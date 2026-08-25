@@ -38,4 +38,4 @@ git remote add origin <URL_DEL_REPOSITORIO>
 git push -u origin main
 ```
 
-El workflow `.github/workflows/deploy.yml` publica automáticamente `dist/local` en GitHub Pages cuando se hace push a `main`.
+El workflow `.github/workflows/deploy.yml` publica automáticamente `dist/local` en GitHub Pages cuando se hace push a `main`. Antes del primer despliegue, activa `Settings > Pages > Build and deployment > Source: GitHub Actions` en el repositorio; esa configuración permite que `configure-pages` encuentre el sitio.

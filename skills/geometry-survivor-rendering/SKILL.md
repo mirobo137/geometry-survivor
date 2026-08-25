@@ -9,6 +9,8 @@ metadata:
 
 Convierte geometría simple en feedback fuerte sin esconder información ni gastar GPU sin medida.
 
+Para crear o revisar SVG code-first con contrato, geometría, accesibilidad y validación detallados, carga también `../../skills/geometry-survivor-svg/SKILL.md`; esta skill conserva las decisiones de representación y rendimiento de PixiJS.
+
 ## Contexto requerido
 
 Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay”, “Rendering y pipeline SVG” y “Rendimiento y presupuestos”. Consulta en `../../proyecto.md` las secciones 16–17, 23–30, 43–49 y 73–103.
@@ -20,7 +22,7 @@ Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay
 - Arena, líneas y warnings dinámicos: `Graphics`, mesh o geometría simple.
 - Formas simples repetidas que deban seguir vectoriales: `GraphicsContext` compartido si el spike lo justifica.
 - Menús y cartas: HTML/CSS + SVG cuando mejore responsive y accesibilidad.
-- SVG complejo: master editable, validación y rasterización en build.
+- SVG complejo: master editable y validación; rasterización en build solo como fallback medido cuando el destino o el presupuesto lo exijan, nunca como sustituto por defecto del SVG fuente.
 
 ## Invariantes
 

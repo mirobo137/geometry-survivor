@@ -1005,7 +1005,7 @@ docs/
 └── visual/                 lenguaje visual y pipeline SVG
 ```
 
-No copiar las mismas reglas en muchos archivos. Las seis skills base existen desde la Fase 0 porque protegen fronteras críticas. Las futuras skills especializadas deben enlazar la fuente canónica y existir solo cuando una tarea repetida lo justifique.
+No copiar las mismas reglas en muchos archivos. Las skills base del proyecto existen desde la Fase 0 porque protegen fronteras críticas. Las skills especializadas deben enlazar la fuente canónica y existir solo cuando una tarea repetida lo justifique.
 
 Un identificador de modelo no basta para controlar el repositorio. Codex/GPT o Grok Build deben iniciarse con este directorio como raíz y con herramientas de lectura, edición y pruebas. Si se usa GPT-5.6 o Grok 4.6 mediante API directa, el orquestador debe cargar `AGENTS.md`, entregar la skill pertinente y proporcionar esas herramientas; no existe descubrimiento automático garantizado en una llamada de modelo aislada.
 
@@ -1017,7 +1017,7 @@ La primera implementación debe ser únicamente la **Fase 0**. No se deben crear
 
 Orden inmediato:
 
-1. comprobar que GPT/Codex y Grok descubren `AGENTS.md` y las seis skills base;
+1. comprobar que GPT/Codex y Grok descubren `AGENTS.md` y las skills base del proyecto;
 2. inicializar Vite + TypeScript + PixiJS;
 3. crear la shell responsive y LocalPlatform;
 4. configurar GitHub Actions + Pages;
@@ -1066,6 +1066,17 @@ Orden inmediato:
 - [OpenAI: guía de GPT-5.6 y uso de skills](https://developers.openai.com/api/docs/guides/latest-model)
 - [xAI: Skills, Plugins & Marketplaces](https://docs.x.ai/build/features/skills-plugins-marketplaces)
 - [xAI: reglas de proyecto con AGENTS.md](https://docs.x.ai/build/features/project-rules)
+
+## Skill SVG code-first — 25-08-2026
+
+Se incorpora una skill especializada para que la IA genere y mantenga SVG mediante codigo, sin depender de PNG ni de un editor grafico:
+
+- canonica: `skills/geometry-survivor-svg/SKILL.md`;
+- referencias: contrato de asset, pipeline PixiJS y validacion;
+- adaptador Grok: `.grok/skills/geometry-survivor-svg/SKILL.md`;
+- `AGENTS.md` y la skill de rendering la enrutan cuando una tarea sea especifica de SVG.
+
+La skill exige `viewBox`, ancla, IDs deterministas, accesibilidad, rutas relativas, ausencia de recursos externos y una eleccion explicita entre SVG inline, textura Pixi o `GraphicsContext`. Tambien protege el `viewBox` y la accesibilidad durante optimizacion.
 
 ## Estado de implementación — 25-08-2026
 

@@ -29,6 +29,7 @@ Las skills canónicas están en `skills/`. Carga la mínima combinación que cub
 - [geometry-survivor-architecture](skills/geometry-survivor-architecture/SKILL.md): capas, módulos, contratos y cambios estructurales.
 - [geometry-survivor-gameplay](skills/geometry-survivor-gameplay/SKILL.md): armas, enemigos, upgrades, hazards, bosses y balance.
 - [geometry-survivor-rendering](skills/geometry-survivor-rendering/SKILL.md): PixiJS, SVG, UI visual, animación y FX.
+- [geometry-survivor-svg](skills/geometry-survivor-svg/SKILL.md): SVG code-first, iconos, assets, accesibilidad, optimización y validación.
 - [geometry-survivor-mobile-performance](skills/geometry-survivor-mobile-performance/SKILL.md): viewport, input, loop, spatial grid, pooling, calidad y profiling.
 - [geometry-survivor-platforms](skills/geometry-survivor-platforms/SKILL.md): GitHub Pages, Poki, CrazyGames, anuncios y guardado.
 - [geometry-survivor-validation](skills/geometry-survivor-validation/SKILL.md): tests, CI, revisión, presupuestos y puertas de fase.

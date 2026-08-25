@@ -1,0 +1,84 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #080b17;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #080b17;
+}
+
+body {
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#game-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #080b17;
+}
+
+#game-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+#orientation-overlay {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 2rem;
+  text-align: center;
+  color: #f5f7ff;
+  background: rgba(8, 11, 23, 0.96);
+}
+
+#orientation-overlay strong {
+  font-size: clamp(1.4rem, 5vw, 2rem);
+}
+
+#orientation-overlay span {
+  max-width: 24rem;
+  color: #aeb8d6;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  #orientation-overlay {
+    display: flex;
+  }
+}
+
+#debug-panel {
+  position: absolute;
+  z-index: 5;
+  top: max(0.5rem, env(safe-area-inset-top));
+  left: max(0.5rem, env(safe-area-inset-left));
+  padding: 0.45rem 0.6rem;
+  color: #cde3ff;
+  background: rgba(7, 12, 28, 0.78);
+  border: 1px solid rgba(145, 181, 255, 0.28);
+  border-radius: 0.4rem;
+  font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+  pointer-events: none;
+}

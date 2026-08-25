@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#080b17" />
+    <meta name="description" content="Geometry Survivor: prototipo web de supervivencia geométrica." />
+    <title>Geometry Survivor</title>
+  </head>
+  <body>
+    <main id="game-container" aria-label="Geometry Survivor">
+      <div id="orientation-overlay" role="status" aria-live="polite">
+        <strong>Gira tu dispositivo</strong>
+        <span>El juego está diseñado para jugarse en horizontal.</span>
+      </div>
+      <div id="debug-panel" hidden></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

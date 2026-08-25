@@ -1,0 +1,73 @@
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { ARENA_CENTER, ARENA_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/constants';
+import type { PlayerState } from '../simulation/PlayerModel';
+import type { ViewportState } from './viewport/ViewportTransform';
+
+export class PixiGameView {
+  public readonly root = new Container();
+  private readonly world = new Container();
+  private readonly arena = new Graphics();
+  private readonly player = new Graphics();
+  private readonly title: Text;
+  private readonly hint: Text;
+
+  public constructor() {
+    this.root.addChild(this.world);
+    this.world.addChild(this.arena, this.player);
+
+    this.arena
+      .circle(ARENA_CENTER.x, ARENA_CENTER.y, ARENA_RADIUS)
+      .fill({ color: 0x111a36, alpha: 1 })
+      .stroke({ color: 0x4b6cb7, width: 3, alpha: 0.9 });
+    this.arena
+      .circle(ARENA_CENTER.x, ARENA_CENTER.y, ARENA_RADIUS - 40)
+      .stroke({ color: 0x26365f, width: 2, alpha: 0.8 });
+    this.arena
+      .circle(ARENA_CENTER.x, ARENA_CENTER.y, 2)
+      .fill({ color: 0x83a8ff, alpha: 0.9 });
+
+    this.player.circle(0, 0, 22).fill({ color: 0x75e6ff }).stroke({ color: 0xf4ffff, width: 3 });
+    this.player.circle(0, 0, 7).fill({ color: 0x10213d });
+
+    this.title = new Text({
+      text: 'GEOMETRY SURVIVOR',
+      style: new TextStyle({
+        fill: 0xeaf0ff,
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 26,
+        fontWeight: '700',
+        letterSpacing: 4
+      })
+    });
+    this.title.anchor.set(0.5, 0);
+    this.title.position.set(ARENA_CENTER.x, 34);
+    this.root.addChild(this.title);
+
+    this.hint = new Text({
+      text: 'Mantén pulsado y mueve para sobrevivir · WASD / flechas',
+      style: new TextStyle({
+        fill: 0xaab7d8,
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 16,
+        align: 'center'
+      })
+    });
+    this.hint.anchor.set(0.5, 1);
+    this.hint.position.set(ARENA_CENTER.x, LOGICAL_HEIGHT - 26);
+    this.root.addChild(this.hint);
+  }
+
+  public resize(viewport: ViewportState): void {
+    this.root.scale.set(viewport.scale);
+    this.root.position.set(viewport.offsetX, viewport.offsetY);
+    this.root.hitArea = undefined;
+  }
+
+  public renderPlayer(state: PlayerState): void {
+    this.player.position.set(state.x, state.y);
+  }
+
+  public get logicalSize(): { width: number; height: number } {
+    return { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
+  }
+}

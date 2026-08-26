@@ -1,4 +1,4 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite';
 
 export interface EnemyDefinition {
   readonly kind: EnemyKind;
@@ -41,5 +41,15 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     experience: 5,
     spawnCost: 3,
     color: 0xc58cff
+  },
+  elite: {
+    kind: 'elite',
+    radius: 24,
+    speed: 84,
+    maxHealth: 132,
+    contactDamage: 20,
+    experience: 8,
+    spawnCost: 5,
+    color: 0xff5fd2
   }
 };

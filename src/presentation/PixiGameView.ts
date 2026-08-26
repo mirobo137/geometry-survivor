@@ -30,6 +30,12 @@ const createEnemyTextures = (renderer: Renderer): Record<EnemyKind, Texture> => 
   }),
   tank: createTexture(renderer, (graphics) => {
     graphics.regularPoly(0, 0, 28, 6, Math.PI / 6).fill(ENEMY_DEFINITIONS.tank.color).stroke({ color: 0xf0e6ff, width: 2 });
+  }),
+  elite: createTexture(renderer, (graphics) => {
+    graphics.regularPoly(0, 0, 24, 8, Math.PI / 8)
+      .fill(ENEMY_DEFINITIONS.elite.color)
+      .stroke({ color: 0xffe5f8, width: 3 });
+    graphics.circle(0, 0, 10).stroke({ color: 0xffffff, width: 2 });
   })
 });
 

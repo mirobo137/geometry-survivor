@@ -21,6 +21,14 @@ const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const ORBIT_DEFINITION = WEAPON_DEFINITIONS.orbit;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 
+export const selectEnemyKind = (elapsedSeconds: number, index: number): EnemyKind => {
+  if (elapsedSeconds >= 120 && index % 7 === 0) return 'elite';
+  if (elapsedSeconds < 20) return 'chaser';
+  if (elapsedSeconds < 100) return index % 4 === 0 ? 'fast' : 'chaser';
+  if (index % 5 === 0) return 'tank';
+  return index % 2 === 0 ? 'fast' : 'chaser';
+};
+
 export interface OrbitBladeState {
   active: boolean;
   x: number;
@@ -217,7 +225,7 @@ export class CombatSimulation {
 
     const index = this.spawnIndex;
     this.spawnIndex += 1;
-    const kind = this.selectEnemyKind(this.stats.elapsedSeconds, index);
+    const kind = selectEnemyKind(this.stats.elapsedSeconds, index);
     this.configureEnemy(state, arenaRadius, index, kind);
   }
 
@@ -286,13 +294,6 @@ export class CombatSimulation {
       this.stressProjectileIndex += 1;
       if (this.projectiles.activeCount === activeCount) break;
     }
-  }
-
-  private selectEnemyKind(elapsedSeconds: number, index: number): EnemyKind {
-    if (elapsedSeconds < 20) return 'chaser';
-    if (elapsedSeconds < 100) return index % 4 === 0 ? 'fast' : 'chaser';
-    if (index % 5 === 0) return 'tank';
-    return index % 2 === 0 ? 'fast' : 'chaser';
   }
 
   private updateEnemies(dt: number, player: PlayerState): void {

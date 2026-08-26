@@ -3,7 +3,7 @@ import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACI
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { PlayerModel } from '../PlayerModel';
-import { CombatSimulation } from './CombatSimulation';
+import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 
 const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: number): void => {
   const steps = Math.ceil(seconds * 60);
@@ -108,6 +108,13 @@ describe('CombatSimulation', () => {
 
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'fast')).toBe(true);
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'tank')).toBe(true);
+  });
+
+  it('introduces the elite variant only after the second minute', () => {
+    expect(selectEnemyKind(119.99, 7)).not.toBe('elite');
+    expect(selectEnemyKind(120, 7)).toBe('elite');
+    expect(ENEMY_DEFINITIONS.elite.maxHealth).toBeGreaterThan(ENEMY_DEFINITIONS.tank.maxHealth);
+    expect(ENEMY_DEFINITIONS.elite.experience).toBeGreaterThan(ENEMY_DEFINITIONS.tank.experience);
   });
 
   it('keeps newly spawned enemies outside the playable arena edge', () => {

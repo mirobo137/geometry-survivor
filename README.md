@@ -15,6 +15,8 @@ Abre la URL que muestre Vite. Para ver el panel técnico añade `?debug=1`.
 
 La orientación primaria es portrait para móvil. En landscape el juego usa un viewport 1280×720 para aprovechar pantallas de PC y portales de escritorio; no se fuerza a girar el dispositivo.
 
+Los spikes de Fase 0 se pueden ejecutar desde GitHub Pages con `?spike=rendering` y `?spike=audio`; el protocolo está en [docs/performance/F0_SPIKES.md](docs/performance/F0_SPIKES.md).
+
 ## Validación y builds
 
 ```bash

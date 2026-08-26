@@ -23,19 +23,8 @@ const reportBootError = (error: unknown): void => {
   console.error('Geometry Survivor could not start:', error);
 };
 
-const bootstrap = async (): Promise<void> => {
-  const container = document.querySelector<HTMLElement>('#game-container');
-  const debugElement = document.querySelector<HTMLElement>('#debug-panel');
-  const bootStatus = document.querySelector<HTMLElement>('#boot-status');
-  if (!container || !debugElement || !bootStatus) throw new Error('Faltan elementos de la interfaz');
-
+const createPixiApplication = async (container: HTMLElement): Promise<Application> => {
   const app = new Application();
-  const viewport = new ViewportTransform();
-  const player = new PlayerModel();
-  const view = new PixiGameView();
-  const debug = new DebugPanel(debugElement);
-  const platform = new LocalPlatform();
-
   await app.init({
     width: Math.max(1, container.clientWidth),
     height: Math.max(1, container.clientHeight),
@@ -48,8 +37,44 @@ const bootstrap = async (): Promise<void> => {
     failIfMajorPerformanceCaveat: false,
     powerPreference: 'low-power'
   });
+  return app;
+};
 
+const bootstrap = async (): Promise<void> => {
+  const container = document.querySelector<HTMLElement>('#game-container');
+  const debugElement = document.querySelector<HTMLElement>('#debug-panel');
+  const bootStatus = document.querySelector<HTMLElement>('#boot-status');
+  if (!container || !debugElement || !bootStatus) throw new Error('Faltan elementos de la interfaz');
+
+  const spike = new URLSearchParams(window.location.search).get('spike');
+  if (spike === 'audio') {
+    const { runAudioSpike } = await import('./spikes/AudioSpike');
+    bootStatus.hidden = true;
+    const cleanupAudioSpike = runAudioSpike(container);
+    window.addEventListener('beforeunload', cleanupAudioSpike, { once: true });
+    return;
+  }
+
+  const app = await createPixiApplication(container);
   container.appendChild(app.canvas);
+
+  if (spike === 'rendering') {
+    const { runRenderingSpike } = await import('./spikes/RenderingSpike');
+    bootStatus.hidden = true;
+    const cleanupRenderingSpike = runRenderingSpike(app, container);
+    window.addEventListener('beforeunload', () => {
+      cleanupRenderingSpike();
+      app.destroy(true, { children: true });
+    }, { once: true });
+    return;
+  }
+
+  const viewport = new ViewportTransform();
+  const player = new PlayerModel();
+  const view = new PixiGameView();
+  const debug = new DebugPanel(debugElement);
+  const platform = new LocalPlatform();
+
   app.stage.addChild(view.root);
 
   const resizeNow = (): void => {

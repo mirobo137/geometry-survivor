@@ -65,6 +65,75 @@ body {
   display: none;
 }
 
+.spike-panel {
+  position: absolute;
+  z-index: 20;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: auto;
+  left: max(0.75rem, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 38rem;
+  max-height: calc(100% - 1.5rem);
+  margin: auto;
+  padding: 1rem;
+  overflow: auto;
+  color: #cde3ff;
+  background: rgba(7, 12, 28, 0.94);
+  border: 1px solid rgba(145, 181, 255, 0.35);
+  border-radius: 0.65rem;
+  font-size: 0.95rem;
+}
+
+.spike-panel h1,
+.spike-panel p {
+  margin: 0;
+}
+
+.spike-panel h1 {
+  color: #f1f5ff;
+  font-size: 1.15rem;
+}
+
+.spike-panel pre {
+  min-height: 4rem;
+  margin: 0;
+  padding: 0.65rem;
+  overflow: auto;
+  color: #b8ffd9;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 0.35rem;
+  font: 0.76rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.spike-panel button,
+.spike-panel a {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  color: #07101f;
+  background: #75e6ff;
+  border: 0;
+  border-radius: 0.4rem;
+  font: inherit;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.spike-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.spike-panel a {
+  color: #cde3ff;
+  background: transparent;
+  border: 1px solid rgba(145, 181, 255, 0.35);
+}
+
 #debug-panel {
   position: absolute;
   z-index: 5;

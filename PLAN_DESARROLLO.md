@@ -1092,6 +1092,9 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/platform/local/LocalPlatform.ts` deja aislada la futura integración de SDK;
 - `src/presentation/PixiGameView.ts` dibuja una arena geométrica mínima y la figura controlable;
 - `.github/workflows/deploy.yml` prepara la publicación de `dist/local` en GitHub Pages;
+- `src/spikes/RenderingSpike.ts` permite comparar 500 `Sprite`, `GraphicsContext` compartido y pool desde GitHub Pages con `?spike=rendering`;
+- `src/spikes/AudioSpike.ts` comprueba desbloqueo, latencia y retorno de visibilidad de Web Audio desde `?spike=audio`;
+- `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones pendientes por dispositivo;
 - `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan.
 
-La versión que está publicada en este momento todavía corresponde al commit anterior y conserva el overlay de rotación. La siguiente acción es hacer push de este cambio a `main` y probar la URL publicada en portrait y landscape. Los spikes de 500 shapes y audio siguen deliberadamente después de validar esta shell.
+La shell responsive y la compatibilidad móvil están publicadas en `main`. El siguiente paso es publicar estos spikes, medirlos en el teléfono disponible y registrar los resultados en `docs/performance/F0_SPIKES.md`. Después de esa medición se cierra Fase 0 y comienza la expansión de arena de Fase 1.

@@ -6,6 +6,7 @@ import { InputManager } from './input/InputManager';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 import { PixiGameView } from './presentation/PixiGameView';
 import { ViewportTransform } from './presentation/viewport/ViewportTransform';
+import { ArenaModel } from './simulation/ArenaModel';
 import { PlayerModel } from './simulation/PlayerModel';
 
 const getErrorMessage = (error: unknown): string => {
@@ -70,6 +71,7 @@ const bootstrap = async (): Promise<void> => {
   }
 
   const viewport = new ViewportTransform();
+  const arena = new ArenaModel();
   const player = new PlayerModel();
   const view = new PixiGameView();
   const debug = new DebugPanel(debugElement);
@@ -114,10 +116,12 @@ const bootstrap = async (): Promise<void> => {
   app.ticker.add((ticker) => {
     accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
     while (accumulator >= FIXED_STEP_SECONDS) {
-      player.update(input.getMovement(), FIXED_STEP_SECONDS);
+      arena.update(FIXED_STEP_SECONDS);
+      player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
       accumulator -= FIXED_STEP_SECONDS;
     }
 
+    view.renderArena(arena.state.radius);
     view.renderPlayer(player.state);
     frames += 1;
     const now = performance.now();
@@ -135,6 +139,7 @@ const bootstrap = async (): Promise<void> => {
       scale: state.scale,
       dpr: state.dpr,
       fps,
+      arena: arena.state.radius,
       player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
     });
   });

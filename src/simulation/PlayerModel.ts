@@ -14,11 +14,11 @@ export class PlayerModel {
     radius: PLAYER_RADIUS
   };
 
-  public update(input: InputVector, dtSeconds: number): void {
+  public update(input: InputVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
     this.state.x += input.x * PLAYER_SPEED * dtSeconds;
     this.state.y += input.y * PLAYER_SPEED * dtSeconds;
 
-    const maxDistance = ARENA_RADIUS - this.state.radius;
+    const maxDistance = Math.max(0, arenaRadius - this.state.radius);
     const dx = this.state.x - ARENA_CENTER.x;
     const dy = this.state.y - ARENA_CENTER.y;
     const distance = Math.hypot(dx, dy);

@@ -154,7 +154,7 @@ El objetivo no es “hacer el juego”. Es probar que su núcleo merece crecer.
 - backend;
 - analítica externa;
 - PWA o service worker;
-- soporte portrait jugable como orientación primaria;
+- más layouts específicos por dispositivo; portrait jugable ya está fijado como orientación primaria;
 - localización completa más allá de inglés y, si resulta barato, español.
 
 ## Criterio de éxito del vertical slice
@@ -1094,8 +1094,9 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `.github/workflows/deploy.yml` prepara la publicación de `dist/local` en GitHub Pages;
 - `src/spikes/RenderingSpike.ts` permite comparar 500 `Sprite`, `GraphicsContext` compartido y pool desde GitHub Pages con `?spike=rendering`;
 - `src/spikes/AudioSpike.ts` comprueba desbloqueo, latencia y retorno de visibilidad de Web Audio desde `?spike=audio`;
-- `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones pendientes por dispositivo;
-- primera medición aportada desde Android Chrome: `Sprite` 76.11 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con latencia base de audio de 3.0 ms;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan.
+- `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones por dispositivo;
+- ejecución limpia aportada desde Android Chrome: `Sprite` 59.95 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con p95 de 16.80 ms y latencia base de audio de 3.0 ms;
+- `src/simulation/ArenaModel.ts` inicia Fase 1 con una expansión de arena configurable y pruebas de su radio/límite;
+- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (9 tests).
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La primera medición confirma que la ruta Sprite es viable; falta repetirla con el modelo y DPR identificados y verificar que el panel corregido sólo muestre tres filas. Después de esa medición se cierra Fase 0 y comienza la expansión de arena de Fase 1.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada y Fase 1 comienza con la expansión de arena; queda pendiente validar manualmente una sesión larga de tres minutos.

@@ -8,23 +8,17 @@ export class PixiGameView {
   private readonly world = new Container();
   private readonly arena = new Graphics();
   private readonly player = new Graphics();
+  private arenaRadius = -1;
+  private arenaGeometryReady = false;
   private readonly title: Text;
   private readonly hint: Text;
 
   public constructor() {
     this.root.addChild(this.world);
     this.world.addChild(this.arena, this.player);
+    this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
-    this.arena
-      .circle(ARENA_CENTER.x, ARENA_CENTER.y, ARENA_RADIUS)
-      .fill({ color: 0x111a36, alpha: 1 })
-      .stroke({ color: 0x4b6cb7, width: 3, alpha: 0.9 });
-    this.arena
-      .circle(ARENA_CENTER.x, ARENA_CENTER.y, ARENA_RADIUS - 40)
-      .stroke({ color: 0x26365f, width: 2, alpha: 0.8 });
-    this.arena
-      .circle(ARENA_CENTER.x, ARENA_CENTER.y, 2)
-      .fill({ color: 0x83a8ff, alpha: 0.9 });
+    this.renderArena(ARENA_RADIUS);
 
     this.player.circle(0, 0, 22).fill({ color: 0x75e6ff }).stroke({ color: 0xf4ffff, width: 3 });
     this.player.circle(0, 0, 7).fill({ color: 0x10213d });
@@ -62,6 +56,23 @@ export class PixiGameView {
     this.root.position.set(viewport.offsetX, viewport.offsetY);
     this.world.position.set(viewport.worldOffsetX, viewport.worldOffsetY);
     this.root.hitArea = undefined;
+  }
+
+  public renderArena(radius: number): void {
+    if (this.arenaRadius === radius) return;
+    if (!this.arenaGeometryReady) {
+      this.arena
+        .circle(0, 0, ARENA_RADIUS)
+        .fill({ color: 0x111a36, alpha: 1 })
+        .stroke({ color: 0x4b6cb7, width: 3, alpha: 0.9 })
+        .circle(0, 0, Math.max(0, ARENA_RADIUS - 40))
+        .stroke({ color: 0x26365f, width: 2, alpha: 0.8 })
+        .circle(0, 0, 2)
+        .fill({ color: 0x83a8ff, alpha: 0.9 });
+      this.arenaGeometryReady = true;
+    }
+    this.arena.scale.set(radius / ARENA_RADIUS);
+    this.arenaRadius = radius;
   }
 
   public renderPlayer(state: PlayerState): void {

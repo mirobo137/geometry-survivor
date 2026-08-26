@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARENA_CENTER, ARENA_RADIUS, PLAYER_RADIUS, PLAYER_SPEED } from '../config/constants';
+import { ARENA_CENTER, ARENA_MAX_RADIUS, ARENA_RADIUS, PLAYER_RADIUS, PLAYER_SPEED } from '../config/constants';
 import { PlayerModel } from './PlayerModel';
 
 describe('PlayerModel', () => {
@@ -21,5 +21,15 @@ describe('PlayerModel', () => {
 
     const distance = Math.hypot(player.state.x - ARENA_CENTER.x, player.state.y - ARENA_CENTER.y);
     expect(distance).toBeLessThanOrEqual(ARENA_RADIUS - PLAYER_RADIUS + 0.0001);
+  });
+
+  it('uses the current arena radius when the arena expands', () => {
+    const player = new PlayerModel();
+
+    player.update({ x: 1, y: 0 }, 10, ARENA_MAX_RADIUS);
+
+    const distance = Math.hypot(player.state.x - ARENA_CENTER.x, player.state.y - ARENA_CENTER.y);
+    expect(distance).toBeLessThanOrEqual(ARENA_MAX_RADIUS - PLAYER_RADIUS + 0.0001);
+    expect(distance).toBeGreaterThan(ARENA_RADIUS - PLAYER_RADIUS);
   });
 });

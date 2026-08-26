@@ -140,7 +140,7 @@ const bootstrap = async (): Promise<void> => {
       elapsedSeconds: combat.stats.elapsedSeconds,
       health: player.state.health,
       maxHealth: player.state.maxHealth,
-      xp: combat.stats.xpCollected,
+      xp: combat.stats.experience,
       kills: combat.stats.kills
     });
     frames += 1;

@@ -23,14 +23,6 @@ export interface ProjectileState {
   lifetimeSeconds: number;
 }
 
-export interface XpState {
-  active: boolean;
-  x: number;
-  y: number;
-  radius: number;
-  value: number;
-}
-
 const createEnemyState = (): EnemyState => ({
   active: false,
   kind: 'chaser',
@@ -53,8 +45,6 @@ const createProjectileState = (): ProjectileState => ({
   damage: 0,
   lifetimeSeconds: 0
 });
-
-const createXpState = (): XpState => ({ active: false, x: 0, y: 0, radius: 0, value: 0 });
 
 export class EnemyPool {
   public readonly states: EnemyState[];
@@ -108,35 +98,6 @@ export class ProjectilePool {
   }
 
   public release(state: ProjectileState): void {
-    if (!state.active) return;
-    state.active = false;
-    this.activeCount -= 1;
-  }
-}
-
-export class XpPool {
-  public readonly states: XpState[];
-  public activeCount = 0;
-  private cursor = 0;
-
-  public constructor(public readonly capacity: number) {
-    this.states = Array.from({ length: capacity }, createXpState);
-  }
-
-  public acquire(): XpState | null {
-    for (let offset = 0; offset < this.capacity; offset += 1) {
-      const index = (this.cursor + offset) % this.capacity;
-      const state = this.states[index];
-      if (state.active) continue;
-      state.active = true;
-      this.cursor = (index + 1) % this.capacity;
-      this.activeCount += 1;
-      return state;
-    }
-    return null;
-  }
-
-  public release(state: XpState): void {
     if (!state.active) return;
     state.active = false;
     this.activeCount -= 1;

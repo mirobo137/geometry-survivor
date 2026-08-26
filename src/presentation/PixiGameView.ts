@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
-import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, LOGICAL_HEIGHT, PROJECTILE_POOL_CAPACITY, XP_POOL_CAPACITY } from '../config/constants';
+import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, LOGICAL_HEIGHT, PROJECTILE_POOL_CAPACITY } from '../config/constants';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../content/enemies/EnemyDefinitions';
 import type { PlayerState } from '../simulation/PlayerModel';
 import type { CombatSimulation } from '../simulation/combat/CombatSimulation';
@@ -38,11 +38,9 @@ export class PixiGameView {
   private readonly player = new Graphics();
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
-  private readonly xpLayer = new Container();
   private readonly enemyTextures: Record<EnemyKind, Texture>;
   private readonly enemySprites: Sprite[] = [];
   private readonly projectileSprites: Sprite[] = [];
-  private readonly xpSprites: Sprite[] = [];
   private arenaRadius = -1;
   private arenaGeometryReady = false;
   private readonly title: Text;
@@ -50,7 +48,7 @@ export class PixiGameView {
 
   public constructor(renderer: Renderer) {
     this.root.addChild(this.world);
-    this.world.addChild(this.arena, this.xpLayer, this.projectileLayer, this.enemyLayer, this.player);
+    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.player);
     this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
     this.renderArena(ARENA_RADIUS);
@@ -61,9 +59,6 @@ export class PixiGameView {
     this.enemyTextures = createEnemyTextures(renderer);
     const projectileTexture = createTexture(renderer, (graphics) => {
       graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
-    });
-    const xpTexture = createTexture(renderer, (graphics) => {
-      graphics.poly([0, -8, 8, 0, 0, 8, -8, 0]).fill({ color: 0x9bffcf }).stroke({ color: 0xe5fff3, width: 1 });
     });
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const sprite = new Sprite(this.enemyTextures.chaser);
@@ -78,13 +73,6 @@ export class PixiGameView {
       sprite.visible = false;
       this.projectileSprites.push(sprite);
       this.projectileLayer.addChild(sprite);
-    }
-    for (let index = 0; index < XP_POOL_CAPACITY; index += 1) {
-      const sprite = new Sprite(xpTexture);
-      sprite.anchor.set(0.5);
-      sprite.visible = false;
-      this.xpSprites.push(sprite);
-      this.xpLayer.addChild(sprite);
     }
 
     this.title = new Text({
@@ -160,15 +148,6 @@ export class PixiGameView {
       sprite.rotation = Math.atan2(state.vy, state.vx);
     }
 
-    for (let index = 0; index < this.xpSprites.length; index += 1) {
-      const state = combat.xp.states[index];
-      const sprite = this.xpSprites[index];
-      sprite.visible = state.active;
-      if (!state.active) continue;
-      sprite.position.set(state.x, state.y);
-      const pulse = 1 + Math.sin(performance.now() * 0.006 + index) * 0.08;
-      sprite.scale.set(pulse);
-    }
   }
 
   public renderPlayer(state: PlayerState): void {

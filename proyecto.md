@@ -382,7 +382,7 @@ Estas mecánicas deben impedir gameplay completamente pasivo.
 
 # 10. SISTEMA DE NIVEL
 
-Los enemigos dejan experiencia.
+Los enemigos otorgan experiencia al ser derrotados.
 
 Ejemplo visual:
 
@@ -391,10 +391,10 @@ enemy dies
 
 △ → ✦
 
-       XP
+       +XP
 ```
 
-El jugador recoge experiencia.
+La experiencia se acredita inmediatamente al jugador, sin dejar gemas físicas en la arena. Así ninguna recompensa queda fuera del área circular alcanzable ni obliga a abandonar una posición segura para recogerla.
 
 Cuando alcanza suficiente:
 
@@ -691,7 +691,7 @@ assets/
         weapons/
         particles/
         explosions/
-        pickups/
+        pickups/       # solo si una recompensa futura necesita presencia física
         icons/
         ui/
 ```
@@ -1237,7 +1237,7 @@ Objetivos aproximados de estrés:
 
 200-600 projectiles
 
-100-300 pickups
+100-300 pickups (solo para recompensas físicas opcionales; la XP del MVP no usa pickups)
 ```
 
 No significa que siempre deban existir esas cantidades.
@@ -1926,7 +1926,7 @@ moverse
 disparar
 impactar
 matar
-recoger XP
+ganar XP al derrotar
 subir nivel
 seleccionar upgrade
 expandir arena
@@ -1968,8 +1968,7 @@ Pooling
 ## Phase 3 — Progression
 
 ```text
-XP
-Pickups
+XP directa por baja
 Level
 Upgrade selection
 Weapon upgrades

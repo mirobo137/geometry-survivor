@@ -7,7 +7,6 @@ export const ARENA_EXPANSION_START_SECONDS = 60;
 export const ARENA_EXPANSION_DURATION_SECONDS = 1.25;
 export const ENEMY_POOL_CAPACITY = 250;
 export const PROJECTILE_POOL_CAPACITY = 300;
-export const XP_POOL_CAPACITY = 150;
 export const PLAYER_RADIUS = 22;
 export const PLAYER_MAX_HEALTH = 100;
 export const PLAYER_SPEED = 250;

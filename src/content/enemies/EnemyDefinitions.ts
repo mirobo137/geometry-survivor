@@ -6,6 +6,7 @@ export interface EnemyDefinition {
   readonly speed: number;
   readonly maxHealth: number;
   readonly contactDamage: number;
+  readonly experience: number;
   readonly spawnCost: number;
   readonly color: number;
 }
@@ -17,6 +18,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     speed: 72,
     maxHealth: 24,
     contactDamage: 8,
+    experience: 1,
     spawnCost: 1,
     color: 0xff936b
   },
@@ -26,6 +28,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     speed: 126,
     maxHealth: 12,
     contactDamage: 6,
+    experience: 2,
     spawnCost: 1,
     color: 0xffd166
   },
@@ -35,6 +38,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     speed: 42,
     maxHealth: 72,
     contactDamage: 16,
+    experience: 5,
     spawnCost: 3,
     color: 0xc58cff
   }

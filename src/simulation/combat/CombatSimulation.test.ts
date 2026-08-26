@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_CENTER, ARENA_RADIUS } from '../../config/constants';
+import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation } from './CombatSimulation';
 
@@ -19,9 +20,24 @@ describe('CombatSimulation', () => {
 
     expect(combat.stats.shotsFired).toBeGreaterThan(0);
     expect(combat.stats.kills).toBeGreaterThan(0);
+    expect(combat.stats.experience).toBe(combat.stats.kills * ENEMY_DEFINITIONS.chaser.experience);
     expect(combat.enemies.activeCount).toBeLessThanOrEqual(combat.enemies.capacity);
     expect(combat.projectiles.activeCount).toBeLessThanOrEqual(combat.projectiles.capacity);
-    expect(combat.xp.activeCount).toBeGreaterThan(0);
+  });
+
+  it('awards experience in the defeat event without creating a pickup', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    let defeatEvent: Extract<(typeof combat.events)[number], { type: 'enemyDefeated' }> | undefined;
+
+    for (let index = 0; index < 12 * 60 && !defeatEvent; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      defeatEvent = combat.events.find((event) => event.type === 'enemyDefeated') as typeof defeatEvent;
+    }
+
+    expect(defeatEvent).toBeDefined();
+    expect(defeatEvent?.experience).toBe(ENEMY_DEFINITIONS[defeatEvent!.kind].experience);
+    expect(combat.stats.experience).toBeGreaterThan(0);
   });
 
   it('introduces Fast and Tank through the deterministic timeline', () => {

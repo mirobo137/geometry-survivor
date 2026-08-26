@@ -4,11 +4,10 @@ import {
   ENEMY_POOL_CAPACITY,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
-  PROJECTILE_POOL_CAPACITY,
-  XP_POOL_CAPACITY
+  PROJECTILE_POOL_CAPACITY
 } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
-import { EnemyPool, ProjectilePool, type EnemyState, XpPool } from './EntityPools';
+import { EnemyPool, ProjectilePool, type EnemyState } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 
 const PROJECTILE_DAMAGE = 14;
@@ -17,18 +16,22 @@ const PROJECTILE_RADIUS = 7;
 const PROJECTILE_LIFETIME_SECONDS = 2.5;
 const AUTO_ATTACK_COOLDOWN_SECONDS = 0.55;
 const CONTACT_COOLDOWN_SECONDS = 0.45;
-const XP_PICKUP_RADIUS = 120;
-const XP_MAGNET_SPEED = 260;
 const SPAWN_RADIUS_PADDING = 80;
 
 export type CombatEvent =
-  | { readonly type: 'enemyDefeated'; readonly x: number; readonly y: number; readonly kind: EnemyKind }
+  | {
+    readonly type: 'enemyDefeated';
+    readonly x: number;
+    readonly y: number;
+    readonly kind: EnemyKind;
+    readonly experience: number;
+  }
   | { readonly type: 'playerDamaged'; readonly amount: number };
 
 export interface CombatStats {
   elapsedSeconds: number;
   kills: number;
-  xpCollected: number;
+  experience: number;
   shotsFired: number;
   damageTaken: number;
 }
@@ -36,11 +39,10 @@ export interface CombatStats {
 export class CombatSimulation {
   public readonly enemies = new EnemyPool(ENEMY_POOL_CAPACITY);
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
-  public readonly xp = new XpPool(XP_POOL_CAPACITY);
   public readonly stats: CombatStats = {
     elapsedSeconds: 0,
     kills: 0,
-    xpCollected: 0,
+    experience: 0,
     shotsFired: 0,
     damageTaken: 0
   };
@@ -79,7 +81,6 @@ export class CombatSimulation {
     }
 
     this.updateProjectiles(dt);
-    this.updateXp(dt, player);
   }
 
   public get events(): readonly CombatEvent[] {
@@ -214,33 +215,10 @@ export class CombatSimulation {
     const x = enemy.x;
     const y = enemy.y;
     const kind = enemy.kind;
+    const experience = ENEMY_DEFINITIONS[kind].experience;
     this.enemies.release(enemy);
     this.stats.kills += 1;
-    this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind });
-
-    const pickup = this.xp.acquire();
-    if (!pickup) return;
-    pickup.x = x;
-    pickup.y = y;
-    pickup.radius = 8;
-    pickup.value = 1;
-  }
-
-  private updateXp(dt: number, player: PlayerState): void {
-    for (const pickup of this.xp.states) {
-      if (!pickup.active) continue;
-      const dx = player.x - pickup.x;
-      const dy = player.y - pickup.y;
-      const distance = Math.hypot(dx, dy);
-      if (distance < XP_PICKUP_RADIUS && distance > 0.001) {
-        const step = Math.min(distance, XP_MAGNET_SPEED * dt);
-        pickup.x += (dx / distance) * step;
-        pickup.y += (dy / distance) * step;
-      }
-      if (Math.hypot(player.x - pickup.x, player.y - pickup.y) <= player.radius + pickup.radius) {
-        this.stats.xpCollected += pickup.value;
-        this.xp.release(pickup);
-      }
-    }
+    this.stats.experience += experience;
+    this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience });
   }
 }

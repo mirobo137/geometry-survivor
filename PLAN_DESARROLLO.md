@@ -71,7 +71,8 @@ Existe una tensión en `proyecto.md`: se pide evitar optimización prematura, pe
 
 Resolución:
 
-- proyectiles, partículas, números de daño y pickups: diseñados para pool desde el vertical slice;
+- proyectiles, partículas y números de daño: diseñados para pool desde el vertical slice;
+- la experiencia se acredita al derrotar al enemigo; el MVP no usa pickups físicos de XP porque la arena cerrada puede dejarlos fuera del alcance;
 - enemigos: almacenamiento sencillo y pool solo si el perfil muestra pausas de GC;
 - typed arrays / Structure of Arrays: se adoptan únicamente si el perfil de CPU o memoria lo justifica;
 - todas las APIs de entidad deben permitir cambiar la representación interna sin afectar al contenido.
@@ -551,7 +552,7 @@ Puerta mínima del slice en calidad Low:
 
 - 250 enemigos;
 - 300 proyectiles;
-- 150 pickups;
+- experiencia acreditada directamente en cada baja, sin entidades de pickup;
 - 150 partículas/FX activos;
 - spatial queries y daño funcionando, no solo objetos decorativos.
 
@@ -581,7 +582,7 @@ Fase posterior:
 - grupos `music`, `sfx`, `ui` con mute y volumen persistentes;
 - límite de voces global y límite por sonido;
 - variación ligera de pitch para impactos repetidos;
-- prioridad: telegraph/boss/player damage > arma > pickup > ambiente;
+- prioridad: telegraph/boss/player damage > arma > feedback de experiencia > ambiente;
 - pausar o mutear solo cuando el anuncio realmente comienza;
 - restaurar audio ante `touchend`, retorno de background y fin/error de anuncio;
 - no iniciar música automática antes de interacción.
@@ -818,7 +819,7 @@ Entregables:
 - Projectile;
 - daño, muerte, spatial grid y pooling crítico;
 - spawn budget básico;
-- XP como pickup.
+- XP acreditada inmediatamente al derrotar al enemigo (sin pickup físico).
 
 Puerta:
 
@@ -1098,9 +1099,9 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - ejecución limpia aportada desde Android Chrome: `Sprite` 59.95 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con p95 de 16.80 ms y latencia base de audio de 3.0 ms;
 - `src/simulation/ArenaModel.ts` inicia Fase 1 con una expansión de arena configurable y pruebas de su radio/límite;
 - `src/content/enemies/EnemyDefinitions.ts` define Chaser, Fast y Tank sin modificar el motor al añadir variantes;
-- `src/simulation/combat/CombatSimulation.ts` conecta spawn, targeting, Projectile, daño, muerte, XP y contacto con el jugador;
-- `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice;
+- `src/simulation/combat/CombatSimulation.ts` conecta spawn, targeting, Projectile, daño, muerte, XP directa y contacto con el jugador;
+- `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice; no se reserva pool para pickups de XP;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (17 tests).
+- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (18 tests).
 
 La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial; quedan pendientes la sesión manual larga y el stress de 250 enemigos/300 proyectiles antes de ampliar contenido.

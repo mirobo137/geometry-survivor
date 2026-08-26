@@ -104,6 +104,7 @@ export class InputManager {
   }
 
   private onKeyDown(event: KeyboardEvent): void {
+    if (this.isInteractiveTarget(event.target)) return;
     if (MOVEMENT_KEYS[event.code]) event.preventDefault();
     this.keys.add(event.code);
   }

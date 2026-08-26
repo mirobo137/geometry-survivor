@@ -180,6 +180,7 @@ const bootstrap = async (): Promise<void> => {
       platform.onGamePause();
     }
     levelUp.open(progression.state.level, (upgradeId) => {
+      input.reset();
       applyUpgrade(upgradeId);
       progression.consumeLevelUp();
       if (progression.state.pendingLevelUps > 0) {
@@ -197,6 +198,7 @@ const bootstrap = async (): Promise<void> => {
     input.reset();
     platform.onGamePause();
     pause.open('La partida se detuvo al salir de la ventana.', () => {
+      input.reset();
       lifecyclePaused = false;
       pause.close();
       platform.onGameResume();

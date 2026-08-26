@@ -12,6 +12,7 @@ import { PlayerModel } from './simulation/PlayerModel';
 import { LevelProgression } from './simulation/progression/LevelProgression';
 import { GameHud } from './ui/GameHud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
+import { PauseOverlay } from './ui/PauseOverlay';
 import { UPGRADE_DEFINITIONS, type UpgradeId } from './content/upgrades/UpgradeDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
@@ -52,7 +53,8 @@ const bootstrap = async (): Promise<void> => {
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
   const levelUpElement = document.querySelector<HTMLElement>('#level-up');
-  if (!container || !debugElement || !bootStatus || !hudElement || !levelUpElement) {
+  const pauseElement = document.querySelector<HTMLElement>('#pause-overlay');
+  if (!container || !debugElement || !bootStatus || !hudElement || !levelUpElement || !pauseElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
 
@@ -92,6 +94,7 @@ const bootstrap = async (): Promise<void> => {
   const debug = new DebugPanel(debugElement, stressMode);
   const hud = new GameHud(hudElement);
   const levelUp = new LevelUpOverlay(levelUpElement);
+  const pause = new PauseOverlay(pauseElement);
   const platform = new LocalPlatform();
 
   app.stage.addChild(view.root);
@@ -131,6 +134,7 @@ const bootstrap = async (): Promise<void> => {
   let fpsTime = performance.now();
   let fps = 0;
   let gameplayPaused = false;
+  let lifecyclePaused = false;
 
   const applyUpgrade = (upgradeId: UpgradeId): void => {
     const definition = UPGRADE_DEFINITIONS.find((upgrade) => upgrade.id === upgradeId);
@@ -171,7 +175,10 @@ const bootstrap = async (): Promise<void> => {
   };
 
   const openLevelUp = (): void => {
-    gameplayPaused = true;
+    if (!gameplayPaused) {
+      gameplayPaused = true;
+      platform.onGamePause();
+    }
     levelUp.open(progression.state.level, (upgradeId) => {
       applyUpgrade(upgradeId);
       progression.consumeLevelUp();
@@ -179,14 +186,34 @@ const bootstrap = async (): Promise<void> => {
         openLevelUp();
       } else {
         gameplayPaused = false;
+        if (!lifecyclePaused) platform.onGameResume();
       }
     });
   };
 
+  const pauseForLifecycle = (): void => {
+    if (gameplayPaused || lifecyclePaused) return;
+    lifecyclePaused = true;
+    input.reset();
+    platform.onGamePause();
+    pause.open('La partida se detuvo al salir de la ventana.', () => {
+      lifecyclePaused = false;
+      pause.close();
+      platform.onGameResume();
+    });
+  };
+
+  const onVisibilityChange = (): void => {
+    if (document.visibilityState === 'hidden') pauseForLifecycle();
+  };
+  const onWindowBlur = (): void => pauseForLifecycle();
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('blur', onWindowBlur);
+
   app.ticker.add((ticker) => {
     accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
     while (accumulator >= FIXED_STEP_SECONDS) {
-      if (!gameplayPaused) {
+      if (!gameplayPaused && !lifecyclePaused) {
         arena.update(FIXED_STEP_SECONDS);
         player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
         combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
@@ -233,7 +260,7 @@ const bootstrap = async (): Promise<void> => {
       projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
       orbit: `${combat.activeOrbitBlades}/${combat.orbitBlades.length}`,
       chain: combat.hasChainLightning ? 'ready' : 'locked',
-      paused: gameplayPaused ? 'level-up' : 'playing',
+      paused: gameplayPaused ? 'level-up' : lifecyclePaused ? 'lifecycle' : 'playing',
       level: progression.state.level,
       arena: arena.state.radius,
       player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
@@ -247,6 +274,8 @@ const bootstrap = async (): Promise<void> => {
     resizeObserver?.disconnect();
     window.removeEventListener('resize', queueResize);
     window.removeEventListener('orientationchange', queueResize);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    window.removeEventListener('blur', onWindowBlur);
     platform.onGamePause();
   });
 };

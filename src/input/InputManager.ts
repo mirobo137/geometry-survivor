@@ -93,6 +93,12 @@ export class InputManager {
     return { x: x / length, y: y / length };
   }
 
+  public reset(): void {
+    this.keys.clear();
+    this.pointerId = null;
+    this.touchId = null;
+  }
+
   private isInteractiveTarget(target: EventTarget | null): boolean {
     return target instanceof Element && Boolean(target.closest('button, a, input, select, textarea'));
   }

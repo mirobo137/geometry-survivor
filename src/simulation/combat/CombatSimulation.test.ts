@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARENA_CENTER, ARENA_RADIUS } from '../../config/constants';
+import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation } from './CombatSimulation';
@@ -38,6 +38,18 @@ describe('CombatSimulation', () => {
     expect(defeatEvent).toBeDefined();
     expect(defeatEvent?.experience).toBe(ENEMY_DEFINITIONS[defeatEvent!.kind].experience);
     expect(combat.stats.experience).toBeGreaterThan(0);
+  });
+
+  it('seeds the reproducible stress preset with both pools at capacity', () => {
+    const combat = new CombatSimulation({ stress: true });
+    const player = new PlayerModel();
+
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.enemies.activeCount).toBe(ENEMY_POOL_CAPACITY);
+    expect(combat.projectiles.activeCount).toBe(PROJECTILE_POOL_CAPACITY);
+    expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'fast')).toBe(true);
+    expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'tank')).toBe(true);
   });
 
   it('introduces Fast and Tank through the deterministic timeline', () => {

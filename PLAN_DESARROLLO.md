@@ -627,7 +627,7 @@ La selección será de build (`VITE_PLATFORM` o equivalente), no una detección 
 
 - no carga SDK externo;
 - usa anuncios simulados con éxito, cancelación, demora y error;
-- permite presets mediante query string, por ejemplo `?debug=1&stress=enemies:250`;
+- permite presets mediante query string, por ejemplo `?stress=1` (el panel técnico se muestra automáticamente);
 - muestra versión/commit en el HUD de debug;
 - usa `base: "./"` para paths relativos y compatibilidad con subruta/zip;
 - GitHub Actions ejecuta verificación y publica únicamente `dist/local`.
@@ -1101,7 +1101,8 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/content/enemies/EnemyDefinitions.ts` define Chaser, Fast y Tank sin modificar el motor al añadir variantes;
 - `src/simulation/combat/CombatSimulation.ts` conecta spawn, targeting, Projectile, daño, muerte, XP directa y contacto con el jugador;
 - `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice; no se reserva pool para pickups de XP;
+- `?stress=1` inicializa el escenario de 250 enemigos y 300 proyectiles para la puerta de rendimiento de Fase 2;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (18 tests).
+- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (19 tests).
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial; quedan pendientes la sesión manual larga y el stress de 250 enemigos/300 proyectiles antes de ampliar contenido.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial y un preset de stress reproducible; queda pendiente medirlo manualmente en el móvil antes de ampliar contenido.

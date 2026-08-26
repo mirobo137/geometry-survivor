@@ -17,6 +17,8 @@ La orientación primaria es portrait para móvil. En landscape el juego usa un v
 
 Los spikes de Fase 0 se pueden ejecutar desde GitHub Pages con `?spike=rendering` y `?spike=audio`; el protocolo está en [docs/performance/F0_SPIKES.md](docs/performance/F0_SPIKES.md).
 
+El stress de combate de Fase 2 se ejecuta con `?stress=1`. Inicializa 250 enemigos y 300 proyectiles reales, mantiene visible el panel técnico y sirve para comprobar el peor caso en el mismo móvil. Se puede combinar con `&debug=1`, aunque no es necesario.
+
 ## Validación y builds
 
 ```bash

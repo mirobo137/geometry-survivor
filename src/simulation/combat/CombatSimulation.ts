@@ -17,6 +17,11 @@ const PROJECTILE_LIFETIME_SECONDS = 2.5;
 const AUTO_ATTACK_COOLDOWN_SECONDS = 0.55;
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
+const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
+
+export interface CombatSimulationOptions {
+  readonly stress?: boolean;
+}
 
 export type CombatEvent =
   | {
@@ -52,11 +57,26 @@ export class CombatSimulation {
   private attackAccumulator = 0;
   private contactCooldown = 0;
   private spawnIndex = 0;
+  private stressProjectileIndex = 0;
+  private readonly stressMode: boolean;
+  private stressInitialized = false;
+
+  public constructor(options: CombatSimulationOptions = {}) {
+    this.stressMode = options.stress === true;
+  }
+
+  public get isStressMode(): boolean {
+    return this.stressMode;
+  }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     this.pendingEvents.length = 0;
     if (dt === 0) return;
+
+    if (this.stressMode && !this.stressInitialized) {
+      this.initializeStress(player, arenaRadius);
+    }
 
     this.stats.elapsedSeconds += dt;
     this.contactCooldown = Math.max(0, this.contactCooldown - dt);
@@ -81,6 +101,8 @@ export class CombatSimulation {
     }
 
     this.updateProjectiles(dt);
+    this.maintainStressEnemies(arenaRadius);
+    this.maintainStressProjectiles(player);
   }
 
   public get events(): readonly CombatEvent[] {
@@ -94,9 +116,13 @@ export class CombatSimulation {
     const index = this.spawnIndex;
     this.spawnIndex += 1;
     const kind = this.selectEnemyKind(this.stats.elapsedSeconds, index);
+    this.configureEnemy(state, arenaRadius, index, kind);
+  }
+
+  private configureEnemy(state: EnemyState, arenaRadius: number, index: number, kind: EnemyKind): void {
     const definition = ENEMY_DEFINITIONS[kind];
     const angle = index * 2.399963229728653;
-    const distance = Math.max(arenaRadius + SPAWN_RADIUS_PADDING, 380);
+    const distance = Math.max(arenaRadius + SPAWN_RADIUS_PADDING + (index % 4) * 24, 380);
     state.kind = kind;
     state.x = ARENA_CENTER.x + Math.cos(angle) * distance;
     state.y = ARENA_CENTER.y + Math.sin(angle) * distance;
@@ -105,6 +131,58 @@ export class CombatSimulation {
     state.maxHealth = definition.maxHealth;
     state.health = definition.maxHealth;
     state.contactDamage = definition.contactDamage;
+  }
+
+  private initializeStress(player: PlayerState, arenaRadius: number): void {
+    for (let index = 0; index < this.enemies.capacity; index += 1) {
+      const state = this.enemies.acquire();
+      if (!state) break;
+      const kind = STRESS_ENEMY_KINDS[index % STRESS_ENEMY_KINDS.length];
+      this.configureEnemy(state, arenaRadius, index, kind);
+    }
+    this.rebuildEnemyGrid();
+    for (let index = 0; index < this.projectiles.capacity; index += 1) {
+      this.spawnStressProjectile(player, index);
+    }
+    this.stressProjectileIndex = this.projectiles.capacity;
+    this.stressInitialized = true;
+  }
+
+  private maintainStressEnemies(arenaRadius: number): void {
+    if (!this.stressMode) return;
+    while (this.enemies.activeCount < this.enemies.capacity) {
+      const state = this.enemies.acquire();
+      if (!state) break;
+      const index = this.spawnIndex;
+      this.spawnIndex += 1;
+      const kind = STRESS_ENEMY_KINDS[index % STRESS_ENEMY_KINDS.length];
+      this.configureEnemy(state, arenaRadius, index, kind);
+    }
+  }
+
+  private spawnStressProjectile(player: PlayerState, index: number): void {
+    const projectile = this.projectiles.acquire();
+    if (!projectile) return;
+    const angle = index * 2.399963229728653;
+    projectile.active = true;
+    projectile.x = player.x;
+    projectile.y = player.y;
+    projectile.vx = Math.cos(angle) * PROJECTILE_SPEED;
+    projectile.vy = Math.sin(angle) * PROJECTILE_SPEED;
+    projectile.radius = PROJECTILE_RADIUS;
+    projectile.damage = PROJECTILE_DAMAGE;
+    projectile.lifetimeSeconds = PROJECTILE_LIFETIME_SECONDS;
+    this.stats.shotsFired += 1;
+  }
+
+  private maintainStressProjectiles(player: PlayerState): void {
+    if (!this.stressMode) return;
+    while (this.projectiles.activeCount < this.projectiles.capacity) {
+      const activeCount = this.projectiles.activeCount;
+      this.spawnStressProjectile(player, this.stressProjectileIndex);
+      this.stressProjectileIndex += 1;
+      if (this.projectiles.activeCount === activeCount) break;
+    }
   }
 
   private selectEnemyKind(elapsedSeconds: number, index: number): EnemyKind {

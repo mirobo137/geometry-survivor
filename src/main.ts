@@ -50,7 +50,9 @@ const bootstrap = async (): Promise<void> => {
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
   if (!container || !debugElement || !bootStatus || !hudElement) throw new Error('Faltan elementos de la interfaz');
 
-  const spike = new URLSearchParams(window.location.search).get('spike');
+  const searchParams = new URLSearchParams(window.location.search);
+  const spike = searchParams.get('spike');
+  const stressMode = searchParams.get('stress') === '1';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -78,9 +80,9 @@ const bootstrap = async (): Promise<void> => {
   const viewport = new ViewportTransform();
   const arena = new ArenaModel();
   const player = new PlayerModel();
-  const combat = new CombatSimulation();
+  const combat = new CombatSimulation({ stress: stressMode });
   const view = new PixiGameView(app.renderer);
-  const debug = new DebugPanel(debugElement);
+  const debug = new DebugPanel(debugElement, stressMode);
   const hud = new GameHud(hudElement);
   const platform = new LocalPlatform();
 
@@ -159,6 +161,9 @@ const bootstrap = async (): Promise<void> => {
       scale: state.scale,
       dpr: state.dpr,
       fps,
+      mode: combat.isStressMode ? 'stress' : 'normal',
+      enemies: `${combat.enemies.activeCount}/${combat.enemies.capacity}`,
+      projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
       arena: arena.state.radius,
       player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
     });

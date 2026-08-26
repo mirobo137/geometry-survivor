@@ -65,6 +65,32 @@ body {
   display: none;
 }
 
+#game-hud {
+  position: absolute;
+  z-index: 5;
+  top: max(0.6rem, env(safe-area-inset-top));
+  right: max(0.6rem, env(safe-area-inset-right));
+  left: max(0.6rem, env(safe-area-inset-left));
+  display: flex;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.5rem 0.65rem;
+  color: #eaf0ff;
+  background: rgba(7, 12, 28, 0.7);
+  border: 1px solid rgba(145, 181, 255, 0.28);
+  border-radius: 0.45rem;
+  font: 600 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+#hud-health {
+  color: #ffb3a5;
+}
+
+#hud-xp {
+  color: #b8ffd9;
+}
+
 .spike-panel {
   position: absolute;
   z-index: 20;

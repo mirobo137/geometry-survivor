@@ -32,4 +32,16 @@ describe('PlayerModel', () => {
     expect(distance).toBeLessThanOrEqual(ARENA_MAX_RADIUS - PLAYER_RADIUS + 0.0001);
     expect(distance).toBeGreaterThan(ARENA_RADIUS - PLAYER_RADIUS);
   });
+
+  it('applies contact damage with a short invulnerability window', () => {
+    const player = new PlayerModel();
+
+    expect(player.takeDamage(20)).toBe(true);
+    expect(player.state.health).toBe(80);
+    expect(player.takeDamage(20)).toBe(false);
+
+    player.update({ x: 0, y: 0 }, 0.5);
+    expect(player.takeDamage(20)).toBe(true);
+    expect(player.state.health).toBe(60);
+  });
 });

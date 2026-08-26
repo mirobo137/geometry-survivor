@@ -10,6 +10,12 @@
   <body>
     <main id="game-container" aria-label="Geometry Survivor">
       <div id="boot-status" role="status" aria-live="assertive">Cargando juego…</div>
+      <div id="game-hud" aria-label="Estado de la partida" hidden>
+        <span id="hud-time">00:00</span>
+        <span id="hud-health">HP 100/100</span>
+        <span id="hud-xp">XP 0</span>
+        <span id="hud-kills">K 0</span>
+      </div>
       <div id="debug-panel" hidden></div>
     </main>
     <script>

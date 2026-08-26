@@ -1,27 +1,91 @@
-import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { ARENA_CENTER, ARENA_RADIUS, LOGICAL_HEIGHT } from '../config/constants';
+import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
+import type { Renderer, Texture } from 'pixi.js';
+import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, LOGICAL_HEIGHT, PROJECTILE_POOL_CAPACITY, XP_POOL_CAPACITY } from '../config/constants';
+import { ENEMY_DEFINITIONS, type EnemyKind } from '../content/enemies/EnemyDefinitions';
 import type { PlayerState } from '../simulation/PlayerModel';
+import type { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import type { ViewportState } from './viewport/ViewportTransform';
+
+const createTexture = (renderer: Renderer, draw: (graphics: Graphics) => void): Texture => {
+  const graphics = new Graphics();
+  draw(graphics);
+  const texture = renderer.generateTexture({
+    target: graphics,
+    resolution: 1,
+    antialias: false,
+    defaultAnchor: { x: 0.5, y: 0.5 }
+  });
+  graphics.destroy();
+  return texture;
+};
+
+const createEnemyTextures = (renderer: Renderer): Record<EnemyKind, Texture> => ({
+  chaser: createTexture(renderer, (graphics) => {
+    graphics.poly([0, -18, 16, 12, -16, 12]).fill(ENEMY_DEFINITIONS.chaser.color).stroke({ color: 0xfff3eb, width: 2 });
+  }),
+  fast: createTexture(renderer, (graphics) => {
+    graphics.poly([0, -14, 14, 0, 0, 14, -14, 0]).fill(ENEMY_DEFINITIONS.fast.color).stroke({ color: 0xfffbdf, width: 2 });
+  }),
+  tank: createTexture(renderer, (graphics) => {
+    graphics.regularPoly(0, 0, 28, 6, Math.PI / 6).fill(ENEMY_DEFINITIONS.tank.color).stroke({ color: 0xf0e6ff, width: 2 });
+  })
+});
 
 export class PixiGameView {
   public readonly root = new Container();
   private readonly world = new Container();
   private readonly arena = new Graphics();
   private readonly player = new Graphics();
+  private readonly enemyLayer = new Container();
+  private readonly projectileLayer = new Container();
+  private readonly xpLayer = new Container();
+  private readonly enemyTextures: Record<EnemyKind, Texture>;
+  private readonly enemySprites: Sprite[] = [];
+  private readonly projectileSprites: Sprite[] = [];
+  private readonly xpSprites: Sprite[] = [];
   private arenaRadius = -1;
   private arenaGeometryReady = false;
   private readonly title: Text;
   private readonly hint: Text;
 
-  public constructor() {
+  public constructor(renderer: Renderer) {
     this.root.addChild(this.world);
-    this.world.addChild(this.arena, this.player);
+    this.world.addChild(this.arena, this.xpLayer, this.projectileLayer, this.enemyLayer, this.player);
     this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
     this.renderArena(ARENA_RADIUS);
 
     this.player.circle(0, 0, 22).fill({ color: 0x75e6ff }).stroke({ color: 0xf4ffff, width: 3 });
     this.player.circle(0, 0, 7).fill({ color: 0x10213d });
+
+    this.enemyTextures = createEnemyTextures(renderer);
+    const projectileTexture = createTexture(renderer, (graphics) => {
+      graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
+    });
+    const xpTexture = createTexture(renderer, (graphics) => {
+      graphics.poly([0, -8, 8, 0, 0, 8, -8, 0]).fill({ color: 0x9bffcf }).stroke({ color: 0xe5fff3, width: 1 });
+    });
+    for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
+      const sprite = new Sprite(this.enemyTextures.chaser);
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+      this.enemySprites.push(sprite);
+      this.enemyLayer.addChild(sprite);
+    }
+    for (let index = 0; index < PROJECTILE_POOL_CAPACITY; index += 1) {
+      const sprite = new Sprite(projectileTexture);
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+      this.projectileSprites.push(sprite);
+      this.projectileLayer.addChild(sprite);
+    }
+    for (let index = 0; index < XP_POOL_CAPACITY; index += 1) {
+      const sprite = new Sprite(xpTexture);
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+      this.xpSprites.push(sprite);
+      this.xpLayer.addChild(sprite);
+    }
 
     this.title = new Text({
       text: 'GEOMETRY SURVIVOR',
@@ -73,6 +137,38 @@ export class PixiGameView {
     }
     this.arena.scale.set(radius / ARENA_RADIUS);
     this.arenaRadius = radius;
+  }
+
+  public renderCombat(combat: CombatSimulation): void {
+    for (let index = 0; index < this.enemySprites.length; index += 1) {
+      const state = combat.enemies.states[index];
+      const sprite = this.enemySprites[index];
+      sprite.visible = state.active;
+      if (!state.active) continue;
+      const texture = this.enemyTextures[state.kind];
+      if (sprite.texture !== texture) sprite.texture = texture;
+      sprite.position.set(state.x, state.y);
+      sprite.alpha = Math.max(0.55, state.health / state.maxHealth);
+    }
+
+    for (let index = 0; index < this.projectileSprites.length; index += 1) {
+      const state = combat.projectiles.states[index];
+      const sprite = this.projectileSprites[index];
+      sprite.visible = state.active;
+      if (!state.active) continue;
+      sprite.position.set(state.x, state.y);
+      sprite.rotation = Math.atan2(state.vy, state.vx);
+    }
+
+    for (let index = 0; index < this.xpSprites.length; index += 1) {
+      const state = combat.xp.states[index];
+      const sprite = this.xpSprites[index];
+      sprite.visible = state.active;
+      if (!state.active) continue;
+      sprite.position.set(state.x, state.y);
+      const pulse = 1 + Math.sin(performance.now() * 0.006 + index) * 0.08;
+      sprite.scale.set(pulse);
+    }
   }
 
   public renderPlayer(state: PlayerState): void {

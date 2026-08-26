@@ -1097,6 +1097,10 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones por dispositivo;
 - ejecución limpia aportada desde Android Chrome: `Sprite` 59.95 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con p95 de 16.80 ms y latencia base de audio de 3.0 ms;
 - `src/simulation/ArenaModel.ts` inicia Fase 1 con una expansión de arena configurable y pruebas de su radio/límite;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (9 tests).
+- `src/content/enemies/EnemyDefinitions.ts` define Chaser, Fast y Tank sin modificar el motor al añadir variantes;
+- `src/simulation/combat/CombatSimulation.ts` conecta spawn, targeting, Projectile, daño, muerte, XP y contacto con el jugador;
+- `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice;
+- `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
+- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (17 tests).
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada y Fase 1 comienza con la expansión de arena; queda pendiente validar manualmente una sesión larga de tres minutos.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial; quedan pendientes la sesión manual larga y el stress de 250 enemigos/300 proyectiles antes de ampliar contenido.

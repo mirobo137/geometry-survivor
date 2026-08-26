@@ -7,7 +7,9 @@ import { LocalPlatform } from './platform/local/LocalPlatform';
 import { PixiGameView } from './presentation/PixiGameView';
 import { ViewportTransform } from './presentation/viewport/ViewportTransform';
 import { ArenaModel } from './simulation/ArenaModel';
+import { CombatSimulation } from './simulation/combat/CombatSimulation';
 import { PlayerModel } from './simulation/PlayerModel';
+import { GameHud } from './ui/GameHud';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -45,12 +47,14 @@ const bootstrap = async (): Promise<void> => {
   const container = document.querySelector<HTMLElement>('#game-container');
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
-  if (!container || !debugElement || !bootStatus) throw new Error('Faltan elementos de la interfaz');
+  const hudElement = document.querySelector<HTMLElement>('#game-hud');
+  if (!container || !debugElement || !bootStatus || !hudElement) throw new Error('Faltan elementos de la interfaz');
 
   const spike = new URLSearchParams(window.location.search).get('spike');
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
+    hudElement.hidden = true;
     const cleanupAudioSpike = runAudioSpike(container);
     window.addEventListener('beforeunload', cleanupAudioSpike, { once: true });
     return;
@@ -62,6 +66,7 @@ const bootstrap = async (): Promise<void> => {
   if (spike === 'rendering') {
     const { runRenderingSpike } = await import('./spikes/RenderingSpike');
     bootStatus.hidden = true;
+    hudElement.hidden = true;
     const cleanupRenderingSpike = runRenderingSpike(app, container);
     window.addEventListener('beforeunload', () => {
       cleanupRenderingSpike();
@@ -73,8 +78,10 @@ const bootstrap = async (): Promise<void> => {
   const viewport = new ViewportTransform();
   const arena = new ArenaModel();
   const player = new PlayerModel();
-  const view = new PixiGameView();
+  const combat = new CombatSimulation();
+  const view = new PixiGameView(app.renderer);
   const debug = new DebugPanel(debugElement);
+  const hud = new GameHud(hudElement);
   const platform = new LocalPlatform();
 
   app.stage.addChild(view.root);
@@ -105,6 +112,7 @@ const bootstrap = async (): Promise<void> => {
 
   const input = new InputManager(container, viewport, () => player.state);
   input.attach();
+  hudElement.hidden = false;
   await platform.init();
   platform.onGameStart();
 
@@ -118,11 +126,23 @@ const bootstrap = async (): Promise<void> => {
     while (accumulator >= FIXED_STEP_SECONDS) {
       arena.update(FIXED_STEP_SECONDS);
       player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
+      combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
+      for (const event of combat.events) {
+        if (event.type === 'playerDamaged') player.takeDamage(event.amount);
+      }
       accumulator -= FIXED_STEP_SECONDS;
     }
 
     view.renderArena(arena.state.radius);
+    view.renderCombat(combat);
     view.renderPlayer(player.state);
+    hud.update({
+      elapsedSeconds: combat.stats.elapsedSeconds,
+      health: player.state.health,
+      maxHealth: player.state.maxHealth,
+      xp: combat.stats.xpCollected,
+      kills: combat.stats.kills
+    });
     frames += 1;
     const now = performance.now();
     if (now - fpsTime >= 500) {

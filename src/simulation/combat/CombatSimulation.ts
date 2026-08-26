@@ -97,10 +97,15 @@ export class CombatSimulation {
   private readonly stressMode: boolean;
   private stressInitialized = false;
   private projectileDamage = PROJECTILE_DEFINITION.damage;
+  private projectileSpeed = PROJECTILE_DEFINITION.speed;
+  private projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
   private orbitBladeCount = 0;
   private orbitAngle = 0;
+  private orbitRadius = ORBIT_DEFINITION.orbitRadius;
+  private orbitDamage = ORBIT_DEFINITION.damage;
   private chainLightningUnlocked = false;
   private chainAccumulator = 0;
+  private chainDamage = CHAIN_DEFINITION.damage;
   private readonly chainHitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
 
   public constructor(options: CombatSimulationOptions = {}) {
@@ -113,6 +118,14 @@ export class CombatSimulation {
 
   public increaseProjectileDamage(amount: number): void {
     this.projectileDamage += Math.max(0, amount);
+  }
+
+  public decreaseProjectileCooldown(amount: number): void {
+    this.projectileCooldown = Math.max(0.18, this.projectileCooldown - Math.max(0, amount));
+  }
+
+  public increaseProjectileSpeed(amount: number): void {
+    this.projectileSpeed += Math.max(0, amount);
   }
 
   public addOrbitBlade(): boolean {
@@ -131,6 +144,14 @@ export class CombatSimulation {
 
   public get activeOrbitBlades(): number {
     return this.orbitBladeCount;
+  }
+
+  public increaseOrbitRadius(amount: number): void {
+    this.orbitRadius = Math.max(ORBIT_DEFINITION.orbitRadius, this.orbitRadius + Math.max(0, amount));
+  }
+
+  public increaseChainDamage(amount: number): void {
+    this.chainDamage += Math.max(0, amount);
   }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
@@ -161,8 +182,8 @@ export class CombatSimulation {
     this.rebuildEnemyGrid();
     this.updateOrbit(dt, player);
 
-    while (this.attackAccumulator >= PROJECTILE_DEFINITION.cooldownSeconds) {
-      this.attackAccumulator -= PROJECTILE_DEFINITION.cooldownSeconds;
+    while (this.attackAccumulator >= this.projectileCooldown) {
+      this.attackAccumulator -= this.projectileCooldown;
       this.fireProjectile(player);
     }
 
@@ -242,8 +263,8 @@ export class CombatSimulation {
     projectile.active = true;
     projectile.x = player.x;
     projectile.y = player.y;
-    projectile.vx = Math.cos(angle) * PROJECTILE_DEFINITION.speed;
-    projectile.vy = Math.sin(angle) * PROJECTILE_DEFINITION.speed;
+    projectile.vx = Math.cos(angle) * this.projectileSpeed;
+    projectile.vy = Math.sin(angle) * this.projectileSpeed;
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.projectileDamage;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
@@ -310,8 +331,8 @@ export class CombatSimulation {
     projectile.active = true;
     projectile.x = player.x;
     projectile.y = player.y;
-    projectile.vx = (dx / distance) * PROJECTILE_DEFINITION.speed;
-    projectile.vy = (dy / distance) * PROJECTILE_DEFINITION.speed;
+    projectile.vx = (dx / distance) * this.projectileSpeed;
+    projectile.vy = (dy / distance) * this.projectileSpeed;
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.projectileDamage;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
@@ -372,15 +393,15 @@ export class CombatSimulation {
       if (!blade.active) continue;
       const angle = this.orbitAngle + (index / this.orbitBladeCount) * FULL_CIRCLE;
       blade.angle = angle;
-      blade.x = player.x + Math.cos(angle) * ORBIT_DEFINITION.orbitRadius;
-      blade.y = player.y + Math.sin(angle) * ORBIT_DEFINITION.orbitRadius;
+      blade.x = player.x + Math.cos(angle) * this.orbitRadius;
+      blade.y = player.y + Math.sin(angle) * this.orbitRadius;
       const candidates = this.enemyGrid.queryCircle(blade.x, blade.y, blade.radius + 32);
       for (const candidateIndex of candidates) {
         const enemy = this.enemies.states[candidateIndex];
         if (!enemy.active || enemy.orbitHitCooldown > 0) continue;
         const hitDistance = blade.radius + enemy.radius;
         if (Math.hypot(blade.x - enemy.x, blade.y - enemy.y) > hitDistance) continue;
-        enemy.health -= ORBIT_DEFINITION.damage;
+        enemy.health -= this.orbitDamage;
         enemy.orbitHitCooldown = ORBIT_DEFINITION.hitCooldownSeconds;
         if (enemy.health <= 0) this.defeatEnemy(enemy);
         break;
@@ -411,7 +432,7 @@ export class CombatSimulation {
       segment.y2 = enemy.y;
       segment.lifeSeconds = CHAIN_DEFINITION.segmentLifetimeSeconds;
       this.chainHitIndices[targetIndex] = enemyIndex;
-      enemy.health -= CHAIN_DEFINITION.damage;
+      enemy.health -= this.chainDamage;
       if (enemy.health <= 0) this.defeatEnemy(enemy);
       currentX = enemy.x;
       currentY = enemy.y;

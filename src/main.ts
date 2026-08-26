@@ -12,7 +12,7 @@ import { PlayerModel } from './simulation/PlayerModel';
 import { LevelProgression } from './simulation/progression/LevelProgression';
 import { GameHud } from './ui/GameHud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
-import type { UpgradeId } from './content/upgrades/UpgradeDefinitions';
+import { UPGRADE_DEFINITIONS, type UpgradeId } from './content/upgrades/UpgradeDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -133,21 +133,39 @@ const bootstrap = async (): Promise<void> => {
   let gameplayPaused = false;
 
   const applyUpgrade = (upgradeId: UpgradeId): void => {
-    switch (upgradeId) {
-      case 'swift_step':
-        player.increaseMovementSpeed(25);
+    const definition = UPGRADE_DEFINITIONS.find((upgrade) => upgrade.id === upgradeId);
+    if (!definition) return;
+
+    switch (definition.effect.type) {
+      case 'movementSpeed':
+        player.increaseMovementSpeed(definition.effect.amount);
         break;
-      case 'focused_projectiles':
-        combat.increaseProjectileDamage(4);
+      case 'projectileDamage':
+        combat.increaseProjectileDamage(definition.effect.amount);
         break;
-      case 'reinforced_core':
-        player.increaseMaxHealth(20);
+      case 'maxHealth':
+        player.increaseMaxHealth(definition.effect.amount);
         break;
-      case 'orbit_blade':
+      case 'orbitBlade':
         combat.addOrbitBlade();
         break;
-      case 'chain_lightning':
+      case 'chainLightning':
         combat.unlockChainLightning();
+        break;
+      case 'projectileCooldown':
+        combat.decreaseProjectileCooldown(definition.effect.amount);
+        break;
+      case 'projectileSpeed':
+        combat.increaseProjectileSpeed(definition.effect.amount);
+        break;
+      case 'orbitRadius':
+        combat.increaseOrbitRadius(definition.effect.amount);
+        break;
+      case 'chainDamage':
+        combat.increaseChainDamage(definition.effect.amount);
+        break;
+      case 'armor':
+        player.increaseArmor(definition.effect.amount);
         break;
     }
   };

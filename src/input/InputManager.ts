@@ -1,9 +1,7 @@
 import type { ViewportTransform } from '../presentation/viewport/ViewportTransform';
+import type { MovementVector } from '../simulation/MovementVector';
 
-export interface InputVector {
-  x: number;
-  y: number;
-}
+export type InputVector = MovementVector;
 
 const MOVEMENT_KEYS: Record<string, InputVector> = {
   ArrowUp: { x: 0, y: -1 },

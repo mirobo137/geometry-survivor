@@ -5,7 +5,7 @@ import {
   PLAYER_RADIUS,
   PLAYER_SPEED
 } from '../config/constants';
-import type { InputVector } from '../input/InputManager';
+import type { MovementVector } from './MovementVector';
 
 export interface PlayerState {
   x: number;
@@ -13,6 +13,7 @@ export interface PlayerState {
   radius: number;
   health: number;
   maxHealth: number;
+  armor: number;
 }
 
 export class PlayerModel {
@@ -21,12 +22,13 @@ export class PlayerModel {
     y: ARENA_CENTER.y,
     radius: PLAYER_RADIUS,
     health: PLAYER_MAX_HEALTH,
-    maxHealth: PLAYER_MAX_HEALTH
+    maxHealth: PLAYER_MAX_HEALTH,
+    armor: 0
   };
   private invulnerabilitySeconds = 0;
   private movementSpeed = PLAYER_SPEED;
 
-  public update(input: InputVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
+  public update(input: MovementVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
     this.invulnerabilitySeconds = Math.max(0, this.invulnerabilitySeconds - Math.max(0, dtSeconds));
     this.state.x += input.x * this.movementSpeed * dtSeconds;
     this.state.y += input.y * this.movementSpeed * dtSeconds;
@@ -44,7 +46,8 @@ export class PlayerModel {
 
   public takeDamage(amount: number): boolean {
     if (amount <= 0 || this.invulnerabilitySeconds > 0 || this.state.health <= 0) return false;
-    this.state.health = Math.max(0, this.state.health - amount);
+    const mitigatedAmount = Math.max(0, amount - this.state.armor);
+    this.state.health = Math.max(0, this.state.health - mitigatedAmount);
     this.invulnerabilitySeconds = 0.45;
     return true;
   }
@@ -61,5 +64,9 @@ export class PlayerModel {
     const increase = Math.max(0, amount);
     this.state.maxHealth += increase;
     this.state.health = Math.min(this.state.maxHealth, this.state.health + increase);
+  }
+
+  public increaseArmor(amount: number): void {
+    this.state.armor += Math.max(0, amount);
   }
 }

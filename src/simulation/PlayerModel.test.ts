@@ -56,4 +56,12 @@ describe('PlayerModel', () => {
     expect(player.state.health).toBe(120);
     expect(player.state.x).toBeCloseTo(ARENA_CENTER.x + (PLAYER_SPEED + 25) / 6);
   });
+
+  it('mitigates contact damage with hardened shell armor', () => {
+    const player = new PlayerModel();
+
+    player.increaseArmor(2);
+    expect(player.takeDamage(5)).toBe(true);
+    expect(player.state.health).toBe(97);
+  });
 });

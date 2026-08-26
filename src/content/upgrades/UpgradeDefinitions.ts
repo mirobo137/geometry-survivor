@@ -3,39 +3,92 @@ export type UpgradeId =
   | 'focused_projectiles'
   | 'reinforced_core'
   | 'orbit_blade'
-  | 'chain_lightning';
+  | 'chain_lightning'
+  | 'rapid_projectiles'
+  | 'longshot_projectiles'
+  | 'orbit_reach'
+  | 'chain_overload'
+  | 'hardened_shell';
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
   readonly title: string;
   readonly description: string;
+  readonly effect: UpgradeEffect;
 }
+
+export type UpgradeEffect =
+  | { readonly type: 'movementSpeed'; readonly amount: number }
+  | { readonly type: 'projectileDamage'; readonly amount: number }
+  | { readonly type: 'maxHealth'; readonly amount: number }
+  | { readonly type: 'orbitBlade' }
+  | { readonly type: 'chainLightning' }
+  | { readonly type: 'projectileCooldown'; readonly amount: number }
+  | { readonly type: 'projectileSpeed'; readonly amount: number }
+  | { readonly type: 'orbitRadius'; readonly amount: number }
+  | { readonly type: 'chainDamage'; readonly amount: number }
+  | { readonly type: 'armor'; readonly amount: number };
 
 export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'swift_step',
     title: 'Paso veloz',
-    description: '+25 velocidad de movimiento'
+    description: '+25 velocidad de movimiento',
+    effect: { type: 'movementSpeed', amount: 25 }
   },
   {
     id: 'focused_projectiles',
     title: 'Proyectiles enfocados',
-    description: '+4 daño del proyectil automático'
+    description: '+4 daño del proyectil automático',
+    effect: { type: 'projectileDamage', amount: 4 }
   },
   {
     id: 'reinforced_core',
     title: 'Núcleo reforzado',
-    description: '+20 vida máxima y recuperación inmediata'
+    description: '+20 vida máxima y recuperación inmediata',
+    effect: { type: 'maxHealth', amount: 20 }
   },
   {
     id: 'orbit_blade',
     title: 'Órbita geométrica',
-    description: 'Desbloquea una hoja que gira y daña al contacto'
+    description: 'Desbloquea una hoja que gira y daña al contacto',
+    effect: { type: 'orbitBlade' }
   },
   {
     id: 'chain_lightning',
     title: 'Cadena eléctrica',
-    description: 'Desbloquea un rayo que salta hasta 3 enemigos'
+    description: 'Desbloquea un rayo que salta hasta 3 enemigos',
+    effect: { type: 'chainLightning' }
+  },
+  {
+    id: 'rapid_projectiles',
+    title: 'Ráfaga rápida',
+    description: 'Reduce 0.08 s el tiempo entre proyectiles',
+    effect: { type: 'projectileCooldown', amount: 0.08 }
+  },
+  {
+    id: 'longshot_projectiles',
+    title: 'Lanzamiento lejano',
+    description: '+90 velocidad de proyectil automático',
+    effect: { type: 'projectileSpeed', amount: 90 }
+  },
+  {
+    id: 'orbit_reach',
+    title: 'Órbita extendida',
+    description: '+18 radio de la órbita geométrica',
+    effect: { type: 'orbitRadius', amount: 18 }
+  },
+  {
+    id: 'chain_overload',
+    title: 'Sobrecarga eléctrica',
+    description: '+6 daño de Cadena eléctrica',
+    effect: { type: 'chainDamage', amount: 6 }
+  },
+  {
+    id: 'hardened_shell',
+    title: 'Coraza endurecida',
+    description: '+2 armadura contra contacto',
+    effect: { type: 'armor', amount: 2 }
   }
 ];
 

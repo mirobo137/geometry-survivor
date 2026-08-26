@@ -2,6 +2,8 @@
 
 Prototipo web del MVP de *Geometry Survivor*. El juego está construido para ejecutarse primero en navegador y publicarse en GitHub Pages, con destinos separados para pruebas locales, Poki y CrazyGames.
 
+Para retomar el desarrollo desde otra sesión o agente, consulta [CONTINUACION.md](CONTINUACION.md). Resume el estado comprobado, la auditoría de modularidad y el siguiente hito recomendado sin reemplazar `PLAN_DESARROLLO.md`.
+
 ## Arranque local
 
 Requiere Node.js 20+.

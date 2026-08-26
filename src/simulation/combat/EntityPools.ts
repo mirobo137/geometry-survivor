@@ -10,6 +10,7 @@ export interface EnemyState {
   health: number;
   maxHealth: number;
   contactDamage: number;
+  orbitHitCooldown: number;
 }
 
 export interface ProjectileState {
@@ -32,7 +33,8 @@ const createEnemyState = (): EnemyState => ({
   speed: 0,
   health: 0,
   maxHealth: 0,
-  contactDamage: 0
+  contactDamage: 0,
+  orbitHitCooldown: 0
 });
 
 const createProjectileState = (): ProjectileState => ({

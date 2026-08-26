@@ -143,6 +143,12 @@ const bootstrap = async (): Promise<void> => {
       case 'reinforced_core':
         player.increaseMaxHealth(20);
         break;
+      case 'orbit_blade':
+        combat.addOrbitBlade();
+        break;
+      case 'chain_lightning':
+        combat.unlockChainLightning();
+        break;
     }
   };
 
@@ -207,6 +213,8 @@ const bootstrap = async (): Promise<void> => {
       mode: combat.isStressMode ? 'stress' : 'normal',
       enemies: `${combat.enemies.activeCount}/${combat.enemies.capacity}`,
       projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
+      orbit: `${combat.activeOrbitBlades}/${combat.orbitBlades.length}`,
+      chain: combat.hasChainLightning ? 'ready' : 'locked',
       paused: gameplayPaused ? 'level-up' : 'playing',
       level: progression.state.level,
       arena: arena.state.radius,

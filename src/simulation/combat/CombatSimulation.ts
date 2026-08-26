@@ -1,4 +1,5 @@
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import {
   ARENA_CENTER,
   ENEMY_POOL_CAPACITY,
@@ -10,14 +11,47 @@ import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, ProjectilePool, type EnemyState } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 
-const PROJECTILE_DAMAGE = 14;
-const PROJECTILE_SPEED = 460;
-const PROJECTILE_RADIUS = 7;
-const PROJECTILE_LIFETIME_SECONDS = 2.5;
-const AUTO_ATTACK_COOLDOWN_SECONDS = 0.55;
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
 const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
+const FULL_CIRCLE = Math.PI * 2;
+const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
+const ORBIT_DEFINITION = WEAPON_DEFINITIONS.orbit;
+const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
+
+export interface OrbitBladeState {
+  active: boolean;
+  x: number;
+  y: number;
+  radius: number;
+  angle: number;
+}
+
+export interface ChainSegmentState {
+  active: boolean;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  lifeSeconds: number;
+}
+
+const createOrbitBladeState = (): OrbitBladeState => ({
+  active: false,
+  x: 0,
+  y: 0,
+  radius: ORBIT_DEFINITION.radius,
+  angle: 0
+});
+
+const createChainSegmentState = (): ChainSegmentState => ({
+  active: false,
+  x1: 0,
+  y1: 0,
+  x2: 0,
+  y2: 0,
+  lifeSeconds: 0
+});
 
 export interface CombatSimulationOptions {
   readonly stress?: boolean;
@@ -44,6 +78,8 @@ export interface CombatStats {
 export class CombatSimulation {
   public readonly enemies = new EnemyPool(ENEMY_POOL_CAPACITY);
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
+  public readonly orbitBlades = Array.from({ length: ORBIT_DEFINITION.maxBlades }, createOrbitBladeState);
+  public readonly chainSegments = Array.from({ length: CHAIN_DEFINITION.maxTargets }, createChainSegmentState);
   public readonly stats: CombatStats = {
     elapsedSeconds: 0,
     kills: 0,
@@ -60,7 +96,12 @@ export class CombatSimulation {
   private stressProjectileIndex = 0;
   private readonly stressMode: boolean;
   private stressInitialized = false;
-  private projectileDamage = PROJECTILE_DAMAGE;
+  private projectileDamage = PROJECTILE_DEFINITION.damage;
+  private orbitBladeCount = 0;
+  private orbitAngle = 0;
+  private chainLightningUnlocked = false;
+  private chainAccumulator = 0;
+  private readonly chainHitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.stressMode = options.stress === true;
@@ -72,6 +113,24 @@ export class CombatSimulation {
 
   public increaseProjectileDamage(amount: number): void {
     this.projectileDamage += Math.max(0, amount);
+  }
+
+  public addOrbitBlade(): boolean {
+    if (this.orbitBladeCount >= this.orbitBlades.length) return false;
+    this.orbitBladeCount += 1;
+    return true;
+  }
+
+  public unlockChainLightning(): void {
+    this.chainLightningUnlocked = true;
+  }
+
+  public get hasChainLightning(): boolean {
+    return this.chainLightningUnlocked;
+  }
+
+  public get activeOrbitBlades(): number {
+    return this.orbitBladeCount;
   }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
@@ -87,6 +146,7 @@ export class CombatSimulation {
     this.contactCooldown = Math.max(0, this.contactCooldown - dt);
     this.spawnAccumulator += dt;
     this.attackAccumulator += dt;
+    this.updateChainSegments(dt);
 
     const spawnInterval = Math.max(0.28, 0.85 - this.stats.elapsedSeconds * 0.002);
     while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < this.enemies.capacity) {
@@ -99,10 +159,19 @@ export class CombatSimulation {
 
     this.updateEnemies(dt, player);
     this.rebuildEnemyGrid();
+    this.updateOrbit(dt, player);
 
-    while (this.attackAccumulator >= AUTO_ATTACK_COOLDOWN_SECONDS) {
-      this.attackAccumulator -= AUTO_ATTACK_COOLDOWN_SECONDS;
+    while (this.attackAccumulator >= PROJECTILE_DEFINITION.cooldownSeconds) {
+      this.attackAccumulator -= PROJECTILE_DEFINITION.cooldownSeconds;
       this.fireProjectile(player);
+    }
+
+    if (this.chainLightningUnlocked) {
+      this.chainAccumulator += dt;
+      while (this.chainAccumulator >= CHAIN_DEFINITION.cooldownSeconds) {
+        this.chainAccumulator -= CHAIN_DEFINITION.cooldownSeconds;
+        this.fireChainLightning(player);
+      }
     }
 
     this.updateProjectiles(dt);
@@ -136,6 +205,7 @@ export class CombatSimulation {
     state.maxHealth = definition.maxHealth;
     state.health = definition.maxHealth;
     state.contactDamage = definition.contactDamage;
+    state.orbitHitCooldown = 0;
   }
 
   private initializeStress(player: PlayerState, arenaRadius: number): void {
@@ -172,11 +242,11 @@ export class CombatSimulation {
     projectile.active = true;
     projectile.x = player.x;
     projectile.y = player.y;
-    projectile.vx = Math.cos(angle) * PROJECTILE_SPEED;
-    projectile.vy = Math.sin(angle) * PROJECTILE_SPEED;
-    projectile.radius = PROJECTILE_RADIUS;
+    projectile.vx = Math.cos(angle) * PROJECTILE_DEFINITION.speed;
+    projectile.vy = Math.sin(angle) * PROJECTILE_DEFINITION.speed;
+    projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.projectileDamage;
-    projectile.lifetimeSeconds = PROJECTILE_LIFETIME_SECONDS;
+    projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     this.stats.shotsFired += 1;
   }
 
@@ -200,6 +270,7 @@ export class CombatSimulation {
   private updateEnemies(dt: number, player: PlayerState): void {
     for (const enemy of this.enemies.states) {
       if (!enemy.active) continue;
+      enemy.orbitHitCooldown = Math.max(0, enemy.orbitHitCooldown - dt);
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
       const distance = Math.hypot(dx, dy);
@@ -239,28 +310,112 @@ export class CombatSimulation {
     projectile.active = true;
     projectile.x = player.x;
     projectile.y = player.y;
-    projectile.vx = (dx / distance) * PROJECTILE_SPEED;
-    projectile.vy = (dy / distance) * PROJECTILE_SPEED;
-    projectile.radius = PROJECTILE_RADIUS;
-    projectile.damage = PROJECTILE_DAMAGE;
-    projectile.lifetimeSeconds = PROJECTILE_LIFETIME_SECONDS;
+    projectile.vx = (dx / distance) * PROJECTILE_DEFINITION.speed;
+    projectile.vy = (dy / distance) * PROJECTILE_DEFINITION.speed;
+    projectile.radius = PROJECTILE_DEFINITION.radius;
+    projectile.damage = this.projectileDamage;
+    projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     this.stats.shotsFired += 1;
   }
 
   private findNearestEnemy(x: number, y: number, radius: number): EnemyState | null {
+    const index = this.findNearestEnemyIndex(x, y, radius);
+    return index < 0 ? null : this.enemies.states[index];
+  }
+
+  private findNearestEnemyIndex(
+    x: number,
+    y: number,
+    radius: number,
+    excludedIndices?: readonly number[],
+    excludedCount = 0
+  ): number {
     const candidates = this.enemyGrid.queryCircle(x, y, radius);
-    let nearest: EnemyState | null = null;
+    let nearestIndex = -1;
     let nearestDistance = Number.POSITIVE_INFINITY;
     for (const index of candidates) {
       const enemy = this.enemies.states[index];
       if (!enemy.active) continue;
+      if (excludedIndices) {
+        let excluded = false;
+        for (let excludedIndex = 0; excludedIndex < excludedCount; excludedIndex += 1) {
+          if (excludedIndices[excludedIndex] === index) {
+            excluded = true;
+            break;
+          }
+        }
+        if (excluded) continue;
+      }
       const distance = Math.hypot(enemy.x - x, enemy.y - y);
       if (distance < nearestDistance) {
-        nearest = enemy;
+        nearestIndex = index;
         nearestDistance = distance;
       }
     }
-    return nearest;
+    return nearestIndex;
+  }
+
+  private updateChainSegments(dt: number): void {
+    for (const segment of this.chainSegments) {
+      if (!segment.active) continue;
+      segment.lifeSeconds -= dt;
+      if (segment.lifeSeconds <= 0) segment.active = false;
+    }
+  }
+
+  private updateOrbit(dt: number, player: PlayerState): void {
+    if (this.orbitBladeCount <= 0) return;
+    this.orbitAngle = (this.orbitAngle + ORBIT_DEFINITION.rotationSpeed * dt) % FULL_CIRCLE;
+    for (let index = 0; index < this.orbitBlades.length; index += 1) {
+      const blade = this.orbitBlades[index];
+      blade.active = index < this.orbitBladeCount;
+      if (!blade.active) continue;
+      const angle = this.orbitAngle + (index / this.orbitBladeCount) * FULL_CIRCLE;
+      blade.angle = angle;
+      blade.x = player.x + Math.cos(angle) * ORBIT_DEFINITION.orbitRadius;
+      blade.y = player.y + Math.sin(angle) * ORBIT_DEFINITION.orbitRadius;
+      const candidates = this.enemyGrid.queryCircle(blade.x, blade.y, blade.radius + 32);
+      for (const candidateIndex of candidates) {
+        const enemy = this.enemies.states[candidateIndex];
+        if (!enemy.active || enemy.orbitHitCooldown > 0) continue;
+        const hitDistance = blade.radius + enemy.radius;
+        if (Math.hypot(blade.x - enemy.x, blade.y - enemy.y) > hitDistance) continue;
+        enemy.health -= ORBIT_DEFINITION.damage;
+        enemy.orbitHitCooldown = ORBIT_DEFINITION.hitCooldownSeconds;
+        if (enemy.health <= 0) this.defeatEnemy(enemy);
+        break;
+      }
+    }
+  }
+
+  private fireChainLightning(player: PlayerState): void {
+    this.chainHitIndices.fill(-1);
+    let currentX = player.x;
+    let currentY = player.y;
+    for (let targetIndex = 0; targetIndex < CHAIN_DEFINITION.maxTargets; targetIndex += 1) {
+      const searchRadius = targetIndex === 0 ? 960 : CHAIN_DEFINITION.jumpRadius;
+      const enemyIndex = this.findNearestEnemyIndex(
+        currentX,
+        currentY,
+        searchRadius,
+        this.chainHitIndices,
+        targetIndex
+      );
+      if (enemyIndex < 0) break;
+      const enemy = this.enemies.states[enemyIndex];
+      const segment = this.chainSegments[targetIndex];
+      segment.active = true;
+      segment.x1 = currentX;
+      segment.y1 = currentY;
+      segment.x2 = enemy.x;
+      segment.y2 = enemy.y;
+      segment.lifeSeconds = CHAIN_DEFINITION.segmentLifetimeSeconds;
+      this.chainHitIndices[targetIndex] = enemyIndex;
+      enemy.health -= CHAIN_DEFINITION.damage;
+      if (enemy.health <= 0) this.defeatEnemy(enemy);
+      currentX = enemy.x;
+      currentY = enemy.y;
+    }
   }
 
   private updateProjectiles(dt: number): void {

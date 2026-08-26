@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
+import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation } from './CombatSimulation';
 
@@ -50,6 +51,53 @@ describe('CombatSimulation', () => {
     expect(combat.projectiles.activeCount).toBe(PROJECTILE_POOL_CAPACITY);
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'fast')).toBe(true);
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'tank')).toBe(true);
+  });
+
+  it('moves and damages with an orbit blade after it is unlocked', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const enemy = combat.enemies.acquire();
+    if (!enemy) throw new Error('No se pudo preparar el enemigo de prueba');
+    enemy.kind = 'chaser';
+    enemy.x = player.state.x + WEAPON_DEFINITIONS.orbit.orbitRadius;
+    enemy.y = player.state.y;
+    enemy.radius = ENEMY_DEFINITIONS.chaser.radius;
+    enemy.speed = 0;
+    enemy.maxHealth = 24;
+    enemy.health = 10;
+    enemy.contactDamage = 0;
+
+    expect(combat.addOrbitBlade()).toBe(true);
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.activeOrbitBlades).toBe(1);
+    expect(combat.orbitBlades[0].active).toBe(true);
+    expect(combat.stats.kills).toBe(1);
+  });
+
+  it('chains lightning through nearby enemies on its cooldown', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    for (let index = 0; index < 3; index += 1) {
+      const enemy = combat.enemies.acquire();
+      if (!enemy) throw new Error('No se pudo preparar el enemigo de cadena');
+      enemy.kind = 'tank';
+      enemy.x = player.state.x + 120 + index * 45;
+      enemy.y = player.state.y;
+      enemy.radius = ENEMY_DEFINITIONS.tank.radius;
+      enemy.speed = 0;
+      enemy.maxHealth = 100;
+      enemy.health = 100;
+      enemy.contactDamage = 0;
+    }
+    combat.unlockChainLightning();
+
+    for (let index = 0; index < 74; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+    }
+
+    expect(combat.hasChainLightning).toBe(true);
+    expect(combat.chainSegments.some((segment) => segment.active)).toBe(true);
   });
 
   it('introduces Fast and Tank through the deterministic timeline', () => {

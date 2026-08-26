@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, LOGICAL_HEIGHT, PROJECTILE_POOL_CAPACITY } from '../config/constants';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../content/enemies/EnemyDefinitions';
+import { WEAPON_DEFINITIONS } from '../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../simulation/PlayerModel';
 import type { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import type { ViewportState } from './viewport/ViewportTransform';
@@ -38,9 +39,12 @@ export class PixiGameView {
   private readonly player = new Graphics();
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
+  private readonly orbitLayer = new Container();
+  private readonly chainLayer = new Graphics();
   private readonly enemyTextures: Record<EnemyKind, Texture>;
   private readonly enemySprites: Sprite[] = [];
   private readonly projectileSprites: Sprite[] = [];
+  private readonly orbitSprites: Sprite[] = [];
   private arenaRadius = -1;
   private arenaGeometryReady = false;
   private readonly title: Text;
@@ -48,7 +52,7 @@ export class PixiGameView {
 
   public constructor(renderer: Renderer) {
     this.root.addChild(this.world);
-    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.player);
+    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.orbitLayer, this.chainLayer, this.player);
     this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
     this.renderArena(ARENA_RADIUS);
@@ -59,6 +63,11 @@ export class PixiGameView {
     this.enemyTextures = createEnemyTextures(renderer);
     const projectileTexture = createTexture(renderer, (graphics) => {
       graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
+    });
+    const orbitTexture = createTexture(renderer, (graphics) => {
+      graphics.regularPoly(0, 0, WEAPON_DEFINITIONS.orbit.radius, 4, Math.PI / 4)
+        .fill({ color: 0x9bffcf })
+        .stroke({ color: 0xe5fff3, width: 2 });
     });
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const sprite = new Sprite(this.enemyTextures.chaser);
@@ -73,6 +82,13 @@ export class PixiGameView {
       sprite.visible = false;
       this.projectileSprites.push(sprite);
       this.projectileLayer.addChild(sprite);
+    }
+    for (let index = 0; index < WEAPON_DEFINITIONS.orbit.maxBlades; index += 1) {
+      const sprite = new Sprite(orbitTexture);
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+      this.orbitSprites.push(sprite);
+      this.orbitLayer.addChild(sprite);
     }
 
     this.title = new Text({
@@ -146,6 +162,41 @@ export class PixiGameView {
       if (!state.active) continue;
       sprite.position.set(state.x, state.y);
       sprite.rotation = Math.atan2(state.vy, state.vx);
+    }
+
+    for (let index = 0; index < this.orbitSprites.length; index += 1) {
+      const state = combat.orbitBlades[index];
+      const sprite = this.orbitSprites[index];
+      sprite.visible = state.active;
+      if (!state.active) continue;
+      sprite.position.set(state.x, state.y);
+      sprite.rotation = state.angle;
+    }
+
+    let hasActiveChain = false;
+    for (const segment of combat.chainSegments) {
+      if (segment.active) {
+        hasActiveChain = true;
+        break;
+      }
+    }
+    if (!hasActiveChain) {
+      if (this.chainLayer.visible) {
+        this.chainLayer.clear();
+        this.chainLayer.visible = false;
+      }
+      return;
+    }
+
+    this.chainLayer.visible = true;
+    this.chainLayer.clear();
+    for (const segment of combat.chainSegments) {
+      if (!segment.active) continue;
+      const alpha = Math.max(0, Math.min(1, segment.lifeSeconds / WEAPON_DEFINITIONS.chainLightning.segmentLifetimeSeconds));
+      this.chainLayer
+        .moveTo(segment.x1, segment.y1)
+        .lineTo(segment.x2, segment.y2)
+        .stroke({ color: 0xa9f4ff, width: 5, alpha });
     }
 
   }

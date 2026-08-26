@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { ARENA_CENTER, ARENA_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/constants';
+import { ARENA_CENTER, ARENA_RADIUS, LOGICAL_HEIGHT } from '../config/constants';
 import type { PlayerState } from '../simulation/PlayerModel';
 import type { ViewportState } from './viewport/ViewportTransform';
 
@@ -41,7 +41,7 @@ export class PixiGameView {
     });
     this.title.anchor.set(0.5, 0);
     this.title.position.set(ARENA_CENTER.x, 34);
-    this.root.addChild(this.title);
+    this.world.addChild(this.title);
 
     this.hint = new Text({
       text: 'Mantén pulsado y mueve para sobrevivir · WASD / flechas',
@@ -54,20 +54,17 @@ export class PixiGameView {
     });
     this.hint.anchor.set(0.5, 1);
     this.hint.position.set(ARENA_CENTER.x, LOGICAL_HEIGHT - 26);
-    this.root.addChild(this.hint);
+    this.world.addChild(this.hint);
   }
 
   public resize(viewport: ViewportState): void {
     this.root.scale.set(viewport.scale);
     this.root.position.set(viewport.offsetX, viewport.offsetY);
+    this.world.position.set(viewport.worldOffsetX, viewport.worldOffsetY);
     this.root.hitArea = undefined;
   }
 
   public renderPlayer(state: PlayerState): void {
     this.player.position.set(state.x, state.y);
-  }
-
-  public get logicalSize(): { width: number; height: number } {
-    return { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
   }
 }

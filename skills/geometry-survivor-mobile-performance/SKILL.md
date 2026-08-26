@@ -16,11 +16,12 @@ Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay
 ## Invariantes responsive
 
 - World space no depende del tamaño físico.
-- Viewport lógico seguro: 1280×720, escalado uniforme `min(width/1280, height/720)` y centrado.
+- Viewport lógico seguro: 720×1280 en portrait y 1280×720 en landscape, escalado uniforme `min(width/logicalWidth, height/logicalHeight)` y centrado.
 - Área sobrante solo contiene fondo decorativo; no amplía la vista jugable.
 - Input aplica la inversa de la misma matriz usada para render.
 - `ResizeObserver` agrupa cambios a una actualización por frame.
-- HUD respeta safe areas; portrait muestra overlay de rotación durante el MVP.
+- HUD respeta safe areas; portrait es la orientación primaria y no muestra overlay de rotación.
+- La presentación usa 720×1280 en portrait y 1280×720 en landscape, mientras la simulación conserva su mundo lógico estable.
 - DPR se limita por preset: punto de partida 1.0/1.25/1.5.
 
 ## Invariantes de simulación

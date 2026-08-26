@@ -106,6 +106,6 @@ export class InputManager {
   }
 
   private updatePointer(event: PointerEvent): void {
-    this.pointerPosition = this.viewport.toLogical(event.clientX, event.clientY, this.element.getBoundingClientRect());
+    this.pointerPosition = this.viewport.toWorld(event.clientX, event.clientY, this.element.getBoundingClientRect());
   }
 }

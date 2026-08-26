@@ -13,6 +13,8 @@ npm run dev
 
 Abre la URL que muestre Vite. Para ver el panel técnico añade `?debug=1`.
 
+La orientación primaria es portrait para móvil. En landscape el juego usa un viewport 1280×720 para aprovechar pantallas de PC y portales de escritorio; no se fuerza a girar el dispositivo.
+
 ## Validación y builds
 
 ```bash

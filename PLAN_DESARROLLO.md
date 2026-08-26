@@ -154,7 +154,7 @@ El objetivo no es “hacer el juego”. Es probar que su núcleo merece crecer.
 - backend;
 - analítica externa;
 - PWA o service worker;
-- orientación portrait jugable;
+- soporte portrait jugable como orientación primaria;
 - localización completa más allá de inglés y, si resulta barato, español.
 
 ## Criterio de éxito del vertical slice
@@ -331,7 +331,8 @@ WORLD SPACE
 unidades de simulación; nunca depende del navegador
         ↓ cámara
 LOGICAL VIEWPORT
-1280 × 720, zona segura 16:9
+720 × 1280 en portrait / 1280 × 720 en landscape
+la simulación conserva el mundo 1280 × 720
         ↓ escala uniforme + offset
 CSS / DEVICE PIXELS
 tamaño real del iframe y DPR limitado
@@ -340,9 +341,9 @@ tamaño real del iframe y DPR limitado
 ## 6.2 Estrategia
 
 1. El canvas ocupa siempre el 100% del contenedor real.
-2. La escena jugable usa referencia lógica 1280×720.
-3. Se calcula `scale = min(containerWidth / 1280, containerHeight / 720)`.
-4. La escena se centra mediante offsets; no se estira en X o Y.
+2. La escena usa referencia lógica 720×1280 en portrait y 1280×720 en landscape.
+3. Se calcula `scale = min(containerWidth / logicalWidth, containerHeight / logicalHeight)`.
+4. La escena se centra mediante offsets; en portrait el mundo 1280×720 recibe un offset interno para que la arena siga siendo grande y jugable.
 5. El área sobrante muestra fondo decorativo, nunca información o gameplay adicional.
 6. El HUD vive dentro de la zona lógica y respeta `env(safe-area-inset-*)`.
 7. El input convierte `clientX/clientY` a coordenadas lógicas usando exactamente la misma matriz.
@@ -353,11 +354,12 @@ Esta estrategia mantiene la misma porción útil del mundo en todos los tamaños
 
 ## 6.3 Orientación
 
-- MVP: landscape;
-- en portrait se muestra una pantalla ligera para rotar el dispositivo;
-- CrazyGames configurará landscape en la submission, sin implementar un orientation lock propio;
-- en Poki y GitHub Pages el overlay local sigue cubriendo toda la pantalla;
-- una versión portrait real solo se considera después de validar el juego landscape.
+- portrait es la experiencia primaria para móvil;
+- la presentación portrait usa un viewport lógico 720×1280 y centra el mundo de simulación 1280×720, sin deformarlo ni alterar sus velocidades o colisiones;
+- landscape usa un viewport lógico 1280×720 y aprovecha pantallas de PC, tablet y portales de escritorio;
+- no se implementa orientation lock ni se obliga a girar el dispositivo;
+- el mismo `ViewportTransform` convierte render e input en ambas orientaciones;
+- si una expansión futura deja hazards fuera de la franja visible en portrait, debe añadir indicadores direccionales en vez de conceder información extra.
 
 ## 6.4 CSS y navegador
 
@@ -389,7 +391,7 @@ Probar automáticamente y de forma manual:
 - 821×462, 907×510, 1077×606 y 1216×684;
 - 1280×720, 1366×768, 1536×864 y 1920×1080;
 - 800×450 móvil landscape y 1080×607 tablet;
-- portrait para verificar únicamente el overlay de rotación;
+- portrait jugable en 360×640, 390×844 y 412×915;
 - DPR reportado 1, 1.5, 2 y 3, comprobando el límite interno;
 - resize durante gameplay, level-up, pausa, game over y retorno de un anuncio simulado.
 
@@ -751,7 +753,7 @@ Capturas de:
 - level-up;
 - laser telegraph;
 - game over;
-- overlay portrait;
+- gameplay portrait;
 - presets Low y High.
 
 No bloquear por diferencias de partículas aleatorias: usar semilla y desactivar animación no determinista en snapshots.
@@ -1078,12 +1080,13 @@ Se incorpora una skill especializada para que la IA genere y mantenga SVG median
 
 La skill exige `viewBox`, ancla, IDs deterministas, accesibilidad, rutas relativas, ausencia de recursos externos y una eleccion explicita entre SVG inline, textura Pixi o `GraphicsContext`. Tambien protege el `viewBox` y la accesibilidad durante optimizacion.
 
-## Estado de implementación — 25-08-2026
+## Estado de implementación — 26-08-2026
 
 La primera base ejecutable de la Fase 0 ya está creada en el directorio de trabajo:
 
 - `package.json`, `vite.config.ts` y `tsconfig.json` fijan Vite + TypeScript + PixiJS 8.20.0;
 - `src/presentation/viewport/ViewportTransform.ts` mantiene un mundo lógico 1280×720 sin estirar;
+- `ViewportTransform` presenta 720×1280 en portrait y 1280×720 en landscape, sin overlay que obligue a rotar;
 - `src/input/InputManager.ts` acepta pointer/touch y WASD, ZQSD o flechas;
 - `src/simulation/PlayerModel.ts` contiene movimiento fijo y límite circular sin depender de Pixi;
 - `src/platform/local/LocalPlatform.ts` deja aislada la futura integración de SDK;
@@ -1091,4 +1094,4 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `.github/workflows/deploy.yml` prepara la publicación de `dist/local` en GitHub Pages;
 - `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan.
 
-Al conectar el repositorio remoto, la siguiente acción es hacer push a `main`, activar Pages con GitHub Actions y probar la URL publicada en móvil y escritorio. Los spikes de 500 shapes y audio siguen deliberadamente después de validar esta shell.
+La versión que está publicada en este momento todavía corresponde al commit anterior y conserva el overlay de rotación. La siguiente acción es hacer push de este cambio a `main` y probar la URL publicada en portrait y landscape. Los spikes de 500 shapes y audio siguen deliberadamente después de validar esta shell.

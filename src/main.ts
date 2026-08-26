@@ -1,10 +1,6 @@
 import { Application } from 'pixi.js';
 import './styles.css';
-import {
-  FIXED_STEP_SECONDS,
-  LOGICAL_HEIGHT,
-  LOGICAL_WIDTH
-} from './config/constants';
+import { FIXED_STEP_SECONDS } from './config/constants';
 import { DebugPanel } from './debug/DebugPanel';
 import { InputManager } from './input/InputManager';
 import { LocalPlatform } from './platform/local/LocalPlatform';
@@ -34,17 +30,27 @@ await app.init({
 container.appendChild(app.canvas);
 app.stage.addChild(view.root);
 
-const resize = (): void => {
+const resizeNow = (): void => {
   const state = viewport.resize(container.clientWidth, container.clientHeight, window.devicePixelRatio);
   app.renderer.resolution = state.dpr;
   app.renderer.resize(state.cssWidth, state.cssHeight);
   view.resize(state);
 };
 
-const resizeObserver = new ResizeObserver(resize);
+let resizeQueued = false;
+const queueResize = (): void => {
+  if (resizeQueued) return;
+  resizeQueued = true;
+  requestAnimationFrame(() => {
+    resizeQueued = false;
+    resizeNow();
+  });
+};
+
+const resizeObserver = new ResizeObserver(queueResize);
 resizeObserver.observe(container);
-window.addEventListener('orientationchange', resize, { passive: true });
-resize();
+window.addEventListener('orientationchange', queueResize, { passive: true });
+resizeNow();
 
 const input = new InputManager(container, viewport, () => player.state);
 input.attach();
@@ -74,7 +80,8 @@ app.ticker.add((ticker) => {
   const state = viewport.state;
   debug.update({
     target: __BUILD_TARGET__,
-    logical: `${LOGICAL_WIDTH}×${LOGICAL_HEIGHT}`,
+    orientation: state.orientation,
+    logical: `${state.logicalWidth}×${state.logicalHeight}`,
     viewport: `${state.cssWidth}×${state.cssHeight}`,
     scale: state.scale,
     dpr: state.dpr,

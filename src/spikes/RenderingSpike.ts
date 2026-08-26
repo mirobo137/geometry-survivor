@@ -20,6 +20,8 @@ const VARIANT_LABELS: Record<RenderingVariant, string> = {
   'sprite-pool': 'Sprite pool (reutilizado)'
 };
 
+const VARIANTS: readonly RenderingVariant[] = ['sprite', 'graphics-context', 'sprite-pool'];
+
 const formatNumber = (value: number): string => value.toFixed(2);
 
 const createSpriteTexture = (app: Application) => {
@@ -127,7 +129,8 @@ export const runRenderingSpike = (app: Application, host: HTMLElement): (() => v
     clearEntities(scene, entities);
     context?.destroy();
     context = null;
-    const variant = (['sprite', 'graphics-context', 'sprite-pool'] as RenderingVariant[])[variantIndex];
+    const variant = VARIANTS[variantIndex];
+    if (!variant) return;
     const created = createEntities(variant, scene, texture);
     entities = created.entities;
     context = created.context;
@@ -152,6 +155,7 @@ export const runRenderingSpike = (app: Application, host: HTMLElement): (() => v
   const restart = (): void => {
     variantIndex = 0;
     results = [];
+    running = true;
     renderResults();
     startPhase();
   };
@@ -159,7 +163,8 @@ export const runRenderingSpike = (app: Application, host: HTMLElement): (() => v
   const tickerHandler = (ticker: { deltaMS: number }): void => {
     if (!running) return;
     const elapsed = (performance.now() - phaseStartedAt) / 1000;
-    const variant = (['sprite', 'graphics-context', 'sprite-pool'] as RenderingVariant[])[variantIndex];
+    const variant = VARIANTS[variantIndex];
+    if (!variant) return;
     if (variant === 'sprite' && elapsed >= nextBaselineRecycleAt && elapsed < PHASE_SECONDS) {
       // Baseline intentionally recreates the same 500 display objects. This
       // exposes the allocation/GC cost that the pool variant is meant to avoid.
@@ -177,7 +182,10 @@ export const runRenderingSpike = (app: Application, host: HTMLElement): (() => v
     renderResults();
     variantIndex += 1;
     if (variantIndex < 3) startPhase();
-    else phaseElement.textContent = 'Benchmark terminado. Repite en el mismo dispositivo y preset para comparar.';
+    else {
+      running = false;
+      phaseElement.textContent = 'Benchmark terminado. Repite en el mismo dispositivo y preset para comparar.';
+    }
   };
 
   restartButton.addEventListener('click', restart, { passive: true });

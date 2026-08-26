@@ -1095,6 +1095,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/spikes/RenderingSpike.ts` permite comparar 500 `Sprite`, `GraphicsContext` compartido y pool desde GitHub Pages con `?spike=rendering`;
 - `src/spikes/AudioSpike.ts` comprueba desbloqueo, latencia y retorno de visibilidad de Web Audio desde `?spike=audio`;
 - `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones pendientes por dispositivo;
+- primera medición aportada desde Android Chrome: `Sprite` 76.11 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con latencia base de audio de 3.0 ms;
 - `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan.
 
-La shell responsive y la compatibilidad móvil están publicadas en `main`. El siguiente paso es publicar estos spikes, medirlos en el teléfono disponible y registrar los resultados en `docs/performance/F0_SPIKES.md`. Después de esa medición se cierra Fase 0 y comienza la expansión de arena de Fase 1.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La primera medición confirma que la ruta Sprite es viable; falta repetirla con el modelo y DPR identificados y verificar que el panel corregido sólo muestre tres filas. Después de esa medición se cierra Fase 0 y comienza la expansión de arena de Fase 1.

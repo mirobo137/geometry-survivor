@@ -42,6 +42,6 @@ Completar una fila por dispositivo. Si una fila no se puede medir, conservarla v
 
 | Fecha | Dispositivo / navegador | Orientación | DPR | Sprite FPS / p95 | GraphicsContext FPS / p95 | Pool FPS / p95 | Audio desbloqueo | Observaciones |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| pendiente | teléfono disponible | portrait | pendiente | pendiente | pendiente | pendiente | pendiente | requiere prueba manual |
+| 2026-08-26 | Android Chrome (modelo pendiente) | portrait | pendiente | 76.11 / 16.70 ms | 59.94 / 16.80 ms | 59.94 / 16.80 ms | `running`, 3.0 ms base | Captura aportada por el usuario; repetir con modelo y DPR para cerrar la puerta |
 
 La medición en este entorno queda limitada porque no hay un navegador gráfico ni un teléfono conectado. El panel en pantalla está diseñado para que el resultado pueda copiarse manualmente desde GitHub Pages sin abrir DevTools.

@@ -5,6 +5,7 @@ import { ENEMY_DEFINITIONS, type EnemyKind } from '../content/enemies/EnemyDefin
 import { WEAPON_DEFINITIONS } from '../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../simulation/PlayerModel';
 import type { CombatSimulation } from '../simulation/combat/CombatSimulation';
+import type { LaserHazardState } from '../simulation/hazards/LaserHazard';
 import type { ViewportState } from './viewport/ViewportTransform';
 
 const createTexture = (renderer: Renderer, draw: (graphics: Graphics) => void): Texture => {
@@ -36,6 +37,7 @@ export class PixiGameView {
   public readonly root = new Container();
   private readonly world = new Container();
   private readonly arena = new Graphics();
+  private readonly laserLayer = new Graphics();
   private readonly player = new Graphics();
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
@@ -52,7 +54,7 @@ export class PixiGameView {
 
   public constructor(renderer: Renderer) {
     this.root.addChild(this.world);
-    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.orbitLayer, this.chainLayer, this.player);
+    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.orbitLayer, this.chainLayer, this.laserLayer, this.player);
     this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
     this.renderArena(ARENA_RADIUS);
@@ -199,6 +201,43 @@ export class PixiGameView {
         .stroke({ color: 0xa9f4ff, width: 5, alpha });
     }
 
+  }
+
+  public renderLaser(state: LaserHazardState, arenaRadius: number): void {
+    if (state.phase === 'idle') {
+      if (this.laserLayer.visible) {
+        this.laserLayer.clear();
+        this.laserLayer.visible = false;
+      }
+      return;
+    }
+
+    const directionX = Math.cos(state.angle);
+    const directionY = Math.sin(state.angle);
+    const startX = ARENA_CENTER.x - directionX * (arenaRadius + 18);
+    const startY = ARENA_CENTER.y - directionY * (arenaRadius + 18);
+    const endX = ARENA_CENTER.x + directionX * (arenaRadius + 18);
+    const endY = ARENA_CENTER.y + directionY * (arenaRadius + 18);
+    this.laserLayer.visible = true;
+    this.laserLayer.clear();
+    if (state.phase === 'telegraph') {
+      const alpha = 0.24 + state.progress * 0.36;
+      this.laserLayer
+        .moveTo(startX, startY)
+        .lineTo(endX, endY)
+        .stroke({ color: 0xffd166, width: 4, alpha });
+      return;
+    }
+
+    const alpha = state.phase === 'active' ? 0.95 : 0.28;
+    this.laserLayer
+      .moveTo(startX, startY)
+      .lineTo(endX, endY)
+      .stroke({ color: 0xff5f6d, width: state.phase === 'active' ? state.width : 10, alpha: alpha * 0.24 });
+    this.laserLayer
+      .moveTo(startX, startY)
+      .lineTo(endX, endY)
+      .stroke({ color: state.phase === 'active' ? 0xfff1a8 : 0xff9d75, width: state.phase === 'active' ? 6 : 4, alpha });
   }
 
   public renderPlayer(state: PlayerState): void {

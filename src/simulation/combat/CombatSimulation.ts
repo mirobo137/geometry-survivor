@@ -10,6 +10,8 @@ import {
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, ProjectilePool, type EnemyState } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
+import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
+import { LaserHazard } from '../hazards/LaserHazard';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -78,6 +80,7 @@ export interface CombatStats {
 export class CombatSimulation {
   public readonly enemies = new EnemyPool(ENEMY_POOL_CAPACITY);
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
+  public readonly laser = new LaserHazard();
   public readonly orbitBlades = Array.from({ length: ORBIT_DEFINITION.maxBlades }, createOrbitBladeState);
   public readonly chainSegments = Array.from({ length: CHAIN_DEFINITION.maxTargets }, createChainSegmentState);
   public readonly stats: CombatStats = {
@@ -168,6 +171,10 @@ export class CombatSimulation {
     this.spawnAccumulator += dt;
     this.attackAccumulator += dt;
     this.updateChainSegments(dt);
+    if (this.laser.update(dt, this.stats.elapsedSeconds, player, arenaRadius)) {
+      this.stats.damageTaken += LASER_DEFINITION.damage;
+      this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage });
+    }
 
     const spawnInterval = Math.max(0.28, 0.85 - this.stats.elapsedSeconds * 0.002);
     while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < this.enemies.capacity) {

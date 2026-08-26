@@ -231,6 +231,7 @@ const bootstrap = async (): Promise<void> => {
     }
 
     view.renderArena(arena.state.radius);
+    view.renderLaser(combat.laser.state, arena.state.radius);
     view.renderCombat(combat);
     view.renderPlayer(player.state);
     hud.update({

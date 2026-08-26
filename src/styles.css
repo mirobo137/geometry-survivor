@@ -40,6 +40,31 @@ body {
   touch-action: none;
 }
 
+#boot-status {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  left: 50%;
+  width: min(30rem, calc(100% - 2rem));
+  padding: 0.8rem 1rem;
+  transform: translate(-50%, -50%);
+  color: #cde3ff;
+  background: rgba(7, 12, 28, 0.92);
+  border: 1px solid rgba(145, 181, 255, 0.35);
+  border-radius: 0.55rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+#boot-status[data-state="error"] {
+  color: #ffe2e2;
+  border-color: rgba(255, 112, 112, 0.65);
+}
+
+#boot-status[hidden] {
+  display: none;
+}
+
 #debug-panel {
   position: absolute;
   z-index: 5;

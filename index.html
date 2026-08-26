@@ -9,8 +9,28 @@
   </head>
   <body>
     <main id="game-container" aria-label="Geometry Survivor">
+      <div id="boot-status" role="status" aria-live="assertive">Cargando juego…</div>
       <div id="debug-panel" hidden></div>
     </main>
+    <script>
+      (function () {
+        function showBootError(message) {
+          var status = document.getElementById('boot-status');
+          if (!status) return;
+          status.hidden = false;
+          status.setAttribute('data-state', 'error');
+          status.textContent = 'No se pudo iniciar el juego. ' + (message || 'Recarga la página.');
+        }
+
+        window.addEventListener('error', function (event) {
+          showBootError(event.message || 'Error al cargar los archivos.');
+        });
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event.reason;
+          showBootError(reason && reason.message ? reason.message : String(reason || 'Error de inicialización.'));
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

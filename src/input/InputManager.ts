@@ -20,13 +20,18 @@ const MOVEMENT_KEYS: Record<string, InputVector> = {
 
 export class InputManager {
   private readonly keys = new Set<string>();
+  private readonly supportsPointerEvents = 'PointerEvent' in window;
   private pointerId: number | null = null;
+  private touchId: number | null = null;
   private pointerPosition = { x: 0, y: 0 };
   private readonly onKeyDownBound = (event: KeyboardEvent): void => this.onKeyDown(event);
   private readonly onKeyUpBound = (event: KeyboardEvent): void => this.onKeyUp(event);
   private readonly onPointerDownBound = (event: PointerEvent): void => this.onPointerDown(event);
   private readonly onPointerMoveBound = (event: PointerEvent): void => this.onPointerMove(event);
   private readonly onPointerEndBound = (event: PointerEvent): void => this.onPointerEnd(event);
+  private readonly onTouchStartBound = (event: TouchEvent): void => this.onTouchStart(event);
+  private readonly onTouchMoveBound = (event: TouchEvent): void => this.onTouchMove(event);
+  private readonly onTouchEndBound = (event: TouchEvent): void => this.onTouchEnd(event);
 
   public constructor(
     private readonly element: HTMLElement,
@@ -37,21 +42,35 @@ export class InputManager {
   public attach(): void {
     window.addEventListener('keydown', this.onKeyDownBound, { passive: false });
     window.addEventListener('keyup', this.onKeyUpBound, { passive: false });
-    this.element.addEventListener('pointerdown', this.onPointerDownBound, { passive: false });
-    this.element.addEventListener('pointermove', this.onPointerMoveBound, { passive: false });
-    this.element.addEventListener('pointerup', this.onPointerEndBound, { passive: false });
-    this.element.addEventListener('pointercancel', this.onPointerEndBound, { passive: false });
-    this.element.addEventListener('lostpointercapture', this.onPointerEndBound, { passive: false });
+    if (this.supportsPointerEvents) {
+      this.element.addEventListener('pointerdown', this.onPointerDownBound, { passive: false });
+      this.element.addEventListener('pointermove', this.onPointerMoveBound, { passive: false });
+      this.element.addEventListener('pointerup', this.onPointerEndBound, { passive: false });
+      this.element.addEventListener('pointercancel', this.onPointerEndBound, { passive: false });
+      this.element.addEventListener('lostpointercapture', this.onPointerEndBound, { passive: false });
+    } else {
+      this.element.addEventListener('touchstart', this.onTouchStartBound, { passive: false });
+      this.element.addEventListener('touchmove', this.onTouchMoveBound, { passive: false });
+      this.element.addEventListener('touchend', this.onTouchEndBound, { passive: false });
+      this.element.addEventListener('touchcancel', this.onTouchEndBound, { passive: false });
+    }
   }
 
   public detach(): void {
     window.removeEventListener('keydown', this.onKeyDownBound);
     window.removeEventListener('keyup', this.onKeyUpBound);
-    this.element.removeEventListener('pointerdown', this.onPointerDownBound);
-    this.element.removeEventListener('pointermove', this.onPointerMoveBound);
-    this.element.removeEventListener('pointerup', this.onPointerEndBound);
-    this.element.removeEventListener('pointercancel', this.onPointerEndBound);
-    this.element.removeEventListener('lostpointercapture', this.onPointerEndBound);
+    if (this.supportsPointerEvents) {
+      this.element.removeEventListener('pointerdown', this.onPointerDownBound);
+      this.element.removeEventListener('pointermove', this.onPointerMoveBound);
+      this.element.removeEventListener('pointerup', this.onPointerEndBound);
+      this.element.removeEventListener('pointercancel', this.onPointerEndBound);
+      this.element.removeEventListener('lostpointercapture', this.onPointerEndBound);
+    } else {
+      this.element.removeEventListener('touchstart', this.onTouchStartBound);
+      this.element.removeEventListener('touchmove', this.onTouchMoveBound);
+      this.element.removeEventListener('touchend', this.onTouchEndBound);
+      this.element.removeEventListener('touchcancel', this.onTouchEndBound);
+    }
   }
 
   public getMovement(): InputVector {
@@ -65,7 +84,7 @@ export class InputManager {
       }
     }
 
-    if (this.pointerId !== null) {
+    if (this.pointerId !== null || this.touchId !== null) {
       const player = this.getPlayerPosition();
       x += this.pointerPosition.x - player.x;
       y += this.pointerPosition.y - player.y;
@@ -88,8 +107,12 @@ export class InputManager {
   private onPointerDown(event: PointerEvent): void {
     if (this.pointerId !== null) return;
     this.pointerId = event.pointerId;
-    this.element.setPointerCapture(event.pointerId);
     this.updatePointer(event);
+    try {
+      this.element.setPointerCapture(event.pointerId);
+    } catch {
+      // Some mobile WebViews expose Pointer Events but reject pointer capture.
+    }
     event.preventDefault();
   }
 
@@ -107,5 +130,43 @@ export class InputManager {
 
   private updatePointer(event: PointerEvent): void {
     this.pointerPosition = this.viewport.toWorld(event.clientX, event.clientY, this.element.getBoundingClientRect());
+  }
+
+  private onTouchStart(event: TouchEvent): void {
+    if (this.touchId !== null || event.changedTouches.length === 0) return;
+    const touch = event.changedTouches[0];
+    this.touchId = touch.identifier;
+    this.updateTouch(touch);
+    event.preventDefault();
+  }
+
+  private onTouchMove(event: TouchEvent): void {
+    const touch = this.findTouch(event.touches);
+    if (!touch) return;
+    this.updateTouch(touch);
+    event.preventDefault();
+  }
+
+  private onTouchEnd(event: TouchEvent): void {
+    if (!this.findTouch(event.changedTouches)) return;
+    this.touchId = null;
+    event.preventDefault();
+  }
+
+  private findTouch(touches: TouchList): Touch | null {
+    if (this.touchId === null) return null;
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === this.touchId) return touch;
+    }
+    return null;
+  }
+
+  private updateTouch(touch: Touch): void {
+    this.pointerPosition = this.viewport.toWorld(
+      touch.clientX,
+      touch.clientY,
+      this.element.getBoundingClientRect()
+    );
   }
 }

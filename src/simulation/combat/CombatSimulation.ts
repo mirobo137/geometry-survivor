@@ -11,6 +11,7 @@ import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, ProjectilePool, type EnemyState } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
+import { getSpawnIntervalSeconds } from '../../content/run/DifficultyDefinitions';
 import { LaserHazard } from '../hazards/LaserHazard';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
@@ -184,7 +185,7 @@ export class CombatSimulation {
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage });
     }
 
-    const spawnInterval = Math.max(0.28, 0.85 - this.stats.elapsedSeconds * 0.002);
+    const spawnInterval = getSpawnIntervalSeconds(this.stats.elapsedSeconds);
     while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < this.enemies.capacity) {
       this.spawnAccumulator -= spawnInterval;
       this.spawnEnemy(arenaRadius);

@@ -43,6 +43,7 @@ export class PixiGameView {
   public readonly root = new Container();
   private readonly world = new Container();
   private readonly arena = new Graphics();
+  private readonly arenaResonance = new Graphics();
   private readonly laserLayer = new Graphics();
   private readonly player = new Graphics();
   private readonly enemyLayer = new Container();
@@ -60,7 +61,7 @@ export class PixiGameView {
 
   public constructor(renderer: Renderer) {
     this.root.addChild(this.world);
-    this.world.addChild(this.arena, this.projectileLayer, this.enemyLayer, this.orbitLayer, this.chainLayer, this.laserLayer, this.player);
+    this.world.addChild(this.arena, this.arenaResonance, this.projectileLayer, this.enemyLayer, this.orbitLayer, this.chainLayer, this.laserLayer, this.player);
     this.arena.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
 
     this.renderArena(ARENA_RADIUS);
@@ -134,8 +135,8 @@ export class PixiGameView {
     this.root.hitArea = undefined;
   }
 
-  public renderArena(radius: number): void {
-    if (this.arenaRadius === radius) return;
+  public renderArena(radius: number, resonance = 0): void {
+    if (this.arenaRadius === radius && !this.arenaResonance.visible && resonance <= 0) return;
     if (!this.arenaGeometryReady) {
       this.arena
         .circle(0, 0, ARENA_RADIUS)
@@ -149,6 +150,18 @@ export class PixiGameView {
     }
     this.arena.scale.set(radius / ARENA_RADIUS);
     this.arenaRadius = radius;
+    if (resonance <= 0) {
+      if (this.arenaResonance.visible) {
+        this.arenaResonance.clear();
+        this.arenaResonance.visible = false;
+      }
+      return;
+    }
+
+    this.arenaResonance.visible = true;
+    this.arenaResonance.clear();
+    this.arenaResonance.circle(ARENA_CENTER.x, ARENA_CENTER.y, radius + 10 + resonance * 16)
+      .stroke({ color: 0x75e6ff, width: 4 + resonance * 3, alpha: 0.18 + resonance * 0.42 });
   }
 
   public renderCombat(combat: CombatSimulation): void {

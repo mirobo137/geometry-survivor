@@ -230,7 +230,7 @@ const bootstrap = async (): Promise<void> => {
       accumulator -= FIXED_STEP_SECONDS;
     }
 
-    view.renderArena(arena.state.radius);
+    view.renderArena(arena.state.radius, arena.state.resonance);
     view.renderLaser(combat.laser.state, arena.state.radius);
     view.renderCombat(combat);
     view.renderPlayer(player.state);
@@ -265,7 +265,8 @@ const bootstrap = async (): Promise<void> => {
       chain: combat.hasChainLightning ? 'ready' : 'locked',
       paused: gameplayPaused ? 'level-up' : lifecyclePaused ? 'lifecycle' : 'playing',
       level: progression.state.level,
-      arena: arena.state.radius,
+      arena: `${arena.state.radius.toFixed(1)} | expansión ${arena.state.expansionIndex}`,
+      resonance: arena.state.resonance,
       player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
     });
   });

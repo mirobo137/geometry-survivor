@@ -24,11 +24,12 @@ export class PlayerModel {
     maxHealth: PLAYER_MAX_HEALTH
   };
   private invulnerabilitySeconds = 0;
+  private movementSpeed = PLAYER_SPEED;
 
   public update(input: InputVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
     this.invulnerabilitySeconds = Math.max(0, this.invulnerabilitySeconds - Math.max(0, dtSeconds));
-    this.state.x += input.x * PLAYER_SPEED * dtSeconds;
-    this.state.y += input.y * PLAYER_SPEED * dtSeconds;
+    this.state.x += input.x * this.movementSpeed * dtSeconds;
+    this.state.y += input.y * this.movementSpeed * dtSeconds;
 
     const maxDistance = Math.max(0, arenaRadius - this.state.radius);
     const dx = this.state.x - ARENA_CENTER.x;
@@ -50,5 +51,15 @@ export class PlayerModel {
 
   public get isAlive(): boolean {
     return this.state.health > 0;
+  }
+
+  public increaseMovementSpeed(amount: number): void {
+    this.movementSpeed = Math.max(PLAYER_SPEED, this.movementSpeed + Math.max(0, amount));
+  }
+
+  public increaseMaxHealth(amount: number): void {
+    const increase = Math.max(0, amount);
+    this.state.maxHealth += increase;
+    this.state.health = Math.min(this.state.maxHealth, this.state.health + increase);
   }
 }

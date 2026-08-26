@@ -4,6 +4,7 @@ export interface GameHudValues {
   readonly maxHealth: number;
   readonly xp: number;
   readonly kills: number;
+  readonly level: number;
 }
 
 const formatTime = (seconds: number): string => {
@@ -18,6 +19,7 @@ export class GameHud {
   private readonly healthElement: HTMLElement;
   private readonly xpElement: HTMLElement;
   private readonly killsElement: HTMLElement;
+  private readonly levelElement: HTMLElement;
   private lastText = '';
 
   public constructor(root: HTMLElement) {
@@ -25,13 +27,15 @@ export class GameHud {
     const healthElement = root.querySelector<HTMLElement>('#hud-health');
     const xpElement = root.querySelector<HTMLElement>('#hud-xp');
     const killsElement = root.querySelector<HTMLElement>('#hud-kills');
-    if (!timeElement || !healthElement || !xpElement || !killsElement) {
+    const levelElement = root.querySelector<HTMLElement>('#hud-level');
+    if (!timeElement || !healthElement || !xpElement || !killsElement || !levelElement) {
       throw new Error('Faltan elementos del HUD');
     }
     this.timeElement = timeElement;
     this.healthElement = healthElement;
     this.xpElement = xpElement;
     this.killsElement = killsElement;
+    this.levelElement = levelElement;
   }
 
   public update(values: GameHudValues): void {
@@ -39,7 +43,8 @@ export class GameHud {
       formatTime(values.elapsedSeconds),
       `HP ${Math.ceil(values.health)}/${values.maxHealth}`,
       `XP ${values.xp}`,
-      `K ${values.kills}`
+      `K ${values.kills}`,
+      `LV ${values.level}`
     ];
     const joined = text.join('|');
     if (joined === this.lastText) return;
@@ -48,5 +53,6 @@ export class GameHud {
     this.healthElement.textContent = text[1];
     this.xpElement.textContent = text[2];
     this.killsElement.textContent = text[3];
+    this.levelElement.textContent = text[4];
   }
 }

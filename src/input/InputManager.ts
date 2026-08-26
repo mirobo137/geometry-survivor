@@ -95,6 +95,10 @@ export class InputManager {
     return { x: x / length, y: y / length };
   }
 
+  private isInteractiveTarget(target: EventTarget | null): boolean {
+    return target instanceof Element && Boolean(target.closest('button, a, input, select, textarea'));
+  }
+
   private onKeyDown(event: KeyboardEvent): void {
     if (MOVEMENT_KEYS[event.code]) event.preventDefault();
     this.keys.add(event.code);
@@ -105,6 +109,7 @@ export class InputManager {
   }
 
   private onPointerDown(event: PointerEvent): void {
+    if (this.isInteractiveTarget(event.target)) return;
     if (this.pointerId !== null) return;
     this.pointerId = event.pointerId;
     this.updatePointer(event);
@@ -133,6 +138,7 @@ export class InputManager {
   }
 
   private onTouchStart(event: TouchEvent): void {
+    if (this.isInteractiveTarget(event.target)) return;
     if (this.touchId !== null || event.changedTouches.length === 0) return;
     const touch = event.changedTouches[0];
     this.touchId = touch.identifier;

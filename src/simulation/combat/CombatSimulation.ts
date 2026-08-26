@@ -60,6 +60,7 @@ export class CombatSimulation {
   private stressProjectileIndex = 0;
   private readonly stressMode: boolean;
   private stressInitialized = false;
+  private projectileDamage = PROJECTILE_DAMAGE;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.stressMode = options.stress === true;
@@ -67,6 +68,10 @@ export class CombatSimulation {
 
   public get isStressMode(): boolean {
     return this.stressMode;
+  }
+
+  public increaseProjectileDamage(amount: number): void {
+    this.projectileDamage += Math.max(0, amount);
   }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
@@ -170,7 +175,7 @@ export class CombatSimulation {
     projectile.vx = Math.cos(angle) * PROJECTILE_SPEED;
     projectile.vy = Math.sin(angle) * PROJECTILE_SPEED;
     projectile.radius = PROJECTILE_RADIUS;
-    projectile.damage = PROJECTILE_DAMAGE;
+    projectile.damage = this.projectileDamage;
     projectile.lifetimeSeconds = PROJECTILE_LIFETIME_SECONDS;
     this.stats.shotsFired += 1;
   }

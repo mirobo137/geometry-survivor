@@ -44,4 +44,16 @@ describe('PlayerModel', () => {
     expect(player.takeDamage(20)).toBe(true);
     expect(player.state.health).toBe(60);
   });
+
+  it('applies movement and vitality upgrades without breaking the arena contract', () => {
+    const player = new PlayerModel();
+
+    player.increaseMovementSpeed(25);
+    player.increaseMaxHealth(20);
+    player.update({ x: 1, y: 0 }, 1 / 6);
+
+    expect(player.state.maxHealth).toBe(120);
+    expect(player.state.health).toBe(120);
+    expect(player.state.x).toBeCloseTo(ARENA_CENTER.x + (PLAYER_SPEED + 25) / 6);
+  });
 });

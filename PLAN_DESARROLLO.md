@@ -1102,7 +1102,9 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/simulation/combat/CombatSimulation.ts` conecta spawn, targeting, Projectile, daño, muerte, XP directa y contacto con el jugador;
 - `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice; no se reserva pool para pickups de XP;
 - `?stress=1` inicializa el escenario de 250 enemigos y 300 proyectiles para la puerta de rendimiento de Fase 2;
+- medición manual aportada desde Android Chrome en `?stress=1`: estable en 60 FPS al estar quieto y con picos de 120 FPS al mover; modelo y preset Low aún no registrados;
+- `src/simulation/progression/LevelProgression.ts` pausa la run al alcanzar el umbral de XP y `src/ui/LevelUpOverlay.ts` ofrece tres cartas funcionales;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (19 tests).
+- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (23 tests).
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial y un preset de stress reproducible; queda pendiente medirlo manualmente en el móvil antes de ampliar contenido.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene su primera expansión y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 inicia con level-up pausado y tres mejoras funcionales; quedan pendientes su smoke test manual en móvil, Orbit/Chain Lightning y el balance de cartas.

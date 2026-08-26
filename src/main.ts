@@ -9,7 +9,10 @@ import { ViewportTransform } from './presentation/viewport/ViewportTransform';
 import { ArenaModel } from './simulation/ArenaModel';
 import { CombatSimulation } from './simulation/combat/CombatSimulation';
 import { PlayerModel } from './simulation/PlayerModel';
+import { LevelProgression } from './simulation/progression/LevelProgression';
 import { GameHud } from './ui/GameHud';
+import { LevelUpOverlay } from './ui/LevelUpOverlay';
+import type { UpgradeId } from './content/upgrades/UpgradeDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -48,7 +51,10 @@ const bootstrap = async (): Promise<void> => {
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
-  if (!container || !debugElement || !bootStatus || !hudElement) throw new Error('Faltan elementos de la interfaz');
+  const levelUpElement = document.querySelector<HTMLElement>('#level-up');
+  if (!container || !debugElement || !bootStatus || !hudElement || !levelUpElement) {
+    throw new Error('Faltan elementos de la interfaz');
+  }
 
   const searchParams = new URLSearchParams(window.location.search);
   const spike = searchParams.get('spike');
@@ -81,9 +87,11 @@ const bootstrap = async (): Promise<void> => {
   const arena = new ArenaModel();
   const player = new PlayerModel();
   const combat = new CombatSimulation({ stress: stressMode });
+  const progression = new LevelProgression();
   const view = new PixiGameView(app.renderer);
   const debug = new DebugPanel(debugElement, stressMode);
   const hud = new GameHud(hudElement);
+  const levelUp = new LevelUpOverlay(levelUpElement);
   const platform = new LocalPlatform();
 
   app.stage.addChild(view.root);
@@ -122,15 +130,49 @@ const bootstrap = async (): Promise<void> => {
   let frames = 0;
   let fpsTime = performance.now();
   let fps = 0;
+  let gameplayPaused = false;
+
+  const applyUpgrade = (upgradeId: UpgradeId): void => {
+    switch (upgradeId) {
+      case 'swift_step':
+        player.increaseMovementSpeed(25);
+        break;
+      case 'focused_projectiles':
+        combat.increaseProjectileDamage(4);
+        break;
+      case 'reinforced_core':
+        player.increaseMaxHealth(20);
+        break;
+    }
+  };
+
+  const openLevelUp = (): void => {
+    gameplayPaused = true;
+    levelUp.open(progression.state.level, (upgradeId) => {
+      applyUpgrade(upgradeId);
+      progression.consumeLevelUp();
+      if (progression.state.pendingLevelUps > 0) {
+        openLevelUp();
+      } else {
+        gameplayPaused = false;
+      }
+    });
+  };
 
   app.ticker.add((ticker) => {
     accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
     while (accumulator >= FIXED_STEP_SECONDS) {
-      arena.update(FIXED_STEP_SECONDS);
-      player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
-      combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
-      for (const event of combat.events) {
-        if (event.type === 'playerDamaged') player.takeDamage(event.amount);
+      if (!gameplayPaused) {
+        arena.update(FIXED_STEP_SECONDS);
+        player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
+        combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
+        for (const event of combat.events) {
+          if (event.type === 'playerDamaged') player.takeDamage(event.amount);
+        }
+        if (!stressMode) {
+          progression.sync(combat.stats.experience);
+          if (progression.state.pendingLevelUps > 0) openLevelUp();
+        }
       }
       accumulator -= FIXED_STEP_SECONDS;
     }
@@ -143,7 +185,8 @@ const bootstrap = async (): Promise<void> => {
       health: player.state.health,
       maxHealth: player.state.maxHealth,
       xp: combat.stats.experience,
-      kills: combat.stats.kills
+      kills: combat.stats.kills,
+      level: progression.state.level
     });
     frames += 1;
     const now = performance.now();
@@ -164,6 +207,8 @@ const bootstrap = async (): Promise<void> => {
       mode: combat.isStressMode ? 'stress' : 'normal',
       enemies: `${combat.enemies.activeCount}/${combat.enemies.capacity}`,
       projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
+      paused: gameplayPaused ? 'level-up' : 'playing',
+      level: progression.state.level,
       arena: arena.state.radius,
       player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
     });

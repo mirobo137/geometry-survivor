@@ -56,6 +56,10 @@ export class PlayerModel {
     return this.state.health > 0;
   }
 
+  public get currentMovementSpeed(): number {
+    return this.movementSpeed;
+  }
+
   public increaseMovementSpeed(amount: number): void {
     this.movementSpeed = Math.max(PLAYER_SPEED, this.movementSpeed + Math.max(0, amount));
   }

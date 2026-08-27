@@ -6,6 +6,7 @@ import {
 } from '../../content/upgrades/UpgradeDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
+import type { UpgradePreview } from './UpgradePreview';
 
 /** Applies authored upgrade effects at the composition boundary. */
 export class UpgradeApplier {
@@ -24,10 +25,67 @@ export class UpgradeApplier {
     return this.stacks.get(upgradeId) ?? 0;
   }
 
+  public getPreview(upgrade: UpgradeDefinition | UpgradeId): UpgradePreview | null {
+    const definition = this.resolveDefinition(upgrade);
+    if (!definition) return null;
+
+    switch (definition.effect.type) {
+      case 'movementSpeed':
+        return {
+          stat: 'movementSpeed',
+          before: this.player.currentMovementSpeed,
+          after: this.player.currentMovementSpeed + definition.effect.amount
+        };
+      case 'projectileDamage':
+        return {
+          stat: 'projectileDamage',
+          before: this.combat.currentProjectileDamage,
+          after: this.combat.currentProjectileDamage + definition.effect.amount
+        };
+      case 'maxHealth':
+        return {
+          stat: 'maxHealth',
+          before: this.player.state.maxHealth,
+          after: this.player.state.maxHealth + definition.effect.amount
+        };
+      case 'projectileCooldown':
+        return {
+          stat: 'projectileCooldown',
+          before: this.combat.currentProjectileCooldown,
+          after: Math.max(0.18, this.combat.currentProjectileCooldown - definition.effect.amount)
+        };
+      case 'projectileSpeed':
+        return {
+          stat: 'projectileSpeed',
+          before: this.combat.currentProjectileSpeed,
+          after: this.combat.currentProjectileSpeed + definition.effect.amount
+        };
+      case 'orbitRadius':
+        return {
+          stat: 'orbitRadius',
+          before: this.combat.currentOrbitRadius,
+          after: this.combat.currentOrbitRadius + definition.effect.amount
+        };
+      case 'chainDamage':
+        return {
+          stat: 'chainDamage',
+          before: this.combat.currentChainDamage,
+          after: this.combat.currentChainDamage + definition.effect.amount
+        };
+      case 'armor':
+        return {
+          stat: 'armor',
+          before: this.player.state.armor,
+          after: this.player.state.armor + definition.effect.amount
+        };
+      case 'orbitBlade':
+      case 'chainLightning':
+        return null;
+    }
+  }
+
   public canApply(upgrade: UpgradeDefinition | UpgradeId): boolean {
-    const definition = typeof upgrade === 'string'
-      ? UPGRADE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
-      : upgrade;
+    const definition = this.resolveDefinition(upgrade);
     if (!definition) return false;
     const currentStacks = this.getStacks(definition.id);
     if (definition.maxStacks !== undefined && currentStacks >= definition.maxStacks) return false;
@@ -35,7 +93,7 @@ export class UpgradeApplier {
   }
 
   public apply(upgradeId: UpgradeId): boolean {
-    const definition = UPGRADE_DEFINITIONS.find((upgrade) => upgrade.id === upgradeId);
+    const definition = this.resolveDefinition(upgradeId);
     if (!definition || !this.canApply(definition)) return false;
 
     let applied = true;
@@ -74,5 +132,11 @@ export class UpgradeApplier {
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
     return true;
+  }
+
+  private resolveDefinition(upgrade: UpgradeDefinition | UpgradeId): UpgradeDefinition | undefined {
+    return typeof upgrade === 'string'
+      ? UPGRADE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
+      : upgrade;
   }
 }

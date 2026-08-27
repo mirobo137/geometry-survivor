@@ -57,6 +57,26 @@ export class CombatWeaponSystem {
     return this.shotsFired;
   }
 
+  public get currentProjectileDamage(): number {
+    return this.projectileDamage;
+  }
+
+  public get currentProjectileCooldown(): number {
+    return this.projectileCooldown;
+  }
+
+  public get currentProjectileSpeed(): number {
+    return this.projectileSpeed;
+  }
+
+  public get currentOrbitRadius(): number {
+    return this.orbitRadius;
+  }
+
+  public get currentChainDamage(): number {
+    return this.chainDamage;
+  }
+
   public increaseProjectileDamage(amount: number): void {
     this.projectileDamage += Math.max(0, amount);
   }

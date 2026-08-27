@@ -42,4 +42,30 @@ describe('UpgradeApplier', () => {
     }
     expect(applier.apply('rapid_projectiles')).toBe(false);
   });
+
+  it('exposes numeric before-after previews without applying the upgrade', () => {
+    const player = new PlayerModel();
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(player, combat);
+
+    expect(applier.getPreview('swift_step')).toEqual({
+      stat: 'movementSpeed',
+      before: 250,
+      after: 275
+    });
+    const cooldownPreview = applier.getPreview('rapid_projectiles');
+    expect(cooldownPreview?.stat).toBe('projectileCooldown');
+    expect(cooldownPreview?.before).toBeCloseTo(0.55);
+    expect(cooldownPreview?.after).toBeCloseTo(0.47);
+    expect(applier.getPreview('orbit_blade')).toBeNull();
+    expect(player.currentMovementSpeed).toBe(250);
+    expect(combat.currentProjectileCooldown).toBe(0.55);
+
+    expect(applier.apply('swift_step')).toBe(true);
+    expect(applier.getPreview('swift_step')).toEqual({
+      stat: 'movementSpeed',
+      before: 275,
+      after: 300
+    });
+  });
 });

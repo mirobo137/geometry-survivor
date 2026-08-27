@@ -73,6 +73,26 @@ export class CombatSimulation {
     return this.stressMode;
   }
 
+  public get currentProjectileDamage(): number {
+    return this.weaponSystem.currentProjectileDamage;
+  }
+
+  public get currentProjectileCooldown(): number {
+    return this.weaponSystem.currentProjectileCooldown;
+  }
+
+  public get currentProjectileSpeed(): number {
+    return this.weaponSystem.currentProjectileSpeed;
+  }
+
+  public get currentOrbitRadius(): number {
+    return this.weaponSystem.currentOrbitRadius;
+  }
+
+  public get currentChainDamage(): number {
+    return this.weaponSystem.currentChainDamage;
+  }
+
   public increaseProjectileDamage(amount: number): void {
     this.weaponSystem.increaseProjectileDamage(amount);
   }

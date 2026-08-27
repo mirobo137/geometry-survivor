@@ -210,7 +210,7 @@ export class Game {
         this.gameState.leaveLevelUp();
         if (!this.lifecyclePaused) this.platform.onGameResume();
       }
-    });
+    }, (upgrade) => this.upgradeApplier.getPreview(upgrade));
   }
 
   private pauseForLifecycle(): void {

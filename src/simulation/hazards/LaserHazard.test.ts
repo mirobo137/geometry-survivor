@@ -47,4 +47,16 @@ describe('LaserHazard', () => {
       expect(escaped.update(1 / 60, escapedElapsed, escapedPlayer.state, ARENA_RADIUS)).toBe(false);
     }
   });
+
+  it('returns to idle before the first trigger after reset', () => {
+    const hazard = new LaserHazard();
+    const player = new PlayerModel();
+    hazard.update(1 / 60, LASER_DEFINITION.firstTriggerSeconds, player.state, ARENA_RADIUS);
+
+    hazard.reset();
+
+    expect(hazard.state.phase).toBe('idle');
+    expect(hazard.state.progress).toBe(0);
+    expect(hazard.update(1 / 60, LASER_DEFINITION.firstTriggerSeconds - 1 / 60, player.state, ARENA_RADIUS)).toBe(false);
+  });
 });

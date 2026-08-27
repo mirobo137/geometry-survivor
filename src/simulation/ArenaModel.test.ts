@@ -61,4 +61,19 @@ describe('ArenaModel', () => {
     expect(arena.state.radius).toBe(ARENA_MAX_RADIUS);
     expect(arena.state.expansionProgress).toBe(1);
   });
+
+  it('returns to the opening arena for an in-place restart', () => {
+    const arena = new ArenaModel();
+    arena.update(ARENA_SECOND_EXPANSION_START_SECONDS + 1);
+
+    arena.reset();
+
+    expect(arena.state).toEqual({
+      elapsedSeconds: 0,
+      radius: ARENA_RADIUS,
+      expansionProgress: 0,
+      expansionIndex: 0,
+      resonance: 0
+    });
+  });
 });

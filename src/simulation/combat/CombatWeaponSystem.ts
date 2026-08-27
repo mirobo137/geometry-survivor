@@ -77,6 +77,38 @@ export class CombatWeaponSystem {
     return this.chainDamage;
   }
 
+  public reset(): void {
+    this.projectiles.reset();
+    for (const blade of this.orbitBlades) {
+      blade.active = false;
+      blade.x = 0;
+      blade.y = 0;
+      blade.angle = 0;
+    }
+    for (const segment of this.chainSegments) {
+      segment.active = false;
+      segment.x1 = 0;
+      segment.y1 = 0;
+      segment.x2 = 0;
+      segment.y2 = 0;
+      segment.lifeSeconds = 0;
+    }
+    this.attackAccumulator = 0;
+    this.chainAccumulator = 0;
+    this.stressProjectileIndex = 0;
+    this.projectileDamage = PROJECTILE_DEFINITION.damage;
+    this.projectileSpeed = PROJECTILE_DEFINITION.speed;
+    this.projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
+    this.orbitBladeCount = 0;
+    this.orbitAngle = 0;
+    this.orbitRadius = ORBIT_DEFINITION.orbitRadius;
+    this.orbitDamage = ORBIT_DEFINITION.damage;
+    this.chainLightningUnlocked = false;
+    this.chainDamage = CHAIN_DEFINITION.damage;
+    this.chainHitIndices.fill(-1);
+    this.shotsFired = 0;
+  }
+
   public increaseProjectileDamage(amount: number): void {
     this.projectileDamage += Math.max(0, amount);
   }

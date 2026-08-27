@@ -247,8 +247,24 @@ export class Game {
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
     this.saveStore.save({ ...saved, best });
     this.gameOver.open(summary, best, () => {
-      if (!this.gameState.restart()) return;
-      window.location.reload();
+      this.restartRun();
     });
+  }
+
+  private restartRun(): void {
+    if (!this.gameState.restart()) return;
+    this.input.reset();
+    this.arena.reset();
+    this.player.reset();
+    this.combat.reset();
+    this.progression.reset();
+    this.upgradeApplier.reset();
+    this.lifecyclePaused = false;
+    this.accumulator = 0;
+    this.frames = 0;
+    this.fps = 0;
+    this.fpsTime = performance.now();
+    this.gameOver.close();
+    this.lifecycle.onGameStart();
   }
 }

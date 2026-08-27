@@ -128,4 +128,31 @@ describe('CombatSimulation', () => {
       && Math.hypot(enemy.x - ARENA_CENTER.x, enemy.y - ARENA_CENTER.y) > ARENA_RADIUS
     ))).toBe(true);
   });
+
+  it('resets stats, pools and weapon state without reallocating systems', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    combat.addOrbitBlade();
+    combat.unlockChainLightning();
+    runSeconds(combat, player, 2);
+    const enemies = combat.enemies;
+    const projectiles = combat.projectiles;
+
+    combat.reset();
+
+    expect(combat.enemies).toBe(enemies);
+    expect(combat.projectiles).toBe(projectiles);
+    expect(combat.stats).toEqual({
+      elapsedSeconds: 0,
+      kills: 0,
+      experience: 0,
+      shotsFired: 0,
+      damageTaken: 0
+    });
+    expect(combat.enemies.activeCount).toBe(0);
+    expect(combat.projectiles.activeCount).toBe(0);
+    expect(combat.activeOrbitBlades).toBe(0);
+    expect(combat.hasChainLightning).toBe(false);
+    expect(combat.laser.state.phase).toBe('idle');
+  });
 });

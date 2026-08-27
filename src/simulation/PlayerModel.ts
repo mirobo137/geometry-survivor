@@ -60,6 +60,16 @@ export class PlayerModel {
     return this.movementSpeed;
   }
 
+  public reset(): void {
+    this.state.x = ARENA_CENTER.x;
+    this.state.y = ARENA_CENTER.y;
+    this.state.health = PLAYER_MAX_HEALTH;
+    this.state.maxHealth = PLAYER_MAX_HEALTH;
+    this.state.armor = 0;
+    this.movementSpeed = PLAYER_SPEED;
+    this.invulnerabilitySeconds = 0;
+  }
+
   public increaseMovementSpeed(amount: number): void {
     this.movementSpeed = Math.max(PLAYER_SPEED, this.movementSpeed + Math.max(0, amount));
   }

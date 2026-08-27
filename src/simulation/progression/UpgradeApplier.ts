@@ -25,6 +25,10 @@ export class UpgradeApplier {
     return this.stacks.get(upgradeId) ?? 0;
   }
 
+  public reset(): void {
+    this.stacks.clear();
+  }
+
   public getPreview(upgrade: UpgradeDefinition | UpgradeId): UpgradePreview | null {
     const definition = this.resolveDefinition(upgrade);
     if (!definition) return null;

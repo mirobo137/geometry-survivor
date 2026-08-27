@@ -21,4 +21,19 @@ describe('entity pools', () => {
     projectiles.release(projectile!);
     expect(projectiles.activeCount).toBe(0);
   });
+
+  it('resets all active slots and cursors for a new run', () => {
+    const enemies = new EnemyPool(2);
+    const projectiles = new ProjectilePool(2);
+    enemies.acquire();
+    projectiles.acquire();
+
+    enemies.reset();
+    projectiles.reset();
+
+    expect(enemies.activeCount).toBe(0);
+    expect(projectiles.activeCount).toBe(0);
+    expect(enemies.states.every((state) => !state.active)).toBe(true);
+    expect(projectiles.states.every((state) => !state.active)).toBe(true);
+  });
 });

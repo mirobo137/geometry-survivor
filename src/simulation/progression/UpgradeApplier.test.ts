@@ -68,4 +68,16 @@ describe('UpgradeApplier', () => {
       after: 300
     });
   });
+
+  it('clears acquired stacks so a restarted run starts with the base build', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    expect(applier.apply('orbit_blade')).toBe(true);
+    expect(applier.apply('chain_lightning')).toBe(true);
+
+    applier.reset();
+
+    expect(applier.getStacks('orbit_blade')).toBe(0);
+    expect(applier.getStacks('chain_lightning')).toBe(0);
+    expect(applier.canApply('orbit_reach')).toBe(false);
+  });
 });

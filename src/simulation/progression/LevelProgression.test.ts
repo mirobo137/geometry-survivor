@@ -43,4 +43,18 @@ describe('LevelProgression', () => {
     expect(progression.state.totalExperience).toBe(12);
     expect(progression.state.level).toBe(2);
   });
+
+  it('clears pending level-ups for an in-place restart', () => {
+    const progression = new LevelProgression();
+    progression.sync(50);
+
+    progression.reset();
+
+    expect(progression.state).toEqual({
+      level: 1,
+      totalExperience: 0,
+      nextLevelExperience: 8,
+      pendingLevelUps: 0
+    });
+  });
 });

@@ -75,6 +75,18 @@ export class LaserHazard {
     return damagedPlayer;
   }
 
+  public reset(): void {
+    this.phase = 'idle';
+    this.phaseTimer = 0;
+    this.nextTriggerSeconds = this.definition.firstTriggerSeconds;
+    this.strikeIndex = 0;
+    this.hitApplied = false;
+    this.state.phase = 'idle';
+    this.state.angle = 0;
+    this.state.progress = 0;
+    this.state.width = this.definition.width;
+  }
+
   private startStrike(): void {
     this.phase = 'telegraph';
     this.phaseTimer = 0;

@@ -75,6 +75,12 @@ export class EnemyPool {
     state.active = false;
     this.activeCount -= 1;
   }
+
+  public reset(): void {
+    for (const state of this.states) state.active = false;
+    this.activeCount = 0;
+    this.cursor = 0;
+  }
 }
 
 export class ProjectilePool {
@@ -103,5 +109,11 @@ export class ProjectilePool {
     if (!state.active) return;
     state.active = false;
     this.activeCount -= 1;
+  }
+
+  public reset(): void {
+    for (const state of this.states) state.active = false;
+    this.activeCount = 0;
+    this.cursor = 0;
   }
 }

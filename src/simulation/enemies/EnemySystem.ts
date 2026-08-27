@@ -138,6 +138,13 @@ export class EnemySystem {
     return this.pool.states[index];
   }
 
+  public reset(): void {
+    this.pool.reset();
+    this.grid.clear();
+    this.contactCooldown = 0;
+    this.spawnIndex = 0;
+  }
+
   private configureEnemy(state: EnemyState, arenaRadius: number, index: number, kind: EnemyKind): void {
     const definition = ENEMY_DEFINITIONS[kind];
     const angle = index * SPAWN_ANGLE_STEP;

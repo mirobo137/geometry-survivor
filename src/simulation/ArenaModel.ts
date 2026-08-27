@@ -55,6 +55,16 @@ export class ArenaModel {
     this.state = { elapsedSeconds, radius, expansionProgress, expansionIndex, resonance };
   }
 
+  public reset(): void {
+    this.state = {
+      elapsedSeconds: 0,
+      radius: ARENA_RADIUS,
+      expansionProgress: 0,
+      expansionIndex: 0,
+      resonance: 0
+    };
+  }
+
   private expansionResonance(elapsedSeconds: number, startSeconds: number): number {
     const age = elapsedSeconds - startSeconds;
     if (age < 0 || age >= ARENA_RESONANCE_DURATION_SECONDS) return 0;

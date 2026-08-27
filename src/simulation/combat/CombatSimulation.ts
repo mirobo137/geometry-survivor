@@ -170,6 +170,20 @@ export class CombatSimulation {
     return this.pendingEvents;
   }
 
+  public reset(): void {
+    this.enemySystem.reset();
+    this.weaponSystem.reset();
+    this.laser.reset();
+    this.stats.elapsedSeconds = 0;
+    this.stats.kills = 0;
+    this.stats.experience = 0;
+    this.stats.shotsFired = 0;
+    this.stats.damageTaken = 0;
+    this.pendingEvents.length = 0;
+    this.spawnAccumulator = 0;
+    this.stressInitialized = false;
+  }
+
   private initializeStress(player: PlayerState, arenaRadius: number): void {
     this.enemySystem.initializeStress(arenaRadius);
     this.weaponSystem.initializeStress(player);

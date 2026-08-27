@@ -64,4 +64,26 @@ describe('PlayerModel', () => {
     expect(player.takeDamage(5)).toBe(true);
     expect(player.state.health).toBe(97);
   });
+
+  it('restores the base player state for an in-place restart', () => {
+    const player = new PlayerModel();
+    player.increaseMovementSpeed(25);
+    player.increaseMaxHealth(20);
+    player.increaseArmor(2);
+    player.takeDamage(10);
+    player.update({ x: 1, y: 0 }, 1 / 60);
+
+    player.reset();
+
+    expect(player.state).toEqual({
+      x: ARENA_CENTER.x,
+      y: ARENA_CENTER.y,
+      radius: PLAYER_RADIUS,
+      health: 100,
+      maxHealth: 100,
+      armor: 0
+    });
+    expect(player.currentMovementSpeed).toBe(PLAYER_SPEED);
+    expect(player.isAlive).toBe(true);
+  });
 });

@@ -47,4 +47,14 @@ export class LevelProgression {
     this.state = { ...this.state, pendingLevelUps: this.state.pendingLevelUps - 1 };
     return true;
   }
+
+  public reset(): void {
+    this.state = {
+      level: 1,
+      totalExperience: 0,
+      nextLevelExperience: FIRST_LEVEL_EXPERIENCE,
+      pendingLevelUps: 0
+    };
+    this.lastExperience = 0;
+  }
 }

@@ -121,12 +121,12 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta completar snapshots finales y view-models de UI fuera del level-up.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
-6. `PlatformAdapter` aún mezcla lifecycle y anuncios; `SaveStore` local ya tiene contrato y fallback, pero falta conectarlo al flujo final y separar los servicios de plataforma.
+6. `PlatformAdapter` ahora compone `PlatformLifecycle` y `AdService`; `SaveStore` local ya tiene contrato y fallback, pero falta conectarlo al flujo final.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, conexión del guardado y el flujo de run final. `GameState` ahora expone transiciones terminales explícitas y un reinicio seguro para preparar ese flujo sin acoplarlo al renderer. Las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, y `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, conexión del guardado y el flujo de run final. `GameState` ahora expone transiciones terminales explícitas y un reinicio seguro para preparar ese flujo sin acoplarlo al renderer. Las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle de anuncios.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 

@@ -2,7 +2,7 @@ import type { Application, Ticker } from 'pixi.js';
 import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { InputManager } from '../input/InputManager';
-import type { PlatformAdapter } from '../platform/Platform';
+import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
 import { PixiGameView } from '../presentation/PixiGameView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
@@ -38,7 +38,7 @@ export class Game {
   private readonly hudElement: HTMLElement;
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
-  private readonly platform: PlatformAdapter;
+  private readonly lifecycle: PlatformLifecycle;
   private readonly viewport = new ViewportTransform();
   private readonly arena = new ArenaModel();
   private readonly player = new PlayerModel();
@@ -93,7 +93,7 @@ export class Game {
     this.hudElement = options.elements.hud;
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
-    this.platform = options.platform;
+    this.lifecycle = options.platform.lifecycle;
     this.combat = new CombatSimulation({ stress: this.stressMode });
     this.view = new PixiGameView(this.app.renderer);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode);
@@ -117,8 +117,8 @@ export class Game {
     this.resizeNow();
     this.input.attach();
     this.hudElement.hidden = false;
-    await this.platform.init();
-    this.platform.onGameStart();
+    await this.lifecycle.init();
+    this.lifecycle.onGameStart();
     this.app.ticker.add(this.onTick);
   }
 
@@ -132,7 +132,7 @@ export class Game {
     window.removeEventListener('orientationchange', this.queueResize);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     window.removeEventListener('blur', this.onWindowBlur);
-    this.platform.onGamePause();
+    this.lifecycle.onGamePause();
   }
 
   private resizeNow(): void {
@@ -198,7 +198,7 @@ export class Game {
   }
 
   private openLevelUp(): void {
-    if (this.gameState.enterLevelUp()) this.platform.onGamePause();
+    if (this.gameState.enterLevelUp()) this.lifecycle.onGamePause();
     const choices = this.upgradeApplier.getChoices(this.progression.state.level);
     this.levelUp.open(this.progression.state.level, choices, (upgradeId) => {
       this.input.reset();
@@ -208,7 +208,7 @@ export class Game {
         this.openLevelUp();
       } else {
         this.gameState.leaveLevelUp();
-        if (!this.lifecyclePaused) this.platform.onGameResume();
+        if (!this.lifecyclePaused) this.lifecycle.onGameResume();
       }
     }, (upgrade) => this.upgradeApplier.getPreview(upgrade));
   }
@@ -217,13 +217,13 @@ export class Game {
     if (this.lifecyclePaused || !this.gameState.enterPause()) return;
     this.lifecyclePaused = true;
     this.input.reset();
-    this.platform.onGamePause();
+    this.lifecycle.onGamePause();
     this.pause.open('La partida se detuvo al salir de la ventana.', () => {
       this.input.reset();
       this.lifecyclePaused = false;
       this.gameState.resume();
       this.pause.close();
-      this.platform.onGameResume();
+      this.lifecycle.onGameResume();
     });
   }
 }

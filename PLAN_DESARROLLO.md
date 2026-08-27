@@ -1111,6 +1111,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `UpgradeDefinition` declara `maxStacks` y `requires`; `UpgradeApplier` registra acumulaciones y `Game` entrega al overlay sólo cartas aplicables, evitando adquisiciones repetidas o mejoras sin prerrequisito;
 - `UpgradeApplier` expone previews numéricos `antes → después` y `LevelUpOverlay` los presenta sin duplicar reglas de simulación;
 - `src/platform/save/SaveStore.ts` define schema v1, migración/normalización y `LocalSaveStore` usa `localStorage` con fallback en memoria y límite de payload;
+- `PlatformAdapter` compone `PlatformLifecycle` y `AdService`; `Game` consume solo el lifecycle y la implementación local mantiene anuncios simulados aislados;
 - `src/content/weapons/WeaponDefinitions.ts` y `CombatSimulation` incorporan Orbit (contacto orbital) y Chain Lightning (hasta tres saltos con telegraph visual);
 - `src/content/upgrades/UpgradeDefinitions.ts` contiene 10 mejoras data-driven, con cinco efectos adicionales para ritmo, alcance, daño y mitigación;
 - `src/ui/PauseOverlay.ts` detiene la simulación al perder visibilidad/foco y permite reanudar con un target táctil amplio;

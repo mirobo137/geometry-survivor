@@ -165,7 +165,6 @@ Puerta del hito:
 ### Fase 3 — todavía abierta
 
 - Conectar el `SaveStore` versionado de ajustes y mejor marca al resumen de run y a la UI de configuración.
-- Separar `PlatformLifecycle`, `AdService` y `SaveStore`.
 - Validar manualmente dos builds que se sientan diferentes.
 
 ### Fase 4 — implementada, pendiente de puerta humana

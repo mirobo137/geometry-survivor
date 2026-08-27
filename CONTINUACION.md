@@ -2,7 +2,7 @@
 
 > Snapshot operativo: 27-08-2026.
 >
-> Estado funcional auditado desde el commit `b868645` (`feat: support in-place run restart`) y la consolidación arquitectónica en curso.
+> Estado funcional auditado desde el commit `32744cf` (`feat: add modular boss and victory flow`) y la consolidación arquitectónica en curso.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 

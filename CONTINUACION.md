@@ -2,7 +2,7 @@
 
 > Snapshot operativo: 27-08-2026.
 >
-> Estado funcional auditado desde el commit `10a892f` (`feat: add arena resonance and difficulty phases`) y la consolidación arquitectónica en curso.
+> Estado funcional auditado desde el commit `1f54150` (`refactor: formalize run terminal transitions`) y la consolidación arquitectónica en curso.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 

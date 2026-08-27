@@ -272,3 +272,36 @@ npm run build:crazygames
 - No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
 - No existen resultados de browser smoke automatizado, context loss o storage fallido.
 - La diversión, claridad y balance no pueden declararse aprobados sólo con tests.
+
+## 12. Registro de sesión — auditoría de modularidad
+
+Fecha: 27-08-2026.
+
+Estado al cerrar esta sesión:
+
+- `main` está limpio y sincronizado con `origin/main`.
+- La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
+- No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
+- No se encontraron ciclos de dependencias en `src`.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 65 tests en 17 archivos.
+- Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
+- El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
+
+Pendiente prioritario detectado por la auditoría:
+
+1. En `src/app/Game.ts`, `finishRun()` crea el resumen con `game-over` incluso cuando recibe `victory`. Corregirlo a `createRunSummary(outcome, ...)` y añadir una prueba de integración que confirme el resumen de victoria.
+2. Después de esa corrección, repetir en móvil el encuentro del boss publicado: comprobar movimiento orbital, telegraphs, derrota y texto “Victoria”.
+3. Añadir browser smoke en CI para carga, resize, pausa, level-up, storage y consola; el crash de color del boss demostró que los tests de simulación/build no sustituyen esa capa.
+4. Antes de una cuarta arma, evaluar separar `CombatWeaponSystem`; antes de ampliar variantes, mover la selección temporal de enemigos de `EnemySystem` a contenido/director.
+
+Limitaciones de esta sesión:
+
+- No hubo navegador conectado en el entorno del agente, por lo que no se pudo ejecutar smoke visual local.
+- No se modificó el código de producción durante la auditoría; el fallo de `finishRun()` permanece pendiente de autorización/implementación.
+
+Para retomar en otra PC:
+
+1. Abrir `C:\PROYECTOS\pruebas_geo` como raíz y leer `AGENTS.md` y este archivo.
+2. Ejecutar `git status --short --branch`, `npm run typecheck` y `npm test`.
+3. Corregir primero el resultado `victory` y cubrirlo con test; luego ejecutar `npm run validate` y los dos builds de plataforma.
+4. Publicar en `main` y repetir la misma URL de GitHub Pages, sin parámetros adicionales.

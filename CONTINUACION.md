@@ -55,7 +55,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 38 tests pasando en 12 archivos.
+- Última auditoría local: typecheck correcto y 40 tests pasando en 13 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -116,7 +116,7 @@ Mediciones manuales aportadas desde Android Chrome:
 
 No son fallos actuales, pero ya son puntos de concentración reales:
 
-1. `src/simulation/combat/CombatSimulation.ts` tiene alrededor de 436 líneas y coordina spawn, enemigos, grid, tres armas, proyectiles, derrotas y eventos.
+1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 271 líneas y agrupa Projectile, Orbit, Chain y stress; `CombatSimulation.ts` se redujo a unas 179 líneas y coordina Laser, run, derrotas, XP y eventos.
 2. `src/main.ts` tiene alrededor de 229 líneas y aún coordina bootstrap, resize, lifecycle, loop, pausa, level-up, HUD y plataforma.
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 243 líneas y representa arena, jugador, enemigos, armas y hazards.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta separar vistas internas y snapshots finales.
@@ -126,7 +126,7 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación ya comenzó; todavía debe dividirse la coordinación interna antes del boss, game over y más armas.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; todavía debe decidirse si armas futuras justifican separar Projectile/Orbit/Chain y debe dividirse la fachada de presentación antes del boss, game over y más armas.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
@@ -137,10 +137,8 @@ Orden recomendado:
 1. Usar `src/app/GameState.ts` en todos los estados de gameplay y añadir tests de transición para fin/reinicio.
 2. Extraer del `main.ts` la coordinación de la run hacia `src/app/Game.ts` o una composición equivalente con consumidor real.
 3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación y añadir límites/estado de cartas.
-4. Dividir responsabilidades existentes de `CombatSimulation` sin rediseñar datos ni colisiones:
-   - enemigos/spawn;
-   - armas/proyectiles;
-   - coordinación de eventos y stats.
+4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
+   `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
 5. Dividir `PixiGameView` en vistas existentes —arena, entidades, armas y hazards— manteniendo una fachada pequeña para `main`/`Game`.
 6. Completar snapshots mínimos de presentación; `CombatRenderState` ya es el primer contrato.
 7. Añadir tests de transiciones de estado, pausa, level-up, game over y reinicio.
@@ -159,7 +157,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 38 tests existentes siguen pasando y existen tests nuevos de estados/aplicación;
+- 40 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -253,7 +251,9 @@ npm run build:crazygames
 - `PLAN_DESARROLLO.md`: alcance, decisiones, fases y puertas.
 - `proyecto.md`: visión y principios de largo plazo.
 - `src/main.ts`: composition root actual; siguiente candidato a extracción.
-- `src/simulation/combat/CombatSimulation.ts`: coordinador de combate actual; siguiente candidato a división.
+- `src/simulation/enemies/EnemySystem.ts`: ciclo de vida, movimiento, contacto, spawn y consultas espaciales de enemigos.
+- `src/simulation/combat/CombatWeaponSystem.ts`: Projectile, Orbit, Chain Lightning y stress; frontera preparada para futuras armas.
+- `src/simulation/combat/CombatSimulation.ts`: coordinador de run/laser/eventos/XP; mantiene la composición sin lógica de armas.
 - `src/presentation/PixiGameView.ts`: fachada de render actual; siguiente candidato a división.
 - `src/content/`: configuración data-driven.
 - `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.

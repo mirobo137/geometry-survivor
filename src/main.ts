@@ -1,20 +1,7 @@
 import { Application } from 'pixi.js';
 import './styles.css';
-import { FIXED_STEP_SECONDS } from './config/constants';
-import { DebugPanel } from './debug/DebugPanel';
-import { InputManager } from './input/InputManager';
+import { Game } from './app/Game';
 import { LocalPlatform } from './platform/local/LocalPlatform';
-import { PixiGameView } from './presentation/PixiGameView';
-import { ViewportTransform } from './presentation/viewport/ViewportTransform';
-import { ArenaModel } from './simulation/ArenaModel';
-import { CombatSimulation } from './simulation/combat/CombatSimulation';
-import { PlayerModel } from './simulation/PlayerModel';
-import { LevelProgression } from './simulation/progression/LevelProgression';
-import { GameHud } from './ui/GameHud';
-import { LevelUpOverlay } from './ui/LevelUpOverlay';
-import { PauseOverlay } from './ui/PauseOverlay';
-import { GameState } from './app/GameState';
-import { UpgradeApplier } from './simulation/progression/UpgradeApplier';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -86,166 +73,22 @@ const bootstrap = async (): Promise<void> => {
     return;
   }
 
-  const viewport = new ViewportTransform();
-  const arena = new ArenaModel();
-  const player = new PlayerModel();
-  const combat = new CombatSimulation({ stress: stressMode });
-  const progression = new LevelProgression();
-  const gameState = new GameState();
-  const view = new PixiGameView(app.renderer);
-  const debug = new DebugPanel(debugElement, stressMode);
-  const hud = new GameHud(hudElement);
-  const levelUp = new LevelUpOverlay(levelUpElement);
-  const pause = new PauseOverlay(pauseElement);
-  const upgradeApplier = new UpgradeApplier(player, combat);
-  const platform = new LocalPlatform();
-
-  app.stage.addChild(view.root);
-
-  const resizeNow = (): void => {
-    const state = viewport.resize(container.clientWidth, container.clientHeight, window.devicePixelRatio);
-    app.renderer.resolution = state.dpr;
-    app.renderer.resize(state.cssWidth, state.cssHeight);
-    view.resize(state);
-  };
-
-  let resizeQueued = false;
-  const queueResize = (): void => {
-    if (resizeQueued) return;
-    resizeQueued = true;
-    requestAnimationFrame(() => {
-      resizeQueued = false;
-      resizeNow();
-    });
-  };
-
-  const resizeObserver =
-    typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(queueResize);
-  resizeObserver?.observe(container);
-  window.addEventListener('resize', queueResize, { passive: true });
-  window.addEventListener('orientationchange', queueResize, { passive: true });
-  resizeNow();
-
-  const input = new InputManager(container, viewport, () => player.state);
-  input.attach();
-  hudElement.hidden = false;
-  await platform.init();
-  platform.onGameStart();
-
-  let accumulator = 0;
-  let frames = 0;
-  let fpsTime = performance.now();
-  let fps = 0;
-  let lifecyclePaused = false;
-
-  const openLevelUp = (): void => {
-    if (gameState.enterLevelUp()) {
-      platform.onGamePause();
-    }
-    levelUp.open(progression.state.level, (upgradeId) => {
-      input.reset();
-      upgradeApplier.apply(upgradeId);
-      progression.consumeLevelUp();
-      if (progression.state.pendingLevelUps > 0) {
-        openLevelUp();
-      } else {
-        gameState.leaveLevelUp();
-        if (!lifecyclePaused) platform.onGameResume();
-      }
-    });
-  };
-
-  const pauseForLifecycle = (): void => {
-    if (lifecyclePaused || !gameState.enterPause()) return;
-    lifecyclePaused = true;
-    input.reset();
-    platform.onGamePause();
-    pause.open('La partida se detuvo al salir de la ventana.', () => {
-      input.reset();
-      lifecyclePaused = false;
-      gameState.resume();
-      pause.close();
-      platform.onGameResume();
-    });
-  };
-
-  const onVisibilityChange = (): void => {
-    if (document.visibilityState === 'hidden') pauseForLifecycle();
-  };
-  const onWindowBlur = (): void => pauseForLifecycle();
-  document.addEventListener('visibilitychange', onVisibilityChange);
-  window.addEventListener('blur', onWindowBlur);
-
-  app.ticker.add((ticker) => {
-    accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
-    while (accumulator >= FIXED_STEP_SECONDS) {
-      if (gameState.isSimulationRunning && !lifecyclePaused) {
-        arena.update(FIXED_STEP_SECONDS);
-        player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
-        combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
-        for (const event of combat.events) {
-          if (event.type === 'playerDamaged') player.takeDamage(event.amount);
-        }
-        if (!stressMode) {
-          progression.sync(combat.stats.experience);
-          if (progression.state.pendingLevelUps > 0) openLevelUp();
-        }
-      }
-      accumulator -= FIXED_STEP_SECONDS;
-    }
-
-    view.renderArena(arena.state.radius, arena.state.resonance);
-    view.renderLaser(combat.renderState.laser, arena.state.radius);
-    view.renderCombat(combat.renderState);
-    view.renderPlayer(player.state);
-    hud.update({
-      elapsedSeconds: combat.stats.elapsedSeconds,
-      health: player.state.health,
-      maxHealth: player.state.maxHealth,
-      xp: combat.stats.experience,
-      kills: combat.stats.kills,
-      level: progression.state.level
-    });
-    frames += 1;
-    const now = performance.now();
-    if (now - fpsTime >= 500) {
-      fps = (frames * 1000) / (now - fpsTime);
-      frames = 0;
-      fpsTime = now;
-    }
-    const state = viewport.state;
-    debug.update({
-      target: __BUILD_TARGET__,
-      orientation: state.orientation,
-      logical: `${state.logicalWidth}×${state.logicalHeight}`,
-      viewport: `${state.cssWidth}×${state.cssHeight}`,
-      scale: state.scale,
-      dpr: state.dpr,
-      fps,
-      mode: combat.isStressMode ? 'stress' : 'normal',
-      enemies: `${combat.enemies.activeCount}/${combat.enemies.capacity}`,
-      projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
-      orbit: `${combat.activeOrbitBlades}/${combat.orbitBlades.length}`,
-      chain: combat.hasChainLightning ? 'ready' : 'locked',
-      paused: lifecyclePaused ? 'lifecycle' : gameState.phase,
-      level: progression.state.level,
-      arena: `${arena.state.radius.toFixed(1)} | expansión ${arena.state.expansionIndex}`,
-      resonance: arena.state.resonance,
-      player: `${player.state.x.toFixed(1)}, ${player.state.y.toFixed(1)}`
-    });
+  const game = new Game({
+    app,
+    elements: {
+      container,
+      debug: debugElement,
+      hud: hudElement,
+      levelUp: levelUpElement,
+      pause: pauseElement
+    },
+    stressMode,
+    buildTarget: __BUILD_TARGET__,
+    platform: new LocalPlatform()
   });
-
+  await game.start();
   bootStatus.hidden = true;
-
-  window.addEventListener('beforeunload', () => {
-    input.detach();
-    resizeObserver?.disconnect();
-    window.removeEventListener('resize', queueResize);
-    window.removeEventListener('orientationchange', queueResize);
-    document.removeEventListener('visibilitychange', onVisibilityChange);
-    window.removeEventListener('blur', onWindowBlur);
-    platform.onGamePause();
-  });
+  window.addEventListener('beforeunload', () => game.shutdown(), { once: true });
 };
 
 void bootstrap().catch(reportBootError);

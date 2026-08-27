@@ -117,7 +117,7 @@ Mediciones manuales aportadas desde Android Chrome:
 No son fallos actuales, pero ya son puntos de concentración reales:
 
 1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 271 líneas y agrupa Projectile, Orbit, Chain y stress; `CombatSimulation.ts` se redujo a unas 179 líneas y coordina Laser, run, derrotas, XP y eventos.
-2. `src/main.ts` tiene alrededor de 229 líneas y aún coordina bootstrap, resize, lifecycle, loop, pausa, level-up, HUD y plataforma.
+2. `src/main.ts` tiene alrededor de 94 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 228 líneas y coordina lifecycle, loop, pausa, level-up, HUD y plataforma sin implementar sistemas completos.
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta completar snapshots finales y view-models de UI.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts`; un efecto nuevo todavía requiere modificar ese módulo tipado.
@@ -126,7 +126,7 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación avanza; la presentación ya tiene vistas separadas, mientras `main.ts` sigue siendo el siguiente punto de concentración antes del boss, game over y más armas.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, límites de upgrades, guardado y el flujo de run final.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
@@ -135,7 +135,7 @@ Objetivo: preparar boss, fin de run y guardado sin cambiar el comportamiento jug
 Orden recomendado:
 
 1. Usar `src/app/GameState.ts` en todos los estados de gameplay y añadir tests de transición para fin/reinicio.
-2. Extraer del `main.ts` la coordinación de la run hacia `src/app/Game.ts` o una composición equivalente con consumidor real.
+2. `src/app/Game.ts` ya coordina la run; mantenerlo como orquestador de lifecycle/loop, no como contenedor de sistemas.
 3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación y añadir límites/estado de cartas.
 4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
    `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
@@ -254,7 +254,8 @@ npm run build:crazygames
 - `src/simulation/combat/CombatSimulation.ts`: coordinador de run/laser/eventos/XP; mantiene la composición sin lógica de armas.
 - `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
 - `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
-- `src/main.ts`: composition root actual; siguiente candidato a extracción hacia `Game`.
+- `src/app/Game.ts`: orquestador de lifecycle, loop, pausa, level-up, HUD y plataforma.
+- `src/main.ts`: composition root y bootstrap de Pixi/spikes.
 - `src/content/`: configuración data-driven.
 - `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.
 - `skills/geometry-survivor-svg/`: contrato code-first para futuros SVG.

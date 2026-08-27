@@ -22,6 +22,7 @@ export class BossSystem {
   private attackIndex = 0;
   private hitApplied = false;
   private arenaRadius = 0;
+  private movementAngle = -Math.PI / 2;
 
   public constructor(
     private readonly enemies: EnemySystem,
@@ -67,7 +68,10 @@ export class BossSystem {
       return 0;
     }
 
-    let remaining = Math.min(Math.max(dtSeconds, 0), 0.1);
+    const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
+    this.updateMovement(dt);
+
+    let remaining = dt;
     let damage = 0;
     while (remaining > EPSILON) {
       const duration = this.phaseDuration();
@@ -112,6 +116,7 @@ export class BossSystem {
     this.attackIndex = 0;
     this.hitApplied = false;
     this.arenaRadius = 0;
+    this.movementAngle = -Math.PI / 2;
     this.state.active = false;
     this.state.x = ARENA_CENTER.x;
     this.state.y = ARENA_CENTER.y - this.definition.spawnDistance;
@@ -124,6 +129,18 @@ export class BossSystem {
     this.state.ringRadius = this.definition.ringStartRadius;
     this.state.safeGapAngle = 0;
     this.state.safeGapHalfAngle = this.definition.safeGapHalfAngle;
+  }
+
+  private updateMovement(dtSeconds: number): void {
+    if (!this.boss || dtSeconds <= 0) return;
+
+    this.movementAngle =
+      (this.movementAngle + this.definition.movementAngularSpeed * dtSeconds) % FULL_CIRCLE;
+    const safeRadius = Math.max(0, this.arenaRadius - this.boss.radius - 24);
+    const movementRadius = Math.min(this.definition.movementRadius, safeRadius);
+
+    this.boss.x = ARENA_CENTER.x + Math.cos(this.movementAngle) * movementRadius;
+    this.boss.y = ARENA_CENTER.y + Math.sin(this.movementAngle) * movementRadius;
   }
 
   private phaseDuration(): number {

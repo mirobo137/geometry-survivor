@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { ARENA_CENTER } from '../../config/constants';
 import type { BossRenderState } from '../../simulation/combat/CombatRenderState';
+import { BOSS_VISUAL_COLORS } from './BossVisualTokens';
 
 const FULL_CIRCLE = Math.PI * 2;
 const HEALTH_BAR_WIDTH = 120;
@@ -17,7 +18,7 @@ export class BossView {
     this.label = new Text({
       text: 'BOSS',
       style: new TextStyle({
-        fill: 0xffe8ff,
+        fill: BOSS_VISUAL_COLORS.outline,
         fontFamily: 'Arial, sans-serif',
         fontSize: 13,
         fontWeight: '700',
@@ -59,11 +60,11 @@ export class BossView {
     const ratio = state.maxHealth > 0 ? Math.max(0, Math.min(1, state.health / state.maxHealth)) : 0;
     this.health
       .rect(left, top, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
-      .fill({ color: 0x24142e, alpha: 0.95 })
+      .fill({ color: BOSS_VISUAL_COLORS.healthTrack, alpha: 0.95 })
       .rect(left, top, HEALTH_BAR_WIDTH * ratio, HEALTH_BAR_HEIGHT)
-      .fill({ color: 0xff6cf2, alpha: 0.95 })
+      .fill({ color: BOSS_VISUAL_COLORS.boss, alpha: 0.95 })
       .rect(left, top, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
-      .stroke({ color: 0xffe8ff, width: 1, alpha: 0.8 });
+      .stroke({ color: BOSS_VISUAL_COLORS.outline, width: 1, alpha: 0.8 });
   }
 
   private renderSweep(state: BossRenderState, arenaRadius: number): void {
@@ -78,14 +79,14 @@ export class BossView {
       .moveTo(startX, startY)
       .lineTo(endX, endY)
       .stroke({
-        color: active ? 0xff5f6d : 0xffd166,
+        color: active ? BOSS_VISUAL_COLORS.danger : BOSS_VISUAL_COLORS.warning,
         width: active ? 14 : 5,
         alpha: active ? 0.3 : 0.45 + state.progress * 0.35
       })
       .moveTo(startX, startY)
       .lineTo(endX, endY)
       .stroke({
-        color: active ? 0xfff1a8 : 0xfff7cf7a,
+        color: active ? BOSS_VISUAL_COLORS.activeCore : BOSS_VISUAL_COLORS.warningCore,
         width: active ? 4 : 2,
         alpha: active ? 0.95 : 0.85
       });
@@ -93,13 +94,19 @@ export class BossView {
 
   private renderRing(state: BossRenderState): void {
     const active = state.phase === 'ring-active';
-    const ringColor = active ? 0xff5f6d : 0xffd166;
+    const ringColor = active ? BOSS_VISUAL_COLORS.danger : BOSS_VISUAL_COLORS.warning;
     this.attack
       .circle(ARENA_CENTER.x, ARENA_CENTER.y, state.ringRadius)
       .stroke({ color: ringColor, width: active ? 12 : 5, alpha: active ? 0.3 : 0.55 });
     const start = state.safeGapAngle - state.safeGapHalfAngle;
     const end = state.safeGapAngle + state.safeGapHalfAngle;
-    this.strokeArc(start, end, state.ringRadius, active ? 0x75e6ff : 0xb8ffd9, active ? 9 : 6);
+    this.strokeArc(
+      start,
+      end,
+      state.ringRadius,
+      active ? BOSS_VISUAL_COLORS.safe : BOSS_VISUAL_COLORS.safeTelegraph,
+      active ? 9 : 6
+    );
   }
 
   private strokeArc(start: number, end: number, radius: number, color: number, width: number): void {

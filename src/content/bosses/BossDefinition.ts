@@ -1,6 +1,8 @@
 export interface BossDefinition {
   readonly startSeconds: number;
   readonly spawnDistance: number;
+  readonly movementRadius: number;
+  readonly movementAngularSpeed: number;
   readonly introSeconds: number;
   readonly sweepTelegraphSeconds: number;
   readonly sweepActiveSeconds: number;
@@ -18,6 +20,8 @@ export interface BossDefinition {
 export const BOSS_DEFINITION = {
   startSeconds: 260,
   spawnDistance: 180,
+  movementRadius: 180,
+  movementAngularSpeed: 0.32,
   introSeconds: 1.2,
   sweepTelegraphSeconds: 1,
   sweepActiveSeconds: 0.24,

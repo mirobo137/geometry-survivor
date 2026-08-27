@@ -55,6 +55,31 @@ describe('BossSystem', () => {
     expect(phases.has('ring-telegraph')).toBe(true);
   });
 
+  it('moves deterministically on a bounded orbit inside the arena', () => {
+    const first = createBoss();
+    const second = createBoss();
+    first.boss.update(1 / 60, 0, first.player.state, ARENA_RADIUS);
+    second.boss.update(1 / 60, 0, second.player.state, ARENA_RADIUS);
+    const initialX = first.boss.state.x;
+    const initialY = first.boss.state.y;
+
+    for (let index = 0; index < 60; index += 1) {
+      first.boss.update(1 / 60, 1, first.player.state, ARENA_RADIUS);
+      second.boss.update(1 / 60, 1, second.player.state, ARENA_RADIUS);
+    }
+
+    expect(first.boss.state.x).not.toBeCloseTo(initialX, 4);
+    expect(first.boss.state.y).not.toBeCloseTo(initialY, 4);
+    expect(first.boss.state.x).toBeCloseTo(second.boss.state.x, 8);
+    expect(first.boss.state.y).toBeCloseTo(second.boss.state.y, 8);
+    const distance = Math.hypot(
+      first.boss.state.x - ARENA_CENTER.x,
+      first.boss.state.y - ARENA_CENTER.y
+    );
+    expect(distance).toBeCloseTo(TEST_DEFINITION.movementRadius, 5);
+    expect(distance + first.boss.state.radius).toBeLessThan(ARENA_RADIUS);
+  });
+
   it('damages a player in the sweep but permits the declared ring safe gap', () => {
     const first = createBoss();
     first.boss.update(1 / 60, 0, first.player.state, ARENA_RADIUS);

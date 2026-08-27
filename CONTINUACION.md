@@ -2,7 +2,7 @@
 
 > Snapshot operativo: 27-08-2026.
 >
-> Estado funcional auditado desde el commit `32744cf` (`feat: add modular boss and victory flow`) y la consolidación arquitectónica en curso.
+> Estado funcional auditado desde el commit `6966a55` (`fix: stabilize boss rendering and movement`) y la consolidación arquitectónica en curso.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 
@@ -55,13 +55,14 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 63 tests pasando en 16 archivos.
+- Última auditoría local: typecheck correcto y 65 tests pasando en 17 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
 - Spike de 500 entidades: aproximadamente 60 FPS en Sprite, GraphicsContext compartido y pool; p95 de 16.80 ms.
 - Audio: `AudioContext` running y latencia base de 3.0 ms.
 - Stress de 250 enemigos + 300 proyectiles: estable alrededor de 60 FPS quieto, con picos reportados de 120 FPS al mover.
+- Una run móvil llegó al boss de 4:20 y descubrió `Unable to convert color 4294430586`; la causa era un color de ocho dígitos en el telegraph de barrido. Quedó corregido con una paleta RGB validada por test. Falta repetir el encuentro en el build publicado.
 - Falta registrar modelo exacto del teléfono y preset de calidad cuando éstos existan.
 
 ## 4. Funcionalidad implementada
@@ -156,7 +157,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 63 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas/guardado/resumen/reset/boss;
+- 65 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas/guardado/resumen/reset/boss/colores;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -178,6 +179,7 @@ Puerta del hito:
 ### Fase 5 — parcial, boss implementado
 
 - Boss con dos patrones: barrido/línea telegraphed y anillo con huecos seguros ya implementado.
+- El boss se desplaza en una órbita determinista, lenta y acotada dentro de la arena; radio y velocidad viven en contenido, no en Pixi.
 - Run reproducible completa de 5–6 minutos, pendiente de validación manual y balance.
 - Game over por muerte, resumen, mejor marca, victoria y reinicio in-place ya están implementados.
 - Primer balance integral y diez runs internas sin softlock.
@@ -218,7 +220,7 @@ En la URL normal:
 5. alrededor de 1:00, observar primera expansión/resonancia;
 6. después de 2:00, identificar el elite rosa/octagonal;
 7. alrededor de 3:00, observar segunda expansión/resonancia;
-8. alrededor de 4:20, confirmar que aparece un solo boss con barra de vida;
+8. alrededor de 4:20, confirmar que aparece un solo boss con barra de vida, se mueve por su órbita y no muestra el error de color corregido;
 9. observar el aviso del barrido y, después, el anillo con un hueco cian seguro;
 10. derrotar al boss, confirmar el resumen de Victoria y reiniciar sin recarga;
 11. confirmar que HUD y cartas no se cortan ni generan scroll.
@@ -256,7 +258,7 @@ npm run build:crazygames
 - `src/app/Game.ts`: orquestador de lifecycle, loop, pausa, level-up, HUD y plataforma.
 - `src/app/RunSummary.ts` y `src/ui/GameOverOverlay.ts`: snapshot y representación del fin de run.
 - `reset()` en `ArenaModel`, `PlayerModel`, `CombatSimulation`, pools, Laser y progresión: reinicio in-place sin reasignar sistemas.
-- `src/content/bosses/BossDefinition.ts`, `src/simulation/bosses/BossSystem.ts` y `src/presentation/pixi/BossView.ts`: datos, reglas y representación separadas del boss.
+- `src/content/bosses/BossDefinition.ts`, `src/simulation/bosses/BossSystem.ts` y `src/presentation/pixi/BossView.ts`: datos, reglas, movimiento y representación separadas del boss; `BossVisualTokens.ts` mantiene su paleta RGB comprobable.
 - `src/main.ts`: composition root y bootstrap de Pixi/spikes.
 - `src/content/`: configuración data-driven.
 - `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.
@@ -266,7 +268,7 @@ npm run build:crazygames
 ## 11. Evidencia pendiente, no asumir
 
 - No se ha documentado todavía una run manual completa de 5–6 minutos.
-- Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas, pero falta registrar su smoke manual final en móvil.
+- Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas; el boss ya fue alcanzado en móvil, pero falta repetir el encuentro con la corrección publicada y completar el smoke final.
 - No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
 - No existen resultados de browser smoke automatizado, context loss o storage fallido.
 - La diversión, claridad y balance no pueden declararse aprobados sólo con tests.

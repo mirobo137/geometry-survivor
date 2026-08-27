@@ -55,7 +55,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 42 tests pasando en 13 archivos.
+- Última auditoría local: typecheck correcto y 43 tests pasando en 13 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -126,7 +126,7 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, límites de upgrades, guardado y el flujo de run final.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, guardado y el flujo de run final. `GameState` ahora expone transiciones terminales explícitas y un reinicio seguro para preparar ese flujo sin acoplarlo al renderer.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
@@ -134,14 +134,14 @@ Objetivo: preparar boss, fin de run y guardado sin cambiar el comportamiento jug
 
 Orden recomendado:
 
-1. Usar `src/app/GameState.ts` en todos los estados de gameplay y añadir tests de transición para fin/reinicio.
+1. Usar `src/app/GameState.ts` en todos los estados de gameplay; el contrato de fin/victoria/reinicio ya está cubierto por tests y queda integrarlo cuando se implemente el flujo final de run.
 2. `src/app/Game.ts` ya coordina la run; mantenerlo como orquestador de lifecycle/loop, no como contenedor de sistemas.
 3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación; límites y prerrequisitos de cartas ya están data-driven.
 4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
    `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
 5. Mantener `PixiGameView` como fachada pequeña; `ArenaView`, `CombatEntitiesView`, `WeaponView`, `HazardView` y `PlayerView` ya separan la representación por responsabilidad.
 6. Completar snapshots mínimos de presentación; `CombatRenderState` ya es el primer contrato.
-7. Añadir tests de transiciones de estado, pausa, level-up, game over y reinicio; después ejecutar typecheck, suite, tres builds y smoke móvil.
+7. Mantener tests de transiciones de estado, pausa, level-up, game over y reinicio; después ejecutar typecheck, suite, tres builds y smoke móvil.
 
 Límites de este refactor:
 
@@ -156,7 +156,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 42 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas;
+- 43 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -166,8 +166,6 @@ Puerta del hito:
 
 - Guardado versionado de ajustes y mejor marca.
 - Separar `PlatformLifecycle`, `AdService` y `SaveStore`.
-- Evitar ofrecer adquisiciones ya obtenidas o mejoras que alcanzaron su límite.
-- Evitar que una carta produzca un no-op, especialmente Chain ya desbloqueada u Orbit al máximo.
 - Mostrar `antes → después` cuando una carta modifica una cifra.
 - Validar manualmente dos builds que se sientan diferentes.
 
@@ -183,7 +181,7 @@ Puerta del hito:
 
 - Boss con dos patrones: barrido/línea telegraphed y anillo con huecos seguros.
 - Run reproducible completa de 5–6 minutos.
-- Game over, victoria, resumen, mejor resultado y reinicio rápido.
+- Game over, victoria, resumen, mejor resultado y reinicio rápido. `GameState` ya deja definidas las transiciones terminales, pero la pantalla y el reinicio completo siguen pendientes de Fase 5.
 - Primer balance integral y diez runs internas sin softlock.
 
 ### Fase 6 — sin implementar

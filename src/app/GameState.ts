@@ -7,6 +7,10 @@ export class GameState {
     return this.phase === 'playing';
   }
 
+  public get isTerminal(): boolean {
+    return this.phase === 'game-over' || this.phase === 'victory';
+  }
+
   public enterLevelUp(): boolean {
     if (this.phase !== 'playing') return false;
     this.phase = 'level-up';
@@ -31,11 +35,21 @@ export class GameState {
     return true;
   }
 
-  public endRun(): void {
+  public endRun(): boolean {
+    if (this.phase !== 'playing') return false;
     this.phase = 'game-over';
+    return true;
   }
 
-  public winRun(): void {
+  public winRun(): boolean {
+    if (this.phase !== 'playing') return false;
     this.phase = 'victory';
+    return true;
+  }
+
+  public restart(): boolean {
+    if (!this.isTerminal) return false;
+    this.phase = 'playing';
+    return true;
   }
 }

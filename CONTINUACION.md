@@ -118,15 +118,15 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 
 1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 271 líneas y agrupa Projectile, Orbit, Chain y stress; `CombatSimulation.ts` se redujo a unas 179 líneas y coordina Laser, run, derrotas, XP y eventos.
 2. `src/main.ts` tiene alrededor de 229 líneas y aún coordina bootstrap, resize, lifecycle, loop, pausa, level-up, HUD y plataforma.
-3. `src/presentation/PixiGameView.ts` tiene alrededor de 243 líneas y representa arena, jugador, enemigos, armas y hazards.
-4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta separar vistas internas y snapshots finales.
+3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
+4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta completar snapshots finales y view-models de UI.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts`; un efecto nuevo todavía requiere modificar ese módulo tipado.
 6. `PlatformAdapter` aún mezcla lifecycle y anuncios; faltan los contratos separados de guardado previstos en el plan.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación avanza; todavía debe decidirse si armas futuras justifican separar Projectile/Orbit/Chain y debe dividirse la fachada de presentación antes del boss, game over y más armas.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; la presentación ya tiene vistas separadas, mientras `main.ts` sigue siendo el siguiente punto de concentración antes del boss, game over y más armas.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
@@ -139,10 +139,9 @@ Orden recomendado:
 3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación y añadir límites/estado de cartas.
 4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
    `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
-5. Dividir `PixiGameView` en vistas existentes —arena, entidades, armas y hazards— manteniendo una fachada pequeña para `main`/`Game`.
+5. Mantener `PixiGameView` como fachada pequeña; `ArenaView`, `CombatEntitiesView`, `WeaponView`, `HazardView` y `PlayerView` ya separan la representación por responsabilidad.
 6. Completar snapshots mínimos de presentación; `CombatRenderState` ya es el primer contrato.
-7. Añadir tests de transiciones de estado, pausa, level-up, game over y reinicio.
-8. Ejecutar typecheck, toda la suite y los tres builds; después realizar smoke móvil para demostrar paridad.
+7. Añadir tests de transiciones de estado, pausa, level-up, game over y reinicio; después ejecutar typecheck, suite, tres builds y smoke móvil.
 
 Límites de este refactor:
 
@@ -250,11 +249,12 @@ npm run build:crazygames
 - `AGENTS.md`: reglas neutrales para agentes y routing de skills.
 - `PLAN_DESARROLLO.md`: alcance, decisiones, fases y puertas.
 - `proyecto.md`: visión y principios de largo plazo.
-- `src/main.ts`: composition root actual; siguiente candidato a extracción.
 - `src/simulation/enemies/EnemySystem.ts`: ciclo de vida, movimiento, contacto, spawn y consultas espaciales de enemigos.
 - `src/simulation/combat/CombatWeaponSystem.ts`: Projectile, Orbit, Chain Lightning y stress; frontera preparada para futuras armas.
 - `src/simulation/combat/CombatSimulation.ts`: coordinador de run/laser/eventos/XP; mantiene la composición sin lógica de armas.
-- `src/presentation/PixiGameView.ts`: fachada de render actual; siguiente candidato a división.
+- `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
+- `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
+- `src/main.ts`: composition root actual; siguiente candidato a extracción hacia `Game`.
 - `src/content/`: configuración data-driven.
 - `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.
 - `skills/geometry-survivor-svg/`: contrato code-first para futuros SVG.

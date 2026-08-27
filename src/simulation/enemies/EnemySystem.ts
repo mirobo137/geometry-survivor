@@ -41,6 +41,14 @@ export class EnemySystem {
     return state;
   }
 
+  public spawnBoss(arenaRadius: number, spawnDistance: number): EnemyState | null {
+    if (this.pool.states.some((state) => state.active && state.kind === 'boss')) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    this.configureBoss(state, arenaRadius, spawnDistance);
+    return state;
+  }
+
   public initializeStress(arenaRadius: number): void {
     for (let index = 0; index < this.pool.capacity; index += 1) {
       const state = this.pool.acquire();
@@ -69,6 +77,7 @@ export class EnemySystem {
     for (const enemy of this.pool.states) {
       if (!enemy.active) continue;
       enemy.orbitHitCooldown = Math.max(0, enemy.orbitHitCooldown - dt);
+      if (enemy.kind === 'boss') continue;
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
       const distance = Math.hypot(dx, dy);
@@ -152,6 +161,23 @@ export class EnemySystem {
     state.kind = kind;
     state.x = ARENA_CENTER.x + Math.cos(angle) * distance;
     state.y = ARENA_CENTER.y + Math.sin(angle) * distance;
+    state.radius = definition.radius;
+    state.speed = definition.speed;
+    state.maxHealth = definition.maxHealth;
+    state.health = definition.maxHealth;
+    state.contactDamage = definition.contactDamage;
+    state.orbitHitCooldown = 0;
+  }
+
+  private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
+    const definition = ENEMY_DEFINITIONS.boss;
+    const distance = Math.min(
+      Math.max(0, spawnDistance),
+      Math.max(0, arenaRadius - definition.radius - 16)
+    );
+    state.kind = definition.kind;
+    state.x = ARENA_CENTER.x;
+    state.y = ARENA_CENTER.y - distance;
     state.radius = definition.radius;
     state.speed = definition.speed;
     state.maxHealth = definition.maxHealth;

@@ -4,6 +4,7 @@ import { ARENA_CENTER, LOGICAL_HEIGHT } from '../config/constants';
 import type { CombatRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
 import { ArenaView } from './pixi/ArenaView';
+import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { PlayerView } from './pixi/PlayerView';
@@ -15,6 +16,7 @@ export class PixiGameView {
   public readonly root = new Container();
   private readonly world = new Container();
   private readonly arenaView = new ArenaView();
+  private readonly bossView = new BossView();
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
   private readonly hazardView = new HazardView();
@@ -31,6 +33,7 @@ export class PixiGameView {
       this.entitiesView.root,
       this.weaponView.root,
       this.hazardView.root,
+      this.bossView.root,
       this.playerView.root
     );
 
@@ -80,6 +83,10 @@ export class PixiGameView {
 
   public renderLaser(state: CombatRenderState['laser'], arenaRadius: number): void {
     this.hazardView.renderLaser(state, arenaRadius);
+  }
+
+  public renderBoss(state: CombatRenderState['boss'], arenaRadius: number): void {
+    this.bossView.render(state, arenaRadius);
   }
 
   public renderPlayer(state: PlayerState): void {

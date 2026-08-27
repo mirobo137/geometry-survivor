@@ -1,6 +1,31 @@
 import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { EnemyState, ProjectileState } from './EntityPools';
 
+export type BossPhase =
+  | 'inactive'
+  | 'intro'
+  | 'sweep-telegraph'
+  | 'sweep-active'
+  | 'ring-telegraph'
+  | 'ring-active'
+  | 'recovery'
+  | 'defeated';
+
+export interface BossRenderState {
+  active: boolean;
+  x: number;
+  y: number;
+  radius: number;
+  health: number;
+  maxHealth: number;
+  phase: BossPhase;
+  progress: number;
+  sweepAngle: number;
+  ringRadius: number;
+  safeGapAngle: number;
+  safeGapHalfAngle: number;
+}
+
 export interface OrbitBladeState {
   active: boolean;
   x: number;
@@ -25,4 +50,5 @@ export interface CombatRenderState {
   readonly orbitBlades: readonly OrbitBladeState[];
   readonly chainSegments: readonly ChainSegmentState[];
   readonly laser: LaserHazardState;
+  readonly boss: BossRenderState;
 }

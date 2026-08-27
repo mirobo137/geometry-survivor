@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
+import { BOSS_DEFINITION } from '../../content/bosses/BossDefinition';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
@@ -117,6 +118,17 @@ describe('CombatSimulation', () => {
     expect(ENEMY_DEFINITIONS.elite.experience).toBeGreaterThan(ENEMY_DEFINITIONS.tank.experience);
   });
 
+  it('introduces one boss at the authored late-run threshold', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+
+    runSeconds(combat, player, BOSS_DEFINITION.startSeconds);
+
+    expect(combat.boss.state.active).toBe(true);
+    expect(combat.boss.state.maxHealth).toBe(ENEMY_DEFINITIONS.boss.maxHealth);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'boss')).toHaveLength(1);
+  });
+
   it('keeps newly spawned enemies outside the playable arena edge', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();
@@ -127,6 +139,32 @@ describe('CombatSimulation', () => {
       enemy.active
       && Math.hypot(enemy.x - ARENA_CENTER.x, enemy.y - ARENA_CENTER.y) > ARENA_RADIUS
     ))).toBe(true);
+  });
+
+  it('emits a terminal boss event when existing weapons defeat the boss kind', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const boss = combat.enemies.acquire();
+    if (!boss) throw new Error('No se pudo preparar el boss de prueba');
+    boss.kind = 'boss';
+    boss.x = player.state.x + 54;
+    boss.y = player.state.y;
+    boss.radius = ENEMY_DEFINITIONS.boss.radius;
+    boss.speed = 0;
+    boss.maxHealth = ENEMY_DEFINITIONS.boss.maxHealth;
+    boss.health = 1;
+    boss.contactDamage = 0;
+
+    let defeated = false;
+    for (let index = 0; index < 120 && !defeated; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      defeated = combat.events.some((event) => event.type === 'bossDefeated');
+    }
+
+    expect(defeated).toBe(true);
+    expect(combat.boss.state.phase).toBe('defeated');
+    expect(combat.stats.kills).toBe(1);
+    expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.boss.experience);
   });
 
   it('resets stats, pools and weapon state without reallocating systems', () => {
@@ -154,5 +192,7 @@ describe('CombatSimulation', () => {
     expect(combat.activeOrbitBlades).toBe(0);
     expect(combat.hasChainLightning).toBe(false);
     expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.boss.state.phase).toBe('inactive');
+    expect(combat.boss.state.active).toBe(false);
   });
 });

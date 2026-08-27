@@ -13,6 +13,7 @@ import { LaserHazard } from '../hazards/LaserHazard';
 import type { CombatRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
+import { BossSystem } from '../bosses/BossSystem';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -28,6 +29,7 @@ export type CombatEvent =
     readonly kind: EnemyKind;
     readonly experience: number;
   }
+  | { readonly type: 'bossDefeated' }
   | { readonly type: 'playerDamaged'; readonly amount: number };
 
 export interface CombatStats {
@@ -48,6 +50,7 @@ export class CombatSimulation {
     damageTaken: 0
   };
   private readonly enemySystem = new EnemySystem(this.enemies, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+  public readonly boss = new BossSystem(this.enemySystem);
   private readonly weaponSystem = new CombatWeaponSystem(this.enemySystem, (enemy) => this.defeatEnemy(enemy));
   public readonly projectiles = this.weaponSystem.projectiles;
   public readonly laser = new LaserHazard();
@@ -58,7 +61,8 @@ export class CombatSimulation {
     projectiles: this.projectiles.states,
     orbitBlades: this.orbitBlades,
     chainSegments: this.chainSegments,
-    laser: this.laser.state
+    laser: this.laser.state,
+    boss: this.boss.state
   };
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
@@ -146,12 +150,21 @@ export class CombatSimulation {
     }
 
     const spawnInterval = getSpawnIntervalSeconds(this.stats.elapsedSeconds);
-    while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < this.enemies.capacity) {
+    const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
+    while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
       this.spawnAccumulator -= spawnInterval;
       this.enemySystem.spawn(this.stats.elapsedSeconds, arenaRadius);
     }
-    if (this.enemies.activeCount >= this.enemies.capacity) {
+    if (this.enemies.activeCount >= normalEnemyCapacity) {
       this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval);
+    }
+
+    if (!this.stressMode) {
+      const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
+      if (bossDamage > 0) {
+        this.stats.damageTaken += bossDamage;
+        this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage });
+      }
     }
 
     const contactDamage = this.enemySystem.update(dt, player);
@@ -172,6 +185,7 @@ export class CombatSimulation {
 
   public reset(): void {
     this.enemySystem.reset();
+    this.boss.reset();
     this.weaponSystem.reset();
     this.laser.reset();
     this.stats.elapsedSeconds = 0;
@@ -208,6 +222,11 @@ export class CombatSimulation {
     this.enemies.release(enemy);
     this.stats.kills += 1;
     this.stats.experience += experience;
+    if (kind === 'boss') {
+      this.boss.markDefeated();
+      this.pendingEvents.push({ type: 'bossDefeated' });
+      return;
+    }
     this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience });
   }
 }

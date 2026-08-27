@@ -16,7 +16,7 @@ import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { GameState } from './GameState';
-import { createRunSummary } from './RunSummary';
+import { createRunSummary, type RunOutcome } from './RunSummary';
 
 export interface GameElements {
   readonly container: HTMLElement;
@@ -156,7 +156,11 @@ export class Game {
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
     for (const event of this.combat.events) {
       if (event.type === 'playerDamaged' && this.player.takeDamage(event.amount) && !this.player.isAlive) {
-        this.finishRun();
+        this.finishRun('game-over');
+        return;
+      }
+      if (event.type === 'bossDefeated') {
+        this.finishRun('victory');
         return;
       }
     }
@@ -168,6 +172,7 @@ export class Game {
   private renderFrame(): void {
     this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
+    this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState);
     this.view.renderPlayer(this.player.state);
     this.hud.update({
@@ -204,6 +209,9 @@ export class Game {
       level: this.progression.state.level,
       arena: `${this.arena.state.radius.toFixed(1)} | expansión ${this.arena.state.expansionIndex}`,
       resonance: this.arena.state.resonance,
+      boss: this.combat.renderState.boss.active
+        ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
+        : 'inactive',
       player: `${this.player.state.x.toFixed(1)}, ${this.player.state.y.toFixed(1)}`
     });
   }
@@ -238,8 +246,9 @@ export class Game {
     });
   }
 
-  private finishRun(): void {
-    if (!this.gameState.endRun()) return;
+  private finishRun(outcome: RunOutcome): void {
+    const transitioned = outcome === 'victory' ? this.gameState.winRun() : this.gameState.endRun();
+    if (!transitioned) return;
     this.input.reset();
     this.lifecycle.onGameOver();
     const summary = createRunSummary('game-over', this.combat.stats);

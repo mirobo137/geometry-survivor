@@ -20,6 +20,13 @@ const createEnemyTextures = (renderer: Renderer): Record<EnemyKind, Texture> => 
       .fill(ENEMY_DEFINITIONS.elite.color)
       .stroke({ color: 0xffe5f8, width: 3 });
     graphics.circle(0, 0, 10).stroke({ color: 0xffffff, width: 2 });
+  }),
+  boss: createTexture(renderer, (graphics) => {
+    graphics.regularPoly(0, 0, ENEMY_DEFINITIONS.boss.radius, 8, Math.PI / 8)
+      .fill(ENEMY_DEFINITIONS.boss.color)
+      .stroke({ color: 0xffe8ff, width: 4 });
+    graphics.circle(0, 0, 22).fill({ color: 0x241044, alpha: 0.92 }).stroke({ color: 0xffffff, width: 3 });
+    graphics.circle(0, 0, 8).fill({ color: 0x75e6ff, alpha: 0.95 });
   })
 });
 

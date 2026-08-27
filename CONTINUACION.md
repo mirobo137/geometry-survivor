@@ -1,8 +1,8 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 26-08-2026.
+> Snapshot operativo: 27-08-2026.
 >
-> Estado funcional auditado desde el commit `10a892f` (`feat: add arena resonance and difficulty phases`).
+> Estado funcional auditado desde el commit `10a892f` (`feat: add arena resonance and difficulty phases`) y la consolidación arquitectónica en curso.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 
@@ -55,7 +55,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 35 tests pasando en 10 archivos.
+- Última auditoría local: typecheck correcto y 38 tests pasando en 12 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -116,33 +116,33 @@ Mediciones manuales aportadas desde Android Chrome:
 
 No son fallos actuales, pero ya son puntos de concentración reales:
 
-1. `src/simulation/combat/CombatSimulation.ts` tiene alrededor de 443 líneas y coordina spawn, enemigos, grid, tres armas, proyectiles, derrotas y eventos.
-2. `src/main.ts` tiene alrededor de 263 líneas y coordina bootstrap, resize, lifecycle, loop, pausa, level-up, upgrades, HUD y plataforma.
+1. `src/simulation/combat/CombatSimulation.ts` tiene alrededor de 436 líneas y coordina spawn, enemigos, grid, tres armas, proyectiles, derrotas y eventos.
+2. `src/main.ts` tiene alrededor de 229 líneas y aún coordina bootstrap, resize, lifecycle, loop, pausa, level-up, HUD y plataforma.
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 243 líneas y representa arena, jugador, enemigos, armas y hazards.
-4. `PixiGameView` recibe `CombatSimulation` completo en lugar de snapshots/contratos de render pequeños.
-5. La aplicación de efectos de upgrades vive en `main.ts`; los valores están data-driven, pero un efecto nuevo todavía modifica el composition root.
+4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta separar vistas internas y snapshots finales.
+5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts`; un efecto nuevo todavía requiere modificar ese módulo tipado.
 6. `PlatformAdapter` aún mezcla lifecycle y anuncios; faltan los contratos separados de guardado previstos en el plan.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas, pero la modularidad interna debe consolidarse ahora, antes del boss, game over y más armas.
+Conclusión: las fronteras principales son correctas y la consolidación ya comenzó; todavía debe dividirse la coordinación interna antes del boss, game over y más armas.
 
-## 6. Próximo hito recomendado: consolidación arquitectónica
+## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
 Objetivo: preparar boss, fin de run y guardado sin cambiar el comportamiento jugable actual.
 
 Orden recomendado:
 
-1. Crear un estado de aplicación tipado con al menos `PLAYING`, `LEVEL_UP`, `PAUSED`, `GAME_OVER` y `VICTORY`.
+1. Usar `src/app/GameState.ts` en todos los estados de gameplay y añadir tests de transición para fin/reinicio.
 2. Extraer del `main.ts` la coordinación de la run hacia `src/app/Game.ts` o una composición equivalente con consumidor real.
-3. Extraer la aplicación de upgrades a un módulo de progresión que reciba `PlayerModel` y los sistemas de armas necesarios.
+3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación y añadir límites/estado de cartas.
 4. Dividir responsabilidades existentes de `CombatSimulation` sin rediseñar datos ni colisiones:
    - enemigos/spawn;
    - armas/proyectiles;
    - coordinación de eventos y stats.
 5. Dividir `PixiGameView` en vistas existentes —arena, entidades, armas y hazards— manteniendo una fachada pequeña para `main`/`Game`.
-6. Definir snapshots mínimos de presentación en vez de entregar el coordinador completo al renderer.
+6. Completar snapshots mínimos de presentación; `CombatRenderState` ya es el primer contrato.
 7. Añadir tests de transiciones de estado, pausa, level-up, game over y reinicio.
 8. Ejecutar typecheck, toda la suite y los tres builds; después realizar smoke móvil para demostrar paridad.
 
@@ -159,7 +159,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 35 tests existentes siguen pasando y existen tests nuevos de estados;
+- 38 tests existentes siguen pasando y existen tests nuevos de estados/aplicación;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -267,4 +267,3 @@ npm run build:crazygames
 - No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
 - No existen resultados de browser smoke automatizado, context loss o storage fallido.
 - La diversión, claridad y balance no pueden declararse aprobados sólo con tests.
-

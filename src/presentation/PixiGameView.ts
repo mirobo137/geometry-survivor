@@ -4,7 +4,7 @@ import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, LOGICAL_HEIGHT, PROJEC
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../content/enemies/EnemyDefinitions';
 import { WEAPON_DEFINITIONS } from '../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../simulation/PlayerModel';
-import type { CombatSimulation } from '../simulation/combat/CombatSimulation';
+import type { CombatRenderState } from '../simulation/combat/CombatRenderState';
 import type { LaserHazardState } from '../simulation/hazards/LaserHazard';
 import type { ViewportState } from './viewport/ViewportTransform';
 
@@ -164,9 +164,9 @@ export class PixiGameView {
       .stroke({ color: 0x75e6ff, width: 4 + resonance * 3, alpha: 0.18 + resonance * 0.42 });
   }
 
-  public renderCombat(combat: CombatSimulation): void {
+  public renderCombat(combat: CombatRenderState): void {
     for (let index = 0; index < this.enemySprites.length; index += 1) {
-      const state = combat.enemies.states[index];
+      const state = combat.enemies[index];
       const sprite = this.enemySprites[index];
       sprite.visible = state.active;
       if (!state.active) continue;
@@ -177,7 +177,7 @@ export class PixiGameView {
     }
 
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
-      const state = combat.projectiles.states[index];
+      const state = combat.projectiles[index];
       const sprite = this.projectileSprites[index];
       sprite.visible = state.active;
       if (!state.active) continue;

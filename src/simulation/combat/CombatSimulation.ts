@@ -13,6 +13,7 @@ import { SpatialGrid } from '../spatial/SpatialGrid';
 import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
 import { getSpawnIntervalSeconds } from '../../content/run/DifficultyDefinitions';
 import { LaserHazard } from '../hazards/LaserHazard';
+import type { ChainSegmentState, CombatRenderState, OrbitBladeState } from './CombatRenderState';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -29,23 +30,6 @@ export const selectEnemyKind = (elapsedSeconds: number, index: number): EnemyKin
   if (index % 5 === 0) return 'tank';
   return index % 2 === 0 ? 'fast' : 'chaser';
 };
-
-export interface OrbitBladeState {
-  active: boolean;
-  x: number;
-  y: number;
-  radius: number;
-  angle: number;
-}
-
-export interface ChainSegmentState {
-  active: boolean;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  lifeSeconds: number;
-}
 
 const createOrbitBladeState = (): OrbitBladeState => ({
   active: false,
@@ -92,6 +76,13 @@ export class CombatSimulation {
   public readonly laser = new LaserHazard();
   public readonly orbitBlades = Array.from({ length: ORBIT_DEFINITION.maxBlades }, createOrbitBladeState);
   public readonly chainSegments = Array.from({ length: CHAIN_DEFINITION.maxTargets }, createChainSegmentState);
+  public readonly renderState: CombatRenderState = {
+    enemies: this.enemies.states,
+    projectiles: this.projectiles.states,
+    orbitBlades: this.orbitBlades,
+    chainSegments: this.chainSegments,
+    laser: this.laser.state
+  };
   public readonly stats: CombatStats = {
     elapsedSeconds: 0,
     kills: 0,

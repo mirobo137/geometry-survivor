@@ -13,7 +13,8 @@ import { LevelProgression } from './simulation/progression/LevelProgression';
 import { GameHud } from './ui/GameHud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
 import { PauseOverlay } from './ui/PauseOverlay';
-import { UPGRADE_DEFINITIONS, type UpgradeId } from './content/upgrades/UpgradeDefinitions';
+import { GameState } from './app/GameState';
+import { UpgradeApplier } from './simulation/progression/UpgradeApplier';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -90,11 +91,13 @@ const bootstrap = async (): Promise<void> => {
   const player = new PlayerModel();
   const combat = new CombatSimulation({ stress: stressMode });
   const progression = new LevelProgression();
+  const gameState = new GameState();
   const view = new PixiGameView(app.renderer);
   const debug = new DebugPanel(debugElement, stressMode);
   const hud = new GameHud(hudElement);
   const levelUp = new LevelUpOverlay(levelUpElement);
   const pause = new PauseOverlay(pauseElement);
+  const upgradeApplier = new UpgradeApplier(player, combat);
   const platform = new LocalPlatform();
 
   app.stage.addChild(view.root);
@@ -133,73 +136,34 @@ const bootstrap = async (): Promise<void> => {
   let frames = 0;
   let fpsTime = performance.now();
   let fps = 0;
-  let gameplayPaused = false;
   let lifecyclePaused = false;
 
-  const applyUpgrade = (upgradeId: UpgradeId): void => {
-    const definition = UPGRADE_DEFINITIONS.find((upgrade) => upgrade.id === upgradeId);
-    if (!definition) return;
-
-    switch (definition.effect.type) {
-      case 'movementSpeed':
-        player.increaseMovementSpeed(definition.effect.amount);
-        break;
-      case 'projectileDamage':
-        combat.increaseProjectileDamage(definition.effect.amount);
-        break;
-      case 'maxHealth':
-        player.increaseMaxHealth(definition.effect.amount);
-        break;
-      case 'orbitBlade':
-        combat.addOrbitBlade();
-        break;
-      case 'chainLightning':
-        combat.unlockChainLightning();
-        break;
-      case 'projectileCooldown':
-        combat.decreaseProjectileCooldown(definition.effect.amount);
-        break;
-      case 'projectileSpeed':
-        combat.increaseProjectileSpeed(definition.effect.amount);
-        break;
-      case 'orbitRadius':
-        combat.increaseOrbitRadius(definition.effect.amount);
-        break;
-      case 'chainDamage':
-        combat.increaseChainDamage(definition.effect.amount);
-        break;
-      case 'armor':
-        player.increaseArmor(definition.effect.amount);
-        break;
-    }
-  };
-
   const openLevelUp = (): void => {
-    if (!gameplayPaused) {
-      gameplayPaused = true;
+    if (gameState.enterLevelUp()) {
       platform.onGamePause();
     }
     levelUp.open(progression.state.level, (upgradeId) => {
       input.reset();
-      applyUpgrade(upgradeId);
+      upgradeApplier.apply(upgradeId);
       progression.consumeLevelUp();
       if (progression.state.pendingLevelUps > 0) {
         openLevelUp();
       } else {
-        gameplayPaused = false;
+        gameState.leaveLevelUp();
         if (!lifecyclePaused) platform.onGameResume();
       }
     });
   };
 
   const pauseForLifecycle = (): void => {
-    if (gameplayPaused || lifecyclePaused) return;
+    if (lifecyclePaused || !gameState.enterPause()) return;
     lifecyclePaused = true;
     input.reset();
     platform.onGamePause();
     pause.open('La partida se detuvo al salir de la ventana.', () => {
       input.reset();
       lifecyclePaused = false;
+      gameState.resume();
       pause.close();
       platform.onGameResume();
     });
@@ -215,7 +179,7 @@ const bootstrap = async (): Promise<void> => {
   app.ticker.add((ticker) => {
     accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
     while (accumulator >= FIXED_STEP_SECONDS) {
-      if (!gameplayPaused && !lifecyclePaused) {
+      if (gameState.isSimulationRunning && !lifecyclePaused) {
         arena.update(FIXED_STEP_SECONDS);
         player.update(input.getMovement(), FIXED_STEP_SECONDS, arena.state.radius);
         combat.update(FIXED_STEP_SECONDS, player.state, arena.state.radius);
@@ -231,8 +195,8 @@ const bootstrap = async (): Promise<void> => {
     }
 
     view.renderArena(arena.state.radius, arena.state.resonance);
-    view.renderLaser(combat.laser.state, arena.state.radius);
-    view.renderCombat(combat);
+    view.renderLaser(combat.renderState.laser, arena.state.radius);
+    view.renderCombat(combat.renderState);
     view.renderPlayer(player.state);
     hud.update({
       elapsedSeconds: combat.stats.elapsedSeconds,
@@ -263,7 +227,7 @@ const bootstrap = async (): Promise<void> => {
       projectiles: `${combat.projectiles.activeCount}/${combat.projectiles.capacity}`,
       orbit: `${combat.activeOrbitBlades}/${combat.orbitBlades.length}`,
       chain: combat.hasChainLightning ? 'ready' : 'locked',
-      paused: gameplayPaused ? 'level-up' : lifecyclePaused ? 'lifecycle' : 'playing',
+      paused: lifecyclePaused ? 'lifecycle' : gameState.phase,
       level: progression.state.level,
       arena: `${arena.state.radius.toFixed(1)} | expansión ${arena.state.expansionIndex}`,
       resonance: arena.state.resonance,

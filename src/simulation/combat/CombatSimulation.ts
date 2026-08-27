@@ -89,8 +89,8 @@ export class CombatSimulation {
     return this.weaponSystem.addOrbitBlade();
   }
 
-  public unlockChainLightning(): void {
-    this.weaponSystem.unlockChainLightning();
+  public unlockChainLightning(): boolean {
+    return this.weaponSystem.unlockChainLightning();
   }
 
   public get hasChainLightning(): boolean {

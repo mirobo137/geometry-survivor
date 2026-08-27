@@ -75,8 +75,10 @@ export class CombatWeaponSystem {
     return true;
   }
 
-  public unlockChainLightning(): void {
+  public unlockChainLightning(): boolean {
+    if (this.chainLightningUnlocked) return false;
     this.chainLightningUnlocked = true;
+    return true;
   }
 
   public get hasChainLightning(): boolean {

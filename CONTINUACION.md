@@ -55,7 +55,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 40 tests pasando en 13 archivos.
+- Última auditoría local: typecheck correcto y 42 tests pasando en 13 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -120,7 +120,7 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 2. `src/main.ts` tiene alrededor de 94 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 228 líneas y coordina lifecycle, loop, pausa, level-up, HUD y plataforma sin implementar sistemas completos.
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta completar snapshots finales y view-models de UI.
-5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts`; un efecto nuevo todavía requiere modificar ese módulo tipado.
+5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
 6. `PlatformAdapter` aún mezcla lifecycle y anuncios; faltan los contratos separados de guardado previstos en el plan.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
@@ -136,7 +136,7 @@ Orden recomendado:
 
 1. Usar `src/app/GameState.ts` en todos los estados de gameplay y añadir tests de transición para fin/reinicio.
 2. `src/app/Game.ts` ya coordina la run; mantenerlo como orquestador de lifecycle/loop, no como contenedor de sistemas.
-3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación y añadir límites/estado de cartas.
+3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación; límites y prerrequisitos de cartas ya están data-driven.
 4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
    `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
 5. Mantener `PixiGameView` como fachada pequeña; `ArenaView`, `CombatEntitiesView`, `WeaponView`, `HazardView` y `PlayerView` ya separan la representación por responsabilidad.
@@ -156,7 +156,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 40 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos;
+- 42 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 

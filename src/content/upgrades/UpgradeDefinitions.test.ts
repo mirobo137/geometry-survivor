@@ -18,4 +18,12 @@ describe('UpgradeDefinitions', () => {
     expect(first.map((choice) => choice.id)).toEqual(repeat.map((choice) => choice.id));
     expect(new Set(first.map((choice) => choice.id)).size).toBe(3);
   });
+
+  it('fills filtered choices from the deterministic catalog order', () => {
+    const blocked = UPGRADE_DEFINITIONS[0];
+    const choices = getLevelUpChoices(2, (upgrade) => upgrade.id !== blocked.id);
+
+    expect(choices).toHaveLength(3);
+    expect(choices.some((choice) => choice.id === blocked.id)).toBe(false);
+  });
 });

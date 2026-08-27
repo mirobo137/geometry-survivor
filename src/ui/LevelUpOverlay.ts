@@ -1,4 +1,4 @@
-import { getLevelUpChoices, type UpgradeId } from '../content/upgrades/UpgradeDefinitions';
+import type { UpgradeDefinition, UpgradeId } from '../content/upgrades/UpgradeDefinitions';
 
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 
@@ -16,10 +16,10 @@ export class LevelUpOverlay {
     this.options = options;
   }
 
-  public open(level: number, onSelection: UpgradeSelectionHandler): void {
+  public open(level: number, choices: readonly UpgradeDefinition[], onSelection: UpgradeSelectionHandler): void {
     this.title.textContent = `Nivel ${level}`;
     this.options.replaceChildren();
-    for (const choice of getLevelUpChoices(level)) {
+    for (const choice of choices) {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.upgradeId = choice.id;

@@ -15,6 +15,8 @@ export interface UpgradeDefinition {
   readonly title: string;
   readonly description: string;
   readonly effect: UpgradeEffect;
+  readonly maxStacks?: number;
+  readonly requires?: readonly UpgradeId[];
 }
 
 export type UpgradeEffect =
@@ -52,19 +54,22 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     id: 'orbit_blade',
     title: 'Órbita geométrica',
     description: 'Desbloquea una hoja que gira y daña al contacto',
-    effect: { type: 'orbitBlade' }
+    effect: { type: 'orbitBlade' },
+    maxStacks: 6
   },
   {
     id: 'chain_lightning',
     title: 'Cadena eléctrica',
     description: 'Desbloquea un rayo que salta hasta 3 enemigos',
-    effect: { type: 'chainLightning' }
+    effect: { type: 'chainLightning' },
+    maxStacks: 1
   },
   {
     id: 'rapid_projectiles',
     title: 'Ráfaga rápida',
     description: 'Reduce 0.08 s el tiempo entre proyectiles',
-    effect: { type: 'projectileCooldown', amount: 0.08 }
+    effect: { type: 'projectileCooldown', amount: 0.08 },
+    maxStacks: 4
   },
   {
     id: 'longshot_projectiles',
@@ -76,25 +81,31 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     id: 'orbit_reach',
     title: 'Órbita extendida',
     description: '+18 radio de la órbita geométrica',
-    effect: { type: 'orbitRadius', amount: 18 }
+    effect: { type: 'orbitRadius', amount: 18 },
+    requires: ['orbit_blade']
   },
   {
     id: 'chain_overload',
     title: 'Sobrecarga eléctrica',
     description: '+6 daño de Cadena eléctrica',
-    effect: { type: 'chainDamage', amount: 6 }
+    effect: { type: 'chainDamage', amount: 6 },
+    requires: ['chain_lightning']
   },
   {
     id: 'hardened_shell',
     title: 'Coraza endurecida',
     description: '+2 armadura contra contacto',
-    effect: { type: 'armor', amount: 2 }
+    effect: { type: 'armor', amount: 2 },
+    maxStacks: 9
   }
 ];
 
-export const getLevelUpChoices = (level: number): readonly UpgradeDefinition[] => {
+export const getLevelUpChoices = (
+  level: number,
+  isAvailable: (upgrade: UpgradeDefinition) => boolean = () => true
+): readonly UpgradeDefinition[] => {
   const start = Math.max(0, (level - 2) % UPGRADE_DEFINITIONS.length);
-  return Array.from({ length: 3 }, (_, index) => (
+  return Array.from({ length: UPGRADE_DEFINITIONS.length }, (_, index) => (
     UPGRADE_DEFINITIONS[(start + index) % UPGRADE_DEFINITIONS.length]
-  ));
+  )).filter(isAvailable).slice(0, 3);
 };

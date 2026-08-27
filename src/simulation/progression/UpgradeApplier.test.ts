@@ -18,4 +18,28 @@ describe('UpgradeApplier', () => {
     expect(combat.activeOrbitBlades).toBe(1);
     expect(combat.hasChainLightning).toBe(true);
   });
+
+  it('filters prerequisites and stops finite upgrades at their authored limits', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+
+    expect(applier.canApply('orbit_reach')).toBe(false);
+    expect(applier.canApply('chain_overload')).toBe(false);
+    expect(applier.apply('orbit_reach')).toBe(false);
+
+    for (let index = 0; index < 6; index += 1) {
+      expect(applier.apply('orbit_blade')).toBe(true);
+    }
+    expect(applier.apply('orbit_blade')).toBe(false);
+    expect(applier.canApply('orbit_blade')).toBe(false);
+    expect(applier.canApply('orbit_reach')).toBe(true);
+
+    expect(applier.apply('chain_lightning')).toBe(true);
+    expect(applier.apply('chain_lightning')).toBe(false);
+    expect(applier.canApply('chain_overload')).toBe(true);
+
+    for (let index = 0; index < 4; index += 1) {
+      expect(applier.apply('rapid_projectiles')).toBe(true);
+    }
+    expect(applier.apply('rapid_projectiles')).toBe(false);
+  });
 });

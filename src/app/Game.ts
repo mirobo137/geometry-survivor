@@ -199,7 +199,8 @@ export class Game {
 
   private openLevelUp(): void {
     if (this.gameState.enterLevelUp()) this.platform.onGamePause();
-    this.levelUp.open(this.progression.state.level, (upgradeId) => {
+    const choices = this.upgradeApplier.getChoices(this.progression.state.level);
+    this.levelUp.open(this.progression.state.level, choices, (upgradeId) => {
       this.input.reset();
       this.upgradeApplier.apply(upgradeId);
       this.progression.consumeLevelUp();

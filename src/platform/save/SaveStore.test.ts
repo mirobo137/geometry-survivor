@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createDefaultSaveData,
   migrateSaveData,
+  mergeBestRun,
   SAVE_SCHEMA_VERSION,
   SAVE_STORAGE_KEY,
   type StorageAdapter
@@ -86,5 +87,16 @@ describe('LocalSaveStore', () => {
 
     storage.values.set(SAVE_STORAGE_KEY, JSON.stringify({ schemaVersion: SAVE_SCHEMA_VERSION + 1 }));
     expect(store.load()).toEqual(createDefaultSaveData());
+  });
+
+  it('merges a run result without allowing negative or lower best values', () => {
+    expect(mergeBestRun(
+      { timeSeconds: 120, score: 20 },
+      { timeSeconds: 90, score: 31 }
+    )).toEqual({ timeSeconds: 120, score: 31 });
+    expect(mergeBestRun(
+      { timeSeconds: 0, score: 0 },
+      { timeSeconds: -10, score: -4 }
+    )).toEqual({ timeSeconds: 0, score: 0 });
   });
 });

@@ -3,6 +3,7 @@ import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
+import { mergeBestRun, type SaveStore } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
@@ -11,9 +12,11 @@ import { PlayerModel } from '../simulation/PlayerModel';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
+import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { GameState } from './GameState';
+import { createRunSummary } from './RunSummary';
 
 export interface GameElements {
   readonly container: HTMLElement;
@@ -21,6 +24,7 @@ export interface GameElements {
   readonly hud: HTMLElement;
   readonly levelUp: HTMLElement;
   readonly pause: HTMLElement;
+  readonly gameOver: HTMLElement;
 }
 
 export interface GameOptions {
@@ -39,6 +43,7 @@ export class Game {
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
   private readonly lifecycle: PlatformLifecycle;
+  private readonly saveStore: SaveStore;
   private readonly viewport = new ViewportTransform();
   private readonly arena = new ArenaModel();
   private readonly player = new PlayerModel();
@@ -50,6 +55,7 @@ export class Game {
   private readonly hud: GameHud;
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
+  private readonly gameOver: GameOverOverlay;
   private readonly input: InputManager;
   private readonly upgradeApplier: UpgradeApplier;
   private readonly resizeObserver: ResizeObserver | null;
@@ -94,12 +100,14 @@ export class Game {
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
     this.lifecycle = options.platform.lifecycle;
+    this.saveStore = options.platform.saveStore;
     this.combat = new CombatSimulation({ stress: this.stressMode });
     this.view = new PixiGameView(this.app.renderer);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
+    this.gameOver = new GameOverOverlay(options.elements.gameOver);
     this.input = new InputManager(this.container, this.viewport, () => this.player.state);
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.queueResize);
@@ -147,7 +155,10 @@ export class Game {
     this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state.radius);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
     for (const event of this.combat.events) {
-      if (event.type === 'playerDamaged') this.player.takeDamage(event.amount);
+      if (event.type === 'playerDamaged' && this.player.takeDamage(event.amount) && !this.player.isAlive) {
+        this.finishRun();
+        return;
+      }
     }
     if (this.stressMode) return;
     this.progression.sync(this.combat.stats.experience);
@@ -224,6 +235,20 @@ export class Game {
       this.gameState.resume();
       this.pause.close();
       this.lifecycle.onGameResume();
+    });
+  }
+
+  private finishRun(): void {
+    if (!this.gameState.endRun()) return;
+    this.input.reset();
+    this.lifecycle.onGameOver();
+    const summary = createRunSummary('game-over', this.combat.stats);
+    const saved = this.saveStore.load();
+    const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
+    this.saveStore.save({ ...saved, best });
+    this.gameOver.open(summary, best, () => {
+      if (!this.gameState.restart()) return;
+      window.location.reload();
     });
   }
 }

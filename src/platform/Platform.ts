@@ -1,3 +1,5 @@
+import type { SaveStore } from './save/SaveStore';
+
 export interface PlatformLifecycle {
   init(): Promise<void>;
   onGameStart(): void;
@@ -15,4 +17,5 @@ export interface PlatformAdapter {
   readonly name: string;
   readonly lifecycle: PlatformLifecycle;
   readonly ads: AdService;
+  readonly saveStore: SaveStore;
 }

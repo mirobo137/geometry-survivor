@@ -28,6 +28,18 @@
         <span id="pause-message">La partida se detuvo al salir de la ventana.</span>
         <button id="pause-resume" type="button">Continuar</button>
       </section>
+      <section id="game-over" aria-labelledby="game-over-title" hidden>
+        <p>RUN COMPLETE</p>
+        <h1 id="game-over-title">Fin de la partida</h1>
+        <div id="game-over-stats" aria-live="polite">
+          <span id="game-over-time">Tiempo 00:00</span>
+          <span id="game-over-kills">Bajas 0</span>
+          <span id="game-over-experience">Experiencia 0</span>
+          <span id="game-over-score">Puntuación 0</span>
+          <span id="game-over-best">Mejor 00:00 · 0 puntos</span>
+        </div>
+        <button id="game-over-restart" type="button">Jugar de nuevo</button>
+      </section>
       <div id="debug-panel" hidden></div>
     </main>
     <script>

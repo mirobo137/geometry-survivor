@@ -37,6 +37,11 @@ export interface SaveStore {
   clear(): void;
 }
 
+export const mergeBestRun = (current: BestRun, candidate: BestRun): BestRun => ({
+  timeSeconds: Math.max(0, current.timeSeconds, candidate.timeSeconds),
+  score: Math.max(0, current.score, candidate.score)
+});
+
 export const createDefaultSaveData = (): SaveData => ({
   schemaVersion: SAVE_SCHEMA_VERSION,
   settings: {

@@ -55,7 +55,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 48 tests pasando en 14 archivos.
+- Última auditoría local: typecheck correcto y 51 tests pasando en 15 archivos.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -117,16 +117,16 @@ Mediciones manuales aportadas desde Android Chrome:
 No son fallos actuales, pero ya son puntos de concentración reales:
 
 1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 271 líneas y agrupa Projectile, Orbit, Chain y stress; `CombatSimulation.ts` se redujo a unas 179 líneas y coordina Laser, run, derrotas, XP y eventos.
-2. `src/main.ts` tiene alrededor de 94 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 228 líneas y coordina lifecycle, loop, pausa, level-up, HUD y plataforma sin implementar sistemas completos.
+2. `src/main.ts` tiene alrededor de 94 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 260 líneas y coordina lifecycle, loop, pausa, level-up, HUD, game-over y persistencia sin implementar sistemas completos.
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; falta completar snapshots finales y view-models de UI fuera del level-up.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
-6. `PlatformAdapter` ahora compone `PlatformLifecycle` y `AdService`; `SaveStore` local ya tiene contrato y fallback, pero falta conectarlo al flujo final.
+6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService` y `SaveStore`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
 9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
 
-Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, conexión del guardado y el flujo de run final. `GameState` ahora expone transiciones terminales explícitas y un reinicio seguro para preparar ese flujo sin acoplarlo al renderer. Las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle de anuncios.
+Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI, ajustes persistentes y el flujo de run final. `GameState` ahora expone transiciones terminales explícitas y un reinicio seguro para preparar ese flujo sin acoplarlo al renderer. Las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, la plataforma local separa lifecycle/anuncios y el game-over guarda la mejor marca.
 
 ## 6. Próximo hito recomendado: completar la consolidación arquitectónica
 
@@ -156,7 +156,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 48 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas/guardado;
+- 51 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas/guardado/resumen;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -164,7 +164,7 @@ Puerta del hito:
 
 ### Fase 3 — todavía abierta
 
-- Conectar el `SaveStore` versionado de ajustes y mejor marca al resumen de run y a la UI de configuración.
+- Conectar los ajustes persistentes a una UI de configuración; la mejor marca ya se actualiza desde game-over.
 - Validar manualmente dos builds que se sientan diferentes.
 
 ### Fase 4 — implementada, pendiente de puerta humana
@@ -175,11 +175,11 @@ Puerta del hito:
 - Ajustar timings y presión con runs completas, no sólo unit tests.
 - Verificar manualmente primera y segunda expansión con resonancia.
 
-### Fase 5 — sin implementar
+### Fase 5 — parcial
 
 - Boss con dos patrones: barrido/línea telegraphed y anillo con huecos seguros.
 - Run reproducible completa de 5–6 minutos.
-- Game over, victoria, resumen, mejor resultado y reinicio rápido. `GameState` ya deja definidas las transiciones terminales, pero la pantalla y el reinicio completo siguen pendientes de Fase 5.
+- Game over por muerte, resumen y mejor marca ya están implementados. Victoria, boss y reinicio in-place siguen pendientes de Fase 5.
 - Primer balance integral y diez runs internas sin softlock.
 
 ### Fase 6 — sin implementar
@@ -251,6 +251,7 @@ npm run build:crazygames
 - `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
 - `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
 - `src/app/Game.ts`: orquestador de lifecycle, loop, pausa, level-up, HUD y plataforma.
+- `src/app/RunSummary.ts` y `src/ui/GameOverOverlay.ts`: snapshot y representación del fin de run.
 - `src/main.ts`: composition root y bootstrap de Pixi/spikes.
 - `src/content/`: configuración data-driven.
 - `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.

@@ -999,6 +999,21 @@ Se incorporó el primer consumidor real de la skill SVG code-first:
 - `SvgAssets.test.ts` valida estructura, IDs únicos, accesibilidad decorativa y ausencia de scripts, raster o URLs externas;
 - la UI queda preparada para ampliar el mismo contrato a player, enemigos y hazards sin parsear SVG durante el gameplay.
 
+---
+
+## 15.5 Audio híbrido estable — 28-08-2026
+
+Se reemplaza la frase programada mediante `setTimeout` por una arquitectura con una pista continua y efectos independientes:
+
+- `AudioManager` mantiene el contrato que consume `Game`; simulación y contenido no importan Howler, ZzFX ni Web Audio;
+- `HowlerMusicBackend` crea su `Howl` sólo dentro de `unlock()`, es decir, durante la primera interacción válida. La pista actual es una fuente WAV generada localmente en memoria: permite verificar loop, pausa, reinicio, volumen y recuperación sin CDN ni asset binario provisional;
+- al licenciar la música final, se sustituirá esa fuente por archivos locales `WebM/Opus` y `MP3` ordenados en `src/assets/audio/music/`. Howler elegirá el primer formato compatible; no usar WAV como formato de publicación salvo clips muy cortos;
+- `ZzfxSfxBackend` usa recetas ZzFX tipadas en `content/audio/AudioCueDefinitions.ts`, un bus propio conectado al contexto que ya abrió Howler y un máximo de ocho voces. No crea un segundo `AudioContext`, condición necesaria para Safari/iOS y reinicios fiables;
+- cada cue tiene cooldown propio. Los eventos masivos como `enemy-defeated` pasan por 80 ms de rate limit; daño, level-up y boss tienen prioridades perceptuales superiores mediante sus recetas y cooldowns;
+- para añadir un efecto futuro: (1) definir la receta y cooldown en `AudioCueDefinitions`, (2) emitir la clave desde la frontera existente de eventos en `Game`, (3) añadir test de comportamiento si abre una ruta nueva, (4) probar pausa, mute, restart y móvil. No se llama a ninguna librería desde sistemas de simulación.
+
+Se añade Howler 2.2.4, `@types/howler` 2.2.13 y la referencia MIT de ZzFX 1.3.2 al lockfile. Tone.js queda fuera del runtime: no aporta valor al vertical slice frente a una pista looping y recetas de efectos, y añadiría un scheduler musical adicional.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |

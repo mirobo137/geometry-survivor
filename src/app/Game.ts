@@ -231,6 +231,9 @@ export class Game {
     this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state.radius);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
     for (const event of this.combat.events) {
+      if (event.type === 'enemyDefeated') {
+        this.audio.playCue('enemy-defeated');
+      }
       if (event.type === 'playerDamaged') {
         this.audio.playCue('damage');
         if (this.player.takeDamage(event.amount) && !this.player.isAlive) {

@@ -373,3 +373,14 @@ Fecha: 28-08-2026.
 - smoke browser confirma que ambos iconos aparecen junto con pausa, configuración, persistencia y touch emulado.
 
 El siguiente bloque visual puede reutilizar este contrato para un asset de player o enemigo; no se parsearán SVG nuevos por frame ni se modificarán reglas de simulación.
+
+## 15. Continuación — audio Howler + ZzFX
+
+Fecha: 28-08-2026.
+
+- `AudioManager` sustituye al adaptador procedural temporizado como fachada de audio y sigue cumpliendo el contrato `AudioService` que usa `Game`;
+- la música se reproduce con `HowlerMusicBackend`: instancia la pista sólo en el primer gesto de usuario, mantiene una única pista looping y conserva su estado al pausar, reanudar o reiniciar;
+- mientras no exista una composición licenciada, `PrototypeMusicSource` genera una pista WAV local en memoria. No hay request de red ni asset externo; la sustitución futura debe aportar `WebM/Opus` + `MP3` locales;
+- `ZzfxSfxBackend` toma el `AudioContext` ya desbloqueado por Howler y produce efectos desde recetas contenidas en `AudioCueDefinitions`. Tiene límite de ocho voces y cooldown por cue; `enemy-defeated` ya usa esa ruta sin tocar la simulación;
+- las dependencias `howler`, `zzfx` y `@types/howler` se fijaron en `package-lock.json`. La adaptación local de ZzFX evita importar su entrypoint directamente porque éste construye un contexto de audio al cargarlo, algo incompatible con el desbloqueo móvil diferido;
+- antes de cerrar el hito, desplegar en GitHub Pages y comprobar en móvil: primer gesto, pausa/reanudar, reiniciar, mute, cambio de volúmenes y volver desde segundo plano. Si el navegador rechaza audio, la run debe seguir silenciosa y sin error de consola.

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="-32 -32 64 64"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-labelledby="enemy-turtle-title enemy-turtle-desc">
+  <title id="enemy-turtle-title">Tortuga geométrica</title>
+  <desc id="enemy-turtle-desc">Enemigo visto desde arriba, con caparazón poligonal, cabeza adelantada, cuatro patas y cola.</desc>
+
+  <g id="enemy-turtle-shadow" fill="#050816" opacity="0.45">
+    <ellipse cx="1" cy="5" rx="27" ry="22"/>
+  </g>
+
+  <g id="enemy-turtle-legs" fill="#c26855" stroke="#fff0e8" stroke-width="1.8" stroke-linejoin="round">
+    <path id="enemy-turtle-leg-front-left" d="M-15-12l-11-7-4 8 12 10z"/>
+    <path id="enemy-turtle-leg-front-right" d="M15-12l11-7 4 8-12 10z"/>
+    <path id="enemy-turtle-leg-rear-left" d="M-16 12l-11 7 4 8 12-10z"/>
+    <path id="enemy-turtle-leg-rear-right" d="M16 12l11 7-4 8-12-10z"/>
+  </g>
+
+  <path id="enemy-turtle-tail" d="M-4 21l4 9 4-9z" fill="#a84f50" stroke="#fff0e8" stroke-width="1.8" stroke-linejoin="round"/>
+
+  <g id="enemy-turtle-shell" stroke="#fff0e8" stroke-linejoin="round">
+    <path id="enemy-turtle-shell-base" d="M0-25 13-21 23-10 24 4 16 17 0 23-16 17-24 4-23-10-13-21z" fill="#e47f58" stroke-width="2.4"/>
+    <path id="enemy-turtle-shell-plate" d="M0-18 9-14 14-5 10 6 0 12-10 6-14-5-9-14z" fill="#f0a05f" stroke-width="1.5"/>
+    <path id="enemy-turtle-shell-ridge" d="M0-18v30M-14-5H14M-10 6h20" fill="none" stroke-width="1.35" opacity="0.9"/>
+  </g>
+
+  <g id="enemy-turtle-head" stroke="#fff0e8" stroke-linejoin="round">
+    <path id="enemy-turtle-head-base" d="M-9-21Q-7-31 0-31t9 10l-2 8H-7z" fill="#ffb86b" stroke-width="2"/>
+    <circle id="enemy-turtle-eye-left" cx="-4" cy="-23" r="2" fill="#101b35" stroke="none"/>
+    <circle id="enemy-turtle-eye-right" cx="4" cy="-23" r="2" fill="#101b35" stroke="none"/>
+  </g>
+</svg>

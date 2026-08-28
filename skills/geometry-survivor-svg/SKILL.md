@@ -157,3 +157,36 @@ Al terminar una tarea SVG, reporta brevemente:
 5. validaciones ejecutadas y cualquier inspeccion visual que no haya sido posible hacer.
 
 La IA debe dejar el SVG y cualquier generador en el repositorio, no solo pegar una imagen en la conversacion.
+
+## Ficha de diseno para personajes top-down
+
+La ficha siguiente es obligatoria antes de generar un player, enemigo o boss. Evita que el modelo salte directamente a un XML correcto pero sin identidad:
+
+```md
+id: enemy-turtle
+rol: enemigo comun / perseguidor
+lectura: criatura lenta, resistente, avanza hacia el jugador
+ancla: centro de masa (0, 0)
+orientacion: cabeza hacia -Y; la direccion de movimiento se resuelve con rotacion runtime
+silueta: caparazon ancho, cuatro patas visibles, cabeza adelantada y cola corta
+proporciones: caparazon 70 %, cabeza 25 %, extremidades 15 % fuera del caparazon
+identidad: placas poligonales en el caparazon
+paleta: cuerpo, contorno, detalle y senal de estado
+presupuesto: 8-20 primitivas, sin filtros
+pruebas: silueta negra y color en 32/48/64/96 px, fondo oscuro y claro
+```
+
+### Reglas top-down
+
+- La silueta se lee radialmente: cabeza, cola y extremidades deben sobrevivir aunque el asset se vea desde arriba y se reduzca.
+- La orientacion base debe ser estable; el runtime rota el contenedor segun velocidad o ataque, nunca se regeneran SVG por entidad.
+- El centro del `viewBox` coincide con el centro de masa y con el ancla de colision. No uses padding invisible para compensar una pose.
+- La cabeza o el elemento funcional debe adelantarse al cuerpo. Si el enemigo no tiene cabeza, usa una punta, nucleo o placa direccional inequivoca.
+- Las extremidades se solapan con la masa principal, pero cada una debe conservar al menos un borde visible a 32 px.
+- El estado peligroso no depende solo del color: anade contorno, patron, escala, postura o ritmo de animacion.
+
+### Revision de diseno antes de integrar
+
+Califica cada asset de 0 a 2 en cinco criterios: reconocimiento por silueta, personalidad, lectura de funcion, legibilidad minima y coherencia de familia. Un total menor de 8 obliga a volver a proporciones o silueta; anadir detalles no compensa una puntuacion baja.
+
+La evidencia minima de un personaje es: el SVG fuente, su ficha de contrato, una prueba estructural, una vista de silueta plana y una inspeccion en el modo de render elegido. La galeria de variantes solo se crea cuando ya existe un segundo consumidor real.

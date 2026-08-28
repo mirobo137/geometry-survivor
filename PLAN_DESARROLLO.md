@@ -1160,6 +1160,12 @@ Se incorpora una skill especializada para que la IA genere y mantenga SVG median
 
 La skill exige `viewBox`, ancla, IDs deterministas, accesibilidad, rutas relativas, ausencia de recursos externos y una eleccion explicita entre SVG inline, textura Pixi o `GraphicsContext`. Tambien protege el `viewBox` y la accesibilidad durante optimizacion.
 
+## Direccion artistica de personajes SVG — 28-08-2026
+
+La skill ahora exige una ficha de diseno antes del XML: funcion y lectura de gameplay, silueta, proporciones, pose top-down, ancla, paleta, presupuesto de primitivas y pruebas a 32/48/64/96 px. Incluye una rubrica de reconocimiento, personalidad, funcion, legibilidad y coherencia de familia; una puntuacion menor de 8/10 obliga a corregir silueta o proporciones antes de anadir detalle.
+
+El primer asset que aplica el contrato es `src/assets/svg/enemies/turtle.svg`: caparazon poligonal dominante, cabeza adelantada, cuatro patas, cola, viewBox centrado, 16 primitivas, cuatro colores principales y cero filtros o recursos externos. `CombatEntitiesView` lo convierte una sola vez en textura Pixi y lo comparte con el pool de `chaser`; la simulacion permanece sin cambios.
+
 ## Estado de implementación — 26-08-2026
 
 La primera base ejecutable de la Fase 0 ya está creada en el directorio de trabajo:

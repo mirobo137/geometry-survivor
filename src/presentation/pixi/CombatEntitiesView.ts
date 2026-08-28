@@ -1,14 +1,25 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { CombatRenderState } from '../../simulation/combat/CombatRenderState';
 import { createTexture } from './TextureFactory';
+import turtleSvg from '../../assets/svg/enemies/turtle.svg?raw';
+
+const createSvgTexture = (renderer: Renderer, svg: string): Texture => {
+  const graphics = new Graphics().svg(svg);
+  const texture = renderer.generateTexture({
+    target: graphics,
+    resolution: 1,
+    antialias: false,
+    defaultAnchor: { x: 0.5, y: 0.5 }
+  });
+  graphics.destroy();
+  return texture;
+};
 
 const createEnemyTextures = (renderer: Renderer): Record<EnemyKind, Texture> => ({
-  chaser: createTexture(renderer, (graphics) => {
-    graphics.poly([0, -18, 16, 12, -16, 12]).fill(ENEMY_DEFINITIONS.chaser.color).stroke({ color: 0xfff3eb, width: 2 });
-  }),
+  chaser: createSvgTexture(renderer, turtleSvg),
   fast: createTexture(renderer, (graphics) => {
     graphics.poly([0, -14, 14, 0, 0, 14, -14, 0]).fill(ENEMY_DEFINITIONS.fast.color).stroke({ color: 0xfffbdf, width: 2 });
   }),

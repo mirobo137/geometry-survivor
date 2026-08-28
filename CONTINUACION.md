@@ -384,3 +384,12 @@ Fecha: 28-08-2026.
 - `ZzfxSfxBackend` toma el `AudioContext` ya desbloqueado por Howler y produce efectos desde recetas contenidas en `AudioCueDefinitions`. Tiene límite de ocho voces y cooldown por cue; `enemy-defeated` ya usa esa ruta sin tocar la simulación;
 - las dependencias `howler`, `zzfx` y `@types/howler` se fijaron en `package-lock.json`. La adaptación local de ZzFX evita importar su entrypoint directamente porque éste construye un contexto de audio al cargarlo, algo incompatible con el desbloqueo móvil diferido;
 - antes de cerrar el hito, desplegar en GitHub Pages y comprobar en móvil: primer gesto, pausa/reanudar, reiniciar, mute, cambio de volúmenes y volver desde segundo plano. Si el navegador rechaza audio, la run debe seguir silenciosa y sin error de consola.
+## 16. Continuacion — primer enemigo SVG
+
+Fecha: 28-08-2026.
+
+- se amplio la skill SVG con una ficha obligatoria de diseno, reglas top-down y una rubrica de reconocimiento antes de generar XML;
+- `src/assets/svg/enemies/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 16 primitivas sin filtros;
+- `CombatEntitiesView` convierte el master a una textura Pixi una sola vez y la comparte en el pool. El chaser conserva sus radios, velocidad y colisiones de simulacion;
+- `SvgEnemyAssets.test.ts` cubre el contrato estructural y el limite geometrico; la inspeccion raster en fondo oscuro/claro confirmo lectura a 32/96/384 px;
+- antes de convertir la tortuga en diseno definitivo, probar la URL publicada en movil y observarla durante gameplay real con enemigos, UI y hazards simultaneos. Si funciona, continuar con player y luego las familias fast/tank/elite respetando siluetas distintas.

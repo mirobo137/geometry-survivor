@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 24 24"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <title id="ui-settings-title">Configuración</title>
+  <desc id="ui-settings-desc">Engranaje que indica las opciones de configuración</desc>
+  <path id="ui-settings-spokes" d="M12 3.5v2.1M12 18.4v2.1M3.5 12h2.1M18.4 12h2.1M6 6l1.5 1.5M16.5 16.5 18 18M18 6l-1.5 1.5M7.5 16.5 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.3" />
+  <circle id="ui-settings-ring" cx="12" cy="12" r="6.1" fill="none" stroke="currentColor" stroke-width="2.3" />
+  <circle id="ui-settings-core" cx="12" cy="12" r="2.1" fill="currentColor" />
+</svg>

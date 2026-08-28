@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 24 24"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <title id="ui-pause-title">Pausa</title>
+  <desc id="ui-pause-desc">Dos barras verticales que indican que la partida puede pausarse</desc>
+  <rect id="ui-pause-bar-left" x="6" y="4" width="4" height="16" rx="1" fill="currentColor" />
+  <rect id="ui-pause-bar-right" x="14" y="4" width="4" height="16" rx="1" fill="currentColor" />
+</svg>

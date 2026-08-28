@@ -2,7 +2,7 @@
 
 > Snapshot operativo: 28-08-2026.
 >
-> Estado funcional auditado desde el commit base `4fbf751` (`audio procedural`) y las correcciones de modularidad de esta sesión.
+> Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 
@@ -58,12 +58,13 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 77 tests unitarios/integración en 22 archivos y 7 smoke tests de Playwright pasando en Chromium (6 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 78 tests unitarios/integración en 23 archivos y 7 smoke tests de Playwright pasando en Chromium (6 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
 - Spike de 500 entidades: aproximadamente 60 FPS en Sprite, GraphicsContext compartido y pool; p95 de 16.80 ms.
 - Audio: `AudioContext` running y latencia base de 3.0 ms.
+- Audio integrado: el usuario confirma música, efectos, pausa, reanudación, volumen y silencio funcionando correctamente en móvil.
 - Stress de 250 enemigos + 300 proyectiles: estable alrededor de 60 FPS quieto, con picos reportados de 120 FPS al mover.
 - Una run móvil llegó al boss de 4:20 y descubrió `Unable to convert color 4294430586`; la causa era un color de ocho dígitos en el telegraph de barrido. Quedó corregido con una paleta RGB validada por test. Falta repetir el encuentro en el build publicado.
 - Falta registrar modelo exacto del teléfono y preset de calidad cuando éstos existan.
@@ -134,7 +135,7 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
 6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService`, `SaveStore` y `AudioService`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
-8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
+8. La skill SVG ya tiene dos assets master de UI (`pause.svg` y `settings.svg`) con validación estructural; faltan las familias visuales de player, enemigos y hazards.
 9. `tests/browser/game.smoke.spec.ts` ejecuta Playwright sobre `dist/local`: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, persistencia local, context loss y consola/red. `tests/browser/mobile.smoke.spec.ts` cubre un drag touch emulado en portrait Pixel 5. El fallback de storage bloqueado, el constructor Web Audio fallido y el lifecycle de audio tienen cobertura unitaria; la validación manual en móvil real sigue pendiente.
 
 Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI secundarios, ajustes persistentes y el balance final de la run. `GameState`, `BossSystem` y los modelos de simulación ya permiten terminar, mostrar victoria y reiniciar una run in-place sin recargar ni perder la mejor marca. El boss usa contenido tipado, patrones telegraphed y un snapshot de render; las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle/anuncios.
@@ -166,7 +167,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 77 tests unitarios/integración y 7 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), acceso rápido de boss, context loss y touch emulado;
+- 78 tests unitarios/integración y 7 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), SVG, acceso rápido de boss, context loss y touch emulado;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -199,8 +200,8 @@ Puerta del hito:
 ### Fase 6 — parcialmente implementada
 
 - Lenguaje visual definitivo.
-- SVG master code-first para UI/assets y pipeline de validación.
-- ✅ AudioService real con música procedural, cues básicos, volumen separado, desbloqueo diferido y pausa/reanudación.
+- ✅ Primer pipeline SVG master code-first para UI: iconos `pause.svg` y `settings.svg` inline, recoloreables y validados.
+- ✅ AudioService real con música procedural, cues básicos, volumen separado, desbloqueo diferido y pausa/reanudación; audio integrado validado manualmente.
 - ⬜ Música final/asset externo opcional, límites de voces refinados y mezcla definitiva; la UI de ajustes del prototipo ya está conectada.
 - Hit feedback, shake presupuestado, hit stop, trails y partículas.
 - Presets Low/Medium/High sin cambiar gameplay.
@@ -222,7 +223,7 @@ Puerta del hito:
 - ⬜ Falta registrar número exacto de runs, dispositivo, navegador, calidad y FPS.
 - ✅ Context loss ya tiene smoke browser; el fallback de storage bloqueado ya tiene test unitario.
 - ✅ El usuario validó que el spike de Web Audio reproduce sonido; el volumen bajo queda registrado como comportamiento actual de prueba.
-- ⬜ Falta completar en móvil context loss, storage bloqueado, audio integrado y background/foreground.
+- ⬜ Falta completar en móvil context loss, storage bloqueado y background/foreground; el usuario ya validó audio integrado, pausa, volumen y silencio.
 - El aspecto amateur y la falta de juice quedan conscientemente aplazados a la Fase 6; no bloquean la validación funcional actual.
 
 ### Fase 8 — pendiente
@@ -309,7 +310,7 @@ npm run build:crazygames
 - El usuario reporta varias runs manuales completas de 5–6 minutos; falta registrar el número exacto y sus resultados.
 - Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas; el browser smoke ya cubre carga, input, pausa, level-up, storage local, consola/red, la matriz de resize y el acceso rápido al boss con sus dos patrones. El atajo y varias runs completas también fueron probados manualmente por el usuario; falta registrar el número exacto de runs y sus resultados.
 - No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
-- No existen resultados manuales en móvil de context loss, storage bloqueado, audio integrado ni una run completa registrada con dispositivo y FPS; el spike de audio sí fue validado manualmente.
+- No existen resultados manuales en móvil de context loss, storage bloqueado ni una run completa registrada con dispositivo y FPS; audio integrado, pausa, volumen y silencio ya fueron validados por el usuario.
 - La diversión, claridad y balance no pueden declararse aprobados sólo con tests.
 
 ## 12. Registro de sesión — auditoría de modularidad
@@ -318,11 +319,11 @@ Fecha: 28-08-2026.
 
 Estado al cerrar esta sesión:
 
-- `main` parte de `4fbf751`; las correcciones de esta auditoría y sus regresiones quedan registradas en el commit de cierre de esta sesión.
+- `main` permanece sincronizado con `origin/main`; las sesiones de audio/pausa y SVG quedan registradas en commits de cierre identificables.
 - La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
 - No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
 - No se encontraron ciclos de dependencias en `src`.
-- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 77 tests en 22 archivos y 7 smoke tests browser.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 78 tests en 23 archivos y 7 smoke tests browser.
 - Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
 - El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
 
@@ -330,12 +331,12 @@ Estado y pendientes prioritarios:
 
 1. En `src/app/Game.ts`, `finishRun()` ya crea el resumen con `createRunSummary(outcome, ...)`; `src/app/Game.test.ts` confirma que una victoria llega al overlay como `victory`.
 2. El arco seguro del boss ya inicia cada segmento con `beginPath()`: esto evita la diagonal que PixiJS producía al heredar `(0,0)` después de dibujar el círculo. `src/presentation/pixi/BossView.test.ts` cubre arcos normales y wrap-around. Repetir en móvil el encuentro publicado y comprobar que no aparece la diagonal, además de movimiento orbital, telegraphs, derrota y texto “Victoria”.
-3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red, matriz de resize y drag touch emulado se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias, incluido constructor rechazado; lifecycle, audio integrado y storage bloqueado en móvil real siguen siendo una comprobación manual.
+3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red, matriz de resize y drag touch emulado se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias, incluido constructor rechazado; lifecycle y storage bloqueado en móvil real siguen siendo una comprobación manual.
 4. Los hallazgos de concentración se abordaron sin fragmentación especulativa: stress está en `StressCombatScenario`, la selección temporal está en `EnemySpawnDefinitions` y el contrato de render no expone campos mutables de gameplay. `CombatWeaponSystem` y `Game` conservan fronteras cohesivas con umbral explícito para futuras extracciones.
 
 Limitaciones de esta sesión:
 
-- El smoke automatizado se ejecutó localmente en Chromium: 6 escenarios correctos (5 desktop y 1 Pixel 5 emulado) sin errores de consola/red. Esto no sustituye la verificación visual ni el lifecycle de audio/storage en un móvil físico.
+- El smoke automatizado se ejecutó localmente en Chromium: 7 escenarios correctos (6 desktop y 1 Pixel 5 emulado) sin errores de consola/red. Esto no sustituye la verificación visual ni el lifecycle de audio/storage en un móvil físico.
 - Se modificaron `src/audio/AudioService.ts`, `src/simulation/enemies/EnemySystem.ts`, `src/simulation/combat/CombatRenderState.ts` y `src/simulation/combat/CombatWeaponSystem.ts`; se añadieron `EnemySpawnDefinitions`, `StressCombatScenario` y el smoke touch móvil. El audio degrada a silencio si el navegador rechaza la construcción, y la documentación/README incluye la instalación reproducible de Chromium.
 
 Para retomar en otra PC:
@@ -356,8 +357,19 @@ Implementado en esta sesión:
 - `GameState.restartFromPause()` impide reinicios accidentales desde estados terminales o transitorios;
 - los cambios de audio se aplican al `WebAudioService` y se guardan con el schema existente de `SaveStore`;
 - la música procedural usa un patrón de ocho pasos con bajo, melodía y armonía, sin archivos remotos ni dependencia npm;
-- smoke browser: 77 tests unitarios/integración y 7 escenarios browser (incluido Pixel 5 emulado) pasan.
+- smoke browser: 78 tests unitarios/integración y 7 escenarios browser (incluido Pixel 5 emulado) pasan.
 
-Decisión de assets/librerías: se revisaron ZzFX/ZzFXM y Kenney Sci-Fi Sounds. Se mantienen como candidatos documentados, pero no se incorporan aún para respetar el presupuesto, el requisito de builds autocontenidos y la regla de no añadir dependencias para una utilidad pequeña. Antes de Fase 6 queda la comprobación auditiva en un móvil físico y decidir si una pista local comprimida justifica su peso.
+Decisión de assets/librerías: se revisaron ZzFX/ZzFXM y Kenney Sci-Fi Sounds. Se mantienen como candidatos documentados, pero no se incorporan aún para respetar el presupuesto, el requisito de builds autocontenidos y la regla de no añadir dependencias para una utilidad pequeña. El usuario validó auditivamente el audio integrado; antes de cerrar Fase 6 queda decidir si una pista local comprimida justifica su peso.
 
 Para retomar: abrir pausa en la URL publicada, desplegar “Configuración”, cambiar música/SFX/silencio, reanudar y recargar para comprobar persistencia. El botón “Reiniciar partida” debe devolver la run a `00:00` sin recarga.
+
+## 14. Continuación — SVG UI
+
+Fecha: 28-08-2026.
+
+- `src/assets/svg/ui/pause.svg` y `settings.svg` son masters code-first de 24×24, inline, recoloreables con `currentColor` y sin filtros ni recursos externos;
+- `main.ts` los monta en los botones existentes; el hit-area y la etiqueta accesible siguen siendo HTML;
+- `SvgAssets.test.ts` valida `viewBox`, `preserveAspectRatio`, IDs prefijados y ausencia de scripts, raster, handlers o URLs externas;
+- smoke browser confirma que ambos iconos aparecen junto con pausa, configuración, persistencia y touch emulado.
+
+El siguiente bloque visual puede reutilizar este contrato para un asset de player o enemigo; no se parsearán SVG nuevos por frame ni se modificarán reglas de simulación.

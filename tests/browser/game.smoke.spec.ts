@@ -87,11 +87,13 @@ test('carga, acepta input, pausa y mantiene el canvas durante resize', async ({ 
 test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   const failures = await openGame(page);
   await expect(page.locator('#pause-toggle')).toBeVisible();
+  await expect(page.locator('#pause-toggle svg')).toBeVisible();
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-overlay')).toBeVisible();
   await expect(page.locator('#pause-toggle')).toBeHidden();
 
   await page.locator('#pause-settings-toggle').click();
+  await expect(page.locator('#pause-settings-toggle svg')).toBeVisible();
   await page.locator('#pause-music').fill('35');
   await page.locator('#pause-sfx').fill('55');
   await page.locator('#pause-muted').check();

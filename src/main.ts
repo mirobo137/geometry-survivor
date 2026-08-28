@@ -1,6 +1,8 @@
 import { Application } from 'pixi.js';
 import './styles.css';
 import { Game } from './app/Game';
+import pauseIcon from './assets/svg/ui/pause.svg?raw';
+import settingsIcon from './assets/svg/ui/settings.svg?raw';
 import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 
@@ -17,6 +19,16 @@ const reportBootError = (error: unknown): void => {
     bootStatus.textContent = `No se pudo iniciar el juego. ${getErrorMessage(error)}`;
   }
   console.error('Geometry Survivor could not start:', error);
+};
+
+const mountInlineIcon = (host: HTMLElement, svg: string, replaceChildren: boolean): void => {
+  if (replaceChildren) host.replaceChildren();
+  host.insertAdjacentHTML('afterbegin', svg);
+  const icon = host.firstElementChild;
+  if (icon instanceof SVGElement) {
+    icon.setAttribute('aria-hidden', 'true');
+    icon.setAttribute('focusable', 'false');
+  }
 };
 
 const createPixiApplication = async (container: HTMLElement): Promise<Application> => {
@@ -48,6 +60,9 @@ const bootstrap = async (): Promise<void> => {
   if (!container || !debugElement || !bootStatus || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
+  mountInlineIcon(pauseButton, pauseIcon, true);
+  const settingsToggle = pauseElement.querySelector<HTMLButtonElement>('#pause-settings-toggle');
+  if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
   const spike = searchParams.get('spike');

@@ -110,6 +110,12 @@ body {
   transform: translateY(1px);
 }
 
+#pause-toggle svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  display: block;
+}
+
 #hud-health {
   color: #ffb3a5;
 }
@@ -252,6 +258,19 @@ body {
   border-radius: 0.45rem;
   font: inherit;
   touch-action: manipulation;
+}
+
+#pause-settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+#pause-settings-toggle svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
 }
 
 #pause-actions #pause-settings-toggle,

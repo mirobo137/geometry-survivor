@@ -114,15 +114,17 @@ export class BossView {
     const span = Math.max(0, end - start);
     const normalizedEnd = normalizedStart + span;
     if (normalizedEnd <= FULL_CIRCLE) {
-      this.attack
-        .arc(ARENA_CENTER.x, ARENA_CENTER.y, radius, normalizedStart, normalizedEnd)
-        .stroke({ color, width, alpha: 0.95 });
+      this.strokeArcSegment(normalizedStart, normalizedEnd, radius, color, width);
       return;
     }
+    this.strokeArcSegment(normalizedStart, FULL_CIRCLE, radius, color, width);
+    this.strokeArcSegment(0, normalizedEnd - FULL_CIRCLE, radius, color, width);
+  }
+
+  private strokeArcSegment(start: number, end: number, radius: number, color: number, width: number): void {
     this.attack
-      .arc(ARENA_CENTER.x, ARENA_CENTER.y, radius, normalizedStart, FULL_CIRCLE)
-      .stroke({ color, width, alpha: 0.95 })
-      .arc(ARENA_CENTER.x, ARENA_CENTER.y, radius, 0, normalizedEnd - FULL_CIRCLE)
+      .beginPath()
+      .arc(ARENA_CENTER.x, ARENA_CENTER.y, radius, start, end)
       .stroke({ color, width, alpha: 0.95 });
   }
 }

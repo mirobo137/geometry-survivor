@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js';
 import './styles.css';
 import { Game } from './app/Game';
+import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 
 const getErrorMessage = (error: unknown): string => {
@@ -50,6 +51,7 @@ const bootstrap = async (): Promise<void> => {
   const searchParams = new URLSearchParams(window.location.search);
   const spike = searchParams.get('spike');
   const stressMode = searchParams.get('stress') === '1';
+  const bossDebugMode = searchParams.get('boss') === '1';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -85,6 +87,7 @@ const bootstrap = async (): Promise<void> => {
       gameOver: gameOverElement
     },
     stressMode,
+    initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     platform: new LocalPlatform()
   });

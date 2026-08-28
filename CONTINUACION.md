@@ -42,9 +42,12 @@ Atajos que pueden escribirse después de la URL base:
 ```text
 ?debug=1
 ?stress=1
+?boss=1
 ?spike=rendering
 ?spike=audio
 ```
+
+`?boss=1` es el atajo de desarrollo para probar el encuentro sin jugar los 4:20 previos: inicia el reloj en el umbral oficial, coloca la arena en su estado de late game y muestra el panel técnico. La URL normal no cambia. También puede combinarse con `&debug=1` aunque el panel ya se muestra automáticamente.
 
 Stack y calidad confirmada:
 
@@ -53,9 +56,9 @@ Stack y calidad confirmada:
 - Timestep fijo de 60 Hz; presentación desacoplada del ritmo de simulación.
 - Viewport lógico 720×1280 en portrait y 1280×720 en landscape.
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
-- CI despliega `dist/local` en GitHub Pages sólo si pasa `npm run validate`.
+- CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto y 65 tests pasando en 17 archivos.
+- Última auditoría local: typecheck correcto, 71 tests unitarios/integración en 20 archivos y 5 smoke tests de Playwright pasando en Chromium.
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -83,6 +86,7 @@ Mediciones manuales aportadas desde Android Chrome:
 - Projectile, Orbit y Chain Lightning.
 - Pooling, targeting, spatial grid, colisiones, daño, muerte y XP directa.
 - Preset `?stress=1` mantiene ambos pools en capacidad.
+- Preset `?boss=1` inicia una run de prueba en el umbral del boss sin cambiar la URL normal ni el balance del encuentro.
 
 ### Progresión y arena
 
@@ -99,6 +103,12 @@ Mediciones manuales aportadas desde Android Chrome:
 - HUD de tiempo, vida, XP, bajas y nivel.
 - Overlays DOM responsive para level-up y pausa.
 - Panel debug con FPS, viewport, pools, armas, nivel, pausa, arena y resonancia.
+
+### Audio
+
+- `src/audio/AudioService.ts` mantiene Web Audio fuera de la simulación y crea el contexto sólo después de la primera interacción.
+- `WebAudioService` reproduce una música procedural discreta, cues de daño/level-up/victoria y pausa/reanuda junto con el lifecycle del juego.
+- El usuario validó manualmente que el spike de audio suena; su volumen de prueba es deliberadamente bajo y la música integrada todavía requiere validación en móvil real.
 
 ## 5. Resultado de la auditoría de modularidad
 
@@ -122,10 +132,10 @@ No son fallos actuales, pero ya son puntos de concentración reales:
 3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
 4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; ahora incluye un snapshot de boss con fase, salud, barrido y anillo. Los sistemas de simulación ya exponen reset explícito para reinicio in-place.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
-6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService` y `SaveStore`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
+6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService`, `SaveStore` y `AudioService`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
-9. Hay unit/integration tests, pero todavía no Playwright/browser smoke para consola, resize, pausa, level-up y storage.
+9. `tests/browser/game.smoke.spec.ts` ejecuta Playwright sobre `dist/local`: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, persistencia local, context loss y consola/red. El fallback de storage bloqueado tiene cobertura unitaria; falta validación manual en móvil.
 
 Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI secundarios, ajustes persistentes y el balance final de la run. `GameState`, `BossSystem` y los modelos de simulación ya permiten terminar, mostrar victoria y reiniciar una run in-place sin recargar ni perder la mejor marca. El boss usa contenido tipado, patrones telegraphed y un snapshot de render; las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle/anuncios.
 
@@ -157,7 +167,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 65 tests existentes siguen pasando y existen tests nuevos de estados/aplicación/enemigos/cartas/guardado/resumen/reset/boss/colores;
+- 71 tests unitarios/integración y 5 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio, acceso rápido de boss y context loss;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -166,10 +176,11 @@ Puerta del hito:
 ### Fase 3 — todavía abierta
 
 - Conectar los ajustes persistentes a una UI de configuración; la mejor marca ya se actualiza desde game-over.
-- Validar manualmente dos builds que se sientan diferentes.
+- Validar manualmente dos builds que se sientan diferentes; la evidencia del usuario confirma que las decisiones importan, pero todavía no documenta dos rutas de build comparables.
 
 ### Fase 4 — implementada, pendiente de puerta humana
 
+- ✅ El usuario confirma que las mecánicas generales funcionan y que el balance inicial es adecuado.
 - Confirmar en móvil que el Laser se entiende tras verlo una vez.
 - Confirmar que el camping no domina.
 - Confirmar que elite, densidad y Laser no producen daño inevitable.
@@ -180,23 +191,39 @@ Puerta del hito:
 
 - Boss con dos patrones: barrido/línea telegraphed y anillo con huecos seguros ya implementado.
 - El boss se desplaza en una órbita determinista, lenta y acotada dentro de la arena; radio y velocidad viven en contenido, no en Pixi.
-- Run reproducible completa de 5–6 minutos, pendiente de validación manual y balance.
+- ✅ Varias runs normales de 5–6 minutos fueron completadas manualmente; el usuario confirma que el balance inicial y las decisiones de build funcionan.
+- El atajo `?boss=1` fue probado manualmente por el usuario; el smoke browser confirma además su aparición y la secuencia de barrido/anillo.
 - Game over por muerte, resumen, mejor marca, victoria y reinicio in-place ya están implementados.
-- Primer balance integral y diez runs internas sin softlock.
+- Primer balance integral y diez runs internas sin softlock: todavía falta registrar el número exacto de runs y sus resultados.
 
-### Fase 6 — sin implementar
+### Fase 6 — parcialmente implementada
 
 - Lenguaje visual definitivo.
 - SVG master code-first para UI/assets y pipeline de validación.
-- AudioService real, música/SFX, límites de voces y recuperación de contexto.
+- ✅ AudioService real con música procedural, cues básicos, volumen separado, desbloqueo diferido y pausa/reanudación.
+- ⬜ Música final, assets de audio, límites de voces refinados, UI de ajustes y mezcla definitiva.
 - Hit feedback, shake presupuestado, hit stop, trails y partículas.
 - Presets Low/Medium/High sin cambiar gameplay.
 
 ### Fase 7 — parcial
 
 - Ya existen responsive, pausa de lifecycle y stress inicial.
-- Faltan context loss, storage fallido, matriz completa de resize y profiling CPU/GPU/GC.
+- ✅ Context loss está cubierto en browser smoke; el fallback ante storage bloqueado está cubierto por tests unitarios.
+- ✅ La matriz completa de resize está cubierta por browser smoke.
+- Faltan validación manual móvil y profiling CPU/GPU/GC.
 - Falta decidir adaptive quality con datos reales.
+
+## 7.1 Evidencia manual actual
+
+- ✅ La rotación funciona.
+- ✅ El usuario completó varias runs normales hasta el final.
+- ✅ El boss fue probado y derrotado.
+- ✅ El balance inicial y el peso de las decisiones se perciben correctos para el primer nivel.
+- ⬜ Falta registrar número exacto de runs, dispositivo, navegador, calidad y FPS.
+- ✅ Context loss ya tiene smoke browser; el fallback de storage bloqueado ya tiene test unitario.
+- ✅ El usuario validó que el spike de Web Audio reproduce sonido; el volumen bajo queda registrado como comportamiento actual de prueba.
+- ⬜ Falta completar en móvil context loss, storage bloqueado, audio integrado y background/foreground.
+- El aspecto amateur y la falta de juice quedan conscientemente aplazados a la Fase 6; no bloquean la validación funcional actual.
 
 ### Fase 8 — pendiente
 
@@ -232,6 +259,13 @@ En `?stress=1`:
 3. comprobar que pausa/reanudación no duplica entidades ni acelera la simulación;
 4. registrar modelo, navegador, FPS aproximado y cualquier congelamiento.
 
+En `?boss=1`:
+
+1. confirmar que el HUD inicia alrededor de `4:20` y que aparece un solo boss;
+2. probar el movimiento orbital, el telegraph del barrido y el anillo con hueco seguro;
+3. comprobar que la línea del boss no aparece conectada accidentalmente con el origen;
+4. derrotar al boss si se desea validar Victoria, resumen y reinicio in-place.
+
 ## 9. Comandos de validación
 
 ```bash
@@ -239,11 +273,12 @@ npm ci
 npm run typecheck
 npm test
 npm run validate
+npm run test:browser
 npm run build:poki
 npm run build:crazygames
 ```
 
-`npm run validate` ya incluye typecheck, tests y build local. No declarar una puerta manual superada sólo porque estos comandos pasen.
+`npm run validate` ya incluye typecheck, tests y build local. `npm run test:browser` vuelve a construir `dist/local` y ejecuta Playwright en Chromium. No declarar una puerta manual superada sólo porque estos comandos pasen.
 
 ## 10. Archivos clave
 
@@ -267,10 +302,10 @@ npm run build:crazygames
 
 ## 11. Evidencia pendiente, no asumir
 
-- No se ha documentado todavía una run manual completa de 5–6 minutos.
-- Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas; el boss ya fue alcanzado en móvil, pero falta repetir el encuentro con la corrección publicada y completar el smoke final.
+- El usuario reporta varias runs manuales completas de 5–6 minutos; falta registrar el número exacto y sus resultados.
+- Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas; el browser smoke ya cubre carga, input, pausa, level-up, storage local, consola/red, la matriz de resize y el acceso rápido al boss con sus dos patrones. El atajo y varias runs completas también fueron probados manualmente por el usuario; falta registrar el número exacto de runs y sus resultados.
 - No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
-- No existen resultados de browser smoke automatizado, context loss o storage fallido.
+- No existen resultados manuales en móvil de context loss, storage bloqueado, audio integrado ni una run completa registrada con dispositivo y FPS; el spike de audio sí fue validado manualmente.
 - La diversión, claridad y balance no pueden declararse aprobados sólo con tests.
 
 ## 12. Registro de sesión — auditoría de modularidad
@@ -279,29 +314,29 @@ Fecha: 27-08-2026.
 
 Estado al cerrar esta sesión:
 
-- `main` está limpio y sincronizado con `origin/main`.
+- `main` sigue sincronizado con `origin/main`; el worktree contiene las correcciones locales de victoria/subpaths, sus regresiones y el browser smoke de CI.
 - La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
 - No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
 - No se encontraron ciclos de dependencias en `src`.
-- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 65 tests en 17 archivos.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 71 tests en 20 archivos.
 - Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
 - El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
 
-Pendiente prioritario detectado por la auditoría:
+Estado y pendientes prioritarios:
 
-1. En `src/app/Game.ts`, `finishRun()` crea el resumen con `game-over` incluso cuando recibe `victory`. Corregirlo a `createRunSummary(outcome, ...)` y añadir una prueba de integración que confirme el resumen de victoria.
-2. Después de esa corrección, repetir en móvil el encuentro del boss publicado: comprobar movimiento orbital, telegraphs, derrota y texto “Victoria”.
-3. Añadir browser smoke en CI para carga, resize, pausa, level-up, storage y consola; el crash de color del boss demostró que los tests de simulación/build no sustituyen esa capa.
+1. En `src/app/Game.ts`, `finishRun()` ya crea el resumen con `createRunSummary(outcome, ...)`; `src/app/Game.test.ts` confirma que una victoria llega al overlay como `victory`.
+2. El arco seguro del boss ya inicia cada segmento con `beginPath()`: esto evita la diagonal que PixiJS producía al heredar `(0,0)` después de dibujar el círculo. `src/presentation/pixi/BossView.test.ts` cubre arcos normales y wrap-around. Repetir en móvil el encuentro publicado y comprobar que no aparece la diagonal, además de movimiento orbital, telegraphs, derrota y texto “Victoria”.
+3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red y toda la matriz de resize se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias; pendiente repetir lifecycle, audio y storage bloqueado en móvil real.
 4. Antes de una cuarta arma, evaluar separar `CombatWeaponSystem`; antes de ampliar variantes, mover la selección temporal de enemigos de `EnemySystem` a contenido/director.
 
 Limitaciones de esta sesión:
 
-- No hubo navegador conectado en el entorno del agente, por lo que no se pudo ejecutar smoke visual local.
-- No se modificó el código de producción durante la auditoría; el fallo de `finishRun()` permanece pendiente de autorización/implementación.
+- El smoke automatizado se ejecutó localmente en Chromium: 5 escenarios correctos y sin errores de consola/red. La verificación visual manual en un navegador conectado y en móvil sigue pendiente.
+- Se modificaron `src/app/Game.ts`, `src/audio/AudioService.ts` y `src/presentation/pixi/BossView.ts` para integrar audio con lifecycle, corregir el outcome de victoria, separar los subpaths del arco y pausar ante pérdida de contexto WebGL; se añadieron pruebas de regresión. También se añadió Playwright a CI para impedir deploys sin smoke correcto.
 
 Para retomar en otra PC:
 
 1. Abrir `C:\PROYECTOS\pruebas_geo` como raíz y leer `AGENTS.md` y este archivo.
 2. Ejecutar `git status --short --branch`, `npm run typecheck` y `npm test`.
-3. Corregir primero el resultado `victory` y cubrirlo con test; luego ejecutar `npm run validate` y los dos builds de plataforma.
-4. Publicar en `main` y repetir la misma URL de GitHub Pages, sin parámetros adicionales.
+3. Ejecutar `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames`.
+4. Publicar en `main` y repetir la URL normal de GitHub Pages para la run completa; usar `?boss=1` para repetir el encuentro corregido sin esperar 4:20.

@@ -22,6 +22,7 @@ export class InputManager {
   private pointerId: number | null = null;
   private touchId: number | null = null;
   private pointerPosition = { x: 0, y: 0 };
+  private firstInputNotified = false;
   private readonly onKeyDownBound = (event: KeyboardEvent): void => this.onKeyDown(event);
   private readonly onKeyUpBound = (event: KeyboardEvent): void => this.onKeyUp(event);
   private readonly onPointerDownBound = (event: PointerEvent): void => this.onPointerDown(event);
@@ -34,7 +35,8 @@ export class InputManager {
   public constructor(
     private readonly element: HTMLElement,
     private readonly viewport: ViewportTransform,
-    private readonly getPlayerPosition: () => { x: number; y: number }
+    private readonly getPlayerPosition: () => { x: number; y: number },
+    private readonly onFirstInput: () => void = () => undefined
   ) {}
 
   public attach(): void {
@@ -105,7 +107,10 @@ export class InputManager {
 
   private onKeyDown(event: KeyboardEvent): void {
     if (this.isInteractiveTarget(event.target)) return;
-    if (MOVEMENT_KEYS[event.code]) event.preventDefault();
+    if (MOVEMENT_KEYS[event.code]) {
+      event.preventDefault();
+      this.notifyFirstInput();
+    }
     this.keys.add(event.code);
   }
 
@@ -116,6 +121,7 @@ export class InputManager {
   private onPointerDown(event: PointerEvent): void {
     if (this.isInteractiveTarget(event.target)) return;
     if (this.pointerId !== null) return;
+    this.notifyFirstInput();
     this.pointerId = event.pointerId;
     this.updatePointer(event);
     try {
@@ -145,6 +151,7 @@ export class InputManager {
   private onTouchStart(event: TouchEvent): void {
     if (this.isInteractiveTarget(event.target)) return;
     if (this.touchId !== null || event.changedTouches.length === 0) return;
+    this.notifyFirstInput();
     const touch = event.changedTouches[0];
     this.touchId = touch.identifier;
     this.updateTouch(touch);
@@ -179,5 +186,11 @@ export class InputManager {
       touch.clientY,
       this.element.getBoundingClientRect()
     );
+  }
+
+  private notifyFirstInput(): void {
+    if (this.firstInputNotified) return;
+    this.firstInputNotified = true;
+    this.onFirstInput();
   }
 }

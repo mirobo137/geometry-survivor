@@ -19,6 +19,8 @@ export { selectEnemyKind } from '../enemies/EnemySystem';
 
 export interface CombatSimulationOptions {
   readonly stress?: boolean;
+  /** Optional simulation clock offset used by deterministic development scenarios. */
+  readonly initialElapsedSeconds?: number;
 }
 
 export type CombatEvent =
@@ -67,10 +69,15 @@ export class CombatSimulation {
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
   private readonly stressMode: boolean;
+  private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.stressMode = options.stress === true;
+    this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
+      ? Math.max(0, options.initialElapsedSeconds ?? 0)
+      : 0;
+    this.stats.elapsedSeconds = this.initialElapsedSeconds;
   }
 
   public get isStressMode(): boolean {
@@ -188,7 +195,7 @@ export class CombatSimulation {
     this.boss.reset();
     this.weaponSystem.reset();
     this.laser.reset();
-    this.stats.elapsedSeconds = 0;
+    this.stats.elapsedSeconds = this.initialElapsedSeconds;
     this.stats.kills = 0;
     this.stats.experience = 0;
     this.stats.shotsFired = 0;

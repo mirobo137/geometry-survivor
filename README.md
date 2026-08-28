@@ -21,10 +21,13 @@ Los spikes de Fase 0 se pueden ejecutar desde GitHub Pages con `?spike=rendering
 
 El stress de combate de Fase 2 se ejecuta con `?stress=1`. Inicializa 250 enemigos y 300 proyectiles reales, mantiene visible el panel técnico y sirve para comprobar el peor caso en el mismo móvil. Se puede combinar con `&debug=1`, aunque no es necesario.
 
+Para probar el encuentro del boss sin esperar 4:20, usa `?boss=1`. Este atajo de desarrollo inicia el reloj en el umbral oficial del boss, coloca la arena en su estado correspondiente y muestra el panel técnico; la URL normal continúa empezando en `0:00`.
+
 ## Validación y builds
 
 ```bash
 npm run validate
+npm run test:browser
 npm run build:local
 npm run build:poki
 npm run build:crazygames
@@ -32,6 +35,8 @@ npm run preview
 ```
 
 Los artefactos quedan en `dist/local`, `dist/poki` y `dist/crazygames`. En esta primera fase Poki y CrazyGames usan todavía `LocalPlatform`; sus SDK se integrarán en adaptadores aislados cuando el MVP sea estable.
+
+`npm run test:browser` reconstruye `dist/local` y ejecuta el smoke de Playwright en Chromium: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, almacenamiento local, context loss y errores de consola/red. El juego desbloquea la música procedural y los cues de audio después de la primera interacción; `?spike=audio` conserva la prueba técnica aislada.
 
 ## Subir al repositorio remoto
 
@@ -46,4 +51,4 @@ git remote add origin <URL_DEL_REPOSITORIO>
 git push -u origin main
 ```
 
-El workflow `.github/workflows/deploy.yml` publica automáticamente `dist/local` en GitHub Pages cuando se hace push a `main`. Antes del primer despliegue, activa `Settings > Pages > Build and deployment > Source: GitHub Actions` en el repositorio; esa configuración permite que `configure-pages` encuentre el sitio.
+El workflow `.github/workflows/deploy.yml` publica automáticamente `dist/local` en GitHub Pages cuando se hace push a `main`, sólo después de pasar el browser smoke y los builds Poki/CrazyGames. Antes del primer despliegue, activa `Settings > Pages > Build and deployment > Source: GitHub Actions` en el repositorio; esa configuración permite que `configure-pages` encuentre el sitio.

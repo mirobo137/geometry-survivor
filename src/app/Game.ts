@@ -15,6 +15,7 @@ import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import { PauseOverlay } from '../ui/PauseOverlay';
+import type { AudioService } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 
@@ -31,6 +32,7 @@ export interface GameOptions {
   readonly app: Application;
   readonly elements: GameElements;
   readonly stressMode: boolean;
+  readonly initialElapsedSeconds?: number;
   readonly buildTarget: string;
   readonly platform: PlatformAdapter;
 }
@@ -42,8 +44,10 @@ export class Game {
   private readonly hudElement: HTMLElement;
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
+  private readonly initialElapsedSeconds: number;
   private readonly lifecycle: PlatformLifecycle;
   private readonly saveStore: SaveStore;
+  private readonly audio: AudioService;
   private readonly viewport = new ViewportTransform();
   private readonly arena = new ArenaModel();
   private readonly player = new PlayerModel();
@@ -65,6 +69,7 @@ export class Game {
   private fpsTime = performance.now();
   private fps = 0;
   private lifecyclePaused = false;
+  private contextLost = false;
   private started = false;
   private stopped = false;
 
@@ -83,6 +88,30 @@ export class Game {
 
   private readonly onWindowBlur = (): void => this.pauseForLifecycle();
 
+  private readonly onWebglContextLost = (event: Event): void => {
+    event.preventDefault();
+    if (this.stopped || this.lifecyclePaused || !this.gameState.isSimulationRunning) return;
+    this.contextLost = true;
+    this.pauseForLifecycle('El renderizador se está recuperando. La partida se pausó; espera y pulsa Continuar.');
+  };
+
+  private readonly onWebglContextRestored = (): void => {
+    if (!this.contextLost) return;
+    this.contextLost = false;
+    if (this.lifecyclePaused) {
+      this.pause.open('El renderizador se recuperó. Pulsa Continuar para regresar.', this.resumeFromLifecycle);
+    }
+  };
+
+  private readonly resumeFromLifecycle = (): void => {
+    if (this.contextLost) return;
+    this.input.reset();
+    this.lifecyclePaused = false;
+    this.gameState.resume();
+    this.pause.close();
+    this.lifecycle.onGameResume();
+  };
+
   private readonly onTick = (ticker: Ticker): void => {
     this.accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
     while (this.accumulator >= FIXED_STEP_SECONDS) {
@@ -99,16 +128,26 @@ export class Game {
     this.hudElement = options.elements.hud;
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
+    this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
+      ? Math.max(0, options.initialElapsedSeconds ?? 0)
+      : 0;
     this.lifecycle = options.platform.lifecycle;
     this.saveStore = options.platform.saveStore;
-    this.combat = new CombatSimulation({ stress: this.stressMode });
+    this.audio = options.platform.audio;
+    this.audio.configure(this.saveStore.load().settings);
+    this.combat = new CombatSimulation({
+      stress: this.stressMode,
+      initialElapsedSeconds: this.initialElapsedSeconds
+    });
     this.view = new PixiGameView(this.app.renderer);
-    this.debug = new DebugPanel(options.elements.debug, this.stressMode);
+    this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
-    this.input = new InputManager(this.container, this.viewport, () => this.player.state);
+    this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
+      void this.audio.unlock();
+    });
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.queueResize);
   }
@@ -122,6 +161,9 @@ export class Game {
     window.addEventListener('orientationchange', this.queueResize, { passive: true });
     document.addEventListener('visibilitychange', this.onVisibilityChange);
     window.addEventListener('blur', this.onWindowBlur);
+    this.app.canvas.addEventListener('webglcontextlost', this.onWebglContextLost);
+    this.app.canvas.addEventListener('webglcontextrestored', this.onWebglContextRestored);
+    this.arena.update(this.initialElapsedSeconds);
     this.resizeNow();
     this.input.attach();
     this.hudElement.hidden = false;
@@ -140,6 +182,9 @@ export class Game {
     window.removeEventListener('orientationchange', this.queueResize);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     window.removeEventListener('blur', this.onWindowBlur);
+    this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
+    this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
+    this.audio.shutdown();
     this.lifecycle.onGamePause();
   }
 
@@ -155,11 +200,15 @@ export class Game {
     this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state.radius);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
     for (const event of this.combat.events) {
-      if (event.type === 'playerDamaged' && this.player.takeDamage(event.amount) && !this.player.isAlive) {
-        this.finishRun('game-over');
-        return;
+      if (event.type === 'playerDamaged') {
+        this.audio.playCue('damage');
+        if (this.player.takeDamage(event.amount) && !this.player.isAlive) {
+          this.finishRun('game-over');
+          return;
+        }
       }
       if (event.type === 'bossDefeated') {
+        this.audio.playCue('boss-defeated');
         this.finishRun('victory');
         return;
       }
@@ -217,7 +266,10 @@ export class Game {
   }
 
   private openLevelUp(): void {
-    if (this.gameState.enterLevelUp()) this.lifecycle.onGamePause();
+    if (this.gameState.enterLevelUp()) {
+      this.lifecycle.onGamePause();
+      this.audio.playCue('level-up');
+    }
     const choices = this.upgradeApplier.getChoices(this.progression.state.level);
     this.levelUp.open(this.progression.state.level, choices, (upgradeId) => {
       this.input.reset();
@@ -227,31 +279,29 @@ export class Game {
         this.openLevelUp();
       } else {
         this.gameState.leaveLevelUp();
-        if (!this.lifecyclePaused) this.lifecycle.onGameResume();
+        if (!this.lifecyclePaused) {
+          this.lifecycle.onGameResume();
+        }
       }
     }, (upgrade) => this.upgradeApplier.getPreview(upgrade));
   }
 
-  private pauseForLifecycle(): void {
+  private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
     if (this.lifecyclePaused || !this.gameState.enterPause()) return;
     this.lifecyclePaused = true;
     this.input.reset();
+    this.audio.pause();
     this.lifecycle.onGamePause();
-    this.pause.open('La partida se detuvo al salir de la ventana.', () => {
-      this.input.reset();
-      this.lifecyclePaused = false;
-      this.gameState.resume();
-      this.pause.close();
-      this.lifecycle.onGameResume();
-    });
+    this.pause.open(message, this.resumeFromLifecycle);
   }
 
   private finishRun(outcome: RunOutcome): void {
     const transitioned = outcome === 'victory' ? this.gameState.winRun() : this.gameState.endRun();
     if (!transitioned) return;
     this.input.reset();
+    this.audio.stopMusic();
     this.lifecycle.onGameOver();
-    const summary = createRunSummary('game-over', this.combat.stats);
+    const summary = createRunSummary(outcome, this.combat.stats);
     const saved = this.saveStore.load();
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
     this.saveStore.save({ ...saved, best });
@@ -264,6 +314,7 @@ export class Game {
     if (!this.gameState.restart()) return;
     this.input.reset();
     this.arena.reset();
+    this.arena.update(this.initialElapsedSeconds);
     this.player.reset();
     this.combat.reset();
     this.progression.reset();
@@ -274,6 +325,7 @@ export class Game {
     this.fps = 0;
     this.fpsTime = performance.now();
     this.gameOver.close();
+    this.audio.startMusic();
     this.lifecycle.onGameStart();
   }
 }

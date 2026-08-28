@@ -504,6 +504,8 @@ PixiJS 8 puede cargar SVG como textura o convertirlo a `GraphicsContext`, pero n
 - preparar atlas después de que el lenguaje visual se estabilice;
 - validar visualmente cualquier optimización SVGO.
 
+En PixiJS 8, cada arco, curva o grupo de líneas visualmente independiente debe iniciar un subpath explícito con `beginPath()` o `moveTo()`. No se permite depender del punto activo que `fill()`/`stroke()` conserva, porque puede producir una diagonal desde `(0,0)` o desde la figura anterior. El procedimiento y la regresión obligatoria viven en [geometry-survivor-rendering](skills/geometry-survivor-rendering/SKILL.md#subpaths-independientes-en-pixijs-8).
+
 ## Presupuesto visual
 
 La prioridad de render es:
@@ -628,6 +630,7 @@ La selección será de build (`VITE_PLATFORM` o equivalente), no una detección 
 - no carga SDK externo;
 - usa anuncios simulados con éxito, cancelación, demora y error;
 - permite presets mediante query string, por ejemplo `?stress=1` (el panel técnico se muestra automáticamente);
+- permite `?boss=1` como escenario de desarrollo: inicia el reloj en el umbral oficial del boss y sincroniza la arena late game, sin modificar la URL normal ni el balance;
 - muestra versión/commit en el HUD de debug;
 - usa `base: "./"` para paths relativos y compatibilidad con subruta/zip;
 - GitHub Actions ejecuta verificación y publica únicamente `dist/local`.
@@ -935,6 +938,28 @@ Solo después de pasar las fases anteriores:
 
 ---
 
+## 15.1 Estado de puertas tras validación manual — 27-08-2026
+
+Evidencia aportada por el usuario, separada de las mediciones automatizadas:
+
+- [x] La rotación funciona durante la experiencia jugable.
+- [x] Se completaron varias runs normales hasta el final.
+- [x] El boss puede ser alcanzado y derrotado.
+- [x] Las decisiones de build tienen impacto real para llegar al boss y derrotarlo.
+- [x] El balance inicial se percibe adecuado para el primer nivel.
+- [x] Las mecánicas principales y los diseños provisionales cumplen su función actual.
+- [ ] Registrar diez runs internas con causa de final, softlocks y daño inevitable.
+- [ ] Registrar dispositivo, navegador, preset de calidad y FPS aproximado.
+- [x] Validar context loss automáticamente y cubrir el fallback de storage bloqueado con tests unitarios.
+- [x] Validar el spike de Web Audio; reproduce sonido tras interacción del usuario y se documenta su volumen bajo de prueba.
+- [ ] Validar context loss, storage bloqueado, audio y background/foreground en un móvil real.
+- [ ] Validar los builds dentro de Poki Inspector y CrazyGames Preview.
+- [ ] Aplicar el polish visual y el juice de la Fase 6 después de cerrar las puertas funcionales.
+
+Esta evidencia permite avanzar en la validación de Fase 5, pero no sustituye el registro cuantitativo ni las pruebas específicas de plataforma y lifecycle.
+
+---
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |
@@ -1095,6 +1120,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `.github/workflows/deploy.yml` prepara la publicación de `dist/local` en GitHub Pages;
 - `src/spikes/RenderingSpike.ts` permite comparar 500 `Sprite`, `GraphicsContext` compartido y pool desde GitHub Pages con `?spike=rendering`;
 - `src/spikes/AudioSpike.ts` comprueba desbloqueo, latencia y retorno de visibilidad de Web Audio desde `?spike=audio`;
+- `src/audio/AudioService.ts` implementa el adaptador Web Audio integrado: música procedural diferida, cues básicos y pausa/reanudación sin importar la simulación;
 - `docs/performance/F0_SPIKES.md` documenta el protocolo y conserva las mediciones por dispositivo;
 - ejecución limpia aportada desde Android Chrome: `Sprite` 59.95 FPS, `GraphicsContext` 59.94 FPS y pool 59.94 FPS, con p95 de 16.80 ms y latencia base de audio de 3.0 ms;
 - `src/simulation/ArenaModel.ts` inicia Fase 1 con una expansión de arena configurable y pruebas de su radio/límite;
@@ -1106,6 +1132,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/app/Game.ts` extrae la coordinación de la run, loop fijo, resize, lifecycle, pausa, level-up, HUD y plataforma fuera de `main.ts`;
 - `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice; no se reserva pool para pickups de XP;
 - `?stress=1` inicializa el escenario de 250 enemigos y 300 proyectiles para la puerta de rendimiento de Fase 2;
+- `?boss=1` permite probar el boss desde el umbral de 4:20 sin jugar los minutos previos; la prueba browser comprueba su aparición y no altera la run normal;
 - medición manual aportada desde Android Chrome en `?stress=1`: estable en 60 FPS al estar quieto y con picos de 120 FPS al mover; modelo y preset Low aún no registrados;
 - `src/simulation/progression/LevelProgression.ts` pausa la run al alcanzar el umbral de XP y `src/ui/LevelUpOverlay.ts` ofrece tres cartas funcionales;
 - `UpgradeDefinition` declara `maxStacks` y `requires`; `UpgradeApplier` registra acumulaciones y `Game` entrega al overlay sólo cartas aplicables, evitando adquisiciones repetidas o mejoras sin prerrequisito;
@@ -1125,6 +1152,6 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/content/bosses/BossDefinition.ts` centraliza el umbral, movimiento orbital, telegraphs, daño, radio y hueco seguro; `BossSystem` mueve al boss de forma determinista, alterna barrido/anillo y reserva un slot del pool normal para garantizar su aparición;
 - `src/presentation/pixi/BossView.ts` representa boss, barra de vida y telegraphs sin decidir colisiones ni daño; su paleta RGB está separada y validada para impedir valores incompatibles con Pixi;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run build:local`, `npm run build:poki` y `npm run build:crazygames` pasan (65 tests).
+- `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (71 tests unitarios/integración y 5 smoke tests de navegador); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
 
 La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, FX adicionales, UI de ajustes y la puerta humana de la run completa.

@@ -1,4 +1,5 @@
 import type { SaveStore } from './save/SaveStore';
+import type { AudioService } from '../audio/AudioService';
 
 export interface PlatformLifecycle {
   init(): Promise<void>;
@@ -18,4 +19,5 @@ export interface PlatformAdapter {
   readonly lifecycle: PlatformLifecycle;
   readonly ads: AdService;
   readonly saveStore: SaveStore;
+  readonly audio: AudioService;
 }

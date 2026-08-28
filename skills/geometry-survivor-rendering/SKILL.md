@@ -34,6 +34,27 @@ Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay
 - Gameplay emite estado/eventos; renderer no aplica daño ni decide drops.
 - Low puede reducir partículas, trails y glow, nunca telegraphs o entidades reales.
 
+## Subpaths independientes en PixiJS 8
+
+`Graphics`/`GraphicsContext` conserva un punto activo después de `fill()` o `stroke()`. Si la siguiente geometría es independiente y se añade con `arc()`, una curva o una línea sin separar el path, Pixi puede trazar también el segmento entre el punto heredado y el inicio nuevo. El síntoma típico es una diagonal desde `(0,0)` o desde la figura anterior hacia un arco.
+
+- Inicia cada arco, curva o grupo de líneas independiente con `beginPath()` o con `moveTo()` a su punto inicial exacto.
+- Repite el límite de subpath para cada segmento cuando un arco se divide al cruzar `2π`.
+- `clear()` al inicio del frame no separa las figuras que se añaden después dentro de ese mismo frame.
+- No encadenes `circle().stroke().arc().stroke()` ni dos strokes independientes sin `beginPath()`/`moveTo()` entre ellos.
+- Si una conexión es intencional, exprésala con `lineTo()`; no dependas del punto activo implícito.
+
+Patrón preferido para un arco independiente:
+
+```ts
+graphics
+  .beginPath()
+  .arc(centerX, centerY, radius, startAngle, endAngle)
+  .stroke(style);
+```
+
+Al revisar una regresión, comprueba los casos normal y wrap-around y confirma que ningún subpath herede `(0,0)` ni el endpoint de otra figura.
+
 ## Procedimiento
 
 1. Define tamaño en pantalla, número máximo de instancias y frecuencia de cambio.

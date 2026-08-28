@@ -129,6 +129,18 @@ describe('CombatSimulation', () => {
     expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'boss')).toHaveLength(1);
   });
 
+  it('can start at the authored boss threshold for a deterministic development scenario', () => {
+    const combat = new CombatSimulation({ initialElapsedSeconds: BOSS_DEFINITION.startSeconds });
+    const player = new PlayerModel();
+
+    expect(combat.stats.elapsedSeconds).toBe(BOSS_DEFINITION.startSeconds);
+
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.boss.state.active).toBe(true);
+    expect(combat.boss.state.phase).toBe('intro');
+  });
+
   it('keeps newly spawned enemies outside the playable arena edge', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

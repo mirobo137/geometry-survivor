@@ -441,7 +441,8 @@ Fecha: 28-08-2026.
   presentacion y no modifica la simulacion.
 
 Verificacion de esta continuacion: typecheck, suite unitaria, smoke browser y
-builds local/Poki/CrazyGames completados; queda publicar el commit en `main`.
+builds local/Poki/CrazyGames completados; el commit `9045c6e` esta publicado en
+`main`.
 
 ## 20. Continuacion - feedback premium de cartas
 

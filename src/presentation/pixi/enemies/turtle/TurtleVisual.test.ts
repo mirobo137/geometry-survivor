@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Texture } from 'pixi.js';
-import type { EnemyRenderState } from '../../simulation/combat/CombatRenderState';
+import type { EnemyRenderState } from '../../../../simulation/combat/CombatRenderState';
 import { TurtleVisual } from './TurtleVisual';
 
 const createState = (vx: number, vy: number): EnemyRenderState => ({

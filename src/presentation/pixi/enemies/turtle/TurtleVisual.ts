@@ -1,6 +1,6 @@
 import { Container, Sprite } from 'pixi.js';
 import type { Texture } from 'pixi.js';
-import type { EnemyRenderState } from '../../simulation/combat/CombatRenderState';
+import type { EnemyRenderState } from '../../../../simulation/combat/CombatRenderState';
 
 export interface TurtleTextureSet {
   readonly shell: Texture;

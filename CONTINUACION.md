@@ -390,7 +390,7 @@ Fecha: 28-08-2026.
 Fecha: 28-08-2026.
 
 - se amplio la skill SVG con una ficha obligatoria de diseno, reglas top-down y una rubrica de reconocimiento antes de generar XML;
-- `src/assets/svg/enemies/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 12 primitivas sin filtros;
+- `src/assets/svg/enemies/turtle/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 12 primitivas sin filtros;
 - `CombatEntitiesView` convierte el master a una textura Pixi una sola vez y la comparte en el pool. El chaser conserva sus radios, velocidad y colisiones de simulacion;
 - `SvgEnemyAssets.test.ts` cubre el contrato estructural y el limite geometrico; la inspeccion raster en fondo oscuro/claro confirmo lectura a 32/96/384 px;
 - antes de convertir la tortuga en diseno definitivo, probar la URL publicada en movil y observarla durante gameplay real con enemigos, UI y hazards simultaneos. Si funciona, continuar con player y luego las familias fast/tank/elite respetando siluetas distintas.
@@ -416,3 +416,30 @@ Fecha: 28-08-2026.
 - la regla canonica queda en la skill SVG: un personaje modular comparte `viewBox`, frame de textura, ancla y escala; no se corrige el recorte con offsets manuales dentro del dibujo;
 - `SvgTextureFactory.test.ts` protege el frame y el ancla para futuras criaturas;
 - una captura del render Pixi en Pixel 5 emulado confirmo tortugas completas y orientadas hacia el jugador desde varios lados de la arena.
+
+## 19. Continuacion - organizacion por personaje y cartas SVG
+
+Fecha: 28-08-2026.
+
+- La estructura por dominio queda establecida: `src/assets/svg/enemies/<id>/`
+  contiene los masters y pruebas del asset; `src/presentation/pixi/enemies/<id>/`
+  contiene su compositor y animacion; `src/assets/svg/characters/<id>/` y
+  `src/presentation/pixi/characters/<id>/` siguen el mismo contrato para player
+  y futuros personajes. Cada carpeta tiene un README corto con su responsabilidad.
+- `src/ui/level-up/LevelUpOverlay.ts` ya vive junto a
+  `UpgradeCardVisual.ts`; la UI no decide dano, XP, rareza ni progresion. El
+  mapa visual por `UpgradeId` permite agregar cartas sin duplicar markup ni
+  tocar la simulacion.
+- `src/assets/svg/ui/level-up/card-frame.svg` define el marco escalable por
+  variables CSS y `icons.svg` es un sprite de seis simbolos referenciados con
+  `<use>`. El texto y la zona tactil siguen siendo botones HTML accesibles.
+- `LevelUpSvgAssets.test.ts` valida viewBox, `preserveAspectRatio`, IDs
+  prefijados y ausencia de raster, filtros, scripts, handlers o URLs externas;
+  `UpgradeCardVisual.test.ts` exige cobertura visual para cada upgrade existente.
+- La estrategia responsive esta documentada: tres cartas en desktop, una
+  columna en portrait, safe-area y reduced-motion. El resize solo cambia
+  presentacion y no modifica la simulacion.
+
+Pendiente de esta continuacion: ejecutar typecheck, suite unitaria, smoke
+browser y builds Poki/CrazyGames; revisar la captura del level-up en Pixel 5
+emulado y publicar el commit en `main`.

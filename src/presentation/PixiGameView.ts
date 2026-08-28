@@ -7,7 +7,7 @@ import { ArenaView } from './pixi/ArenaView';
 import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
-import { PlayerView } from './pixi/PlayerView';
+import { PlayerView } from './pixi/characters/player/PlayerView';
 import { WeaponView } from './pixi/WeaponView';
 import type { ViewportState } from './viewport/ViewportTransform';
 

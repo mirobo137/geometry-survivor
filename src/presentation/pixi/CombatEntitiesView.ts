@@ -3,12 +3,12 @@ import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
-import turtleSvg from '../../assets/svg/enemies/turtle.svg?raw';
-import turtleShellSvg from '../../assets/svg/enemies/turtle-shell.svg?raw';
-import turtleFrontSvg from '../../assets/svg/enemies/turtle-limbs-front.svg?raw';
-import turtleRearSvg from '../../assets/svg/enemies/turtle-limbs-rear.svg?raw';
-import turtleHeadSvg from '../../assets/svg/enemies/turtle-head.svg?raw';
-import { TurtleVisual, type TurtleTextureSet } from './TurtleVisual';
+import turtleSvg from '../../assets/svg/enemies/turtle/turtle.svg?raw';
+import turtleShellSvg from '../../assets/svg/enemies/turtle/turtle-shell.svg?raw';
+import turtleFrontSvg from '../../assets/svg/enemies/turtle/turtle-limbs-front.svg?raw';
+import turtleRearSvg from '../../assets/svg/enemies/turtle/turtle-limbs-rear.svg?raw';
+import turtleHeadSvg from '../../assets/svg/enemies/turtle/turtle-head.svg?raw';
+import { TurtleVisual, type TurtleTextureSet } from './enemies/turtle/TurtleVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { createTexture } from './TextureFactory';
 

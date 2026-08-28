@@ -480,3 +480,284 @@ body {
   white-space: pre;
   pointer-events: none;
 }
+
+/* Level-up card system: the frame and icon geometry stay vectorial while
+   text, focus and the touch target remain native HTML controls. */
+#level-up {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, auto);
+  align-content: center;
+  justify-items: center;
+  width: 100%;
+  max-height: none;
+  padding: max(1.2rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.2rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  transform: none;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(25, 74, 108, 0.35), transparent 38%),
+    radial-gradient(circle at 10% 85%, rgba(87, 54, 142, 0.2), transparent 28%),
+    rgba(4, 8, 20, 0.94);
+}
+
+#level-up > #ui-upgrade-icons {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#level-up .level-up-kicker {
+  margin: 0;
+  color: #75e6ff;
+  font: 800 clamp(0.7rem, 1.7vw, 0.85rem)/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 1rem rgba(117, 230, 255, 0.45);
+}
+
+#level-up h1 {
+  margin: 0.25rem 0 0;
+  color: #f1f5ff;
+  font-size: clamp(1.5rem, 4vw, 2.35rem);
+  letter-spacing: 0.03em;
+}
+
+#level-up .level-up-subtitle {
+  margin: 0.35rem 0 1.2rem;
+  color: #9eb5d8;
+  font-size: clamp(0.82rem, 2vw, 1rem);
+}
+
+#level-up-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.65rem, 2vw, 1rem);
+  width: min(64rem, 100%);
+  margin: 0;
+}
+
+#level-up-options button.upgrade-card {
+  --card-accent: #75e6ff;
+  --card-line: #315773;
+  --card-surface: #0d1a31;
+  position: relative;
+  display: block;
+  min-height: 16.5rem;
+  padding: 0;
+  overflow: hidden;
+  color: #eaf0ff;
+  background: transparent;
+  border: 0;
+  border-radius: 0.85rem;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+#level-up-options button.upgrade-card[data-tone="cyan"] {
+  --card-accent: #75e6ff;
+  --card-line: #315773;
+  --card-surface: #0d1a31;
+}
+
+#level-up-options button.upgrade-card[data-tone="gold"] {
+  --card-accent: #ffe39a;
+  --card-line: #6c5a35;
+  --card-surface: #211c2d;
+}
+
+#level-up-options button.upgrade-card[data-tone="violet"] {
+  --card-accent: #d2a8ff;
+  --card-line: #60478a;
+  --card-surface: #18152e;
+}
+
+#level-up-options button.upgrade-card[data-tone="amber"] {
+  --card-accent: #ffb86b;
+  --card-line: #774b36;
+  --card-surface: #21182b;
+}
+
+#level-up-options button.upgrade-card[data-tone="rose"] {
+  --card-accent: #ff92a3;
+  --card-line: #713c5e;
+  --card-surface: #25162b;
+}
+
+#level-up-options button.upgrade-card[data-tone="mint"] {
+  --card-accent: #b8ffd9;
+  --card-line: #376b68;
+  --card-surface: #0e242c;
+}
+
+#level-up-options button.upgrade-card:focus-visible {
+  outline: 3px solid var(--card-accent);
+  outline-offset: 4px;
+}
+
+#level-up-options button.upgrade-card:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+@media (hover: hover) {
+  #level-up-options button.upgrade-card:hover {
+    transform: translateY(-0.25rem);
+    filter: brightness(1.12);
+  }
+}
+
+.upgrade-card-frame,
+.upgrade-card-frame svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.upgrade-card-frame svg {
+  color: var(--card-accent);
+}
+
+.upgrade-card-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  height: 100%;
+  padding: 1.05rem 1.15rem 1rem;
+}
+
+/* The legacy level-up shell styles every descendant span. Keep the new card
+   content above that compatibility rule so metadata and copy stay readable
+   on each dark surface. */
+#level-up-options button.upgrade-card .upgrade-card-content {
+  color: #eaf0ff;
+  font-size: inherit;
+  line-height: normal;
+}
+
+.upgrade-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--card-accent);
+  font: 800 0.68rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.14em;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-category,
+#level-up-options button.upgrade-card .upgrade-card-index {
+  color: var(--card-accent);
+}
+
+.upgrade-card-index {
+  opacity: 0.65;
+}
+
+.upgrade-card-icon {
+  width: 3.8rem;
+  height: 3.8rem;
+  margin: 1rem 0 0.65rem;
+  color: var(--card-accent);
+  overflow: visible;
+}
+
+.upgrade-card-title {
+  color: #f1f5ff;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.12;
+}
+
+.upgrade-card-description {
+  align-self: start;
+  padding-top: 0.55rem;
+  color: #aebfdd;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-description {
+  color: #aebfdd;
+}
+
+.upgrade-card-preview {
+  align-self: end;
+  margin-top: 0.8rem;
+  color: var(--card-accent);
+  font: 700 0.7rem/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-preview {
+  color: var(--card-accent);
+}
+
+@media (max-width: 48rem) {
+  #level-up {
+    align-content: start;
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  #level-up .level-up-subtitle {
+    margin-bottom: 0.8rem;
+  }
+
+  #level-up-options {
+    grid-template-columns: 1fr;
+    width: min(30rem, 100%);
+    gap: 0.55rem;
+  }
+
+  #level-up-options button.upgrade-card {
+    min-height: 8.8rem;
+  }
+
+  .upgrade-card-content {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "icon meta"
+      "icon title"
+      "icon description"
+      "icon preview";
+    column-gap: 0.85rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .upgrade-card-meta {
+    grid-area: meta;
+  }
+
+  .upgrade-card-icon {
+    grid-area: icon;
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: auto 0;
+  }
+
+  .upgrade-card-title {
+    grid-area: title;
+  }
+
+  .upgrade-card-description {
+    grid-area: description;
+    padding-top: 0.25rem;
+  }
+
+  .upgrade-card-preview {
+    grid-area: preview;
+    margin-top: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #level-up-options button.upgrade-card {
+    transition: none;
+  }
+}

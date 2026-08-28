@@ -1164,9 +1164,32 @@ La skill exige `viewBox`, ancla, IDs deterministas, accesibilidad, rutas relativ
 
 La skill ahora exige una ficha de diseno antes del XML: funcion y lectura de gameplay, silueta, proporciones, pose top-down, ancla, paleta, presupuesto de primitivas y pruebas a 32/48/64/96 px. Incluye una rubrica de reconocimiento, personalidad, funcion, legibilidad y coherencia de familia; una puntuacion menor de 8/10 obliga a corregir silueta o proporciones antes de anadir detalle.
 
-El primer asset que aplica el contrato es `src/assets/svg/enemies/turtle.svg`: caparazon poligonal dominante, cabeza adelantada, cuatro patas, cola, viewBox centrado, 12 primitivas geometricas, cuatro colores principales y cero filtros o recursos externos. `CombatEntitiesView` lo convierte una sola vez en textura Pixi y lo comparte con el pool de `chaser`; la simulacion permanece sin cambios.
+El primer asset que aplica el contrato es `src/assets/svg/enemies/turtle/turtle.svg`: caparazon poligonal dominante, cabeza adelantada, cuatro patas, cola, viewBox centrado, 12 primitivas geometricas, cuatro colores principales y cero filtros o recursos externos. `CombatEntitiesView` lo convierte una sola vez en textura Pixi y lo comparte con el pool de `chaser`; la simulacion permanece sin cambios.
 
 La direccion visual queda fijada: cada personaje declara frente base y offset, el contenedor se orienta con su velocidad y las piezas animables comparten viewBox/ancla. La tortuga separa caparazon, patas delanteras, patas traseras y cabeza; Pixi aplica giro, balanceo y bob de baja amplitud mientras la simulacion conserva exactamente las mismas colisiones. Al rasterizar piezas, `SvgTextureFactory` exige un frame igual al viewBox comun para impedir que el recorte automatico cambie el centro de cada textura. `TurtleVisual` crea las piezas de cada ranura solo al primer uso como `chaser` y luego las reutiliza, evitando trabajo de arranque innecesario en movil.
+
+## UI SVG y menu de cartas - 28-08-2026
+
+La organizacion visual sigue el mismo contrato por dominio: cada familia de
+personaje tiene sus masters en `src/assets/svg/{enemies|characters}/<id>/` y su
+compositor Pixi en `src/presentation/pixi/{enemies|characters}/<id>/`. Player y
+tortuga ya usan esta estructura; un nuevo enemigo debe poder cambiar de forma
+independiente sin editar una carpeta compartida de sprites.
+
+El level-up usa `src/assets/svg/ui/level-up/` para geometria y
+`src/ui/level-up/` para orquestacion. `LevelUpOverlay` mantiene tres botones
+HTML accesibles y data-attributes estables; `UpgradeCardVisual` es el registro
+visual por `UpgradeId`; `card-frame.svg` se instancia por carta e `icons.svg` se
+monta una sola vez y se referencia con `<use>`. La simulacion solo entrega
+definiciones y previews: no conoce SVG, DOM ni Pixi.
+
+La estrategia responsive es intencional: el texto, foco y hit-area son HTML; el
+marco vectorial se adapta a la carta con CSS variables por tono y el sprite de
+iconos conserva su proporcion. El layout cambia de tres columnas a una columna
+compacta en portrait, respeta safe-area y reduced-motion, y el cambio de viewport
+solo afecta presentacion. Al anadir una carta se amplia el mapa visual y el
+asset iconografico, sin duplicar reglas de gameplay. La validacion estructural
+rechaza raster, filtros, scripts, recursos externos e IDs no prefijados.
 
 ## Estado de implementación — 26-08-2026
 
@@ -1196,7 +1219,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `?stress=1` inicializa el escenario de 250 enemigos y 300 proyectiles para la puerta de rendimiento de Fase 2;
 - `?boss=1` permite probar el boss desde el umbral de 4:20 sin jugar los minutos previos; la prueba browser comprueba su aparición y no altera la run normal;
 - medición manual aportada desde Android Chrome en `?stress=1`: estable en 60 FPS al estar quieto y con picos de 120 FPS al mover; modelo y preset Low aún no registrados;
-- `src/simulation/progression/LevelProgression.ts` pausa la run al alcanzar el umbral de XP y `src/ui/LevelUpOverlay.ts` ofrece tres cartas funcionales;
+- `src/simulation/progression/LevelProgression.ts` pausa la run al alcanzar el umbral de XP y `src/ui/level-up/LevelUpOverlay.ts` ofrece tres cartas funcionales;
 - `UpgradeDefinition` declara `maxStacks` y `requires`; `UpgradeApplier` registra acumulaciones y `Game` entrega al overlay sólo cartas aplicables, evitando adquisiciones repetidas o mejoras sin prerrequisito;
 - `UpgradeApplier` expone previews numéricos `antes → después` y `LevelUpOverlay` los presenta sin duplicar reglas de simulación;
 - `src/platform/save/SaveStore.ts` define schema v1, migración/normalización y `LocalSaveStore` usa `localStorage` con fallback en memoria y límite de payload;

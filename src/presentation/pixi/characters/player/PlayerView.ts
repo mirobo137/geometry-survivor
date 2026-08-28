@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
-import type { PlayerState } from '../../simulation/PlayerModel';
+import type { PlayerState } from '../../../../simulation/PlayerModel';
 
 export class PlayerView {
   public readonly root = new Container();

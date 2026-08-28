@@ -1,0 +1,32 @@
+import type { UpgradeId } from '../../content/upgrades/UpgradeDefinitions';
+
+export type UpgradeCardIconId =
+  | 'speed'
+  | 'projectile'
+  | 'core'
+  | 'orbit'
+  | 'chain'
+  | 'armor';
+
+export type UpgradeCardTone = 'cyan' | 'gold' | 'violet' | 'amber' | 'rose' | 'mint';
+
+export interface UpgradeCardVisual {
+  readonly icon: UpgradeCardIconId;
+  readonly tone: UpgradeCardTone;
+  readonly category: string;
+}
+
+const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
+  swift_step: { icon: 'speed', tone: 'cyan', category: 'MOVILIDAD' },
+  focused_projectiles: { icon: 'projectile', tone: 'gold', category: 'ARSENAL' },
+  reinforced_core: { icon: 'core', tone: 'mint', category: 'NÚCLEO' },
+  orbit_blade: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
+  chain_lightning: { icon: 'chain', tone: 'cyan', category: 'ENERGÍA' },
+  rapid_projectiles: { icon: 'projectile', tone: 'amber', category: 'ARSENAL' },
+  longshot_projectiles: { icon: 'projectile', tone: 'gold', category: 'ARSENAL' },
+  orbit_reach: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
+  chain_overload: { icon: 'chain', tone: 'rose', category: 'ENERGÍA' },
+  hardened_shell: { icon: 'armor', tone: 'mint', category: 'DEFENSA' }
+};
+
+export const getUpgradeCardVisual = (upgradeId: UpgradeId): UpgradeCardVisual => UPGRADE_CARD_VISUALS[upgradeId];

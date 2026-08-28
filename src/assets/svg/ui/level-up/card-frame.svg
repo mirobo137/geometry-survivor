@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 320 260"
+     preserveAspectRatio="none"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <path d="M16 2h288l14 14v228l-14 14H16L2 244V16z" fill="#050816" opacity="0.78"/>
+  <path d="M18 5h284l13 13v221l-13 13H18L5 239V18z"
+        fill="var(--card-surface, #101a31)"
+        stroke="var(--card-line, #324668)"
+        stroke-width="2"/>
+  <path d="M18 5h284l13 13M5 239V18L18 5M302 252H18"
+        fill="none"
+        stroke="var(--card-accent, #75e6ff)"
+        stroke-width="2"
+        opacity="0.9"/>
+  <path d="M24 31h74M222 31h74M24 229h44M252 229h44"
+        stroke="var(--card-accent, #75e6ff)"
+        stroke-width="1"
+        opacity="0.35"/>
+  <path d="M25 45h42l7-7h34M295 45h-42l-7-7h-34M25 215h42l7 7h34M295 215h-42l-7 7h-34"
+        fill="none"
+        stroke="var(--card-accent, #75e6ff)"
+        stroke-width="1.2"
+        opacity="0.22"/>
+  <circle cx="25" cy="31" r="2.2" fill="var(--card-accent, #75e6ff)"/>
+  <circle cx="295" cy="31" r="2.2" fill="var(--card-accent, #75e6ff)"/>
+  <circle cx="25" cy="229" r="2.2" fill="var(--card-accent, #75e6ff)"/>
+  <circle cx="295" cy="229" r="2.2" fill="var(--card-accent, #75e6ff)"/>
+  <path d="M18 5 5 18M302 5l13 13M5 239l13 13M302 252l13-13"
+        stroke="var(--card-accent, #75e6ff)"
+        stroke-width="3"
+        opacity="0.9"/>
+</svg>

@@ -13,7 +13,7 @@ import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
-import { LevelUpOverlay } from '../ui/LevelUpOverlay';
+import { LevelUpOverlay } from '../ui/level-up/LevelUpOverlay';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';

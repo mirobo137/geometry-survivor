@@ -1,5 +1,8 @@
-import type { UpgradeDefinition, UpgradeId } from '../content/upgrades/UpgradeDefinitions';
-import type { UpgradePreview, UpgradePreviewStat } from '../simulation/progression/UpgradePreview';
+import type { UpgradeDefinition, UpgradeId } from '../../content/upgrades/UpgradeDefinitions';
+import type { UpgradePreview, UpgradePreviewStat } from '../../simulation/progression/UpgradePreview';
+import cardFrameSvg from '../../assets/svg/ui/level-up/card-frame.svg?raw';
+import upgradeIconsSvg from '../../assets/svg/ui/level-up/icons.svg?raw';
+import { getUpgradeCardVisual } from './UpgradeCardVisual';
 
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 export type UpgradePreviewProvider = (upgrade: UpgradeDefinition) => UpgradePreview | null;
@@ -31,6 +34,12 @@ export class LevelUpOverlay {
     this.root = root;
     this.title = title;
     this.options = options;
+    this.mountIconSprite();
+  }
+
+  private mountIconSprite(): void {
+    if (this.root.querySelector('#ui-upgrade-icons')) return;
+    this.root.insertAdjacentHTML('afterbegin', upgradeIconsSvg);
   }
 
   public open(
@@ -41,28 +50,64 @@ export class LevelUpOverlay {
   ): void {
     this.title.textContent = `Nivel ${level}`;
     this.options.replaceChildren();
-    for (const choice of choices) {
+    choices.forEach((choice, index) => {
+      const visual = getUpgradeCardVisual(choice.id);
       const button = document.createElement('button');
       button.type = 'button';
+      button.className = 'upgrade-card';
       button.dataset.upgradeId = choice.id;
+      button.dataset.tone = visual.tone;
+      button.dataset.category = visual.category;
+
+      const frame = document.createElement('span');
+      frame.className = 'upgrade-card-frame';
+      frame.setAttribute('aria-hidden', 'true');
+      frame.innerHTML = cardFrameSvg;
+
+      const content = document.createElement('span');
+      content.className = 'upgrade-card-content';
+
+      const meta = document.createElement('span');
+      meta.className = 'upgrade-card-meta';
+      const category = document.createElement('span');
+      category.className = 'upgrade-card-category';
+      category.textContent = visual.category;
+      const indexElement = document.createElement('span');
+      indexElement.className = 'upgrade-card-index';
+      indexElement.textContent = `0${index + 1}`;
+      meta.append(category, indexElement);
+
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.classList.add('upgrade-card-icon');
+      icon.setAttribute('viewBox', '0 0 48 48');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.setAttribute('focusable', 'false');
+      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttribute('href', `#ui-upgrade-icon-${visual.icon}`);
+      icon.appendChild(use);
+
       const title = document.createElement('strong');
+      title.className = 'upgrade-card-title';
       title.textContent = choice.title;
       const description = document.createElement('span');
+      description.className = 'upgrade-card-description';
       description.textContent = choice.description;
-      button.append(title, description);
+      content.append(meta, icon, title, description);
       const preview = getPreview(choice);
       if (preview) {
         const values = document.createElement('small');
         values.textContent = `${STAT_LABELS[preview.stat]} ${formatValue(preview.before)} → ${formatValue(preview.after)}`;
         values.setAttribute('aria-label', `Valor actual ${formatValue(preview.before)}, siguiente ${formatValue(preview.after)}`);
-        button.append(values);
+        values.className = 'upgrade-card-preview';
+        content.append(values);
       }
       button.addEventListener('click', () => {
         this.close();
         onSelection(choice.id);
       }, { once: true });
+      button.append(frame, content);
       this.options.appendChild(button);
-    }
+    });
     this.root.hidden = false;
   }
 

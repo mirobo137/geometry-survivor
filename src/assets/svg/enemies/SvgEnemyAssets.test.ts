@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import turtleSvg from './turtle.svg?raw';
+import turtleSvg from './turtle/turtle.svg?raw';
 
 describe('enemy SVG masters', () => {
   it('keeps the top-down turtle within the character contract', () => {

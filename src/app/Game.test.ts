@@ -18,7 +18,7 @@ vi.mock('../ui/GameHud', () => ({
   GameHud: class {}
 }));
 
-vi.mock('../ui/LevelUpOverlay', () => ({
+vi.mock('../ui/level-up/LevelUpOverlay', () => ({
   LevelUpOverlay: class {}
 }));
 

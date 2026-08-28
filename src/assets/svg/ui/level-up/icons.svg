@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     id="ui-upgrade-icons"
+     viewBox="0 0 48 48"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <symbol id="ui-upgrade-icon-speed" viewBox="0 0 48 48">
+    <path d="M8 28 22 10l-2 13h12L18 38l2-13z" fill="currentColor"/>
+    <path d="M31 12h9M34 19h7M34 34h7M31 41h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-projectile" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="14" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    <path d="M24 4v8M24 36v8M4 24h8M36 24h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="m29 14 5 5-8 8-5-5z" fill="currentColor" opacity="0.65"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-core" viewBox="0 0 48 48">
+    <path d="m24 4 16 9v22l-16 9-16-9V13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="m24 12 9 5v14l-9 5-9-5V17z" fill="currentColor" opacity="0.35"/>
+    <circle cx="24" cy="24" r="5" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-orbit" viewBox="0 0 48 48">
+    <ellipse cx="24" cy="24" rx="19" ry="9" fill="none" stroke="currentColor" stroke-width="2.2" transform="rotate(-28 24 24)"/>
+    <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    <path d="m39 11 5 1-2 5z" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-chain" viewBox="0 0 48 48">
+    <path d="m27 4-6 15h8l-8 12 3-9h-7z" fill="currentColor"/>
+    <circle cx="10" cy="35" r="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="38" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <path d="M13 32 20 25M29 18l6-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-armor" viewBox="0 0 48 48">
+    <path d="M24 4 40 10v12c0 10-6 17-16 22C14 39 8 32 8 22V10z" fill="currentColor" opacity="0.3"/>
+    <path d="M24 4 40 10v12c0 10-6 17-16 22C14 39 8 32 8 22V10z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="m16 24 5 5 11-12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>

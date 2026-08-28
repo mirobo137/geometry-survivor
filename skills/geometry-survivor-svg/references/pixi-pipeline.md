@@ -12,6 +12,8 @@ Usa SVG inline cuando se necesiten `currentColor`, CSS, accesibilidad, focus y r
 
 Usa `Assets.load('assets/foo.svg')` y crea un `Sprite` cuando el asset sea estatico, se repita o se beneficie de cache. Define una resolucion de carga si se necesita nitidez a un tamaño concreto; no confundas resolucion de textura con el `viewBox` logico.
 
+Si varias piezas SVG forman un personaje y se rasterizan con `renderer.generateTexture()`, pasa en todas `frame: new Rectangle(viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight)`. Sin ese frame Pixi usa los limites visibles de cada `Graphics`, cada textura obtiene un centro distinto y la composicion se colapsa aunque los archivos declaren el mismo `viewBox`.
+
 ### GraphicsContext
 
 Usa `GraphicsContext` para una forma SVG simple que se comparte entre muchas instancias y necesita tint o variaciones de transform. El contexto debe construirse una vez y ser propiedad clara de la capa de presentacion.

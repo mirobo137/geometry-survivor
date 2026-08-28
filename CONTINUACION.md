@@ -384,7 +384,8 @@ Fecha: 28-08-2026.
 - `ZzfxSfxBackend` toma el `AudioContext` ya desbloqueado por Howler y produce efectos desde recetas contenidas en `AudioCueDefinitions`. Tiene límite de ocho voces y cooldown por cue; `enemy-defeated` ya usa esa ruta sin tocar la simulación;
 - las dependencias `howler`, `zzfx` y `@types/howler` se fijaron en `package-lock.json`. La adaptación local de ZzFX evita importar su entrypoint directamente porque éste construye un contexto de audio al cargarlo, algo incompatible con el desbloqueo móvil diferido;
 - antes de cerrar el hito, desplegar en GitHub Pages y comprobar en móvil: primer gesto, pausa/reanudar, reiniciar, mute, cambio de volúmenes y volver desde segundo plano. Si el navegador rechaza audio, la run debe seguir silenciosa y sin error de consola.
-\n+## 16. Continuacion — primer enemigo SVG
+
+## 16. Continuacion — primer enemigo SVG
 
 Fecha: 28-08-2026.
 
@@ -404,3 +405,13 @@ Fecha: 28-08-2026.
 - el tiempo de presentacion avanza solo mientras la simulacion esta jugando, por lo que la animacion queda congelada durante pausa, level-up y game over;
 - `TurtleVisual.test.ts` cubre frente, direccion y velocidad cero; `SvgEnemyAssets.test.ts` mantiene el contrato estructural de las piezas;
 - la tortuga sigue siendo el patron de revision: silueta, direccion, piezas, amplitud, lectura a 32 px y rendimiento antes de crear player o nuevas familias de enemigos.
+
+## 18. Continuacion — frame comun para piezas SVG
+
+Fecha: 28-08-2026.
+
+- la prueba movil revelo que Pixi recortaba cada pieza de la tortuga a sus limites visibles, cambiando su centro aunque todas compartieran `viewBox`;
+- `SvgTextureFactory` exige un frame logico explicito al rasterizar y la tortuga usa `(-32, -32, 64, 64)` para master, caparazon, patas y cabeza;
+- la regla canonica queda en la skill SVG: un personaje modular comparte `viewBox`, frame de textura, ancla y escala; no se corrige el recorte con offsets manuales dentro del dibujo;
+- `SvgTextureFactory.test.ts` protege el frame y el ancla para futuras criaturas;
+- una captura del render Pixi en Pixel 5 emulado confirmo tortugas completas y orientadas hacia el jugador desde varios lados de la arena.

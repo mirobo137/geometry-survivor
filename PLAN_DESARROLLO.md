@@ -1166,7 +1166,7 @@ La skill ahora exige una ficha de diseno antes del XML: funcion y lectura de gam
 
 El primer asset que aplica el contrato es `src/assets/svg/enemies/turtle.svg`: caparazon poligonal dominante, cabeza adelantada, cuatro patas, cola, viewBox centrado, 12 primitivas geometricas, cuatro colores principales y cero filtros o recursos externos. `CombatEntitiesView` lo convierte una sola vez en textura Pixi y lo comparte con el pool de `chaser`; la simulacion permanece sin cambios.
 
-La direccion visual queda fijada: cada personaje declara frente base y offset, el contenedor se orienta con su velocidad y las piezas animables comparten viewBox/ancla. La tortuga separa caparazon, patas delanteras, patas traseras y cabeza; Pixi aplica giro, balanceo y bob de baja amplitud mientras la simulacion conserva exactamente las mismas colisiones. `TurtleVisual` crea las piezas de cada ranura solo al primer uso como `chaser` y luego las reutiliza, evitando trabajo de arranque innecesario en movil.
+La direccion visual queda fijada: cada personaje declara frente base y offset, el contenedor se orienta con su velocidad y las piezas animables comparten viewBox/ancla. La tortuga separa caparazon, patas delanteras, patas traseras y cabeza; Pixi aplica giro, balanceo y bob de baja amplitud mientras la simulacion conserva exactamente las mismas colisiones. Al rasterizar piezas, `SvgTextureFactory` exige un frame igual al viewBox comun para impedir que el recorte automatico cambie el centro de cada textura. `TurtleVisual` crea las piezas de cada ranura solo al primer uso como `chaser` y luego las reutiliza, evitando trabajo de arranque innecesario en movil.
 
 ## Estado de implementación — 26-08-2026
 

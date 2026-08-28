@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
+import { Container, Sprite } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
@@ -9,18 +9,14 @@ import turtleFrontSvg from '../../assets/svg/enemies/turtle-limbs-front.svg?raw'
 import turtleRearSvg from '../../assets/svg/enemies/turtle-limbs-rear.svg?raw';
 import turtleHeadSvg from '../../assets/svg/enemies/turtle-head.svg?raw';
 import { TurtleVisual, type TurtleTextureSet } from './TurtleVisual';
+import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { createTexture } from './TextureFactory';
 
-const createSvgTexture = (renderer: Renderer, svg: string): Texture => {
-  const graphics = new Graphics().svg(svg);
-  const texture = renderer.generateTexture({
-    target: graphics,
-    resolution: 1,
-    antialias: false,
-    defaultAnchor: { x: 0.5, y: 0.5 }
-  });
-  graphics.destroy();
-  return texture;
+const TURTLE_TEXTURE_FRAME: SvgTextureFrame = {
+  x: -32,
+  y: -32,
+  width: 64,
+  height: 64
 };
 
 interface EnemyTextureSet {
@@ -30,7 +26,7 @@ interface EnemyTextureSet {
 
 const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
   fallback: {
-    chaser: createSvgTexture(renderer, turtleSvg),
+    chaser: createSvgTexture(renderer, turtleSvg, TURTLE_TEXTURE_FRAME),
     fast: createTexture(renderer, (graphics) => {
       graphics.poly([0, -14, 14, 0, 0, 14, -14, 0]).fill(ENEMY_DEFINITIONS.fast.color).stroke({ color: 0xfffbdf, width: 2 });
     }),
@@ -52,10 +48,10 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
     })
   },
   turtle: {
-    shell: createSvgTexture(renderer, turtleShellSvg),
-    limbsFront: createSvgTexture(renderer, turtleFrontSvg),
-    limbsRear: createSvgTexture(renderer, turtleRearSvg),
-    head: createSvgTexture(renderer, turtleHeadSvg)
+    shell: createSvgTexture(renderer, turtleShellSvg, TURTLE_TEXTURE_FRAME),
+    limbsFront: createSvgTexture(renderer, turtleFrontSvg, TURTLE_TEXTURE_FRAME),
+    limbsRear: createSvgTexture(renderer, turtleRearSvg, TURTLE_TEXTURE_FRAME),
+    head: createSvgTexture(renderer, turtleHeadSvg, TURTLE_TEXTURE_FRAME)
   }
 });
 

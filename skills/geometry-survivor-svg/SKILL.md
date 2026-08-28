@@ -197,4 +197,6 @@ Todo personaje top-down debe declarar un frente base en la ficha (por ejemplo, c
 
 Cuando la criatura tenga extremidades o una cabeza expresiva, separa solo las piezas que tengan un movimiento legible: normalmente cuerpo/caparazon, patas delanteras, patas traseras y cabeza. Todas deben compartir el mismo `viewBox`, ancla y escala. El runtime las convierte en texturas una vez y anima `rotation`, `position` o `scale` con una amplitud pequena (aproximadamente 1–3 % para respiracion y hasta 0.1–0.2 rad para una marcha sutil). La animacion se detiene o congela en pausa y no debe cambiar colisiones.
 
+En Pixi, compartir `viewBox` no garantiza por si solo que las texturas queden alineadas: `renderer.generateTexture()` recorta por defecto cada `Graphics` a sus limites visibles. Toda composicion modular debe pasar un `frame` explicito igual al `viewBox` comun al rasterizar cada pieza. Los `Sprite` usan entonces la misma ancla; no compenses el recorte con offsets manuales ni padding visible dentro del SVG.
+
 La prueba de orientacion debe cubrir al menos frente, lateral, giro de 180 grados y velocidad cero. La prueba de piezas debe confirmar que la marcha usa transformaciones sobre texturas cacheadas, no reconstruccion de XML ni nuevas asignaciones por frame.

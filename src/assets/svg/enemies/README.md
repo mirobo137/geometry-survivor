@@ -20,7 +20,9 @@ arena oscura.
 El master se divide tambien en `turtle-shell.svg`, `turtle-limbs-front.svg`,
 `turtle-limbs-rear.svg` y `turtle-head.svg`. Son piezas alineadas al mismo
 viewBox y se convierten en texturas una sola vez para permitir rotacion,
-balanceo de patas y bob de cabeza sin reconstruir XML.
+balanceo de patas y bob de cabeza sin reconstruir XML. La rasterizacion pasa
+explicitamente el frame `(-32, -32, 64, 64)`; depender de los limites visibles
+de cada pieza cambiaria su centro y destruiria la composicion.
 
 ## Ficha de revision reutilizable
 

@@ -53,6 +53,8 @@ export interface EnemyRenderState {
   readonly kind: EnemyKind;
   readonly x: number;
   readonly y: number;
+  readonly vx: number;
+  readonly vy: number;
   readonly radius: number;
   readonly health: number;
   readonly maxHealth: number;

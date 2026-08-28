@@ -384,12 +384,23 @@ Fecha: 28-08-2026.
 - `ZzfxSfxBackend` toma el `AudioContext` ya desbloqueado por Howler y produce efectos desde recetas contenidas en `AudioCueDefinitions`. Tiene límite de ocho voces y cooldown por cue; `enemy-defeated` ya usa esa ruta sin tocar la simulación;
 - las dependencias `howler`, `zzfx` y `@types/howler` se fijaron en `package-lock.json`. La adaptación local de ZzFX evita importar su entrypoint directamente porque éste construye un contexto de audio al cargarlo, algo incompatible con el desbloqueo móvil diferido;
 - antes de cerrar el hito, desplegar en GitHub Pages y comprobar en móvil: primer gesto, pausa/reanudar, reiniciar, mute, cambio de volúmenes y volver desde segundo plano. Si el navegador rechaza audio, la run debe seguir silenciosa y sin error de consola.
-## 16. Continuacion — primer enemigo SVG
+\n+## 16. Continuacion — primer enemigo SVG
 
 Fecha: 28-08-2026.
 
 - se amplio la skill SVG con una ficha obligatoria de diseno, reglas top-down y una rubrica de reconocimiento antes de generar XML;
-- `src/assets/svg/enemies/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 16 primitivas sin filtros;
+- `src/assets/svg/enemies/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 12 primitivas sin filtros;
 - `CombatEntitiesView` convierte el master a una textura Pixi una sola vez y la comparte en el pool. El chaser conserva sus radios, velocidad y colisiones de simulacion;
 - `SvgEnemyAssets.test.ts` cubre el contrato estructural y el limite geometrico; la inspeccion raster en fondo oscuro/claro confirmo lectura a 32/96/384 px;
 - antes de convertir la tortuga en diseno definitivo, probar la URL publicada en movil y observarla durante gameplay real con enemigos, UI y hazards simultaneos. Si funciona, continuar con player y luego las familias fast/tank/elite respetando siluetas distintas.
+
+## 17. Continuacion — orientacion y animacion de personajes
+
+Fecha: 28-08-2026.
+
+- `EnemyState` expone velocidad visual (`vx`, `vy`) calculada en simulacion, sin importar Pixi ni cambiar reglas de combate;
+- `TurtleVisual` compone cuatro texturas SVG alineadas, conserva la pose neutra con cabeza hacia `-Y` y orienta el contenedor con `atan2(vy, vx) + PI/2`. La marcha balancea patas por pares, hace bob de cabeza y una respiracion de 0.8 %, todo mediante transforms cacheados;
+- las piezas se crean de forma diferida por ranura del pool al primer `chaser` y luego se reutilizan; al cambiar de especie se limpia la posicion padre para evitar offsets heredados;
+- el tiempo de presentacion avanza solo mientras la simulacion esta jugando, por lo que la animacion queda congelada durante pausa, level-up y game over;
+- `TurtleVisual.test.ts` cubre frente, direccion y velocidad cero; `SvgEnemyAssets.test.ts` mantiene el contrato estructural de las piezas;
+- la tortuga sigue siendo el patron de revision: silueta, direccion, piezas, amplitud, lectura a 32 px y rendimiento antes de crear player o nuevas familias de enemigos.

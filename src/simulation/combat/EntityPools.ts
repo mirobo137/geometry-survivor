@@ -5,6 +5,8 @@ export interface EnemyState {
   kind: EnemyKind;
   x: number;
   y: number;
+  vx: number;
+  vy: number;
   radius: number;
   speed: number;
   health: number;
@@ -29,6 +31,8 @@ const createEnemyState = (): EnemyState => ({
   kind: 'chaser',
   x: 0,
   y: 0,
+  vx: 0,
+  vy: 0,
   radius: 0,
   speed: 0,
   health: 0,

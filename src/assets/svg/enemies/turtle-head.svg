@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="turtle-head-title turtle-head-desc">
+  <title id="turtle-head-title">Cabeza de tortuga</title>
+  <desc id="turtle-head-desc">Cabeza adelantada y ojos de la tortuga geométrica.</desc>
+  <g id="enemy-turtle-head" stroke="#fff0e8" stroke-linejoin="round">
+    <path id="enemy-turtle-head-base" d="M-9-21Q-7-31 0-31t9 10l-2 8H-7z" fill="#ffb86b" stroke-width="2"/>
+    <circle id="enemy-turtle-eye-left" cx="-4" cy="-23" r="2" fill="#101b35" stroke="none"/>
+    <circle id="enemy-turtle-eye-right" cx="4" cy="-23" r="2" fill="#101b35" stroke="none"/>
+  </g>
+</svg>

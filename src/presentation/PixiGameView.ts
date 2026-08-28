@@ -76,8 +76,8 @@ export class PixiGameView {
     this.arenaView.render(radius, resonance);
   }
 
-  public renderCombat(combat: CombatRenderState): void {
-    this.entitiesView.render(combat);
+  public renderCombat(combat: CombatRenderState, animationSeconds = 0): void {
+    this.entitiesView.render(combat, animationSeconds);
     this.weaponView.render(combat);
   }
 

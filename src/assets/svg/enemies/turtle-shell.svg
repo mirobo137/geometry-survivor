@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="turtle-shell-title turtle-shell-desc">
+  <title id="turtle-shell-title">Caparazón de tortuga</title>
+  <desc id="turtle-shell-desc">Caparazón poligonal y sombra plana de la tortuga geométrica.</desc>
+  <ellipse id="enemy-turtle-shell-shadow" cx="1" cy="5" rx="27" ry="22" fill="#050816" opacity="0.45"/>
+  <g id="enemy-turtle-shell" stroke="#fff0e8" stroke-linejoin="round">
+    <path id="enemy-turtle-shell-base" d="M0-25 13-21 23-10 24 4 16 17 0 23-16 17-24 4-23-10-13-21z" fill="#e47f58" stroke-width="2.4"/>
+    <path id="enemy-turtle-shell-plate" d="M0-18 9-14 14-5 10 6 0 12-10 6-14-5-9-14z" fill="#f0a05f" stroke-width="1.5"/>
+    <path id="enemy-turtle-shell-ridge" d="M0-18v30M-14-5H14M-10 6h20" fill="none" stroke-width="1.35" opacity="0.9"/>
+  </g>
+</svg>

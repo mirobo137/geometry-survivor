@@ -68,6 +68,7 @@ export class Game {
   private resizeQueued = false;
   private accumulator = 0;
   private frames = 0;
+  private presentationTime = 0;
   private fpsTime = performance.now();
   private fps = 0;
   private lifecyclePaused = false;
@@ -146,6 +147,7 @@ export class Game {
       this.accumulator -= FIXED_STEP_SECONDS;
     }
 
+    if (this.gameState.isSimulationRunning) this.presentationTime += Math.min(ticker.deltaMS / 1000, 0.1);
     this.renderFrame();
   };
 
@@ -256,7 +258,7 @@ export class Game {
     this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
-    this.view.renderCombat(this.combat.renderState);
+    this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.view.renderPlayer(this.player.state);
     this.hud.update({
       elapsedSeconds: this.combat.stats.elapsedSeconds,
@@ -372,6 +374,7 @@ export class Game {
     this.accumulator = 0;
     this.frames = 0;
     this.fps = 0;
+    this.presentationTime = 0;
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();

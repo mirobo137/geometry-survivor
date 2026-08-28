@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="turtle-front-title turtle-front-desc">
+  <title id="turtle-front-title">Patas delanteras de tortuga</title>
+  <desc id="turtle-front-desc">Par de patas delanteras trapezoidales para animación de marcha.</desc>
+  <g id="enemy-turtle-legs-front" fill="#c26855" stroke="#fff0e8" stroke-width="1.8" stroke-linejoin="round">
+    <path id="enemy-turtle-leg-front-left" d="M-15-12l-11-7-4 8 12 10z"/>
+    <path id="enemy-turtle-leg-front-right" d="M15-12l11-7 4 8-12 10z"/>
+  </g>
+</svg>

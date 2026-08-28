@@ -68,6 +68,15 @@ export class EnemySystem {
   /** Updates movement and returns the first contact damage, if any. */
   public update(dtSeconds: number, player: PlayerState): number | null {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
+    if (dt === 0) {
+      for (const enemy of this.pool.states) {
+        if (enemy.active) {
+          enemy.vx = 0;
+          enemy.vy = 0;
+        }
+      }
+      return null;
+    }
     this.contactCooldown = Math.max(0, this.contactCooldown - dt);
     let contactDamage: number | null = null;
 
@@ -80,8 +89,13 @@ export class EnemySystem {
       const distance = Math.hypot(dx, dy);
       if (distance > 0.001) {
         const step = Math.min(distance, enemy.speed * dt);
-        enemy.x += (dx / distance) * step;
-        enemy.y += (dy / distance) * step;
+        enemy.vx = (dx / distance) * (step / dt);
+        enemy.vy = (dy / distance) * (step / dt);
+        enemy.x += enemy.vx * dt;
+        enemy.y += enemy.vy * dt;
+      } else {
+        enemy.vx = 0;
+        enemy.vy = 0;
       }
       if (
         contactDamage === null
@@ -158,6 +172,8 @@ export class EnemySystem {
     state.kind = kind;
     state.x = ARENA_CENTER.x + Math.cos(angle) * distance;
     state.y = ARENA_CENTER.y + Math.sin(angle) * distance;
+    state.vx = 0;
+    state.vy = 0;
     state.radius = definition.radius;
     state.speed = definition.speed;
     state.maxHealth = definition.maxHealth;
@@ -175,6 +191,8 @@ export class EnemySystem {
     state.kind = definition.kind;
     state.x = ARENA_CENTER.x;
     state.y = ARENA_CENTER.y - distance;
+    state.vx = 0;
+    state.vy = 0;
     state.radius = definition.radius;
     state.speed = definition.speed;
     state.maxHealth = definition.maxHealth;

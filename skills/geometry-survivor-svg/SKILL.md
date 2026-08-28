@@ -190,3 +190,11 @@ pruebas: silueta negra y color en 32/48/64/96 px, fondo oscuro y claro
 Califica cada asset de 0 a 2 en cinco criterios: reconocimiento por silueta, personalidad, lectura de funcion, legibilidad minima y coherencia de familia. Un total menor de 8 obliga a volver a proporciones o silueta; anadir detalles no compensa una puntuacion baja.
 
 La evidencia minima de un personaje es: el SVG fuente, su ficha de contrato, una prueba estructural, una vista de silueta plana y una inspeccion en el modo de render elegido. La galeria de variantes solo se crea cuando ya existe un segundo consumidor real.
+
+### Orientacion y piezas animables
+
+Todo personaje top-down debe declarar un frente base en la ficha (por ejemplo, cabeza hacia `-Y`) y una regla de orientacion runtime. Si recibe velocidad `(vx, vy)`, el contenedor gira con `atan2(vy, vx) + offsetFrente`; no se crean variantes SVG para cada direccion ni se invierte manualmente la silueta.
+
+Cuando la criatura tenga extremidades o una cabeza expresiva, separa solo las piezas que tengan un movimiento legible: normalmente cuerpo/caparazon, patas delanteras, patas traseras y cabeza. Todas deben compartir el mismo `viewBox`, ancla y escala. El runtime las convierte en texturas una vez y anima `rotation`, `position` o `scale` con una amplitud pequena (aproximadamente 1–3 % para respiracion y hasta 0.1–0.2 rad para una marcha sutil). La animacion se detiene o congela en pausa y no debe cambiar colisiones.
+
+La prueba de orientacion debe cubrir al menos frente, lateral, giro de 180 grados y velocidad cero. La prueba de piezas debe confirmar que la marcha usa transformaciones sobre texturas cacheadas, no reconstruccion de XML ni nuevas asignaciones por frame.

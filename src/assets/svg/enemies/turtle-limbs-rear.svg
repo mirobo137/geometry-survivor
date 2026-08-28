@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="turtle-rear-title turtle-rear-desc">
+  <title id="turtle-rear-title">Patas traseras de tortuga</title>
+  <desc id="turtle-rear-desc">Par de patas traseras y cola triangular para animación de marcha.</desc>
+  <g id="enemy-turtle-legs-rear" fill="#c26855" stroke="#fff0e8" stroke-width="1.8" stroke-linejoin="round">
+    <path id="enemy-turtle-leg-rear-left" d="M-16 12l-11 7 4 8 12-10z"/>
+    <path id="enemy-turtle-leg-rear-right" d="M16 12l11 7-4 8-12-10z"/>
+  </g>
+  <path id="enemy-turtle-tail" d="M-4 21l4 9 4-9z" fill="#a84f50" stroke="#fff0e8" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>

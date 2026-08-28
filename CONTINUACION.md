@@ -401,6 +401,7 @@ Fecha: 28-08-2026.
 
 - `EnemyState` expone velocidad visual (`vx`, `vy`) calculada en simulacion, sin importar Pixi ni cambiar reglas de combate;
 - `TurtleVisual` compone cuatro texturas SVG alineadas, conserva la pose neutra con cabeza hacia `-Y` y orienta el contenedor con `atan2(vy, vx) + PI/2`. La marcha balancea patas por pares, hace bob de cabeza y una respiracion de 0.8 %, todo mediante transforms cacheados;
+- el orden de composicion queda fijado como patas traseras, patas delanteras, caparazon y cabeza, para que las patas delanteras no se dibujen encima del caparazon;
 - las piezas se crean de forma diferida por ranura del pool al primer `chaser` y luego se reutilizan; al cambiar de especie se limpia la posicion padre para evitar offsets heredados;
 - el tiempo de presentacion avanza solo mientras la simulacion esta jugando, por lo que la animacion queda congelada durante pausa, level-up y game over;
 - `TurtleVisual.test.ts` cubre frente, direccion y velocidad cero; `SvgEnemyAssets.test.ts` mantiene el contrato estructural de las piezas;

@@ -32,6 +32,9 @@ de cada pieza cambiaria su centro y destruiria la composicion.
   colisiones.
 - **Animacion:** patas delanteras y traseras balanceadas, bob leve de cabeza y
   respiracion del caparazon. Amplitudes pequenas y congeladas durante pausa.
+- **Orden de capas:** patas traseras → patas delanteras → caparazon → cabeza;
+  las extremidades quedan parcialmente ocultas por el caparazon y la cabeza
+  conserva la lectura direccional.
 - **Gate visual:** reconocer la silueta en negro, frente/lateral/trasera con
   movimiento y lectura a 32 px sobre fondos oscuro y claro antes de crear otra
   familia.

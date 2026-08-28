@@ -30,7 +30,9 @@ export class TurtleVisual {
     this.limbsFront = new Sprite(textures.limbsFront);
     this.head = new Sprite(textures.head);
     for (const part of [this.limbsRear, this.shell, this.limbsFront, this.head]) part.anchor.set(0.5);
-    this.root.addChild(this.limbsRear, this.shell, this.limbsFront, this.head);
+    // Both leg groups sit behind the shell; only the directional head remains
+    // in front so the layered composition matches the SVG master.
+    this.root.addChild(this.limbsRear, this.limbsFront, this.shell, this.head);
   }
 
   public render(state: EnemyRenderState, animationSeconds: number): void {

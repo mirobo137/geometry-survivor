@@ -29,10 +29,10 @@ describe('TurtleVisual', () => {
 
     visual.render(createState(90, 0), 0.4);
     expect(visual.root.rotation).toBeCloseTo(Math.PI / 2);
-    const [rear, shell, front, head] = visual.root.children as unknown as [
+    const [rear, front, shell, head] = visual.root.children as unknown as [
+      { rotation: number },
       { rotation: number },
       { scale: { x: number; y: number } },
-      { rotation: number },
       { position: { y: number }; rotation: number }
     ];
     expect(front.rotation).toBeGreaterThan(0);

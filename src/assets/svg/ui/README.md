@@ -8,6 +8,7 @@ control.
 | --- | --- | --- | --- | --- |
 | `pause.svg` | direct pause button | `0 0 24 24` | inline DOM | 1 |
 | `settings.svg` | pause settings toggle | `0 0 24 24` | inline DOM | 1 |
+| `start/mark.svg` | start screen visual mark | `-72 -72 144 144` | inline DOM | 1 |
 | `level-up/card-frame.svg` | frame for each upgrade card | `0 0 320 260` | inline DOM | 3 |
 | `level-up/icons.svg` | shared upgrade icon sprite | `0 0 48 48` | inline DOM + `<use>` | 1 |
 

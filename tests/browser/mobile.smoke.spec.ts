@@ -26,6 +26,9 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
 
   const canvas = page.locator('#game-container canvas');
   const canvasBox = await canvas.boundingBox();

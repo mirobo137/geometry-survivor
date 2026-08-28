@@ -65,6 +65,307 @@ body {
   display: none;
 }
 
+/* Premium home screen: CSS owns layout and motion while the mark remains an
+   editable SVG asset. No runtime canvas or gameplay state is required here. */
+#start-screen {
+  position: fixed;
+  z-index: 18;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  overflow: auto;
+  color: #eaf0ff;
+  background:
+    radial-gradient(circle at 50% 37%, rgba(30, 102, 144, 0.28), transparent 28%),
+    radial-gradient(circle at 16% 86%, rgba(95, 61, 161, 0.2), transparent 32%),
+    linear-gradient(145deg, #080b17 0%, #0a1226 55%, #100d24 100%);
+  isolation: isolate;
+}
+
+#start-screen::before,
+#start-screen::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+}
+
+#start-screen::before {
+  z-index: -2;
+  opacity: 0.32;
+  background-image:
+    linear-gradient(rgba(117, 230, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 230, 255, 0.04) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+}
+
+#start-screen::after {
+  z-index: -1;
+  opacity: 0.45;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(2, 4, 12, 0.7) 100%);
+}
+
+#start-screen[hidden] {
+  display: none;
+}
+
+.start-screen-panel {
+  display: grid;
+  gap: 1.15rem;
+  width: min(30rem, 100%);
+  max-height: 100%;
+  padding: clamp(1.2rem, 4vw, 2.1rem);
+  overflow: auto;
+  border: 1px solid rgba(117, 230, 255, 0.26);
+  border-radius: 1.25rem;
+  background: linear-gradient(155deg, rgba(10, 22, 46, 0.9), rgba(12, 10, 30, 0.82));
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 255, 255, 0.08);
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.start-brand {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+#start-mark {
+  display: grid;
+  width: clamp(7rem, 31vw, 10.5rem);
+  aspect-ratio: 1;
+  place-items: center;
+  color: #75e6ff;
+  filter: drop-shadow(0 0 1.2rem rgba(117, 230, 255, 0.35));
+}
+
+#start-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: start-mark-drift 16s linear infinite;
+}
+
+.start-kicker {
+  margin: 0;
+  color: #75e6ff;
+  font: 800 clamp(0.62rem, 2vw, 0.76rem)/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.22em;
+  text-shadow: 0 0 1rem rgba(117, 230, 255, 0.42);
+}
+
+#start-title {
+  margin: 0;
+  color: #f1f5ff;
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  line-height: 0.98;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 2rem rgba(117, 230, 255, 0.18);
+}
+
+#start-title span {
+  display: block;
+  color: #ffe39a;
+  font-size: 0.62em;
+  letter-spacing: 0.24em;
+}
+
+.start-subtitle {
+  max-width: 23rem;
+  margin: 0.2rem 0 0;
+  color: #aebfdd;
+  font-size: clamp(0.82rem, 2.5vw, 0.98rem);
+  line-height: 1.4;
+}
+
+.start-actions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.start-actions button {
+  min-height: 3.2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  font: 800 0.88rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.12em;
+  touch-action: manipulation;
+  transition: transform 140ms ease, filter 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.start-primary {
+  color: #07101f;
+  background: linear-gradient(110deg, #75e6ff 0%, #8de7d0 52%, #ffe39a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  box-shadow: 0 0.6rem 1.6rem rgba(73, 200, 226, 0.23), inset 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.start-primary:focus-visible,
+.start-secondary:focus-visible {
+  outline: 3px solid #ffe39a;
+  outline-offset: 3px;
+}
+
+.start-primary:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.start-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.start-secondary {
+  color: #cde3ff;
+  background: rgba(14, 27, 53, 0.76);
+  border: 1px solid rgba(145, 181, 255, 0.35);
+  font-size: 0.68rem !important;
+  letter-spacing: 0.06em !important;
+}
+
+.start-secondary:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.start-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.start-coming-soon {
+  display: grid;
+  gap: 0.25rem;
+  align-content: center;
+}
+
+.start-coming-soon span {
+  color: #8ea3c6;
+  font-size: 0.56rem;
+  letter-spacing: 0.05em;
+}
+
+.start-coming-soon-note {
+  margin: 0;
+  color: #7185a7;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.start-settings {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  color: #b9c9e8;
+  background: rgba(3, 8, 20, 0.48);
+  border: 1px solid rgba(145, 181, 255, 0.22);
+  border-radius: 0.65rem;
+  text-align: left;
+}
+
+.start-settings[hidden] {
+  display: none;
+}
+
+.start-settings h2 {
+  margin: 0 0 0.2rem;
+  color: #eaf0ff;
+  font-size: 0.95rem;
+}
+
+.start-settings label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.start-settings output {
+  color: #75e6ff;
+  font: 700 0.78rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.start-settings input[type="range"] {
+  width: 100%;
+  accent-color: #75e6ff;
+  touch-action: manipulation;
+}
+
+.start-checkbox {
+  justify-content: flex-start !important;
+  padding-top: 0.2rem;
+}
+
+.start-checkbox input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #75e6ff;
+}
+
+.start-record {
+  display: flex;
+  justify-content: center;
+  gap: 1.4rem;
+  color: #7589ad;
+  font: 700 0.66rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.start-record strong {
+  margin-left: 0.22rem;
+  color: #ffe39a;
+}
+
+.start-hint {
+  margin: 0;
+  color: #7185a7;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+@keyframes start-mark-drift {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (hover: hover) {
+  .start-primary:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+  }
+
+  .start-secondary:not(:disabled):hover {
+    border-color: rgba(117, 230, 255, 0.65);
+    filter: brightness(1.08);
+  }
+}
+
+@media (max-width: 30rem) {
+  .start-screen-panel {
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .start-menu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .start-secondary {
+    min-height: 2.75rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #start-mark svg,
+  .start-actions button {
+    animation: none;
+    transition: none;
+  }
+}
+
 #game-hud {
   position: absolute;
   z-index: 5;

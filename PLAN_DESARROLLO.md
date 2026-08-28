@@ -1211,6 +1211,48 @@ y el pool pequeno; un glow filtrado solo se aceptara mediante un spike medido y
 una politica Low/High. Si el numero de particulas creciera de forma real, se
 reevaluara `ParticleContainer`, manteniendo su uso limitado a FX sin filtros.
 
+### Spike futuro de FX para cartas
+
+La version actual debe tratarse como baseline, no como resultado visual final:
+una `Graphics` de aura/anillo, rayos simples y un pool fijo de 24 sprites. Antes
+de aumentar brillo, particulas o shaders, comparar en el mismo dispositivo y
+viewport estas variantes:
+
+1. baseline actual;
+2. glow barato por dos o tres sprites aditivos escalados;
+3. `GlowFilter` de `pixi-filters` aplicado solo al contenedor seleccionado;
+4. particulas de mayor contraste y, solo si el conteo lo exige, un
+   `ParticleContainer` dedicado.
+
+Registrar para cada variante: captura antes/despues, legibilidad del texto,
+tiempo de frame medio y p95, FPS estable, draw calls aproximados, memoria y
+comportamiento con `prefers-reduced-motion`. La puerta es conservar 60 FPS en
+el telefono de referencia y no ocultar el CTA ni el copy; Low debe reducir
+particulas/glow sin cambiar la seleccion ni el telegraph. Si ninguna variante
+mejora claramente la lectura, conservar el baseline y redirigir el presupuesto
+a squash, sonido, timing y contraste de la carta.
+
+## Pantalla de inicio y presentacion - 28-08-2026
+
+La aplicacion ahora abre en un menu de presentacion antes de iniciar la
+simulacion. `GameState` usa la fase `menu`, por lo que no avanzan tiempo,
+enemigos, armas ni input hasta pulsar `JUGAR`; los atajos `?boss=1` siguen
+saltando el menu para depuracion.
+
+`src/ui/StartScreen.ts` es la vista DOM responsable de abrir/cerrar el menu,
+mostrar la mejor marca y persistir los ajustes de audio. El layout incluye un
+CTA principal, un panel funcional de musica/SFX/silencio y dos ranuras
+deshabilitadas con `data-feature` (`level-select`, `skins`) para futuras pantallas
+sin acoplarlas al motor. `src/assets/svg/ui/start/mark.svg` es el master
+vectorial del nucleo/orbitas; el resto del acabado usa gradientes, rejilla y
+animaciones CSS de bajo coste.
+
+La presentacion conserva el viewport logico y safe-area: desktop usa panel
+centrado y portrait colapsa las acciones en una columna. `JUGAR` es tambien el
+gesto que desbloquea Howler/ZzFX en movil. La pantalla no crea una segunda
+simulacion ni modifica progresion; al empezar, `Game` activa input, HUD, audio y
+lifecycle en una unica transicion.
+
 ## Estado de implementación — 26-08-2026
 
 La primera base ejecutable de la Fase 0 ya está creada en el directorio de trabajo:
@@ -1260,6 +1302,6 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/content/bosses/BossDefinition.ts` centraliza el umbral, movimiento orbital, telegraphs, daño, radio y hueco seguro; `BossSystem` mueve al boss de forma determinista, alterna barrido/anillo y reserva un slot del pool normal para garantizar su aparición;
 - `src/presentation/pixi/BossView.ts` representa boss, barra de vida y telegraphs sin decidir colisiones ni daño; su paleta RGB está separada y validada para impedir valores incompatibles con Pixi;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (75 tests unitarios/integración y 6 smoke tests de navegador: 5 desktop + 1 Pixel 5 emulado); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
+- `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (88 tests unitarios/integración y 8 smoke tests de navegador: 7 desktop + 1 Pixel 5 emulado); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, FX adicionales, UI de ajustes y la puerta humana de la run completa.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas, pantalla de inicio en fase `menu` y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, spike comparativo de FX y la puerta humana de la run completa.

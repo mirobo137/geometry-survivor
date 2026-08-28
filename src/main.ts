@@ -52,12 +52,13 @@ const bootstrap = async (): Promise<void> => {
   const container = document.querySelector<HTMLElement>('#game-container');
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
+  const startScreenElement = document.querySelector<HTMLElement>('#start-screen');
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
   const pauseButton = document.querySelector<HTMLButtonElement>('#pause-toggle');
   const levelUpElement = document.querySelector<HTMLElement>('#level-up');
   const pauseElement = document.querySelector<HTMLElement>('#pause-overlay');
   const gameOverElement = document.querySelector<HTMLElement>('#game-over');
-  if (!container || !debugElement || !bootStatus || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
+  if (!container || !debugElement || !bootStatus || !startScreenElement || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
   mountInlineIcon(pauseButton, pauseIcon, true);
@@ -97,6 +98,7 @@ const bootstrap = async (): Promise<void> => {
     elements: {
       container,
       debug: debugElement,
+      startScreen: startScreenElement,
       hud: hudElement,
       pauseButton,
       levelUp: levelUpElement,
@@ -106,6 +108,7 @@ const bootstrap = async (): Promise<void> => {
     stressMode,
     initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
+    startOnMenu: !bossDebugMode,
     platform: new LocalPlatform()
   });
   await game.start();

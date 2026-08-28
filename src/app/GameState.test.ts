@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { GameState } from './GameState';
 
 describe('GameState', () => {
+  it('keeps the presentation menu outside the simulation until play starts', () => {
+    const state = new GameState('menu');
+
+    expect(state.phase).toBe('menu');
+    expect(state.isSimulationRunning).toBe(false);
+    expect(state.enterPause()).toBe(false);
+    expect(state.startRun()).toBe(true);
+    expect(state.phase).toBe('playing');
+    expect(state.startRun()).toBe(false);
+  });
+
   it('allows only the intended level-up and pause transitions', () => {
     const state = new GameState();
 

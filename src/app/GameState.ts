@@ -1,7 +1,11 @@
-export type GamePhase = 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory';
+export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory';
 
 export class GameState {
-  public phase: GamePhase = 'playing';
+  public phase: GamePhase;
+
+  public constructor(initialPhase: 'menu' | 'playing' = 'playing') {
+    this.phase = initialPhase;
+  }
 
   public get isSimulationRunning(): boolean {
     return this.phase === 'playing';
@@ -9,6 +13,12 @@ export class GameState {
 
   public get isTerminal(): boolean {
     return this.phase === 'game-over' || this.phase === 'victory';
+  }
+
+  public startRun(): boolean {
+    if (this.phase !== 'menu') return false;
+    this.phase = 'playing';
+    return true;
   }
 
   public enterLevelUp(): boolean {

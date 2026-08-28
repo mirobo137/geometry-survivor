@@ -17,6 +17,7 @@ import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/level-up/LevelUpOverlay';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
+import { StartScreen } from '../ui/StartScreen';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
@@ -28,6 +29,7 @@ export interface GameElements {
   readonly levelUp: HTMLElement;
   readonly pause: HTMLElement;
   readonly gameOver: HTMLElement;
+  readonly startScreen?: HTMLElement;
   readonly pauseButton?: HTMLButtonElement;
 }
 
@@ -38,6 +40,7 @@ export interface GameOptions {
   readonly initialElapsedSeconds?: number;
   readonly buildTarget: string;
   readonly platform: PlatformAdapter;
+  readonly startOnMenu?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -49,6 +52,7 @@ export class Game {
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
   private readonly initialElapsedSeconds: number;
+  private readonly startOnMenu: boolean;
   private readonly lifecycle: PlatformLifecycle;
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
@@ -57,13 +61,14 @@ export class Game {
   private readonly player = new PlayerModel();
   private readonly combat: CombatSimulation;
   private readonly progression = new LevelProgression();
-  private readonly gameState = new GameState();
+  private readonly gameState: GameState;
   private readonly view: PixiGameView;
   private readonly debug: DebugPanel;
   private readonly hud: GameHud;
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
   private readonly gameOver: GameOverOverlay;
+  private readonly startScreen: StartScreen | null;
   private readonly input: InputManager;
   private readonly upgradeApplier: UpgradeApplier;
   private readonly resizeObserver: ResizeObserver | null;
@@ -97,6 +102,12 @@ export class Game {
     this.view.handleLevelUpInteraction(interaction.kind, interaction.index);
   };
 
+  private readonly onStartPlay = (): void => {
+    if (this.stopped || !this.startOnMenu || !this.gameState.startRun()) return;
+    this.startScreen?.close();
+    this.activateRun(true);
+  };
+
   private readonly onPauseButton = (): void => {
     // A pause tap is also a valid user gesture for mobile Web Audio unlock.
     void this.audio.unlock();
@@ -104,15 +115,11 @@ export class Game {
   };
 
   private readonly onPauseSettingsChange = (settings: AudioSettings): void => {
-    this.audio.configure(settings);
-    const saved = this.saveStore.load();
-    this.saveStore.save({
-      ...saved,
-      settings: {
-        ...saved.settings,
-        ...settings
-      }
-    });
+    this.persistAudioSettings(settings);
+  };
+
+  private readonly onStartSettingsChange = (settings: AudioSettings): void => {
+    this.persistAudioSettings(settings);
   };
 
   private readonly onPauseRestart = (): void => {
@@ -164,6 +171,8 @@ export class Game {
     this.pauseButton = options.elements.pauseButton ?? null;
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
+    this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
+    this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
@@ -181,6 +190,7 @@ export class Game {
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
+    this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
       void this.audio.unlock();
     });
@@ -203,10 +213,20 @@ export class Game {
     if (this.pauseButton) this.pauseButton.hidden = false;
     this.arena.update(this.initialElapsedSeconds);
     this.resizeNow();
-    this.input.attach();
-    this.hudElement.hidden = false;
     await this.lifecycle.init();
-    this.lifecycle.onGameStart();
+    if (this.startOnMenu) {
+      const saved = this.saveStore.load();
+      this.startScreen?.open({
+        settings: saved.settings,
+        best: saved.best,
+        onPlay: this.onStartPlay,
+        onSettingsChange: this.onStartSettingsChange
+      });
+      this.hudElement.hidden = true;
+      if (this.pauseButton) this.pauseButton.hidden = true;
+    } else {
+      this.activateRun(false);
+    }
     this.app.ticker.add(this.onTick);
   }
 
@@ -223,6 +243,7 @@ export class Game {
     this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.removeEventListener('click', this.onPauseButton);
+    this.startScreen?.close();
     this.view.closeLevelUpFx();
     this.audio.shutdown();
     this.lifecycle.onGamePause();
@@ -365,6 +386,26 @@ export class Game {
     this.openPause(message);
   }
 
+  private activateRun(unlockAudio: boolean): void {
+    this.input.attach();
+    this.hudElement.hidden = false;
+    if (unlockAudio) void this.audio.unlock();
+    this.audio.startMusic();
+    this.lifecycle.onGameStart();
+  }
+
+  private persistAudioSettings(settings: AudioSettings): void {
+    this.audio.configure(settings);
+    const saved = this.saveStore.load();
+    this.saveStore.save({
+      ...saved,
+      settings: {
+        ...saved.settings,
+        ...settings
+      }
+    });
+  }
+
   private openPause(message: string): void {
     this.pause.open(message, this.resumeFromLifecycle, {
       settings: this.saveStore.load().settings,
@@ -409,6 +450,7 @@ export class Game {
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();
+    this.startScreen?.close();
     this.view.closeLevelUpFx();
     this.audio.resume();
     this.audio.startMusic();

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="-72 -72 144 144"
+     preserveAspectRatio="xMidYMid meet"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <title id="ui-start-mark-title">Nucleo geometrico de Geometry Survivor</title>
+  <desc id="ui-start-mark-desc">Un nucleo hexagonal rodeado por orbitas, puntos y rayos de energia</desc>
+  <circle id="ui-start-mark-orbit-outer" cx="0" cy="0" r="57" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 8" opacity="0.55" />
+  <circle id="ui-start-mark-orbit-inner" cx="0" cy="0" r="43" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="17 8" opacity="0.85" />
+  <path id="ui-start-mark-crosshair" d="M0-66V-54M66 0H54M0 66V54M-66 0H-54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="3" opacity="0.8" />
+  <circle id="ui-start-mark-node-top" cx="0" cy="-57" r="5" fill="#ffe39a" />
+  <circle id="ui-start-mark-node-right" cx="57" cy="0" r="4" fill="#75e6ff" />
+  <circle id="ui-start-mark-node-bottom" cx="0" cy="57" r="4" fill="#d2a8ff" />
+  <circle id="ui-start-mark-node-left" cx="-57" cy="0" r="5" fill="#b8ffd9" />
+  <polygon id="ui-start-mark-core-shadow" points="0,-31 27,-15 27,15 0,31 -27,15 -27,-15" fill="#0b1930" stroke="currentColor" stroke-width="4" />
+  <polygon id="ui-start-mark-core" points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="currentColor" opacity="0.95" />
+  <polygon id="ui-start-mark-core-cut" points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="#081020" />
+  <path id="ui-start-mark-energy" d="M-7-37 0-47 7-37M-37 7-47 0-37-7M7 37 0 47-7 37M37-7 47 0 37 7" fill="none" stroke="#75e6ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" />
+</svg>

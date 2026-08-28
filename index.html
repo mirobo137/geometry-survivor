@@ -10,6 +10,41 @@
   <body>
     <main id="game-container" aria-label="Geometry Survivor">
       <div id="boot-status" role="status" aria-live="assertive">Cargando juego…</div>
+      <section id="start-screen" aria-labelledby="start-title" hidden>
+        <div class="start-screen-panel">
+          <div class="start-brand">
+            <div id="start-mark" aria-hidden="true"></div>
+            <p class="start-kicker">GEOMETRY / SURVIVAL PROTOCOL</p>
+            <h1 id="start-title">GEOMETRY <span>SURVIVOR</span></h1>
+            <p class="start-subtitle">Sobrevive al caos. Construye tu propia geometría.</p>
+          </div>
+          <div class="start-actions" aria-label="Menu principal">
+            <button id="start-play" class="start-primary" type="button">JUGAR</button>
+            <div class="start-menu-grid">
+              <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings">Configuración</button>
+              <button id="start-level" class="start-secondary start-coming-soon" type="button" disabled aria-describedby="start-coming-soon-note" data-feature="level-select">Niveles <span>PRÓXIMAMENTE</span></button>
+              <button id="start-skins" class="start-secondary start-coming-soon" type="button" disabled aria-describedby="start-coming-soon-note" data-feature="skins">Skins <span>PRÓXIMAMENTE</span></button>
+            </div>
+            <p id="start-coming-soon-note" class="start-coming-soon-note">Niveles y skins se añadirán sin cambiar el núcleo de la partida.</p>
+          </div>
+          <div id="start-settings" class="start-settings" hidden>
+            <h2>Configuración rápida</h2>
+            <label for="start-music">Música <output id="start-music-value" for="start-music">100%</output></label>
+            <input id="start-music" type="range" min="0" max="100" step="5" value="100" />
+            <label for="start-sfx">Efectos <output id="start-sfx-value" for="start-sfx">100%</output></label>
+            <input id="start-sfx" type="range" min="0" max="100" step="5" value="100" />
+            <label class="start-checkbox" for="start-muted">
+              <input id="start-muted" type="checkbox" />
+              Silenciar todo
+            </label>
+          </div>
+          <div class="start-record" aria-label="Mejor marca">
+            <span>MEJOR RUN <strong id="start-best-time">00:00</strong></span>
+            <span>PUNTOS <strong id="start-best-score">0</strong></span>
+          </div>
+          <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
+        </div>
+      </section>
       <div id="game-hud" aria-label="Estado de la partida" hidden>
         <span id="hud-time">00:00</span>
         <span id="hud-health">HP 100/100</span>

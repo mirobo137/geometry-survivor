@@ -58,7 +58,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 78 tests unitarios/integración en 23 archivos y 7 smoke tests de Playwright pasando en Chromium (6 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 88 tests unitarios/integración en 31 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -167,7 +167,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 78 tests unitarios/integración y 7 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), SVG, acceso rápido de boss, context loss y touch emulado;
+- 88 tests unitarios/integración y 8 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), SVG, pantalla de inicio, acceso rápido de boss, context loss y touch emulado;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -323,7 +323,7 @@ Estado al cerrar esta sesión:
 - La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
 - No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
 - No se encontraron ciclos de dependencias en `src`.
-- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 78 tests en 23 archivos y 7 smoke tests browser.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 88 tests en 31 archivos y 8 smoke tests browser.
 - Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
 - El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
 
@@ -357,7 +357,7 @@ Implementado en esta sesión:
 - `GameState.restartFromPause()` impide reinicios accidentales desde estados terminales o transitorios;
 - los cambios de audio se aplican al `WebAudioService` y se guardan con el schema existente de `SaveStore`;
 - la música procedural usa un patrón de ocho pasos con bajo, melodía y armonía, sin archivos remotos ni dependencia npm;
-- smoke browser: 78 tests unitarios/integración y 7 escenarios browser (incluido Pixel 5 emulado) pasan.
+- smoke browser: 88 tests unitarios/integración y 8 escenarios browser (incluido Pixel 5 emulado) pasan.
 
 Decisión de assets/librerías: se revisaron ZzFX/ZzFXM y Kenney Sci-Fi Sounds. Se mantienen como candidatos documentados, pero no se incorporan aún para respetar el presupuesto, el requisito de builds autocontenidos y la regla de no añadir dependencias para una utilidad pequeña. El usuario validó auditivamente el audio integrado; antes de cerrar Fase 6 queda decidir si una pista local comprimida justifica su peso.
 
@@ -441,8 +441,7 @@ Fecha: 28-08-2026.
   presentacion y no modifica la simulacion.
 
 Verificacion de esta continuacion: typecheck, suite unitaria, smoke browser y
-build local completados; quedan los builds Poki/CrazyGames y la publicacion del
-commit en `main`.
+builds local/Poki/CrazyGames completados; queda publicar el commit en `main`.
 
 ## 20. Continuacion - feedback premium de cartas
 
@@ -464,3 +463,27 @@ Archivos principales: `src/ui/level-up/LevelUpOverlay.ts`,
 `src/ui/level-up/LevelUpCardInteraction.ts`,
 `src/presentation/pixi/ui/level-up/LevelUpFxView.ts`,
 `src/app/Game.ts` y `src/presentation/viewport/ViewportTransform.ts`.
+
+## 21. Continuacion - pantalla de inicio premium
+
+Fecha: 28-08-2026.
+
+- `GameState` admite la fase `menu`; la simulacion no avanza y el input no se
+  conecta hasta que el usuario pulsa `JUGAR`. El atajo `?boss=1` conserva el
+  arranque directo para pruebas.
+- `src/ui/StartScreen.ts` controla la vista DOM, el CTA, ajustes de audio y la
+  mejor marca. `JUGAR` desbloquea Howler/ZzFX dentro del gesto movil y activa
+  input, HUD, lifecycle y musica en una unica transicion.
+- `src/assets/svg/ui/start/mark.svg` define el nucleo/orbitas como master
+  vectorial code-first; la pantalla combina gradientes, rejilla, safe-area y
+  animacion CSS ligera. No se usa un segundo canvas ni una segunda simulacion.
+- Niveles y skins aparecen como botones deshabilitados con `data-feature`
+  (`level-select`, `skins`), listos para consumidores futuros sin tocar el
+  engine ni duplicar el menu.
+- La captura desktop y portrait confirma que el panel, CTA y acciones caben sin
+  scroll inesperado; el usuario debe validar en su movil la respuesta tactil y
+  el desbloqueo de audio desde la URL publicada.
+
+El spike de FX de cartas queda conscientemente abierto: el plan conserva el
+baseline actual y una matriz para comparar glow aditivo, `GlowFilter` y
+`ParticleContainer` con mediciones antes de elevar el presupuesto visual.

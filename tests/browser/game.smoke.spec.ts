@@ -37,9 +37,40 @@ const openGame = async (page: Page): Promise<string[]> => {
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await expect(page.locator('#start-play')).toBeVisible();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
   await expect(page.locator('#game-hud')).toBeVisible();
   return failures;
 };
+
+test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await expect.poll(async () => page.locator('#debug-panel').textContent()).toContain('paused: menu');
+  await expect(page.locator('#start-mark svg')).toBeVisible();
+  await expect(page.locator('#start-play')).toBeVisible();
+  await expect(page.locator('#start-level')).toHaveAttribute('disabled', '');
+  await expect(page.locator('#start-skins')).toHaveAttribute('disabled', '');
+
+  await page.locator('#start-settings-toggle').click();
+  await expect(page.locator('#start-settings')).toBeVisible();
+  await page.locator('#start-music').fill('45');
+  await page.locator('#start-sfx').fill('65');
+  await expect(page.locator('#start-music-value')).toHaveText('45%');
+  await expect(page.locator('#start-sfx-value')).toHaveText('65%');
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#game-hud')).toBeVisible();
+
+  const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
+  expect(saved).not.toBeNull();
+  expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
+  expect(failures).toEqual([]);
+});
 
 const getPlayerPosition = async (page: Page): Promise<{ x: number; y: number }> => {
   const debugText = await page.locator('#debug-panel').textContent();
@@ -108,6 +139,8 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   await expect(page.locator('#pause-overlay')).toBeHidden();
   await page.reload();
   await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await page.locator('#start-play').click();
   await expect(page.locator('#pause-toggle')).toBeVisible();
   await page.locator('#pause-toggle').click();
   await page.locator('#pause-settings-toggle').click();

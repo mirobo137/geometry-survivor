@@ -68,5 +68,13 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
       isPrimary: true
     }));
   });
+  await expect(page.locator('#pause-toggle')).toBeVisible();
+  await page.locator('#pause-toggle').click();
+  await expect(page.locator('#pause-overlay')).toBeVisible();
+  await page.locator('#pause-settings-toggle').click();
+  await page.locator('#pause-music').fill('40');
+  await expect(page.locator('#pause-music-value')).toHaveText('40%');
+  await page.locator('#pause-resume').click();
+  await expect(page.locator('#pause-overlay')).toBeHidden();
   expect(failures).toEqual([]);
 });

@@ -58,7 +58,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 75 tests unitarios/integración en 21 archivos y 6 smoke tests de Playwright pasando en Chromium (5 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 77 tests unitarios/integración en 22 archivos y 7 smoke tests de Playwright pasando en Chromium (6 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -166,15 +166,16 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 75 tests unitarios/integración y 6 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), acceso rápido de boss, context loss y touch emulado;
+- 77 tests unitarios/integración y 7 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), acceso rápido de boss, context loss y touch emulado;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
 ## 7. Trabajo pendiente por fase
 
-### Fase 3 — todavía abierta
+### Fase 3 — casi cerrada, pendiente de validación manual
 
-- Conectar los ajustes persistentes a una UI de configuración; la mejor marca ya se actualiza desde game-over.
+- Ajustes persistentes conectados a la UI de pausa: música, efectos y silencio; la mejor marca ya se actualiza desde game-over.
+- Pausa manual, continuar y reinicio desde pausa cubiertos por smoke browser.
 - Validar manualmente dos builds que se sientan diferentes; la evidencia del usuario confirma que las decisiones importan, pero todavía no documenta dos rutas de build comparables.
 
 ### Fase 4 — implementada, pendiente de puerta humana
@@ -200,7 +201,7 @@ Puerta del hito:
 - Lenguaje visual definitivo.
 - SVG master code-first para UI/assets y pipeline de validación.
 - ✅ AudioService real con música procedural, cues básicos, volumen separado, desbloqueo diferido y pausa/reanudación.
-- ⬜ Música final, assets de audio, límites de voces refinados, UI de ajustes y mezcla definitiva.
+- ⬜ Música final/asset externo opcional, límites de voces refinados y mezcla definitiva; la UI de ajustes del prototipo ya está conectada.
 - Hit feedback, shake presupuestado, hit stop, trails y partículas.
 - Presets Low/Medium/High sin cambiar gameplay.
 
@@ -293,6 +294,7 @@ npm run build:crazygames
 - `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
 - `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
 - `src/app/Game.ts`: orquestador de lifecycle, loop, pausa, level-up, HUD y plataforma.
+- `src/content/audio/MusicDefinitions.ts`: frase procedural versionada como contenido, separada del adaptador Web Audio.
 - `src/app/RunSummary.ts` y `src/ui/GameOverOverlay.ts`: snapshot y representación del fin de run.
 - `reset()` en `ArenaModel`, `PlayerModel`, `CombatSimulation`, pools, Laser y progresión: reinicio in-place sin reasignar sistemas.
 - `src/content/bosses/BossDefinition.ts`, `src/simulation/bosses/BossSystem.ts` y `src/presentation/pixi/BossView.ts`: datos, reglas, movimiento y representación separadas del boss; `BossVisualTokens.ts` mantiene su paleta RGB comprobable.
@@ -316,11 +318,11 @@ Fecha: 28-08-2026.
 
 Estado al cerrar esta sesión:
 
-- `main` sigue sincronizado con `origin/main` en `4fbf751`; el worktree contiene las correcciones locales de esta auditoría y sus regresiones. Aún no se ha creado un commit nuevo.
+- `main` parte de `4fbf751`; las correcciones de esta auditoría y sus regresiones quedan registradas en el commit de cierre de esta sesión.
 - La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
 - No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
 - No se encontraron ciclos de dependencias en `src`.
-- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 75 tests en 21 archivos y 6 smoke tests browser.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 77 tests en 22 archivos y 7 smoke tests browser.
 - Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
 - El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
 
@@ -342,3 +344,20 @@ Para retomar en otra PC:
 2. Ejecutar `git status --short --branch`, `npm run typecheck` y `npm test`.
 3. Ejecutar `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames`.
 4. Publicar en `main` y repetir la URL normal de GitHub Pages para la run completa; usar `?boss=1` para repetir el encuentro corregido sin esperar 4:20.
+
+## 13. Continuación — audio y pausa manual
+
+Fecha: 28-08-2026.
+
+Implementado en esta sesión:
+
+- `#pause-toggle` ofrece pausa directa con un objetivo táctil amplio y se oculta durante level-up, pausa o fin de run;
+- `PauseOverlay` añade continuar, configuración de música/SFX/silencio y reinicio seguro desde pausa;
+- `GameState.restartFromPause()` impide reinicios accidentales desde estados terminales o transitorios;
+- los cambios de audio se aplican al `WebAudioService` y se guardan con el schema existente de `SaveStore`;
+- la música procedural usa un patrón de ocho pasos con bajo, melodía y armonía, sin archivos remotos ni dependencia npm;
+- smoke browser: 77 tests unitarios/integración y 7 escenarios browser (incluido Pixel 5 emulado) pasan.
+
+Decisión de assets/librerías: se revisaron ZzFX/ZzFXM y Kenney Sci-Fi Sounds. Se mantienen como candidatos documentados, pero no se incorporan aún para respetar el presupuesto, el requisito de builds autocontenidos y la regla de no añadir dependencias para una utilidad pequeña. Antes de Fase 6 queda la comprobación auditiva en un móvil físico y decidir si una pista local comprimida justifica su peso.
+
+Para retomar: abrir pausa en la URL publicada, desplegar “Configuración”, cambiar música/SFX/silencio, reanudar y recargar para comprobar persistencia. El botón “Reiniciar partida” debe devolver la run a `00:00` sin recarga.

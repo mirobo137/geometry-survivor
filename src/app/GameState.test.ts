@@ -45,4 +45,16 @@ describe('GameState', () => {
     expect(state.enterPause()).toBe(true);
     expect(state.restart()).toBe(false);
   });
+
+  it('allows an explicit restart from the manual pause only', () => {
+    const state = new GameState();
+
+    expect(state.restartFromPause()).toBe(false);
+    expect(state.enterPause()).toBe(true);
+    expect(state.restartFromPause()).toBe(true);
+    expect(state.phase).toBe('playing');
+
+    expect(state.enterLevelUp()).toBe(true);
+    expect(state.restartFromPause()).toBe(false);
+  });
 });

@@ -52,4 +52,15 @@ export class GameState {
     this.phase = 'playing';
     return true;
   }
+
+  /**
+   * Manual pause can be abandoned explicitly from the pause menu. Keeping
+   * this transition separate from `restart()` prevents a lifecycle pause or
+   * a level-up from being reset accidentally by a shared button.
+   */
+  public restartFromPause(): boolean {
+    if (this.phase !== 'paused') return false;
+    this.phase = 'playing';
+    return true;
+  }
 }

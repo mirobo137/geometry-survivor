@@ -41,10 +41,11 @@ const bootstrap = async (): Promise<void> => {
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
+  const pauseButton = document.querySelector<HTMLButtonElement>('#pause-toggle');
   const levelUpElement = document.querySelector<HTMLElement>('#level-up');
   const pauseElement = document.querySelector<HTMLElement>('#pause-overlay');
   const gameOverElement = document.querySelector<HTMLElement>('#game-over');
-  if (!container || !debugElement || !bootStatus || !hudElement || !levelUpElement || !pauseElement || !gameOverElement) {
+  if (!container || !debugElement || !bootStatus || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
 
@@ -82,6 +83,7 @@ const bootstrap = async (): Promise<void> => {
       container,
       debug: debugElement,
       hud: hudElement,
+      pauseButton,
       levelUp: levelUpElement,
       pause: pauseElement,
       gameOver: gameOverElement

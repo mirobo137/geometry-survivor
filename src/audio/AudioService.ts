@@ -1,3 +1,5 @@
+import { MUSIC_PATTERN } from '../content/audio/MusicDefinitions';
+
 export type AudioCue = 'damage' | 'level-up' | 'boss-defeated';
 
 export interface AudioSettings {
@@ -21,9 +23,8 @@ interface AudioContextWindow extends Window {
   webkitAudioContext?: typeof AudioContext;
 }
 
-const MUSIC_NOTES = [220, 277.18, 329.63, 277.18, 196, 246.94, 293.66, 246.94] as const;
-const MUSIC_STEP_SECONDS = 0.625;
-const MUSIC_LOOP_SECONDS = MUSIC_NOTES.length * MUSIC_STEP_SECONDS;
+const MUSIC_STEP_SECONDS = 0.5;
+const MUSIC_LOOP_SECONDS = MUSIC_PATTERN.length * MUSIC_STEP_SECONDS;
 
 const CUE_NOTES: Record<AudioCue, readonly number[]> = {
   damage: [150],
@@ -45,11 +46,12 @@ const createTone = (
   when: number,
   frequency: number,
   peak: number,
-  duration: number
+  duration: number,
+  type: OscillatorType = 'sine'
 ): void => {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
-  oscillator.type = 'sine';
+  oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, when);
   gain.gain.setValueAtTime(0.0001, when);
   gain.gain.exponentialRampToValueAtTime(peak, when + 0.02);
@@ -189,8 +191,13 @@ export class WebAudioService implements AudioService {
     if (!this.context || !this.musicBus || !this.musicActive || this.lifecyclePaused) return;
     this.clearMusicTimer();
     const start = this.context.currentTime + 0.05;
-    MUSIC_NOTES.forEach((frequency, index) => {
-      createTone(this.context!, this.musicBus!, start + index * MUSIC_STEP_SECONDS, frequency, 0.16, 0.48);
+    MUSIC_PATTERN.forEach((step, index) => {
+      const when = start + index * MUSIC_STEP_SECONDS;
+      createTone(this.context!, this.musicBus!, when, step.bass, 0.08, 0.42, 'sine');
+      createTone(this.context!, this.musicBus!, when, step.lead, 0.1, 0.34, 'triangle');
+      step.harmony.forEach((frequency) => {
+        createTone(this.context!, this.musicBus!, when, frequency, 0.025, 0.32, 'sine');
+      });
     });
     this.musicTimer = window.setTimeout(() => this.scheduleMusicLoop(), MUSIC_LOOP_SECONDS * 1000 - 80);
   }

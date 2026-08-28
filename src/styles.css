@@ -74,13 +74,40 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 0.45rem;
-  padding: 0.5rem 0.65rem;
+  padding: 0.5rem 3.6rem 0.5rem 0.65rem;
   color: #eaf0ff;
   background: rgba(7, 12, 28, 0.7);
   border: 1px solid rgba(145, 181, 255, 0.28);
   border-radius: 0.45rem;
   font: 600 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   pointer-events: none;
+}
+
+#pause-toggle {
+  position: absolute;
+  z-index: 7;
+  top: max(0.55rem, env(safe-area-inset-top));
+  right: max(0.6rem, env(safe-area-inset-right));
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  padding: 0;
+  color: #07101f;
+  background: #75e6ff;
+  border: 0;
+  border-radius: 0.45rem;
+  font: 800 1rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  touch-action: manipulation;
+}
+
+#pause-toggle[hidden] {
+  display: none;
+}
+
+#pause-toggle:active,
+#pause-actions button:active {
+  transform: translateY(1px);
 }
 
 #hud-health {
@@ -175,7 +202,9 @@ body {
   display: grid;
   gap: 0.7rem;
   width: min(30rem, calc(100% - 1.5rem));
+  max-height: calc(100% - 1.5rem);
   padding: 1.2rem;
+  overflow: auto;
   transform: translate(-50%, -50%);
   color: #eaf0ff;
   background: rgba(7, 12, 28, 0.97);
@@ -209,7 +238,12 @@ body {
   line-height: 1.4;
 }
 
-#pause-resume {
+#pause-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+#pause-actions button {
   min-height: 3rem;
   padding: 0.7rem 1rem;
   color: #07101f;
@@ -218,6 +252,61 @@ body {
   border-radius: 0.45rem;
   font: inherit;
   touch-action: manipulation;
+}
+
+#pause-actions #pause-settings-toggle,
+#pause-actions #pause-restart {
+  color: #cde3ff;
+  background: transparent;
+  border: 1px solid rgba(145, 181, 255, 0.4);
+}
+
+#pause-settings {
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.25rem;
+  color: #b9c9e8;
+  text-align: left;
+}
+
+#pause-settings[hidden] {
+  display: none;
+}
+
+#pause-settings h2 {
+  margin: 0 0 0.15rem;
+  color: #eaf0ff;
+  font-size: 1rem;
+}
+
+#pause-settings label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+#pause-settings output {
+  color: #75e6ff;
+  font: 700 0.82rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+#pause-settings input[type="range"] {
+  width: 100%;
+  accent-color: #75e6ff;
+  touch-action: manipulation;
+}
+
+#pause-settings .pause-checkbox {
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+}
+
+#pause-settings input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: #75e6ff;
 }
 
 #game-over {

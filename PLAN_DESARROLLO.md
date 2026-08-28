@@ -974,6 +974,20 @@ La extracción se detuvo en estas fronteras porque `Game` sigue siendo un orques
 
 La validación de esta auditoría registró 75 tests unitarios/integración en 21 archivos, 6 smoke tests browser, typecheck y builds `local`, `poki` y `crazygames` correctos. El smoke emulado no sustituye las comprobaciones manuales de audio, storage, background/foreground y contexto WebGL en un teléfono físico.
 
+---
+
+## 15.3 Audio y pausa manual — 28-08-2026
+
+La primera iteración de audio queda deliberadamente sin dependencia ni descarga externa:
+
+- `WebAudioService` conserva el contrato independiente del gameplay y ahora reproduce una frase procedural de ocho pasos con bajo, melodía y armonía, además de los cues existentes;
+- `PauseOverlay` ofrece un botón directo de pausa, continuar, reinicio explícito desde pausa y controles persistentes de música, efectos y silencio;
+- los ajustes se normalizan mediante `SaveStore` y se aplican al bus de audio sin tocar la simulación;
+- `GameState.restartFromPause()` mantiene separado el reinicio manual de las transiciones terminales y de level-up;
+- los smoke tests desktop y Pixel 5 cubren pausa manual, ajustes y reanudación; queda pendiente la comprobación auditiva manual en el teléfono físico.
+
+Se evaluaron alternativas code-first pequeñas: [ZzFX](https://github.com/KilledByAPixel/ZzFX/blob/master/README.md) (MIT, sin dependencias y menos de 1 KB comprimido) y [ZzFXM](https://keithclark.github.io/ZzFXM/) (renderer musical MIT de aproximadamente 442 bytes gzip). También se verificó [Kenney Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds) y su licencia [CC0](https://kenney.nl/support). No se añaden todavía porque el plan exige builds autocontenidos, sin CDN, y la música externa encontrada para prototipos puede añadir varios MB. La decisión se reabrirá en Fase 6 cuando exista dirección sonora y presupuesto de descarga medido.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |

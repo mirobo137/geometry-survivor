@@ -84,6 +84,40 @@ test('carga, acepta input, pausa y mantiene el canvas durante resize', async ({ 
   expect(failures).toEqual([]);
 });
 
+test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
+  const failures = await openGame(page);
+  await expect(page.locator('#pause-toggle')).toBeVisible();
+  await page.locator('#pause-toggle').click();
+  await expect(page.locator('#pause-overlay')).toBeVisible();
+  await expect(page.locator('#pause-toggle')).toBeHidden();
+
+  await page.locator('#pause-settings-toggle').click();
+  await page.locator('#pause-music').fill('35');
+  await page.locator('#pause-sfx').fill('55');
+  await page.locator('#pause-muted').check();
+  await expect(page.locator('#pause-music-value')).toHaveText('35%');
+  await expect(page.locator('#pause-sfx-value')).toHaveText('55%');
+
+  const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
+  expect(saved).not.toBeNull();
+  expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.35, sfxVolume: 0.55, muted: true });
+
+  await page.locator('#pause-resume').click();
+  await expect(page.locator('#pause-overlay')).toBeHidden();
+  await page.reload();
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#pause-toggle')).toBeVisible();
+  await page.locator('#pause-toggle').click();
+  await page.locator('#pause-settings-toggle').click();
+  await expect(page.locator('#pause-music')).toHaveValue('35');
+  await expect(page.locator('#pause-sfx')).toHaveValue('55');
+  await expect(page.locator('#pause-muted')).toBeChecked();
+  await page.locator('#pause-restart').click();
+  await expect(page.locator('#pause-overlay')).toBeHidden();
+  await expect(page.locator('#pause-toggle')).toBeVisible();
+  expect(failures).toEqual([]);
+});
+
 test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
   test.setTimeout(45_000);
   const failures = await openGame(page);

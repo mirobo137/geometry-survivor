@@ -15,7 +15,7 @@ import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import { PauseOverlay } from '../ui/PauseOverlay';
-import type { AudioService } from '../audio/AudioService';
+import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 
@@ -26,6 +26,7 @@ export interface GameElements {
   readonly levelUp: HTMLElement;
   readonly pause: HTMLElement;
   readonly gameOver: HTMLElement;
+  readonly pauseButton?: HTMLButtonElement;
 }
 
 export interface GameOptions {
@@ -42,6 +43,7 @@ export class Game {
   private readonly app: Application;
   private readonly container: HTMLElement;
   private readonly hudElement: HTMLElement;
+  private readonly pauseButton: HTMLButtonElement | null;
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
   private readonly initialElapsedSeconds: number;
@@ -88,6 +90,30 @@ export class Game {
 
   private readonly onWindowBlur = (): void => this.pauseForLifecycle();
 
+  private readonly onPauseButton = (): void => {
+    // A pause tap is also a valid user gesture for mobile Web Audio unlock.
+    void this.audio.unlock();
+    this.pauseForLifecycle('Partida pausada manualmente.');
+  };
+
+  private readonly onPauseSettingsChange = (settings: AudioSettings): void => {
+    this.audio.configure(settings);
+    const saved = this.saveStore.load();
+    this.saveStore.save({
+      ...saved,
+      settings: {
+        ...saved.settings,
+        ...settings
+      }
+    });
+  };
+
+  private readonly onPauseRestart = (): void => {
+    if (this.contextLost) return;
+    if (!this.gameState.restartFromPause()) return;
+    this.resetRunState();
+  };
+
   private readonly onWebglContextLost = (event: Event): void => {
     event.preventDefault();
     if (this.stopped || this.lifecyclePaused || !this.gameState.isSimulationRunning) return;
@@ -99,7 +125,7 @@ export class Game {
     if (!this.contextLost) return;
     this.contextLost = false;
     if (this.lifecyclePaused) {
-      this.pause.open('El renderizador se recuperó. Pulsa Continuar para regresar.', this.resumeFromLifecycle);
+      this.openPause('El renderizador se recuperó. Pulsa Continuar para regresar.');
     }
   };
 
@@ -109,6 +135,7 @@ export class Game {
     this.lifecyclePaused = false;
     this.gameState.resume();
     this.pause.close();
+    this.audio.resume();
     this.lifecycle.onGameResume();
   };
 
@@ -126,6 +153,7 @@ export class Game {
     this.app = options.app;
     this.container = options.elements.container;
     this.hudElement = options.elements.hud;
+    this.pauseButton = options.elements.pauseButton ?? null;
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
@@ -163,6 +191,8 @@ export class Game {
     window.addEventListener('blur', this.onWindowBlur);
     this.app.canvas.addEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.addEventListener('webglcontextrestored', this.onWebglContextRestored);
+    this.pauseButton?.addEventListener('click', this.onPauseButton);
+    if (this.pauseButton) this.pauseButton.hidden = false;
     this.arena.update(this.initialElapsedSeconds);
     this.resizeNow();
     this.input.attach();
@@ -184,6 +214,7 @@ export class Game {
     window.removeEventListener('blur', this.onWindowBlur);
     this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
+    this.pauseButton?.removeEventListener('click', this.onPauseButton);
     this.audio.shutdown();
     this.lifecycle.onGamePause();
   }
@@ -232,6 +263,9 @@ export class Game {
       kills: this.combat.stats.kills,
       level: this.progression.state.level
     });
+    if (this.pauseButton) {
+      this.pauseButton.hidden = !this.gameState.isSimulationRunning || this.lifecyclePaused;
+    }
 
     this.frames += 1;
     const now = performance.now();
@@ -292,7 +326,15 @@ export class Game {
     this.input.reset();
     this.audio.pause();
     this.lifecycle.onGamePause();
-    this.pause.open(message, this.resumeFromLifecycle);
+    this.openPause(message);
+  }
+
+  private openPause(message: string): void {
+    this.pause.open(message, this.resumeFromLifecycle, {
+      settings: this.saveStore.load().settings,
+      onSettingsChange: this.onPauseSettingsChange,
+      onRestart: this.onPauseRestart
+    });
   }
 
   private finishRun(outcome: RunOutcome): void {
@@ -312,6 +354,10 @@ export class Game {
 
   private restartRun(): void {
     if (!this.gameState.restart()) return;
+    this.resetRunState();
+  }
+
+  private resetRunState(): void {
     this.input.reset();
     this.arena.reset();
     this.arena.update(this.initialElapsedSeconds);
@@ -324,7 +370,9 @@ export class Game {
     this.frames = 0;
     this.fps = 0;
     this.fpsTime = performance.now();
+    this.pause.close();
     this.gameOver.close();
+    this.audio.resume();
     this.audio.startMusic();
     this.lifecycle.onGameStart();
   }

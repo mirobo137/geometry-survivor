@@ -17,6 +17,7 @@
         <span id="hud-kills">K 0</span>
         <span id="hud-level">LV 1</span>
       </div>
+      <button id="pause-toggle" type="button" aria-label="Pausar partida" title="Pausar partida" hidden>||</button>
       <section id="level-up" aria-labelledby="level-up-title" hidden>
         <p>LEVEL UP</p>
         <h1 id="level-up-title">Nivel 2</h1>
@@ -26,7 +27,22 @@
         <p>PAUSA</p>
         <h1 id="pause-title">Partida pausada</h1>
         <span id="pause-message">La partida se detuvo al salir de la ventana.</span>
-        <button id="pause-resume" type="button">Continuar</button>
+        <div id="pause-actions">
+          <button id="pause-resume" type="button">Continuar</button>
+          <button id="pause-settings-toggle" type="button" aria-expanded="false" aria-controls="pause-settings">Configuracion</button>
+          <button id="pause-restart" type="button">Reiniciar partida</button>
+        </div>
+        <div id="pause-settings" hidden>
+          <h2>Audio</h2>
+          <label for="pause-music">Musica <output id="pause-music-value" for="pause-music">100%</output></label>
+          <input id="pause-music" type="range" min="0" max="100" step="5" value="100" />
+          <label for="pause-sfx">Efectos <output id="pause-sfx-value" for="pause-sfx">100%</output></label>
+          <input id="pause-sfx" type="range" min="0" max="100" step="5" value="100" />
+          <label class="pause-checkbox" for="pause-muted">
+            <input id="pause-muted" type="checkbox" />
+            Silenciar todo
+          </label>
+        </div>
       </section>
       <section id="game-over" aria-labelledby="game-over-title" hidden>
         <p>RUN COMPLETE</p>

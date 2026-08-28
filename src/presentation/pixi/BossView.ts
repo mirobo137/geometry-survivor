@@ -30,7 +30,7 @@ export class BossView {
     this.root.visible = false;
   }
 
-  public render(state: BossRenderState, arenaRadius: number): void {
+  public render(state: Readonly<BossRenderState>, arenaRadius: number): void {
     if (!state.active) {
       if (this.root.visible) {
         this.root.visible = false;
@@ -54,7 +54,7 @@ export class BossView {
     }
   }
 
-  private renderHealth(state: BossRenderState): void {
+  private renderHealth(state: Readonly<BossRenderState>): void {
     const left = state.x - HEALTH_BAR_WIDTH * 0.5;
     const top = state.y - state.radius - 17;
     const ratio = state.maxHealth > 0 ? Math.max(0, Math.min(1, state.health / state.maxHealth)) : 0;
@@ -67,7 +67,7 @@ export class BossView {
       .stroke({ color: BOSS_VISUAL_COLORS.outline, width: 1, alpha: 0.8 });
   }
 
-  private renderSweep(state: BossRenderState, arenaRadius: number): void {
+  private renderSweep(state: Readonly<BossRenderState>, arenaRadius: number): void {
     const directionX = Math.cos(state.sweepAngle);
     const directionY = Math.sin(state.sweepAngle);
     const startX = ARENA_CENTER.x - directionX * (arenaRadius + 22);
@@ -92,7 +92,7 @@ export class BossView {
       });
   }
 
-  private renderRing(state: BossRenderState): void {
+  private renderRing(state: Readonly<BossRenderState>): void {
     const active = state.phase === 'ring-active';
     const ringColor = active ? BOSS_VISUAL_COLORS.danger : BOSS_VISUAL_COLORS.warning;
     this.attack

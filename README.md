@@ -26,6 +26,7 @@ Para probar el encuentro del boss sin esperar 4:20, usa `?boss=1`. Este atajo de
 ## Validación y builds
 
 ```bash
+npx playwright install chromium
 npm run validate
 npm run test:browser
 npm run build:local
@@ -36,7 +37,9 @@ npm run preview
 
 Los artefactos quedan en `dist/local`, `dist/poki` y `dist/crazygames`. En esta primera fase Poki y CrazyGames usan todavía `LocalPlatform`; sus SDK se integrarán en adaptadores aislados cuando el MVP sea estable.
 
-`npm run test:browser` reconstruye `dist/local` y ejecuta el smoke de Playwright en Chromium: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, almacenamiento local, context loss y errores de consola/red. El juego desbloquea la música procedural y los cues de audio después de la primera interacción; `?spike=audio` conserva la prueba técnica aislada.
+`npm run test:browser` reconstruye `dist/local` y ejecuta el smoke de Playwright en Chromium (desktop y un proyecto emulado Pixel 5): carga, teclado/pointer/touch, pausa/reanudación, matriz de resize, level-up, almacenamiento local, context loss y errores de consola/red. El juego desbloquea la música procedural y los cues de audio después de la primera interacción; `?spike=audio` conserva la prueba técnica aislada.
+
+La instalación de Chromium es necesaria una sola vez por máquina (`npx playwright install chromium`). El workflow de GitHub Actions la instala automáticamente.
 
 ## Subir al repositorio remoto
 

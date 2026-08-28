@@ -10,7 +10,7 @@ export class HazardView {
     this.root.addChild(this.laser);
   }
 
-  public renderLaser(state: LaserHazardState, arenaRadius: number): void {
+  public renderLaser(state: Readonly<LaserHazardState>, arenaRadius: number): void {
     if (state.phase === 'idle') {
       if (this.laser.visible) {
         this.laser.clear();

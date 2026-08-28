@@ -5,6 +5,7 @@ import type { EnemyState } from './EntityPools';
 import { ProjectilePool } from './EntityPools';
 import type { ChainSegmentState, OrbitBladeState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
+import { StressCombatScenario } from './StressCombatScenario';
 
 const FULL_CIRCLE = Math.PI * 2;
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
@@ -35,7 +36,6 @@ export class CombatWeaponSystem {
   public readonly chainSegments = Array.from({ length: CHAIN_DEFINITION.maxTargets }, createChainSegmentState);
   private attackAccumulator = 0;
   private chainAccumulator = 0;
-  private stressProjectileIndex = 0;
   private projectileDamage = PROJECTILE_DEFINITION.damage;
   private projectileSpeed = PROJECTILE_DEFINITION.speed;
   private projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
@@ -47,11 +47,19 @@ export class CombatWeaponSystem {
   private chainDamage = CHAIN_DEFINITION.damage;
   private readonly chainHitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
   private shotsFired = 0;
+  private readonly stressScenario: StressCombatScenario;
 
   public constructor(
     private readonly enemies: EnemySystem,
     private readonly onEnemyDefeated: (enemy: EnemyState) => void
-  ) {}
+  ) {
+    this.stressScenario = new StressCombatScenario(
+      this.projectiles,
+      () => this.projectileSpeed,
+      () => this.projectileDamage,
+      () => { this.shotsFired += 1; }
+    );
+  }
 
   public get totalShotsFired(): number {
     return this.shotsFired;
@@ -95,7 +103,7 @@ export class CombatWeaponSystem {
     }
     this.attackAccumulator = 0;
     this.chainAccumulator = 0;
-    this.stressProjectileIndex = 0;
+    this.stressScenario.reset();
     this.projectileDamage = PROJECTILE_DEFINITION.damage;
     this.projectileSpeed = PROJECTILE_DEFINITION.speed;
     this.projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
@@ -174,34 +182,11 @@ export class CombatWeaponSystem {
   }
 
   public initializeStress(player: PlayerState): void {
-    for (let index = 0; index < this.projectiles.capacity; index += 1) {
-      this.spawnStressProjectile(player, index);
-    }
-    this.stressProjectileIndex = this.projectiles.capacity;
+    this.stressScenario.initialize(player);
   }
 
   public maintainStressProjectiles(player: PlayerState): void {
-    while (this.projectiles.activeCount < this.projectiles.capacity) {
-      const activeCount = this.projectiles.activeCount;
-      this.spawnStressProjectile(player, this.stressProjectileIndex);
-      this.stressProjectileIndex += 1;
-      if (this.projectiles.activeCount === activeCount) break;
-    }
-  }
-
-  private spawnStressProjectile(player: PlayerState, index: number): void {
-    const projectile = this.projectiles.acquire();
-    if (!projectile) return;
-    const angle = index * 2.399963229728653;
-    projectile.active = true;
-    projectile.x = player.x;
-    projectile.y = player.y;
-    projectile.vx = Math.cos(angle) * this.projectileSpeed;
-    projectile.vy = Math.sin(angle) * this.projectileSpeed;
-    projectile.radius = PROJECTILE_DEFINITION.radius;
-    projectile.damage = this.projectileDamage;
-    projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
-    this.shotsFired += 1;
+    this.stressScenario.maintain(player);
   }
 
   private fireProjectile(player: PlayerState): void {

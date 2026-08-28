@@ -3,19 +3,16 @@ import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
+import { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
 const SPAWN_ANGLE_STEP = 2.399963229728653;
 const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
 
-export const selectEnemyKind = (elapsedSeconds: number, index: number): EnemyKind => {
-  if (elapsedSeconds >= 120 && index % 7 === 0) return 'elite';
-  if (elapsedSeconds < 20) return 'chaser';
-  if (elapsedSeconds < 100) return index % 4 === 0 ? 'fast' : 'chaser';
-  if (index % 5 === 0) return 'tank';
-  return index % 2 === 0 ? 'fast' : 'chaser';
-};
+// Kept as a compatibility export for simulation consumers and existing tools.
+// The authored timeline itself lives in content/run/EnemySpawnDefinitions.ts.
+export { selectEnemyKind };
 
 /** Owns enemy lifecycle, movement and broad-phase queries for a combat run. */
 export class EnemySystem {

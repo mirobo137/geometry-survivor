@@ -95,7 +95,9 @@ export class WebAudioService implements AudioService {
     this.lifecyclePaused = true;
     this.clearMusicTimer();
     this.silence(this.musicBus);
-    if (this.context?.state === 'running') void this.context.suspend();
+    if (this.context?.state === 'running') {
+      void this.context.suspend().catch(() => undefined);
+    }
   }
 
   public resume(): void {
@@ -142,24 +144,33 @@ export class WebAudioService implements AudioService {
     this.sfxBus = null;
     this.lifecyclePaused = false;
     this.graphConnected = false;
-    if (context) void context.close();
+    if (context) void context.close().catch(() => undefined);
   }
 
   private ensureGraph(): AudioContext | null {
-    const AudioContextConstructor = getAudioContextConstructor();
-    if (!AudioContextConstructor) return null;
-    this.context ??= new AudioContextConstructor();
-    this.master ??= this.context.createGain();
-    this.musicBus ??= this.context.createGain();
-    this.sfxBus ??= this.context.createGain();
-    if (!this.graphConnected) {
-      this.musicBus.connect(this.master);
-      this.sfxBus.connect(this.master);
-      this.master.connect(this.context.destination);
-      this.graphConnected = true;
+    try {
+      const AudioContextConstructor = getAudioContextConstructor();
+      if (!AudioContextConstructor) return null;
+      this.context ??= new AudioContextConstructor();
+      this.master ??= this.context.createGain();
+      this.musicBus ??= this.context.createGain();
+      this.sfxBus ??= this.context.createGain();
+      if (!this.graphConnected) {
+        this.musicBus.connect(this.master);
+        this.sfxBus.connect(this.master);
+        this.master.connect(this.context.destination);
+        this.graphConnected = true;
+      }
+      this.applyGains();
+      return this.context;
+    } catch {
+      // Web Audio is an optional enhancement. Some browsers expose the
+      // constructor but reject it (permissions, private mode, resource
+      // limits); audio must never turn the first input into an unhandled
+      // rejection or prevent gameplay from starting.
+      this.shutdown();
+      return null;
     }
-    this.applyGains();
-    return this.context;
   }
 
   private applyGains(): void {

@@ -960,6 +960,20 @@ Esta evidencia permite avanzar en la validación de Fase 5, pero no sustituye el
 
 ---
 
+## 15.2 Auditoría de modularidad y reproducibilidad — 28-08-2026
+
+Antes de continuar con el siguiente hito se cerraron los hallazgos estructurales de la sesión anterior:
+
+- `WebAudioService` captura fallos del constructor, conexiones y lifecycle; si el navegador bloquea Web Audio, el juego continúa en silencio sin un rechazo no controlado.
+- `EnemySpawnDefinitions` posee la mezcla temporal (`chaser`, `fast`, `tank`, `elite`); `EnemySystem` conserva ciclo de vida, movimiento, contacto y spatial grid sin umbrales de dificultad embebidos.
+- `CombatRenderState` expone interfaces reducidas y readonly para enemigos, proyectiles, órbitas y cadenas; las vistas no reciben campos mutables de gameplay a través de ese contrato.
+- `StressCombatScenario` separa el benchmark de pools de la frontera normal de armas sin duplicar el pool ni alterar el balance.
+- Playwright ejecuta cinco escenarios desktop y un escenario touch en un proyecto Pixel 5 emulado. La instalación queda documentada (`npx playwright install chromium`) y CI la realiza de forma explícita.
+
+La extracción se detuvo en estas fronteras porque `Game` sigue siendo un orquestador cohesivo y `CombatWeaponSystem` sigue teniendo un único consumidor. Se volverán a evaluar sólo al aparecer una cuarta arma, un segundo consumidor o una regla transversal real; no se crean managers especulativos.
+
+La validación de esta auditoría registró 75 tests unitarios/integración en 21 archivos, 6 smoke tests browser, typecheck y builds `local`, `poki` y `crazygames` correctos. El smoke emulado no sustituye las comprobaciones manuales de audio, storage, background/foreground y contexto WebGL en un teléfono físico.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |
@@ -1127,7 +1141,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/content/enemies/EnemyDefinitions.ts` define Chaser, Fast y Tank sin modificar el motor al añadir variantes;
 - `src/simulation/combat/CombatSimulation.ts` compone `EnemySystem` y `CombatWeaponSystem`, y coordina Laser, daño, muerte, XP directa y eventos;
 - `src/simulation/enemies/EnemySystem.ts` separa ciclo de vida, spawn, movimiento, contacto y consultas espaciales de enemigos del coordinador de combate;
-- `src/simulation/combat/CombatWeaponSystem.ts` concentra Projectile, Orbit, Chain Lightning y stress detrás de una frontera de armas;
+- `src/simulation/combat/CombatWeaponSystem.ts` concentra Projectile, Orbit y Chain Lightning detrás de una frontera de armas; `StressCombatScenario.ts` mantiene el benchmark de pools como escenario separado y reutiliza el pool real;
 - `src/presentation/pixi/` divide arena, entidades, armas, hazards y jugador en vistas Pixi pequeñas, con `PixiGameView` como fachada;
 - `src/app/Game.ts` extrae la coordinación de la run, loop fijo, resize, lifecycle, pausa, level-up, HUD y plataforma fuera de `main.ts`;
 - `src/simulation/combat/EntityPools.ts` y `src/simulation/spatial/SpatialGrid.ts` cubren el churn y la broad-phase del slice; no se reserva pool para pickups de XP;
@@ -1145,13 +1159,16 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/content/upgrades/UpgradeDefinitions.ts` contiene 10 mejoras data-driven, con cinco efectos adicionales para ritmo, alcance, daño y mitigación;
 - `src/ui/PauseOverlay.ts` detiene la simulación al perder visibilidad/foco y permite reanudar con un target táctil amplio;
 - `src/content/hazards/LaserDefinition.ts` y `src/simulation/hazards/LaserHazard.ts` incorporan Laser con telegraph, ataque, recuperación y escape perpendicular comprobable;
-- `src/content/enemies/EnemyDefinitions.ts` añade la variante `elite`, reutilizando pool, grid, colisiones y XP con selección determinista desde 2:00;
+- `src/content/enemies/EnemyDefinitions.ts` añade la variante `elite`, reutilizando pool, grid, colisiones y XP; `EnemySpawnDefinitions.ts` la selecciona de forma determinista desde 2:00;
 - `ArenaModel` ejecuta dos expansiones (1:00 y 3:00) con mesetas intermedias y pulsos de resonancia expuestos al renderer;
-- `src/content/run/DifficultyDefinitions.ts` centraliza seis fases de presión de spawn, con pruebas de monotonicidad y hitos deterministas;
+- `src/content/run/DifficultyDefinitions.ts` centraliza seis fases de presión de spawn, con pruebas de monotonicidad y hitos deterministas; `EnemySpawnDefinitions.ts` centraliza la mezcla temporal de enemigos con perfiles tipados y selección determinista;
+- `CombatRenderState` expone contratos de render reducidos y de solo lectura para enemigos, proyectiles, órbitas y cadenas, sin entregar campos mutables de gameplay a las vistas;
+- `WebAudioService` trata el constructor y las operaciones de lifecycle de Web Audio como una mejora opcional: fallos de permisos, WebView o recursos degradan a silencio sin rechazos no controlados;
+- `playwright.config.ts` mantiene un smoke desktop y añade un proyecto Pixel 5 emulado con una prueba de drag touch; la instalación reproducible es `npx playwright install chromium` y CI la ejecuta antes del smoke;
 - `src/app/GameState.ts`, `src/app/Game.ts`, `src/simulation/progression/UpgradeApplier.ts`, `src/simulation/combat/CombatRenderState.ts`, `src/simulation/enemies/EnemySystem.ts`, `src/simulation/combat/CombatWeaponSystem.ts`, `src/simulation/bosses/BossSystem.ts` y `src/presentation/pixi/` avanzan la consolidación arquitectónica: fases tipadas, transiciones terminales/reinicio/victoria, runtime y upgrades fuera del bootstrap, contrato de render desacoplado y sistemas/vistas separados;
 - `src/content/bosses/BossDefinition.ts` centraliza el umbral, movimiento orbital, telegraphs, daño, radio y hueco seguro; `BossSystem` mueve al boss de forma determinista, alterna barrido/anillo y reserva un slot del pool normal para garantizar su aparición;
 - `src/presentation/pixi/BossView.ts` representa boss, barra de vida y telegraphs sin decidir colisiones ni daño; su paleta RGB está separada y validada para impedir valores incompatibles con Pixi;
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
-- `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (71 tests unitarios/integración y 5 smoke tests de navegador); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
+- `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (75 tests unitarios/integración y 6 smoke tests de navegador: 5 desktop + 1 Pixel 5 emulado); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
 
 La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, FX adicionales, UI de ajustes y la puerta humana de la run completa.

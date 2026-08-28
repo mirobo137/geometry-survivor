@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/browser',
@@ -10,10 +10,21 @@ export default defineConfig({
     : 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    viewport: { width: 1280, height: 720 },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure'
   },
+  projects: [
+    {
+      name: 'desktop',
+      testMatch: '**/game.smoke.spec.ts',
+      use: { viewport: { width: 1280, height: 720 } }
+    },
+    {
+      name: 'mobile',
+      testMatch: '**/mobile.smoke.spec.ts',
+      use: { ...devices['Pixel 5'] }
+    }
+  ],
   webServer: {
     command: 'npx vite preview --mode development --host 127.0.0.1 --port 4173 --strictPort',
     url: 'http://127.0.0.1:4173',

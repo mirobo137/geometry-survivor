@@ -101,4 +101,26 @@ describe('WebAudioService', () => {
       service.shutdown();
     }).not.toThrow();
   });
+
+  it('degrada a silencio si el constructor de Web Audio falla', async () => {
+    const throwingAudioContext = vi.fn(() => {
+      throw new Error('AudioContext bloqueado por el navegador');
+    });
+    vi.stubGlobal('window', {
+      AudioContext: throwingAudioContext,
+      setTimeout: globalThis.setTimeout,
+      clearTimeout: globalThis.clearTimeout
+    });
+    const service = new WebAudioService();
+
+    await expect(service.unlock()).resolves.toBeUndefined();
+    expect(throwingAudioContext).toHaveBeenCalledTimes(1);
+    expect(() => {
+      service.pause();
+      service.resume();
+      service.startMusic();
+      service.playCue('damage');
+      service.shutdown();
+    }).not.toThrow();
+  });
 });

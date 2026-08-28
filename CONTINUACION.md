@@ -1,8 +1,8 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 27-08-2026.
+> Snapshot operativo: 28-08-2026.
 >
-> Estado funcional auditado desde el commit `6966a55` (`fix: stabilize boss rendering and movement`) y la consolidación arquitectónica en curso.
+> Estado funcional auditado desde el commit base `4fbf751` (`audio procedural`) y las correcciones de modularidad de esta sesión.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
 
@@ -58,7 +58,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 71 tests unitarios/integración en 20 archivos y 5 smoke tests de Playwright pasando en Chromium.
+- Última auditoría local: typecheck correcto, 75 tests unitarios/integración en 21 archivos y 6 smoke tests de Playwright pasando en Chromium (5 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -127,15 +127,15 @@ Mediciones manuales aportadas desde Android Chrome:
 
 No son fallos actuales, pero ya son puntos de concentración reales:
 
-1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 271 líneas y agrupa Projectile, Orbit, Chain y stress; `CombatSimulation.ts` se redujo a unas 179 líneas y coordina Laser, run, derrotas, XP y eventos.
-2. `src/main.ts` tiene alrededor de 94 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 290 líneas y coordina lifecycle, loop, pausa, level-up, HUD, game-over/victoria y persistencia sin implementar sistemas completos.
-3. `src/presentation/PixiGameView.ts` tiene alrededor de 88 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas de 17–77 líneas.
-4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; ahora incluye un snapshot de boss con fase, salud, barrido y anillo. Los sistemas de simulación ya exponen reset explícito para reinicio in-place.
+1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 310 líneas y mantiene Projectile, Orbit y Chain detrás de una frontera única; el benchmark se extrajo a `StressCombatScenario.ts` porque es un escenario de validación distinto. `CombatSimulation.ts` coordina Laser, run, derrotas, XP y eventos.
+2. `src/main.ts` tiene alrededor de 99 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 331 líneas y coordina lifecycle, loop, pausa, level-up, HUD, game-over/victoria y persistencia sin implementar sistemas completos. Se mantiene como orquestador cohesivo; se extraerá una responsabilidad sólo cuando exista un segundo consumidor real.
+3. `src/presentation/PixiGameView.ts` tiene alrededor de 95 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas.
+4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; incluye un snapshot de boss con fase, salud, barrido y anillo y contratos reducidos de solo lectura para arrays de enemigos, proyectiles, órbitas y cadenas. Los sistemas de simulación ya exponen reset explícito para reinicio in-place.
 5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
 6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService`, `SaveStore` y `AudioService`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
 7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
 8. Existe la skill SVG, pero todavía no hay assets SVG master ni validación SVG dentro del build.
-9. `tests/browser/game.smoke.spec.ts` ejecuta Playwright sobre `dist/local`: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, persistencia local, context loss y consola/red. El fallback de storage bloqueado tiene cobertura unitaria; falta validación manual en móvil.
+9. `tests/browser/game.smoke.spec.ts` ejecuta Playwright sobre `dist/local`: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, persistencia local, context loss y consola/red. `tests/browser/mobile.smoke.spec.ts` cubre un drag touch emulado en portrait Pixel 5. El fallback de storage bloqueado, el constructor Web Audio fallido y el lifecycle de audio tienen cobertura unitaria; la validación manual en móvil real sigue pendiente.
 
 Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI secundarios, ajustes persistentes y el balance final de la run. `GameState`, `BossSystem` y los modelos de simulación ya permiten terminar, mostrar victoria y reiniciar una run in-place sin recargar ni perder la mejor marca. El boss usa contenido tipado, patrones telegraphed y un snapshot de render; las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle/anuncios.
 
@@ -148,8 +148,7 @@ Orden recomendado:
 1. Usar `src/app/GameState.ts` en todos los estados de gameplay; el contrato de fin/victoria/reinicio ya está integrado en `Game` y cubierto por tests.
 2. `src/app/Game.ts` ya coordina la run; mantenerlo como orquestador de lifecycle/loop, no como contenedor de sistemas.
 3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación; límites y prerrequisitos de cartas ya están data-driven.
-4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; si una cuarta arma o una regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños.
-   `EnemySystem` ya cubre enemigos, spawn, movimiento, contacto y spatial grid.
+4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; el stress ya vive en `StressCombatScenario` y, si una cuarta arma o regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños. `EnemySystem` cubre ciclo de vida, movimiento, contacto y spatial grid; `EnemySpawnDefinitions` posee la mezcla temporal.
 5. Mantener `PixiGameView` como fachada pequeña; `ArenaView`, `CombatEntitiesView`, `WeaponView`, `HazardView` y `PlayerView` ya separan la representación por responsabilidad.
 6. Completar snapshots mínimos de presentación; `CombatRenderState` ya incluye el boss. `UpgradePreview` y `SaveStore` son contratos adicionales ya aislados.
 7. Mantener tests de transiciones de estado, pausa, level-up, game over y reinicio; después ejecutar typecheck, suite, tres builds y smoke móvil.
@@ -167,7 +166,7 @@ Puerta del hito:
 - comportamiento observable equivalente;
 - ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
 - los coordinadores dejan de crecer como managers universales;
-- 71 tests unitarios/integración y 5 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio, acceso rápido de boss y context loss;
+- 75 tests unitarios/integración y 6 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), acceso rápido de boss, context loss y touch emulado;
 - `local`, `poki` y `crazygames` construyen correctamente;
 - pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
 
@@ -270,6 +269,7 @@ En `?boss=1`:
 
 ```bash
 npm ci
+npx playwright install chromium
 npm run typecheck
 npm test
 npm run validate
@@ -286,7 +286,9 @@ npm run build:crazygames
 - `PLAN_DESARROLLO.md`: alcance, decisiones, fases y puertas.
 - `proyecto.md`: visión y principios de largo plazo.
 - `src/simulation/enemies/EnemySystem.ts`: ciclo de vida, movimiento, contacto, spawn y consultas espaciales de enemigos.
-- `src/simulation/combat/CombatWeaponSystem.ts`: Projectile, Orbit, Chain Lightning y stress; frontera preparada para futuras armas.
+- `src/content/run/EnemySpawnDefinitions.ts`: mezcla temporal de enemigos en perfiles tipados, separada del engine.
+- `src/simulation/combat/CombatWeaponSystem.ts`: Projectile, Orbit y Chain Lightning; frontera preparada para futuras armas.
+- `src/simulation/combat/StressCombatScenario.ts`: benchmark reproducible que reutiliza el pool de proyectiles de producción.
 - `src/simulation/combat/CombatSimulation.ts`: coordinador de run/laser/eventos/XP; mantiene la composición sin lógica de armas.
 - `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
 - `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
@@ -310,15 +312,15 @@ npm run build:crazygames
 
 ## 12. Registro de sesión — auditoría de modularidad
 
-Fecha: 27-08-2026.
+Fecha: 28-08-2026.
 
 Estado al cerrar esta sesión:
 
-- `main` sigue sincronizado con `origin/main`; el worktree contiene las correcciones locales de victoria/subpaths, sus regresiones y el browser smoke de CI.
+- `main` sigue sincronizado con `origin/main` en `4fbf751`; el worktree contiene las correcciones locales de esta auditoría y sus regresiones. Aún no se ha creado un commit nuevo.
 - La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
 - No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
 - No se encontraron ciclos de dependencias en `src`.
-- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 71 tests en 20 archivos.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 75 tests en 21 archivos y 6 smoke tests browser.
 - Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
 - El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
 
@@ -326,13 +328,13 @@ Estado y pendientes prioritarios:
 
 1. En `src/app/Game.ts`, `finishRun()` ya crea el resumen con `createRunSummary(outcome, ...)`; `src/app/Game.test.ts` confirma que una victoria llega al overlay como `victory`.
 2. El arco seguro del boss ya inicia cada segmento con `beginPath()`: esto evita la diagonal que PixiJS producía al heredar `(0,0)` después de dibujar el círculo. `src/presentation/pixi/BossView.test.ts` cubre arcos normales y wrap-around. Repetir en móvil el encuentro publicado y comprobar que no aparece la diagonal, además de movimiento orbital, telegraphs, derrota y texto “Victoria”.
-3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red y toda la matriz de resize se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias; pendiente repetir lifecycle, audio y storage bloqueado en móvil real.
-4. Antes de una cuarta arma, evaluar separar `CombatWeaponSystem`; antes de ampliar variantes, mover la selección temporal de enemigos de `EnemySystem` a contenido/director.
+3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red, matriz de resize y drag touch emulado se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias, incluido constructor rechazado; lifecycle, audio integrado y storage bloqueado en móvil real siguen siendo una comprobación manual.
+4. Los hallazgos de concentración se abordaron sin fragmentación especulativa: stress está en `StressCombatScenario`, la selección temporal está en `EnemySpawnDefinitions` y el contrato de render no expone campos mutables de gameplay. `CombatWeaponSystem` y `Game` conservan fronteras cohesivas con umbral explícito para futuras extracciones.
 
 Limitaciones de esta sesión:
 
-- El smoke automatizado se ejecutó localmente en Chromium: 5 escenarios correctos y sin errores de consola/red. La verificación visual manual en un navegador conectado y en móvil sigue pendiente.
-- Se modificaron `src/app/Game.ts`, `src/audio/AudioService.ts` y `src/presentation/pixi/BossView.ts` para integrar audio con lifecycle, corregir el outcome de victoria, separar los subpaths del arco y pausar ante pérdida de contexto WebGL; se añadieron pruebas de regresión. También se añadió Playwright a CI para impedir deploys sin smoke correcto.
+- El smoke automatizado se ejecutó localmente en Chromium: 6 escenarios correctos (5 desktop y 1 Pixel 5 emulado) sin errores de consola/red. Esto no sustituye la verificación visual ni el lifecycle de audio/storage en un móvil físico.
+- Se modificaron `src/audio/AudioService.ts`, `src/simulation/enemies/EnemySystem.ts`, `src/simulation/combat/CombatRenderState.ts` y `src/simulation/combat/CombatWeaponSystem.ts`; se añadieron `EnemySpawnDefinitions`, `StressCombatScenario` y el smoke touch móvil. El audio degrada a silencio si el navegador rechaza la construcción, y la documentación/README incluye la instalación reproducible de Chromium.
 
 Para retomar en otra PC:
 

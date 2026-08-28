@@ -137,6 +137,8 @@ test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
   const choices = page.locator('#level-up-options button');
   await expect(choices).toHaveCount(3);
   await choices.first().click();
+  await expect(choices.first()).toHaveClass(/is-selected/);
+  await expect(choices.first()).toHaveAttribute('aria-pressed', 'true');
   await expect(levelUp).toBeHidden();
 
   expect(failures).toEqual([]);

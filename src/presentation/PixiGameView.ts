@@ -8,7 +8,9 @@ import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { PlayerView } from './pixi/characters/player/PlayerView';
+import { LevelUpFxView, type LevelUpCardAnchor } from './pixi/ui/level-up/LevelUpFxView';
 import { WeaponView } from './pixi/WeaponView';
+import type { LevelUpCardInteractionKind } from '../ui/level-up/LevelUpCardInteraction';
 import type { ViewportState } from './viewport/ViewportTransform';
 
 /** Small presentation facade; domain rules stay in simulation systems. */
@@ -21,6 +23,7 @@ export class PixiGameView {
   private readonly weaponView: WeaponView;
   private readonly hazardView = new HazardView();
   private readonly playerView = new PlayerView();
+  private readonly levelUpFxView: LevelUpFxView;
   private readonly title: Text;
   private readonly hint: Text;
 
@@ -28,6 +31,7 @@ export class PixiGameView {
     this.root.addChild(this.world);
     this.entitiesView = new CombatEntitiesView(renderer);
     this.weaponView = new WeaponView(renderer);
+    this.levelUpFxView = new LevelUpFxView(renderer);
     this.world.addChild(
       this.arenaView.root,
       this.entitiesView.root,
@@ -36,6 +40,7 @@ export class PixiGameView {
       this.bossView.root,
       this.playerView.root
     );
+    this.root.addChild(this.levelUpFxView.root);
 
     this.title = new Text({
       text: 'GEOMETRY SURVIVOR',
@@ -91,5 +96,21 @@ export class PixiGameView {
 
   public renderPlayer(state: PlayerState): void {
     this.playerView.render(state);
+  }
+
+  public openLevelUpFx(anchors: readonly LevelUpCardAnchor[]): void {
+    this.levelUpFxView.open(anchors);
+  }
+
+  public handleLevelUpInteraction(kind: LevelUpCardInteractionKind, index: number): void {
+    this.levelUpFxView.handleInteraction(kind, index);
+  }
+
+  public renderLevelUpFx(deltaSeconds: number): void {
+    this.levelUpFxView.update(deltaSeconds);
+  }
+
+  public closeLevelUpFx(): void {
+    this.levelUpFxView.close();
   }
 }

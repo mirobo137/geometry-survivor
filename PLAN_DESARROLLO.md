@@ -1191,6 +1191,26 @@ solo afecta presentacion. Al anadir una carta se amplia el mapa visual y el
 asset iconografico, sin duplicar reglas de gameplay. La validacion estructural
 rechaza raster, filtros, scripts, recursos externos e IDs no prefijados.
 
+## Interaccion premium de cartas y FX Pixi - 28-08-2026
+
+La primera capa de "juice" del level-up queda separada del gameplay. Los
+botones HTML/SVG conservan texto, foco, accesibilidad y hit-area; emiten el
+contrato semantico `focus`, `blur`, `press` y `select` definido en
+`src/ui/level-up/LevelUpCardInteraction.ts`. `Game` convierte los rectangulos
+CSS a anclas del espacio logico solo al abrir o redimensionar.
+
+`LevelUpFxView` (`src/presentation/pixi/ui/level-up/`) dibuja aura, aura interna,
+anillo, rayos y una rafaga de 24 sprites reutilizados. El efecto usa un reloj de
+UI independiente, de modo que la confirmacion sigue animandose durante la pausa
+de gameplay; `eventMode = none` impide que Pixi intercepte el toque. La consulta
+de `prefers-reduced-motion` elimina movimiento y particulas cuando el usuario lo
+solicita.
+
+No se incorpora `pixi-filters` todavia. Primero se valida el coste con `Graphics`
+y el pool pequeno; un glow filtrado solo se aceptara mediante un spike medido y
+una politica Low/High. Si el numero de particulas creciera de forma real, se
+reevaluara `ParticleContainer`, manteniendo su uso limitado a FX sin filtros.
+
 ## Estado de implementación — 26-08-2026
 
 La primera base ejecutable de la Fase 0 ya está creada en el directorio de trabajo:

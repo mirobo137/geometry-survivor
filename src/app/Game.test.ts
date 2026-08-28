@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../presentation/PixiGameView', () => ({
   PixiGameView: class {
     public readonly root = {};
+    public closeLevelUpFx = vi.fn();
   }
 }));
 

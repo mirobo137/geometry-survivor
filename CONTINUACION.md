@@ -440,6 +440,27 @@ Fecha: 28-08-2026.
   columna en portrait, safe-area y reduced-motion. El resize solo cambia
   presentacion y no modifica la simulacion.
 
-Pendiente de esta continuacion: ejecutar typecheck, suite unitaria, smoke
-browser y builds Poki/CrazyGames; revisar la captura del level-up en Pixel 5
-emulado y publicar el commit en `main`.
+Verificacion de esta continuacion: typecheck, suite unitaria, smoke browser y
+build local completados; quedan los builds Poki/CrazyGames y la publicacion del
+commit en `main`.
+
+## 20. Continuacion - feedback premium de cartas
+
+Fecha: 28-08-2026.
+
+- `LevelUpCardInteraction.ts` fija los eventos semanticos `focus`, `blur`,
+  `press` y `select`, sin exponer Pixi a la UI ni mezclar reglas de progresion.
+- `LevelUpOverlay` conserva botones HTML/SVG accesibles, aplica una confirmacion
+  de 220 ms, marca la opcion elegida con `aria-pressed` y atenúa las restantes.
+- `LevelUpFxView` agrega aura, aura interior, anillo, rayos y una rafaga de 24
+  sprites reutilizados. El efecto se ancla en espacio logico, tiene reloj propio
+  durante la pausa, respeta `prefers-reduced-motion` y no intercepta input.
+- El resize solo vuelve a sincronizar anclas. No se anadio `pixi-filters`: se
+  validara un glow filtrado unicamente como spike con presupuestos Low/High.
+- La captura automatizada de Pixel 5 confirma foco y seleccion; la prueba tactil
+  fisica del usuario sigue siendo la ultima comprobacion de sensacion y legibilidad.
+
+Archivos principales: `src/ui/level-up/LevelUpOverlay.ts`,
+`src/ui/level-up/LevelUpCardInteraction.ts`,
+`src/presentation/pixi/ui/level-up/LevelUpFxView.ts`,
+`src/app/Game.ts` y `src/presentation/viewport/ViewportTransform.ts`.

@@ -58,9 +58,14 @@ export class ViewportTransform {
 
   public toLogical(clientX: number, clientY: number, rect?: DOMRect): { x: number; y: number } {
     const bounds = rect ?? { left: 0, top: 0 };
+    return this.cssToLogical(clientX - bounds.left, clientY - bounds.top);
+  }
+
+  /** Converts coordinates relative to the game container into logical Pixi space. */
+  public cssToLogical(cssX: number, cssY: number): { x: number; y: number } {
     return {
-      x: (clientX - bounds.left - this.state.offsetX) / this.state.scale,
-      y: (clientY - bounds.top - this.state.offsetY) / this.state.scale
+      x: (cssX - this.state.offsetX) / this.state.scale,
+      y: (cssY - this.state.offsetY) / this.state.scale
     };
   }
 

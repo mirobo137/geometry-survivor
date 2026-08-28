@@ -603,6 +603,17 @@ body {
   transform: translateY(1px) scale(0.99);
 }
 
+#level-up-options button.upgrade-card.is-selected {
+  z-index: 2;
+  transform: scale(1.06);
+  filter: brightness(1.18);
+}
+
+#level-up-options button.upgrade-card.is-dimmed {
+  opacity: 0.42;
+  transform: scale(0.985);
+}
+
 @media (hover: hover) {
   #level-up-options button.upgrade-card:hover {
     transform: translateY(-0.25rem);

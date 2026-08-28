@@ -3,9 +3,13 @@ import type { UpgradePreview, UpgradePreviewStat } from '../../simulation/progre
 import cardFrameSvg from '../../assets/svg/ui/level-up/card-frame.svg?raw';
 import upgradeIconsSvg from '../../assets/svg/ui/level-up/icons.svg?raw';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
+import type { LevelUpCardInteraction, LevelUpCardLayout } from './LevelUpCardInteraction';
 
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 export type UpgradePreviewProvider = (upgrade: UpgradeDefinition) => UpgradePreview | null;
+export type LevelUpInteractionHandler = (interaction: LevelUpCardInteraction) => void;
+
+const CARD_SELECTION_DELAY_MS = 220;
 
 const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   movementSpeed: 'Velocidad',
@@ -26,6 +30,7 @@ export class LevelUpOverlay {
   private readonly root: HTMLElement;
   private readonly title: HTMLElement;
   private readonly options: HTMLElement;
+  private selectionTimer: number | null = null;
 
   public constructor(root: HTMLElement) {
     const title = root.querySelector<HTMLElement>('#level-up-title');
@@ -46,8 +51,10 @@ export class LevelUpOverlay {
     level: number,
     choices: readonly UpgradeDefinition[],
     onSelection: UpgradeSelectionHandler,
-    getPreview: UpgradePreviewProvider = () => null
+    getPreview: UpgradePreviewProvider = () => null,
+    onInteraction?: LevelUpInteractionHandler
   ): void {
+    this.cancelPendingSelection();
     this.title.textContent = `Nivel ${level}`;
     this.options.replaceChildren();
     choices.forEach((choice, index) => {
@@ -101,9 +108,35 @@ export class LevelUpOverlay {
         values.className = 'upgrade-card-preview';
         content.append(values);
       }
+      button.addEventListener('pointerenter', () => {
+        onInteraction?.({ kind: 'focus', index, upgradeId: choice.id });
+      });
+      button.addEventListener('pointerleave', () => {
+        onInteraction?.({ kind: 'blur', index, upgradeId: choice.id });
+      });
+      button.addEventListener('focus', () => {
+        onInteraction?.({ kind: 'focus', index, upgradeId: choice.id });
+      });
+      button.addEventListener('blur', () => {
+        onInteraction?.({ kind: 'blur', index, upgradeId: choice.id });
+      });
+      button.addEventListener('pointerdown', () => {
+        onInteraction?.({ kind: 'press', index, upgradeId: choice.id });
+      });
       button.addEventListener('click', () => {
-        this.close();
-        onSelection(choice.id);
+        if (this.selectionTimer !== null) return;
+        button.classList.add('is-selected');
+        button.setAttribute('aria-pressed', 'true');
+        for (const other of this.options.querySelectorAll<HTMLButtonElement>('button')) {
+          other.disabled = true;
+          if (other !== button) other.classList.add('is-dimmed');
+        }
+        onInteraction?.({ kind: 'select', index, upgradeId: choice.id });
+        this.selectionTimer = window.setTimeout(() => {
+          this.selectionTimer = null;
+          this.close();
+          onSelection(choice.id);
+        }, CARD_SELECTION_DELAY_MS);
       }, { once: true });
       button.append(frame, content);
       this.options.appendChild(button);
@@ -111,7 +144,40 @@ export class LevelUpOverlay {
     this.root.hidden = false;
   }
 
+  /**
+   * Returns card centers and sizes relative to the overlay root. The game
+   * coordinator converts these CSS coordinates into its logical Pixi space
+   * only when opening or resizing, never on every frame.
+   */
+  public getCardLayouts(): readonly LevelUpCardLayout[] {
+    if (this.root.hidden) return [];
+    const rootRect = this.root.getBoundingClientRect();
+    return Array.from(this.options.querySelectorAll<HTMLButtonElement>('button.upgrade-card'))
+      .map((button, index) => {
+        const rect = button.getBoundingClientRect();
+        const tone = button.dataset.tone;
+        if (tone !== 'cyan' && tone !== 'gold' && tone !== 'violet' && tone !== 'amber' && tone !== 'rose' && tone !== 'mint') {
+          throw new Error(`Tono de carta invalido: ${tone ?? 'vacío'}`);
+        }
+        return {
+          index,
+          x: rect.left - rootRect.left + rect.width * 0.5,
+          y: rect.top - rootRect.top + rect.height * 0.5,
+          width: rect.width,
+          height: rect.height,
+          tone
+        };
+      });
+  }
+
   public close(): void {
+    this.cancelPendingSelection();
     this.root.hidden = true;
+  }
+
+  private cancelPendingSelection(): void {
+    if (this.selectionTimer === null) return;
+    window.clearTimeout(this.selectionTimer);
+    this.selectionTimer = null;
   }
 }

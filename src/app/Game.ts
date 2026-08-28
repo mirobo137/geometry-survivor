@@ -5,6 +5,7 @@ import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
 import { mergeBestRun, type SaveStore } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
+import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
@@ -14,6 +15,7 @@ import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/level-up/LevelUpOverlay';
+import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
@@ -91,6 +93,10 @@ export class Game {
 
   private readonly onWindowBlur = (): void => this.pauseForLifecycle();
 
+  private readonly onLevelUpInteraction = (interaction: LevelUpCardInteraction): void => {
+    this.view.handleLevelUpInteraction(interaction.kind, interaction.index);
+  };
+
   private readonly onPauseButton = (): void => {
     // A pause tap is also a valid user gesture for mobile Web Audio unlock.
     void this.audio.unlock();
@@ -148,7 +154,7 @@ export class Game {
     }
 
     if (this.gameState.isSimulationRunning) this.presentationTime += Math.min(ticker.deltaMS / 1000, 0.1);
-    this.renderFrame();
+    this.renderFrame(Math.min(ticker.deltaMS / 1000, 0.1));
   };
 
   public constructor(options: GameOptions) {
@@ -217,6 +223,7 @@ export class Game {
     this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.removeEventListener('click', this.onPauseButton);
+    this.view.closeLevelUpFx();
     this.audio.shutdown();
     this.lifecycle.onGamePause();
   }
@@ -226,6 +233,7 @@ export class Game {
     this.app.renderer.resolution = state.dpr;
     this.app.renderer.resize(state.cssWidth, state.cssHeight);
     this.view.resize(state);
+    if (this.gameState.phase === 'level-up') this.syncLevelUpFx();
   }
 
   private updateSimulation(): void {
@@ -254,12 +262,13 @@ export class Game {
     if (this.progression.state.pendingLevelUps > 0) this.openLevelUp();
   }
 
-  private renderFrame(): void {
+  private renderFrame(deltaSeconds = 0): void {
     this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.view.renderPlayer(this.player.state);
+    this.view.renderLevelUpFx(deltaSeconds);
     this.hud.update({
       elapsedSeconds: this.combat.stats.elapsedSeconds,
       health: this.player.state.health,
@@ -311,6 +320,7 @@ export class Game {
     }
     const choices = this.upgradeApplier.getChoices(this.progression.state.level);
     this.levelUp.open(this.progression.state.level, choices, (upgradeId) => {
+      this.view.closeLevelUpFx();
       this.input.reset();
       this.upgradeApplier.apply(upgradeId);
       this.progression.consumeLevelUp();
@@ -322,7 +332,28 @@ export class Game {
           this.lifecycle.onGameResume();
         }
       }
-    }, (upgrade) => this.upgradeApplier.getPreview(upgrade));
+    }, (upgrade) => this.upgradeApplier.getPreview(upgrade), this.onLevelUpInteraction);
+    this.syncLevelUpFx();
+  }
+
+  private syncLevelUpFx(): void {
+    if (this.gameState.phase !== 'level-up') {
+      this.view.closeLevelUpFx();
+      return;
+    }
+    const scale = this.viewport.state.scale;
+    const anchors: LevelUpCardAnchor[] = this.levelUp.getCardLayouts().map((layout) => {
+      const logical = this.viewport.cssToLogical(layout.x, layout.y);
+      return {
+        index: layout.index,
+        x: logical.x,
+        y: logical.y,
+        width: layout.width / scale,
+        height: layout.height / scale,
+        tone: layout.tone
+      };
+    });
+    this.view.openLevelUpFx(anchors);
   }
 
   private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
@@ -378,6 +409,7 @@ export class Game {
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();
+    this.view.closeLevelUpFx();
     this.audio.resume();
     this.audio.startMusic();
     this.lifecycle.onGameStart();

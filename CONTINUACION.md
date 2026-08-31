@@ -520,6 +520,18 @@ escena SVG/CSS resulta insuficiente se abrirá un spike Pixi separado con un
 pool pequeño de partículas; no se añadirá `pixi-filters` ni una textura
 recalculada por frame sin evidencia de coste y beneficio.
 
+## 24. Continuación — marco cromático del panel inicial
+
+Fecha: 31-08-2026.
+
+- El borde exterior de `.start-screen-panel` anima `border-color` en un ciclo
+  lento cyan → violeta → dorado → mint → cyan, con 14 segundos por vuelta.
+- La línea interna (`::before`) usa el mismo recorrido con un desfase de 2.5
+  segundos para crear profundidad sin añadir filtros ni capas grandes.
+- `prefers-reduced-motion` detiene ambos ciclos y conserva el color base cyan.
+- El efecto sólo pinta dos bordes pequeños; no toca el fondo, el canvas, la
+  simulación ni el input. Los builds local/Poki/CrazyGames y los 89 tests pasan.
+
 ## 23. Continuación — estabilización de la escena en móviles
 
 Fecha: 31-08-2026.

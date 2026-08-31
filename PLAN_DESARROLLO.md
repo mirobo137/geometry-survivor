@@ -1284,6 +1284,9 @@ la frontera entre UI y simulación:
   superficie semitransparente estable. El bloque de configuración usa
   `contain: layout paint` y `overflow-anchor: none` para que abrir/cerrar no
   deje una superficie compuesta vacía ni altere el reflow del resto del menú.
+- El marco exterior y la línea interna del panel recorren un ciclo RGB lento de
+  cuatro tonos (`border-color` y opacidad baja); la línea interna va desfasada
+  2.5 s. `prefers-reduced-motion` congela ambos bordes en el token cyan base.
 
 Definition of Done adicional: contrato SVG e IDs validados por prueba
 estructural, escena visible en smoke browser, inspección en 1280×720 y

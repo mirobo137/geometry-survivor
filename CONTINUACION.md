@@ -558,3 +558,36 @@ Fecha: 31-08-2026.
   de menú llegó a ejecutar su aserción completa, aunque el runner local dejó
   vivo el servidor de preview al cerrar y se detuvo manualmente; no reportó
   errores de aplicación.
+
+## 25. Continuación — plan de juice visual mobile-first
+
+Fecha: 31-08-2026.
+
+La siguiente iteración visual queda definida en `PLAN_DESARROLLO.md` §15.6.
+No se implementan todavía efectos nuevos en esta sesión; se fija el orden para
+que cada cambio pueda probarse en GitHub Pages desde el móvil y pueda revertirse
+sin tocar la simulación.
+
+- El lenguaje visual vigente (geometría limpia, neón cyan/violeta/mint/dorado,
+  contraste alto y animación breve) se convierte en tokens compartidos por UI,
+  player, enemigos, hazards y FX.
+- Se crearán un `FxPool`, recetas `ImpactFX`, `DamageNumberView` y
+  `HealthBarView` en presentación Pixi. La simulación sólo emitirá eventos; no
+  importará Pixi, DOM ni audio.
+- El player será modular (`shadow`, `outer-ring`, `body`, `core`, armas y
+  accent), con dos skins de prueba sin estadísticas ni reglas propias.
+- Los impactos usarán flash, scale-punch y recoil visual; las muertes comunes
+  harán fade/shrink y las criaturas modulares podrán desarmarse en fragmentos
+  cacheados. El boss y la muerte del player tendrán secuencias breves propias.
+- Los números de daño se agruparán y limitarán; las mini barras sólo aparecerán
+  en objetivos dañados recientemente y elites/tanks, nunca sobre cientos de
+  enemigos de forma permanente.
+- Low/Medium/High controlarán partículas, trails, glow, texto y barras sin
+  cambiar telegraphs, controles ni gameplay. `prefers-reduced-motion` elimina
+  movimiento y fragmentos, pero conserva la información esencial.
+- Orden de trabajo: tokens/contratos → player y daño recibido → impacto/muerte
+  de chaser → tank/elite/boss → números/barras → muerte del player → skins →
+  comparación de presets en `?stress=1`.
+- La puerta de la fase exige 60 FPS objetivo, al menos 30 FPS jugables bajo
+  stress, legibilidad del player y hazards, ausencia de efectos huérfanos en
+  pausa/resize/restart y validación de los tres builds.

@@ -1014,6 +1014,202 @@ Se reemplaza la frase programada mediante `setTimeout` por una arquitectura con 
 
 Se añade Howler 2.2.4, `@types/howler` 2.2.13 y la referencia MIT de ZzFX 1.3.2 al lockfile. Tone.js queda fuera del runtime: no aporta valor al vertical slice frente a una pista looping y recetas de efectos, y añadiría un scheduler musical adicional.
 
+---
+
+## 15.6 Plan de juice visual mobile-first — 31-08-2026
+
+Esta sección convierte la Fase 6 en un plan ejecutable y medible. El objetivo
+no es llenar la pantalla de efectos, sino hacer que cada decisión importante
+tenga una respuesta breve, legible y coherente con el lenguaje geométrico
+neón ya establecido en la pantalla de inicio, las cartas y la arena.
+
+### Investigación aplicada al proyecto
+
+- `Vampire Survivors` demuestra el valor de una muerte corta y reconocible,
+  pequeños estallidos de polvo y un efecto propio por arma; la misma referencia
+  también advierte que demasiados números y efectos pueden ocultar al jugador.
+  Véase la [reseña de Nintendo Everything](https://nintendoeverything.com/rapid-review-vampire-survivors/).
+- `Halls of Torment` ofrece controles para reducir la opacidad de efectos y
+  ocultar los números de daño, una respuesta práctica al caos visual. El plan
+  adopta esa idea como configuración opcional, no como requisito para entender
+  el combate. Véase la [discusión de visibilidad de efectos](https://steamcommunity.com/app/2218750/discussions/0/4033600999078471547/).
+- `Deep Rock Galactic: Survivor` diferencia elites, peligros del escenario y
+  bosses para que cada amenaza exija una lectura distinta; su reseña destaca
+  que los encuentros de boss deben tener drama propio, no ser sólo más vida.
+  Véase la [reseña de PC Gamer](https://www.pcgamer.com/games/roguelike/deep-rock-galactic-survivor-review/).
+- Un estudio de feedback de impacto en juegos de acción encontró que hit-stop,
+  coherencia sonora y control de cámara tienen una influencia especialmente
+  fuerte en la sensación de impacto. Se aplicará como principio de diseño,
+  manteniendo amplitudes pequeñas por tratarse de un survivor móvil. Véase el
+  [estudio sobre impact feel](https://arxiv.org/abs/2208.06155).
+
+### Principios que no se negocian
+
+1. La simulación emite eventos; la presentación decide cómo dibujarlos. Ningún
+   FX modifica daño, vida, velocidad, XP, colisiones o dificultad.
+2. Cada evento tiene cuatro momentos: anticipación, impacto, persistencia y
+   recuperación. La recuperación evita que todos los efectos compitan al mismo
+   tiempo.
+3. La prioridad visual permanece: hazard crítico > player > boss > elite >
+   enemigo > arma > texto de daño > partículas > fondo.
+4. El color acompaña, pero nunca es la única señal de peligro. Se combinan
+   forma, ritmo, escala, contorno o sonido.
+5. Low reduce fidelidad, no información: conserva player, enemigos, barras de
+   boss, telegraphs, dirección y resultado de los impactos.
+6. No se usarán blur, filtros o sombras por entidad. SVG será el master; Pixi
+   reutilizará texturas y pools para las instancias repetidas.
+
+### Contratos y módulos previstos
+
+- `src/content/visual/VisualTokens.ts`: colores, grosores, duraciones,
+  amplitudes y límites compartidos por UI, personajes y FX.
+- `src/content/visual/SkinDefinitions.ts`: `SkinId`, piezas SVG, paleta,
+  acento y variantes de animación. Las skins sólo cambian presentación; no
+  otorgan daño, vida, velocidad ni otra ventaja.
+- `src/presentation/pixi/fx/ImpactFxView.ts`: compositor de FX con recetas
+  tipadas, prioridad, cooldown, `prefers-reduced-motion` y quality preset.
+- `src/presentation/pixi/fx/FxPool.ts`: pool único para chispas, fragmentos,
+  anillos, trails y números. Las recetas no crean objetos en cada impacto.
+- `src/presentation/pixi/fx/DamageNumberView.ts`: texto Pixi cacheado,
+  agrupación de impactos cercanos y límite de instancias visibles. Nunca se
+  añadirá un nodo DOM por enemigo.
+- `src/presentation/pixi/entities/HealthBarView.ts`: barra pequeña reutilizable
+  para boss, elite y enemigos que hayan recibido daño recientemente.
+- `src/presentation/pixi/characters/`: compositores de player y familias de
+  enemigos. Cada uno conserva piezas SVG con el mismo `viewBox`, frame y ancla.
+
+El evento visual mínimo debe transportar `kind`, posición lógica, intensidad,
+variante y tiempo de vida. Si un evento no necesita una representación visual,
+no se crea. La cola debe poder descartar o agrupar FX de baja prioridad bajo
+stress sin perder telegraphs ni feedback del player.
+
+### Recetas de feedback
+
+#### Player
+
+- Idle: respiración del core de 0.8–1.5 % y rotación/energía ambiental muy
+  sutil; no debe parecer que se está moviendo sin input.
+- Movimiento: inclinación de 2–4° y una estela corta sólo en Medium/High.
+- Disparo: recoil de 60–110 ms en la pieza del arma, destello breve y cue ZzFX
+  con cooldown; no escalar el cuerpo completo en cada disparo.
+- Daño: flash blanco de 70–100 ms, compresión de 2–4 %, anillo cian/rojo de
+  recuperación y vibración de cámara de 0.5–1.5 unidades. La invulnerabilidad
+  se comunica también con ritmo/contorno para no depender del parpadeo.
+- Level-up: expansión radial, giro corto del core, halo dorado y cue musical;
+  el overlay de cartas sigue siendo el foco y la simulación continúa pausada.
+
+#### Enemigos
+
+- Impacto normal: flash/tint de 60–90 ms, escala punch de 1.03–1.06 y un
+  desplazamiento visual corto. Es sólo presentación; no es knockback de gameplay.
+- Impacto fuerte o crítico: anillo pequeño, dos o cuatro chispas y una pausa de
+  impacto de 8–16 ms únicamente si la densidad lo permite. Los impactos masivos
+  se agrupan para no producir un terremoto constante.
+- Daño flotante: por defecto aparece sólo en impactos legibles o enemigos
+  importantes; se agrupan golpes del mismo objetivo durante aproximadamente
+  80 ms. Se colorean por tipo de evento y pueden apagarse desde ajustes.
+- Mini barra de vida: no se dibuja sobre los 250 enemigos todo el tiempo. Se
+  muestra durante 0.8–1.2 s sobre enemigos dañados recientemente y siempre en
+  elite/tank/boss; el boss conserva una barra HUD completa. El límite inicial
+  será de 8/16/24 barras visibles en Low/Medium/High y se medirá en móvil.
+
+#### Muerte de enemigos
+
+- Chaser/Fast: shrink suave más fade y un burst de 3–5 fragmentos geométricos,
+  220–320 ms, con dirección determinista basada en la posición del impacto.
+- Tank/Elite: desarme visual de 4–8 piezas cacheadas, anillo de energía y
+  recuperación de 320–480 ms. La silueta debe dejar de bloquear al jugador
+  desde el primer instante; los fragmentos son decorativos y no colisionan.
+- Boss: secuencia exclusiva en tres pasos: telegraph de colapso, separación de
+  anillos/core y burst final con sonido. El tiempo total debe permitir reiniciar
+  rápido y no convertirse en una cinemática obligatoria.
+- XP sigue acreditándose al morir, como ya exige el diseño; no se añade pickup
+  físico para justificar el efecto.
+
+#### Arena, armas y hazards
+
+- Proyectiles: trail corto por historial de posiciones, no blur; el trail se
+  apaga antes de competir con el telegraph.
+- Chain Lightning: flash de impacto, arco breve y dos o tres partículas en el
+  rebote; el número de saltos continúa siendo decisión de simulación.
+- Laser: warning y línea de ataque permanecen por encima de FX decorativos; un
+  hit sólo añade un flash y una onda de recuperación.
+- Expansión de arena: ring, shockwave, pocas partículas, cambio de tono del
+  borde y cue ascendente. La cámara sólo recibe un zoom punch pequeño.
+- Borde: reacción sutil al contacto o daño, sin sacudir la cámara en cada tick.
+
+#### Muerte del player
+
+Secuencia de 450–750 ms: último flash controlado, separación del core y piezas,
+fade del aura, pausa de impacto corta y transición al resumen. El input se
+limpia inmediatamente, el resumen no depende del FX y el botón de reinicio
+queda disponible sin recargar. Con `prefers-reduced-motion` se conserva sólo
+un cambio de estado, alpha y sonido breve.
+
+### Skins y player modular
+
+El player se construirá como `shadow`, `outer-ring`, `body`, `core`,
+`weapon-left`, `weapon-right` y `accent`, todos con el contrato SVG común. La
+primera entrega tendrá una silueta base y dos skins de prueba: una cyan/mint
+calmada y una violeta/dorada de energía. Cada skin se podrá cambiar desde un
+selector de desarrollo y desde la futura pantalla de skins, sin tocar
+`PlayerModel`, `CombatSimulation` o las cartas.
+
+La animación runtime usará transformaciones sobre texturas cacheadas: tilt,
+recoil, squash, pulse y separación de piezas al morir. No se generarán variantes
+por dirección ni XML nuevo por entidad. Antes de integrar cada personaje se
+aplicará la ficha SVG: silueta plana, frente, piezas, ancla, lectura a 32 px y
+score mínimo de 8/10.
+
+### Presets iniciales y límites de coste
+
+Son presupuestos de arranque, no cifras definitivas; se deben comparar en el
+mismo teléfono y viewport:
+
+| Preset | Partículas/fragments | Daño flotante | Barras enemigas | Trails/glow |
+| --- | ---: | --- | ---: | --- |
+| Low | 30 % del pool | apagado salvo boss/elite | dañados recientes, máximo 8 | sin trail, sin filtro |
+| Medium | 60 % del pool | agrupado, máximo 16 | máximo 16 | trail corto, glow por sprites |
+| High | 100 % del pool | agrupado, máximo 24 | máximo 24 | trail completo, sin blur por entidad |
+
+Punto de partida para el pool: 96 FX simultáneos en Low, 160 en Medium y
+240 en High, con reutilización y descarte por prioridad. El stress deberá
+añadir al menos 150 FX reales además de 250 enemigos y 300 proyectiles. Si el
+frame p95 supera la puerta, se reduce primero fondo/trail/partículas, después
+texto y por último glow; nunca se reduce el telegraph ni se cambia gameplay.
+
+### Orden de implementación y validación en GitHub Pages
+
+1. Crear tokens, `FxPool` y contrato de eventos; probar un único impacto con
+   `?juice=1` sin cambiar reglas.
+2. Integrar feedback del player y daño recibido; validar pausa, resize y
+   `prefers-reduced-motion`.
+3. Añadir impacto y muerte del chaser con piezas SVG cacheadas; después tank y
+   elite. Comparar textura compartida frente a `Graphics` sólo si hace falta.
+4. Añadir `DamageNumberView` y `HealthBarView` con límites y agrupación; probar
+   caos con `?stress=1` y no con una escena artificial aislada únicamente.
+5. Crear muerte del player y muerte especial del boss; confirmar que resumen y
+   restart in-place no esperan a terminar la animación.
+6. Añadir las dos skins de prueba y una vista de desarrollo; el selector no
+   se convierte todavía en una pantalla comercial completa.
+7. Comparar Low/Medium/High en el móvil de referencia, registrar FPS medio,
+   p95, memoria aproximada, legibilidad y captura antes/después. Sólo entonces
+   decidir si hace falta `ParticleContainer` o un filtro pequeño.
+
+### Definition of Done de la Fase 6 visual
+
+- Se reconoce player, enemigo, daño, amenaza y muerte sin depender del color.
+- El desarme de piezas no cambia colisiones, pool de gameplay ni XP.
+- Daño flotante y barras informan sin ocultar al player, telegraphs o CTA.
+- El feedback normal no produce shake o hit-stop constante en hordas.
+- Low conserva lectura y controles; High mejora impacto sin tapar la escena.
+- `prefers-reduced-motion`, pausa, resize, background/foreground y reinicio
+  funcionan sin efectos huérfanos.
+- SVGs tienen contrato, IDs prefijados, frame/ancla comunes y prueba
+  estructural; no hay raster, filtros caros ni recursos externos nuevos.
+- Typecheck, tests, builds local/Poki/CrazyGames y smoke browser pasan; el
+  móvil de referencia aporta mediciones comparables y no sólo una impresión.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |

@@ -1,6 +1,6 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 28-08-2026.
+> Snapshot operativo: 31-08-2026.
 >
 > Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
@@ -58,7 +58,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 88 tests unitarios/integración en 31 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 89 tests unitarios/integración en 31 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -488,3 +488,34 @@ Fecha: 28-08-2026.
 El spike de FX de cartas queda conscientemente abierto: el plan conserva el
 baseline actual y una matriz para comparar glow aditivo, `GlowFilter` y
 `ParticleContainer` con mediciones antes de elevar el presupuesto visual.
+
+## 22. Continuación — escena SVG dinámica de presentación
+
+Fecha: 31-08-2026.
+
+- `src/assets/svg/ui/start/hero-scene.svg` añade una escena ambiental
+  vectorial code-first con órbitas, rayos, nodos, barridos, fragmentos y un
+  núcleo central. Usa `viewBox="0 0 1200 900"`, no contiene raster, scripts,
+  recursos externos, filtros ni máscaras complejas, y todos sus IDs usan el
+  prefijo `ui-start-hero-`.
+- `StartScreen` monta la escena una sola vez en `#start-scene`; permanece
+  decorativa (`aria-hidden` y `pointer-events: none`) mientras el texto, foco y
+  hit-area continúan siendo HTML accesible.
+- CSS anima únicamente transformaciones, opacidad y `stroke-dashoffset` en
+  ciclos lentos: órbitas, pulsos de nodos, barridos de luz, respiración del
+  núcleo y una pasada de brillo sobre el panel. No se reconstruye el XML ni se
+  crea un segundo canvas o una segunda simulación.
+- `prefers-reduced-motion` detiene las animaciones y reduce la opacidad de la
+  escena; portrait, landscape y safe-area conservan el CTA y el layout de
+  acciones.
+- `StartSvgAssets.test.ts` valida el contrato del nuevo master y el smoke de
+  navegador confirma que la escena está montada antes de jugar. La inspección
+  visual en 1280×720 y 390×844 no mostró solapamiento del panel, scroll
+  inesperado ni pérdida de legibilidad.
+- `npm run typecheck`, `npm test` (89 tests), `npm run test:browser` (8 smoke),
+  y builds local/Poki/CrazyGames quedan como puertas antes de publicar.
+
+La próxima mejora visual debe medirse en el teléfono de referencia. Sólo si la
+escena SVG/CSS resulta insuficiente se abrirá un spike Pixi separado con un
+pool pequeño de partículas; no se añadirá `pixi-filters` ni una textura
+recalculada por frame sin evidencia de coste y beneficio.

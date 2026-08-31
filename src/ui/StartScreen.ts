@@ -1,4 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
+import heroSceneSvg from '../assets/svg/ui/start/hero-scene.svg?raw';
 import startMarkSvg from '../assets/svg/ui/start/mark.svg?raw';
 
 export interface StartScreenBest {
@@ -61,6 +62,7 @@ export class StartScreen {
     this.sfxValue = sfxValue;
     this.bestTime = bestTime;
     this.bestScore = bestScore;
+    this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.playHandler?.());
     this.settingsToggle.addEventListener('click', () => this.toggleSettings());
@@ -91,6 +93,17 @@ export class StartScreen {
     const host = this.root.querySelector<HTMLElement>('#start-mark');
     if (!host || host.firstElementChild) return;
     host.insertAdjacentHTML('afterbegin', startMarkSvg);
+    const svg = host.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+    }
+  }
+
+  private mountScene(): void {
+    const host = this.root.querySelector<HTMLElement>('#start-scene');
+    if (!host || host.firstElementChild) return;
+    host.insertAdjacentHTML('afterbegin', heroSceneSvg);
     const svg = host.querySelector('svg');
     if (svg) {
       svg.setAttribute('aria-hidden', 'true');

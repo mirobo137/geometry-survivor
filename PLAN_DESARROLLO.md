@@ -1253,6 +1253,34 @@ gesto que desbloquea Howler/ZzFX en movil. La pantalla no crea una segunda
 simulacion ni modifica progresion; al empezar, `Game` activa input, HUD, audio y
 lifecycle en una unica transicion.
 
+### Extensión visual — escena SVG dinámica - 31-08-2026
+
+La presentación incorpora una escena ambiental vectorial por capas sin cambiar
+la frontera entre UI y simulación:
+
+- `src/assets/svg/ui/start/hero-scene.svg` es el master code-first de una
+  composición con órbitas, rayos radiales, nodos, barridos, fragmentos y núcleo;
+  conserva `viewBox="0 0 1200 900"`, ancla visual centrada, IDs prefijados y no
+  incluye raster, scripts, URLs externas, filtros ni máscaras complejas;
+- `StartScreen` lo monta una vez en `#start-scene` como SVG inline decorativo;
+  `aria-hidden` y `pointer-events: none` garantizan que no intercepte input ni
+  sustituya el texto HTML accesible;
+- `src/styles.css` anima solo `transform`, `opacity` y
+  `stroke-dashoffset`: órbitas con velocidades distintas, nodos pulsantes,
+  barridos de luz, respiración del núcleo, atmósfera y sheen del panel. No se
+  reescribe el XML ni se crean nodos nuevos por frame;
+- la escena usa CSS/DOM porque es una sola composición responsive de menú, no
+  una masa de entidades. Pixi queda reservado para un spike futuro si una
+  medición real justifica textura cacheada o un pool pequeño de partículas;
+- `prefers-reduced-motion` detiene la animación y baja la opacidad ambiental.
+  El fondo se recorta con el viewport, mientras panel, copy, CTA y hit-area
+  conservan prioridad visual en portrait, landscape y safe-area.
+
+Definition of Done adicional: contrato SVG e IDs validados por prueba
+estructural, escena visible en smoke browser, inspección en 1280×720 y
+390×844 sin solapamiento/scroll, typecheck/tests/builds local-Poki-CrazyGames
+correctos y ningún cambio en estado, reglas, input o timestep de simulación.
+
 ## Estado de implementación — 26-08-2026
 
 La primera base ejecutable de la Fase 0 ya está creada en el directorio de trabajo:

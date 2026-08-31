@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 900"
+     preserveAspectRatio="xMidYMid slice"
+     role="presentation"
+     aria-hidden="true">
+  <!--
+    Geometry Survivor start-scene master.
+    Static geometry only: the DOM consumer animates groups with transforms,
+    opacity and dash offsets so the asset is never rebuilt at runtime.
+  -->
+  <g id="ui-start-hero-horizon" fill="none" stroke="#75e6ff" stroke-width="1" opacity="0.13" vector-effect="non-scaling-stroke">
+    <path d="M70 690H1130" />
+    <path d="M160 735H1040" />
+    <path d="M260 780H940" />
+    <path d="M355 825H845" />
+  </g>
+
+  <g id="ui-start-hero-rays" class="start-hero-rays" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <path d="M600 450V84" stroke="#75e6ff" stroke-width="2" opacity="0.25" />
+    <path d="M600 450L859 191" stroke="#ffe39a" stroke-width="1.5" opacity="0.2" />
+    <path d="M600 450H966" stroke="#75e6ff" stroke-width="2" opacity="0.2" />
+    <path d="M600 450L859 709" stroke="#d2a8ff" stroke-width="1.5" opacity="0.21" />
+    <path d="M600 450V816" stroke="#b8ffd9" stroke-width="2" opacity="0.18" />
+    <path d="M600 450L341 709" stroke="#75e6ff" stroke-width="1.5" opacity="0.2" />
+    <path d="M600 450H234" stroke="#ffe39a" stroke-width="2" opacity="0.18" />
+    <path d="M600 450L341 191" stroke="#d2a8ff" stroke-width="1.5" opacity="0.2" />
+  </g>
+
+  <g id="ui-start-hero-orbit-outer" class="start-hero-orbit start-hero-orbit-outer" fill="none" stroke="#75e6ff" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <ellipse cx="600" cy="450" rx="465" ry="242" stroke-width="1" stroke-dasharray="2 18" opacity="0.35" />
+    <ellipse cx="600" cy="450" rx="433" ry="215" stroke-width="2" stroke-dasharray="86 24 8 24" opacity="0.2" />
+  </g>
+
+  <g id="ui-start-hero-orbit-diagonal" class="start-hero-orbit start-hero-orbit-diagonal" fill="none" stroke="#d2a8ff" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <ellipse cx="600" cy="450" rx="260" ry="385" transform="rotate(32 600 450)" stroke-width="1.5" stroke-dasharray="5 23" opacity="0.28" />
+    <ellipse cx="600" cy="450" rx="235" ry="360" transform="rotate(32 600 450)" stroke-width="1" stroke-dasharray="34 22" opacity="0.18" />
+  </g>
+
+  <g id="ui-start-hero-orbit-inner" class="start-hero-orbit start-hero-orbit-inner" fill="none" stroke="#ffe39a" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <ellipse cx="600" cy="450" rx="190" ry="98" stroke-width="1.5" stroke-dasharray="12 14" opacity="0.38" />
+    <ellipse cx="600" cy="450" rx="156" ry="76" stroke-width="1" stroke-dasharray="3 12" opacity="0.3" />
+  </g>
+
+  <g id="ui-start-hero-sweeps" class="start-hero-sweeps" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <path class="start-hero-sweep start-hero-sweep-cyan" d="M157 450A443 230 0 0 1 982 300" stroke="#75e6ff" stroke-width="3" stroke-dasharray="2 34" opacity="0.75" />
+    <path class="start-hero-sweep start-hero-sweep-gold" d="M230 675A415 224 0 0 0 1030 500" stroke="#ffe39a" stroke-width="2" stroke-dasharray="2 46" opacity="0.6" />
+    <path class="start-hero-sweep start-hero-sweep-mint" d="M425 134A340 320 0 0 1 858 689" stroke="#b8ffd9" stroke-width="2" stroke-dasharray="2 52" opacity="0.6" />
+  </g>
+
+  <g id="ui-start-hero-shards" class="start-hero-shards" fill="none" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <path d="M118 244l28-18 24 12-7 32-30 9z" stroke="#75e6ff" stroke-width="1.5" opacity="0.35" />
+    <path d="M1008 174l35 14 9 30-32 17-23-22z" stroke="#ffe39a" stroke-width="1.5" opacity="0.3" />
+    <path d="M1015 690l30-18 27 16-5 34-38 10z" stroke="#d2a8ff" stroke-width="1.5" opacity="0.28" />
+    <path d="M142 690l25-21 27 9 5 28-32 19z" stroke="#b8ffd9" stroke-width="1.5" opacity="0.27" />
+    <path d="M285 143l15-13 18 8-1 22-18 9z" stroke="#d2a8ff" stroke-width="1" opacity="0.2" />
+    <path d="M884 788l19-14 21 9-2 24-22 9z" stroke="#75e6ff" stroke-width="1" opacity="0.22" />
+  </g>
+
+  <g id="ui-start-hero-nodes" class="start-hero-nodes" stroke="#081020" stroke-width="5" vector-effect="non-scaling-stroke">
+    <circle class="start-hero-node start-hero-node-cyan" cx="138" cy="450" r="7" fill="#75e6ff" />
+    <circle class="start-hero-node start-hero-node-gold" cx="1024" cy="450" r="6" fill="#ffe39a" />
+    <circle class="start-hero-node start-hero-node-mint" cx="600" cy="117" r="7" fill="#b8ffd9" />
+    <circle class="start-hero-node start-hero-node-violet" cx="600" cy="783" r="6" fill="#d2a8ff" />
+    <circle class="start-hero-node start-hero-node-cyan" cx="355" cy="205" r="5" fill="#75e6ff" />
+    <circle class="start-hero-node start-hero-node-gold" cx="845" cy="695" r="5" fill="#ffe39a" />
+  </g>
+
+  <g id="ui-start-hero-core" class="start-hero-core" transform="translate(600 450)" vector-effect="non-scaling-stroke">
+    <circle r="102" fill="#071325" stroke="#75e6ff" stroke-width="1.5" opacity="0.34" />
+    <circle r="86" fill="none" stroke="#75e6ff" stroke-width="2" stroke-dasharray="4 12" opacity="0.55" />
+    <circle r="64" fill="#0d1f37" stroke="#ffe39a" stroke-width="2" opacity="0.9" />
+    <polygon points="0,-47 41,-24 41,24 0,47 -41,24 -41,-24" fill="#75e6ff" opacity="0.9" />
+    <polygon points="0,-28 24,-14 24,14 0,28 -24,14 -24,-14" fill="#081020" stroke="#eaf0ff" stroke-width="2" opacity="0.95" />
+    <path d="M0-72V-54M72 0H54M0 72V54M-72 0H-54" fill="none" stroke="#b8ffd9" stroke-width="4" stroke-linecap="round" />
+  </g>
+
+  <g id="ui-start-hero-corners" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke">
+    <path d="M72 112h76M72 112v76" stroke="#75e6ff" stroke-width="2" opacity="0.34" />
+    <path d="M1128 112h-76M1128 112v76" stroke="#ffe39a" stroke-width="2" opacity="0.3" />
+    <path d="M72 788h76M72 788v-76" stroke="#b8ffd9" stroke-width="2" opacity="0.25" />
+    <path d="M1128 788h-76M1128 788v-76" stroke="#d2a8ff" stroke-width="2" opacity="0.28" />
+  </g>
+</svg>

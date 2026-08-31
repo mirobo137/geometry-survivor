@@ -99,6 +99,7 @@ body {
     linear-gradient(90deg, rgba(117, 230, 255, 0.04) 1px, transparent 1px);
   background-size: 3rem 3rem;
   mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  animation: start-grid-drift 28s linear infinite;
 }
 
 #start-screen::after {
@@ -109,6 +110,114 @@ body {
 
 #start-screen[hidden] {
   display: none;
+}
+
+.start-scene {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.78;
+}
+
+.start-scene::before,
+.start-scene::after {
+  position: absolute;
+  inset: -18%;
+  content: "";
+  pointer-events: none;
+}
+
+.start-scene::before {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(117, 230, 255, 0.14), transparent 17%),
+    radial-gradient(circle at 16% 29%, rgba(210, 168, 255, 0.1), transparent 18%),
+    radial-gradient(circle at 86% 72%, rgba(255, 227, 154, 0.08), transparent 20%);
+  animation: start-atmosphere-breathe 10s ease-in-out infinite alternate;
+}
+
+.start-scene::after {
+  background: linear-gradient(115deg, transparent 35%, rgba(117, 230, 255, 0.08) 48%, transparent 62%);
+  background-size: 220% 100%;
+  animation: start-light-sweep 13s ease-in-out infinite;
+}
+
+.start-scene svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.88;
+}
+
+.start-scene .start-hero-orbit,
+.start-scene .start-hero-rays,
+.start-scene .start-hero-sweeps,
+.start-scene .start-hero-shards,
+.start-scene .start-hero-core,
+.start-scene .start-hero-node {
+  transform-box: view-box;
+  transform-origin: 600px 450px;
+}
+
+.start-scene .start-hero-orbit-outer {
+  animation: start-hero-orbit 34s linear infinite;
+}
+
+.start-scene .start-hero-orbit-diagonal {
+  animation: start-hero-orbit-reverse 42s linear infinite;
+}
+
+.start-scene .start-hero-orbit-inner {
+  animation: start-hero-orbit 24s linear infinite reverse;
+}
+
+.start-scene .start-hero-rays {
+  animation: start-hero-rays 9s ease-in-out infinite alternate;
+}
+
+.start-scene .start-hero-sweeps {
+  animation: start-hero-sweeps 12s ease-in-out infinite;
+}
+
+.start-scene .start-hero-sweep {
+  animation: start-hero-dash 7s linear infinite;
+}
+
+.start-scene .start-hero-sweep-gold {
+  animation-delay: -2.3s;
+}
+
+.start-scene .start-hero-sweep-mint {
+  animation-delay: -4.7s;
+}
+
+.start-scene .start-hero-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: start-hero-node-pulse 3.8s ease-in-out infinite;
+}
+
+.start-scene .start-hero-node-gold {
+  animation-delay: -1.1s;
+}
+
+.start-scene .start-hero-node-mint {
+  animation-delay: -2.2s;
+}
+
+.start-scene .start-hero-node-violet {
+  animation-delay: -3.1s;
+}
+
+.start-scene .start-hero-shards {
+  animation: start-hero-shards 11s ease-in-out infinite alternate;
+}
+
+.start-scene .start-hero-core {
+  animation: start-hero-core-breathe 4.5s ease-in-out infinite alternate;
 }
 
 .start-screen-panel {
@@ -124,6 +233,40 @@ body {
   box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 255, 255, 0.08);
   text-align: center;
   backdrop-filter: blur(8px);
+  isolation: isolate;
+  position: relative;
+  z-index: 1;
+}
+
+.start-screen-panel::before,
+.start-screen-panel::after {
+  position: absolute;
+  inset: 0.45rem;
+  z-index: -1;
+  border: 1px solid rgba(117, 230, 255, 0.12);
+  border-radius: 0.95rem;
+  content: "";
+  pointer-events: none;
+}
+
+.start-screen-panel::after {
+  inset: 0;
+  border: 0;
+  border-radius: inherit;
+  background: linear-gradient(112deg, transparent 26%, rgba(255, 255, 255, 0.09) 46%, transparent 63%);
+  background-size: 220% 100%;
+  mix-blend-mode: screen;
+  opacity: 0.45;
+  animation: start-panel-sheen 11s ease-in-out infinite;
+}
+
+.start-brand,
+.start-actions,
+.start-settings,
+.start-record,
+.start-hint {
+  position: relative;
+  z-index: 1;
 }
 
 .start-brand {
@@ -331,6 +474,69 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes start-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 3rem 3rem; }
+}
+
+@keyframes start-atmosphere-breathe {
+  from { transform: scale(0.96) rotate(-2deg); opacity: 0.72; }
+  to { transform: scale(1.04) rotate(2deg); opacity: 1; }
+}
+
+@keyframes start-light-sweep {
+  from { background-position: 120% 0; opacity: 0; }
+  20%, 70% { opacity: 1; }
+  to { background-position: -30% 0; opacity: 0; }
+}
+
+@keyframes start-panel-sheen {
+  from { background-position: 120% 0; }
+  45%, 65% { background-position: 0 0; }
+  to { background-position: -120% 0; }
+}
+
+@keyframes start-hero-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes start-hero-orbit-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes start-hero-rays {
+  from { opacity: 0.55; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1.015); }
+}
+
+@keyframes start-hero-sweeps {
+  from { opacity: 0.55; transform: scale(0.99); }
+  50% { opacity: 1; transform: scale(1.01); }
+  to { opacity: 0.55; transform: scale(0.99); }
+}
+
+@keyframes start-hero-dash {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -160; }
+}
+
+@keyframes start-hero-node-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.82); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+
+@keyframes start-hero-shards {
+  from { opacity: 0.55; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(-5px); }
+}
+
+@keyframes start-hero-core-breathe {
+  from { opacity: 0.78; }
+  to { opacity: 1; }
+}
+
 @media (hover: hover) {
   .start-primary:hover {
     filter: brightness(1.08);
@@ -359,10 +565,26 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #start-screen::before,
+  .start-scene::before,
+  .start-scene::after,
+  .start-scene svg,
+  .start-scene .start-hero-orbit,
+  .start-scene .start-hero-rays,
+  .start-scene .start-hero-sweeps,
+  .start-scene .start-hero-sweep,
+  .start-scene .start-hero-node,
+  .start-scene .start-hero-shards,
+  .start-scene .start-hero-core,
+  .start-screen-panel::after,
   #start-mark svg,
   .start-actions button {
     animation: none;
     transition: none;
+  }
+
+  .start-scene {
+    opacity: 0.58;
   }
 }
 

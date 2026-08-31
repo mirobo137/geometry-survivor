@@ -1280,6 +1280,10 @@ la frontera entre UI y simulación:
   se mueven con `stroke-dashoffset`, las luces con opacidad y sólo los nodos
   pequeños usan escala. Las capas no llegan a opacidad cero al reiniciar su
   ciclo, evitando un destello de apagado/encendido.
+- El panel de inicio no usa `backdrop-filter` ni `mix-blend-mode`; conserva una
+  superficie semitransparente estable. El bloque de configuración usa
+  `contain: layout paint` y `overflow-anchor: none` para que abrir/cerrar no
+  deje una superficie compuesta vacía ni altere el reflow del resto del menú.
 
 Definition of Done adicional: contrato SVG e IDs validados por prueba
 estructural, escena visible en smoke browser, inspección en 1280×720 y

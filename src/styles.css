@@ -222,7 +222,9 @@ body {
   background: linear-gradient(155deg, rgba(10, 22, 46, 0.9), rgba(12, 10, 30, 0.82));
   box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 255, 255, 0.08);
   text-align: center;
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow-anchor: none;
   isolation: isolate;
   position: relative;
   z-index: 1;
@@ -245,9 +247,7 @@ body {
   border-radius: inherit;
   background: linear-gradient(112deg, transparent 26%, rgba(255, 255, 255, 0.09) 46%, transparent 63%);
   background-size: 220% 100%;
-  mix-blend-mode: screen;
-  opacity: 0.45;
-  animation: start-panel-sheen 11s ease-in-out infinite;
+  opacity: 0.32;
 }
 
 .start-brand,
@@ -396,6 +396,7 @@ body {
   border: 1px solid rgba(145, 181, 255, 0.22);
   border-radius: 0.65rem;
   text-align: left;
+  contain: layout paint;
 }
 
 .start-settings[hidden] {
@@ -512,6 +513,11 @@ body {
   50% { opacity: 1; transform: scale(1.35); }
 }
 
+@keyframes start-hero-node-fade {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 @keyframes start-hero-shards {
   from { opacity: 0.55; }
   to { opacity: 1; }
@@ -546,6 +552,23 @@ body {
 
   .start-secondary {
     min-height: 2.75rem !important;
+  }
+}
+
+/* The game is portrait-first. Keep mobile/tablet SVG geometry static to avoid
+   driver-specific flicker; the atmosphere, mark and light pulse still move. */
+@media (max-width: 60rem) {
+  .start-scene .start-hero-orbit,
+  .start-scene .start-hero-rays,
+  .start-scene .start-hero-sweeps,
+  .start-scene .start-hero-sweep,
+  .start-scene .start-hero-shards,
+  .start-scene .start-hero-core {
+    animation: none;
+  }
+
+  .start-scene .start-hero-node {
+    animation: start-hero-node-fade 4.2s ease-in-out infinite;
   }
 }
 

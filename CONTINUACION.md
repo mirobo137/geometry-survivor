@@ -541,3 +541,8 @@ Fecha: 31-08-2026.
   panel, el CTA y el SVG; typecheck y la suite de 89 tests deben repetirse
   antes de publicar este ajuste. La validación final requiere volver a abrir
   la URL publicada en el móvil de referencia.
+- Tras el ajuste, `npm run typecheck`, `npm test` (89 tests) y los builds
+  `local`, `poki` y `crazygames` son correctos. El escenario browser específico
+  de menú llegó a ejecutar su aserción completa, aunque el runner local dejó
+  vivo el servidor de preview al cerrar y se detuvo manualmente; no reportó
+  errores de aplicación.

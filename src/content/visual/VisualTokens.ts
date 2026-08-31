@@ -1,4 +1,4 @@
-export type PlayerSkinId = 'cyan' | 'violet';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald';
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -30,7 +30,38 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     core: 0xffb8df,
     weapon: 0xffe39a,
     accent: 0xfff4ff
+  },
+  amber: {
+    shadow: 0x130b03,
+    outer: 0xffb86b,
+    body: 0x53321d,
+    bodyDetail: 0x9b5c2d,
+    core: 0xffe39a,
+    weapon: 0xfff1bf,
+    accent: 0xfffff2
+  },
+  emerald: {
+    shadow: 0x03120f,
+    outer: 0x65f2c2,
+    body: 0x123d3d,
+    bodyDetail: 0x2f8d7c,
+    core: 0xb8ffd9,
+    weapon: 0x75e6ff,
+    accent: 0xe5fff3
   }
+} as const;
+
+export interface PlayerSkinMotionTokens {
+  readonly signatureSpin: number;
+  readonly signaturePulse: number;
+}
+
+/** Motion accents are presentation-only and never affect the player model. */
+export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionTokens>> = {
+  cyan: { signatureSpin: 0.12, signaturePulse: 0.012 },
+  violet: { signatureSpin: -0.18, signaturePulse: 0.02 },
+  amber: { signatureSpin: 0.28, signaturePulse: 0.016 },
+  emerald: { signatureSpin: -0.34, signaturePulse: 0.024 }
 } as const;
 
 export interface FxQualityTokens {

@@ -61,11 +61,11 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-main-view')).toBeHidden();
   await expect(page.locator('#start-skins-view')).toBeVisible();
   await expect(page.locator('#start-skin-preview svg')).toBeVisible();
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(2);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(4);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);
-  await expect(page.locator('#start-skin-selected-name')).toHaveText('Prisma Violeta');
+  await expect(page.locator('#start-skin-selected-name')).toHaveText('Eclipse Prism');
   await page.locator('#start-skins-back').click();
   await expect(page.locator('#start-skins-view')).toBeHidden();
   await expect(page.locator('#start-main-view')).toBeVisible();

@@ -1149,11 +1149,11 @@ un cambio de estado, alpha y sonido breve.
 ### Skins y player modular
 
 El player se construirá como `shadow`, `outer-ring`, `body`, `core`,
-`weapon-left`, `weapon-right` y `accent`, todos con el contrato SVG común. La
-primera entrega tendrá una silueta base y dos skins de prueba: una cyan/mint
-calmada y una violeta/dorada de energía. Cada skin se podrá cambiar desde un
-selector de desarrollo y desde la futura pantalla de skins, sin tocar
-`PlayerModel`, `CombatSimulation` o las cartas.
+`weapon-left`, `weapon-right`, `accent` y una `signature` por skin, todos con
+el contrato SVG común. La primera entrega visual contiene cuatro skins de
+prueba: cyan/mint, violeta/dorada, ámbar solar y esmeralda biocristalina.
+Cada skin se puede cambiar desde el selector de desarrollo y el locker, sin
+tocar `PlayerModel`, `CombatSimulation` o las cartas.
 
 La animación runtime usará transformaciones sobre texturas cacheadas: tilt,
 recoil, squash, pulse y separación de piezas al morir. No se generarán variantes
@@ -1258,11 +1258,11 @@ economía prematura:
   preparado para reemplazarlo por coste/requisito cuando exista una
   progresión meta real.
 - `Game` carga la skin guardada al crear la vista y la actualiza en vivo cuando
-  se equipa desde el locker. El query `?skin=cyan|violet` sigue siendo un
+  se equipa desde el locker. El query `?skin=cyan|violet|amber|emerald` sigue siendo un
   override de desarrollo; ninguna skin toca PlayerModel, combate, colisiones,
   daño, XP o balance.
 - La pantalla conserva safe-area, portrait, landscape, foco visible,
-  `prefers-reduced-motion` y un límite de dos tarjetas iniciales. El panel se
+  `prefers-reduced-motion` y un límite de cuatro tarjetas iniciales. El panel se
   puede cerrar y volver al menú sin destruir la escena ni dejar huecos de
   layout.
 
@@ -1271,6 +1271,32 @@ recargar, preview SVG sin recursos externos, migración segura de guardados,
 typecheck, suite, tres builds y smoke browser sin errores de consola/red. La
 economía, inventario masivo, rarezas comerciales y skins con efectos de juego
 permanecen fuera de alcance hasta definir la progresión meta.
+
+### Extensión visual — cuatro firmas de skin y locker desplazable — 31-08-2026
+
+La prueba del primer locker mostró que el color por sí solo no da suficiente
+identidad. Se amplía el contrato sin tocar gameplay:
+
+- `PlayerSkinId` ahora contiene `cyan`, `violet`, `amber` y `emerald`. Cada
+  definición declara una firma geométrica (`aurora`, `prism`, `solar` o
+  `verdant`) además de la paleta.
+- `SkinSignatureSvg.ts` genera la pieza vectorial periférica de cada firma con
+  el mismo `viewBox` y frame del jugador. Pixi la rasteriza una vez por skin y
+  `PlayerView` la rota/pulsa con tokens de movimiento; no se reconstruye SVG
+  durante la partida.
+- El preview del locker ya no es un círculo coloreado: combina casco,
+  emisores, núcleo, fragmentos/aspas y marcas direccionales. CSS anima órbitas,
+  fragmentos, corona, aspas y núcleo; `prefers-reduced-motion` los congela.
+- El locker conserva cuatro tarjetas y `overflow: auto` en el panel. En
+  portrait el panel usa `touch-action: pan-y` para permitir el desplazamiento;
+  el canvas de gameplay mantiene `touch-action: none` y no comparte el gesto.
+- La matriz browser comprueba que el contenido excede la altura disponible y
+  que el `scrollTop` cambia en Pixel 5 emulado, además de adquirir/equipar una
+  skin y conservar el guardado.
+
+El orden de adquisición sigue siendo gratuito de demostración. Costes,
+monedas, rarezas y una economía meta requieren una decisión de progresión
+independiente y no se inventan en esta mejora visual.
 
 # 16. RIESGOS PRINCIPALES
 

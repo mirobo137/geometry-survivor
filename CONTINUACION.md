@@ -43,7 +43,7 @@ Atajos que pueden escribirse después de la URL base:
 ?debug=1
 ?stress=1
 ?boss=1
-?skin=violet
+?skin=cyan|violet|amber|emerald
 ?quality=low|high
 ?spike=rendering
 ?spike=audio
@@ -60,7 +60,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 97 tests unitarios/integración en 37 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 98 tests unitarios/integración en 37 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -649,3 +649,31 @@ incluyendo abrir el locker, adquirir/equipar violeta y comprobar el guardado.
 Pendiente para el móvil real: revisar escala de texto y sensación táctil en la
 URL publicada. La economía meta, costes, inventario amplio y skins con ventajas
 siguen fuera de alcance hasta definir esa progresión.
+
+## 28. Continuación — firmas visuales y desplazamiento del locker
+
+Fecha: 31-08-2026.
+
+- El locker ahora contiene cuatro skins con identidad geométrica propia:
+  Aurora Strider (`cyan`), Eclipse Prism (`violet`), Solar Bastion (`amber`) y
+  Verdant Vector (`emerald`). Ya no son variantes basadas solamente en color.
+- `SkinSignatureSvg.ts` genera una pieza vectorial adicional por skin:
+  órbitas segmentadas, fragmentos cristalinos, corona solar o aspas orgánicas.
+  Todas comparten `viewBox="-32 -32 64 64"`, frame y ancla; se rasterizan una
+  vez por skin y se reutilizan en Pixi.
+- `PlayerView` compone la firma encima de la sombra y la anima con rotación y
+  pulso de baja amplitud según tokens. El preview SVG del locker añade casco,
+  emisores, núcleo, detalle interno y firma periférica; CSS anima cada familia
+  sin filtros ni canvas secundario.
+- El panel usa cuatro tarjetas y permite scroll vertical en portrait. Se
+  habilitó `touch-action: pan-y` sólo en el overlay/panel; el canvas de juego
+  conserva su gesto `none`.
+- La prueba browser de Pixel 5 verifica que `scrollHeight` supera la altura
+  visible y que `scrollTop` cambia. También se mantiene la prueba de adquirir y
+  equipar la skin violeta y persistir la selección.
+
+Validación actual: typecheck correcto, 98 tests unitarios/integración, builds
+local/Poki/CrazyGames generados y smoke browser ampliado a 9 escenarios (7
+desktop y 2 Pixel 5), incluido el desplazamiento del locker. Sólo queda la
+revisión visual en el teléfono físico; `prefers-reduced-motion` conserva la
+lectura y elimina las animaciones decorativas.

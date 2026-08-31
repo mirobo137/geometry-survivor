@@ -81,6 +81,8 @@ body {
     radial-gradient(circle at 16% 86%, rgba(95, 61, 161, 0.2), transparent 32%),
     linear-gradient(145deg, #080b17 0%, #0a1226 55%, #100d24 100%);
   isolation: isolate;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 #start-screen::before,
@@ -229,6 +231,7 @@ body {
   position: relative;
   z-index: 1;
   animation: start-panel-border-cycle 14s ease-in-out infinite;
+  touch-action: pan-y;
 }
 
 .start-screen-panel.is-skins-open {
@@ -626,6 +629,18 @@ body {
   background: linear-gradient(150deg, rgba(36, 22, 64, 0.94), rgba(14, 13, 34, 0.92));
 }
 
+.skin-card[data-tone="amber"] {
+  --skin-accent: #ffb86b;
+  --skin-line: rgba(255, 184, 107, 0.5);
+  background: linear-gradient(150deg, rgba(62, 34, 19, 0.94), rgba(24, 15, 19, 0.92));
+}
+
+.skin-card[data-tone="emerald"] {
+  --skin-accent: #65f2c2;
+  --skin-line: rgba(101, 242, 194, 0.46);
+  background: linear-gradient(150deg, rgba(12, 53, 51, 0.94), rgba(7, 24, 29, 0.92));
+}
+
 .skin-card.is-selected {
   border-color: var(--skin-accent);
   box-shadow: 0 0 1.25rem color-mix(in srgb, var(--skin-accent) 24%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 22%, transparent);
@@ -689,6 +704,16 @@ body {
   color: #d2a8ff;
 }
 
+.skin-card[data-tone="amber"] .skin-card-meta,
+.skin-card[data-tone="amber"] .skin-card-action {
+  color: #ffb86b;
+}
+
+.skin-card[data-tone="emerald"] .skin-card-meta,
+.skin-card[data-tone="emerald"] .skin-card-action {
+  color: #65f2c2;
+}
+
 .skin-card-copy strong {
   color: #f1f5ff;
   font-size: 0.94rem;
@@ -718,6 +743,66 @@ body {
   from { transform: translateY(0); }
   50% { transform: translateY(-0.25rem); }
   to { transform: translateY(0); }
+}
+
+.skin-preview svg .skin-art-orbit,
+.skin-card-art svg .skin-art-orbit {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-spin 12s linear infinite;
+}
+
+.skin-preview svg .skin-art-shards,
+.skin-card-art svg .skin-art-shards {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-shard-pulse 2.8s ease-in-out infinite;
+}
+
+.skin-preview svg .skin-art-crown,
+.skin-card-art svg .skin-art-crown {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-crown-turn 8s ease-in-out infinite;
+}
+
+.skin-preview svg .skin-art-blades,
+.skin-card-art svg .skin-art-blades {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-blade-turn 6s linear infinite reverse;
+}
+
+.skin-preview svg .skin-art-core,
+.skin-card-art svg .skin-art-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-core-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes skin-art-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes skin-art-shard-pulse {
+  from, to { transform: scale(0.96) rotate(0deg); opacity: 0.78; }
+  50% { transform: scale(1.04) rotate(4deg); opacity: 1; }
+}
+
+@keyframes skin-art-crown-turn {
+  from, to { transform: rotate(-3deg) scale(0.98); }
+  50% { transform: rotate(3deg) scale(1.04); }
+}
+
+@keyframes skin-art-blade-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes skin-art-core-pulse {
+  from, to { transform: scale(0.96); }
+  50% { transform: scale(1.08); }
 }
 
 @keyframes start-mark-drift {
@@ -1601,7 +1686,17 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skin-preview svg {
+  .skin-preview svg,
+  .skin-preview svg .skin-art-orbit,
+  .skin-preview svg .skin-art-shards,
+  .skin-preview svg .skin-art-crown,
+  .skin-preview svg .skin-art-blades,
+  .skin-preview svg .skin-art-core,
+  .skin-card-art svg .skin-art-orbit,
+  .skin-card-art svg .skin-art-shards,
+  .skin-card-art svg .skin-art-crown,
+  .skin-card-art svg .skin-art-blades,
+  .skin-card-art svg .skin-art-core {
     animation: none;
   }
 

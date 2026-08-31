@@ -71,7 +71,7 @@ const bootstrap = async (): Promise<void> => {
   const stressMode = searchParams.get('stress') === '1';
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
-  const playerSkin: PlayerSkinId | undefined = requestedSkin === 'violet' || requestedSkin === 'cyan'
+  const playerSkin: PlayerSkinId | undefined = requestedSkin === 'violet' || requestedSkin === 'cyan' || requestedSkin === 'amber' || requestedSkin === 'emerald'
     ? requestedSkin
     : undefined;
   const requestedQuality = searchParams.get('quality');

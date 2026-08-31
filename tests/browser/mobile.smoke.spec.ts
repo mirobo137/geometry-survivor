@@ -20,6 +20,27 @@ const getPlayerX = async (page: Page): Promise<number> => {
   return Number(match[1]);
 };
 
+test('permite desplazarse por el locker de skins en portrait', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await page.locator('#start-skins').click();
+  await expect(page.locator('#start-skins-view')).toBeVisible();
+
+  const scrollMetrics = await page.locator('.start-screen-panel').evaluate((element) => ({
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight
+  }));
+  expect(scrollMetrics.scrollHeight).toBeGreaterThan(scrollMetrics.clientHeight);
+  await page.locator('.start-screen-panel').evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect.poll(async () => page.locator('.start-screen-panel').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(page.locator('#start-skins-back')).toBeVisible();
+  expect(failures).toEqual([]);
+});
+
 test('mantiene el control touch en portrait móvil', async ({ page }) => {
   test.setTimeout(20_000);
   const failures = captureRuntimeFailures(page);

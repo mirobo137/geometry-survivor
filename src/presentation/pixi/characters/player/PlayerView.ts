@@ -2,6 +2,7 @@ import { Container, Sprite } from 'pixi.js';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
 import {
   PLAYER_SKINS,
+  PLAYER_SKIN_MOTION,
   PLAYER_VISUAL_TOKENS,
   type PlayerSkinId
 } from '../../../../content/visual/VisualTokens';
@@ -13,6 +14,7 @@ import type { PlayerTextureSet } from './PlayerVisualAssets';
  */
 export class PlayerView {
   public readonly root = new Container();
+  private readonly textures: PlayerTextureSet;
   private readonly shadow: Sprite;
   private readonly ring: Sprite;
   private readonly weapons: Sprite;
@@ -20,6 +22,7 @@ export class PlayerView {
   private readonly core: Sprite;
   private readonly accent: Sprite;
   private readonly damageFlash: Sprite;
+  private readonly signature: Sprite;
   private skin: PlayerSkinId = 'cyan';
   private facing = 0;
   private lastX: number | null = null;
@@ -28,6 +31,7 @@ export class PlayerView {
   private damageStrength = 0;
 
   public constructor(textures: PlayerTextureSet, skin: PlayerSkinId = 'cyan') {
+    this.textures = textures;
     this.shadow = new Sprite(textures.shadow);
     this.ring = new Sprite(textures.ring);
     this.weapons = new Sprite(textures.weapons);
@@ -35,18 +39,21 @@ export class PlayerView {
     this.core = new Sprite(textures.core);
     this.accent = new Sprite(textures.accent);
     this.damageFlash = new Sprite(textures.body);
+    this.signature = new Sprite(textures.signature.cyan);
     this.damageFlash.tint = 0xffffff;
     this.damageFlash.alpha = 0;
-    for (const part of [this.shadow, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash]) {
+    for (const part of [this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash]) {
       part.anchor.set(0.5);
     }
-    this.root.addChild(this.shadow, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash);
+    this.root.addChild(this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash);
     this.setSkin(skin);
   }
 
   public setSkin(skin: PlayerSkinId): void {
     this.skin = skin;
     const colors = PLAYER_SKINS[skin];
+    this.signature.texture = this.textures.signature[skin];
+    this.signature.tint = colors.outer;
     this.shadow.tint = colors.shadow;
     this.ring.tint = colors.outer;
     this.weapons.tint = colors.weapon;
@@ -77,6 +84,7 @@ export class PlayerView {
     this.root.rotation = this.facing;
 
     const pulse = 1 + Math.sin(animationSeconds * 4.2) * PLAYER_VISUAL_TOKENS.idlePulseAmplitude;
+    const motion = PLAYER_SKIN_MOTION[this.skin];
     const damageAge = animationSeconds - this.damageAtSeconds;
     const damageProgress = damageAge >= 0
       ? Math.min(1, damageAge / PLAYER_VISUAL_TOKENS.damageFlashSeconds)
@@ -88,6 +96,9 @@ export class PlayerView {
     );
     this.body.rotation = -damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
+    this.signature.rotation = animationSeconds * motion.signatureSpin;
+    this.signature.scale.set(1 + Math.sin(animationSeconds * 3.2) * motion.signaturePulse);
+    this.ring.rotation = -animationSeconds * motion.signatureSpin * 0.35;
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
@@ -102,6 +113,9 @@ export class PlayerView {
     this.damageStrength = 0;
     this.root.rotation = 0;
     this.root.scale.set(1);
+    this.signature.rotation = 0;
+    this.signature.scale.set(1);
+    this.ring.rotation = 0;
     this.damageFlash.alpha = 0;
   }
 }

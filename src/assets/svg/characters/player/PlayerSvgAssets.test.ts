@@ -6,6 +6,7 @@ import masterSvg from './player.svg?raw';
 import ringSvg from './player-ring.svg?raw';
 import shadowSvg from './player-shadow.svg?raw';
 import weaponsSvg from './player-weapons.svg?raw';
+import { createPlayerSkinSignatureSvg } from './SkinSignatureSvg';
 
 const parts = [shadowSvg, ringSvg, weaponsSvg, bodySvg, coreSvg, accentSvg] as const;
 
@@ -23,6 +24,18 @@ describe('player SVG assets', () => {
 
     for (const [, pathData] of parts.join('\n').matchAll(/\sd="([^"]+)"/g)) {
       expect(masterSvg).toContain(`d="${pathData}"`);
+    }
+  });
+
+  it('keeps every skin signature vector-only and framed for the player texture', () => {
+    for (const skin of ['cyan', 'violet', 'amber', 'emerald'] as const) {
+      const svg = createPlayerSkinSignatureSvg(skin);
+      expect(svg).toContain('viewBox="-32 -32 64 64"');
+      expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
+      expect(svg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
+      const ids = [...svg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids.every((id) => id.startsWith('player-signature-'))).toBe(true);
     }
   });
 });

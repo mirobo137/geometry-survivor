@@ -5,6 +5,7 @@ import {
 } from './VisualTokens';
 
 export type SkinAcquisition = 'default' | 'prototype-free';
+export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant';
 
 export interface PlayerSkinDefinition {
   readonly id: PlayerSkinId;
@@ -14,6 +15,7 @@ export interface PlayerSkinDefinition {
   readonly rarity: string;
   readonly palette: PlayerSkinTokens;
   readonly acquisition: SkinAcquisition;
+  readonly signature: PlayerSkinSignature;
 }
 
 /**
@@ -24,26 +26,48 @@ export interface PlayerSkinDefinition {
 export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
   {
     id: 'cyan',
-    name: 'Núcleo Aurora',
+    name: 'Aurora Strider',
     subtitle: 'La señal original',
-    description: 'Una geometría fría y estable para entrar al protocolo.',
+    description: 'Aletas de navegación y una corona de luz para abrir camino.',
     rarity: 'INICIAL',
     palette: PLAYER_SKINS.cyan,
-    acquisition: 'default'
+    acquisition: 'default',
+    signature: 'aurora'
   },
   {
     id: 'violet',
-    name: 'Prisma Violeta',
+    name: 'Eclipse Prism',
     subtitle: 'Energía de eclipse',
-    description: 'Capas violetas con emisores dorados para una presencia más intensa.',
+    description: 'Fragmentos cristalinos que orbitan el núcleo como una armadura viva.',
     rarity: 'DESBLOQUEABLE',
     palette: PLAYER_SKINS.violet,
-    acquisition: 'prototype-free'
+    acquisition: 'prototype-free',
+    signature: 'prism'
+  },
+  {
+    id: 'amber',
+    name: 'Solar Bastion',
+    subtitle: 'Núcleo de forja',
+    description: 'Una silueta blindada con aspas solares y pulsos de calor.',
+    rarity: 'NUEVA · DEMO',
+    palette: PLAYER_SKINS.amber,
+    acquisition: 'prototype-free',
+    signature: 'solar'
+  },
+  {
+    id: 'emerald',
+    name: 'Verdant Vector',
+    subtitle: 'Pulso biocristalino',
+    description: 'Cuatro hojas de energía marcan su dirección y respiran al moverse.',
+    rarity: 'NUEVA · DEMO',
+    palette: PLAYER_SKINS.emerald,
+    acquisition: 'prototype-free',
+    signature: 'verdant'
   }
 ] as const;
 
 export const isPlayerSkinId = (value: unknown): value is PlayerSkinId => (
-  value === 'cyan' || value === 'violet'
+  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald'
 );
 
 export const getPlayerSkinDefinition = (id: PlayerSkinId): PlayerSkinDefinition => (

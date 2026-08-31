@@ -8,7 +8,13 @@ const textures = {
   weapons: Texture.WHITE,
   body: Texture.WHITE,
   core: Texture.WHITE,
-  accent: Texture.WHITE
+  accent: Texture.WHITE,
+  signature: {
+    cyan: Texture.WHITE,
+    violet: Texture.WHITE,
+    amber: Texture.WHITE,
+    emerald: Texture.WHITE
+  }
 };
 
 const state = (x: number, y: number, health = 100) => ({
@@ -23,7 +29,7 @@ const state = (x: number, y: number, health = 100) => ({
 describe('PlayerView', () => {
   it('composes aligned pieces, supports skins and animates damage locally', () => {
     const view = new PlayerView(textures);
-    expect(view.root.children).toHaveLength(7);
+    expect(view.root.children).toHaveLength(8);
     expect(view.skinId).toBe('cyan');
     view.render(state(300, 400), 0);
     view.render(state(320, 400), 0.4);
@@ -32,6 +38,8 @@ describe('PlayerView', () => {
 
     view.setSkin('violet');
     expect(view.skinId).toBe('violet');
+    view.setSkin('amber');
+    expect(view.skinId).toBe('amber');
     view.playDamage(20, 0.4);
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[6] as { alpha: number };

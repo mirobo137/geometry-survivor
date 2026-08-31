@@ -1210,6 +1210,35 @@ texto y por último glow; nunca se reduce el telegraph ni se cambia gameplay.
 - Typecheck, tests, builds local/Poki/CrazyGames y smoke browser pasan; el
   móvil de referencia aporta mediciones comparables y no sólo una impresión.
 
+### Primera implementación — tokens, player y primer impacto — 31-08-2026
+
+El primer bloque ejecutable del plan quedó integrado sin alterar reglas de
+simulación:
+
+- `src/content/visual/VisualTokens.ts` centraliza las paletas `cyan`/`violet`,
+  los presupuestos Low/Medium/High y las amplitudes del player;
+- `src/assets/svg/characters/player/` contiene el master y seis piezas con
+  `viewBox="-32 -32 64 64"`; `PlayerVisualAssets` las rasteriza una vez con el
+  frame común y `PlayerView` sólo anima transforms, orientación, idle, recoil y
+  flash de daño;
+- `src/presentation/pixi/fx/FxPool.ts` reserva sprites una vez, reutiliza sus
+  slots y descarta solicitudes cuando el pool está lleno; no hay allocations
+  por impacto en la ruta de actualización;
+- `ImpactFxView` implementa el primer recipe de daño del player: anillo
+  expandible, partículas geométricas limitadas y soporte de reduced-motion;
+- `Game` reenvía el evento `playerDamaged` a la presentación después de que la
+  simulación acepta el daño. El FX no aplica daño ni cambia invulnerabilidad;
+- `?skin=violet` permite comparar la segunda paleta en GitHub Pages y
+  `?quality=low|high` compara presupuestos; sin parámetro se usa `cyan` y
+  `medium` para conservar el comportamiento actual;
+- se añadieron pruebas estructurales SVG y pruebas unitarias de tokens, pool,
+  impacto y player. Typecheck, 95 tests, los tres builds y los 8 smoke browser
+  pasan.
+
+Esta entrega no incluye todavía números de daño, barras, muerte/desarme de
+enemigos ni escena de muerte del player. Esas piezas siguen el orden del plan y
+se construirán sobre este pool y contrato, no como efectos aislados.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |

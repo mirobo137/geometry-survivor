@@ -43,6 +43,8 @@ Atajos que pueden escribirse después de la URL base:
 ?debug=1
 ?stress=1
 ?boss=1
+?skin=violet
+?quality=low|high
 ?spike=rendering
 ?spike=audio
 ```
@@ -591,3 +593,26 @@ sin tocar la simulación.
 - La puerta de la fase exige 60 FPS objetivo, al menos 30 FPS jugables bajo
   stress, legibilidad del player y hazards, ausencia de efectos huérfanos en
   pausa/resize/restart y validación de los tres builds.
+
+## 26. Continuación — primera implementación de juice y player
+
+Fecha: 31-08-2026.
+
+- `VisualTokens.ts` centraliza skins, colores y presupuestos de FX; no hay
+  colores duplicados en `PlayerView` ni límites dispersos en el compositor.
+- El player dejó de ser dos círculos: ahora usa un master SVG y seis piezas
+  cacheadas (sombra, anillo, emisores, cuerpo, núcleo y acentos) con la misma
+  caja lógica. `PlayerView` soporta orientación por movimiento, pulso idle,
+  recoil y flash/compresión visual al recibir daño.
+- `FxPool` reutiliza sprites y mantiene una capacidad fija. `ImpactFxView`
+  dibuja el anillo y las partículas del primer impacto del player; respeta
+  `prefers-reduced-motion`, pausa y descarte por presupuesto.
+- La variante `?skin=violet` permite comparar la segunda paleta en Pages; el
+  parámetro opcional `?quality=low|high` reduce o aumenta el presupuesto del
+  primer recipe. La URL normal sigue usando `cyan`/`medium`.
+- La simulación continúa sin imports de Pixi/DOM/audio. `Game` sólo reenvía el
+  evento de daño aceptado a la fachada de presentación; no cambia vida,
+  invulnerabilidad, XP, colisiones ni timestep.
+- Validación: typecheck correcto, 95 tests unitarios/integración, builds local,
+  Poki y CrazyGames correctos y los 8 smoke browser (incluido Pixel 5 touch)
+  correctos. Pendiente: inspección visual manual en el teléfono publicado.

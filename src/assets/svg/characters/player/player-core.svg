@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-core-title player-core-desc">
+  <title id="player-core-title">Núcleo del jugador</title>
+  <desc id="player-core-desc">Orbe central de energía con cruz direccional.</desc>
+  <g id="player-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <circle id="player-core-orb" cx="0" cy="0" r="8" stroke-width="1.6"/>
+    <path id="player-core-cross" d="M0-5v10M-5 0h10" fill="none" stroke-width="1.4"/>
+  </g>
+</svg>

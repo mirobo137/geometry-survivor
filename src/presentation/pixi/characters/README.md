@@ -6,7 +6,11 @@ estado de simulacion:
 ```text
 characters/
 └─ player/
-   └─ PlayerView.ts
+   ├─ PlayerView.ts
+   └─ PlayerVisualAssets.ts
 ```
 
-No contienen reglas de daño, movimiento, upgrades o input.
+`PlayerView` compone las piezas SVG cacheadas, aplica skins visuales y anima
+idle, orientacion, recoil y flash de daño. `PlayerVisualAssets` es la unica
+frontera que rasteriza los masters con el frame comun. No contienen reglas de
+daño, movimiento, upgrades o input.

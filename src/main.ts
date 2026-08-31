@@ -4,6 +4,7 @@ import { Game } from './app/Game';
 import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import settingsIcon from './assets/svg/ui/settings.svg?raw';
 import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
+import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 
 const getErrorMessage = (error: unknown): string => {
@@ -69,6 +70,12 @@ const bootstrap = async (): Promise<void> => {
   const spike = searchParams.get('spike');
   const stressMode = searchParams.get('stress') === '1';
   const bossDebugMode = searchParams.get('boss') === '1';
+  const requestedSkin = searchParams.get('skin');
+  const playerSkin: PlayerSkinId = requestedSkin === 'violet' ? 'violet' : 'cyan';
+  const requestedQuality = searchParams.get('quality');
+  const fxQuality: FxQuality = requestedQuality === 'low' || requestedQuality === 'high'
+    ? requestedQuality
+    : 'medium';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -106,6 +113,8 @@ const bootstrap = async (): Promise<void> => {
       gameOver: gameOverElement
     },
     stressMode,
+    playerSkin,
+    fxQuality,
     initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode,

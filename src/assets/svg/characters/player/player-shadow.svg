@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-shadow-title player-shadow-desc">
+  <title id="player-shadow-title">Sombra del jugador</title>
+  <desc id="player-shadow-desc">Sombra plana que ancla al jugador a la arena.</desc>
+  <ellipse id="player-shadow" cx="0" cy="5" rx="25" ry="16" fill="#ffffff" opacity="0.42"/>
+</svg>

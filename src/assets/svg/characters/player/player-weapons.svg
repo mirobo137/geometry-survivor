@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-weapons-title player-weapons-desc">
+  <title id="player-weapons-title">Emisores del jugador</title>
+  <desc id="player-weapons-desc">Dos emisores laterales que reaccionan al disparo.</desc>
+  <g id="player-weapons" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-weapon-left" d="M-17-5l-10-6 2 13z" stroke-width="1.4"/>
+    <path id="player-weapon-right" d="M17-5l10-6-2 13z" stroke-width="1.4"/>
+  </g>
+</svg>

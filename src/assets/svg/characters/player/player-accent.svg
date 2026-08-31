@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-accent-title player-accent-desc">
+  <title id="player-accent-title">Acentos del jugador</title>
+  <desc id="player-accent-desc">Dos luces laterales de lectura del estado del jugador.</desc>
+  <g id="player-accent" fill="#ffffff">
+    <circle id="player-accent-left" cx="-14" cy="0" r="2"/>
+    <circle id="player-accent-right" cx="14" cy="0" r="2"/>
+  </g>
+</svg>

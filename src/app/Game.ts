@@ -10,6 +10,7 @@ import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
+import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
@@ -41,6 +42,8 @@ export interface GameOptions {
   readonly buildTarget: string;
   readonly platform: PlatformAdapter;
   readonly startOnMenu?: boolean;
+  readonly playerSkin?: PlayerSkinId;
+  readonly fxQuality?: FxQuality;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -53,6 +56,8 @@ export class Game {
   private readonly stressMode: boolean;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
+  private readonly playerSkin: PlayerSkinId;
+  private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
@@ -172,6 +177,8 @@ export class Game {
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
+    this.playerSkin = options.playerSkin ?? 'cyan';
+    this.fxQuality = options.fxQuality ?? 'medium';
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -184,7 +191,7 @@ export class Game {
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds
     });
-    this.view = new PixiGameView(this.app.renderer);
+    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
@@ -267,9 +274,12 @@ export class Game {
       }
       if (event.type === 'playerDamaged') {
         this.audio.playCue('damage');
-        if (this.player.takeDamage(event.amount) && !this.player.isAlive) {
-          this.finishRun('game-over');
-          return;
+        if (this.player.takeDamage(event.amount)) {
+          this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
+          if (!this.player.isAlive) {
+            this.finishRun('game-over');
+            return;
+          }
         }
       }
       if (event.type === 'bossDefeated') {
@@ -288,7 +298,8 @@ export class Game {
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
-    this.view.renderPlayer(this.player.state);
+    this.view.renderPlayer(this.player.state, this.presentationTime);
+    this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
     this.view.renderLevelUpFx(deltaSeconds);
     this.hud.update({
       elapsedSeconds: this.combat.stats.elapsedSeconds,
@@ -442,6 +453,7 @@ export class Game {
     this.combat.reset();
     this.progression.reset();
     this.upgradeApplier.reset();
+    this.view.resetPresentation();
     this.lifecyclePaused = false;
     this.accumulator = 0;
     this.frames = 0;

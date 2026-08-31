@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-ring-title player-ring-desc">
+  <title id="player-ring-title">Anillo exterior del jugador</title>
+  <desc id="player-ring-desc">Anillo energético que marca el espacio del jugador.</desc>
+  <g id="player-outer-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+    <circle id="player-outer-ring-circle" cx="0" cy="0" r="25" stroke-width="2.2"/>
+    <path id="player-outer-ring-notch" d="M0-29v7M0 22v7M-29 0h7M22 0h7" stroke-width="2.6"/>
+  </g>
+</svg>

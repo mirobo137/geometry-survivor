@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-body-title player-body-desc">
+  <title id="player-body-title">Cuerpo geométrico del jugador</title>
+  <desc id="player-body-desc">Cuerpo hexagonal con panel interior.</desc>
+  <g id="player-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-body-shell" d="M0-20 18-10 18 10 0 20-18 10-18-10z" stroke-width="2.6"/>
+    <path id="player-body-panel" d="M0-14 11-7 11 7 0 14-11 7-11-7z" fill="none" stroke-width="1.4" opacity="0.78"/>
+  </g>
+</svg>

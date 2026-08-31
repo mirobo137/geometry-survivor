@@ -1,13 +1,16 @@
 import { Container, Text, TextStyle } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
 import { ARENA_CENTER, LOGICAL_HEIGHT } from '../config/constants';
+import { type FxQuality, type PlayerSkinId } from '../content/visual/VisualTokens';
 import type { CombatRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
 import { ArenaView } from './pixi/ArenaView';
 import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
+import { ImpactFxView } from './pixi/fx/ImpactFxView';
 import { PlayerView } from './pixi/characters/player/PlayerView';
+import { createPlayerTextures } from './pixi/characters/player/PlayerVisualAssets';
 import { LevelUpFxView, type LevelUpCardAnchor } from './pixi/ui/level-up/LevelUpFxView';
 import { WeaponView } from './pixi/WeaponView';
 import type { LevelUpCardInteractionKind } from '../ui/level-up/LevelUpCardInteraction';
@@ -22,23 +25,27 @@ export class PixiGameView {
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
   private readonly hazardView = new HazardView();
-  private readonly playerView = new PlayerView();
+  private readonly playerView: PlayerView;
+  private readonly impactFxView: ImpactFxView;
   private readonly levelUpFxView: LevelUpFxView;
   private readonly title: Text;
   private readonly hint: Text;
 
-  public constructor(renderer: Renderer) {
+  public constructor(renderer: Renderer, playerSkin: PlayerSkinId = 'cyan', quality: FxQuality = 'medium') {
     this.root.addChild(this.world);
     this.entitiesView = new CombatEntitiesView(renderer);
     this.weaponView = new WeaponView(renderer);
     this.levelUpFxView = new LevelUpFxView(renderer);
+    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin);
+    this.impactFxView = new ImpactFxView(renderer, quality);
     this.world.addChild(
       this.arenaView.root,
       this.entitiesView.root,
       this.weaponView.root,
       this.hazardView.root,
       this.bossView.root,
-      this.playerView.root
+      this.playerView.root,
+      this.impactFxView.root
     );
     this.root.addChild(this.levelUpFxView.root);
 
@@ -94,8 +101,22 @@ export class PixiGameView {
     this.bossView.render(state, arenaRadius);
   }
 
-  public renderPlayer(state: PlayerState): void {
-    this.playerView.render(state);
+  public renderPlayer(state: PlayerState, animationSeconds = 0): void {
+    this.playerView.render(state, animationSeconds);
+  }
+
+  public playPlayerDamage(x: number, y: number, amount: number, animationSeconds: number): void {
+    this.playerView.playDamage(amount, animationSeconds);
+    this.impactFxView.playPlayerDamage(x, y, amount);
+  }
+
+  public renderImpactFx(deltaSeconds: number): void {
+    this.impactFxView.update(deltaSeconds);
+  }
+
+  public resetPresentation(): void {
+    this.playerView.reset();
+    this.impactFxView.clear();
   }
 
   public openLevelUpFx(anchors: readonly LevelUpCardAnchor[]): void {

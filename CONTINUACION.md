@@ -60,7 +60,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 89 tests unitarios/integración en 31 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
+- Última auditoría local: typecheck correcto, 97 tests unitarios/integración en 37 archivos y 8 smoke tests de Playwright pasando en Chromium (7 desktop + 1 Pixel 5 emulado).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -616,3 +616,36 @@ Fecha: 31-08-2026.
 - Validación: typecheck correcto, 95 tests unitarios/integración, builds local,
   Poki y CrazyGames correctos y los 8 smoke browser (incluido Pixel 5 touch)
   correctos. Pendiente: inspección visual manual en el teléfono publicado.
+
+## 27. Continuación — locker de skins cosméticas
+
+Fecha: 31-08-2026.
+
+- El botón `#start-skins` del menú principal ya está habilitado y abre una
+  escena completa de locker dentro del mismo panel. Incluye volver al menú,
+  preview grande, colección, estado equipada/bloqueada y acción de adquirir o
+  equipar.
+- `src/content/visual/SkinDefinitions.ts` es el catálogo único de contenido:
+  Núcleo Aurora (`cyan`) se entrega de inicio y Prisma Violeta (`violet`) se
+  adquiere gratis como flujo de demostración. Añadir otra skin requiere ampliar
+  el tipo, la paleta y una definición, no duplicar la pantalla.
+- `src/ui/skins/SkinSelectPanel.ts` contiene la administración DOM y los
+  botones accesibles; `SkinPreviewSvg.ts` genera un preview vectorial pequeño
+  por código. El jugador real sigue usando sus piezas SVG cacheadas de Pixi.
+- `SaveStore` está en schema v2 y migra guardados v1. Persiste
+  `skins.selected` y `skins.unlocked`, fuerza cyan como fallback seguro y
+  garantiza que nunca se equipe una skin no adquirida.
+- `Game` toma la selección guardada al iniciar y `PixiGameView.setPlayerSkin`
+  actualiza la vista en vivo. Las skins son cosméticas: no cambian simulación,
+  daño, vida, velocidad, colisiones, XP ni balance. `?skin=cyan|violet` sigue
+  disponible como override de desarrollo.
+- El layout usa HTML/SVG, safe-area, portrait y landscape; no crea un canvas,
+  filtro ni textura por tarjeta. `prefers-reduced-motion` elimina el levitado
+  del preview y conserva la información y el foco.
+
+Validación de la sesión: typecheck correcto, 97 tests unitarios/integración,
+build local correcto y 8 smoke browser (desktop + Pixel 5 touch) correctos,
+incluyendo abrir el locker, adquirir/equipar violeta y comprobar el guardado.
+Pendiente para el móvil real: revisar escala de texto y sensación táctil en la
+URL publicada. La economía meta, costes, inventario amplio y skins con ventajas
+siguen fuera de alcance hasta definir esa progresión.

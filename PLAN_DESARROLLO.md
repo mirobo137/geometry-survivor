@@ -1190,8 +1190,8 @@ texto y por último glow; nunca se reduce el telegraph ni se cambia gameplay.
    caos con `?stress=1` y no con una escena artificial aislada únicamente.
 5. Crear muerte del player y muerte especial del boss; confirmar que resumen y
    restart in-place no esperan a terminar la animación.
-6. Añadir las dos skins de prueba y una vista de desarrollo; el selector no
-   se convierte todavía en una pantalla comercial completa.
+6. ✅ Añadir las dos skins de prueba y el locker cosmético; la adquisición es
+   gratuita sólo como prototipo y la economía comercial queda pendiente.
 7. Comparar Low/Medium/High en el móvil de referencia, registrar FPS medio,
    p95, memoria aproximada, legibilidad y captura antes/después. Sólo entonces
    decidir si hace falta `ParticleContainer` o un filtro pequeño.
@@ -1238,6 +1238,39 @@ simulación:
 Esta entrega no incluye todavía números de daño, barras, muerte/desarme de
 enemigos ni escena de muerte del player. Esas piezas siguen el orden del plan y
 se construirán sobre este pool y contrato, no como efectos aislados.
+
+### Primera pantalla de skins — locker cosmético — 31-08-2026
+
+La futura pantalla de skins ya tiene una primera implementación ejecutable,
+sin convertir las skins en un sistema de estadísticas ni introducir una
+economía prematura:
+
+- `src/content/visual/SkinDefinitions.ts` contiene el catálogo tipado, el
+  texto, la paleta y el modo de adquisición de cada skin. El catálogo es el
+  único lugar que debe ampliarse al añadir otra variante.
+- `src/ui/skins/SkinSelectPanel.ts` separa la escena de administración del
+  menú principal. Cada tarjeta es un botón HTML accesible con estado `locked`,
+  `selected` y acción de adquirir/equipar; el preview se genera con SVG
+  code-first y no usa PNG ni canvas adicional.
+- `SaveStore` migra el schema v1 al v2 y persiste `skins.selected` y
+  `skins.unlocked`. Cyan se entrega por defecto; Violeta se puede adquirir
+  gratis en este prototipo para validar el flujo en Pages. El contrato queda
+  preparado para reemplazarlo por coste/requisito cuando exista una
+  progresión meta real.
+- `Game` carga la skin guardada al crear la vista y la actualiza en vivo cuando
+  se equipa desde el locker. El query `?skin=cyan|violet` sigue siendo un
+  override de desarrollo; ninguna skin toca PlayerModel, combate, colisiones,
+  daño, XP o balance.
+- La pantalla conserva safe-area, portrait, landscape, foco visible,
+  `prefers-reduced-motion` y un límite de dos tarjetas iniciales. El panel se
+  puede cerrar y volver al menú sin destruir la escena ni dejar huecos de
+  layout.
+
+La puerta de esta entrega exige: adquisición y equipamiento persistentes tras
+recargar, preview SVG sin recursos externos, migración segura de guardados,
+typecheck, suite, tres builds y smoke browser sin errores de consola/red. La
+economía, inventario masivo, rarezas comerciales y skins con efectos de juego
+permanecen fuera de alcance hasta definir la progresión meta.
 
 # 16. RIESGOS PRINCIPALES
 

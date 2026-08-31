@@ -3,7 +3,7 @@ import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
-import { mergeBestRun, type SaveStore } from '../platform/save/SaveStore';
+import { mergeBestRun, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -127,6 +127,13 @@ export class Game {
     this.persistAudioSettings(settings);
   };
 
+  private readonly onStartSkinStateChange = (skins: SkinSaveData): void => {
+    const saved = this.saveStore.load();
+    if (!skins.unlocked.includes(skins.selected)) return;
+    this.saveStore.save({ ...saved, skins });
+    this.view.setPlayerSkin(skins.selected);
+  };
+
   private readonly onPauseRestart = (): void => {
     if (this.contextLost) return;
     if (!this.gameState.restartFromPause()) return;
@@ -177,16 +184,17 @@ export class Game {
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
-    this.playerSkin = options.playerSkin ?? 'cyan';
+    this.saveStore = options.platform.saveStore;
+    const saved = this.saveStore.load();
+    this.playerSkin = options.playerSkin ?? saved.skins.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
     this.lifecycle = options.platform.lifecycle;
-    this.saveStore = options.platform.saveStore;
     this.audio = options.platform.audio;
-    this.audio.configure(this.saveStore.load().settings);
+    this.audio.configure(saved.settings);
     this.combat = new CombatSimulation({
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds
@@ -226,8 +234,10 @@ export class Game {
       this.startScreen?.open({
         settings: saved.settings,
         best: saved.best,
+        skins: saved.skins,
         onPlay: this.onStartPlay,
-        onSettingsChange: this.onStartSettingsChange
+        onSettingsChange: this.onStartSettingsChange,
+        onSkinStateChange: this.onStartSkinStateChange
       });
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;

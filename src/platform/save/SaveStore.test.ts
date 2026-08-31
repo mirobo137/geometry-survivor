@@ -38,14 +38,16 @@ describe('LocalSaveStore', () => {
       ...defaults,
       settings: { ...defaults.settings, sfxVolume: 0.35, quality: 'low' },
       best: { timeSeconds: 302.5, score: 8400 },
-      tutorialSeen: true
+      tutorialSeen: true,
+      skins: defaults.skins
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { ...defaults.settings, sfxVolume: 0.35, quality: 'low' },
       best: { timeSeconds: 302.5, score: 8400 },
-      tutorialSeen: true
+      tutorialSeen: true,
+      skins: defaults.skins
     });
   });
 
@@ -65,8 +67,20 @@ describe('LocalSaveStore', () => {
         quality: 'medium'
       },
       best: { timeSeconds: 0, score: 14 },
-      tutorialSeen: true
+      tutorialSeen: true,
+      skins: { selected: 'cyan', unlocked: ['cyan'] }
     });
+  });
+
+  it('normalizes skin ownership and never equips a locked or unknown skin', () => {
+    expect(migrateSaveData({
+      schemaVersion: 1,
+      skins: { selected: 'violet', unlocked: ['violet', 'violet', 'unknown'] }
+    }).skins).toEqual({ selected: 'violet', unlocked: ['cyan', 'violet'] });
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      skins: { selected: 'violet', unlocked: [] }
+    }).skins).toEqual({ selected: 'cyan', unlocked: ['cyan'] });
   });
 
   it('uses memory fallback when persistent storage rejects writes', () => {

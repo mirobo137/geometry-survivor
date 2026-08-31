@@ -105,6 +105,10 @@ export class PixiGameView {
     this.playerView.render(state, animationSeconds);
   }
 
+  public setPlayerSkin(skin: PlayerSkinId): void {
+    this.playerView.setSkin(skin);
+  }
+
   public playPlayerDamage(x: number, y: number, amount: number, animationSeconds: number): void {
     this.playerView.playDamage(amount, animationSeconds);
     this.impactFxView.playPlayerDamage(x, y, amount);

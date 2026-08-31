@@ -55,7 +55,20 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-mark svg')).toBeVisible();
   await expect(page.locator('#start-play')).toBeVisible();
   await expect(page.locator('#start-level')).toHaveAttribute('disabled', '');
-  await expect(page.locator('#start-skins')).toHaveAttribute('disabled', '');
+  await expect(page.locator('#start-skins')).toBeEnabled();
+
+  await page.locator('#start-skins').click();
+  await expect(page.locator('#start-main-view')).toBeHidden();
+  await expect(page.locator('#start-skins-view')).toBeVisible();
+  await expect(page.locator('#start-skin-preview svg')).toBeVisible();
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(2);
+  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
+  await page.locator('.skin-card[data-skin="violet"] button').click();
+  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-skin-selected-name')).toHaveText('Prisma Violeta');
+  await page.locator('#start-skins-back').click();
+  await expect(page.locator('#start-skins-view')).toBeHidden();
+  await expect(page.locator('#start-main-view')).toBeVisible();
 
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
@@ -77,6 +90,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
   expect(saved).not.toBeNull();
   expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
+  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'violet'] });
   expect(failures).toEqual([]);
 });
 

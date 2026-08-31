@@ -1,7 +1,10 @@
 export type QualityPreset = 'low' | 'medium' | 'high';
 export type ControlScheme = 'auto' | 'touch' | 'keyboard';
 
-export const SAVE_SCHEMA_VERSION = 1 as const;
+import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
+import type { PlayerSkinId } from '../../content/visual/VisualTokens';
+
+export const SAVE_SCHEMA_VERSION = 2 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 
@@ -18,11 +21,17 @@ export interface BestRun {
   readonly score: number;
 }
 
+export interface SkinSaveData {
+  readonly selected: PlayerSkinId;
+  readonly unlocked: readonly PlayerSkinId[];
+}
+
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
   readonly settings: SaveSettings;
   readonly best: BestRun;
   readonly tutorialSeen: boolean;
+  readonly skins: SkinSaveData;
 }
 
 export interface StorageAdapter {
@@ -55,7 +64,11 @@ export const createDefaultSaveData = (): SaveData => ({
     timeSeconds: 0,
     score: 0
   },
-  tutorialSeen: false
+  tutorialSeen: false,
+  skins: {
+    selected: 'cyan',
+    unlocked: ['cyan']
+  }
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -86,8 +99,15 @@ export const migrateSaveData = (value: unknown): SaveData => {
 
   const rawSettings = isRecord(value.settings) ? value.settings : {};
   const rawBest = isRecord(value.best) ? value.best : {};
+  const rawSkins = isRecord(value.skins) ? value.skins : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
+  const unlocked = Array.isArray(rawSkins.unlocked)
+    ? rawSkins.unlocked.filter(isPlayerSkinId)
+    : [];
+  const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', ...unlocked]));
+  const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'cyan';
+  const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'cyan';
 
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -102,7 +122,11 @@ export const migrateSaveData = (value: unknown): SaveData => {
       timeSeconds: Math.max(0, finiteOr(rawBest.timeSeconds, finiteOr(legacyBestTime, defaults.best.timeSeconds))),
       score: Math.max(0, finiteOr(rawBest.score, finiteOr(legacyBestScore, defaults.best.score)))
     },
-    tutorialSeen: typeof value.tutorialSeen === 'boolean' ? value.tutorialSeen : defaults.tutorialSeen
+    tutorialSeen: typeof value.tutorialSeen === 'boolean' ? value.tutorialSeen : defaults.tutorialSeen,
+    skins: {
+      selected,
+      unlocked: normalizedUnlocked
+    }
   };
 };
 

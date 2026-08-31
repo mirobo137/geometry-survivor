@@ -99,7 +99,6 @@ body {
     linear-gradient(90deg, rgba(117, 230, 255, 0.04) 1px, transparent 1px);
   background-size: 3rem 3rem;
   mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
-  animation: start-grid-drift 28s linear infinite;
 }
 
 #start-screen::after {
@@ -113,6 +112,8 @@ body {
 }
 
 .start-scene {
+  /* Keep large backdrop layers on opacity/dash animations for mobile GPU
+     stability; transforms remain limited to the small decorative nodes. */
   position: absolute;
   z-index: 0;
   inset: 0;
@@ -134,13 +135,12 @@ body {
     radial-gradient(circle at 50% 48%, rgba(117, 230, 255, 0.14), transparent 17%),
     radial-gradient(circle at 16% 29%, rgba(210, 168, 255, 0.1), transparent 18%),
     radial-gradient(circle at 86% 72%, rgba(255, 227, 154, 0.08), transparent 20%);
-  animation: start-atmosphere-breathe 10s ease-in-out infinite alternate;
+  animation: start-atmosphere-pulse 10s ease-in-out infinite alternate;
 }
 
 .start-scene::after {
   background: linear-gradient(115deg, transparent 35%, rgba(117, 230, 255, 0.08) 48%, transparent 62%);
-  background-size: 220% 100%;
-  animation: start-light-sweep 13s ease-in-out infinite;
+  animation: start-light-pulse 13s ease-in-out infinite;
 }
 
 .start-scene svg {
@@ -150,16 +150,6 @@ body {
   width: 100%;
   height: 100%;
   opacity: 0.88;
-}
-
-.start-scene .start-hero-orbit,
-.start-scene .start-hero-rays,
-.start-scene .start-hero-sweeps,
-.start-scene .start-hero-shards,
-.start-scene .start-hero-core,
-.start-scene .start-hero-node {
-  transform-box: view-box;
-  transform-origin: 600px 450px;
 }
 
 .start-scene .start-hero-orbit-outer {
@@ -474,47 +464,42 @@ body {
   to { transform: rotate(360deg); }
 }
 
-@keyframes start-grid-drift {
-  from { background-position: 0 0; }
-  to { background-position: 3rem 3rem; }
+@keyframes start-atmosphere-pulse {
+  from { opacity: 0.62; }
+  to { opacity: 1; }
 }
 
-@keyframes start-atmosphere-breathe {
-  from { transform: scale(0.96) rotate(-2deg); opacity: 0.72; }
-  to { transform: scale(1.04) rotate(2deg); opacity: 1; }
-}
-
-@keyframes start-light-sweep {
-  from { background-position: 120% 0; opacity: 0; }
-  20%, 70% { opacity: 1; }
-  to { background-position: -30% 0; opacity: 0; }
+@keyframes start-light-pulse {
+  from { opacity: 0.12; }
+  50% { opacity: 0.42; }
+  to { opacity: 0.12; }
 }
 
 @keyframes start-panel-sheen {
-  from { background-position: 120% 0; }
-  45%, 65% { background-position: 0 0; }
-  to { background-position: -120% 0; }
+  from { opacity: 0.18; }
+  50% { opacity: 0.48; }
+  to { opacity: 0.18; }
 }
 
 @keyframes start-hero-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -180; }
 }
 
 @keyframes start-hero-orbit-reverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
+  from { stroke-dashoffset: -180; }
+  to { stroke-dashoffset: 0; }
 }
 
 @keyframes start-hero-rays {
-  from { opacity: 0.55; transform: scale(0.985); }
-  to { opacity: 1; transform: scale(1.015); }
+  from { opacity: 0.55; }
+  to { opacity: 1; }
 }
 
 @keyframes start-hero-sweeps {
-  from { opacity: 0.55; transform: scale(0.99); }
-  50% { opacity: 1; transform: scale(1.01); }
-  to { opacity: 0.55; transform: scale(0.99); }
+  from { opacity: 0.55; }
+  50% { opacity: 1; }
+  to { opacity: 0.55; }
 }
 
 @keyframes start-hero-dash {
@@ -528,8 +513,8 @@ body {
 }
 
 @keyframes start-hero-shards {
-  from { opacity: 0.55; transform: translateY(0); }
-  to { opacity: 1; transform: translateY(-5px); }
+  from { opacity: 0.55; }
+  to { opacity: 1; }
 }
 
 @keyframes start-hero-core-breathe {

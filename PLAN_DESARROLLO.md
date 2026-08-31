@@ -1275,6 +1275,11 @@ la frontera entre UI y simulación:
 - `prefers-reduced-motion` detiene la animación y baja la opacidad ambiental.
   El fondo se recorta con el viewport, mientras panel, copy, CTA y hit-area
   conservan prioridad visual en portrait, landscape y safe-area.
+- Para compatibilidad con GPU móviles, no se animan rotaciones de grupos SVG
+  grandes ni desplazamientos de gradientes de pantalla completa: las órbitas
+  se mueven con `stroke-dashoffset`, las luces con opacidad y sólo los nodos
+  pequeños usan escala. Las capas no llegan a opacidad cero al reiniciar su
+  ciclo, evitando un destello de apagado/encendido.
 
 Definition of Done adicional: contrato SVG e IDs validados por prueba
 estructural, escena visible en smoke browser, inspección en 1280×720 y

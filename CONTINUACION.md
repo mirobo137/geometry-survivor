@@ -519,3 +519,25 @@ La próxima mejora visual debe medirse en el teléfono de referencia. Sólo si l
 escena SVG/CSS resulta insuficiente se abrirá un spike Pixi separado con un
 pool pequeño de partículas; no se añadirá `pixi-filters` ni una textura
 recalculada por frame sin evidencia de coste y beneficio.
+
+## 23. Continuación — estabilización de la escena en móviles
+
+Fecha: 31-08-2026.
+
+- La pantalla y `#start-scene` permanecen visibles durante toda la ejecución;
+  la revisión local confirmó que no hay un cambio de fase ni un `display:none`
+  intermitente.
+- La causa más probable del parpadeo observado en ciertos GPU móviles era la
+  combinación de rotaciones de grupos SVG grandes, gradientes desplazados y
+  varias superficies compuestas mientras el panel usa `backdrop-filter`.
+- La animación se ajustó para mantener la escena estable: el grid y los
+  desplazamientos de capas grandes son estáticos; las órbitas usan
+  `stroke-dashoffset`, las luces usan opacidad y sólo los nodos pequeños
+  conservan un pulso de escala. El efecto visual dinámico se mantiene sin
+  reconstruir el SVG.
+- Las capas de luz ya no llegan a opacidad cero en el reinicio del ciclo; así
+  se evita un destello de apagado/encendido que podía parecer una desaparición.
+- La inspección local en portrait (390×844) a 0, 3, 6 y 9 segundos conservó el
+  panel, el CTA y el SVG; typecheck y la suite de 89 tests deben repetirse
+  antes de publicar este ajuste. La validación final requiere volver a abrir
+  la URL publicada en el móvil de referencia.

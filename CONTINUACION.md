@@ -753,6 +753,20 @@ Validacion de esta sesion: typecheck correcto, 101 pruebas
 unitarias/integracion, 9 smoke browser (incluido movil) y builds
 local/Poki/CrazyGames correctos.
 
+## 33. Continuacion — cierre visual de player y boss
+
+Fecha: 01-09-2026.
+
+- `PlayerView` conserva sus piezas SVG cacheadas y, al morir, separa armas,
+  cuerpo, core y acento mediante transforms durante 0.55 s mientras se desvanece.
+- `TerminalFxView` reutiliza un pool acotado para un anillo/burst del player y
+  un cierre mas amplio del boss. El efecto es presentacion: no espera al resumen,
+  no bloquea reinicio ni modifica el estado terminal.
+- `Game` solo dispara las recetas desde los eventos ya existentes; la simulacion
+  y los contratos de victoria/game-over permanecen sin cambios.
+
+Validacion pendiente de cierre: typecheck, suite, smoke browser y builds.
+
 ## 32. Continuacion — numeros de dano y mini-barras acotadas
 
 Fecha: 01-09-2026.

@@ -29,6 +29,7 @@ export class PlayerView {
   private lastY: number | null = null;
   private damageAtSeconds = Number.NEGATIVE_INFINITY;
   private damageStrength = 0;
+  private defeatProgress = -1;
 
   public constructor(textures: PlayerTextureSet, skin: PlayerSkinId = 'cyan') {
     this.textures = textures;
@@ -94,15 +95,30 @@ export class PlayerView {
       pulse * (1 + damagePulse * PLAYER_VISUAL_TOKENS.damageSquash),
       pulse * (1 - damagePulse * PLAYER_VISUAL_TOKENS.damageSquash)
     );
+    const defeat = Math.max(0, this.defeatProgress);
     this.body.rotation = -damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.signature.rotation = animationSeconds * motion.signatureSpin;
     this.signature.scale.set(1 + Math.sin(animationSeconds * 3.2) * motion.signaturePulse);
     this.ring.rotation = -animationSeconds * motion.signatureSpin * 0.35;
+    this.weapons.position.set(defeat * 26, defeat * 8);
+    this.body.position.set(-defeat * 14, defeat * 12);
+    this.core.position.set(0, -defeat * 28);
+    this.accent.position.set(defeat * 18, -defeat * 16);
+    this.ring.scale.set(1 + defeat * 0.45);
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
-    this.root.alpha = state.health > 0 ? 1 : 0.72;
+    this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
+  }
+
+  public playDefeat(): void {
+    this.defeatProgress = 0;
+  }
+
+  public updateDefeat(deltaSeconds: number): void {
+    if (this.defeatProgress < 0) return;
+    this.defeatProgress = Math.min(1, this.defeatProgress + Math.max(0, deltaSeconds) / 0.55);
   }
 
   public reset(): void {
@@ -111,11 +127,17 @@ export class PlayerView {
     this.facing = 0;
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
+    this.defeatProgress = -1;
     this.root.rotation = 0;
     this.root.scale.set(1);
     this.signature.rotation = 0;
     this.signature.scale.set(1);
     this.ring.rotation = 0;
+    this.ring.scale.set(1);
+    this.weapons.position.set(0, 0);
+    this.body.position.set(0, 0);
+    this.core.position.set(0, 0);
+    this.accent.position.set(0, 0);
     this.damageFlash.alpha = 0;
   }
 }

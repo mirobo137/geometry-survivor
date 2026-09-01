@@ -44,6 +44,10 @@ describe('PlayerView', () => {
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[6] as { alpha: number };
     expect(flash.alpha).toBeGreaterThan(0);
+    view.playDefeat();
+    view.updateDefeat(0.3);
+    view.render(state(320, 400, 0), 0.5);
+    expect(view.root.alpha).toBeLessThan(1);
     view.reset();
     expect(view.root.rotation).toBe(0);
   });

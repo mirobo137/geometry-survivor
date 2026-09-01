@@ -9,6 +9,7 @@ import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { ImpactFxView } from './pixi/fx/ImpactFxView';
+import { TerminalFxView } from './pixi/fx/TerminalFxView';
 import { PlayerView } from './pixi/characters/player/PlayerView';
 import { createPlayerTextures } from './pixi/characters/player/PlayerVisualAssets';
 import { LevelUpFxView, type LevelUpCardAnchor } from './pixi/ui/level-up/LevelUpFxView';
@@ -27,6 +28,7 @@ export class PixiGameView {
   private readonly hazardView = new HazardView();
   private readonly playerView: PlayerView;
   private readonly impactFxView: ImpactFxView;
+  private readonly terminalFxView: TerminalFxView;
   private readonly levelUpFxView: LevelUpFxView;
   private readonly title: Text;
   private readonly hint: Text;
@@ -38,6 +40,7 @@ export class PixiGameView {
     this.levelUpFxView = new LevelUpFxView(renderer);
     this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin);
     this.impactFxView = new ImpactFxView(renderer, quality);
+    this.terminalFxView = new TerminalFxView(renderer, quality);
     this.world.addChild(
       this.arenaView.root,
       this.entitiesView.root,
@@ -45,7 +48,8 @@ export class PixiGameView {
       this.hazardView.root,
       this.bossView.root,
       this.playerView.root,
-      this.impactFxView.root
+      this.impactFxView.root,
+      this.terminalFxView.root
     );
     this.root.addChild(this.levelUpFxView.root);
 
@@ -118,14 +122,29 @@ export class PixiGameView {
     this.impactFxView.playPlayerDamage(x, y, amount);
   }
 
+  public playPlayerDefeat(x: number, y: number): void {
+    this.playerView.playDefeat();
+    this.terminalFxView.playPlayerDefeat(x, y);
+  }
+
+  public playBossDefeat(x: number, y: number, radius: number): void {
+    this.terminalFxView.playBossDefeat(x, y, radius);
+  }
+
   public renderImpactFx(deltaSeconds: number): void {
     this.impactFxView.update(deltaSeconds);
     this.entitiesView.updateFx(deltaSeconds);
   }
 
+  public updateTerminalFx(deltaSeconds: number): void {
+    this.playerView.updateDefeat(deltaSeconds);
+    this.terminalFxView.update(deltaSeconds);
+  }
+
   public resetPresentation(): void {
     this.playerView.reset();
     this.impactFxView.clear();
+    this.terminalFxView.clear();
     this.entitiesView.reset();
   }
 

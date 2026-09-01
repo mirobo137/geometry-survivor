@@ -288,6 +288,7 @@ export class Game {
         if (this.player.takeDamage(event.amount)) {
           this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
           if (!this.player.isAlive) {
+            this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
             this.finishRun('game-over');
             return;
           }
@@ -295,6 +296,7 @@ export class Game {
       }
       if (event.type === 'bossDefeated') {
         this.audio.playCue('boss-defeated');
+        this.view.playBossDefeat(this.combat.renderState.boss.x, this.combat.renderState.boss.y, 48);
         this.finishRun('victory');
         return;
       }
@@ -311,6 +313,7 @@ export class Game {
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.view.renderPlayer(this.player.state, this.presentationTime);
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
+    this.view.updateTerminalFx(deltaSeconds);
     this.view.renderLevelUpFx(deltaSeconds);
     this.hud.update({
       elapsedSeconds: this.combat.stats.elapsedSeconds,

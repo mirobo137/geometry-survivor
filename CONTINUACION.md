@@ -811,7 +811,8 @@ Fecha: 01-09-2026.
   despues de 3 s. El timer se limpia en `resetRunState` y `shutdown`, y verifica
   que la fase siga terminal antes de tomar foco.
 
-Validacion pendiente de ejecutar en esta sesion: typecheck, tests, smoke browser
-y builds local/Poki/CrazyGames. En movil real hay que comprobar que el efecto se
-percibe completo antes del resumen; la puerta humana sigue siendo mantener 60
-FPS y que el boton de reinicio aparezca tras el cierre visual.
+Validacion de esta sesion: typecheck correcto, 105 pruebas unitarias/integracion,
+9 smoke browser (desktop + Pixel 5) y builds local/Poki/CrazyGames correctos.
+En movil real hay que comprobar que el efecto se percibe completo antes del
+resumen; la puerta humana sigue siendo mantener 60 FPS y que el boton de
+reinicio aparezca tras el cierre visual.

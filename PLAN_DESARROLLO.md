@@ -1721,6 +1721,23 @@ y el estudio de [features que influyen en impact feel](https://arxiv.org/abs/220
 Antes de aumentar filtros o particulas se debe repetir la puerta de 60 FPS en el
 telefono de referencia y comparar Low/Medium/High.
 
+## Feedback de disparo y estelas de proyectil - 01-09-2026
+
+El primer bloque de accion del player queda integrado sin introducir eventos de
+simulacion nuevos: `Game` observa el contador ya existente de disparos y
+condensa cualquier rafaga del mismo frame en un pulso visual y un cue ZzFX.
+`PlayerView` anima recoil local del emisor durante 90 ms y dibuja un destello
+geometrico en las dos bocas; no escala ni mueve el cuerpo de gameplay.
+
+`ProjectileTrailView` usa una sola `Graphics` y un historial de ranuras activas
+para dibujar una linea corta alineada con la velocidad. El trail no aparece en
+Low, se limita a 64 segmentos en Medium y 120 en High, y se limpia al reciclar
+o reiniciar. Los proyectiles siguen siendo sprites pooled y su movimiento,
+cadencia, dano y colisiones permanecen en `CombatWeaponSystem`.
+
+La puerta de esta entrega exige verificar en movil el destello/recoil, que el
+trail no tape enemigos ni telegraphs, y que `?stress=1` conserve el presupuesto.
+
 ## Muerte especial del boss - 01-09-2026
 
 La derrota del boss ya no comparte exactamente la receta del player. Durante

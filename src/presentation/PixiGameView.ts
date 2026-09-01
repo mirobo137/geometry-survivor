@@ -113,6 +113,10 @@ export class PixiGameView {
     this.playerView.render(state, animationSeconds);
   }
 
+  public playPlayerShot(animationSeconds: number): void {
+    this.playerView.playShot(animationSeconds);
+  }
+
   public setPlayerSkin(skin: PlayerSkinId): void {
     this.playerView.setSkin(skin);
   }

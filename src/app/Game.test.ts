@@ -5,13 +5,15 @@ import type { GameElements, GameOptions } from './Game';
 import { Game } from './Game';
 
 const mocks = vi.hoisted(() => ({
-  gameOverOpen: vi.fn()
+  gameOverOpen: vi.fn(),
+  playerShot: vi.fn()
 }));
 
 vi.mock('../presentation/PixiGameView', () => ({
   PixiGameView: class {
     public readonly root = {};
     public closeLevelUpFx = vi.fn();
+    public playPlayerShot = mocks.playerShot;
   }
 }));
 
@@ -84,6 +86,7 @@ const createOptions = (): GameOptions => ({
 describe('Game', () => {
   beforeEach(() => {
     mocks.gameOverOpen.mockReset();
+    mocks.playerShot.mockReset();
     vi.stubGlobal('window', { location: { search: '' } });
   });
 
@@ -104,5 +107,23 @@ describe('Game', () => {
     vi.advanceTimersByTime(1);
     expect(mocks.gameOverOpen).toHaveBeenCalledTimes(1);
     expect(mocks.gameOverOpen.mock.calls[0][0]).toMatchObject({ outcome: 'victory' });
+  });
+
+  it('collapses a burst of simulation shots into one presentation pulse per frame', () => {
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      combat: { stats: { shotsFired: number } };
+      syncShotFeedback: () => void;
+    };
+    runtime.combat.stats.shotsFired = 3;
+    runtime.syncShotFeedback();
+    runtime.syncShotFeedback();
+    expect(mocks.playerShot).toHaveBeenCalledTimes(1);
+
+    runtime.combat.stats.shotsFired = 0;
+    runtime.syncShotFeedback();
+    runtime.combat.stats.shotsFired = 1;
+    runtime.syncShotFeedback();
+    expect(mocks.playerShot).toHaveBeenCalledTimes(2);
   });
 });

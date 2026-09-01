@@ -29,7 +29,7 @@ const state = (x: number, y: number, health = 100) => ({
 describe('PlayerView', () => {
   it('composes aligned pieces, supports skins and animates damage locally', () => {
     const view = new PlayerView(textures);
-    expect(view.root.children).toHaveLength(8);
+    expect(view.root.children).toHaveLength(9);
     expect(view.skinId).toBe('cyan');
     view.render(state(300, 400), 0);
     view.render(state(320, 400), 0.4);
@@ -44,6 +44,12 @@ describe('PlayerView', () => {
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[6] as { alpha: number };
     expect(flash.alpha).toBeGreaterThan(0);
+    view.playShot(0.6);
+    view.render(state(320, 400, 80), 0.63);
+    const shotFlash = view.root.children[8] as { visible: boolean };
+    expect(shotFlash.visible).toBe(true);
+    const weapons = view.root.children[3] as { position: { y: number } };
+    expect(weapons.position.y).toBeGreaterThan(0);
     view.playDefeat();
     view.updateDefeat(0.3);
     view.render(state(320, 400, 0), 0.5);

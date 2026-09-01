@@ -1,4 +1,4 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
 import {
   PLAYER_SKINS,
@@ -22,6 +22,7 @@ export class PlayerView {
   private readonly core: Sprite;
   private readonly accent: Sprite;
   private readonly damageFlash: Sprite;
+  private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
   private skin: PlayerSkinId = 'cyan';
   private facing = 0;
@@ -29,6 +30,7 @@ export class PlayerView {
   private lastY: number | null = null;
   private damageAtSeconds = Number.NEGATIVE_INFINITY;
   private damageStrength = 0;
+  private shotAtSeconds = Number.NEGATIVE_INFINITY;
   private defeatProgress = -1;
 
   public constructor(textures: PlayerTextureSet, skin: PlayerSkinId = 'cyan') {
@@ -40,13 +42,14 @@ export class PlayerView {
     this.core = new Sprite(textures.core);
     this.accent = new Sprite(textures.accent);
     this.damageFlash = new Sprite(textures.body);
+    this.shotFlash = new Graphics();
     this.signature = new Sprite(textures.signature.cyan);
     this.damageFlash.tint = 0xffffff;
     this.damageFlash.alpha = 0;
     for (const part of [this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash]) {
       part.anchor.set(0.5);
     }
-    this.root.addChild(this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash);
+    this.root.addChild(this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash);
     this.setSkin(skin);
   }
 
@@ -73,6 +76,11 @@ export class PlayerView {
     this.damageStrength = Math.min(1.4, Math.max(0.6, amount / 12));
   }
 
+  /** Presentation-only recoil signal; weapon cadence still belongs to simulation. */
+  public playShot(animationSeconds: number): void {
+    this.shotAtSeconds = animationSeconds;
+  }
+
   public render(state: PlayerState, animationSeconds: number): void {
     this.root.position.set(state.x, state.y);
     if (this.lastX !== null && this.lastY !== null) {
@@ -91,17 +99,22 @@ export class PlayerView {
       ? Math.min(1, damageAge / PLAYER_VISUAL_TOKENS.damageFlashSeconds)
       : 1;
     const damagePulse = damageProgress < 1 ? Math.sin(damageProgress * Math.PI) * this.damageStrength : 0;
+    const shotAge = animationSeconds - this.shotAtSeconds;
+    const shotProgress = shotAge >= 0
+      ? Math.min(1, shotAge / PLAYER_VISUAL_TOKENS.shotFlashSeconds)
+      : 1;
+    const shotPulse = shotProgress < 1 ? Math.sin(shotProgress * Math.PI) : 0;
     this.root.scale.set(
       pulse * (1 + damagePulse * PLAYER_VISUAL_TOKENS.damageSquash),
       pulse * (1 - damagePulse * PLAYER_VISUAL_TOKENS.damageSquash)
     );
     const defeat = Math.max(0, this.defeatProgress);
     this.body.rotation = -damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
-    this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
+    this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians - shotPulse * 0.025;
     this.signature.rotation = animationSeconds * motion.signatureSpin;
     this.signature.scale.set(1 + Math.sin(animationSeconds * 3.2) * motion.signaturePulse);
     this.ring.rotation = -animationSeconds * motion.signatureSpin * 0.35;
-    this.weapons.position.set(defeat * 26, defeat * 8);
+    this.weapons.position.set(defeat * 26, defeat * 8 + shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance);
     this.body.position.set(-defeat * 14, defeat * 12);
     this.core.position.set(0, -defeat * 28);
     this.accent.position.set(defeat * 18, -defeat * 16);
@@ -109,6 +122,7 @@ export class PlayerView {
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
+    this.renderShotFlash(shotPulse);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
   }
 
@@ -129,6 +143,7 @@ export class PlayerView {
     this.facing = 0;
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
+    this.shotAtSeconds = Number.NEGATIVE_INFINITY;
     this.defeatProgress = -1;
     this.root.rotation = 0;
     this.root.scale.set(1);
@@ -141,5 +156,34 @@ export class PlayerView {
     this.core.position.set(0, 0);
     this.accent.position.set(0, 0);
     this.damageFlash.alpha = 0;
+    this.shotFlash.clear();
+    this.shotFlash.visible = false;
+  }
+
+  private renderShotFlash(pulse: number): void {
+    this.shotFlash.clear();
+    if (pulse <= 0) {
+      this.shotFlash.visible = false;
+      return;
+    }
+    const color = PLAYER_SKINS[this.skin].accent;
+    const alpha = pulse * 0.9;
+    this.shotFlash.visible = true;
+    this.shotFlash
+      .beginPath()
+      .moveTo(-27, -11)
+      .lineTo(-36, -15)
+      .lineTo(-32, -11)
+      .lineTo(-36, -7)
+      .lineTo(-27, -11)
+      .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
+    this.shotFlash
+      .beginPath()
+      .moveTo(27, -11)
+      .lineTo(36, -15)
+      .lineTo(32, -11)
+      .lineTo(36, -7)
+      .lineTo(27, -11)
+      .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
   }
 }

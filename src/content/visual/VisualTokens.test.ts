@@ -15,5 +15,8 @@ describe('VisualTokens', () => {
     expect(FX_QUALITY.medium.particleCount).toBeLessThan(FX_QUALITY.high.particleCount);
     expect(FX_QUALITY.high.poolCapacity).toBeLessThanOrEqual(240);
     expect(FX_QUALITY.low.ringAlpha).toBeLessThan(FX_QUALITY.high.ringAlpha);
+    expect(FX_QUALITY.low.projectileTrailAlpha).toBe(0);
+    expect(FX_QUALITY.medium.projectileTrailAlpha).toBeLessThan(FX_QUALITY.high.projectileTrailAlpha);
+    expect(FX_QUALITY.medium.projectileTrailLimit).toBeLessThan(FX_QUALITY.high.projectileTrailLimit);
   });
 });

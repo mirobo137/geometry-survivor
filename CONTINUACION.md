@@ -834,3 +834,25 @@ Fecha: 01-09-2026.
 Validacion pendiente de esta iteracion: comprobar en `?boss=1` que el boss se
 desplace, se derrote y deje ver la secuencia completa antes del resumen, ademas
 de repetir typecheck, tests, smoke browser y los tres builds.
+
+## 36. Continuacion - feedback de disparo y estelas
+
+Fecha: 01-09-2026.
+
+- `PlayerView` agrega recoil local de los emisores y un destello geometrico de
+  90 ms. `Game` usa el contador de disparos de `CombatSimulation` y colapsa
+  multiples disparos en un solo pulso por frame para no saturar el player ni el
+  bus de audio.
+- `AudioCueDefinitions` incorpora `player-shot` con cooldown de 80 ms. Howler y
+  ZzFX siguen detras de `AudioService`; el cue falla de forma silenciosa si el
+  contexto no fue desbloqueado.
+- `ProjectileTrailView` dibuja estelas cortas con una `Graphics` reutilizada:
+  Low 0, Medium 64 y High 120 segmentos maximos. Las ranuras se marcan activas
+  para evitar lineas fantasma al reciclar un proyectil y `reset()` limpia todo.
+- `CombatEntitiesView` conserva la jerarquia de capas: estela bajo enemigos y
+  sobre el sprite del proyectil. No se crean nodos ni texturas durante el loop.
+
+Validacion de esta iteracion: typecheck correcto, 108 pruebas
+unitarias/integracion, 9 smoke browser (desktop + Pixel 5) y builds
+local/Poki/CrazyGames correctos. Pendiente humano: comprobar en el movil real
+el destello/recoil/trail, especialmente con `?stress=1`, y registrar FPS.

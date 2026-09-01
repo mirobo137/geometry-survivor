@@ -68,20 +68,32 @@ export interface FxQualityTokens {
   readonly particleCount: number;
   readonly poolCapacity: number;
   readonly ringAlpha: number;
+  readonly projectileTrailAlpha: number;
+  readonly projectileTrailLimit: number;
   readonly damageNumberLimit: number;
   readonly healthBarLimit: number;
 }
 
 /** Starting budgets; tune only after comparing the same mobile scenario. */
 export const FX_QUALITY: Readonly<Record<FxQuality, FxQualityTokens>> = {
-  low: { particleCount: 3, poolCapacity: 96, ringAlpha: 0.45, damageNumberLimit: 0, healthBarLimit: 8 },
-  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, damageNumberLimit: 16, healthBarLimit: 16 },
-  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, damageNumberLimit: 24, healthBarLimit: 24 }
+  low: { particleCount: 3, poolCapacity: 96, ringAlpha: 0.45, projectileTrailAlpha: 0, projectileTrailLimit: 0, damageNumberLimit: 0, healthBarLimit: 8 },
+  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, projectileTrailAlpha: 0.28, projectileTrailLimit: 64, damageNumberLimit: 16, healthBarLimit: 16 },
+  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, projectileTrailAlpha: 0.42, projectileTrailLimit: 120, damageNumberLimit: 24, healthBarLimit: 24 }
+} as const;
+
+/** Short trail budget for projectiles; it is presentation-only. */
+export const PROJECTILE_TRAIL_TOKENS = {
+  lengthSeconds: 0.035,
+  maxLength: 22,
+  width: 2.5,
+  color: 0xfff6a8
 } as const;
 
 export const PLAYER_VISUAL_TOKENS = {
   idlePulseAmplitude: 0.012,
   movementTiltRadians: 0.07,
   damageFlashSeconds: 0.1,
-  damageSquash: 0.035
+  damageSquash: 0.035,
+  shotFlashSeconds: 0.09,
+  shotRecoilDistance: 4
 } as const;

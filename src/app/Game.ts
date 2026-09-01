@@ -84,6 +84,7 @@ export class Game {
   private accumulator = 0;
   private frames = 0;
   private presentationTime = 0;
+  private presentedShotsFired = 0;
   private fpsTime = performance.now();
   private fps = 0;
   private lifecyclePaused = false;
@@ -317,6 +318,7 @@ export class Game {
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
+    this.syncShotFeedback();
     this.view.renderPlayer(this.player.state, this.presentationTime);
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
     this.view.updateTerminalFx(deltaSeconds);
@@ -485,6 +487,7 @@ export class Game {
     this.frames = 0;
     this.fps = 0;
     this.presentationTime = 0;
+    this.presentedShotsFired = 0;
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();
@@ -499,5 +502,19 @@ export class Game {
     if (this.terminalSummaryTimer === null) return;
     clearTimeout(this.terminalSummaryTimer);
     this.terminalSummaryTimer = null;
+  }
+
+  private syncShotFeedback(): void {
+    const shotsFired = this.combat.stats.shotsFired;
+    if (shotsFired < this.presentedShotsFired) {
+      this.presentedShotsFired = shotsFired;
+      return;
+    }
+    if (shotsFired === this.presentedShotsFired) return;
+    // Collapse several fixed-step shots into one presentation pulse per frame.
+    // This prevents stress mode from flooding the audio bus or the player view.
+    this.view.playPlayerShot(this.presentationTime);
+    this.audio.playCue('player-shot');
+    this.presentedShotsFired = shotsFired;
   }
 }

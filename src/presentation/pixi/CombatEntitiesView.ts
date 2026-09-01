@@ -15,6 +15,7 @@ import { createTexture } from './TextureFactory';
 import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
 import { DamageNumberView } from './fx/DamageNumberView';
 import { HealthBarView } from './entities/HealthBarView';
+import { ProjectileTrailView } from './fx/ProjectileTrailView';
 
 const TURTLE_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -128,6 +129,7 @@ export class CombatEntitiesView {
   private readonly enemyImpactFx: EnemyImpactFxView;
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
+  private readonly projectileTrails: ProjectileTrailView;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
@@ -135,7 +137,8 @@ export class CombatEntitiesView {
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
-    this.root.addChild(this.projectileLayer, this.enemyLayer, this.healthBars.root, this.enemyImpactFx.root, this.damageNumbers.root);
+    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality);
+    this.root.addChild(this.projectileLayer, this.projectileTrails.root, this.enemyLayer, this.healthBars.root, this.enemyImpactFx.root, this.damageNumbers.root);
     this.enemyTextures = createEnemyTextures(renderer);
     const projectileTexture = createTexture(renderer, (graphics) => {
       graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
@@ -155,6 +158,7 @@ export class CombatEntitiesView {
   }
 
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
+    this.projectileTrails.render(combat.projectiles);
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       const state = combat.enemies[index];
       const wasActive = this.previousActive[index];
@@ -196,6 +200,7 @@ export class CombatEntitiesView {
     this.enemyImpactFx.clear();
     this.damageNumbers.clear();
     this.healthBars.clear();
+    this.projectileTrails.clear();
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       this.previousActive[index] = false;
       this.previousHealth[index] = 0;

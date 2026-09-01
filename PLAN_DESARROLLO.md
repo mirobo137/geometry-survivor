@@ -1298,6 +1298,27 @@ El orden de adquisición sigue siendo gratuito de demostración. Costes,
 monedas, rarezas y una economía meta requieren una decisión de progresión
 independiente y no se inventan en esta mejora visual.
 
+### Correccion de parpadeo en el locker movil - 01-09-2026
+
+La revision del locker detecto dos fuentes de repintado innecesario que no
+afectaban a la simulacion, pero si podian hacer destellar el panel en algunos
+GPU moviles:
+
+- al elegir una skin se reemplazaban las cuatro tarjetas y sus SVG animados en
+  la misma tarea; ahora las tarjetas se montan una sola vez y solo se actualizan
+  clases, estado accesible y texto de accion;
+- el locker era un scroll anidado mientras el fondo, el borde del contenedor y
+  grupos SVG de las previews seguian animandose; en viewport de hasta 60rem la
+  vista `is-skins-mode` congela esas capas decorativas mientras conserva el
+  estilo, contraste, desplazamiento y controles. El menu principal mantiene su
+  animacion en escritorio.
+
+La prueba browser movil verifica que el modo locker activa el preset estable y
+que panel, atmosfera, preview y arte de tarjeta no tienen animacion activa.
+Esto fija la politica: en movil la legibilidad y la composicion estable tienen
+prioridad; el movimiento decorativo puede reactivarse en un spike medido de
+GPU real, sin tocar contratos de gameplay ni crear otro canvas.
+
 # 16. RIESGOS PRINCIPALES
 
 | Riesgo | Señal temprana | Mitigación |

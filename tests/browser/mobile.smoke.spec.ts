@@ -28,6 +28,31 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await page.locator('#start-skins').click();
   await expect(page.locator('#start-skins-view')).toBeVisible();
 
+  const lockerMotion = await page.evaluate(() => {
+    const screen = document.querySelector<HTMLElement>('#start-screen');
+    const panel = document.querySelector<HTMLElement>('.start-screen-panel');
+    const scene = document.querySelector<HTMLElement>('.start-scene');
+    const preview = document.querySelector<SVGElement>('.skin-preview svg');
+    const cardArt = document.querySelector<SVGElement>('.skin-card-art svg');
+    if (!screen || !panel || !scene || !preview || !cardArt) throw new Error('Faltan capas del locker');
+    return {
+      mode: screen.classList.contains('is-skins-mode'),
+      panel: getComputedStyle(panel).animationName,
+      panelInner: getComputedStyle(panel, '::before').animationName,
+      sceneAtmosphere: getComputedStyle(scene, '::before').animationName,
+      preview: getComputedStyle(preview).animationName,
+      cardArt: getComputedStyle(cardArt.querySelector('*') as Element).animationName
+    };
+  });
+  expect(lockerMotion).toEqual({
+    mode: true,
+    panel: 'none',
+    panelInner: 'none',
+    sceneAtmosphere: 'none',
+    preview: 'none',
+    cardArt: 'none'
+  });
+
   const scrollMetrics = await page.locator('.start-screen-panel').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

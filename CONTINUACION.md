@@ -677,3 +677,24 @@ local/Poki/CrazyGames generados y smoke browser ampliado a 9 escenarios (7
 desktop y 2 Pixel 5), incluido el desplazamiento del locker. Sólo queda la
 revisión visual en el teléfono físico; `prefers-reduced-motion` conserva la
 lectura y elimina las animaciones decorativas.
+
+## 29. Continuación — corrección de parpadeo del locker móvil
+
+Fecha: 01-09-2026.
+
+- La auditoría encontró repintado excesivo al reconstruir las cuatro tarjetas
+  y sus SVG cada vez que se elegía una skin. `SkinSelectPanel` ahora monta las
+  tarjetas una vez y actualiza estado, clases, ARIA y texto sin destruir los
+  nodos ni reiniciar todas las animaciones.
+- `StartScreen` marca el root con `is-skins-mode`. En viewport de hasta 60rem,
+  ese modo congela las animaciones del fondo, los grupos SVG de la escena, el
+  marco del panel y las previews del locker. Se mantienen gradientes, contraste,
+  scroll y controles; el menú principal conserva su movimiento en escritorio.
+- La congelación es un preset de estabilidad para GPU móvil, no una regla de
+  gameplay ni una segunda escena. Un futuro spike con dispositivo real puede
+  reactivar una animación aislada si las mediciones lo permiten.
+
+Validación de esta sesión: typecheck correcto, 98 tests unitarios/integración y
+9 smoke browser (incluido Pixel 5) correctos. El smoke móvil comprueba que el
+modo locker activa el preset sin animaciones en panel, atmósfera, preview y
+arte de tarjeta, además del desplazamiento vertical.

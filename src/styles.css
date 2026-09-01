@@ -929,6 +929,29 @@ body {
   .start-scene .start-hero-node {
     animation: start-hero-node-fade 4.2s ease-in-out infinite;
   }
+
+  /*
+   * The locker is a nested scroll surface. Mobile Chromium/Safari can
+   * invalidate the whole stacking context when an inline SVG group and a
+   * full-screen opacity layer animate at the same time. Freeze those
+   * decorative layers while skins are open; the cards remain fully styled and
+   * interactive, while desktop keeps the ambient motion.
+   */
+  #start-screen.is-skins-mode .start-scene::before,
+  #start-screen.is-skins-mode .start-scene::after,
+  #start-screen.is-skins-mode .start-scene *,
+  #start-screen.is-skins-mode .start-screen-panel,
+  #start-screen.is-skins-mode .start-screen-panel::before,
+  #start-screen.is-skins-mode .start-screen-panel::after,
+  #start-screen.is-skins-mode .skin-preview svg,
+  #start-screen.is-skins-mode .skin-preview svg *,
+  #start-screen.is-skins-mode .skin-card-art svg * {
+    animation: none !important;
+  }
+
+  #start-screen.is-skins-mode .start-scene {
+    opacity: 0.66;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

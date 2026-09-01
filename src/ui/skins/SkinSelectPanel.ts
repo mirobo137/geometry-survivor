@@ -11,6 +11,12 @@ export interface SkinSelectPanelOptions {
   readonly onStateChange: (state: SkinSaveData) => void;
 }
 
+interface SkinCardEntry {
+  readonly card: HTMLElement;
+  readonly button: HTMLButtonElement;
+  readonly action: HTMLElement;
+}
+
 /** DOM-only locker: cards stay accessible HTML, while previews remain SVG. */
 export class SkinSelectPanel {
   private readonly root: HTMLElement;
@@ -18,6 +24,7 @@ export class SkinSelectPanel {
   private readonly preview: HTMLElement;
   private readonly selectedName: HTMLElement;
   private readonly selectedStatus: HTMLElement;
+  private readonly cardEntries = new Map<PlayerSkinId, SkinCardEntry>();
   private state: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
   private changeHandler: ((state: SkinSaveData) => void) | null = null;
 
@@ -59,27 +66,28 @@ export class SkinSelectPanel {
     this.preview.replaceChildren();
     this.preview.insertAdjacentHTML('afterbegin', createPlayerSkinPreviewSvg(this.state.selected));
     this.selectedName.textContent = definition.name;
-    this.selectedStatus.textContent = `EQUIPADA · ${definition.subtitle}`;
+    this.selectedStatus.textContent = `EQUIPADA \u00b7 ${definition.subtitle}`;
+
+    // Cards and their SVGs are mounted once. Replacing the whole collection on
+    // every selection made mobile browsers rerasterize four animated SVGs in
+    // the same frame, which can flash the panel on GPU-constrained devices.
+    if (this.cardEntries.size === 0) this.mountCards();
+    this.updateCards();
+  }
+
+  private mountCards(): void {
     this.cards.replaceChildren();
 
     for (const skin of PLAYER_SKIN_DEFINITIONS) {
-      const unlocked = this.state.unlocked.includes(skin.id);
-      const selected = this.state.selected === skin.id;
       const card = document.createElement('article');
       card.className = 'skin-card';
       card.dataset.skin = skin.id;
       card.dataset.tone = skin.id;
-      if (selected) card.classList.add('is-selected');
-      if (!unlocked) card.classList.add('is-locked');
 
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'skin-card-hitarea';
-      button.setAttribute('aria-pressed', String(selected));
-      button.setAttribute('aria-label', unlocked
-        ? `${selected ? 'Equipada: ' : 'Equipar: '}${skin.name}`
-        : `Adquirir ${skin.name}`);
-      button.addEventListener('click', () => this.select(skin.id, unlocked));
+      button.addEventListener('click', () => this.select(skin.id, this.state.unlocked.includes(skin.id)));
 
       const art = document.createElement('span');
       art.className = 'skin-card-art';
@@ -98,11 +106,27 @@ export class SkinSelectPanel {
       description.textContent = skin.description;
       const action = document.createElement('span');
       action.className = 'skin-card-action';
-      action.textContent = selected ? 'EQUIPADA' : unlocked ? 'EQUIPAR' : 'ADQUIRIR · DEMO';
       copy.append(meta, title, description, action);
       button.append(copy);
       card.append(button);
       this.cards.append(card);
+      this.cardEntries.set(skin.id, { card, button, action });
+    }
+  }
+
+  private updateCards(): void {
+    for (const skin of PLAYER_SKIN_DEFINITIONS) {
+      const entry = this.cardEntries.get(skin.id);
+      if (!entry) continue;
+      const unlocked = this.state.unlocked.includes(skin.id);
+      const selected = this.state.selected === skin.id;
+      entry.card.classList.toggle('is-selected', selected);
+      entry.card.classList.toggle('is-locked', !unlocked);
+      entry.button.setAttribute('aria-pressed', String(selected));
+      entry.button.setAttribute('aria-label', unlocked
+        ? `${selected ? 'Equipada: ' : 'Equipar: '}${skin.name}`
+        : `Adquirir ${skin.name}`);
+      entry.action.textContent = selected ? 'EQUIPADA' : unlocked ? 'EQUIPAR' : 'ADQUIRIR \u00b7 DEMO';
     }
   }
 

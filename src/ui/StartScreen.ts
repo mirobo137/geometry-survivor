@@ -149,6 +149,7 @@ export class StartScreen {
   private openSkins(): void {
     this.setSettingsExpanded(false);
     this.mainView.hidden = true;
+    this.root.classList.add('is-skins-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-skins-open');
     this.skinsPanel.open({
       state: this.skinState,
@@ -160,6 +161,7 @@ export class StartScreen {
   private closeSkins(): void {
     this.skinsPanel.close();
     this.mainView.hidden = false;
+    this.root.classList.remove('is-skins-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-skins-open');
   }
 

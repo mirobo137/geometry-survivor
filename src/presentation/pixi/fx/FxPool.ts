@@ -8,6 +8,8 @@ interface PooledFx {
   velocityX: number;
   velocityY: number;
   drag: number;
+  startAlpha: number;
+  startScale: number;
 }
 
 /**
@@ -23,11 +25,11 @@ export class FxPool {
   private readonly items: PooledFx[] = [];
   private active = 0;
 
-  public constructor(texture: Texture, capacity: number) {
+  public constructor(private readonly defaultTexture: Texture, capacity: number) {
     this.root.eventMode = 'none';
     const safeCapacity = Math.max(0, Math.floor(capacity));
     for (let index = 0; index < safeCapacity; index += 1) {
-      const sprite = new Sprite(texture);
+      const sprite = new Sprite(defaultTexture);
       sprite.anchor.set(0.5);
       sprite.visible = false;
       this.root.addChild(sprite);
@@ -37,7 +39,9 @@ export class FxPool {
         maxLifeSeconds: 0,
         velocityX: 0,
         velocityY: 0,
-        drag: 0.9
+        drag: 0.9,
+        startAlpha: 1,
+        startScale: 1
       });
     }
   }
@@ -58,7 +62,9 @@ export class FxPool {
     velocityX: number,
     velocityY: number,
     drag = 0.9,
-    scale = 1
+    scale = 1,
+    texture = this.defaultTexture,
+    alpha = 1
   ): boolean {
     let item: PooledFx | undefined;
     for (const candidate of this.items) {
@@ -75,10 +81,13 @@ export class FxPool {
     item.velocityX = velocityX;
     item.velocityY = velocityY;
     item.drag = Math.min(0.999, Math.max(0, drag));
+    item.startScale = Math.max(0.01, scale);
+    item.startAlpha = Math.min(1, Math.max(0.01, alpha));
+    item.sprite.texture = texture;
     item.sprite.position.set(x, y);
     item.sprite.tint = color;
-    item.sprite.alpha = 1;
-    item.sprite.scale.set(Math.max(0.01, scale));
+    item.sprite.alpha = item.startAlpha;
+    item.sprite.scale.set(item.startScale);
     item.sprite.rotation = Math.atan2(velocityY, velocityX);
     item.sprite.visible = true;
     this.active += 1;
@@ -106,8 +115,8 @@ export class FxPool {
       sprite.x += item.velocityX * delta;
       sprite.y += item.velocityY * delta;
       const lifeRatio = Math.max(0, item.lifeSeconds / item.maxLifeSeconds);
-      sprite.alpha = lifeRatio * lifeRatio;
-      sprite.scale.set(Math.max(0.1, lifeRatio));
+      sprite.alpha = item.startAlpha * lifeRatio * lifeRatio;
+      sprite.scale.set(item.startScale * Math.max(0.1, lifeRatio));
     }
   }
 

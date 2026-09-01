@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
-import type { Renderer } from 'pixi.js';
+import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../../content/enemies/EnemyDefinitions';
 import { FX_QUALITY, type FxQuality } from '../../../content/visual/VisualTokens';
 import { createTexture } from '../TextureFactory';
@@ -8,6 +8,17 @@ import { FxPool } from './FxPool';
 const FULL_CIRCLE = Math.PI * 2;
 const HIT_RING_SECONDS = 0.16;
 const DEATH_RING_SECONDS = 0.34;
+const DUST_COLOR = 0xd8d2c4;
+
+interface ParticleRecipe {
+  readonly minSpeed: number;
+  readonly maxSpeed: number;
+  readonly lifeSeconds: number;
+  readonly drag: number;
+  readonly scale: number;
+  readonly texture?: Texture;
+  readonly alpha?: number;
+}
 
 interface RingSlot {
   active: boolean;
@@ -39,6 +50,7 @@ export class EnemyImpactFxView {
   private readonly rings = new Graphics();
   private readonly ringSlots: RingSlot[];
   private readonly particles: FxPool;
+  private readonly dustTexture: Texture;
   private readonly quality: FxQuality;
   private readonly reducedMotion: boolean;
 
@@ -51,6 +63,9 @@ export class EnemyImpactFxView {
     this.ringSlots = Array.from({ length: Math.max(8, Math.floor(tokens.poolCapacity / 8)) }, createRingSlot);
     const particleTexture = createTexture(renderer, (graphics) => {
       graphics.regularPoly(0, 0, 4, 4, Math.PI / 4).fill({ color: 0xffffff });
+    });
+    this.dustTexture = createTexture(renderer, (graphics) => {
+      graphics.circle(0, 0, 3).fill({ color: 0xffffff, alpha: 0.72 });
     });
     this.particles = new FxPool(particleTexture, Math.max(24, Math.floor(tokens.poolCapacity * 0.55)));
     this.root.eventMode = 'none';
@@ -78,7 +93,15 @@ export class EnemyImpactFxView {
     if (this.reducedMotion) return;
 
     const count = this.quality === 'high' ? 3 : this.quality === 'medium' ? 2 : 1;
-    this.spawnParticles(x, y, radius, color, count, 36, 52, 0.14);
+    this.spawnParticles(x, y, DUST_COLOR, count, {
+      minSpeed: 18,
+      maxSpeed: 34,
+      lifeSeconds: 0.18,
+      drag: 0.68,
+      scale: Math.max(0.42, radius / 42),
+      texture: this.dustTexture,
+      alpha: 0.58
+    });
   }
 
   /** Starts a bounded defeat burst; fragments never interact with gameplay. */
@@ -91,7 +114,13 @@ export class EnemyImpactFxView {
 
     const baseCount = kind === 'elite' ? 5 : kind === 'tank' ? 4 : 3;
     const count = Math.min(FX_QUALITY[this.quality].particleCount, baseCount);
-    this.spawnParticles(x, y, radius, definition.color, count, 58, 88, 0.28);
+    this.spawnParticles(x, y, definition.color, count, {
+      minSpeed: 58,
+      maxSpeed: 88,
+      lifeSeconds: 0.28,
+      drag: 0.8,
+      scale: Math.max(0.55, radius / 24)
+    });
   }
 
   public update(deltaSeconds: number): void {
@@ -148,26 +177,25 @@ export class EnemyImpactFxView {
   private spawnParticles(
     x: number,
     y: number,
-    radius: number,
     color: number,
     count: number,
-    minSpeed: number,
-    maxSpeed: number,
-    lifeSeconds: number
+    recipe: ParticleRecipe
   ): void {
     const phase = ((Math.abs(x * 0.017 + y * 0.031) % 1) + 1) % 1;
     for (let index = 0; index < count; index += 1) {
       const angle = phase * FULL_CIRCLE + (index / count) * FULL_CIRCLE;
-      const speed = minSpeed + ((index * 17) % 23) / 23 * (maxSpeed - minSpeed);
+      const speed = recipe.minSpeed + ((index * 17) % 23) / 23 * (recipe.maxSpeed - recipe.minSpeed);
       this.particles.spawn(
         x,
         y,
         color,
-        lifeSeconds + (index % 2) * 0.035,
+        recipe.lifeSeconds + (index % 2) * 0.035,
         Math.cos(angle) * speed,
         Math.sin(angle) * speed,
-        0.8,
-        Math.max(0.55, radius / 24)
+        recipe.drag,
+        recipe.scale,
+        recipe.texture,
+        recipe.alpha
       );
     }
   }

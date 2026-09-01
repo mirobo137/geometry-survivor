@@ -49,4 +49,18 @@ describe('TurtleVisual', () => {
     visual.render(createState(0, 0), 0.8);
     expect(visual.root.rotation).toBeCloseTo(Math.PI);
   });
+
+  it('can keep its parts local when a combat parent owns the world transform', () => {
+    const visual = new TurtleVisual({
+      shell: Texture.EMPTY,
+      limbsFront: Texture.EMPTY,
+      limbsRear: Texture.EMPTY,
+      head: Texture.EMPTY
+    });
+
+    visual.render(createState(90, 0), 0.4, 'local');
+    expect(visual.root.position.x).toBe(0);
+    expect(visual.root.position.y).toBe(0);
+    expect(visual.root.rotation).toBeCloseTo(Math.PI / 2);
+  });
 });

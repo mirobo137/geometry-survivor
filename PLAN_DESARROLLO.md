@@ -1331,9 +1331,11 @@ GPU real, sin tocar contratos de gameplay ni crear otro canvas.
 Se completa el siguiente bloque de la Fase 6 sin ampliar la frontera de
 simulacion:
 
-- `EnemyImpactFxView` usa un anillo compartido y un `FxPool` de fragmentos con
-  capacidad fija, colores por `EnemyKind`, limites por `FxQuality` y descarte
-  silencioso de decoracion cuando el pool esta lleno;
+- `EnemyImpactFxView` usa un anillo compartido y un `FxPool` de fragmentos o
+  polvo con capacidad fija, colores por `EnemyKind`, limites por `FxQuality` y
+  descarte silencioso de decoracion cuando el pool esta lleno. El polvo de un
+  impacto reutiliza el mismo sprite pool, cambia solo a una textura circular
+  cacheada y se limita a 1/2/3 sprites Low/Medium/High;
 - `CombatEntitiesView` compara snapshots de vida solo para detectar impactos y
   aplica un scale-punch visual de 4.5%/120 ms. La derrota usa el evento de
   `CombatSimulation` en `Game`, evitando perderla si el slot se libera y se
@@ -1344,6 +1346,11 @@ simulacion:
 - con `prefers-reduced-motion` queda el anillo informativo y se omiten los
   fragmentos. El feedback normal permanece debajo de player, hazards y boss en
   la jerarquia de capas.
+
+Los enemigos compuestos conservan una regla adicional de transform: la ranura
+pooled posee la posicion mundial, y sus piezas SVG se renderizan en espacio
+local. Asi cualquier punch, escala o shake futuro se ancla al enemigo y nunca
+al origen de la escena; no se vuelve a crear ni rasterizar SVG al recibir dano.
 
 La puerta de esta entrega exige que el impacto sea perceptible sin inundar la
 escena, que el stress conserve el presupuesto y que un restart no deje FX

@@ -10,6 +10,12 @@ export interface TurtleTextureSet {
 }
 
 /**
+ * World is convenient for standalone previews; local lets a parent own the
+ * transform when the turtle is part of a pooled combat entity.
+ */
+export type TurtlePositionSpace = 'world' | 'local';
+
+/**
  * Composes aligned SVG parts once and animates only transforms. The root is
  * oriented with its head on -Y, so a velocity vector can rotate the turtle
  * without changing its source geometry.
@@ -35,10 +41,15 @@ export class TurtleVisual {
     this.root.addChild(this.limbsRear, this.limbsFront, this.shell, this.head);
   }
 
-  public render(state: EnemyRenderState, animationSeconds: number): void {
+  public render(
+    state: EnemyRenderState,
+    animationSeconds: number,
+    positionSpace: TurtlePositionSpace = 'world'
+  ): void {
     this.root.visible = state.active;
     if (!state.active) return;
-    this.root.position.set(state.x, state.y);
+    if (positionSpace === 'world') this.root.position.set(state.x, state.y);
+    else this.root.position.set(0, 0);
     const speed = Math.hypot(state.vx, state.vy);
     if (speed > 0.5) this.facing = Math.atan2(state.vy, state.vx) + Math.PI / 2;
     this.root.rotation = this.facing;

@@ -80,10 +80,10 @@ class EnemyVisual {
     const punch = hitProgress < 1 ? 1 + Math.sin(hitProgress * Math.PI) * 0.045 : 1;
     this.root.scale.set(punch);
     if (state.kind === 'chaser') {
-      // TurtleVisual owns the world position of its composed root. Clear a
-      // previous fallback position so a pooled slot changing kind cannot add
-      // an old coordinate as an unintended offset.
-      this.root.position.set(0, 0);
+      // Every pooled enemy owns its world transform at this level. The turtle
+      // renders locally so the hit-punch scales around this enemy, never the
+      // global origin.
+      this.root.position.set(state.x, state.y);
       this.fallback.visible = false;
       // A pool slot may never become a chaser. Allocate the four-part visual
       // only when that slot first needs it, keeping the initial mobile scene
@@ -92,7 +92,7 @@ class EnemyVisual {
         this.turtle = new TurtleVisual(this.textures.turtle);
         this.root.addChild(this.turtle.root);
       }
-      this.turtle.render(state, animationSeconds);
+      this.turtle.render(state, animationSeconds, 'local');
       return;
     }
 

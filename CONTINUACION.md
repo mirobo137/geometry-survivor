@@ -727,3 +727,26 @@ Validación de esta sesión: typecheck correcto, 99 tests unitarios/integración
 smoke browser normal y móvil correctos, y builds local/Poki/CrazyGames generados.
 Quedan pendientes para las siguientes puertas: números de daño agrupados,
 mini-barras recientes y la secuencia especial de muerte del boss/player.
+
+## 31. Continuacion — anclaje de tortuga y polvo de impacto
+
+Fecha: 01-09-2026.
+
+- Se corrigio el salto lateral de la tortuga al recibir dano. No era una
+  reconstruccion de SVG: el `scale-punch` del padre escalaba la posicion mundial
+  de las piezas desde el origen. La regla queda fijada: la ranura pooled posee
+  la posicion mundial y `TurtleVisual` usa espacio `local` al integrarse en
+  combate. Previews aislados pueden seguir usando espacio `world`.
+- `EnemyImpactFxView` reemplaza las chispas del impacto normal por polvo breve
+  con textura circular cacheada. Reutiliza el mismo `FxPool`, sin crear sprites
+  ni texturas durante gameplay: 1/2/3 motas Low/Medium/High, drag alto, 0.18 s
+  de vida y descarte seguro al llenarse el pool. Los fragmentos de derrota se
+  mantienen geometricos.
+- `FxPool` conserva escala, alpha y textura iniciales por slot, por lo que una
+  misma capacidad fija puede servir recetas cacheadas distintas sin allocations
+  en la ruta caliente. El cambio continua siendo solo de presentacion y
+  respeta `prefers-reduced-motion`.
+
+Validacion de esta sesion: typecheck correcto, 101 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.

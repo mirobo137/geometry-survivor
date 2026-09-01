@@ -11,6 +11,7 @@ import turtleFrontSvg from '../../assets/svg/enemies/turtle/turtle-limbs-front.s
 import turtleRearSvg from '../../assets/svg/enemies/turtle/turtle-limbs-rear.svg?raw';
 import turtleHeadSvg from '../../assets/svg/enemies/turtle/turtle-head.svg?raw';
 import { TurtleVisual, type TurtleTextureSet } from './enemies/turtle/TurtleVisual';
+import { TurtleDefeatFxView } from './enemies/turtle/TurtleDefeatFxView';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { createTexture } from './TextureFactory';
 import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
@@ -140,6 +141,7 @@ export class CombatEntitiesView {
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
   private readonly enemyImpactFx: EnemyImpactFxView;
+  private readonly turtleDefeatFx: TurtleDefeatFxView;
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
@@ -154,6 +156,10 @@ export class CombatEntitiesView {
     this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
     this.root.addChild(this.projectileLayer, this.projectileTrails.root, this.enemyLayer, this.healthBars.root, this.enemyImpactFx.root, this.damageNumbers.root);
     this.enemyTextures = createEnemyTextures(renderer);
+    this.turtleDefeatFx = new TurtleDefeatFxView(this.enemyTextures.turtle, quality);
+    // A defeated turtle clears the active enemy layer immediately, then its
+    // visual copy briefly occupies the same world depth below HUD feedback.
+    this.root.addChildAt(this.turtleDefeatFx.root, 3);
     this.projectileTextures = {
       basic: createSvgTexture(renderer, projectileBasicSvg, PROJECTILE_TEXTURE_FRAME),
       curve: createSvgTexture(renderer, projectileCurveSvg, PROJECTILE_TEXTURE_FRAME),
@@ -211,15 +217,18 @@ export class CombatEntitiesView {
 
   public playEnemyDefeat(x: number, y: number, kind: EnemyKind): void {
     this.enemyImpactFx.playDefeat(x, y, kind);
+    if (kind === 'chaser') this.turtleDefeatFx.play(x, y);
   }
 
   public updateFx(deltaSeconds: number): void {
     this.enemyImpactFx.update(deltaSeconds);
+    this.turtleDefeatFx.update(deltaSeconds);
     this.damageNumbers.update(deltaSeconds);
   }
 
   public reset(): void {
     this.enemyImpactFx.clear();
+    this.turtleDefeatFx.clear();
     this.damageNumbers.clear();
     this.healthBars.clear();
     this.projectileTrails.clear();

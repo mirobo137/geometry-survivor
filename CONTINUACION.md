@@ -927,3 +927,20 @@ Pixel 5 incluyendo ambas pestañas, y builds local/Poki/CrazyGames correctos.
 Pendiente humano: abrir la URL publicada, adquirir cada paquete, comprobar la
 preview continua y confirmar que el proyectil coincide con el destello en una
 run movil. `debug.log` local no forma parte del commit.
+
+## 40. Continuacion - desarme visual de tortuga
+
+Fecha: 01-09-2026.
+
+- `TurtleDefeatFxView` mantiene un pool de copias de las cuatro piezas SVG ya
+  cacheadas de la tortuga. En Medium/High usa 4/6 slots; Low y
+  `prefers-reduced-motion` no emiten fragmentos modulares.
+- Al morir un `chaser`, `CombatEntitiesView` inicia una copia visual de 360 ms
+  que abre patas, caparazon y cabeza desde el mismo frame comun. La entidad
+  logica se puede liberar y reciclar inmediatamente: no se retiene su slot ni
+  se alteran dano, XP, colisiones o movimiento.
+- La copia se ubica sobre la capa de enemigos y debajo de barras/numeros; se
+  limpia con `reset()` y no crea texturas, SVG ni nodos durante el loop.
+- Queda pendiente probar en movil real que el desarme se perciba junto al polvo
+  sin tapar la arena. Tank y Elite siguen usando el burst generico hasta tener
+  arte modular propio.

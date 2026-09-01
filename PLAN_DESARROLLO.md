@@ -1842,3 +1842,21 @@ silueta; no se copian sprites, nombres ni assets: [Vampire Survivors en PC
 Gamer](https://www.pcgamer.com/vampire-survivors-is-a-screen-clearing-thrillride-with-carpet-bombing-doves/),
 [Vampire Survivors en Windows Central](https://www.windowscentral.com/gaming/vampire-survivors-5-tricks-beginners-need-to-know)
 y [Hades - referencia de proyectiles](https://www.gamersdecide.com/articles/hades-best-boon-combos).
+
+## Entrega - desarme visual modular de tortuga - 01-09-2026
+
+La muerte del `chaser` conserva el anillo y polvo compartidos de
+`EnemyImpactFxView`, y agrega una copia de presentacion breve de sus cuatro
+piezas SVG cacheadas. `TurtleDefeatFxView` posee un pool acotado de 0/4/6 copias
+en Low/Medium/High: patas, caparazon y cabeza parten alineados en el mismo frame
+comun y se separan durante 360 ms antes de desaparecer. No retiene la entidad
+de simulacion ni modifica colisiones, XP, velocidad, dano o el reciclaje del
+pool de enemigos.
+
+El evento de derrota no depende de la ranura que puede reciclarse en el mismo
+tick; una fase determinista derivada de la posicion solo orienta la receta
+visual. `prefers-reduced-motion` y Low omiten las copias modulares, mientras el
+anillo informativo de derrota permanece disponible. La siguiente ampliacion de
+esta familia debe reutilizar este patron para Tank/Elite solo cuando esas
+entidades tengan piezas SVG reales, no fragmentar sus sprites geometricos por
+anticipado.

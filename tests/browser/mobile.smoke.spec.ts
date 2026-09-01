@@ -33,15 +33,17 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     const panel = document.querySelector<HTMLElement>('.start-screen-panel');
     const scene = document.querySelector<HTMLElement>('.start-scene');
     const preview = document.querySelector<SVGElement>('.skin-preview svg');
-    const cardArt = document.querySelector<SVGElement>('.skin-card-art svg');
-    if (!screen || !panel || !scene || !preview || !cardArt) throw new Error('Faltan capas del locker');
+    const previewCore = document.querySelector<SVGElement>('.skin-preview svg .skin-art-core');
+    const cardSignature = document.querySelector<SVGElement>('.skin-card-art svg .skin-art-orbit');
+    if (!screen || !panel || !scene || !preview || !previewCore || !cardSignature) throw new Error('Faltan capas del locker');
     return {
       mode: screen.classList.contains('is-skins-mode'),
       panel: getComputedStyle(panel).animationName,
       panelInner: getComputedStyle(panel, '::before').animationName,
       sceneAtmosphere: getComputedStyle(scene, '::before').animationName,
       preview: getComputedStyle(preview).animationName,
-      cardArt: getComputedStyle(cardArt.querySelector('*') as Element).animationName
+      previewCore: getComputedStyle(previewCore).animationName,
+      cardArt: getComputedStyle(cardSignature).animationName
     };
   });
   expect(lockerMotion).toEqual({
@@ -49,7 +51,8 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     panel: 'none',
     panelInner: 'none',
     sceneAtmosphere: 'none',
-    preview: 'none',
+    preview: 'skin-preview-float-mobile',
+    previewCore: 'skin-art-core-mobile',
     cardArt: 'none'
   });
 

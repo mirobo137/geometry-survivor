@@ -1309,12 +1309,14 @@ GPU moviles:
   clases, estado accesible y texto de accion;
 - el locker era un scroll anidado mientras el fondo, el borde del contenedor y
   grupos SVG de las previews seguian animandose; en viewport de hasta 60rem la
-  vista `is-skins-mode` congela esas capas decorativas mientras conserva el
-  estilo, contraste, desplazamiento y controles. El menu principal mantiene su
-  animacion en escritorio.
+  vista `is-skins-mode` congela esas capas, las cuatro miniaturas y las
+  transformaciones de grupos SVG. El preview grande de la skin equipada
+  conserva una animacion suave de levitacion, opacidad y trazos. El menu
+  principal mantiene su animacion en escritorio.
 
-La prueba browser movil verifica que el modo locker activa el preset estable y
-que panel, atmosfera, preview y arte de tarjeta no tienen animacion activa.
+La prueba browser movil verifica que el modo locker activa el preset estable,
+que panel/atmosfera/miniaturas no tienen animacion activa y que el preview
+equipado conserva solo sus animaciones de baja intensidad.
 Esto fija la politica: en movil la legibilidad y la composicion estable tienen
 prioridad; el movimiento decorativo puede reactivarse en un spike medido de
 GPU real, sin tocar contratos de gameplay ni crear otro canvas.

@@ -688,13 +688,16 @@ Fecha: 01-09-2026.
   nodos ni reiniciar todas las animaciones.
 - `StartScreen` marca el root con `is-skins-mode`. En viewport de hasta 60rem,
   ese modo congela las animaciones del fondo, los grupos SVG de la escena, el
-  marco del panel y las previews del locker. Se mantienen gradientes, contraste,
-  scroll y controles; el menú principal conserva su movimiento en escritorio.
+  marco del panel y las cuatro miniaturas. El preview grande de la skin
+  equipada conserva una animación de baja intensidad (levitación, opacidad y
+  dash), sin rotaciones/escala de grupos SVG. Se mantienen gradientes,
+  contraste, scroll y controles; el menú principal conserva su movimiento en
+  escritorio.
 - La congelación es un preset de estabilidad para GPU móvil, no una regla de
   gameplay ni una segunda escena. Un futuro spike con dispositivo real puede
   reactivar una animación aislada si las mediciones lo permiten.
 
 Validación de esta sesión: typecheck correcto, 98 tests unitarios/integración y
 9 smoke browser (incluido Pixel 5) correctos. El smoke móvil comprueba que el
-modo locker activa el preset sin animaciones en panel, atmósfera, preview y
-arte de tarjeta, además del desplazamiento vertical.
+modo locker congela panel, atmósfera y miniaturas, mantiene sólo la animación
+suave del preview equipado y conserva el desplazamiento vertical.

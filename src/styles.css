@@ -745,6 +745,29 @@ body {
   to { transform: translateY(0); }
 }
 
+/* Low-cost mobile variant: no SVG group transforms, only opacity/dash motion. */
+@keyframes skin-preview-float-mobile {
+  from { transform: translateY(0); }
+  50% { transform: translateY(-0.1rem); }
+  to { transform: translateY(0); }
+}
+
+@keyframes skin-art-orbit-mobile {
+  from { stroke-dashoffset: 0; opacity: 0.82; }
+  50% { stroke-dashoffset: -8; opacity: 1; }
+  to { stroke-dashoffset: -16; opacity: 0.82; }
+}
+
+@keyframes skin-art-signature-mobile {
+  from, to { opacity: 0.86; }
+  50% { opacity: 1; }
+}
+
+@keyframes skin-art-core-mobile {
+  from, to { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
 .skin-preview svg .skin-art-orbit,
 .skin-card-art svg .skin-art-orbit {
   transform-box: fill-box;
@@ -943,14 +966,31 @@ body {
   #start-screen.is-skins-mode .start-screen-panel,
   #start-screen.is-skins-mode .start-screen-panel::before,
   #start-screen.is-skins-mode .start-screen-panel::after,
-  #start-screen.is-skins-mode .skin-preview svg,
-  #start-screen.is-skins-mode .skin-preview svg *,
   #start-screen.is-skins-mode .skin-card-art svg * {
     animation: none !important;
   }
 
   #start-screen.is-skins-mode .start-scene {
     opacity: 0.66;
+  }
+
+  /* Keep a single, small animated surface: the equipped skin preview. */
+  #start-screen.is-skins-mode .skin-preview svg {
+    animation: skin-preview-float-mobile 5.6s ease-in-out infinite;
+  }
+
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-orbit {
+    animation: skin-art-orbit-mobile 18s linear infinite;
+  }
+
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-shards,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-crown,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-blades {
+    animation: skin-art-signature-mobile 5.2s ease-in-out infinite;
+  }
+
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-core {
+    animation: skin-art-core-mobile 4.8s ease-in-out infinite;
   }
 }
 
@@ -1709,6 +1749,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  #start-screen.is-skins-mode .skin-preview svg,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-orbit,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-shards,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-crown,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-blades,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-core,
   .skin-preview svg,
   .skin-preview svg .skin-art-orbit,
   .skin-preview svg .skin-art-shards,

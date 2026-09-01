@@ -752,3 +752,23 @@ Fecha: 01-09-2026.
 Validacion de esta sesion: typecheck correcto, 101 pruebas
 unitarias/integracion, 9 smoke browser (incluido movil) y builds
 local/Poki/CrazyGames correctos.
+
+## 32. Continuacion — numeros de dano y mini-barras acotadas
+
+Fecha: 01-09-2026.
+
+- `DamageNumberView` mantiene un pool fijo de `Text` Pixi: Low no emite texto,
+  Medium/High reservan 16/24 slots. Agrupa golpes de la misma ranura durante
+  80 ms, asciende brevemente y descarta nuevos textos al llenarse, sin DOM ni
+  cambios de simulacion.
+- `HealthBarView` redibuja una unica geometria compartida con limite 8/16/24.
+  Tanks y elites tienen prioridad permanente; chasers/fast aparecen solo un
+  segundo despues de recibir dano. El boss conserva exclusivamente su HUD.
+- `CombatEntitiesView` es el unico consumidor: ya detectaba el delta de vida
+  para el impacto, por lo que reusa esa observacion para ambas vistas y las
+  limpia al reiniciar. Ninguna de las nuevas vistas decide dano, XP, colisiones
+  o dificultad.
+
+Validacion de esta sesion: typecheck correcto, 104 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.

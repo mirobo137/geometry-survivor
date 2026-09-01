@@ -1353,6 +1353,13 @@ pooled posee la posicion mundial, y sus piezas SVG se renderizan en espacio
 local. Asi cualquier punch, escala o shake futuro se ancla al enemigo y nunca
 al origen de la escena; no se vuelve a crear ni rasterizar SVG al recibir dano.
 
+La siguiente entrega visual implementa `DamageNumberView` y `HealthBarView`
+desde la frontera de presentacion: `CombatEntitiesView` agrupa el delta de vida
+que ya observa por ranura pooled, sin emitir un evento nuevo de simulacion. Los
+numeros tienen pool 0/16/24 Low/Medium/High y se agrupan durante 80 ms; las
+barras usan un `Graphics` compartido con limite 8/16/24, prioridad para
+tank/elite y una ventana de un segundo para enemigos danados recientemente.
+
 La puerta de esta entrega exige que el impacto sea perceptible sin inundar la
 escena, que el stress conserve el presupuesto y que un restart no deje FX
 huérfanos. El siguiente bloque sera `DamageNumberView` + `HealthBarView` con

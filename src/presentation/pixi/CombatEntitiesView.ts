@@ -13,6 +13,8 @@ import { TurtleVisual, type TurtleTextureSet } from './enemies/turtle/TurtleVisu
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { createTexture } from './TextureFactory';
 import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
+import { DamageNumberView } from './fx/DamageNumberView';
+import { HealthBarView } from './entities/HealthBarView';
 
 const TURTLE_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -124,12 +126,16 @@ export class CombatEntitiesView {
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
   private readonly enemyImpactFx: EnemyImpactFxView;
+  private readonly damageNumbers: DamageNumberView;
+  private readonly healthBars: HealthBarView;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium') {
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
-    this.root.addChild(this.projectileLayer, this.enemyLayer, this.enemyImpactFx.root);
+    this.damageNumbers = new DamageNumberView(quality);
+    this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
+    this.root.addChild(this.projectileLayer, this.enemyLayer, this.healthBars.root, this.enemyImpactFx.root, this.damageNumbers.root);
     this.enemyTextures = createEnemyTextures(renderer);
     const projectileTexture = createTexture(renderer, (graphics) => {
       graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
@@ -154,7 +160,10 @@ export class CombatEntitiesView {
       const wasActive = this.previousActive[index];
       if (state.active) {
         if (wasActive && state.health < this.previousHealth[index] - 0.001) {
+          const amount = this.previousHealth[index] - state.health;
           this.enemyImpactFx.playHit(state.x, state.y, state.radius, state.kind);
+          this.damageNumbers.playHit(index, state.x, state.y, state.radius, amount, state.kind);
+          this.healthBars.noteDamage(index, animationSeconds);
           this.enemyVisuals[index].playHit(animationSeconds);
         }
       }
@@ -162,6 +171,7 @@ export class CombatEntitiesView {
       this.previousActive[index] = state.active;
       this.previousHealth[index] = state.health;
     }
+    this.healthBars.render(combat.enemies, animationSeconds);
 
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
       const state = combat.projectiles[index];
@@ -179,10 +189,13 @@ export class CombatEntitiesView {
 
   public updateFx(deltaSeconds: number): void {
     this.enemyImpactFx.update(deltaSeconds);
+    this.damageNumbers.update(deltaSeconds);
   }
 
   public reset(): void {
     this.enemyImpactFx.clear();
+    this.damageNumbers.clear();
+    this.healthBars.clear();
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       this.previousActive[index] = false;
       this.previousHealth[index] = 0;

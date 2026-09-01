@@ -33,7 +33,7 @@ export class PixiGameView {
 
   public constructor(renderer: Renderer, playerSkin: PlayerSkinId = 'cyan', quality: FxQuality = 'medium') {
     this.root.addChild(this.world);
-    this.entitiesView = new CombatEntitiesView(renderer);
+    this.entitiesView = new CombatEntitiesView(renderer, quality);
     this.weaponView = new WeaponView(renderer);
     this.levelUpFxView = new LevelUpFxView(renderer);
     this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin);
@@ -93,6 +93,10 @@ export class PixiGameView {
     this.weaponView.render(combat);
   }
 
+  public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind']): void {
+    this.entitiesView.playEnemyDefeat(x, y, kind);
+  }
+
   public renderLaser(state: CombatRenderState['laser'], arenaRadius: number): void {
     this.hazardView.renderLaser(state, arenaRadius);
   }
@@ -116,11 +120,13 @@ export class PixiGameView {
 
   public renderImpactFx(deltaSeconds: number): void {
     this.impactFxView.update(deltaSeconds);
+    this.entitiesView.updateFx(deltaSeconds);
   }
 
   public resetPresentation(): void {
     this.playerView.reset();
     this.impactFxView.clear();
+    this.entitiesView.reset();
   }
 
   public openLevelUpFx(anchors: readonly LevelUpCardAnchor[]): void {

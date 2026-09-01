@@ -1184,13 +1184,14 @@ texto y por último glow; nunca se reduce el telegraph ni se cambia gameplay.
    `?juice=1` sin cambiar reglas.
 2. Integrar feedback del player y daño recibido; validar pausa, resize y
    `prefers-reduced-motion`.
-3. Añadir impacto y muerte del chaser con piezas SVG cacheadas; después tank y
-   elite. Comparar textura compartida frente a `Graphics` sólo si hace falta.
+3. ✅ Integrar impacto y derrota visual del chaser, tank y elite con piezas SVG
+   cacheadas, pool acotado y anillo compartido; comparar textura compartida
+   frente a `Graphics` sólo si una medición real lo justifica.
 4. Añadir `DamageNumberView` y `HealthBarView` con límites y agrupación; probar
    caos con `?stress=1` y no con una escena artificial aislada únicamente.
 5. Crear muerte del player y muerte especial del boss; confirmar que resumen y
    restart in-place no esperan a terminar la animación.
-6. ✅ Añadir las dos skins de prueba y el locker cosmético; la adquisición es
+6. ✅ Añadir las cuatro skins de prueba y el locker cosmético; la adquisición es
    gratuita sólo como prototipo y la economía comercial queda pendiente.
 7. Comparar Low/Medium/High en el móvil de referencia, registrar FPS medio,
    p95, memoria aproximada, legibilidad y captura antes/después. Sólo entonces
@@ -1324,6 +1325,30 @@ equipado conserva solo sus animaciones de baja intensidad.
 Esto fija la politica: en movil la legibilidad y la composicion estable tienen
 prioridad; el movimiento decorativo puede reactivarse en un spike medido de
 GPU real, sin tocar contratos de gameplay ni crear otro canvas.
+
+### Primer feedback de impactos y derrotas enemigas - 01-09-2026
+
+Se completa el siguiente bloque de la Fase 6 sin ampliar la frontera de
+simulacion:
+
+- `EnemyImpactFxView` usa un anillo compartido y un `FxPool` de fragmentos con
+  capacidad fija, colores por `EnemyKind`, limites por `FxQuality` y descarte
+  silencioso de decoracion cuando el pool esta lleno;
+- `CombatEntitiesView` compara snapshots de vida solo para detectar impactos y
+  aplica un scale-punch visual de 4.5%/120 ms. La derrota usa el evento de
+  `CombatSimulation` en `Game`, evitando perderla si el slot se libera y se
+  reutiliza antes del siguiente render;
+- `PixiGameView` avanza y limpia el compositor, y el reinicio borra snapshots y
+  pools. No se crean sprites por impacto, no se dibujan numeros ni barras aun y
+  ningun FX modifica dano, vida, XP, colisiones, dificultad o timestep;
+- con `prefers-reduced-motion` queda el anillo informativo y se omiten los
+  fragmentos. El feedback normal permanece debajo de player, hazards y boss en
+  la jerarquia de capas.
+
+La puerta de esta entrega exige que el impacto sea perceptible sin inundar la
+escena, que el stress conserve el presupuesto y que un restart no deje FX
+huérfanos. El siguiente bloque sera `DamageNumberView` + `HealthBarView` con
+agrupacion y limites; despues se abordaran muerte especial de boss y player.
 
 # 16. RIESGOS PRINCIPALES
 

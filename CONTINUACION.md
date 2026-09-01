@@ -704,3 +704,26 @@ Validación de esta sesión: typecheck correcto, 98 tests unitarios/integración
 9 smoke browser (incluido Pixel 5) correctos. El smoke móvil comprueba que el
 modo locker congela panel, atmósfera y miniaturas, mantiene sólo la animación
 suave del preview equipado y conserva el desplazamiento vertical.
+
+## 30. Continuación — feedback pooled de impactos y derrotas enemigas
+
+Fecha: 01-09-2026.
+
+- `EnemyImpactFxView` añade un anillo expansivo y fragmentos geométricos con
+  capacidad fija para impactos y derrotas. Los colores salen del catálogo de
+  enemigos; los fragmentos son presentación y nunca colisionan ni conceden XP.
+- `CombatEntitiesView` detecta una caída de vida entre frames para disparar el
+  impacto y aplica un scale-punch de 4.5% durante 120 ms. La derrota se dispara
+  desde el evento `enemyDefeated` de `Game`, por lo que no se pierde cuando un
+  slot pooled se libera y se reutiliza en el mismo tick.
+- `PixiGameView` mantiene la frontera: recibe el evento, actualiza la vista y
+  avanza/limpia el FX junto con el resto de la presentación. `resetPresentation`
+  borra pools y snapshots para que reiniciar no produzca muertes fantasma.
+- El preset `prefers-reduced-motion` conserva el anillo informativo y descarta
+  fragmentos. La capacidad sigue limitada por `FxQuality`; no se crean nodos
+  DOM, texturas SVG por impacto ni cambios en simulación, daño, XP o timestep.
+
+Validación de esta sesión: typecheck correcto, 99 tests unitarios/integración,
+smoke browser normal y móvil correctos, y builds local/Poki/CrazyGames generados.
+Quedan pendientes para las siguientes puertas: números de daño agrupados,
+mini-barras recientes y la secuencia especial de muerte del boss/player.

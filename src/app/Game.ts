@@ -281,6 +281,7 @@ export class Game {
     for (const event of this.combat.events) {
       if (event.type === 'enemyDefeated') {
         this.audio.playCue('enemy-defeated');
+        this.view.playEnemyDefeat(event.x, event.y, event.kind);
       }
       if (event.type === 'playerDamaged') {
         this.audio.playCue('damage');

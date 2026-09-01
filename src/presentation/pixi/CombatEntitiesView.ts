@@ -2,6 +2,7 @@ import { Container, Sprite } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
+import type { FxQuality } from '../../content/visual/VisualTokens';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
 import turtleSvg from '../../assets/svg/enemies/turtle/turtle.svg?raw';
 import turtleShellSvg from '../../assets/svg/enemies/turtle/turtle-shell.svg?raw';
@@ -11,6 +12,7 @@ import turtleHeadSvg from '../../assets/svg/enemies/turtle/turtle-head.svg?raw';
 import { TurtleVisual, type TurtleTextureSet } from './enemies/turtle/TurtleVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { createTexture } from './TextureFactory';
+import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
 
 const TURTLE_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -59,6 +61,7 @@ class EnemyVisual {
   public readonly root = new Container();
   private readonly fallback: Sprite;
   private turtle: TurtleVisual | null = null;
+  private hitAtSeconds = Number.NEGATIVE_INFINITY;
 
   public constructor(private readonly textures: EnemyTextureSet) {
     this.fallback = new Sprite(textures.fallback.chaser);
@@ -68,7 +71,14 @@ class EnemyVisual {
 
   public render(state: EnemyRenderState, animationSeconds: number): void {
     this.root.visible = state.active;
-    if (!state.active) return;
+    if (!state.active) {
+      this.root.scale.set(1);
+      return;
+    }
+    const hitAge = animationSeconds - this.hitAtSeconds;
+    const hitProgress = hitAge >= 0 ? Math.min(1, hitAge / 0.12) : 1;
+    const punch = hitProgress < 1 ? 1 + Math.sin(hitProgress * Math.PI) * 0.045 : 1;
+    this.root.scale.set(punch);
     if (state.kind === 'chaser') {
       // TurtleVisual owns the world position of its composed root. Clear a
       // previous fallback position so a pooled slot changing kind cannot add
@@ -94,6 +104,16 @@ class EnemyVisual {
     this.fallback.alpha = Math.max(0.55, state.health / state.maxHealth);
     this.root.position.set(state.x, state.y);
   }
+
+  public playHit(animationSeconds: number): void {
+    this.hitAtSeconds = animationSeconds;
+  }
+
+  public reset(): void {
+    this.hitAtSeconds = Number.NEGATIVE_INFINITY;
+    this.root.visible = false;
+    this.root.scale.set(1);
+  }
 }
 
 export class CombatEntitiesView {
@@ -103,9 +123,13 @@ export class CombatEntitiesView {
   private readonly enemyTextures: EnemyTextureSet;
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
+  private readonly enemyImpactFx: EnemyImpactFxView;
+  private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
+  private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
-  public constructor(renderer: Renderer) {
-    this.root.addChild(this.projectileLayer, this.enemyLayer);
+  public constructor(renderer: Renderer, quality: FxQuality = 'medium') {
+    this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
+    this.root.addChild(this.projectileLayer, this.enemyLayer, this.enemyImpactFx.root);
     this.enemyTextures = createEnemyTextures(renderer);
     const projectileTexture = createTexture(renderer, (graphics) => {
       graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
@@ -126,7 +150,17 @@ export class CombatEntitiesView {
 
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
-      this.enemyVisuals[index].render(combat.enemies[index], animationSeconds);
+      const state = combat.enemies[index];
+      const wasActive = this.previousActive[index];
+      if (state.active) {
+        if (wasActive && state.health < this.previousHealth[index] - 0.001) {
+          this.enemyImpactFx.playHit(state.x, state.y, state.radius, state.kind);
+          this.enemyVisuals[index].playHit(animationSeconds);
+        }
+      }
+      this.enemyVisuals[index].render(state, animationSeconds);
+      this.previousActive[index] = state.active;
+      this.previousHealth[index] = state.health;
     }
 
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
@@ -137,5 +171,23 @@ export class CombatEntitiesView {
       sprite.position.set(state.x, state.y);
       sprite.rotation = Math.atan2(state.vy, state.vx);
     }
+  }
+
+  public playEnemyDefeat(x: number, y: number, kind: EnemyKind): void {
+    this.enemyImpactFx.playDefeat(x, y, kind);
+  }
+
+  public updateFx(deltaSeconds: number): void {
+    this.enemyImpactFx.update(deltaSeconds);
+  }
+
+  public reset(): void {
+    this.enemyImpactFx.clear();
+    for (let index = 0; index < this.enemyVisuals.length; index += 1) {
+      this.previousActive[index] = false;
+      this.previousHealth[index] = 0;
+      this.enemyVisuals[index].reset();
+    }
+    for (const sprite of this.projectileSprites) sprite.visible = false;
   }
 }

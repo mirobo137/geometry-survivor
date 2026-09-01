@@ -48,6 +48,12 @@ describe('PlayerView', () => {
     view.updateDefeat(0.3);
     view.render(state(320, 400, 0), 0.5);
     expect(view.root.alpha).toBeLessThan(1);
+    view.updateDefeat(1.8);
+    view.render(state(320, 400, 0), 2.3);
+    expect(view.root.alpha).toBeGreaterThan(0);
+    view.updateDefeat(0.3);
+    view.render(state(320, 400, 0), 2.4);
+    expect(view.root.alpha).toBe(0);
     view.reset();
     expect(view.root.rotation).toBe(0);
   });

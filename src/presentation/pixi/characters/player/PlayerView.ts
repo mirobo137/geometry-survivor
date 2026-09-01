@@ -118,7 +118,9 @@ export class PlayerView {
 
   public updateDefeat(deltaSeconds: number): void {
     if (this.defeatProgress < 0) return;
-    this.defeatProgress = Math.min(1, this.defeatProgress + Math.max(0, deltaSeconds) / 0.9);
+    // Keep the composed SVG pieces readable long enough to register the loss.
+    // This is presentation timing only; the simulation is already terminal.
+    this.defeatProgress = Math.min(1, this.defeatProgress + Math.max(0, deltaSeconds) / 2.2);
   }
 
   public reset(): void {

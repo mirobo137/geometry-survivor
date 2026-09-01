@@ -9,7 +9,12 @@ describe('TerminalFxView', () => {
     const view = new TerminalFxView(renderer, 'medium');
     view.playPlayerDefeat(320, 240);
     expect(view.root.visible).toBe(true);
-    view.update(0.1);
+    for (let index = 0; index < 10; index += 1) view.update(0.1);
+    expect(view.root.visible).toBe(true);
+    for (let index = 0; index < 14; index += 1) view.update(0.1);
+    expect(view.root.visible).toBe(true);
+    for (let index = 0; index < 8; index += 1) view.update(0.1);
+    expect(view.root.visible).toBe(false);
     view.playBossDefeat(640, 180, 48);
     for (let index = 0; index < 10; index += 1) view.update(0.1);
     expect(view.root.visible).toBe(false);

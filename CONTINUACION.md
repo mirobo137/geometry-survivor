@@ -791,3 +791,27 @@ Fecha: 01-09-2026.
 Validacion de esta sesion: typecheck correcto, 104 pruebas
 unitarias/integracion, 9 smoke browser (incluido movil) y builds
 local/Poki/CrazyGames correctos.
+
+## 34. Continuacion - muerte del jugador visible y resumen diferido
+
+Fecha: 01-09-2026.
+
+- La derrota del jugador conserva las piezas SVG de `PlayerView` y las separa
+  durante 2.2 s. La posicion de la ranura no cambia: solo se aplican transforms
+  de presentacion a armas, cuerpo, core, acento, anillo y firma.
+- `TerminalFxView` amplia el cierre del player con 10 fragmentos del pool,
+  velocidades radiales, arrastre suave y anillo de 3.4 radios. Un `Graphics`
+  gris overscan cubre la zona visible completa en portrait y landscape; el boss
+  mantiene su receta mas corta y discreta. El tono gris permanece durante la
+  ventana completa de 3 s aunque la separacion del player termina a los 2.2 s.
+- La receta ZzFX `player-defeated` continua siendo opcional y rate-limited. No se
+  crean contextos ni nodos de audio durante la muerte y el fallo de audio no
+  bloquea la run.
+- `Game.finishRun` guarda el resultado inmediatamente, pero abre el overlay
+  despues de 3 s. El timer se limpia en `resetRunState` y `shutdown`, y verifica
+  que la fase siga terminal antes de tomar foco.
+
+Validacion pendiente de ejecutar en esta sesion: typecheck, tests, smoke browser
+y builds local/Poki/CrazyGames. En movil real hay que comprobar que el efecto se
+percibe completo antes del resumen; la puerta humana sigue siendo mantener 60
+FPS y que el boton de reinicio aparezca tras el cierre visual.

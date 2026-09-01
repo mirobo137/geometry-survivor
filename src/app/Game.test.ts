@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDefaultSaveData } from '../platform/save/SaveStore';
 import type { PlatformAdapter } from '../platform/Platform';
 import type { GameElements, GameOptions } from './Game';
@@ -87,12 +87,21 @@ describe('Game', () => {
     vi.stubGlobal('window', { location: { search: '' } });
   });
 
-  it('passes victory through to the end-of-run summary', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('waits for terminal presentation before opening the victory summary', () => {
+    vi.useFakeTimers();
     const game = new Game(createOptions());
     const finishRun = (game as unknown as { finishRun: (outcome: 'victory') => void }).finishRun;
 
     finishRun.call(game, 'victory');
 
+    expect(mocks.gameOverOpen).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(2_999);
+    expect(mocks.gameOverOpen).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
     expect(mocks.gameOverOpen).toHaveBeenCalledTimes(1);
     expect(mocks.gameOverOpen.mock.calls[0][0]).toMatchObject({ outcome: 'victory' });
   });

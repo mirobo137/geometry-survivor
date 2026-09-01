@@ -1696,3 +1696,27 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (88 tests unitarios/integración y 8 smoke tests de navegador: 7 desktop + 1 Pixel 5 emulado); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
 
 La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas, pantalla de inicio en fase `menu` y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, spike comparativo de FX y la puerta humana de la run completa.
+
+## Cierre terminal: derrota legible y resumen diferido - 01-09-2026
+
+La muerte del jugador se trata como una escena de presentacion acotada, no como
+un cambio de reglas. `PlayerView` mantiene sus piezas SVG cacheadas y las separa
+durante 2.2 s; `TerminalFxView` anade un estallido de 10 fragmentos reutilizados,
+un anillo de mayor radio y un lavado gris overscan que cubre landscape y portrait.
+El lavado se sostiene hasta el resumen para evitar un corte brusco al terminar
+la separacion de piezas.
+La receta `player-defeated` de ZzFX aporta un tono grave descendente; si el
+audio no esta desbloqueado, el flujo continua en silencio.
+
+El resumen de game-over/victoria se agenda 3 s despues de la transicion terminal
+para que la animacion pueda verse sin que el DOM intercepte la escena. El timer
+se cancela al reiniciar o apagar el runtime y no modifica el timestep, la
+simulacion, la puntuacion ni el contrato de victoria. La capacidad sigue fija y
+`prefers-reduced-motion` evita el burst conservando el tono informativo.
+
+La decision sigue las practicas de game feel de combinar timing, composicion,
+particulas y sonido, pero con el presupuesto movil del proyecto: [GDC Vault -
+Game Feel: Why Your Death Animation Sucks](https://www.gdcvault.com/play/1022759/Game-Feel-Why-Your-Death)
+y el estudio de [features que influyen en impact feel](https://arxiv.org/abs/2208.06155).
+Antes de aumentar filtros o particulas se debe repetir la puerta de 60 FPS en el
+telefono de referencia y comparar Low/Medium/High.

@@ -23,6 +23,9 @@ import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 
+/** Gives terminal presentation time to resolve before the summary takes focus. */
+const TERMINAL_SUMMARY_DELAY_MS = 3_000;
+
 export interface GameElements {
   readonly container: HTMLElement;
   readonly debug: HTMLElement;
@@ -87,6 +90,7 @@ export class Game {
   private contextLost = false;
   private started = false;
   private stopped = false;
+  private terminalSummaryTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly queueResize = (): void => {
     if (this.resizeQueued || this.stopped) return;
@@ -250,6 +254,7 @@ export class Game {
   public shutdown(): void {
     if (!this.started || this.stopped) return;
     this.stopped = true;
+    this.clearTerminalSummaryTimer();
     this.app.ticker.remove(this.onTick);
     this.input.detach();
     this.resizeObserver?.disconnect();
@@ -450,9 +455,14 @@ export class Game {
     const saved = this.saveStore.load();
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
     this.saveStore.save({ ...saved, best });
-    this.gameOver.open(summary, best, () => {
-      this.restartRun();
-    });
+    this.clearTerminalSummaryTimer();
+    this.terminalSummaryTimer = setTimeout(() => {
+      this.terminalSummaryTimer = null;
+      if (this.stopped || !this.gameState.isTerminal) return;
+      this.gameOver.open(summary, best, () => {
+        this.restartRun();
+      });
+    }, TERMINAL_SUMMARY_DELAY_MS);
   }
 
   private restartRun(): void {
@@ -461,6 +471,7 @@ export class Game {
   }
 
   private resetRunState(): void {
+    this.clearTerminalSummaryTimer();
     this.input.reset();
     this.arena.reset();
     this.arena.update(this.initialElapsedSeconds);
@@ -482,5 +493,11 @@ export class Game {
     this.audio.resume();
     this.audio.startMusic();
     this.lifecycle.onGameStart();
+  }
+
+  private clearTerminalSummaryTimer(): void {
+    if (this.terminalSummaryTimer === null) return;
+    clearTimeout(this.terminalSummaryTimer);
+    this.terminalSummaryTimer = null;
   }
 }

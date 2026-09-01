@@ -98,14 +98,17 @@ export class EnemyImpactFxView {
 
     const count = this.quality === 'high' ? 5 : this.quality === 'medium' ? 4 : 3;
     this.spawnParticles(x, y, DUST_COLOR, count, {
-      minSpeed: 78,
-      maxSpeed: 118,
-      lifeSeconds: 0.32,
+      minSpeed: 102,
+      maxSpeed: 152,
+      lifeSeconds: 0.35,
       // FxPool drag is applied once per 60 Hz frame. Keep it close to one so
       // dust travels outward instead of losing most of its velocity instantly.
-      drag: 0.96,
+      drag: 0.97,
       scale: Math.max(0.9, radius / 20),
-      spawnRadius: radius * 0.42,
+      // Chasers use a large composed SVG while their collision radius is
+      // compact. This minimum starts dust at the visible silhouette instead
+      // of its center; larger enemies still scale from their own radius.
+      spawnRadius: Math.max(22, radius * 1.2),
       texture: this.dustTexture,
       alpha: 0.88
     });

@@ -17,11 +17,11 @@ describe('EnemyImpactFxView', () => {
     const particleRoot = (view as unknown as { particles: { root: { children: ContainerChild[] } } }).particles.root;
     const dust = particleRoot.children.filter((child) => child.visible) as unknown as Array<{ x: number; y: number }>;
     expect(dust).toHaveLength(3);
-    expect(dust.every((particle) => Math.hypot(particle.x - 320, particle.y - 240) > 7)).toBe(true);
+    expect(dust.every((particle) => Math.hypot(particle.x - 320, particle.y - 240) > 21)).toBe(true);
 
     view.update(0.1);
     expect(view.isActive).toBe(true);
-    expect(dust.every((particle) => Math.hypot(particle.x - 320, particle.y - 240) > 12)).toBe(true);
+    expect(dust.every((particle) => Math.hypot(particle.x - 320, particle.y - 240) > 30)).toBe(true);
     view.playDefeat(320, 240, 'tank');
     expect(view.activeRingCount).toBe(2);
     expect(view.activeParticleCount).toBeGreaterThan(1);

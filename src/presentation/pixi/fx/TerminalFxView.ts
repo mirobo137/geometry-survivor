@@ -10,6 +10,8 @@ type TerminalFxKind = 'player' | 'boss';
 export class TerminalFxView {
   public readonly root = new Container();
   private readonly ring = new Graphics();
+  private readonly collapse = new Graphics();
+  private readonly core = new Graphics();
   private readonly tone = new Graphics();
   private readonly particles: FxPool;
   private readonly reducedMotion: boolean;
@@ -32,7 +34,7 @@ export class TerminalFxView {
     this.reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
     this.root.eventMode = 'none';
     this.root.visible = false;
-    this.root.addChild(this.tone, this.ring, this.particles.root);
+    this.root.addChild(this.tone, this.ring, this.collapse, this.core, this.particles.root);
   }
 
   public playPlayerDefeat(x: number, y: number): void {
@@ -49,6 +51,8 @@ export class TerminalFxView {
     if (this.life > 0) this.life = Math.max(0, this.life - delta);
     if (this.toneLife > 0) this.toneLife = Math.max(0, this.toneLife - delta);
     this.ring.clear();
+    this.collapse.clear();
+    this.core.clear();
     this.tone.clear();
     if (this.toneLife > 0) {
       const toneProgress = 1 - this.toneLife / this.maxToneLife;
@@ -64,6 +68,7 @@ export class TerminalFxView {
       const expansion = this.kind === 'player' ? 3.4 : 1.8;
       this.ring.beginPath().circle(this.x, this.y, this.radius + progress * this.radius * expansion)
         .stroke({ color: this.color, width: this.kind === 'player' ? 6 - progress * 3 : 5 - progress * 2, alpha: (1 - progress) * 0.9 });
+      if (this.kind === 'boss') this.renderBossCollapse(progress);
     }
     this.root.visible = this.life > 0 || this.toneLife > 0 || this.particles.activeCount > 0;
   }
@@ -74,6 +79,8 @@ export class TerminalFxView {
     this.maxToneLife = 0;
     this.particles.clear();
     this.ring.clear();
+    this.collapse.clear();
+    this.core.clear();
     this.tone.clear();
     this.toneAlpha = 0;
     this.root.visible = false;
@@ -85,7 +92,7 @@ export class TerminalFxView {
     this.y = y;
     this.radius = radius;
     this.color = color;
-    this.maxLife = kind === 'boss' ? 0.78 : 2.2;
+    this.maxLife = kind === 'boss' ? 1.2 : 2.2;
     this.maxToneLife = kind === 'player' ? 3 : this.maxLife;
     this.toneAlpha = kind === 'player' ? 0.58 : 0.1;
     this.life = this.maxLife;
@@ -99,6 +106,31 @@ export class TerminalFxView {
       this.particles.spawn(x + Math.cos(angle) * radius * 0.58, y + Math.sin(angle) * radius * 0.58, color,
         this.maxLife, Math.cos(angle) * speed, Math.sin(angle) * speed, 0.985, kind === 'boss' ? 1.2 : 1.2,
         undefined, kind === 'boss' ? 1 : 0.92);
+    }
+  }
+
+  private renderBossCollapse(progress: number): void {
+    const split = Math.min(1, Math.max(0, (progress - 0.22) / 0.78));
+    const collapseRadius = this.radius * (0.42 + progress * 1.28);
+    const separation = this.radius * 0.95 * split;
+    const ringAlpha = (1 - progress) * 0.82;
+    // Two independently started paths avoid Pixi's inherited subpath joining.
+    this.collapse.beginPath().circle(this.x - separation, this.y, collapseRadius)
+      .stroke({ color: 0xff6cf2, width: 4 - progress * 2, alpha: ringAlpha });
+    this.collapse.beginPath().circle(this.x + separation, this.y, collapseRadius * (0.82 + progress * 0.18))
+      .stroke({ color: 0x75e6ff, width: 3 - progress * 1.5, alpha: ringAlpha * 0.9 });
+
+    const centralAlpha = progress < 0.38 ? 0.95 : Math.max(0, 1 - progress) * 0.95;
+    const centralRadius = this.radius * (0.42 - Math.min(0.22, progress * 0.22));
+    this.core.beginPath().circle(this.x, this.y, centralRadius)
+      .fill({ color: 0x241044, alpha: centralAlpha })
+      .stroke({ color: 0xffe8ff, width: 3, alpha: centralAlpha });
+    if (split > 0) {
+      const shardAlpha = (1 - split) * 0.88;
+      this.core.beginPath().circle(this.x - separation, this.y - this.radius * 0.28 * split, this.radius * 0.11)
+        .fill({ color: 0x75e6ff, alpha: shardAlpha });
+      this.core.beginPath().circle(this.x + separation, this.y + this.radius * 0.28 * split, this.radius * 0.11)
+        .fill({ color: 0xffd166, alpha: shardAlpha });
     }
   }
 }

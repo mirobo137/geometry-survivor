@@ -17,6 +17,8 @@ describe('TerminalFxView', () => {
     expect(view.root.visible).toBe(false);
     view.playBossDefeat(640, 180, 48);
     for (let index = 0; index < 10; index += 1) view.update(0.1);
+    expect(view.root.visible).toBe(true);
+    for (let index = 0; index < 4; index += 1) view.update(0.1);
     expect(view.root.visible).toBe(false);
   });
 });

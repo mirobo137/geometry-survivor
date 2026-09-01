@@ -816,3 +816,21 @@ Validacion de esta sesion: typecheck correcto, 105 pruebas unitarias/integracion
 En movil real hay que comprobar que el efecto se percibe completo antes del
 resumen; la puerta humana sigue siendo mantener 60 FPS y que el boton de
 reinicio aparezca tras el cierre visual.
+
+## 35. Continuacion - secuencia especial de derrota del boss
+
+Fecha: 01-09-2026.
+
+- `TerminalFxView` conserva el burst del pool, pero ahora el boss tiene una
+  lectura propia de colapso: dos anillos se separan, el nucleo se comprime y
+  dos fragmentos de energia se abren antes de desaparecer.
+- La receta dura 1.2 s y sigue debajo del modal diferido de 3 s. No retiene la
+  simulacion, no altera el resultado de victoria y no crea una segunda entidad
+  de gameplay.
+- Cada arco o circulo inicia su subpath de forma explicita; el efecto usa solo
+  tres `Graphics` reutilizados (ring, collapse y core) y el pool acotado de
+  fragmentos. `prefers-reduced-motion` conserva anillos y elimina particulas.
+
+Validacion pendiente de esta iteracion: comprobar en `?boss=1` que el boss se
+desplace, se derrote y deje ver la secuencia completa antes del resumen, ademas
+de repetir typecheck, tests, smoke browser y los tres builds.

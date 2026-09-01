@@ -1720,3 +1720,18 @@ Game Feel: Why Your Death Animation Sucks](https://www.gdcvault.com/play/1022759
 y el estudio de [features que influyen en impact feel](https://arxiv.org/abs/2208.06155).
 Antes de aumentar filtros o particulas se debe repetir la puerta de 60 FPS en el
 telefono de referencia y comparar Low/Medium/High.
+
+## Muerte especial del boss - 01-09-2026
+
+La derrota del boss ya no comparte exactamente la receta del player. Durante
+1.2 s `TerminalFxView` dibuja un colapso en tres pasos: anillo inicial, dos
+anillos que se separan con el nucleo comprimiendose y un burst radial final.
+Los elementos son `Graphics` reutilizados y ocho fragmentos del pool; no se
+crean sprites ni entidades de simulacion al morir. El resumen sigue diferido
+3 s, por lo que la victoria conserva lectura sin convertirse en una
+cinematica bloqueante.
+
+La implementacion aplica `beginPath()` para cada circulo independiente y
+mantiene `prefers-reduced-motion`, portrait/landscape y los presupuestos
+Low/Medium/High. La puerta humana restante es repetir `?boss=1` en el telefono
+real y confirmar desplazamiento, telegraphs, derrota y reinicio sin errores.

@@ -573,6 +573,7 @@ body {
   min-width: 0;
 }
 
+#start-player-skins-panel,
 #start-cannon-skins-panel {
   display: grid;
   gap: 1rem;
@@ -1203,20 +1204,11 @@ body {
   }
 
   #start-screen.is-skins-mode .skin-tabs,
-  #start-screen.is-skins-mode .skins-header,
-  #start-screen.is-skins-mode .player-skin-preview-stage {
+  #start-screen.is-skins-mode .skins-header {
     flex: 0 0 auto;
   }
 
-  #start-screen.is-skins-mode .skin-cards {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-  }
-
-  #start-screen.is-skins-mode #start-cannon-skins-panel {
+  #start-screen.is-skins-mode .skin-tab-panel {
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
@@ -1224,10 +1216,19 @@ body {
     flex-direction: column;
   }
 
-  #start-screen.is-skins-mode #start-cannon-skins-panel .cannon-preview-stage {
+  /* This selector is intentionally as specific as the mobile flex layout.
+     Without it, the flex rule wins over native [hidden] and both collections
+     are painted/tappable at once on portrait screens. */
+  #start-screen.is-skins-mode .skin-tab-panel[hidden] {
+    display: none;
+  }
+
+  #start-screen.is-skins-mode .skin-tab-panel .skin-preview-stage,
+  #start-screen.is-skins-mode .skin-tab-panel .skins-footnote {
     flex: 0 0 auto;
   }
 
+  #start-screen.is-skins-mode .skin-cards,
   #start-screen.is-skins-mode #start-cannon-cards {
     flex: 1 1 auto;
     min-height: 0;

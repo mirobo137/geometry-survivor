@@ -27,6 +27,8 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect(page.locator('#start-screen')).toBeVisible();
   await page.locator('#start-skins').click();
   await expect(page.locator('#start-skins-view')).toBeVisible();
+  await expect(page.locator('#start-player-skins-panel')).toBeVisible();
+  await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
 
   const lockerMotion = await page.evaluate(() => {
     const screen = document.querySelector<HTMLElement>('#start-screen');
@@ -68,6 +70,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect(page.locator('.start-screen-panel')).toHaveJSProperty('scrollTop', 0);
   await expect(page.locator('#start-skins-back')).toBeVisible();
   await page.locator('#start-cannon-skins-tab').click();
+  await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
   await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(4);
@@ -81,6 +84,8 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   });
   await expect.poll(async () => page.locator('#start-cannon-cards').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await page.locator('#start-player-skins-tab').click();
+  await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
+  await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-skin-preview')).toBeVisible();
   expect(failures).toEqual([]);
 });

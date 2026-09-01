@@ -49,10 +49,8 @@ export class StartScreen {
   private readonly skinsView: HTMLElement;
   private readonly playerSkinsTab: HTMLButtonElement;
   private readonly cannonSkinsTab: HTMLButtonElement;
+  private readonly playerSkinsView: HTMLElement;
   private readonly cannonSkinsView: HTMLElement;
-  private readonly playerPreviewStage: HTMLElement;
-  private readonly playerCards: HTMLElement;
-  private readonly playerFootnote: HTMLElement | null;
   private playHandler: (() => void) | null = null;
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
@@ -87,10 +85,9 @@ export class StartScreen {
     const skinsView = root.querySelector<HTMLElement>('#start-skins-view');
     const playerSkinsTab = root.querySelector<HTMLButtonElement>('#start-player-skins-tab');
     const cannonSkinsTab = root.querySelector<HTMLButtonElement>('#start-cannon-skins-tab');
+    const playerSkinsView = root.querySelector<HTMLElement>('#start-player-skins-panel');
     const cannonSkinsView = root.querySelector<HTMLElement>('#start-cannon-skins-panel');
-    const playerPreviewStage = root.querySelector<HTMLElement>('.player-skin-preview-stage');
-    const playerCards = root.querySelector<HTMLElement>('#start-skin-cards');
-    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !cannonSkinsView || !playerPreviewStage || !playerCards) {
+    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !playerSkinsView || !cannonSkinsView) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -110,15 +107,10 @@ export class StartScreen {
     this.skinsView = skinsView;
     this.playerSkinsTab = playerSkinsTab;
     this.cannonSkinsTab = cannonSkinsTab;
+    this.playerSkinsView = playerSkinsView;
     this.cannonSkinsView = cannonSkinsView;
-    this.playerPreviewStage = playerPreviewStage;
-    this.playerCards = playerCards;
-    this.playerFootnote = playerCards.nextElementSibling instanceof HTMLElement ? playerCards.nextElementSibling : null;
-    this.skinsPanel = new SkinSelectPanel(skinsView);
-    this.cannonPanel = new CannonSelectPanel(skinsView);
-    // Keep the cannon tab panel after the player collection in document order;
-    // this also lets the existing player cards remain the single scroll body.
-    skinsView.append(this.cannonSkinsView);
+    this.skinsPanel = new SkinSelectPanel(playerSkinsView);
+    this.cannonPanel = new CannonSelectPanel(cannonSkinsView);
     this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.playHandler?.());
@@ -225,9 +217,7 @@ export class StartScreen {
     this.playerSkinsTab.tabIndex = cannon ? -1 : 0;
     this.cannonSkinsTab.tabIndex = cannon ? 0 : -1;
     this.cannonSkinsView.hidden = !cannon;
-    this.playerPreviewStage.hidden = cannon;
-    this.playerCards.hidden = cannon;
-    if (this.playerFootnote) this.playerFootnote.hidden = cannon;
+    this.playerSkinsView.hidden = cannon;
   }
 
   private skinsPanelIsClosed(): boolean {

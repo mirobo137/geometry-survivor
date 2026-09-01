@@ -60,13 +60,20 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('#start-skins').click();
   await expect(page.locator('#start-main-view')).toBeHidden();
   await expect(page.locator('#start-skins-view')).toBeVisible();
+  await expect(page.locator('#start-player-skins-panel')).toBeVisible();
+  await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-skin-preview svg')).toBeVisible();
   await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(4);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-skin-selected-name')).toHaveText('Eclipse Prism');
+  for (const skin of ['cyan', 'violet', 'ember', 'verdant']) {
+    await page.locator(`.skin-card[data-skin="${skin}"] button`).click();
+    await expect(page.locator(`.skin-card[data-skin="${skin}"]`)).toHaveClass(/is-selected/);
+  }
   await page.locator('#start-cannon-skins-tab').click();
+  await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
   await expect(page.locator('#start-cannon-preview .cannon-preview-shot')).toHaveCount(2);
@@ -75,6 +82,10 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-cannon-selected-name')).toHaveText('Arc Needle');
+  for (const cannon of ['basic', 'curve', 'smoke', 'rainbow']) {
+    await page.locator(`.cannon-card[data-cannon="${cannon}"] button`).click();
+    await expect(page.locator(`.cannon-card[data-cannon="${cannon}"]`)).toHaveClass(/is-selected/);
+  }
   await page.locator('#start-skins-back').click();
   await expect(page.locator('#start-skins-view')).toBeHidden();
   await expect(page.locator('#start-main-view')).toBeVisible();

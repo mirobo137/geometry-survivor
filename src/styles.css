@@ -974,6 +974,28 @@ body {
     opacity: 0.66;
   }
 
+  /* Freeze the equipped preview like a spreadsheet header; only the card
+     collection becomes the scroll surface on a short portrait viewport. */
+  #start-screen.is-skins-mode .start-screen-panel {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  #start-screen.is-skins-mode .start-skins-view {
+    min-height: 0;
+    height: auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  #start-screen.is-skins-mode .skin-cards {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
   /* Keep a single, small animated surface: the equipped skin preview. */
   #start-screen.is-skins-mode .skin-preview svg {
     animation: skin-preview-float-mobile 5.6s ease-in-out infinite;

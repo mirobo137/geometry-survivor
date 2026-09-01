@@ -1313,6 +1313,10 @@ GPU moviles:
   transformaciones de grupos SVG. El preview grande de la skin equipada
   conserva una animacion suave de levitacion, opacidad y trazos. El menu
   principal mantiene su animacion en escritorio.
+- En portrait el panel reserva cabecera y preview como una zona fija (modelo de
+  fila congelada tipo hoja de calculo); solo `#start-skin-cards` tiene
+  `overflow-y: auto` y vuelve a `scrollTop = 0` al abrirse. La skin equipada
+  permanece visible mientras se recorren las demas.
 
 La prueba browser movil verifica que el modo locker activa el preset estable,
 que panel/atmosfera/miniaturas no tienen animacion activa y que el preview

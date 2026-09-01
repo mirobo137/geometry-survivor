@@ -47,6 +47,7 @@ export class SkinSelectPanel {
     this.state = this.normalize(options.state);
     this.changeHandler = options.onStateChange;
     this.root.hidden = false;
+    this.cards.scrollTop = 0;
     this.render();
   }
 

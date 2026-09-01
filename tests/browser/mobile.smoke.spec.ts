@@ -56,15 +56,16 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     cardArt: 'none'
   });
 
-  const scrollMetrics = await page.locator('.start-screen-panel').evaluate((element) => ({
+  const scrollMetrics = await page.locator('#start-skin-cards').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight
   }));
   expect(scrollMetrics.scrollHeight).toBeGreaterThan(scrollMetrics.clientHeight);
-  await page.locator('.start-screen-panel').evaluate((element) => {
+  await page.locator('#start-skin-cards').evaluate((element) => {
     element.scrollTop = element.scrollHeight;
   });
-  await expect.poll(async () => page.locator('.start-screen-panel').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect.poll(async () => page.locator('#start-skin-cards').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(page.locator('.start-screen-panel')).toHaveJSProperty('scrollTop', 0);
   await expect(page.locator('#start-skins-back')).toBeVisible();
   expect(failures).toEqual([]);
 });

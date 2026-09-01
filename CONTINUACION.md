@@ -693,6 +693,9 @@ Fecha: 01-09-2026.
   dash), sin rotaciones/escala de grupos SVG. Se mantienen gradientes,
   contraste, scroll y controles; el menú principal conserva su movimiento en
   escritorio.
+- El preview equipado y la cabecera quedan fijos como una celda congelada; el
+  único scroll es `#start-skin-cards`, que se reinicia al abrir el locker. Así
+  la elección permanece visible mientras se comparan las skins.
 - La congelación es un preset de estabilidad para GPU móvil, no una regla de
   gameplay ni una segunda escena. Un futuro spike con dispositivo real puede
   reactivar una animación aislada si las mediciones lo permiten.

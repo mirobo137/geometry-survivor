@@ -68,7 +68,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-skin-selected-name')).toHaveText('Eclipse Prism');
-  for (const skin of ['cyan', 'violet', 'ember', 'verdant']) {
+  for (const skin of ['cyan', 'violet', 'amber', 'emerald']) {
     await page.locator(`.skin-card[data-skin="${skin}"] button`).click();
     await expect(page.locator(`.skin-card[data-skin="${skin}"]`)).toHaveClass(/is-selected/);
   }
@@ -110,8 +110,8 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
   expect(saved).not.toBeNull();
   expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
-  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'violet'] });
-  expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'curve', unlocked: ['basic', 'curve'] });
+  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'emerald', unlocked: ['cyan', 'violet', 'amber', 'emerald'] });
+  expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'rainbow', unlocked: ['basic', 'curve', 'smoke', 'rainbow'] });
   expect(failures).toEqual([]);
 });
 

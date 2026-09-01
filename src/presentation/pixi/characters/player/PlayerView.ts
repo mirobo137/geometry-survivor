@@ -1,6 +1,7 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
 import type { ShotRenderState } from '../../../../simulation/combat/CombatRenderState';
+import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import {
   PLAYER_SKINS,
   PLAYER_SKIN_MOTION,
@@ -26,6 +27,7 @@ export class PlayerView {
   private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
   private skin: PlayerSkinId = 'cyan';
+  private cannonSkin: CannonSkinId = 'basic';
   private facing = 0;
   private lastX: number | null = null;
   private lastY: number | null = null;
@@ -41,11 +43,15 @@ export class PlayerView {
   private shotRightOriginY = 0;
   private defeatProgress = -1;
 
-  public constructor(textures: PlayerTextureSet, skin: PlayerSkinId = 'cyan') {
+  public constructor(
+    textures: PlayerTextureSet,
+    skin: PlayerSkinId = 'cyan',
+    cannonSkin: CannonSkinId = 'basic'
+  ) {
     this.textures = textures;
     this.shadow = new Sprite(textures.shadow);
     this.ring = new Sprite(textures.ring);
-    this.weapons = new Sprite(textures.weapons);
+    this.weapons = new Sprite(textures.weapons[cannonSkin]);
     this.body = new Sprite(textures.body);
     this.core = new Sprite(textures.core);
     this.accent = new Sprite(textures.accent);
@@ -58,6 +64,7 @@ export class PlayerView {
       part.anchor.set(0.5);
     }
     this.root.addChild(this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash);
+    this.setCannonSkin(cannonSkin);
     this.setSkin(skin);
   }
 
@@ -68,7 +75,6 @@ export class PlayerView {
     this.signature.tint = colors.outer;
     this.shadow.tint = colors.shadow;
     this.ring.tint = colors.outer;
-    this.weapons.tint = colors.weapon;
     this.body.tint = colors.body;
     this.core.tint = colors.core;
     this.accent.tint = colors.accent;
@@ -76,6 +82,18 @@ export class PlayerView {
 
   public get skinId(): PlayerSkinId {
     return this.skin;
+  }
+
+  public get cannonSkinId(): CannonSkinId {
+    return this.cannonSkin;
+  }
+
+  /** Cannon cosmetics are independent from the hull skin and only affect presentation. */
+  public setCannonSkin(cannonSkin: CannonSkinId): void {
+    this.cannonSkin = cannonSkin;
+    this.weapons.texture = this.textures.weapons[cannonSkin];
+    // Cannon SVGs own their palette so a body skin never recolors the loadout.
+    this.weapons.tint = 0xffffff;
   }
 
   /** Called by the app after the simulation accepts a damage event. */

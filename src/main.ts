@@ -5,6 +5,7 @@ import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import settingsIcon from './assets/svg/ui/settings.svg?raw';
 import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
 import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens';
+import { isCannonSkinId, type CannonSkinId } from './content/visual/CannonSkinDefinitions';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 
 const getErrorMessage = (error: unknown): string => {
@@ -74,6 +75,8 @@ const bootstrap = async (): Promise<void> => {
   const playerSkin: PlayerSkinId | undefined = requestedSkin === 'violet' || requestedSkin === 'cyan' || requestedSkin === 'amber' || requestedSkin === 'emerald'
     ? requestedSkin
     : undefined;
+  const requestedCannon = searchParams.get('cannon');
+  const cannonSkin: CannonSkinId | undefined = isCannonSkinId(requestedCannon) ? requestedCannon : undefined;
   const requestedQuality = searchParams.get('quality');
   const fxQuality: FxQuality = requestedQuality === 'low' || requestedQuality === 'high'
     ? requestedQuality
@@ -116,6 +119,7 @@ const bootstrap = async (): Promise<void> => {
     },
     stressMode,
     playerSkin,
+    cannonSkin,
     fxQuality,
     initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,

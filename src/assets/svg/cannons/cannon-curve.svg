@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-curve-title cannon-curve-desc">
+  <title id="cannon-curve-title">Emisores Arc Needle</title>
+  <desc id="cannon-curve-desc">Dos emisores violetas con doble punta y canal de arco.</desc>
+  <g id="cannon-curve-emitters" fill="#8e6bce" stroke="#f5eaff" stroke-linejoin="round">
+    <path id="cannon-curve-left" d="M-9-8-31-18l9 18-9 18 22-10 6-8z" stroke-width="1.5"/>
+    <path id="cannon-curve-right" d="M9-8 31-18l-9 18 9 18-22-10-6-8z" stroke-width="1.5"/>
+    <path id="cannon-curve-left-channel" d="M-13-5-25-12l6 12-6 12 12-7 4-5z" fill="#d2a8ff" stroke="none"/>
+    <path id="cannon-curve-right-channel" d="M13-5 25-12l-6 12 6 12-12-7-4-5z" fill="#d2a8ff" stroke="none"/>
+  </g>
+</svg>

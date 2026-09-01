@@ -47,6 +47,22 @@
           <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
           </div>
           <section id="start-skins-view" class="start-skins-view" hidden aria-labelledby="start-skins-title">
+            <div class="skin-tabs" role="tablist" aria-label="Colecciones visuales">
+              <button id="start-player-skins-tab" class="skin-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="start-player-skins-panel">Nucleo</button>
+              <button id="start-cannon-skins-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-cannon-skins-panel">Canones y balas</button>
+            </div>
+            <div id="start-cannon-skins-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-cannon-skins-tab" hidden>
+              <div class="skin-preview-stage cannon-preview-stage" aria-live="polite">
+                <div id="start-cannon-preview" class="cannon-preview" aria-hidden="true"></div>
+                <div class="skin-preview-copy">
+                  <span class="skin-preview-label">PAQUETE DE DISPARO EQUIPADO</span>
+                  <strong id="start-cannon-selected-name">Pulse Standard</strong>
+                  <span id="start-cannon-selected-status">EQUIPADO</span>
+                </div>
+              </div>
+              <div id="start-cannon-cards" class="cannon-cards" aria-label="Coleccion de canones y balas"></div>
+              <p class="skins-footnote">Cada paquete incluye canones, bala y estela. Todo es cosmetico: no cambia dano, fisica ni cadencia.</p>
+            </div>
             <div class="skins-header">
               <button id="start-skins-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
@@ -55,7 +71,7 @@
                 <p>Adquiere una silueta, visualízala y equípala antes de entrar a la arena.</p>
               </div>
             </div>
-            <div class="skin-preview-stage" aria-live="polite">
+            <div class="skin-preview-stage player-skin-preview-stage" aria-live="polite">
               <div id="start-skin-preview" class="skin-preview" aria-hidden="true"></div>
               <div class="skin-preview-copy">
                 <span class="skin-preview-label">NÚCLEO EQUIPADO</span>

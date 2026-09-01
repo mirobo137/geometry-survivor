@@ -19,7 +19,6 @@ interface SkinCardEntry {
 
 /** DOM-only locker: cards stay accessible HTML, while previews remain SVG. */
 export class SkinSelectPanel {
-  private readonly root: HTMLElement;
   private readonly cards: HTMLElement;
   private readonly preview: HTMLElement;
   private readonly selectedName: HTMLElement;
@@ -36,7 +35,6 @@ export class SkinSelectPanel {
     if (!cards || !preview || !selectedName || !selectedStatus) {
       throw new Error('Faltan elementos del panel de skins');
     }
-    this.root = root;
     this.cards = cards;
     this.preview = preview;
     this.selectedName = selectedName;
@@ -46,13 +44,11 @@ export class SkinSelectPanel {
   public open(options: SkinSelectPanelOptions): void {
     this.state = this.normalize(options.state);
     this.changeHandler = options.onStateChange;
-    this.root.hidden = false;
     this.cards.scrollTop = 0;
     this.render();
   }
 
   public close(): void {
-    this.root.hidden = true;
     this.changeHandler = null;
   }
 

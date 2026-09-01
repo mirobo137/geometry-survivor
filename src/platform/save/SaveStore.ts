@@ -2,9 +2,10 @@ export type QualityPreset = 'low' | 'medium' | 'high';
 export type ControlScheme = 'auto' | 'touch' | 'keyboard';
 
 import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
+import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 
-export const SAVE_SCHEMA_VERSION = 2 as const;
+export const SAVE_SCHEMA_VERSION = 3 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 
@@ -26,12 +27,18 @@ export interface SkinSaveData {
   readonly unlocked: readonly PlayerSkinId[];
 }
 
+export interface CannonSkinSaveData {
+  readonly selected: CannonSkinId;
+  readonly unlocked: readonly CannonSkinId[];
+}
+
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
   readonly settings: SaveSettings;
   readonly best: BestRun;
   readonly tutorialSeen: boolean;
   readonly skins: SkinSaveData;
+  readonly cannonSkins: CannonSkinSaveData;
 }
 
 export interface StorageAdapter {
@@ -68,6 +75,10 @@ export const createDefaultSaveData = (): SaveData => ({
   skins: {
     selected: 'cyan',
     unlocked: ['cyan']
+  },
+  cannonSkins: {
+    selected: 'basic',
+    unlocked: ['basic']
   }
 });
 
@@ -100,6 +111,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawSettings = isRecord(value.settings) ? value.settings : {};
   const rawBest = isRecord(value.best) ? value.best : {};
   const rawSkins = isRecord(value.skins) ? value.skins : {};
+  const rawCannonSkins = isRecord(value.cannonSkins) ? value.cannonSkins : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
   const unlocked = Array.isArray(rawSkins.unlocked)
@@ -108,6 +120,12 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', ...unlocked]));
   const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'cyan';
   const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'cyan';
+  const cannonUnlocked = Array.isArray(rawCannonSkins.unlocked)
+    ? rawCannonSkins.unlocked.filter(isCannonSkinId)
+    : [];
+  const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['basic', ...cannonUnlocked]));
+  const requestedCannon = isCannonSkinId(rawCannonSkins.selected) ? rawCannonSkins.selected : 'basic';
+  const selectedCannon = normalizedCannonUnlocked.includes(requestedCannon) ? requestedCannon : 'basic';
 
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -126,6 +144,10 @@ export const migrateSaveData = (value: unknown): SaveData => {
     skins: {
       selected,
       unlocked: normalizedUnlocked
+    },
+    cannonSkins: {
+      selected: selectedCannon,
+      unlocked: normalizedCannonUnlocked
     }
   };
 };

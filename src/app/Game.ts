@@ -3,7 +3,7 @@ import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
-import { mergeBestRun, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
+import { mergeBestRun, type CannonSkinSaveData, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -11,6 +11,7 @@ import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
+import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
@@ -46,6 +47,7 @@ export interface GameOptions {
   readonly platform: PlatformAdapter;
   readonly startOnMenu?: boolean;
   readonly playerSkin?: PlayerSkinId;
+  readonly cannonSkin?: CannonSkinId;
   readonly fxQuality?: FxQuality;
 }
 
@@ -60,6 +62,7 @@ export class Game {
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
+  private readonly cannonSkin: CannonSkinId;
   private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
   private readonly saveStore: SaveStore;
@@ -139,6 +142,13 @@ export class Game {
     this.view.setPlayerSkin(skins.selected);
   };
 
+  private readonly onStartCannonSkinStateChange = (cannonSkins: CannonSkinSaveData): void => {
+    const saved = this.saveStore.load();
+    if (!cannonSkins.unlocked.includes(cannonSkins.selected)) return;
+    this.saveStore.save({ ...saved, cannonSkins });
+    this.view.setCannonSkin(cannonSkins.selected);
+  };
+
   private readonly onPauseRestart = (): void => {
     if (this.contextLost) return;
     if (!this.gameState.restartFromPause()) return;
@@ -192,6 +202,7 @@ export class Game {
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
     this.playerSkin = options.playerSkin ?? saved.skins.selected;
+    this.cannonSkin = options.cannonSkin ?? saved.cannonSkins.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
@@ -204,7 +215,7 @@ export class Game {
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds
     });
-    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality);
+    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
@@ -240,9 +251,11 @@ export class Game {
         settings: saved.settings,
         best: saved.best,
         skins: saved.skins,
+        cannonSkins: saved.cannonSkins,
         onPlay: this.onStartPlay,
         onSettingsChange: this.onStartSettingsChange,
-        onSkinStateChange: this.onStartSkinStateChange
+        onSkinStateChange: this.onStartSkinStateChange,
+        onCannonSkinStateChange: this.onStartCannonSkinStateChange
       });
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;

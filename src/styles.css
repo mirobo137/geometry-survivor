@@ -523,6 +523,218 @@ body {
   line-height: 1.4;
 }
 
+.skin-tabs {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.25rem;
+  overflow-x: auto;
+  border: 1px solid rgba(145, 181, 255, 0.24);
+  border-radius: 0.7rem;
+  background: rgba(4, 10, 25, 0.68);
+  scrollbar-width: none;
+}
+
+.skin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.skin-tab {
+  flex: 1 0 8rem;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.75rem;
+  color: #8fa8d0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font: 800 0.68rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.skin-tab.is-active {
+  color: #07101f;
+  background: #75e6ff;
+  border-color: #b8f4ff;
+  box-shadow: 0 0 1rem rgba(117, 230, 255, 0.22);
+}
+
+.skin-tab:focus-visible {
+  outline: 3px solid #ffe39a;
+  outline-offset: 2px;
+}
+
+.skin-tab-panel[hidden] {
+  display: none;
+}
+
+.skin-tab-panel {
+  min-width: 0;
+}
+
+#start-cannon-skins-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+#start-cannon-skins-panel[hidden] {
+  display: none;
+}
+
+.cannon-preview-stage {
+  grid-template-columns: minmax(13rem, 1fr) minmax(8rem, 0.72fr);
+}
+
+.cannon-preview {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 8.5rem;
+  color: #75e6ff;
+}
+
+.cannon-preview svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cannon-preview-trail {
+  opacity: 0.82;
+}
+
+.cannon-preview-scene.is-animated .cannon-preview-trail {
+  animation: cannon-preview-trail-pulse 1.25s ease-in-out infinite;
+}
+
+.cannon-preview-scene.is-animated .cannon-preview-smoke {
+  animation: cannon-preview-smoke-drift 1.25s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.cannon-card {
+  --cannon-accent: #75e6ff;
+  --cannon-line: rgba(117, 230, 255, 0.42);
+  min-width: 0;
+  border: 1px solid var(--cannon-line);
+  border-radius: 0.78rem;
+  background: linear-gradient(150deg, rgba(14, 30, 58, 0.92), rgba(9, 14, 31, 0.92));
+  transition: transform 150ms ease, filter 150ms ease, border-color 150ms ease;
+}
+
+.cannon-card[data-cannon="curve"] {
+  --cannon-accent: #d2a8ff;
+  --cannon-line: rgba(210, 168, 255, 0.46);
+  background: linear-gradient(150deg, rgba(36, 22, 64, 0.94), rgba(14, 13, 34, 0.92));
+}
+
+.cannon-card[data-cannon="smoke"] {
+  --cannon-accent: #ffb86b;
+  --cannon-line: rgba(255, 184, 107, 0.5);
+  background: linear-gradient(150deg, rgba(62, 34, 19, 0.94), rgba(24, 15, 19, 0.92));
+}
+
+.cannon-card[data-cannon="rainbow"] {
+  --cannon-accent: #65f2c2;
+  --cannon-line: rgba(101, 242, 194, 0.46);
+  background: linear-gradient(150deg, rgba(12, 53, 51, 0.94), rgba(7, 24, 29, 0.92));
+}
+
+.cannon-card.is-selected {
+  border-color: var(--cannon-accent);
+  box-shadow: 0 0 1.25rem color-mix(in srgb, var(--cannon-accent) 24%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--cannon-accent) 22%, transparent);
+}
+
+.cannon-card.is-locked {
+  border-style: dashed;
+}
+
+.cannon-card-hitarea {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1.25fr) minmax(0, 1fr);
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 8.3rem;
+  padding: 0.65rem;
+  color: #eaf0ff;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cannon-card-hitarea:hover {
+  filter: brightness(1.12);
+}
+
+.cannon-card-hitarea:active {
+  transform: scale(0.985);
+}
+
+.cannon-card-hitarea:focus-visible {
+  outline: 3px solid #ffe39a;
+  outline-offset: 3px;
+}
+
+.cannon-card-art {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 6.9rem;
+  border-radius: 0.55rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cannon-accent) 15%, transparent), transparent 68%);
+}
+
+.cannon-card-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cannon-card-copy {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.28rem;
+  min-width: 0;
+  align-content: stretch;
+}
+
+.cannon-card-meta,
+.cannon-card-action {
+  color: var(--cannon-accent);
+  font: 800 0.62rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.cannon-card-copy strong {
+  color: #f1f5ff;
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.cannon-card-copy > span:not(.cannon-card-meta):not(.cannon-card-action) {
+  color: #9eb5d8;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+@keyframes cannon-preview-trail-pulse {
+  from, to { opacity: 0.52; }
+  50% { opacity: 0.98; }
+}
+
+@keyframes cannon-preview-smoke-drift {
+  from, to { transform: translateX(0) scale(0.86); opacity: 0.35; }
+  50% { transform: translateX(-4px) scale(1.04); opacity: 0.78; }
+}
+
 .skins-back {
   min-height: 2.6rem;
   padding: 0.55rem 0.7rem;
@@ -985,11 +1197,39 @@ body {
   #start-screen.is-skins-mode .start-skins-view {
     min-height: 0;
     height: auto;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 
+  #start-screen.is-skins-mode .skin-tabs,
+  #start-screen.is-skins-mode .skins-header,
+  #start-screen.is-skins-mode .player-skin-preview-stage {
+    flex: 0 0 auto;
+  }
+
   #start-screen.is-skins-mode .skin-cards {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  #start-screen.is-skins-mode #start-cannon-skins-panel {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    flex-direction: column;
+  }
+
+  #start-screen.is-skins-mode #start-cannon-skins-panel .cannon-preview-stage {
+    flex: 0 0 auto;
+  }
+
+  #start-screen.is-skins-mode #start-cannon-cards {
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1391,6 +1631,14 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .cannon-preview-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .cannon-cards {
+    grid-template-columns: 1fr;
+  }
+
   #level-up-options {
     grid-template-columns: 1fr;
   }
@@ -1788,6 +2036,11 @@ body {
   .skin-card-art svg .skin-art-crown,
   .skin-card-art svg .skin-art-blades,
   .skin-card-art svg .skin-art-core {
+    animation: none;
+  }
+
+  .cannon-preview-scene.is-animated .cannon-preview-trail,
+  .cannon-preview-scene.is-animated .cannon-preview-smoke {
     animation: none;
   }
 

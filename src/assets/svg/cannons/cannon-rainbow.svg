@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-rainbow-title cannon-rainbow-desc">
+  <title id="cannon-rainbow-title">Emisores Spectrum Drive</title>
+  <desc id="cannon-rainbow-desc">Dos prismas grandes con aletas multicolor y una boca blanca.</desc>
+  <g id="cannon-rainbow-emitters" stroke="#ffffff" stroke-linejoin="round">
+    <path id="cannon-rainbow-left" d="M-9-8-30-14l6 14-6 14 21-6 6-8z" fill="#65f2c2" stroke-width="1.5"/>
+    <path id="cannon-rainbow-right" d="M9-8 30-14l-6 14 6 14-21-6-6-8z" fill="#65f2c2" stroke-width="1.5"/>
+    <path id="cannon-rainbow-left-red" d="M-13-6-25-10l4 10-4 10 12-4 4-6z" fill="#ff668f" stroke="none"/>
+    <path id="cannon-rainbow-left-gold" d="M-12-3-21-6l3 6-3 6 9-3 3-3z" fill="#ffe39a" stroke="none"/>
+    <path id="cannon-rainbow-right-red" d="M13-6 25-10l-4 10 4 10-12-4-4-6z" fill="#ff668f" stroke="none"/>
+    <path id="cannon-rainbow-right-gold" d="M12-3 21-6l-3 6 3 6-9-3-3-3z" fill="#ffe39a" stroke="none"/>
+  </g>
+</svg>

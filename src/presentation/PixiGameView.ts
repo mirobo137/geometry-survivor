@@ -2,6 +2,7 @@ import { Container, Text, TextStyle } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
 import { ARENA_CENTER, LOGICAL_HEIGHT } from '../config/constants';
 import { type FxQuality, type PlayerSkinId } from '../content/visual/VisualTokens';
+import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import type { CombatRenderState, ShotRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
 import { ArenaView } from './pixi/ArenaView';
@@ -33,12 +34,17 @@ export class PixiGameView {
   private readonly title: Text;
   private readonly hint: Text;
 
-  public constructor(renderer: Renderer, playerSkin: PlayerSkinId = 'cyan', quality: FxQuality = 'medium') {
+  public constructor(
+    renderer: Renderer,
+    playerSkin: PlayerSkinId = 'cyan',
+    quality: FxQuality = 'medium',
+    cannonSkin: CannonSkinId = 'basic'
+  ) {
     this.root.addChild(this.world);
-    this.entitiesView = new CombatEntitiesView(renderer, quality);
+    this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
     this.weaponView = new WeaponView(renderer);
     this.levelUpFxView = new LevelUpFxView(renderer);
-    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin);
+    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin);
     this.impactFxView = new ImpactFxView(renderer, quality);
     this.terminalFxView = new TerminalFxView(renderer, quality);
     this.world.addChild(
@@ -119,6 +125,11 @@ export class PixiGameView {
 
   public setPlayerSkin(skin: PlayerSkinId): void {
     this.playerView.setSkin(skin);
+  }
+
+  public setCannonSkin(skin: CannonSkinId): void {
+    this.playerView.setCannonSkin(skin);
+    this.entitiesView.setCannonSkin(skin);
   }
 
   public playPlayerDamage(x: number, y: number, amount: number, animationSeconds: number): void {

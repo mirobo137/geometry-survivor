@@ -1811,3 +1811,34 @@ Referencias tecnicas primarias: [PixiJS Textures](https://pixijs.com/8.x/guides/
 [PixiJS Performance Tips](https://pixijs.com/8.x/guides/concepts/performance-tips),
 [PixiJS ParticleContainer](https://pixijs.com/8.x/guides/components/scene-objects/particle-container)
 y [PixiJS Filters](https://pixijs.com/8.x/guides/components/filters).
+
+## Entrega - locker de paquetes de disparo - 01-09-2026
+
+La separacion entre skin del nucleo y skin del canon ya tiene consumidor real.
+`CannonSkinDefinitions` centraliza cuatro paquetes visuales y el locker DOM
+ofrece una pestana propia para adquirir, previsualizar y equipar cada paquete.
+La preview grande dispara continuamente con SVG/SMIL; las tarjetas son
+estaticas y la lista mantiene un scroll acotado en portrait.
+
+En partida, `PlayerView` usa la textura de canon equipada y
+`CombatEntitiesView` cambia los sprites pooled de proyectil. La estela se
+resuelve en `ProjectileTrailView` con una sola `Graphics`: linea basica, arco
+visual fino, humo acotado o franjas arcoiris. La curva nunca modifica el
+proyectil logico. `SaveStore` migra schema v3 y conserva el equipamiento entre
+sesiones.
+
+Definition of Done de esta entrega: cuatro SVG de canon y cuatro de proyectil
+con frames validos, IDs locales y sin filtros/raster embebido; adquisicion y
+seleccion accesibles por teclado/touch; preview continua congelable con
+`prefers-reduced-motion`; sin nodos por disparo; typecheck, tests, smoke
+desktop/Pixel 5 y los tres builds en verde. La siguiente puerta es medir el
+coste real en `?stress=1` del telefono de referencia antes de aumentar glow o
+densidad de humo.
+
+Las referencias visuales consultadas fueron capturas de *Vampire Survivors*
+(proyectiles curvos, destellos y caos legible) y *Hades* (proyectiles con color
+y contraste direccional). Se usan solo como referencia de ritmo, contraste y
+silueta; no se copian sprites, nombres ni assets: [Vampire Survivors en PC
+Gamer](https://www.pcgamer.com/vampire-survivors-is-a-screen-clearing-thrillride-with-carpet-bombing-doves/),
+[Vampire Survivors en Windows Central](https://www.windowscentral.com/gaming/vampire-survivors-5-tricks-beginners-need-to-know)
+y [Hades - referencia de proyectiles](https://www.gamersdecide.com/articles/hades-best-boon-combos).

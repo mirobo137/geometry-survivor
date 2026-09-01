@@ -5,7 +5,12 @@ import { PlayerView } from './PlayerView';
 const textures = {
   shadow: Texture.WHITE,
   ring: Texture.WHITE,
-  weapons: Texture.WHITE,
+  weapons: {
+    basic: Texture.WHITE,
+    curve: Texture.WHITE,
+    smoke: Texture.WHITE,
+    rainbow: Texture.WHITE
+  },
   body: Texture.WHITE,
   core: Texture.WHITE,
   accent: Texture.WHITE,
@@ -40,6 +45,8 @@ describe('PlayerView', () => {
     expect(view.skinId).toBe('violet');
     view.setSkin('amber');
     expect(view.skinId).toBe('amber');
+    view.setCannonSkin('rainbow');
+    expect(view.cannonSkinId).toBe('rainbow');
     view.playDamage(20, 0.4);
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[6] as { alpha: number };

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-basic-title cannon-basic-desc">
+  <title id="cannon-basic-title">Emisores Pulse Standard</title>
+  <desc id="cannon-basic-desc">Dos cañones geométricos largos con boca luminosa.</desc>
+  <g id="cannon-basic-emitters" fill="#75e6ff" stroke="#e5fbff" stroke-linejoin="round">
+    <path id="cannon-basic-left" d="M-10-4-31-15l4 15-4 15 21-11z" stroke-width="1.6"/>
+    <path id="cannon-basic-right" d="M10-4 31-15l-4 15 4 15-21-11z" stroke-width="1.6"/>
+    <path id="cannon-basic-left-core" d="M-13-3-27-9l3 9-3 9 14-6z" fill="#b8ffd9" stroke="none"/>
+    <path id="cannon-basic-right-core" d="M13-3 27-9l-3 9 3 9-14-6z" fill="#b8ffd9" stroke="none"/>
+  </g>
+</svg>

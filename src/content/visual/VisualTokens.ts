@@ -7,7 +7,6 @@ export interface PlayerSkinTokens {
   readonly body: number;
   readonly bodyDetail: number;
   readonly core: number;
-  readonly weapon: number;
   readonly accent: number;
 }
 
@@ -19,7 +18,6 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     body: 0x1b3158,
     bodyDetail: 0x2e5d88,
     core: 0x75e6ff,
-    weapon: 0xb8ffd9,
     accent: 0xf4ffff
   },
   violet: {
@@ -28,7 +26,6 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     body: 0x302050,
     bodyDetail: 0x68489a,
     core: 0xffb8df,
-    weapon: 0xffe39a,
     accent: 0xfff4ff
   },
   amber: {
@@ -37,7 +34,6 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     body: 0x53321d,
     bodyDetail: 0x9b5c2d,
     core: 0xffe39a,
-    weapon: 0xfff1bf,
     accent: 0xfffff2
   },
   emerald: {
@@ -46,7 +42,6 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     body: 0x123d3d,
     bodyDetail: 0x2f8d7c,
     core: 0xb8ffd9,
-    weapon: 0x75e6ff,
     accent: 0xe5fff3
   }
 } as const;

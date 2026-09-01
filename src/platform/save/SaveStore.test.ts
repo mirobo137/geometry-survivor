@@ -39,7 +39,8 @@ describe('LocalSaveStore', () => {
       settings: { ...defaults.settings, sfxVolume: 0.35, quality: 'low' },
       best: { timeSeconds: 302.5, score: 8400 },
       tutorialSeen: true,
-      skins: defaults.skins
+      skins: defaults.skins,
+      cannonSkins: defaults.cannonSkins
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
@@ -47,7 +48,8 @@ describe('LocalSaveStore', () => {
       settings: { ...defaults.settings, sfxVolume: 0.35, quality: 'low' },
       best: { timeSeconds: 302.5, score: 8400 },
       tutorialSeen: true,
-      skins: defaults.skins
+      skins: defaults.skins,
+      cannonSkins: defaults.cannonSkins
     });
   });
 
@@ -68,7 +70,8 @@ describe('LocalSaveStore', () => {
       },
       best: { timeSeconds: 0, score: 14 },
       tutorialSeen: true,
-      skins: { selected: 'cyan', unlocked: ['cyan'] }
+      skins: { selected: 'cyan', unlocked: ['cyan'] },
+      cannonSkins: { selected: 'basic', unlocked: ['basic'] }
     });
   });
 
@@ -81,6 +84,10 @@ describe('LocalSaveStore', () => {
       schemaVersion: SAVE_SCHEMA_VERSION,
       skins: { selected: 'violet', unlocked: [] }
     }).skins).toEqual({ selected: 'cyan', unlocked: ['cyan'] });
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      cannonSkins: { selected: 'rainbow', unlocked: ['rainbow', 'rainbow', 'unknown'] }
+    }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['basic', 'rainbow'] });
   });
 
   it('uses memory fallback when persistent storage rejects writes', () => {

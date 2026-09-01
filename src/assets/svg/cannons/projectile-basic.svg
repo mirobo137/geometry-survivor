@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-basic-title projectile-basic-desc">
+  <title id="projectile-basic-title">Pulso basico</title>
+  <desc id="projectile-basic-desc">Proyectil compacto con punta luminosa.</desc>
+  <path id="projectile-basic-body" d="M-10 0-3-6 10 0l-3 6z" fill="#fff6a8" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle id="projectile-basic-core" cx="2" cy="0" r="2.4" fill="#ffffff"/>
+</svg>

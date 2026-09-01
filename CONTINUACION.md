@@ -901,3 +901,29 @@ Orden de continuacion: variantes SVG de canon manteniendo el frame `64x64`,
 definiciones de bala, pool de presentacion, locker de skins de bala y medicion
 en `?stress=1`. La puerta humana es comprobar en movil que la bala y el
 destello coinciden y que Low/Medium/High mantienen 60 FPS.
+
+## 39. Continuacion - locker de canones, balas y estelas
+
+Fecha: 01-09-2026.
+
+- `CannonSkinDefinitions` declara cuatro paquetes completos: `basic`, `curve`,
+  `smoke` y `rainbow`. Cada uno referencia una silueta SVG de canon, una bala
+  SVG y una receta de estela; el contenido no altera reglas de combate.
+- `SaveStore` sube el schema a v3 y migra partidas antiguas agregando
+  `cannonSkins` con `basic` equipado. La seleccion y adquisicion demo se guarda
+  igual que las skins del cuerpo.
+- El locker ahora tiene pestañas Nucleo / Canones y balas. El panel de canones
+  mantiene una sola preview SVG animada con disparos constantes; las tarjetas
+  usan thumbnails estaticos para no animar cuatro escenas a la vez. En movil la
+  coleccion conserva su scroll independiente.
+- `PlayerView` usa texturas de canon independientes y `CombatEntitiesView`
+  cambia las texturas pooled de proyectil. `ProjectileTrailView` cambia entre
+  linea, arco visual, humo y franjas arcoiris sin crear objetos en el loop.
+- La variante curva es solo una forma visual del trail; origen, velocidad,
+  colision, dano y trayectoria logica permanecen intactos.
+
+Validacion: typecheck correcto, 45 archivos y 116 pruebas, smoke desktop y
+Pixel 5 incluyendo ambas pestañas, y builds local/Poki/CrazyGames correctos.
+Pendiente humano: abrir la URL publicada, adquirir cada paquete, comprobar la
+preview continua y confirmar que el proyectil coincide con el destello en una
+run movil. `debug.log` local no forma parte del commit.

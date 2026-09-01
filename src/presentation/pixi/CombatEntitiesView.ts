@@ -3,6 +3,7 @@ import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { FxQuality } from '../../content/visual/VisualTokens';
+import { type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
 import turtleSvg from '../../assets/svg/enemies/turtle/turtle.svg?raw';
 import turtleShellSvg from '../../assets/svg/enemies/turtle/turtle-shell.svg?raw';
@@ -17,11 +18,23 @@ import { DamageNumberView } from './fx/DamageNumberView';
 import { HealthBarView } from './entities/HealthBarView';
 import { ProjectileTrailView } from './fx/ProjectileTrailView';
 
+import projectileBasicSvg from '../../assets/svg/cannons/projectile-basic.svg?raw';
+import projectileCurveSvg from '../../assets/svg/cannons/projectile-curve.svg?raw';
+import projectileSmokeSvg from '../../assets/svg/cannons/projectile-smoke.svg?raw';
+import projectileRainbowSvg from '../../assets/svg/cannons/projectile-rainbow.svg?raw';
+
 const TURTLE_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
   y: -32,
   width: 64,
   height: 64
+};
+
+const PROJECTILE_TEXTURE_FRAME: SvgTextureFrame = {
+  x: -16,
+  y: -16,
+  width: 32,
+  height: 32
 };
 
 interface EnemyTextureSet {
@@ -130,31 +143,40 @@ export class CombatEntitiesView {
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
+  private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
-  public constructor(renderer: Renderer, quality: FxQuality = 'medium') {
+  public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
-    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality);
+    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
     this.root.addChild(this.projectileLayer, this.projectileTrails.root, this.enemyLayer, this.healthBars.root, this.enemyImpactFx.root, this.damageNumbers.root);
     this.enemyTextures = createEnemyTextures(renderer);
-    const projectileTexture = createTexture(renderer, (graphics) => {
-      graphics.circle(0, 0, 7).fill({ color: 0xfff6a8 }).stroke({ color: 0xffffff, width: 2 });
-    });
+    this.projectileTextures = {
+      basic: createSvgTexture(renderer, projectileBasicSvg, PROJECTILE_TEXTURE_FRAME),
+      curve: createSvgTexture(renderer, projectileCurveSvg, PROJECTILE_TEXTURE_FRAME),
+      smoke: createSvgTexture(renderer, projectileSmokeSvg, PROJECTILE_TEXTURE_FRAME),
+      rainbow: createSvgTexture(renderer, projectileRainbowSvg, PROJECTILE_TEXTURE_FRAME)
+    };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures);
       this.enemyVisuals.push(visual);
       this.enemyLayer.addChild(visual.root);
     }
     for (let index = 0; index < PROJECTILE_POOL_CAPACITY; index += 1) {
-      const sprite = new Sprite(projectileTexture);
+      const sprite = new Sprite(this.projectileTextures[cannonSkin]);
       sprite.anchor.set(0.5);
       sprite.visible = false;
       this.projectileSprites.push(sprite);
       this.projectileLayer.addChild(sprite);
     }
+  }
+
+  public setCannonSkin(cannonSkin: CannonSkinId): void {
+    this.projectileTrails.setCannonSkin(cannonSkin);
+    for (const sprite of this.projectileSprites) sprite.texture = this.projectileTextures[cannonSkin];
   }
 
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {

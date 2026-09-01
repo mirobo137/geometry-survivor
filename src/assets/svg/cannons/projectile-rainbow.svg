@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-rainbow-title projectile-rainbow-desc">
+  <title id="projectile-rainbow-title">Prisma spectrum</title>
+  <desc id="projectile-rainbow-desc">Proyectil prismático con facetas de color.</desc>
+  <path id="projectile-rainbow-body" d="M-11 0-4-7 10 0 4 7z" fill="#65f2c2" stroke="#ffffff" stroke-width="1.3" stroke-linejoin="round"/>
+  <path id="projectile-rainbow-facet-red" d="M-4-7 1-2-1 2-7 0z" fill="#ff668f" stroke="none"/>
+  <path id="projectile-rainbow-facet-gold" d="M1-2 10 0 4 7-1 2z" fill="#ffe39a" stroke="none"/>
+</svg>

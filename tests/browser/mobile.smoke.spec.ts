@@ -67,6 +67,21 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect.poll(async () => page.locator('#start-skin-cards').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await expect(page.locator('.start-screen-panel')).toHaveJSProperty('scrollTop', 0);
   await expect(page.locator('#start-skins-back')).toBeVisible();
+  await page.locator('#start-cannon-skins-tab').click();
+  await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
+  await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(4);
+  const cannonScrollMetrics = await page.locator('#start-cannon-cards').evaluate((element) => ({
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight
+  }));
+  expect(cannonScrollMetrics.scrollHeight).toBeGreaterThan(cannonScrollMetrics.clientHeight);
+  await page.locator('#start-cannon-cards').evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect.poll(async () => page.locator('#start-cannon-cards').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await page.locator('#start-player-skins-tab').click();
+  await expect(page.locator('#start-skin-preview')).toBeVisible();
   expect(failures).toEqual([]);
 });
 

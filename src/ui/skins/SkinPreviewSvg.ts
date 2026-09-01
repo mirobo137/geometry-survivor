@@ -1,5 +1,6 @@
 import { getPlayerSkinDefinition } from '../../content/visual/SkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
+import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
 
 const toHex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
 
@@ -36,7 +37,7 @@ export const createPlayerSkinPreviewSvg = (skin: PlayerSkinId): string => {
   const body = toHex(colors.body);
   const detail = toHex(colors.bodyDetail);
   const core = toHex(colors.core);
-  const weapon = toHex(colors.weapon);
+  const weapon = toHex(getCannonSkinDefinition('basic').accent);
   const accent = toHex(colors.accent);
   const signature = signatureMarkup(skin, outer, detail, accent);
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-smoke-title projectile-smoke-desc">
+  <title id="projectile-smoke-title">Semilla de ceniza</title>
+  <desc id="projectile-smoke-desc">Proyectil calido con nucleo de combustion.</desc>
+  <path id="projectile-smoke-body" d="M-10-5h12l7 5-7 5h-12l-4-5z" fill="#ffb86b" stroke="#fff0c5" stroke-width="1.4" stroke-linejoin="round"/>
+  <circle id="projectile-smoke-core" cx="2" cy="0" r="2.3" fill="#fff7d6"/>
+</svg>

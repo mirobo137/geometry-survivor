@@ -12,6 +12,9 @@ define la representacion visual.
 | `turtle/turtle-limbs-front.svg` | patas delanteras | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por chaser |
 | `turtle/turtle-limbs-rear.svg` | patas traseras y cola | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por chaser |
 | `turtle/turtle-head.svg` | cabeza direccional | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por chaser |
+| `fast/fast.svg` | Fast / perseguidor veloz | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | hasta 250 |
+| `tank/tank.svg` | Tank / resistente | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | hasta 250 |
+| `elite/elite.svg` | Elite / amenaza prioritaria | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | hasta 250 |
 
 La tortuga esta orientada hacia `-Y` y puede rotarse como contenedor cuando el
 movimiento direccional se incorpore. Sus colores son explicitos porque Pixi no

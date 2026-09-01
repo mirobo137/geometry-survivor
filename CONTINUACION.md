@@ -944,3 +944,19 @@ Fecha: 01-09-2026.
 - Queda pendiente probar en movil real que el desarme se perciba junto al polvo
   sin tapar la arena. Tank y Elite siguen usando el burst generico hasta tener
   arte modular propio.
+
+## 41. Continuacion - masters SVG de Fast, Tank y Elite
+
+Fecha: 01-09-2026.
+
+- `fast/fast.svg`, `tank/tank.svg` y `elite/elite.svg` reemplazan los
+  `Graphics` provisionales del pool de enemigos. Comparten `viewBox` y ancla
+  con la tortuga, son masters auto-contenidos y se rasterizan una vez como
+  texturas Pixi reutilizadas.
+- Las tres familias tienen una lectura propia a escala pequeña: punta/aletas
+  para velocidad, placas/cuña para resistencia y corona/nucleo para prioridad.
+  Ninguna modifica radio de colision, vida, velocidad, XP o spawn.
+- `SvgEnemyAssets.test.ts` valida estructura, prefijos, ausencia de recursos
+  externos/filtros y presupuesto de primitivas. El siguiente paso visual para
+  Tank y Elite es separar sus masters en piezas reales solo cuando se conecte
+  su desarme pooled; no volver a efectos genericos temporales.

@@ -10,6 +10,9 @@ import turtleShellSvg from '../../assets/svg/enemies/turtle/turtle-shell.svg?raw
 import turtleFrontSvg from '../../assets/svg/enemies/turtle/turtle-limbs-front.svg?raw';
 import turtleRearSvg from '../../assets/svg/enemies/turtle/turtle-limbs-rear.svg?raw';
 import turtleHeadSvg from '../../assets/svg/enemies/turtle/turtle-head.svg?raw';
+import fastSvg from '../../assets/svg/enemies/fast/fast.svg?raw';
+import tankSvg from '../../assets/svg/enemies/tank/tank.svg?raw';
+import eliteSvg from '../../assets/svg/enemies/elite/elite.svg?raw';
 import { TurtleVisual, type TurtleTextureSet } from './enemies/turtle/TurtleVisual';
 import { TurtleDefeatFxView } from './enemies/turtle/TurtleDefeatFxView';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
@@ -46,18 +49,9 @@ interface EnemyTextureSet {
 const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
   fallback: {
     chaser: createSvgTexture(renderer, turtleSvg, TURTLE_TEXTURE_FRAME),
-    fast: createTexture(renderer, (graphics) => {
-      graphics.poly([0, -14, 14, 0, 0, 14, -14, 0]).fill(ENEMY_DEFINITIONS.fast.color).stroke({ color: 0xfffbdf, width: 2 });
-    }),
-    tank: createTexture(renderer, (graphics) => {
-      graphics.regularPoly(0, 0, 28, 6, Math.PI / 6).fill(ENEMY_DEFINITIONS.tank.color).stroke({ color: 0xf0e6ff, width: 2 });
-    }),
-    elite: createTexture(renderer, (graphics) => {
-      graphics.regularPoly(0, 0, 24, 8, Math.PI / 8)
-        .fill(ENEMY_DEFINITIONS.elite.color)
-        .stroke({ color: 0xffe5f8, width: 3 });
-      graphics.circle(0, 0, 10).stroke({ color: 0xffffff, width: 2 });
-    }),
+    fast: createSvgTexture(renderer, fastSvg, TURTLE_TEXTURE_FRAME),
+    tank: createSvgTexture(renderer, tankSvg, TURTLE_TEXTURE_FRAME),
+    elite: createSvgTexture(renderer, eliteSvg, TURTLE_TEXTURE_FRAME),
     boss: createTexture(renderer, (graphics) => {
       graphics.regularPoly(0, 0, ENEMY_DEFINITIONS.boss.radius, 8, Math.PI / 8)
         .fill(ENEMY_DEFINITIONS.boss.color)

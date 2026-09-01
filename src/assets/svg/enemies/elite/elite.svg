@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-title enemy-elite-desc">
+  <title id="enemy-elite-title">Corona de ruptura</title>
+  <desc id="enemy-elite-desc">Enemigo de élite visto desde arriba, con corona octagonal, puntas de amenaza y núcleo magenta.</desc>
+  <ellipse id="enemy-elite-shadow" cx="0" cy="5" rx="25" ry="22" fill="#050816" opacity="0.52"/>
+  <path id="enemy-elite-spikes" d="M0-29 8-22 20-23 23-12 30 0 23 12 20 23 8 22 0 29-8 22-20 23-23 12-30 0-23-12-20-23-8-22z" fill="#8e285f" stroke="#ffe5f8" stroke-width="2" stroke-linejoin="round"/>
+  <path id="enemy-elite-frame" d="M0-23 16-16 23 0 16 16 0 23-16 16-23 0-16-16z" fill="#ff5fd2" stroke="#fff4fd" stroke-width="2.4" stroke-linejoin="round"/>
+  <path id="enemy-elite-inner" d="M0-15 10-10 15 0 10 10 0 15-10 10-15 0-10-10z" fill="#6c1e63" stroke="#ffbfe8" stroke-width="1.6" stroke-linejoin="round"/>
+  <circle id="enemy-elite-core" cx="0" cy="0" r="7" fill="#fff0fb" stroke="#9a246f" stroke-width="2"/>
+  <path id="enemy-elite-sight" d="M0-24v-5M0 24v5M-24 0h-5M24 0h5" fill="none" stroke="#fff4fd" stroke-width="2" stroke-linecap="round"/>
+</svg>

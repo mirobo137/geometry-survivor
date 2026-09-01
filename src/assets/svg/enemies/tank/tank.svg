@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-title enemy-tank-desc">
+  <title id="enemy-tank-title">Bastión hexagonal</title>
+  <desc id="enemy-tank-desc">Enemigo resistente visto desde arriba, con placas hexagonales, una cuña frontal y núcleo blindado.</desc>
+  <ellipse id="enemy-tank-shadow" cx="0" cy="6" rx="27" ry="23" fill="#050816" opacity="0.5"/>
+  <path id="enemy-tank-rear-plate" d="M-18 4-10 20 0 26 10 20 18 4 10-13H-10z" fill="#6d4b9f" stroke="#f4e9ff" stroke-width="2.2" stroke-linejoin="round"/>
+  <path id="enemy-tank-left-plate" d="M-10-13-25-5-24 10-18 15-10 6z" fill="#8e63c8" stroke="#f4e9ff" stroke-width="1.8" stroke-linejoin="round"/>
+  <path id="enemy-tank-right-plate" d="M10-13 25-5 24 10 18 15 10 6z" fill="#8e63c8" stroke="#f4e9ff" stroke-width="1.8" stroke-linejoin="round"/>
+  <path id="enemy-tank-front-wedge" d="M0-30 15-14 10 6H-10l-5-20z" fill="#c58cff" stroke="#fff5ff" stroke-width="2.5" stroke-linejoin="round"/>
+  <path id="enemy-tank-seam" d="M0-25v31M-18 4h36" fill="none" stroke="#f6d9ff" stroke-width="1.25" opacity="0.82"/>
+  <circle id="enemy-tank-core" cx="0" cy="-6" r="7" fill="#f0d6ff" stroke="#4a276d" stroke-width="2"/>
+  <path id="enemy-tank-mark" d="M-3-17h6l3 7-6 4-6-4z" fill="#fff7ff" opacity="0.9"/>
+</svg>

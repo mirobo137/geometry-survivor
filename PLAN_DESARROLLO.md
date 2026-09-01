@@ -1860,3 +1860,19 @@ anillo informativo de derrota permanece disponible. La siguiente ampliacion de
 esta familia debe reutilizar este patron para Tank/Elite solo cuando esas
 entidades tengan piezas SVG reales, no fragmentar sus sprites geometricos por
 anticipado.
+
+## Entrega - masters SVG para enemigos comunes - 01-09-2026
+
+Fast, Tank y Elite dejan de depender de `Graphics` provisionales. Cada familia
+posee un master SVG en `src/assets/svg/enemies/<id>/<id>.svg`, con frame comun
+`-32 -32 64 64`, ancla central, frente visual hacia `-Y`, IDs prefijados y
+menos de doce primitivas. Fast comunica velocidad mediante punta y aletas;
+Tank comunica masa con placas y cuña; Elite comunica prioridad con una corona
+octagonal y núcleo. Las tres siluetas usan forma, contorno y detalle, no solo
+color, y `CombatEntitiesView` las rasteriza una vez con el frame explícito ya
+validado para el pool existente.
+
+La siguiente iteración de muertes de Tank/Elite debe partir sus masters en
+piezas alineadas con ese mismo frame y reutilizar el patrón pooled de tortuga.
+No se añaden piezas ni compositores antes de ese consumidor real; el cambio de
+esta entrega continúa siendo solo presentación.

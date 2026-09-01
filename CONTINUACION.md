@@ -758,14 +758,19 @@ local/Poki/CrazyGames correctos.
 Fecha: 01-09-2026.
 
 - `PlayerView` conserva sus piezas SVG cacheadas y, al morir, separa armas,
-  cuerpo, core y acento mediante transforms durante 0.55 s mientras se desvanece.
-- `TerminalFxView` reutiliza un pool acotado para un anillo/burst del player y
-  un cierre mas amplio del boss. El efecto es presentacion: no espera al resumen,
-  no bloquea reinicio ni modifica el estado terminal.
+  cuerpo, core y acento mediante transforms durante 0.9 s mientras se desvanece.
+- `TerminalFxView` reutiliza un pool acotado para un anillo/burst de siete piezas
+  del player, una capa gris semitransparente y un cierre mas amplio del boss. El
+  panel de resumen deja ver el tono y la periferia de la explosion sin esperar a
+  terminar la animacion ni bloquear reinicio.
+- `AudioCueDefinitions` incorpora `player-defeated`: una receta ZzFX grave y
+  descendente de 0.9 s con cooldown propio, usando el mismo contexto compartido.
 - `Game` solo dispara las recetas desde los eventos ya existentes; la simulacion
   y los contratos de victoria/game-over permanecen sin cambios.
 
-Validacion pendiente de cierre: typecheck, suite, smoke browser y builds.
+Validacion de esta sesion: typecheck correcto, 105 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.
 
 ## 32. Continuacion — numeros de dano y mini-barras acotadas
 

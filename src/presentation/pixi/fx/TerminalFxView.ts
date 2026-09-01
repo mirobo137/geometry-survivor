@@ -10,6 +10,7 @@ type TerminalFxKind = 'player' | 'boss';
 export class TerminalFxView {
   public readonly root = new Container();
   private readonly ring = new Graphics();
+  private readonly tone = new Graphics();
   private readonly particles: FxPool;
   private readonly reducedMotion: boolean;
   private life = 0;
@@ -18,6 +19,7 @@ export class TerminalFxView {
   private y = 0;
   private radius = 0;
   private color = 0xffffff;
+  private toneAlpha = 0;
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium') {
     const texture = createTexture(renderer, (graphics) => {
@@ -27,7 +29,7 @@ export class TerminalFxView {
     this.reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
     this.root.eventMode = 'none';
     this.root.visible = false;
-    this.root.addChild(this.ring, this.particles.root);
+    this.root.addChild(this.tone, this.ring, this.particles.root);
   }
 
   public playPlayerDefeat(x: number, y: number): void {
@@ -43,8 +45,13 @@ export class TerminalFxView {
     this.particles.update(delta);
     if (this.life > 0) this.life = Math.max(0, this.life - delta);
     this.ring.clear();
+    this.tone.clear();
     if (this.life > 0) {
       const progress = 1 - this.life / this.maxLife;
+      if (this.toneAlpha > 0) {
+        this.tone.beginPath().rect(0, 0, 1280, 720)
+          .fill({ color: 0x9aa1ad, alpha: this.toneAlpha * (1 - progress * 0.35) });
+      }
       this.ring.beginPath().circle(this.x, this.y, this.radius + progress * this.radius * 1.8)
         .stroke({ color: this.color, width: 5 - progress * 2, alpha: (1 - progress) * 0.9 });
     }
@@ -55,6 +62,8 @@ export class TerminalFxView {
     this.life = 0;
     this.particles.clear();
     this.ring.clear();
+    this.tone.clear();
+    this.toneAlpha = 0;
     this.root.visible = false;
   }
 
@@ -63,16 +72,17 @@ export class TerminalFxView {
     this.y = y;
     this.radius = radius;
     this.color = color;
-    this.maxLife = kind === 'boss' ? 0.62 : 0.5;
+    this.maxLife = kind === 'boss' ? 0.78 : 0.9;
+    this.toneAlpha = kind === 'player' ? 0.58 : 0.1;
     this.life = this.maxLife;
     this.root.visible = true;
     if (this.reducedMotion) return;
-    const count = kind === 'boss' ? 8 : 5;
+    const count = kind === 'boss' ? 8 : 7;
     for (let index = 0; index < count; index += 1) {
       const angle = (index / count) * Math.PI * 2 + Math.PI / 8;
-      const speed = kind === 'boss' ? 130 + index * 8 : 90 + index * 7;
-      this.particles.spawn(x + Math.cos(angle) * radius * 0.45, y + Math.sin(angle) * radius * 0.45, color,
-        this.maxLife, Math.cos(angle) * speed, Math.sin(angle) * speed, 0.97, kind === 'boss' ? 1.2 : 0.9);
+      const speed = kind === 'boss' ? 130 + index * 8 : 112 + index * 10;
+      this.particles.spawn(x + Math.cos(angle) * radius * 0.58, y + Math.sin(angle) * radius * 0.58, color,
+        this.maxLife, Math.cos(angle) * speed, Math.sin(angle) * speed, 0.97, kind === 'boss' ? 1.2 : 1.05);
     }
   }
 }

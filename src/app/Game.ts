@@ -288,6 +288,7 @@ export class Game {
         if (this.player.takeDamage(event.amount)) {
           this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
           if (!this.player.isAlive) {
+            this.audio.playCue('player-defeated');
             this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
             this.finishRun('game-over');
             return;

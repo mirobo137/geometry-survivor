@@ -12,7 +12,7 @@ describe('EnemyImpactFxView', () => {
     view.playHit(320, 240, 18, 'chaser');
     expect(view.isActive).toBe(true);
     expect(view.activeRingCount).toBe(1);
-    expect(view.activeParticleCount).toBe(1);
+    expect(view.activeParticleCount).toBe(2);
 
     view.update(0.1);
     expect(view.isActive).toBe(true);

@@ -65,7 +65,10 @@ export class EnemyImpactFxView {
       graphics.regularPoly(0, 0, 4, 4, Math.PI / 4).fill({ color: 0xffffff });
     });
     this.dustTexture = createTexture(renderer, (graphics) => {
-      graphics.circle(0, 0, 3).fill({ color: 0xffffff, alpha: 0.72 });
+      // At portrait mobile scale, a 3 px source with a 0.42 transform became
+      // less than two CSS pixels. Keep this source deliberately legible while
+      // retaining a single cached texture and the existing bounded pool.
+      graphics.circle(0, 0, 6).fill({ color: 0xffffff, alpha: 0.9 });
     });
     this.particles = new FxPool(particleTexture, Math.max(24, Math.floor(tokens.poolCapacity * 0.55)));
     this.root.eventMode = 'none';
@@ -92,15 +95,15 @@ export class EnemyImpactFxView {
     this.root.visible = true;
     if (this.reducedMotion) return;
 
-    const count = this.quality === 'high' ? 3 : this.quality === 'medium' ? 2 : 1;
+    const count = this.quality === 'high' ? 4 : this.quality === 'medium' ? 3 : 2;
     this.spawnParticles(x, y, DUST_COLOR, count, {
-      minSpeed: 18,
-      maxSpeed: 34,
-      lifeSeconds: 0.18,
-      drag: 0.68,
-      scale: Math.max(0.42, radius / 42),
+      minSpeed: 24,
+      maxSpeed: 44,
+      lifeSeconds: 0.28,
+      drag: 0.72,
+      scale: Math.max(0.9, radius / 20),
       texture: this.dustTexture,
-      alpha: 0.58
+      alpha: 0.88
     });
   }
 

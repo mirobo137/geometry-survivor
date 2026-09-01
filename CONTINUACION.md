@@ -739,9 +739,10 @@ Fecha: 01-09-2026.
   combate. Previews aislados pueden seguir usando espacio `world`.
 - `EnemyImpactFxView` reemplaza las chispas del impacto normal por polvo breve
   con textura circular cacheada. Reutiliza el mismo `FxPool`, sin crear sprites
-  ni texturas durante gameplay: 1/2/3 motas Low/Medium/High, drag alto, 0.18 s
-  de vida y descarte seguro al llenarse el pool. Los fragmentos de derrota se
-  mantienen geometricos.
+  ni texturas durante gameplay: 2/3/4 motas Low/Medium/High, tamano legible en
+  portrait movil, 0.28 s de vida y descarte seguro al llenarse el pool. Los
+  fragmentos de derrota se mantienen geometricos; el desarme de las cuatro
+  piezas SVG de la tortuga aun no esta implementado.
 - `FxPool` conserva escala, alpha y textura iniciales por slot, por lo que una
   misma capacidad fija puede servir recetas cacheadas distintas sin allocations
   en la ruta caliente. El cambio continua siendo solo de presentacion y

@@ -1771,3 +1771,43 @@ La implementacion aplica `beginPath()` para cada circulo independiente y
 mantiene `prefers-reduced-motion`, portrait/landscape y los presupuestos
 Low/Medium/High. La puerta humana restante es repetir `?boss=1` en el telefono
 real y confirmar desplazamiento, telegraphs, derrota y reinicio sin errores.
+
+## Investigacion y hoja de ruta - canones y skins de proyectil - 01-09-2026
+
+La investigacion confirma que el enfoque es viable para GitHub Pages, Poki y
+CrazyGames si el SVG se usa como fuente de arte y se rasteriza una sola vez a
+texturas Pixi compartidas. Pixi recomienda reutilizar `GraphicsContext`, no
+limpiar y reconstruir geometria en cada frame, y preferir sprites/spritesheets
+para elementos repetidos. Los filtros son utiles para un brillo premium, pero
+son operaciones por pixel y deben quedar limitados a pocos elementos.
+`ParticleContainer` es una opcion de alto rendimiento para particulas ligeras,
+aunque su API v8 es experimental y no debe ser el primer camino del proyecto.
+
+La decision de contenido para la siguiente fase es:
+
+- cada skin puede declarar una variante de emisor/canon y un paquete visual de
+  proyectil sin tocar `damage`, `lifetime`, cadencia, colisiones ni velocidad;
+- la simulacion conserva una direccion recta determinista. Una bala curva se
+  representara como una desviacion visual del trail o una animacion de sprite,
+  nunca como una curva de gameplay, para que el cosmetic no cambie la fisica;
+- los cuerpos SVG de bala se convierten a texturas cacheadas y los proyectiles
+  siguen siendo sprites pooled. Las estelas se dibujan con una receta pooled:
+  recta, arco visual, luminosa o humo;
+- Low desactiva trail y filtros; Medium usa pocos segmentos y humo corto; High
+  permite mas segmentos y un glow acotado. Nunca se crea una textura, Graphics,
+  filtro o particula por disparo;
+- el menu de skins seleccionara el paquete de bala equipado junto a la skin del
+  jugador. El guardado y el contrato de render solo se amplian cuando exista
+  ese consumidor, evitando infraestructura especulativa.
+
+Orden recomendado: (1) ampliar los emisores SVG manteniendo las anclas del
+marco `64x64`; (2) introducir un `ProjectileSkinDefinition` data-driven y un
+pool de presentacion; (3) probar las cuatro recetas visuales con el mismo
+proyectil logico; (4) conectar desbloqueo/equipamiento al locker; (5) medir
+`?stress=1` en el telefono de referencia antes de aceptar mas glow o particulas.
+
+Referencias tecnicas primarias: [PixiJS Textures](https://pixijs.com/8.x/guides/components/textures),
+[PixiJS Graphics](https://pixijs.com/8.x/guides/components/scene-objects/graphics),
+[PixiJS Performance Tips](https://pixijs.com/8.x/guides/concepts/performance-tips),
+[PixiJS ParticleContainer](https://pixijs.com/8.x/guides/components/scene-objects/particle-container)
+y [PixiJS Filters](https://pixijs.com/8.x/guides/components/filters).

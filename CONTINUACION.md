@@ -878,3 +878,26 @@ Validacion de esta iteracion: typecheck correcto, 110 pruebas
 unitarias/integracion y carta incluida en el mapa visual. Pendiente humano:
 comprobar en movil la alternancia, la alineacion bala/destello y la carta Doble
 canon durante `?stress=1`, ademas de repetir smoke browser y los tres builds.
+
+## 38. Continuacion - investigacion de canones y skins de proyectil
+
+Fecha: 01-09-2026.
+
+La siguiente ampliacion visual esta aprobada como cosmetic-only. Los SVG seran
+masters rasterizados una vez a texturas compartidas; las balas seguiran siendo
+sprites reutilizados y sus estelas tendran recetas pooled. La ruta curva sera
+un arco visual del trail, no una curva de la posicion simulada. Humo y glow
+deben tener limites por calidad: Low sin trail/filtro, Medium con pocos
+segmentos y High con un glow pequeno. Pixi advierte que los filtros cuestan
+GPU y que no se debe reconstruir `Graphics` constantemente.
+
+El commit `7beb11e` ya deja la frontera necesaria para comenzar: anclas de
+emisor compartidas, disparo alternado, carta `twin_emitters`, origen exacto y
+`ShotRenderState` estable. El siguiente consumidor sera un
+`ProjectileSkinDefinition` data-driven con variantes de cuerpo, estela y color;
+no debe cambiar dano, cadencia, velocidad, colision ni trayectoria logica.
+
+Orden de continuacion: variantes SVG de canon manteniendo el frame `64x64`,
+definiciones de bala, pool de presentacion, locker de skins de bala y medicion
+en `?stress=1`. La puerta humana es comprobar en movil que la bala y el
+destello coinciden y que Low/Medium/High mantienen 60 FPS.

@@ -16,6 +16,7 @@ interface ParticleRecipe {
   readonly lifeSeconds: number;
   readonly drag: number;
   readonly scale: number;
+  readonly spawnRadius?: number;
   readonly texture?: Texture;
   readonly alpha?: number;
 }
@@ -95,13 +96,16 @@ export class EnemyImpactFxView {
     this.root.visible = true;
     if (this.reducedMotion) return;
 
-    const count = this.quality === 'high' ? 4 : this.quality === 'medium' ? 3 : 2;
+    const count = this.quality === 'high' ? 5 : this.quality === 'medium' ? 4 : 3;
     this.spawnParticles(x, y, DUST_COLOR, count, {
-      minSpeed: 24,
-      maxSpeed: 44,
-      lifeSeconds: 0.28,
-      drag: 0.72,
+      minSpeed: 78,
+      maxSpeed: 118,
+      lifeSeconds: 0.32,
+      // FxPool drag is applied once per 60 Hz frame. Keep it close to one so
+      // dust travels outward instead of losing most of its velocity instantly.
+      drag: 0.96,
       scale: Math.max(0.9, radius / 20),
+      spawnRadius: radius * 0.42,
       texture: this.dustTexture,
       alpha: 0.88
     });
@@ -188,9 +192,10 @@ export class EnemyImpactFxView {
     for (let index = 0; index < count; index += 1) {
       const angle = phase * FULL_CIRCLE + (index / count) * FULL_CIRCLE;
       const speed = recipe.minSpeed + ((index * 17) % 23) / 23 * (recipe.maxSpeed - recipe.minSpeed);
+      const spawnRadius = recipe.spawnRadius ?? 0;
       this.particles.spawn(
-        x,
-        y,
+        x + Math.cos(angle) * spawnRadius,
+        y + Math.sin(angle) * spawnRadius,
         color,
         recipe.lifeSeconds + (index % 2) * 0.035,
         Math.cos(angle) * speed,

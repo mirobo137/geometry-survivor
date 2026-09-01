@@ -1335,7 +1335,8 @@ simulacion:
   polvo con capacidad fija, colores por `EnemyKind`, limites por `FxQuality` y
   descarte silencioso de decoracion cuando el pool esta lleno. El polvo de un
   impacto reutiliza el mismo sprite pool, cambia solo a una textura circular
-  cacheada y se limita a 2/3/4 sprites Low/Medium/High;
+  cacheada, nace alrededor del objetivo y se limita a 3/4/5 sprites
+  Low/Medium/High;
 - `CombatEntitiesView` compara snapshots de vida solo para detectar impactos y
   aplica un scale-punch visual de 4.5%/120 ms. La derrota usa el evento de
   `CombatSimulation` en `Game`, evitando perderla si el slot se libera y se

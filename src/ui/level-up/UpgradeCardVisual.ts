@@ -19,6 +19,7 @@ export interface UpgradeCardVisual {
 const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   swift_step: { icon: 'speed', tone: 'cyan', category: 'MOVILIDAD' },
   focused_projectiles: { icon: 'projectile', tone: 'gold', category: 'ARSENAL' },
+  twin_emitters: { icon: 'projectile', tone: 'rose', category: 'ARSENAL' },
   reinforced_core: { icon: 'core', tone: 'mint', category: 'NÚCLEO' },
   orbit_blade: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
   chain_lightning: { icon: 'chain', tone: 'cyan', category: 'ENERGÍA' },

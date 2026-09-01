@@ -13,10 +13,12 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('hardened_shell')).toBe(true);
     expect(applier.apply('orbit_blade')).toBe(true);
     expect(applier.apply('chain_lightning')).toBe(true);
+    expect(applier.apply('twin_emitters')).toBe(true);
     expect(applier.apply('unknown' as never)).toBe(false);
     expect(player.state.armor).toBe(2);
     expect(combat.activeOrbitBlades).toBe(1);
     expect(combat.hasChainLightning).toBe(true);
+    expect(combat.hasTwinEmitters).toBe(true);
   });
 
   it('filters prerequisites and stops finite upgrades at their authored limits', () => {

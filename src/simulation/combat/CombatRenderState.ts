@@ -1,5 +1,6 @@
 import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 
 export type BossPhase =
   | 'inactive'
@@ -68,6 +69,19 @@ export interface ProjectileRenderState {
   readonly vx: number;
   readonly vy: number;
   readonly radius: number;
+  readonly muzzle: ProjectileMuzzle;
+}
+
+/** Stable presentation signal for the latest authored projectile burst. */
+export interface ShotRenderState {
+  sequence: number;
+  directionX: number;
+  directionY: number;
+  muzzleMask: number;
+  leftOriginX: number;
+  leftOriginY: number;
+  rightOriginX: number;
+  rightOriginY: number;
 }
 
 export type OrbitBladeRenderState = Readonly<OrbitBladeState>;
@@ -81,4 +95,5 @@ export interface CombatRenderState {
   readonly chainSegments: readonly ChainSegmentRenderState[];
   readonly laser: Readonly<LaserHazardState>;
   readonly boss: Readonly<BossRenderState>;
+  readonly shot: Readonly<ShotRenderState>;
 }

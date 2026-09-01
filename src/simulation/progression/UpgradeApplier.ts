@@ -46,6 +46,8 @@ export class UpgradeApplier {
           before: this.combat.currentProjectileDamage,
           after: this.combat.currentProjectileDamage + definition.effect.amount
         };
+      case 'twinEmitters':
+        return null;
       case 'maxHealth':
         return {
           stat: 'maxHealth',
@@ -107,6 +109,9 @@ export class UpgradeApplier {
         break;
       case 'projectileDamage':
         this.combat.increaseProjectileDamage(definition.effect.amount);
+        break;
+      case 'twinEmitters':
+        applied = this.combat.enableTwinEmitters();
         break;
       case 'maxHealth':
         this.player.increaseMaxHealth(definition.effect.amount);

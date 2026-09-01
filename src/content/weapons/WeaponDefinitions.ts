@@ -1,3 +1,16 @@
+/** Shared logical muzzle slot used by simulation and presentation. */
+export type ProjectileMuzzle = 0 | 1;
+
+/**
+ * Coordinates are expressed in the player's 64x64 SVG frame. The negative Y
+ * axis is the authored forward direction; simulation rotates this offset into
+ * the shot direction before spawning a projectile.
+ */
+export const PROJECTILE_MUZZLE_OFFSETS = [
+  { x: -27, y: -11 },
+  { x: 27, y: -11 }
+] as const satisfies readonly [{ x: number; y: number }, { x: number; y: number }];
+
 export interface ProjectileWeaponDefinition {
   readonly damage: number;
   readonly speed: number;

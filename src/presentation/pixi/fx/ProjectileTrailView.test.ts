@@ -8,7 +8,8 @@ const projectile = (active: boolean, x: number): ProjectileRenderState => ({
   y: 240,
   vx: 460,
   vy: 0,
-  radius: 7
+  radius: 7,
+  muzzle: 0
 });
 
 describe('ProjectileTrailView', () => {

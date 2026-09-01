@@ -1,9 +1,12 @@
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import {
+  PROJECTILE_MUZZLE_OFFSETS,
+  WEAPON_DEFINITIONS,
+  type ProjectileMuzzle
+} from '../../content/weapons/WeaponDefinitions';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
-import type { EnemyState } from './EntityPools';
-import { ProjectilePool } from './EntityPools';
-import type { ChainSegmentState, OrbitBladeState } from './CombatRenderState';
+import { ProjectilePool, type EnemyState, type ProjectileState } from './EntityPools';
+import type { ChainSegmentState, OrbitBladeState, ShotRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 
@@ -45,8 +48,22 @@ export class CombatWeaponSystem {
   private orbitDamage = ORBIT_DEFINITION.damage;
   private chainLightningUnlocked = false;
   private chainDamage = CHAIN_DEFINITION.damage;
+  private twinEmitters = false;
+  private nextMuzzle: ProjectileMuzzle = 0;
   private readonly chainHitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
   private shotsFired = 0;
+  private shotSequence = 0;
+  private readonly originScratch = { x: 0, y: 0 };
+  public readonly lastShot: ShotRenderState = {
+    sequence: 0,
+    directionX: 0,
+    directionY: -1,
+    muzzleMask: 0,
+    leftOriginX: 0,
+    leftOriginY: 0,
+    rightOriginX: 0,
+    rightOriginY: 0
+  };
   private readonly stressScenario: StressCombatScenario;
 
   public constructor(
@@ -57,7 +74,13 @@ export class CombatWeaponSystem {
       this.projectiles,
       () => this.projectileSpeed,
       () => this.projectileDamage,
-      () => { this.shotsFired += 1; }
+      (player, projectile, directionX, directionY, muzzle) => {
+        this.calculateMuzzleOrigin(player, directionX, directionY, muzzle);
+        const sequence = this.beginShotBurst(directionX, directionY);
+        this.configureProjectile(projectile, this.originScratch.x, this.originScratch.y, directionX, directionY, muzzle);
+        this.recordShotOrigin(this.originScratch.x, this.originScratch.y, muzzle, sequence);
+        this.shotsFired += 1;
+      }
     );
   }
 
@@ -75,6 +98,10 @@ export class CombatWeaponSystem {
 
   public get currentProjectileSpeed(): number {
     return this.projectileSpeed;
+  }
+
+  public get hasTwinEmitters(): boolean {
+    return this.twinEmitters;
   }
 
   public get currentOrbitRadius(): number {
@@ -113,8 +140,19 @@ export class CombatWeaponSystem {
     this.orbitDamage = ORBIT_DEFINITION.damage;
     this.chainLightningUnlocked = false;
     this.chainDamage = CHAIN_DEFINITION.damage;
+    this.twinEmitters = false;
+    this.nextMuzzle = 0;
     this.chainHitIndices.fill(-1);
     this.shotsFired = 0;
+    this.shotSequence = 0;
+    this.lastShot.sequence = 0;
+    this.lastShot.directionX = 0;
+    this.lastShot.directionY = -1;
+    this.lastShot.muzzleMask = 0;
+    this.lastShot.leftOriginX = 0;
+    this.lastShot.leftOriginY = 0;
+    this.lastShot.rightOriginX = 0;
+    this.lastShot.rightOriginY = 0;
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -127,6 +165,12 @@ export class CombatWeaponSystem {
 
   public increaseProjectileSpeed(amount: number): void {
     this.projectileSpeed += Math.max(0, amount);
+  }
+
+  public enableTwinEmitters(): boolean {
+    if (this.twinEmitters) return false;
+    this.twinEmitters = true;
+    return true;
   }
 
   public addOrbitBlade(): boolean {
@@ -192,21 +236,101 @@ export class CombatWeaponSystem {
   private fireProjectile(player: PlayerState): void {
     const target = this.findNearestEnemy(player.x, player.y, 960);
     if (!target) return;
-    const projectile = this.projectiles.acquire();
-    if (!projectile) return;
-
     const dx = target.x - player.x;
     const dy = target.y - player.y;
     const distance = Math.max(0.001, Math.hypot(dx, dy));
+    const directionX = dx / distance;
+    const directionY = dy / distance;
+    const muzzleCount = this.twinEmitters ? 2 : 1;
+    let sequence = 0;
+    for (let index = 0; index < muzzleCount; index += 1) {
+      const projectile = this.projectiles.acquire();
+      if (!projectile) break;
+      const muzzle = this.twinEmitters
+        ? index as ProjectileMuzzle
+        : this.takeNextMuzzle();
+      this.calculateMuzzleOrigin(player, directionX, directionY, muzzle);
+      const targetDirectionX = target.x - this.originScratch.x;
+      const targetDirectionY = target.y - this.originScratch.y;
+      const targetDistance = Math.max(0.001, Math.hypot(targetDirectionX, targetDirectionY));
+      const projectileDirectionX = targetDirectionX / targetDistance;
+      const projectileDirectionY = targetDirectionY / targetDistance;
+      if (sequence === 0) sequence = this.beginShotBurst(projectileDirectionX, projectileDirectionY);
+      this.configureProjectile(
+        projectile,
+        this.originScratch.x,
+        this.originScratch.y,
+        projectileDirectionX,
+        projectileDirectionY,
+        muzzle
+      );
+      this.recordShotOrigin(this.originScratch.x, this.originScratch.y, muzzle, sequence);
+      this.shotsFired += 1;
+    }
+  }
+
+  private takeNextMuzzle(): ProjectileMuzzle {
+    const muzzle = this.nextMuzzle;
+    this.nextMuzzle = muzzle === 0 ? 1 : 0;
+    return muzzle;
+  }
+
+  private configureProjectile(
+    projectile: ProjectileState,
+    originX: number,
+    originY: number,
+    directionX: number,
+    directionY: number,
+    muzzle: ProjectileMuzzle
+  ): void {
     projectile.active = true;
-    projectile.x = player.x;
-    projectile.y = player.y;
-    projectile.vx = (dx / distance) * this.projectileSpeed;
-    projectile.vy = (dy / distance) * this.projectileSpeed;
+    projectile.x = originX;
+    projectile.y = originY;
+    projectile.vx = directionX * this.projectileSpeed;
+    projectile.vy = directionY * this.projectileSpeed;
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.projectileDamage;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
-    this.shotsFired += 1;
+    projectile.muzzle = muzzle;
+  }
+
+  private beginShotBurst(directionX: number, directionY: number): number {
+    this.shotSequence += 1;
+    this.lastShot.sequence = this.shotSequence;
+    this.lastShot.directionX = directionX;
+    this.lastShot.directionY = directionY;
+    this.lastShot.muzzleMask = 0;
+    return this.shotSequence;
+  }
+
+  private recordShotOrigin(
+    originX: number,
+    originY: number,
+    muzzle: ProjectileMuzzle,
+    sequence: number
+  ): void {
+    this.lastShot.sequence = sequence;
+    this.lastShot.muzzleMask |= 1 << muzzle;
+    if (muzzle === 0) {
+      this.lastShot.leftOriginX = originX;
+      this.lastShot.leftOriginY = originY;
+    } else {
+      this.lastShot.rightOriginX = originX;
+      this.lastShot.rightOriginY = originY;
+    }
+  }
+
+  private calculateMuzzleOrigin(
+    player: PlayerState,
+    directionX: number,
+    directionY: number,
+    muzzle: ProjectileMuzzle
+  ): void {
+    const offset = PROJECTILE_MUZZLE_OFFSETS[muzzle];
+    const sideX = -directionY;
+    const sideY = directionX;
+    this.originScratch.x = player.x + sideX * offset.x + directionX * -offset.y;
+    this.originScratch.y = player.y + sideY * offset.x + directionY * -offset.y;
   }
 
   private findNearestEnemy(x: number, y: number, radius: number): EnemyState | null {

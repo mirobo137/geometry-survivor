@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
+import type { ShotRenderState } from '../../../../simulation/combat/CombatRenderState';
 import {
   PLAYER_SKINS,
   PLAYER_SKIN_MOTION,
@@ -31,6 +32,13 @@ export class PlayerView {
   private damageAtSeconds = Number.NEGATIVE_INFINITY;
   private damageStrength = 0;
   private shotAtSeconds = Number.NEGATIVE_INFINITY;
+  private shotDirectionX = 0;
+  private shotDirectionY = -1;
+  private shotMuzzleMask = 0;
+  private shotLeftOriginX = 0;
+  private shotLeftOriginY = 0;
+  private shotRightOriginX = 0;
+  private shotRightOriginY = 0;
   private defeatProgress = -1;
 
   public constructor(textures: PlayerTextureSet, skin: PlayerSkinId = 'cyan') {
@@ -77,8 +85,15 @@ export class PlayerView {
   }
 
   /** Presentation-only recoil signal; weapon cadence still belongs to simulation. */
-  public playShot(animationSeconds: number): void {
+  public playShot(animationSeconds: number, shot: Readonly<ShotRenderState>): void {
     this.shotAtSeconds = animationSeconds;
+    this.shotDirectionX = shot.directionX;
+    this.shotDirectionY = shot.directionY;
+    this.shotMuzzleMask = shot.muzzleMask;
+    this.shotLeftOriginX = shot.leftOriginX;
+    this.shotLeftOriginY = shot.leftOriginY;
+    this.shotRightOriginX = shot.rightOriginX;
+    this.shotRightOriginY = shot.rightOriginY;
   }
 
   public render(state: PlayerState, animationSeconds: number): void {
@@ -104,13 +119,19 @@ export class PlayerView {
       ? Math.min(1, shotAge / PLAYER_VISUAL_TOKENS.shotFlashSeconds)
       : 1;
     const shotPulse = shotProgress < 1 ? Math.sin(shotProgress * Math.PI) : 0;
+    const shotAimRotation = Math.atan2(this.shotDirectionY, this.shotDirectionX)
+      - this.root.rotation
+      + Math.PI / 2;
+    const shotAimActive = shotProgress < 1 ? 1 : 0;
     this.root.scale.set(
       pulse * (1 + damagePulse * PLAYER_VISUAL_TOKENS.damageSquash),
       pulse * (1 - damagePulse * PLAYER_VISUAL_TOKENS.damageSquash)
     );
     const defeat = Math.max(0, this.defeatProgress);
     this.body.rotation = -damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
-    this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians - shotPulse * 0.025;
+    this.weapons.rotation = damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians
+      + shotAimRotation * shotAimActive
+      - shotPulse * 0.025;
     this.signature.rotation = animationSeconds * motion.signatureSpin;
     this.signature.scale.set(1 + Math.sin(animationSeconds * 3.2) * motion.signaturePulse);
     this.ring.rotation = -animationSeconds * motion.signatureSpin * 0.35;
@@ -122,7 +143,7 @@ export class PlayerView {
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
-    this.renderShotFlash(shotPulse);
+    this.renderShotFlash(shotPulse, state);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
   }
 
@@ -144,6 +165,13 @@ export class PlayerView {
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
     this.shotAtSeconds = Number.NEGATIVE_INFINITY;
+    this.shotDirectionX = 0;
+    this.shotDirectionY = -1;
+    this.shotMuzzleMask = 0;
+    this.shotLeftOriginX = 0;
+    this.shotLeftOriginY = 0;
+    this.shotRightOriginX = 0;
+    this.shotRightOriginY = 0;
     this.defeatProgress = -1;
     this.root.rotation = 0;
     this.root.scale.set(1);
@@ -158,32 +186,70 @@ export class PlayerView {
     this.damageFlash.alpha = 0;
     this.shotFlash.clear();
     this.shotFlash.visible = false;
+    this.shotFlash.position.set(0, 0);
+    this.shotFlash.rotation = 0;
   }
 
-  private renderShotFlash(pulse: number): void {
+  private renderShotFlash(pulse: number, state: PlayerState): void {
     this.shotFlash.clear();
-    if (pulse <= 0) {
+    if (pulse <= 0 || this.shotMuzzleMask === 0) {
       this.shotFlash.visible = false;
       return;
     }
     const color = PLAYER_SKINS[this.skin].accent;
     const alpha = pulse * 0.9;
     this.shotFlash.visible = true;
+    const inverseRoot = -this.root.rotation;
+    this.shotFlash.rotation = Math.atan2(this.shotDirectionY, this.shotDirectionX)
+      + Math.PI / 2
+      + inverseRoot;
+    this.renderMuzzleFlash(
+      this.shotLeftOriginX,
+      this.shotLeftOriginY,
+      state,
+      color,
+      pulse,
+      alpha,
+      (this.shotMuzzleMask & 1) !== 0
+    );
+    this.renderMuzzleFlash(
+      this.shotRightOriginX,
+      this.shotRightOriginY,
+      state,
+      color,
+      pulse,
+      alpha,
+      (this.shotMuzzleMask & 2) !== 0
+    );
+  }
+
+  private renderMuzzleFlash(
+    originX: number,
+    originY: number,
+    state: PlayerState,
+    color: number,
+    pulse: number,
+    alpha: number,
+    visible: boolean
+  ): void {
+    if (!visible) return;
+    const relativeX = originX - state.x;
+    const relativeY = originY - state.y;
+    const cos = Math.cos(-this.root.rotation);
+    const sin = Math.sin(-this.root.rotation);
+    const localX = relativeX * cos - relativeY * sin;
+    const localY = relativeX * sin + relativeY * cos;
+    const length = 8 + pulse * 10;
     this.shotFlash
       .beginPath()
-      .moveTo(-27, -11)
-      .lineTo(-36, -15)
-      .lineTo(-32, -11)
-      .lineTo(-36, -7)
-      .lineTo(-27, -11)
+      .moveTo(localX - 2, localY)
+      .lineTo(localX, localY - length)
+      .lineTo(localX + 2, localY)
+      .lineTo(localX, localY - length * 0.42)
+      .lineTo(localX - 2, localY)
       .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
     this.shotFlash
-      .beginPath()
-      .moveTo(27, -11)
-      .lineTo(36, -15)
-      .lineTo(32, -11)
-      .lineTo(36, -7)
-      .lineTo(27, -11)
-      .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
+      .circle(localX, localY, 1.6 + pulse * 1.8)
+      .fill({ color: 0xffffff, alpha: alpha * 0.85 });
   }
 }

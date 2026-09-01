@@ -2,7 +2,7 @@ import { Container, Text, TextStyle } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
 import { ARENA_CENTER, LOGICAL_HEIGHT } from '../config/constants';
 import { type FxQuality, type PlayerSkinId } from '../content/visual/VisualTokens';
-import type { CombatRenderState } from '../simulation/combat/CombatRenderState';
+import type { CombatRenderState, ShotRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
 import { ArenaView } from './pixi/ArenaView';
 import { BossView } from './pixi/BossView';
@@ -113,8 +113,8 @@ export class PixiGameView {
     this.playerView.render(state, animationSeconds);
   }
 
-  public playPlayerShot(animationSeconds: number): void {
-    this.playerView.playShot(animationSeconds);
+  public playPlayerShot(animationSeconds: number, shot: Readonly<ShotRenderState>): void {
+    this.playerView.playShot(animationSeconds, shot);
   }
 
   public setPlayerSkin(skin: PlayerSkinId): void {

@@ -44,7 +44,16 @@ describe('PlayerView', () => {
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[6] as { alpha: number };
     expect(flash.alpha).toBeGreaterThan(0);
-    view.playShot(0.6);
+    view.playShot(0.6, {
+      sequence: 1,
+      directionX: 0,
+      directionY: -1,
+      muzzleMask: 1,
+      leftOriginX: 293,
+      leftOriginY: 389,
+      rightOriginX: 0,
+      rightOriginY: 0
+    });
     view.render(state(320, 400, 80), 0.63);
     const shotFlash = view.root.children[8] as { visible: boolean };
     expect(shotFlash.visible).toBe(true);

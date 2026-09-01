@@ -1,6 +1,6 @@
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { WEAPON_DEFINITIONS, type ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
-import { ProjectilePool } from './EntityPools';
+import { ProjectilePool, type ProjectileState } from './EntityPools';
 
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const SPAWN_ANGLE_STEP = 2.399963229728653;
@@ -17,7 +17,13 @@ export class StressCombatScenario {
     private readonly projectiles: ProjectilePool,
     private readonly getProjectileSpeed: () => number,
     private readonly getProjectileDamage: () => number,
-    private readonly onShot: () => void
+    private readonly onShot: (
+      player: PlayerState,
+      projectile: ProjectileState,
+      directionX: number,
+      directionY: number,
+      muzzle: ProjectileMuzzle
+    ) => void
   ) {}
 
   public reset(): void {
@@ -44,13 +50,15 @@ export class StressCombatScenario {
     const projectile = this.projectiles.acquire();
     if (!projectile) return;
     const angle = index * SPAWN_ANGLE_STEP;
+    const directionX = Math.cos(angle);
+    const directionY = Math.sin(angle);
     projectile.x = player.x;
     projectile.y = player.y;
-    projectile.vx = Math.cos(angle) * this.getProjectileSpeed();
-    projectile.vy = Math.sin(angle) * this.getProjectileSpeed();
+    projectile.vx = directionX * this.getProjectileSpeed();
+    projectile.vy = directionY * this.getProjectileSpeed();
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.getProjectileDamage();
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
-    this.onShot();
+    this.onShot(player, projectile, directionX, directionY, (index % 2) as ProjectileMuzzle);
   }
 }

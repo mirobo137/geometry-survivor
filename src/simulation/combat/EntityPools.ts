@@ -1,4 +1,5 @@
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 
 export interface EnemyState {
   active: boolean;
@@ -24,6 +25,7 @@ export interface ProjectileState {
   radius: number;
   damage: number;
   lifetimeSeconds: number;
+  muzzle: ProjectileMuzzle;
 }
 
 const createEnemyState = (): EnemyState => ({
@@ -49,7 +51,8 @@ const createProjectileState = (): ProjectileState => ({
   vy: 0,
   radius: 0,
   damage: 0,
-  lifetimeSeconds: 0
+  lifetimeSeconds: 0,
+  muzzle: 0
 });
 
 export class EnemyPool {

@@ -42,6 +42,55 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBeGreaterThan(0);
   });
 
+  it('spawns one projectile from an alternating muzzle and exposes its shot origin', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const enemy = combat.enemies.acquire();
+    if (!enemy) throw new Error('No se pudo preparar el enemigo de origen');
+    enemy.kind = 'tank';
+    enemy.x = player.state.x + 180;
+    enemy.y = player.state.y;
+    enemy.radius = ENEMY_DEFINITIONS.tank.radius;
+    enemy.speed = 0;
+    enemy.maxHealth = 10_000;
+    enemy.health = 10_000;
+    enemy.contactDamage = 0;
+
+    runSeconds(combat, player, 0.55);
+    const firstShot = combat.renderState.shot;
+    expect(firstShot.sequence).toBe(1);
+    expect(firstShot.muzzleMask).toBe(1);
+    expect(Math.hypot(firstShot.leftOriginX - player.state.x, firstShot.leftOriginY - player.state.y)).toBeGreaterThan(20);
+    expect(combat.projectiles.states.some((projectile) => projectile.active && projectile.muzzle === 0)).toBe(true);
+
+    runSeconds(combat, player, 0.55);
+    expect(combat.renderState.shot.sequence).toBe(2);
+    expect(combat.renderState.shot.muzzleMask).toBe(2);
+  });
+
+  it('uses both muzzle origins after the authored twin-emitter upgrade', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const enemy = combat.enemies.acquire();
+    if (!enemy) throw new Error('No se pudo preparar el enemigo doble');
+    enemy.kind = 'tank';
+    enemy.x = player.state.x + 180;
+    enemy.y = player.state.y;
+    enemy.radius = ENEMY_DEFINITIONS.tank.radius;
+    enemy.speed = 0;
+    enemy.maxHealth = 10_000;
+    enemy.health = 10_000;
+    enemy.contactDamage = 0;
+
+    expect(combat.enableTwinEmitters()).toBe(true);
+    runSeconds(combat, player, 0.55);
+
+    expect(combat.hasTwinEmitters).toBe(true);
+    expect(combat.renderState.shot.muzzleMask).toBe(3);
+    expect(combat.stats.shotsFired).toBe(2);
+    expect(combat.projectiles.states.filter((projectile) => projectile.active).map((projectile) => projectile.muzzle)).toEqual([0, 1]);
+  });
+
   it('seeds the reproducible stress preset with both pools at capacity', () => {
     const combat = new CombatSimulation({ stress: true });
     const player = new PlayerModel();

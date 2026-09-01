@@ -112,17 +112,19 @@ describe('Game', () => {
   it('collapses a burst of simulation shots into one presentation pulse per frame', () => {
     const game = new Game(createOptions());
     const runtime = game as unknown as {
-      combat: { stats: { shotsFired: number } };
+      combat: { renderState: { shot: { sequence: number; directionX: number; directionY: number; muzzleMask: number; leftOriginX: number; leftOriginY: number; rightOriginX: number; rightOriginY: number } } };
       syncShotFeedback: () => void;
     };
-    runtime.combat.stats.shotsFired = 3;
+    runtime.combat.renderState.shot.sequence = 3;
+    runtime.combat.renderState.shot.muzzleMask = 3;
     runtime.syncShotFeedback();
     runtime.syncShotFeedback();
     expect(mocks.playerShot).toHaveBeenCalledTimes(1);
+    expect(mocks.playerShot.mock.calls[0][1]).toMatchObject({ muzzleMask: 3 });
 
-    runtime.combat.stats.shotsFired = 0;
+    runtime.combat.renderState.shot.sequence = 0;
     runtime.syncShotFeedback();
-    runtime.combat.stats.shotsFired = 1;
+    runtime.combat.renderState.shot.sequence = 1;
     runtime.syncShotFeedback();
     expect(mocks.playerShot).toHaveBeenCalledTimes(2);
   });

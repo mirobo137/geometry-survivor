@@ -856,3 +856,25 @@ Validacion de esta iteracion: typecheck correcto, 108 pruebas
 unitarias/integracion, 9 smoke browser (desktop + Pixel 5) y builds
 local/Poki/CrazyGames correctos. Pendiente humano: comprobar en el movil real
 el destello/recoil/trail, especialmente con `?stress=1`, y registrar FPS.
+
+## 37. Continuacion - origen exacto y carta Doble canon
+
+Fecha: 01-09-2026.
+
+- `WeaponDefinitions` define las dos anclas logicas del arma en el mismo marco
+  64x64 de los SVG. `CombatWeaponSystem` rota esas anclas con la direccion del
+  objetivo y coloca el proyectil en el origen, no en el centro del player.
+- La configuracion base alterna los emisores izquierdo/derecho. El nuevo
+  `twin_emitters` es una mejora data-driven de una sola acumulacion: genera dos
+  proyectiles, registra una mascara de bocas y conserva un solo burst de audio.
+- `ShotRenderState` es estable y pooled: incluye secuencia, direccion, mascara
+  y origen de cada boca. `PlayerView` usa el mismo descriptor para orientar
+  temporalmente el arma y dibujar uno o dos destellos exactamente donde nace
+  cada bala.
+- El stress reutiliza la misma transformacion y `Game` condensa el feedback por
+  frame para no saturar audio/GPU. No se agregan nodos ni objetos por disparo.
+
+Validacion de esta iteracion: typecheck correcto, 110 pruebas
+unitarias/integracion y carta incluida en el mapa visual. Pendiente humano:
+comprobar en movil la alternancia, la alineacion bala/destello y la carta Doble
+canon durante `?stress=1`, ademas de repetir smoke browser y los tres builds.

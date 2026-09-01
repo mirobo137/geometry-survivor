@@ -505,16 +505,16 @@ export class Game {
   }
 
   private syncShotFeedback(): void {
-    const shotsFired = this.combat.stats.shotsFired;
-    if (shotsFired < this.presentedShotsFired) {
-      this.presentedShotsFired = shotsFired;
+    const shot = this.combat.renderState.shot;
+    if (shot.sequence < this.presentedShotsFired) {
+      this.presentedShotsFired = shot.sequence;
       return;
     }
-    if (shotsFired === this.presentedShotsFired) return;
+    if (shot.sequence === this.presentedShotsFired) return;
     // Collapse several fixed-step shots into one presentation pulse per frame.
     // This prevents stress mode from flooding the audio bus or the player view.
-    this.view.playPlayerShot(this.presentationTime);
+    this.view.playPlayerShot(this.presentationTime, shot);
     this.audio.playCue('player-shot');
-    this.presentedShotsFired = shotsFired;
+    this.presentedShotsFired = shot.sequence;
   }
 }

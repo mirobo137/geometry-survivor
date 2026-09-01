@@ -1,6 +1,7 @@
 export type UpgradeId =
   | 'swift_step'
   | 'focused_projectiles'
+  | 'twin_emitters'
   | 'reinforced_core'
   | 'orbit_blade'
   | 'chain_lightning'
@@ -22,6 +23,7 @@ export interface UpgradeDefinition {
 export type UpgradeEffect =
   | { readonly type: 'movementSpeed'; readonly amount: number }
   | { readonly type: 'projectileDamage'; readonly amount: number }
+  | { readonly type: 'twinEmitters' }
   | { readonly type: 'maxHealth'; readonly amount: number }
   | { readonly type: 'orbitBlade' }
   | { readonly type: 'chainLightning' }
@@ -43,6 +45,13 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Proyectiles enfocados',
     description: '+4 daño del proyectil automático',
     effect: { type: 'projectileDamage', amount: 4 }
+  },
+  {
+    id: 'twin_emitters',
+    title: 'Doble ca\u00f1\u00f3n',
+    description: 'Dispara desde ambos emisores con cada ataque',
+    effect: { type: 'twinEmitters' },
+    maxStacks: 1
   },
   {
     id: 'reinforced_core',

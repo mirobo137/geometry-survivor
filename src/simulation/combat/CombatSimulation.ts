@@ -64,7 +64,8 @@ export class CombatSimulation {
     orbitBlades: this.orbitBlades,
     chainSegments: this.chainSegments,
     laser: this.laser.state,
-    boss: this.boss.state
+    boss: this.boss.state,
+    shot: this.weaponSystem.lastShot
   };
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
@@ -114,6 +115,14 @@ export class CombatSimulation {
 
   public increaseProjectileSpeed(amount: number): void {
     this.weaponSystem.increaseProjectileSpeed(amount);
+  }
+
+  public enableTwinEmitters(): boolean {
+    return this.weaponSystem.enableTwinEmitters();
+  }
+
+  public get hasTwinEmitters(): boolean {
+    return this.weaponSystem.hasTwinEmitters;
   }
 
   public addOrbitBlade(): boolean {

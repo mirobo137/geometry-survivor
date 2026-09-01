@@ -1680,7 +1680,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `Game` detecta muerte del jugador, crea un `RunSummary`, actualiza la mejor marca mediante `SaveStore` y muestra un overlay responsive con reinicio;
 - Los modelos y pools de simulación exponen `reset()`; el botón de reinicio reutiliza sistemas y vuelve a `playing` sin recargar la página;
 - `src/content/weapons/WeaponDefinitions.ts` y `CombatSimulation` incorporan Orbit (contacto orbital) y Chain Lightning (hasta tres saltos con telegraph visual);
-- `src/content/upgrades/UpgradeDefinitions.ts` contiene 10 mejoras data-driven, con cinco efectos adicionales para ritmo, alcance, daño y mitigación;
+- `src/content/upgrades/UpgradeDefinitions.ts` contiene 11 mejoras data-driven, con cinco efectos adicionales para ritmo, alcance, daño, mitigación y doble emisor;
 - `src/ui/PauseOverlay.ts` detiene la simulación al perder visibilidad/foco y permite reanudar con un target táctil amplio;
 - `src/content/hazards/LaserDefinition.ts` y `src/simulation/hazards/LaserHazard.ts` incorporan Laser con telegraph, ataque, recuperación y escape perpendicular comprobable;
 - `src/content/enemies/EnemyDefinitions.ts` añade la variante `elite`, reutilizando pool, grid, colisiones y XP; `EnemySpawnDefinitions.ts` la selecciona de forma determinista desde 2:00;
@@ -1695,7 +1695,7 @@ La primera base ejecutable de la Fase 0 ya está creada en el directorio de trab
 - `src/ui/GameHud.ts` muestra tiempo, vida, XP y bajas durante la partida;
 - `npm run typecheck`, `npm test`, `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames` pasan (88 tests unitarios/integración y 8 smoke tests de navegador: 7 desktop + 1 Pixel 5 emulado); el workflow instala Chromium, ejecuta esas puertas y sólo entonces publica `dist/local`.
 
-La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, diez mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas, pantalla de inicio en fase `menu` y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, spike comparativo de FX y la puerta humana de la run completa.
+La shell responsive, la compatibilidad móvil y los spikes están publicados en `main`. La ejecución limpia confirma que las tres rutas sostienen aproximadamente 60 FPS en el teléfono disponible; se adopta `Sprite` reutilizable como representación de entidades repetidas por su menor complejidad de contenido. Fase 0 queda cerrada, Fase 1 tiene dos expansiones con resonancia y Fase 2 ya cuenta con el combate gris inicial, un preset de stress reproducible y una medición manual favorable. Fase 3 continúa con level-up pausado, once mejoras data-driven, Orbit y Chain Lightning, pausa de lifecycle, límites/prerrequisitos de cartas, previews numéricos, guardado versionado y servicios de plataforma separados; Fase 4 avanza con Laser telegraphed, variante elite determinista, curva de spawn por fases y segunda expansión de arena. Fase 5 ya tiene un boss móvil con dos patrones y flujo de victoria. La consolidación arquitectónica mantiene estado tipado, runtime separado del bootstrap, contrato de render, sistemas de enemigos/armas/boss separados, vistas Pixi separadas, pantalla de inicio en fase `menu` y flujos de game-over/victoria con resumen y reinicio in-place; quedan pendientes repetir el encuentro corregido en móvil, balance de valores, spike comparativo de FX y la puerta humana de la run completa.
 
 ## Cierre terminal: derrota legible y resumen diferido - 01-09-2026
 
@@ -1724,10 +1724,10 @@ telefono de referencia y comparar Low/Medium/High.
 ## Feedback de disparo y estelas de proyectil - 01-09-2026
 
 El primer bloque de accion del player queda integrado sin introducir eventos de
-simulacion nuevos: `Game` observa el contador ya existente de disparos y
+simulacion por disparo: `Game` observa el estado pooled del ultimo burst y
 condensa cualquier rafaga del mismo frame en un pulso visual y un cue ZzFX.
-`PlayerView` anima recoil local del emisor durante 90 ms y dibuja un destello
-geometrico en las dos bocas; no escala ni mueve el cuerpo de gameplay.
+`PlayerView` anima recoil local durante 90 ms y dibuja el destello en la boca
+seleccionada; el cuerpo de gameplay no escala ni se mueve.
 
 `ProjectileTrailView` usa una sola `Graphics` y un historial de ranuras activas
 para dibujar una linea corta alineada con la velocidad. El trail no aparece en
@@ -1737,6 +1737,25 @@ cadencia, dano y colisiones permanecen en `CombatWeaponSystem`.
 
 La puerta de esta entrega exige verificar en movil el destello/recoil, que el
 trail no tape enemigos ni telegraphs, y que `?stress=1` conserve el presupuesto.
+
+## Origen exacto de disparo y carta Doble ca\u00f1\u00f3n - 01-09-2026
+
+`WeaponDefinitions` centraliza las dos anclas de boca en el mismo marco SVG que
+usa el player. `CombatWeaponSystem` rota esa geometria con la direccion del
+objetivo: la configuracion base alterna una boca por ataque y coloca el
+proyectil en ese origen, mientras que `twin_emitters` dispara desde ambas.
+
+`ShotRenderState` es un descriptor estable y reutilizado con direccion, mascara
+de bocas y origen de cada emisor. `PlayerView` recibe ese descriptor, orienta
+temporalmente el arma hacia el objetivo y dibuja uno o dos destellos sobre el
+origen exacto; la presentacion no vuelve a deducir la posicion desde un
+proyectil que ya avanzo.
+
+La carta `Doble ca\u00f1\u00f3n` se integra mediante `UpgradeApplier`, tiene una sola
+acumulacion y permanece separada de la geometria SVG. El stress usa el mismo
+calculo de origen, pero la fachada visual sigue condensando rafagas para no
+saturar audio ni GPU. La puerta humana exige comprobar alternancia, doble
+emisor, recoil y alineacion bala/destello en movil real.
 
 ## Muerte especial del boss - 01-09-2026
 

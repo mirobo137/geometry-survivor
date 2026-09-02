@@ -40,7 +40,8 @@ describe('LocalSaveStore', () => {
       best: { timeSeconds: 302.5, score: 8400 },
       tutorialSeen: true,
       skins: defaults.skins,
-      cannonSkins: defaults.cannonSkins
+      cannonSkins: defaults.cannonSkins,
+      backgrounds: defaults.backgrounds
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
@@ -49,7 +50,8 @@ describe('LocalSaveStore', () => {
       best: { timeSeconds: 302.5, score: 8400 },
       tutorialSeen: true,
       skins: defaults.skins,
-      cannonSkins: defaults.cannonSkins
+      cannonSkins: defaults.cannonSkins,
+      backgrounds: defaults.backgrounds
     });
   });
 
@@ -71,7 +73,8 @@ describe('LocalSaveStore', () => {
       best: { timeSeconds: 0, score: 14 },
       tutorialSeen: true,
       skins: { selected: 'cyan', unlocked: ['cyan'] },
-      cannonSkins: { selected: 'basic', unlocked: ['basic'] }
+      cannonSkins: { selected: 'basic', unlocked: ['basic'] },
+      backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] }
     });
   });
 
@@ -88,6 +91,14 @@ describe('LocalSaveStore', () => {
       schemaVersion: SAVE_SCHEMA_VERSION,
       cannonSkins: { selected: 'rainbow', unlocked: ['rainbow', 'rainbow', 'unknown'] }
     }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['basic', 'rainbow'] });
+    expect(migrateSaveData({
+      schemaVersion: 3,
+      backgrounds: { selected: 'crystal-field', unlocked: ['crystal-field', 'crystal-field', 'unknown'] }
+    }).backgrounds).toEqual({ selected: 'crystal-field', unlocked: ['deep-space', 'crystal-field'] });
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      backgrounds: { selected: 'unknown', unlocked: [] }
+    }).backgrounds).toEqual({ selected: 'deep-space', unlocked: ['deep-space'] });
   });
 
   it('uses memory fallback when persistent storage rejects writes', () => {

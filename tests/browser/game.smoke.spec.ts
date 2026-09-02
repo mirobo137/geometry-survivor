@@ -86,6 +86,19 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
     await page.locator(`.cannon-card[data-cannon="${cannon}"] button`).click();
     await expect(page.locator(`.cannon-card[data-cannon="${cannon}"]`)).toHaveClass(/is-selected/);
   }
+  await page.locator('#start-backgrounds-tab').click();
+  await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
+  await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
+  await expect(page.locator('#start-background-preview')).toBeVisible();
+  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(4);
+  await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-locked/);
+  await page.locator('.background-card[data-background="ion-storm"] button').click();
+  await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-background-selected-name')).toHaveText('Tormenta iónica');
+  for (const background of ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field']) {
+    await page.locator(`.background-card[data-background="${background}"] button`).click();
+    await expect(page.locator(`.background-card[data-background="${background}"]`)).toHaveClass(/is-selected/);
+  }
   await page.locator('#start-skins-back').click();
   await expect(page.locator('#start-skins-view')).toBeHidden();
   await expect(page.locator('#start-main-view')).toBeVisible();
@@ -112,6 +125,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
   expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'emerald', unlocked: ['cyan', 'violet', 'amber', 'emerald'] });
   expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'rainbow', unlocked: ['basic', 'curve', 'smoke', 'rainbow'] });
+  expect(JSON.parse(saved ?? '{}').backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'] });
   expect(failures).toEqual([]);
 });
 

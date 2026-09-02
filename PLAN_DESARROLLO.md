@@ -1943,3 +1943,31 @@ La validación automática de esta entrega queda satisfecha: typecheck, suite
 Permanece la puerta manual en móvil con `?stress=1&profile=1`: registrar
 dispositivo, navegador, preset, FPS/p95, legibilidad y consumo antes de
 decidir glow adicional, ParticleContainer o calidad adaptativa.
+
+## Entrega - atmósferas, locker de fondos y HUD de gameplay - 02-09-2026
+
+El usuario confirma que `?stress=1` corre correctamente en móvil y PC, y que
+las runs completas siguen siendo terminables. Para resolver el fondo plano se
+elige una atmósfera procedural, estática y de bajo coste:
+
+- `BackgroundView` es una sola capa `Graphics` detrás de la arena. Redibuja
+  únicamente al cambiar el fondo o el viewport; no crea nodos, texturas ni
+  datos por frame.
+- Cuatro fondos cosméticos (`deep-space`, `ion-storm`, `solar-drift` y
+  `crystal-field`) comparten el contrato de contenido. Low/Medium/High limita
+  las estrellas a 12/24/34 y la arena mantiene el contraste de gameplay.
+- El locker añade la pestaña `Fondos` con preview, tarjetas y equipamiento.
+  `SaveStore` sube a schema v4 y migra partidas previas a `deep-space` sin
+  perder skins, cañones, audio ni mejor marca.
+- El nombre del juego y las instrucciones inferiores se retiran del mundo
+  jugable; permanecen únicamente en la pantalla de inicio.
+
+Definition of Done adicional:
+
+- el fondo cubre landscape y portrait sin ampliar el mundo jugable;
+- cada fondo se distingue en preview y durante una run;
+- cambiar fondo persiste y no modifica colisiones, dificultad o simulación;
+- el tab de fondos conserva scroll independiente y targets táctiles;
+- typecheck, tests, smoke desktop/mobile y builds local/Poki/CrazyGames pasan;
+- queda validación humana visual en móvil real de contraste, legibilidad y
+  rendimiento de las cuatro atmósferas.

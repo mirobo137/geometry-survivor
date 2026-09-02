@@ -1,9 +1,10 @@
 import type { AudioSettings } from '../audio/AudioService';
 import heroSceneSvg from '../assets/svg/ui/start/hero-scene.svg?raw';
 import startMarkSvg from '../assets/svg/ui/start/mark.svg?raw';
-import type { CannonSkinSaveData, SkinSaveData } from '../platform/save/SaveStore';
+import type { BackgroundSaveData, CannonSkinSaveData, SkinSaveData } from '../platform/save/SaveStore';
 import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
+import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
 
 export interface StartScreenBest {
   readonly timeSeconds: number;
@@ -15,10 +16,12 @@ export interface StartScreenOptions {
   readonly best: StartScreenBest;
   readonly skins: SkinSaveData;
   readonly cannonSkins: CannonSkinSaveData;
+  readonly backgrounds: BackgroundSaveData;
   readonly onPlay: () => void;
   readonly onSettingsChange: (settings: AudioSettings) => void;
   readonly onSkinStateChange: (state: SkinSaveData) => void;
   readonly onCannonSkinStateChange: (state: CannonSkinSaveData) => void;
+  readonly onBackgroundStateChange: (state: BackgroundSaveData) => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -46,16 +49,20 @@ export class StartScreen {
   private readonly skinsBack: HTMLButtonElement;
   private readonly skinsPanel: SkinSelectPanel;
   private readonly cannonPanel: CannonSelectPanel;
+  private readonly backgroundPanel: BackgroundSelectPanel;
   private readonly skinsView: HTMLElement;
   private readonly playerSkinsTab: HTMLButtonElement;
   private readonly cannonSkinsTab: HTMLButtonElement;
+  private readonly backgroundsTab: HTMLButtonElement;
   private readonly playerSkinsView: HTMLElement;
   private readonly cannonSkinsView: HTMLElement;
+  private readonly backgroundsView: HTMLElement;
   private playHandler: (() => void) | null = null;
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
   private skinState: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
   private cannonSkinState: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
+  private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
 
   private readonly onSkinStateChange = (state: SkinSaveData): void => {
     this.skinState = state;
@@ -66,7 +73,12 @@ export class StartScreen {
     this.cannonSkinState = state;
     this.cannonSkinStateHandler?.(state);
   };
+  private readonly onBackgroundStateChange = (state: BackgroundSaveData): void => {
+    this.backgroundState = state;
+    this.backgroundStateHandler?.(state);
+  };
   private cannonSkinStateHandler: ((state: CannonSkinSaveData) => void) | null = null;
+  private backgroundStateHandler: ((state: BackgroundSaveData) => void) | null = null;
 
   public constructor(root: HTMLElement) {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
@@ -85,9 +97,11 @@ export class StartScreen {
     const skinsView = root.querySelector<HTMLElement>('#start-skins-view');
     const playerSkinsTab = root.querySelector<HTMLButtonElement>('#start-player-skins-tab');
     const cannonSkinsTab = root.querySelector<HTMLButtonElement>('#start-cannon-skins-tab');
+    const backgroundsTab = root.querySelector<HTMLButtonElement>('#start-backgrounds-tab');
     const playerSkinsView = root.querySelector<HTMLElement>('#start-player-skins-panel');
     const cannonSkinsView = root.querySelector<HTMLElement>('#start-cannon-skins-panel');
-    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !playerSkinsView || !cannonSkinsView) {
+    const backgroundsView = root.querySelector<HTMLElement>('#start-backgrounds-panel');
+    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !playerSkinsView || !cannonSkinsView || !backgroundsView) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -107,10 +121,13 @@ export class StartScreen {
     this.skinsView = skinsView;
     this.playerSkinsTab = playerSkinsTab;
     this.cannonSkinsTab = cannonSkinsTab;
+    this.backgroundsTab = backgroundsTab;
     this.playerSkinsView = playerSkinsView;
     this.cannonSkinsView = cannonSkinsView;
+    this.backgroundsView = backgroundsView;
     this.skinsPanel = new SkinSelectPanel(playerSkinsView);
     this.cannonPanel = new CannonSelectPanel(cannonSkinsView);
+    this.backgroundPanel = new BackgroundSelectPanel(backgroundsView);
     this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.playHandler?.());
@@ -119,6 +136,7 @@ export class StartScreen {
     this.skinsBack.addEventListener('click', () => this.closeSkins());
     this.playerSkinsTab.addEventListener('click', () => this.selectSkinTab('player'));
     this.cannonSkinsTab.addEventListener('click', () => this.selectSkinTab('cannon'));
+    this.backgroundsTab.addEventListener('click', () => this.selectSkinTab('background'));
     this.musicInput.addEventListener('input', () => this.emitSettings());
     this.sfxInput.addEventListener('input', () => this.emitSettings());
     this.mutedInput.addEventListener('change', () => this.emitSettings());
@@ -129,8 +147,10 @@ export class StartScreen {
     this.settingsHandler = options.onSettingsChange;
     this.skinStateHandler = options.onSkinStateChange;
     this.cannonSkinStateHandler = options.onCannonSkinStateChange;
+    this.backgroundStateHandler = options.onBackgroundStateChange;
     this.skinState = options.skins;
     this.cannonSkinState = options.cannonSkins;
+    this.backgroundState = options.backgrounds;
     this.setSettings(options.settings);
     this.bestTime.textContent = formatTime(options.best.timeSeconds);
     this.bestScore.textContent = String(Math.max(0, Math.floor(options.best.score)));
@@ -146,6 +166,7 @@ export class StartScreen {
     this.settingsHandler = null;
     this.skinStateHandler = null;
     this.cannonSkinStateHandler = null;
+    this.backgroundStateHandler = null;
     this.setSettingsExpanded(false);
     this.closeSkins();
   }
@@ -190,6 +211,7 @@ export class StartScreen {
   private closeSkins(): void {
     this.skinsPanel.close();
     this.cannonPanel.close();
+    this.backgroundPanel.close();
     this.applySkinTab('player');
     this.skinsView.hidden = true;
     this.mainView.hidden = false;
@@ -197,27 +219,38 @@ export class StartScreen {
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-skins-open');
   }
 
-  private selectSkinTab(tab: 'player' | 'cannon'): void {
+  private selectSkinTab(tab: 'player' | 'cannon' | 'background'): void {
     this.applySkinTab(tab);
     if (tab === 'cannon') {
       this.cannonPanel.open({ state: this.cannonSkinState, onStateChange: this.onCannonSkinStateChange });
       this.skinsPanel.close();
+      this.backgroundPanel.close();
+    } else if (tab === 'background') {
+      this.backgroundPanel.open({ state: this.backgroundState, onStateChange: this.onBackgroundStateChange });
+      this.skinsPanel.close();
+      this.cannonPanel.close();
     } else {
       this.cannonPanel.close();
+      this.backgroundPanel.close();
       this.skinsPanel.open({ state: this.skinState, onStateChange: this.onSkinStateChange });
     }
   }
 
-  private applySkinTab(tab: 'player' | 'cannon'): void {
+  private applySkinTab(tab: 'player' | 'cannon' | 'background'): void {
     const cannon = tab === 'cannon';
-    this.playerSkinsTab.classList.toggle('is-active', !cannon);
+    const background = tab === 'background';
+    this.playerSkinsTab.classList.toggle('is-active', !cannon && !background);
     this.cannonSkinsTab.classList.toggle('is-active', cannon);
-    this.playerSkinsTab.setAttribute('aria-selected', String(!cannon));
+    this.backgroundsTab.classList.toggle('is-active', background);
+    this.playerSkinsTab.setAttribute('aria-selected', String(!cannon && !background));
     this.cannonSkinsTab.setAttribute('aria-selected', String(cannon));
-    this.playerSkinsTab.tabIndex = cannon ? -1 : 0;
+    this.backgroundsTab.setAttribute('aria-selected', String(background));
+    this.playerSkinsTab.tabIndex = !cannon && !background ? 0 : -1;
     this.cannonSkinsTab.tabIndex = cannon ? 0 : -1;
+    this.backgroundsTab.tabIndex = background ? 0 : -1;
     this.cannonSkinsView.hidden = !cannon;
-    this.playerSkinsView.hidden = cannon;
+    this.playerSkinsView.hidden = cannon || background;
+    this.backgroundsView.hidden = !background;
   }
 
   private skinsPanelIsClosed(): boolean {

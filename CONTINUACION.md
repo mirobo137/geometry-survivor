@@ -44,6 +44,7 @@ Atajos que pueden escribirse después de la URL base:
 ?stress=1
 ?boss=1
 ?skin=cyan|violet|amber|emerald
+?background=deep-space|ion-storm|solar-drift|crystal-field
 ?quality=low|medium|high
 ?profile=1
 ?spike=rendering
@@ -61,7 +62,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 125 tests unitarios/integración en 49 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
+- Última auditoría local: typecheck correcto, 133 tests unitarios/integración en 54 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -69,6 +70,7 @@ Mediciones manuales aportadas desde Android Chrome:
 - Audio: `AudioContext` running y latencia base de 3.0 ms.
 - Audio integrado: el usuario confirma música, efectos, pausa, reanudación, volumen y silencio funcionando correctamente en móvil.
 - Stress de 250 enemigos + 300 proyectiles: estable alrededor de 60 FPS quieto, con picos reportados de 120 FPS al mover.
+- El usuario confirma que el modo stress corre correctamente en móvil y PC, y que las partidas completas siguen pudiendo terminarse.
 - Una run móvil llegó al boss de 4:20 y descubrió `Unable to convert color 4294430586`; la causa era un color de ocho dígitos en el telegraph de barrido. Quedó corregido con una paleta RGB validada por test. Falta repetir el encuentro en el build publicado.
 - Falta registrar modelo exacto del teléfono y preset de calidad cuando éstos existan.
 
@@ -1015,3 +1017,29 @@ Validacion de esta iteracion: typecheck correcto, 130 pruebas en 52 archivos,
 smoke browser 9/9 y builds local, Poki y CrazyGames correctos. Queda como
 puerta manual medir en un movil fisico con `?stress=1&profile=1`: registrar
 dispositivo, navegador, preset, FPS/p95, legibilidad y consumo.
+
+## 44. Continuacion - atmosferas, locker de fondos y HUD de gameplay - 02-09-2026
+
+El usuario confirma que el modo stress funciona correctamente en movil y PC, y
+que las runs completas siguen siendo terminables. La siguiente capa visual
+resuelve el fondo plano sin tocar simulacion, combate ni balance:
+
+- `BackgroundView` usa un unico `Graphics` estatico detras de la arena. Cada
+  tema se dibuja solo al equiparlo o al cambiar portrait/landscape; no parsea
+  SVG, no descarga imagenes y no reconstruye geometria durante el ticker.
+- Hay cuatro atmosferas seleccionables: `deep-space`, `ion-storm`,
+  `solar-drift` y `crystal-field`. El preset limita las estrellas a 12/24/34
+  en Low/Medium/High. La arena conserva una opacidad dominante para que el
+  fondo aporte profundidad sin competir con player, boss o telegraphs.
+- El locker suma la pestaña `Fondos` junto a `Nucleo` y `Canones y balas`.
+  La seleccion se persiste mediante schema v4 y mantiene `deep-space` como
+  fallback seguro para partidas guardadas anteriores. `?background=` queda
+  disponible como atajo de desarrollo.
+- Se eliminaron del mundo de gameplay el titulo `GEOMETRY SURVIVOR` y la
+  instruccion inferior. La identidad queda en el menu y el HUD conserva solo
+  informacion de la run.
+
+La puerta automatica de esta iteracion es typecheck, suite, smoke desktop y
+mobile, build local y builds de plataforma. La puerta manual posterior es
+comparar las cuatro atmosferas en movil real, revisar contraste y confirmar
+que Low mantenga legibilidad y rendimiento.

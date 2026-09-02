@@ -87,6 +87,19 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-skin-preview')).toBeVisible();
+  await page.locator('#start-backgrounds-tab').click();
+  await expect(page.locator('#start-player-skins-panel')).toBeHidden();
+  await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
+  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(4);
+  const backgroundScrollMetrics = await page.locator('#start-background-cards').evaluate((element) => ({
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight
+  }));
+  expect(backgroundScrollMetrics.scrollHeight).toBeGreaterThan(backgroundScrollMetrics.clientHeight);
+  await page.locator('#start-background-cards').evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect.poll(async () => page.locator('#start-background-cards').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   expect(failures).toEqual([]);
 });
 

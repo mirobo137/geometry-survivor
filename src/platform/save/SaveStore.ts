@@ -3,9 +3,10 @@ export type ControlScheme = 'auto' | 'touch' | 'keyboard';
 
 import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
+import { isBackgroundId, type BackgroundId } from '../../content/visual/BackgroundDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 
-export const SAVE_SCHEMA_VERSION = 3 as const;
+export const SAVE_SCHEMA_VERSION = 4 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 
@@ -32,6 +33,11 @@ export interface CannonSkinSaveData {
   readonly unlocked: readonly CannonSkinId[];
 }
 
+export interface BackgroundSaveData {
+  readonly selected: BackgroundId;
+  readonly unlocked: readonly BackgroundId[];
+}
+
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
   readonly settings: SaveSettings;
@@ -39,6 +45,7 @@ export interface SaveData {
   readonly tutorialSeen: boolean;
   readonly skins: SkinSaveData;
   readonly cannonSkins: CannonSkinSaveData;
+  readonly backgrounds: BackgroundSaveData;
 }
 
 export interface StorageAdapter {
@@ -79,6 +86,10 @@ export const createDefaultSaveData = (): SaveData => ({
   cannonSkins: {
     selected: 'basic',
     unlocked: ['basic']
+  },
+  backgrounds: {
+    selected: 'deep-space',
+    unlocked: ['deep-space']
   }
 });
 
@@ -112,6 +123,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawBest = isRecord(value.best) ? value.best : {};
   const rawSkins = isRecord(value.skins) ? value.skins : {};
   const rawCannonSkins = isRecord(value.cannonSkins) ? value.cannonSkins : {};
+  const rawBackgrounds = isRecord(value.backgrounds) ? value.backgrounds : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
   const unlocked = Array.isArray(rawSkins.unlocked)
@@ -126,6 +138,12 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['basic', ...cannonUnlocked]));
   const requestedCannon = isCannonSkinId(rawCannonSkins.selected) ? rawCannonSkins.selected : 'basic';
   const selectedCannon = normalizedCannonUnlocked.includes(requestedCannon) ? requestedCannon : 'basic';
+  const backgroundUnlocked = Array.isArray(rawBackgrounds.unlocked)
+    ? rawBackgrounds.unlocked.filter(isBackgroundId)
+    : [];
+  const normalizedBackgroundUnlocked = Array.from(new Set<BackgroundId>(['deep-space', ...backgroundUnlocked]));
+  const requestedBackground = isBackgroundId(rawBackgrounds.selected) ? rawBackgrounds.selected : 'deep-space';
+  const selectedBackground = normalizedBackgroundUnlocked.includes(requestedBackground) ? requestedBackground : 'deep-space';
 
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -148,6 +166,10 @@ export const migrateSaveData = (value: unknown): SaveData => {
     cannonSkins: {
       selected: selectedCannon,
       unlocked: normalizedCannonUnlocked
+    },
+    backgrounds: {
+      selected: selectedBackground,
+      unlocked: normalizedBackgroundUnlocked
     }
   };
 };

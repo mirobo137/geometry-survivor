@@ -58,6 +58,7 @@
             <div class="skin-tabs" role="tablist" aria-label="Colecciones visuales">
               <button id="start-player-skins-tab" class="skin-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="start-player-skins-panel">Nucleo</button>
               <button id="start-cannon-skins-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-cannon-skins-panel">Canones y balas</button>
+              <button id="start-backgrounds-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-backgrounds-panel">Fondos</button>
             </div>
             <section id="start-player-skins-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-player-skins-tab">
               <div class="skin-preview-stage player-skin-preview-stage" aria-live="polite">
@@ -82,6 +83,18 @@
               </div>
               <div id="start-cannon-cards" class="cannon-cards" aria-label="Coleccion de canones y balas"></div>
               <p class="skins-footnote">Cada paquete incluye canones, bala y estela. Todo es cosmetico: no cambia dano, fisica ni cadencia.</p>
+            </section>
+            <section id="start-backgrounds-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-backgrounds-tab" hidden>
+              <div class="skin-preview-stage background-preview-stage" aria-live="polite">
+                <div id="start-background-preview" class="background-preview" data-background="deep-space" aria-hidden="true"></div>
+                <div class="skin-preview-copy">
+                  <span class="skin-preview-label">ATMÓSFERA EQUIPADA</span>
+                  <strong id="start-background-selected-name">Vacío profundo</strong>
+                  <span id="start-background-selected-status">EQUIPADO · La señal original</span>
+                </div>
+              </div>
+              <div id="start-background-cards" class="background-cards" aria-label="Colección de fondos"></div>
+              <p class="skins-footnote">Los fondos son cosméticos: solo cambian la atmósfera visual y no alteran el juego.</p>
             </section>
           </section>
         </div>

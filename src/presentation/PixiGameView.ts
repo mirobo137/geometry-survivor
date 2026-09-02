@@ -1,11 +1,12 @@
-import { Container, Text, TextStyle } from 'pixi.js';
+import { Container } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
-import { ARENA_CENTER, LOGICAL_HEIGHT } from '../config/constants';
 import { type FxQuality, type PlayerSkinId } from '../content/visual/VisualTokens';
 import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
+import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import type { CombatRenderState, ShotRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
 import { ArenaView } from './pixi/ArenaView';
+import { BackgroundView } from './pixi/BackgroundView';
 import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
@@ -22,6 +23,7 @@ import type { ViewportState } from './viewport/ViewportTransform';
 /** Small presentation facade; domain rules stay in simulation systems. */
 export class PixiGameView {
   public readonly root = new Container();
+  private readonly backgroundView: BackgroundView;
   private readonly world = new Container();
   private readonly arenaView = new ArenaView();
   private readonly bossView = new BossView();
@@ -33,8 +35,6 @@ export class PixiGameView {
   private readonly terminalFxView: TerminalFxView;
   private readonly levelUpFxView: LevelUpFxView;
   private readonly screenFxView: ScreenFxView;
-  private readonly title: Text;
-  private readonly hint: Text;
   private lastArenaRadius = -1;
   private worldOffsetX = 0;
   private worldOffsetY = 0;
@@ -43,9 +43,11 @@ export class PixiGameView {
     renderer: Renderer,
     playerSkin: PlayerSkinId = 'cyan',
     quality: FxQuality = 'medium',
-    cannonSkin: CannonSkinId = 'basic'
+    cannonSkin: CannonSkinId = 'basic',
+    background: BackgroundId = 'deep-space'
   ) {
-    this.root.addChild(this.world);
+    this.backgroundView = new BackgroundView(background, quality);
+    this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
     this.weaponView = new WeaponView(renderer, () => this.screenFxView.play('chain-hit'));
@@ -65,37 +67,12 @@ export class PixiGameView {
     );
     this.root.addChild(this.levelUpFxView.root);
 
-    this.title = new Text({
-      text: 'GEOMETRY SURVIVOR',
-      style: new TextStyle({
-        fill: 0xeaf0ff,
-        fontFamily: 'Arial, sans-serif',
-        fontSize: 26,
-        fontWeight: '700',
-        letterSpacing: 4
-      })
-    });
-    this.title.anchor.set(0.5, 0);
-    this.title.position.set(ARENA_CENTER.x, 34);
-    this.world.addChild(this.title);
-
-    this.hint = new Text({
-      text: 'Mantén pulsado y mueve para sobrevivir · WASD / flechas',
-      style: new TextStyle({
-        fill: 0xaab7d8,
-        fontFamily: 'Arial, sans-serif',
-        fontSize: 16,
-        align: 'center'
-      })
-    });
-    this.hint.anchor.set(0.5, 1);
-    this.hint.position.set(ARENA_CENTER.x, LOGICAL_HEIGHT - 26);
-    this.world.addChild(this.hint);
   }
 
   public resize(viewport: ViewportState): void {
     this.root.scale.set(viewport.scale);
     this.root.position.set(viewport.offsetX, viewport.offsetY);
+    this.backgroundView.resize(viewport.logicalWidth, viewport.logicalHeight);
     this.worldOffsetX = viewport.worldOffsetX;
     this.worldOffsetY = viewport.worldOffsetY;
     this.applyWorldOffset();
@@ -143,6 +120,10 @@ export class PixiGameView {
   public setCannonSkin(skin: CannonSkinId): void {
     this.playerView.setCannonSkin(skin);
     this.entitiesView.setCannonSkin(skin);
+  }
+
+  public setBackground(background: BackgroundId): void {
+    this.backgroundView.setBackground(background);
   }
 
   public playPlayerDamage(x: number, y: number, amount: number, animationSeconds: number): void {

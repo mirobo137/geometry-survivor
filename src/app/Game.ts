@@ -4,7 +4,7 @@ import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
-import { mergeBestRun, type CannonSkinSaveData, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
+import { mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -13,6 +13,7 @@ import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
+import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
@@ -54,6 +55,7 @@ export interface GameOptions {
   readonly startOnMenu?: boolean;
   readonly playerSkin?: PlayerSkinId;
   readonly cannonSkin?: CannonSkinId;
+  readonly background?: BackgroundId;
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
 }
@@ -70,6 +72,7 @@ export class Game {
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
   private readonly cannonSkin: CannonSkinId;
+  private readonly background: BackgroundId;
   private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
   private readonly saveStore: SaveStore;
@@ -158,6 +161,13 @@ export class Game {
     this.view.setCannonSkin(cannonSkins.selected);
   };
 
+  private readonly onStartBackgroundStateChange = (backgrounds: BackgroundSaveData): void => {
+    const saved = this.saveStore.load();
+    if (!backgrounds.unlocked.includes(backgrounds.selected)) return;
+    this.saveStore.save({ ...saved, backgrounds });
+    this.view.setBackground(backgrounds.selected);
+  };
+
   private readonly onPauseRestart = (): void => {
     if (this.contextLost) return;
     if (!this.gameState.restartFromPause()) return;
@@ -222,6 +232,7 @@ export class Game {
     const saved = this.saveStore.load();
     this.playerSkin = options.playerSkin ?? saved.skins.selected;
     this.cannonSkin = options.cannonSkin ?? saved.cannonSkins.selected;
+    this.background = options.background ?? saved.backgrounds.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
     this.profiler = new FrameProfiler(options.profileMode === true);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
@@ -235,7 +246,7 @@ export class Game {
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds
     });
-    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin);
+    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
@@ -272,10 +283,12 @@ export class Game {
         best: saved.best,
         skins: saved.skins,
         cannonSkins: saved.cannonSkins,
+        backgrounds: saved.backgrounds,
         onPlay: this.onStartPlay,
         onSettingsChange: this.onStartSettingsChange,
         onSkinStateChange: this.onStartSkinStateChange,
-        onCannonSkinStateChange: this.onStartCannonSkinStateChange
+        onCannonSkinStateChange: this.onStartCannonSkinStateChange,
+        onBackgroundStateChange: this.onStartBackgroundStateChange
       });
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;

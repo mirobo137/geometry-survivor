@@ -1066,3 +1066,21 @@ Puerta humana pendiente: ejecutar `?stress=1&quality=low&profile=1` en un
 telefono menos potente, mover durante un minuto y registrar modelo, navegador,
 FPS/p95 y cualquier congelamiento. Medium/High siguen siendo el objetivo
 visual; Low es el modo de seguridad, no un cambio de gameplay.
+
+## 46. Continuacion - tolerancia del smoke en runner compartido
+
+Fecha: 02-09-2026.
+
+- El registro de CI confirma que Vite termina correctamente (`built in 4.45s`).
+  El fallo posterior estaba en Playwright: dos smoke tests agotaron el limite
+  global de 30 s mientras Chromium headless esperaba el canvas tras resize.
+- El log local del navegador muestra `GPU stall due to ReadPixels` al crear
+  texturas WebGL. Es una demora del backend headless al rasterizar los masters
+  SVG durante varios boots, no una excepcion del runtime ni un error de Pages.
+- `playwright.config.ts` usa ahora 60 s por escenario y 10 s por asercion. Las
+  condiciones verificadas no cambian; solo se evita abortar una prueba valida
+  por la variacion de carga del runner compartido.
+
+Validacion posterior: typecheck, suite (131 tests), build local y builds de
+Poki/CrazyGames en verde. Los escenarios desktop y mobile ejecutados por
+separado pasan; CI debe repetir la matriz completa con el nuevo margen.

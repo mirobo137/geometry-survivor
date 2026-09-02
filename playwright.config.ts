@@ -2,6 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/browser',
+  // The resize matrix and WebGL boot can be slower on a shared GitHub runner
+  // than on a local workstation. Keep the assertions strict while allowing
+  // one complete smoke scenario to finish before Playwright aborts it.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: 1,

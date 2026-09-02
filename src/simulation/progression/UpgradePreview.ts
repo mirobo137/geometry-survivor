@@ -3,7 +3,9 @@ export type UpgradePreviewStat =
   | 'projectileDamage'
   | 'maxHealth'
   | 'projectileCooldown'
-  | 'projectileSpeed'
+  | 'experienceGain'
+  | 'healthRecovery'
+  | 'vampirism'
   | 'orbitRadius'
   | 'chainDamage'
   | 'armor';

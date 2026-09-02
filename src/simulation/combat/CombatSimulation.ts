@@ -69,6 +69,7 @@ export class CombatSimulation {
   };
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
+  private experienceMultiplier = 1;
   private readonly stressMode: boolean;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
@@ -103,6 +104,14 @@ export class CombatSimulation {
 
   public get currentChainDamage(): number {
     return this.weaponSystem.currentChainDamage;
+  }
+
+  public get currentExperienceMultiplier(): number {
+    return this.experienceMultiplier;
+  }
+
+  public get currentExperienceBonus(): number {
+    return Math.round((this.experienceMultiplier - 1) * 10_000) / 10_000;
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -147,6 +156,13 @@ export class CombatSimulation {
 
   public increaseChainDamage(amount: number): void {
     this.weaponSystem.increaseChainDamage(amount);
+  }
+
+  public increaseExperienceGain(amount: number): void {
+    this.experienceMultiplier = Math.max(
+      1,
+      Math.round((this.experienceMultiplier + Math.max(0, amount)) * 10_000) / 10_000
+    );
   }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
@@ -209,6 +225,7 @@ export class CombatSimulation {
     this.stats.experience = 0;
     this.stats.shotsFired = 0;
     this.stats.damageTaken = 0;
+    this.experienceMultiplier = 1;
     this.pendingEvents.length = 0;
     this.spawnAccumulator = 0;
     this.stressInitialized = false;
@@ -234,7 +251,7 @@ export class CombatSimulation {
     const x = enemy.x;
     const y = enemy.y;
     const kind = enemy.kind;
-    const experience = ENEMY_DEFINITIONS[kind].experience;
+    const experience = ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
     this.enemies.release(enemy);
     this.stats.kills += 1;
     this.stats.experience += experience;

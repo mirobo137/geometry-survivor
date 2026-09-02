@@ -13,5 +13,7 @@ export const PROJECTILE_POOL_CAPACITY = 300;
 export const PLAYER_RADIUS = 22;
 export const PLAYER_MAX_HEALTH = 100;
 export const PLAYER_SPEED = 250;
+export const PLAYER_HEALTH_RECOVERY_INTERVAL_SECONDS = 5;
+export const PLAYER_VAMPIRISM_COOLDOWN_SECONDS = 0.25;
 export const MAX_DEVICE_PIXEL_RATIO = 1.5;
 export const FIXED_STEP_SECONDS = 1 / 60;

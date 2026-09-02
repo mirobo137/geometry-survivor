@@ -16,15 +16,29 @@ const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   projectileDamage: 'Daño de proyectil',
   maxHealth: 'Vida máxima',
   projectileCooldown: 'Intervalo',
-  projectileSpeed: 'Velocidad de proyectil',
+  experienceGain: 'Experiencia',
+  healthRecovery: 'Recuperaci\u00f3n',
+  vampirism: 'Vampirismo',
   orbitRadius: 'Radio de órbita',
   chainDamage: 'Daño de cadena',
   armor: 'Armadura'
 };
 
-const formatValue = (value: number): string => Number.isInteger(value)
-  ? String(value)
-  : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+const PERCENTAGE_STATS: ReadonlySet<UpgradePreviewStat> = new Set([
+  'experienceGain',
+  'healthRecovery',
+  'vampirism'
+]);
+
+const formatValue = (value: number, stat: UpgradePreviewStat): string => {
+  if (PERCENTAGE_STATS.has(stat)) {
+    const percentage = value * 100;
+    return `${Number.isInteger(percentage) ? percentage : percentage.toFixed(1).replace(/0$/, '')}%`;
+  }
+  return Number.isInteger(value)
+    ? String(value)
+    : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+};
 
 export class LevelUpOverlay {
   private readonly root: HTMLElement;
@@ -103,8 +117,8 @@ export class LevelUpOverlay {
       const preview = getPreview(choice);
       if (preview) {
         const values = document.createElement('small');
-        values.textContent = `${STAT_LABELS[preview.stat]} ${formatValue(preview.before)} → ${formatValue(preview.after)}`;
-        values.setAttribute('aria-label', `Valor actual ${formatValue(preview.before)}, siguiente ${formatValue(preview.after)}`);
+        values.textContent = `${STAT_LABELS[preview.stat]} ${formatValue(preview.before, preview.stat)} → ${formatValue(preview.after, preview.stat)}`;
+        values.setAttribute('aria-label', `Valor actual ${formatValue(preview.before, preview.stat)}, siguiente ${formatValue(preview.after, preview.stat)}`);
         values.className = 'upgrade-card-preview';
         content.append(values);
       }

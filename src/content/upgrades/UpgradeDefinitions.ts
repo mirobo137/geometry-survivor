@@ -6,7 +6,9 @@ export type UpgradeId =
   | 'orbit_blade'
   | 'chain_lightning'
   | 'rapid_projectiles'
-  | 'longshot_projectiles'
+  | 'resonant_core'
+  | 'regenerative_reactor'
+  | 'vampiric_core'
   | 'orbit_reach'
   | 'chain_overload'
   | 'hardened_shell';
@@ -28,7 +30,9 @@ export type UpgradeEffect =
   | { readonly type: 'orbitBlade' }
   | { readonly type: 'chainLightning' }
   | { readonly type: 'projectileCooldown'; readonly amount: number }
-  | { readonly type: 'projectileSpeed'; readonly amount: number }
+  | { readonly type: 'experienceGain'; readonly amount: number }
+  | { readonly type: 'healthRecovery'; readonly amount: number }
+  | { readonly type: 'vampirism'; readonly amount: number }
   | { readonly type: 'orbitRadius'; readonly amount: number }
   | { readonly type: 'chainDamage'; readonly amount: number }
   | { readonly type: 'armor'; readonly amount: number };
@@ -81,10 +85,25 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     maxStacks: 4
   },
   {
-    id: 'longshot_projectiles',
-    title: 'Lanzamiento lejano',
-    description: '+90 velocidad de proyectil automático',
-    effect: { type: 'projectileSpeed', amount: 90 }
+    id: 'resonant_core',
+    title: 'Núcleo resonante',
+    description: '+12% experiencia por derrota',
+    effect: { type: 'experienceGain', amount: 0.12 },
+    maxStacks: 3
+  },
+  {
+    id: 'regenerative_reactor',
+    title: 'Reactor regenerativo',
+    description: 'Recupera 2% de vida máxima cada 5 s',
+    effect: { type: 'healthRecovery', amount: 0.02 },
+    maxStacks: 3
+  },
+  {
+    id: 'vampiric_core',
+    title: 'Núcleo vampírico',
+    description: 'Cura 1% de vida máxima al derrotar',
+    effect: { type: 'vampirism', amount: 0.01 },
+    maxStacks: 3
   },
   {
     id: 'orbit_reach',

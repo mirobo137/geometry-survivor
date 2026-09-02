@@ -97,7 +97,7 @@ Mediciones manuales aportadas desde Android Chrome:
 ### Progresión y arena
 
 - Level-up pausado con tres cartas táctiles.
-- Diez mejoras tipadas/data-driven.
+- Trece mejoras tipadas/data-driven.
 - Dos expansiones de arena: 1:00 y 3:00, con radio intermedio y pulso de resonancia.
 - Curva de spawn con seis fases de contenido entre 0:00 y 5:00.
 - Laser desde aproximadamente 0:45 con `telegraph → attack → recovery`, un impacto por activación y escape perpendicular.
@@ -1081,6 +1081,35 @@ Fecha: 02-09-2026.
   condiciones verificadas no cambian; solo se evita abortar una prueba valida
   por la variacion de carga del runner compartido.
 
-Validacion posterior: typecheck, suite (131 tests), build local y builds de
+Validacion previa: typecheck, suite (131 tests), build local y builds de
 Poki/CrazyGames en verde. Los escenarios desktop y mobile ejecutados por
 separado pasan; CI debe repetir la matriz completa con el nuevo margen.
+
+## 47. Continuacion - primeras pasivas de progresion
+
+Fecha: 02-09-2026.
+
+- `longshot_projectiles` sale del catalogo activo: la arena actual concentra
+  el combate cerca del jugador y la velocidad del proyectil no aporta una
+  decision perceptible durante la primera run.
+- `resonant_core` suma 12% de experiencia por acumulacion, hasta 3; el bonus
+  se aplica al derrotar y conserva los decimales antes de que
+  `LevelProgression` sincronice la experiencia mostrada.
+- `regenerative_reactor` suma 2% de vida maxima cada 5 segundos, hasta 3;
+  `PlayerModel` realiza los pulsos, evita sobrecurar y reinicia su temporizador
+  al reiniciar la run.
+- `vampiric_core` suma 1% de vida maxima por derrota aceptada, hasta 3. El
+  disparador se limita a una curacion cada 0.25 segundos para que una oleada
+  densa no cree una recuperacion infinita. No depende de la vida del enemigo.
+- Las tres cartas usan `UpgradeApplier`, previews numericos con porcentaje e
+  iconos SVG nuevos (`experience`, `repair`, `vampirism`). No se creo un
+  manager global ni se introdujeron imports de Pixi/DOM en simulacion.
+- La definicion activa queda en 13 mejoras: pasivas y rutas de armas siguen en
+  un catalogo tipado, con limites y prerequisitos data-driven.
+
+Validacion automatica de esta iteracion: typecheck correcto, 52 archivos de
+test y 135 pruebas pasando, incluidas curacion por pulso, vampirismo,
+experiencia bonificada, limites y previews. Pendiente humano: probar en
+movil una subida de nivel con cada carta, verificar que la barra de vida haga
+visible la recuperacion y confirmar que la experiencia acelera sin adelantar
+demasiado el primer nivel.

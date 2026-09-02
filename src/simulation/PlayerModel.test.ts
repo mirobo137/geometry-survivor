@@ -65,6 +65,35 @@ describe('PlayerModel', () => {
     expect(player.state.health).toBe(97);
   });
 
+  it('recovers a percentage of max health on a deterministic pulse', () => {
+    const player = new PlayerModel();
+    player.increaseHealthRecovery(0.02);
+    player.takeDamage(50);
+
+    player.update({ x: 0, y: 0 }, 4.99);
+    expect(player.state.health).toBe(50);
+
+    player.update({ x: 0, y: 0 }, 0.01);
+    expect(player.state.health).toBeCloseTo(52);
+
+    player.update({ x: 0, y: 0 }, 10);
+    expect(player.state.health).toBeCloseTo(56);
+  });
+
+  it('applies kill healing once per vampirism cooldown', () => {
+    const player = new PlayerModel();
+    player.increaseVampirism(0.01);
+    player.takeDamage(50);
+
+    expect(player.applyVampirism()).toBeCloseTo(1);
+    expect(player.state.health).toBeCloseTo(51);
+    expect(player.applyVampirism()).toBe(0);
+
+    player.update({ x: 0, y: 0 }, 0.25);
+    expect(player.applyVampirism()).toBeCloseTo(1);
+    expect(player.state.health).toBeCloseTo(52);
+  });
+
   it('restores the base player state for an in-place restart', () => {
     const player = new PlayerModel();
     player.increaseMovementSpeed(25);
@@ -84,6 +113,8 @@ describe('PlayerModel', () => {
       armor: 0
     });
     expect(player.currentMovementSpeed).toBe(PLAYER_SPEED);
+    expect(player.currentHealthRecovery).toBe(0);
+    expect(player.currentVampirism).toBe(0);
     expect(player.isAlive).toBe(true);
   });
 });

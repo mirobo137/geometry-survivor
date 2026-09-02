@@ -60,11 +60,23 @@ export class UpgradeApplier {
           before: this.combat.currentProjectileCooldown,
           after: Math.max(0.18, this.combat.currentProjectileCooldown - definition.effect.amount)
         };
-      case 'projectileSpeed':
+      case 'experienceGain':
         return {
-          stat: 'projectileSpeed',
-          before: this.combat.currentProjectileSpeed,
-          after: this.combat.currentProjectileSpeed + definition.effect.amount
+          stat: 'experienceGain',
+          before: this.combat.currentExperienceBonus,
+          after: this.combat.currentExperienceBonus + definition.effect.amount
+        };
+      case 'healthRecovery':
+        return {
+          stat: 'healthRecovery',
+          before: this.player.currentHealthRecovery,
+          after: this.player.currentHealthRecovery + definition.effect.amount
+        };
+      case 'vampirism':
+        return {
+          stat: 'vampirism',
+          before: this.player.currentVampirism,
+          after: this.player.currentVampirism + definition.effect.amount
         };
       case 'orbitRadius':
         return {
@@ -125,8 +137,14 @@ export class UpgradeApplier {
       case 'projectileCooldown':
         this.combat.decreaseProjectileCooldown(definition.effect.amount);
         break;
-      case 'projectileSpeed':
-        this.combat.increaseProjectileSpeed(definition.effect.amount);
+      case 'experienceGain':
+        this.combat.increaseExperienceGain(definition.effect.amount);
+        break;
+      case 'healthRecovery':
+        this.player.increaseHealthRecovery(definition.effect.amount);
+        break;
+      case 'vampirism':
+        this.player.increaseVampirism(definition.effect.amount);
         break;
       case 'orbitRadius':
         this.combat.increaseOrbitRadius(definition.effect.amount);

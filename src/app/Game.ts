@@ -332,6 +332,7 @@ export class Game {
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
     for (const event of this.combat.events) {
       if (event.type === 'enemyDefeated') {
+        this.player.applyVampirism();
         this.audio.playCue('enemy-defeated');
         this.view.playEnemyDefeat(event.x, event.y, event.kind);
         if (event.kind === 'tank' || event.kind === 'elite') {

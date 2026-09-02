@@ -6,7 +6,10 @@ export type UpgradeCardIconId =
   | 'core'
   | 'orbit'
   | 'chain'
-  | 'armor';
+  | 'armor'
+  | 'experience'
+  | 'repair'
+  | 'vampirism';
 
 export type UpgradeCardTone = 'cyan' | 'gold' | 'violet' | 'amber' | 'rose' | 'mint';
 
@@ -24,7 +27,9 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   orbit_blade: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
   chain_lightning: { icon: 'chain', tone: 'cyan', category: 'ENERGÍA' },
   rapid_projectiles: { icon: 'projectile', tone: 'amber', category: 'ARSENAL' },
-  longshot_projectiles: { icon: 'projectile', tone: 'gold', category: 'ARSENAL' },
+  resonant_core: { icon: 'experience', tone: 'gold', category: 'PROGRESIÓN' },
+  regenerative_reactor: { icon: 'repair', tone: 'mint', category: 'RECUPERACIÓN' },
+  vampiric_core: { icon: 'vampirism', tone: 'rose', category: 'SUPERVIVENCIA' },
   orbit_reach: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
   chain_overload: { icon: 'chain', tone: 'rose', category: 'ENERGÍA' },
   hardened_shell: { icon: 'armor', tone: 'mint', category: 'DEFENSA' }

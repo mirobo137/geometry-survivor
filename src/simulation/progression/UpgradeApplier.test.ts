@@ -71,6 +71,35 @@ describe('UpgradeApplier', () => {
     });
   });
 
+  it('applies the first passive progression cards through their domain contracts', () => {
+    const player = new PlayerModel();
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(player, combat);
+
+    expect(applier.apply('resonant_core')).toBe(true);
+    expect(applier.apply('regenerative_reactor')).toBe(true);
+    expect(applier.apply('vampiric_core')).toBe(true);
+
+    expect(combat.currentExperienceMultiplier).toBeCloseTo(1.12);
+    expect(player.currentHealthRecovery).toBeCloseTo(0.02);
+    expect(player.currentVampirism).toBeCloseTo(0.01);
+    expect(applier.getPreview('resonant_core')).toEqual({
+      stat: 'experienceGain',
+      before: 0.12,
+      after: 0.24
+    });
+    expect(applier.getPreview('regenerative_reactor')).toEqual({
+      stat: 'healthRecovery',
+      before: 0.02,
+      after: 0.04
+    });
+    expect(applier.getPreview('vampiric_core')).toEqual({
+      stat: 'vampirism',
+      before: 0.01,
+      after: 0.02
+    });
+  });
+
   it('clears acquired stacks so a restarted run starts with the base build', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
     expect(applier.apply('orbit_blade')).toBe(true);

@@ -42,6 +42,22 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBeGreaterThan(0);
   });
 
+  it('scales defeat experience without changing the direct-award event contract', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    combat.increaseExperienceGain(0.12);
+
+    let defeatEvent: Extract<(typeof combat.events)[number], { type: 'enemyDefeated' }> | undefined;
+    for (let index = 0; index < 12 * 60 && !defeatEvent; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      defeatEvent = combat.events.find((event) => event.type === 'enemyDefeated') as typeof defeatEvent;
+    }
+
+    expect(defeatEvent).toBeDefined();
+    expect(defeatEvent?.experience).toBeCloseTo(ENEMY_DEFINITIONS[defeatEvent!.kind].experience * 1.12);
+    expect(combat.stats.experience).toBeCloseTo(defeatEvent?.experience ?? 0);
+  });
+
   it('spawns one projectile from an alternating muzzle and exposes its shot origin', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

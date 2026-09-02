@@ -51,4 +51,20 @@
     <path d="M24 5 38 20 24 43 10 20z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
     <path d="M10 20h28M17 20l7 23 7-23M16 12l8 8 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="ui-upgrade-icon-critical" viewBox="0 0 48 48">
+    <path d="M26 4 10 27h12l-2 17 16-24H24z" fill="currentColor" opacity="0.3"/>
+    <path d="M26 4 10 27h12l-2 17 16-24H24z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="8" cy="12" r="2" fill="currentColor"/><circle cx="40" cy="35" r="2" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-shield" viewBox="0 0 48 48">
+    <path d="M24 4 40 10v12c0 10-6 17-16 22C14 39 8 32 8 22V10z" fill="currentColor" opacity="0.28"/>
+    <path d="M24 4 40 10v12c0 10-6 17-16 22C14 39 8 32 8 22V10z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M24 12v22M14 23h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+    <circle cx="24" cy="23" r="4" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-phase" viewBox="0 0 48 48">
+    <path d="m7 24 11-11 5 5 7-7 11 11-11 11-7-7-5 5z" fill="currentColor" opacity="0.3"/>
+    <path d="m7 24 11-11 5 5 7-7 11 11-11 11-7-7-5 5z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="m20 24 4-4 4 4-4 4z" fill="currentColor"/>
+  </symbol>
 </svg>

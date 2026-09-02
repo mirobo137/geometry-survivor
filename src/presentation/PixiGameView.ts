@@ -132,6 +132,10 @@ export class PixiGameView {
     this.screenFxView.play('player-damage');
   }
 
+  public playPlayerGuard(kind: 'shield' | 'phase', animationSeconds: number): void {
+    this.playerView.playGuard(kind, animationSeconds);
+  }
+
   public playPlayerDefeat(x: number, y: number): void {
     this.playerView.playDefeat();
     this.terminalFxView.playPlayerDefeat(x, y);

@@ -31,6 +31,7 @@ const TERMINAL_SUMMARY_DELAY_MS = 3_000;
 const HIT_STOP_SECONDS = {
   enemyDefeat: 0.008,
   playerDamage: 0.012,
+  playerGuard: 0.05,
   terminal: 0.024
 } as const;
 
@@ -340,8 +341,15 @@ export class Game {
         }
       }
       if (event.type === 'playerDamaged') {
-        this.audio.playCue('damage');
-        if (this.player.takeDamage(event.amount)) {
+        const resolution = this.player.resolveDamage(event.amount, this.arena.state.radius);
+        if (resolution.outcome === 'shielded' || resolution.outcome === 'evaded') {
+          this.view.playPlayerGuard(
+            resolution.outcome === 'evaded' ? 'phase' : 'shield',
+            this.presentationTime
+          );
+          this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
+        } else if (resolution.outcome === 'damaged') {
+          this.audio.playCue('damage');
           this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
           this.triggerHitStop(this.player.isAlive ? HIT_STOP_SECONDS.playerDamage : HIT_STOP_SECONDS.terminal);
           if (!this.player.isAlive) {

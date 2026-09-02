@@ -14,6 +14,9 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainder}`;
 };
 
+/** XP keeps fractional precision in simulation but stays integer in the HUD. */
+export const formatExperience = (experience: number): string => String(Math.max(0, Math.floor(experience)));
+
 export class GameHud {
   private readonly timeElement: HTMLElement;
   private readonly healthElement: HTMLElement;
@@ -42,7 +45,7 @@ export class GameHud {
     const text = [
       formatTime(values.elapsedSeconds),
       `HP ${Math.ceil(values.health)}/${values.maxHealth}`,
-      `XP ${values.xp}`,
+      `XP ${formatExperience(values.xp)}`,
       `K ${values.kills}`,
       `LV ${values.level}`
     ];

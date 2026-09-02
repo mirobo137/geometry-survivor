@@ -58,6 +58,27 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBeCloseTo(defeatEvent?.experience ?? 0);
   });
 
+  it('stores deterministic critical damage on projectile hits', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const enemy = combat.enemies.acquire();
+    if (!enemy) throw new Error('No se pudo preparar el enemigo critico');
+    enemy.kind = 'tank';
+    enemy.x = player.state.x + 180;
+    enemy.y = player.state.y;
+    enemy.radius = ENEMY_DEFINITIONS.tank.radius;
+    enemy.maxHealth = 10_000;
+    enemy.health = 10_000;
+    enemy.speed = 0;
+    enemy.contactDamage = 0;
+
+    combat.increaseCriticalChance(1);
+    runSeconds(combat, player, 0.55);
+
+    const projectile = combat.projectiles.states.find((candidate) => candidate.active);
+    expect(projectile?.damage).toBeCloseTo(28);
+  });
+
   it('spawns one projectile from an alternating muzzle and exposes its shot origin', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

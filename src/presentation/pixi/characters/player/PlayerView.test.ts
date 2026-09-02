@@ -34,7 +34,7 @@ const state = (x: number, y: number, health = 100) => ({
 describe('PlayerView', () => {
   it('composes aligned pieces, supports skins and animates damage locally', () => {
     const view = new PlayerView(textures);
-    expect(view.root.children).toHaveLength(10);
+    expect(view.root.children).toHaveLength(11);
     expect(view.skinId).toBe('cyan');
     view.render(state(300, 400), 0);
     view.render(state(320, 400), 0.4);

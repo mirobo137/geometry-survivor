@@ -19,6 +19,7 @@ const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   experienceGain: 'Experiencia',
   healthRecovery: 'Recuperaci\u00f3n',
   vampirism: 'Vampirismo',
+  criticalChance: 'Cr\u00edtico',
   orbitRadius: 'Radio de órbita',
   chainDamage: 'Daño de cadena',
   armor: 'Armadura'
@@ -27,7 +28,8 @@ const STAT_LABELS: Record<UpgradePreviewStat, string> = {
 const PERCENTAGE_STATS: ReadonlySet<UpgradePreviewStat> = new Set([
   'experienceGain',
   'healthRecovery',
-  'vampirism'
+  'vampirism',
+  'criticalChance'
 ]);
 
 const formatValue = (value: number, stat: UpgradePreviewStat): string => {

@@ -27,6 +27,7 @@ export class PlayerView {
   private readonly core: Sprite;
   private readonly accent: Sprite;
   private readonly damageFlash: Sprite;
+  private readonly guardFx: Graphics;
   private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
   private skin: PlayerSkinId = 'cyan';
@@ -49,6 +50,8 @@ export class PlayerView {
   private lastAnimationSeconds: number | null = null;
   private movementStrength = 0;
   private movementTilt = 0;
+  private guardAtSeconds = Number.NEGATIVE_INFINITY;
+  private guardKind: 'shield' | 'phase' = 'shield';
 
   public constructor(
     textures: PlayerTextureSet,
@@ -67,13 +70,14 @@ export class PlayerView {
     this.accent = new Sprite(textures.accent);
     this.damageFlash = new Sprite(textures.body);
     this.shotFlash = new Graphics();
+    this.guardFx = new Graphics();
     this.signature = new Sprite(textures.signature.cyan);
     this.damageFlash.tint = 0xffffff;
     this.damageFlash.alpha = 0;
     for (const part of [this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash]) {
       part.anchor.set(0.5);
     }
-    this.root.addChild(this.shadow, this.movementTrail, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash);
+    this.root.addChild(this.shadow, this.movementTrail, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash, this.guardFx);
     this.setCannonSkin(cannonSkin);
     this.setSkin(skin);
   }
@@ -110,6 +114,11 @@ export class PlayerView {
   public playDamage(amount: number, animationSeconds: number): void {
     this.damageAtSeconds = animationSeconds;
     this.damageStrength = Math.min(1.4, Math.max(0.6, amount / 12));
+  }
+
+  public playGuard(kind: 'shield' | 'phase', animationSeconds: number): void {
+    this.guardKind = kind;
+    this.guardAtSeconds = animationSeconds;
   }
 
   /** Presentation-only recoil signal; weapon cadence still belongs to simulation. */
@@ -160,6 +169,8 @@ export class PlayerView {
       ? Math.min(1, damageAge / PLAYER_VISUAL_TOKENS.damageFlashSeconds)
       : 1;
     const damagePulse = damageProgress < 1 ? Math.sin(damageProgress * Math.PI) * this.damageStrength : 0;
+    const guardAge = animationSeconds - this.guardAtSeconds;
+    const guardProgress = guardAge >= 0 ? Math.min(1, guardAge / 0.42) : 1;
     const shotAge = animationSeconds - this.shotAtSeconds;
     const shotProgress = shotAge >= 0
       ? Math.min(1, shotAge / PLAYER_VISUAL_TOKENS.shotFlashSeconds)
@@ -189,6 +200,7 @@ export class PlayerView {
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
+    this.renderGuardFx(guardProgress);
     this.renderMovementTrail(animationSeconds);
     this.renderShotFlash(shotPulse, state);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
@@ -214,6 +226,8 @@ export class PlayerView {
     this.movementTilt = 0;
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
+    this.guardAtSeconds = Number.NEGATIVE_INFINITY;
+    this.guardKind = 'shield';
     this.shotAtSeconds = Number.NEGATIVE_INFINITY;
     this.shotDirectionX = 0;
     this.shotDirectionY = -1;
@@ -328,5 +342,30 @@ export class PlayerView {
       .beginPath()
       .circle(localX, localY, 1.6 + pulse * 1.8)
       .fill({ color: 0xffffff, alpha: alpha * 0.85 });
+  }
+
+  private renderGuardFx(progress: number): void {
+    this.guardFx.clear();
+    if (progress >= 1) {
+      this.guardFx.visible = false;
+      return;
+    }
+    const pulse = Math.sin(progress * Math.PI);
+    const color = this.guardKind === 'phase' ? 0x75e6ff : 0xffd166;
+    const radius = 28 + progress * 18;
+    this.guardFx
+      .beginPath()
+      .circle(0, 0, radius)
+      .stroke({ color, width: 2.8 + pulse * 2.2, alpha: pulse * 0.9 });
+    if (this.guardKind === 'phase') {
+      this.guardFx
+        .beginPath()
+        .moveTo(-radius * 0.6, -radius * 0.6)
+        .lineTo(radius * 0.6, radius * 0.6)
+        .moveTo(radius * 0.6, -radius * 0.6)
+        .lineTo(-radius * 0.6, radius * 0.6)
+        .stroke({ color, width: 1.8, alpha: pulse * 0.7 });
+    }
+    this.guardFx.visible = true;
   }
 }

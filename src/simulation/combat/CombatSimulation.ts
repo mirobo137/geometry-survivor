@@ -114,6 +114,10 @@ export class CombatSimulation {
     return Math.round((this.experienceMultiplier - 1) * 10_000) / 10_000;
   }
 
+  public get currentCriticalChance(): number {
+    return this.weaponSystem.currentCriticalChance;
+  }
+
   public increaseProjectileDamage(amount: number): void {
     this.weaponSystem.increaseProjectileDamage(amount);
   }
@@ -163,6 +167,10 @@ export class CombatSimulation {
       1,
       Math.round((this.experienceMultiplier + Math.max(0, amount)) * 10_000) / 10_000
     );
+  }
+
+  public increaseCriticalChance(amount: number): void {
+    this.weaponSystem.increaseCriticalChance(amount);
   }
 
   public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {

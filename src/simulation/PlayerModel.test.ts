@@ -94,6 +94,36 @@ describe('PlayerModel', () => {
     expect(player.state.health).toBeCloseTo(52);
   });
 
+  it('blocks one damage packet with a rechargeable shield', () => {
+    const player = new PlayerModel();
+    player.enableShield(1);
+
+    expect(player.resolveDamage(50).outcome).toBe('shielded');
+    expect(player.state.health).toBe(100);
+
+    player.update({ x: 0, y: 0 }, 0.45);
+    expect(player.resolveDamage(50).outcome).toBe('damaged');
+    expect(player.state.health).toBe(50);
+
+    player.update({ x: 0, y: 0 }, 1);
+    expect(player.resolveDamage(50).outcome).toBe('shielded');
+    expect(player.state.health).toBe(50);
+  });
+
+  it('phase-shifts once to a clamped safe position before taking damage', () => {
+    const player = new PlayerModel();
+    player.enablePhaseShift(1, 52);
+
+    const result = player.resolveDamage(50, ARENA_RADIUS);
+    expect(result.outcome).toBe('evaded');
+    expect(player.state.health).toBe(100);
+    expect(player.state.x).toBeCloseTo(ARENA_CENTER.x + 52);
+
+    player.update({ x: 0, y: 0 }, 0.45);
+    expect(player.resolveDamage(50).outcome).toBe('damaged');
+    expect(player.state.health).toBe(50);
+  });
+
   it('restores the base player state for an in-place restart', () => {
     const player = new PlayerModel();
     player.increaseMovementSpeed(25);

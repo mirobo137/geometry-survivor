@@ -11,6 +11,8 @@ import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 
 const FULL_CIRCLE = Math.PI * 2;
+const CRITICAL_MULTIPLIER = 2;
+const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const ORBIT_DEFINITION = WEAPON_DEFINITIONS.orbit;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
@@ -48,6 +50,8 @@ export class CombatWeaponSystem {
   private orbitDamage = ORBIT_DEFINITION.damage;
   private chainLightningUnlocked = false;
   private chainDamage = CHAIN_DEFINITION.damage;
+  private criticalChance = 0;
+  private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
   private nextMuzzle: ProjectileMuzzle = 0;
   private readonly chainHitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
@@ -112,6 +116,14 @@ export class CombatWeaponSystem {
     return this.chainDamage;
   }
 
+  public get currentCriticalChance(): number {
+    return this.criticalChance;
+  }
+
+  public get criticalMultiplier(): number {
+    return CRITICAL_MULTIPLIER;
+  }
+
   public reset(): void {
     this.projectiles.reset();
     for (const blade of this.orbitBlades) {
@@ -140,6 +152,8 @@ export class CombatWeaponSystem {
     this.orbitDamage = ORBIT_DEFINITION.damage;
     this.chainLightningUnlocked = false;
     this.chainDamage = CHAIN_DEFINITION.damage;
+    this.criticalChance = 0;
+    this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
     this.nextMuzzle = 0;
     this.chainHitIndices.fill(-1);
@@ -199,6 +213,10 @@ export class CombatWeaponSystem {
 
   public increaseChainDamage(amount: number): void {
     this.chainDamage += Math.max(0, amount);
+  }
+
+  public increaseCriticalChance(amount: number): void {
+    this.criticalChance = Math.min(1, Math.max(0, this.criticalChance + Math.max(0, amount)));
   }
 
   public update(dtSeconds: number, player: PlayerState): void {
@@ -289,7 +307,7 @@ export class CombatWeaponSystem {
     projectile.vx = directionX * this.projectileSpeed;
     projectile.vy = directionY * this.projectileSpeed;
     projectile.radius = PROJECTILE_DEFINITION.radius;
-    projectile.damage = this.projectileDamage;
+    projectile.damage = this.rollCriticalDamage(this.projectileDamage);
     projectile.ageSeconds = 0;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     projectile.muzzle = muzzle;
@@ -364,7 +382,7 @@ export class CombatWeaponSystem {
         if (!enemy.active || enemy.orbitHitCooldown > 0) continue;
         const hitDistance = blade.radius + enemy.radius;
         if (Math.hypot(blade.x - enemy.x, blade.y - enemy.y) > hitDistance) continue;
-        enemy.health -= this.orbitDamage;
+        enemy.health -= this.rollCriticalDamage(this.orbitDamage);
         enemy.orbitHitCooldown = ORBIT_DEFINITION.hitCooldownSeconds;
         if (enemy.health <= 0) this.onEnemyDefeated(enemy);
         break;
@@ -395,7 +413,7 @@ export class CombatWeaponSystem {
       segment.y2 = enemy.y;
       segment.lifeSeconds = CHAIN_DEFINITION.segmentLifetimeSeconds;
       this.chainHitIndices[targetIndex] = enemyIndex;
-      enemy.health -= this.chainDamage;
+      enemy.health -= this.rollCriticalDamage(this.chainDamage);
       if (enemy.health <= 0) this.onEnemyDefeated(enemy);
       currentX = enemy.x;
       currentY = enemy.y;
@@ -432,5 +450,20 @@ export class CombatWeaponSystem {
         break;
       }
     }
+  }
+
+  private rollCriticalDamage(baseDamage: number): number {
+    if (this.criticalChance <= 0) return baseDamage;
+    if (this.nextRandom() >= this.criticalChance) return baseDamage;
+    return baseDamage * CRITICAL_MULTIPLIER;
+  }
+
+  private nextRandom(): number {
+    let state = this.randomState;
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    this.randomState = state >>> 0;
+    return this.randomState / 0x1_0000_0000;
   }
 }

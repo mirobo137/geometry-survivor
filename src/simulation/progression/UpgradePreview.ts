@@ -6,6 +6,7 @@ export type UpgradePreviewStat =
   | 'experienceGain'
   | 'healthRecovery'
   | 'vampirism'
+  | 'criticalChance'
   | 'orbitRadius'
   | 'chainDamage'
   | 'armor';

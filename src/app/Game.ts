@@ -341,12 +341,9 @@ export class Game {
         }
       }
       if (event.type === 'playerDamaged') {
-        const resolution = this.player.resolveDamage(event.amount, this.arena.state.radius);
-        if (resolution.outcome === 'shielded' || resolution.outcome === 'evaded') {
-          this.view.playPlayerGuard(
-            resolution.outcome === 'evaded' ? 'phase' : 'shield',
-            this.presentationTime
-          );
+        const resolution = this.player.resolveDamage(event.amount);
+        if (resolution.outcome === 'shielded') {
+          this.view.playPlayerGuard(this.presentationTime);
           this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
         } else if (resolution.outcome === 'damaged') {
           this.audio.playCue('damage');
@@ -385,7 +382,7 @@ export class Game {
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.syncShotFeedback();
-    this.view.renderPlayer(this.player.state, this.presentationTime);
+    this.view.renderPlayer(this.player.state, this.presentationTime, this.player.shieldChargeProgress);
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
     this.view.updateTerminalFx(deltaSeconds);
     this.view.renderLevelUpFx(deltaSeconds);

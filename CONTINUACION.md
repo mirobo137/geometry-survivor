@@ -62,7 +62,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 140 tests unitarios/integración en 53 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
+- Última auditoría local: typecheck correcto, 139 tests unitarios/integración en 53 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -86,8 +86,8 @@ Mediciones manuales aportadas desde Android Chrome:
 
 ### Simulación y combate
 
-- Jugador con velocidad, vida, armadura, invulnerabilidad, escudo recargable,
-  desplazamiento de fase y límite circular.
+- Jugador con velocidad, vida, armadura, invulnerabilidad, escudo recargable y
+  límite circular.
 - Chaser, Fast, Tank y variante Elite data-driven.
 - Elite determinista desde 2:00.
 - Projectile, Orbit y Chain Lightning con críticos deterministas.
@@ -98,7 +98,7 @@ Mediciones manuales aportadas desde Android Chrome:
 ### Progresión y arena
 
 - Level-up pausado con tres cartas táctiles.
-- Dieciséis mejoras tipadas/data-driven.
+- Quince mejoras tipadas/data-driven.
 - Dos expansiones de arena: 1:00 y 3:00, con radio intermedio y pulso de resonancia.
 - Curva de spawn con seis fases de contenido entre 0:00 y 5:00.
 - Laser desde aproximadamente 0:45 con `telegraph → attack → recovery`, un impacto por activación y escape perpendicular.
@@ -1125,27 +1125,48 @@ Fecha: 02-09-2026.
   aplica multiplicador fijo 2x a Projectile, Orbit y Chain Lightning. El azar
   usa una semilla propia de simulacion y se reinicia con la run, por lo que no
   depende del framerate ni de Pixi.
-- `recharging_shield` agrega una carga que bloquea un paquete de dano y se
-  recarga en 10 segundos. La carga protege contacto, Laser y boss; no se
-  consumen dos defensas en el mismo paquete porque la prioridad es fase,
-  escudo, armadura y vida.
-- `phase_shift` evita un paquete de dano cada 10 segundos y desplaza al
-  jugador 52 unidades siguiendo su ultimo movimiento (o una direccion
-  tangencial determinista si estaba quieto). El destino se clampa al radio de
-  arena, sin cambiar las reglas por resize.
-- La presentacion muestra un pulso procedural de Pixi dorado al bloquear con
-  escudo y cyan al desplazar por fase; la simulacion permanece libre de Pixi y
-  DOM.
-- El catalogo activo queda en 16 mejoras y conserva `UpgradeApplier` como
+- `recharging_shield` conserva una carga que bloquea un paquete de dano y se
+  recarga en 10 segundos. La carga protege contacto, Laser y boss; mientras se
+  recompone expone un progreso 0..1 para la vista.
+- Se retira `phase_shift`: su desplazamiento se solapaba con el escudo y no
+  aportaba una decision suficientemente distinta durante la primera run.
+- La presentacion mantiene un aura protectora cyan alrededor del jugador. Al
+  bloquear desaparece la carga completa, muestra un pulso dorado de impacto y
+  vuelve a llenarse de forma radial hasta recuperar el escudo.
+- El catalogo activo queda en 15 mejoras y conserva `UpgradeApplier` como
   unico punto de aplicacion, con previews porcentuales para experiencia,
   regeneracion, vampirismo y critico.
 
 Validacion automatica: `npm run typecheck` correcto; suite unitaria con 53
-archivos y 140 pruebas pasando; builds `local`, `poki` y `crazygames` en verde.
+archivos y 139 pruebas pasando; builds `local`, `poki` y `crazygames` en verde.
 El smoke Playwright ejecuto los 9 escenarios desktop/mobile correctamente; el
 proceso deja vivo el servidor de preview en este runner compartido y hubo que
 terminarlo despues de imprimir los nueve `ok`, sin fallos de asercion.
 
 Puerta humana: comprobar en movil que el XP ya no satura el HUD, que el escudo
-absorbe un impacto y vuelve tras 10 segundos, que fase no atraviesa el borde y
-que los criticos se perciben sin volver dominante la carta.
+absorbe un impacto, desaparece visualmente y vuelve a llenarse durante 10
+segundos, y que los criticos se perciben sin volver dominante la carta.
+
+## 49. Continuacion - escudo visual y retirada de fase
+
+Fecha: 02-09-2026.
+
+- Se retira por completo `phase_shift`: desaparece del catalogo activo, sus
+  tipos, icono SVG, aplicador y pruebas. El pool queda en 15 mejoras.
+- `recharging_shield` conserva una unica carga, bloquea el siguiente paquete
+  de dano y se rearma tras 10 segundos. `PlayerModel.shieldChargeProgress`
+  expone una fraccion determinista 0..1 sin introducir estado de Pixi en la
+  simulacion.
+- `PlayerView` dibuja un aura cyan persistente con arco radial de carga; al
+  bloquear, el aura queda vacia y aparece un pulso dorado con fragmentos. El
+  arco se recompone durante la recarga y recupera un anillo completo al 100%.
+- La fachada `PixiGameView` y `Game` solo transportan el progreso y el evento;
+  las reglas siguen en `PlayerModel` y la carta sigue aplicandose únicamente
+  desde `UpgradeApplier`.
+
+Validacion automatica cerrada: typecheck correcto, suite con 53 archivos y 139
+pruebas pasando, builds `local`, `poki` y `crazygames` en verde, y los 9 smoke
+tests desktop/mobile completados sin aserciones fallidas (el servidor de
+preview se mantuvo vivo al terminar y se cerro manualmente). Puerta humana:
+comprobar el aura llena, el vaciado al recibir un impacto bloqueado y la
+recomposicion gradual en un telefono real.

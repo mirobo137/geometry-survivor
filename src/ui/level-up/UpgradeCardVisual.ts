@@ -11,8 +11,7 @@ export type UpgradeCardIconId =
   | 'repair'
   | 'vampirism'
   | 'critical'
-  | 'shield'
-  | 'phase';
+  | 'shield';
 
 export type UpgradeCardTone = 'cyan' | 'gold' | 'violet' | 'amber' | 'rose' | 'mint';
 
@@ -35,7 +34,6 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   vampiric_core: { icon: 'vampirism', tone: 'rose', category: 'SUPERVIVENCIA' },
   critical_impact: { icon: 'critical', tone: 'amber', category: 'ARSENAL' },
   recharging_shield: { icon: 'shield', tone: 'cyan', category: 'DEFENSA' },
-  phase_shift: { icon: 'phase', tone: 'violet', category: 'MOVILIDAD' },
   orbit_reach: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
   chain_overload: { icon: 'chain', tone: 'rose', category: 'ENERGÍA' },
   hardened_shell: { icon: 'armor', tone: 'mint', category: 'DEFENSA' }

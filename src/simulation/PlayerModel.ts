@@ -4,8 +4,6 @@ import {
   PLAYER_MAX_HEALTH,
   PLAYER_HEALTH_RECOVERY_INTERVAL_SECONDS,
   PLAYER_RADIUS,
-  PLAYER_PHASE_SHIFT_COOLDOWN_SECONDS,
-  PLAYER_PHASE_SHIFT_DISTANCE,
   PLAYER_SHIELD_RECHARGE_SECONDS,
   PLAYER_SPEED,
   PLAYER_VAMPIRISM_COOLDOWN_SECONDS
@@ -21,7 +19,7 @@ export interface PlayerState {
   armor: number;
 }
 
-export type PlayerDamageOutcome = 'ignored' | 'damaged' | 'shielded' | 'evaded';
+export type PlayerDamageOutcome = 'ignored' | 'damaged' | 'shielded';
 
 export interface PlayerDamageResolution {
   readonly outcome: PlayerDamageOutcome;
@@ -44,27 +42,17 @@ export class PlayerModel {
   private healthRecoveryTimer = 0;
   private vampirismPercent = 0;
   private vampirismCooldownSeconds = 0;
-  private lastMovementX = 0;
-  private lastMovementY = 0;
   private shieldEnabled = false;
   private shieldCharges = 0;
   private shieldRechargeSeconds = PLAYER_SHIELD_RECHARGE_SECONDS;
   private shieldRechargeTimer = 0;
-  private phaseShiftEnabled = false;
-  private phaseShiftReady = false;
-  private phaseShiftCooldownSeconds = PLAYER_PHASE_SHIFT_COOLDOWN_SECONDS;
-  private phaseShiftDistance = PLAYER_PHASE_SHIFT_DISTANCE;
-  private phaseShiftTimer = 0;
 
   public update(input: MovementVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
     const dt = Math.max(0, dtSeconds);
     this.invulnerabilitySeconds = Math.max(0, this.invulnerabilitySeconds - dt);
     this.vampirismCooldownSeconds = Math.max(0, this.vampirismCooldownSeconds - dt);
     this.updateShieldRecharge(dt);
-    this.updatePhaseShift(dt);
     this.updateHealthRecovery(dt);
-    this.lastMovementX = input.x;
-    this.lastMovementY = input.y;
     this.state.x += input.x * this.movementSpeed * dt;
     this.state.y += input.y * this.movementSpeed * dt;
 
@@ -84,16 +72,9 @@ export class PlayerModel {
   }
 
   /** Resolves a damage packet in a deterministic defensive priority order. */
-  public resolveDamage(amount: number, arenaRadius = ARENA_RADIUS): PlayerDamageResolution {
+  public resolveDamage(amount: number): PlayerDamageResolution {
     if (amount <= 0 || this.invulnerabilitySeconds > 0 || this.state.health <= 0) {
       return { outcome: 'ignored', incomingAmount: amount, appliedAmount: 0 };
-    }
-    if (this.phaseShiftEnabled && this.phaseShiftReady) {
-      this.phaseShiftReady = false;
-      this.phaseShiftTimer = 0;
-      this.teleportToPhaseSafePoint(arenaRadius);
-      this.invulnerabilitySeconds = 0.45;
-      return { outcome: 'evaded', incomingAmount: amount, appliedAmount: 0 };
     }
     if (this.shieldEnabled && this.shieldCharges > 0) {
       this.shieldCharges = 0;
@@ -128,17 +109,6 @@ export class PlayerModel {
     this.shieldCharges = 1;
     this.shieldRechargeSeconds = Math.max(0.1, rechargeSeconds);
     this.shieldRechargeTimer = 0;
-  }
-
-  public enablePhaseShift(
-    cooldownSeconds = PLAYER_PHASE_SHIFT_COOLDOWN_SECONDS,
-    distance = PLAYER_PHASE_SHIFT_DISTANCE
-  ): void {
-    this.phaseShiftEnabled = true;
-    this.phaseShiftReady = true;
-    this.phaseShiftCooldownSeconds = Math.max(0.1, cooldownSeconds);
-    this.phaseShiftTimer = 0;
-    this.phaseShiftDistance = Math.max(0, distance);
   }
 
   /** Applies one kill-triggered heal, throttled to prevent dense waves from snowballing. */
@@ -177,16 +147,11 @@ export class PlayerModel {
     return this.shieldRechargeSeconds;
   }
 
-  public get hasPhaseShift(): boolean {
-    return this.phaseShiftEnabled;
-  }
-
-  public get phaseShiftAvailable(): boolean {
-    return this.phaseShiftEnabled && this.phaseShiftReady;
-  }
-
-  public get currentPhaseShiftCooldownSeconds(): number {
-    return this.phaseShiftCooldownSeconds;
+  /** 0..1 radial recharge amount used only by the presentation layer. */
+  public get shieldChargeProgress(): number {
+    if (!this.shieldEnabled) return 0;
+    if (this.shieldCharges > 0) return 1;
+    return Math.min(1, Math.max(0, this.shieldRechargeTimer / this.shieldRechargeSeconds));
   }
 
   public reset(): void {
@@ -201,17 +166,10 @@ export class PlayerModel {
     this.healthRecoveryTimer = 0;
     this.vampirismPercent = 0;
     this.vampirismCooldownSeconds = 0;
-    this.lastMovementX = 0;
-    this.lastMovementY = 0;
     this.shieldEnabled = false;
     this.shieldCharges = 0;
     this.shieldRechargeSeconds = PLAYER_SHIELD_RECHARGE_SECONDS;
     this.shieldRechargeTimer = 0;
-    this.phaseShiftEnabled = false;
-    this.phaseShiftReady = false;
-    this.phaseShiftCooldownSeconds = PLAYER_PHASE_SHIFT_COOLDOWN_SECONDS;
-    this.phaseShiftDistance = PLAYER_PHASE_SHIFT_DISTANCE;
-    this.phaseShiftTimer = 0;
   }
 
   public increaseMovementSpeed(amount: number): void {
@@ -246,48 +204,4 @@ export class PlayerModel {
     }
   }
 
-  private updatePhaseShift(dtSeconds: number): void {
-    if (!this.phaseShiftEnabled || this.phaseShiftReady || !this.isAlive || dtSeconds <= 0) return;
-    this.phaseShiftTimer += dtSeconds;
-    if (this.phaseShiftTimer >= this.phaseShiftCooldownSeconds) {
-      this.phaseShiftReady = true;
-      this.phaseShiftTimer = 0;
-    }
-  }
-
-  private teleportToPhaseSafePoint(arenaRadius: number): void {
-    let directionX = this.lastMovementX;
-    let directionY = this.lastMovementY;
-    const inputLength = Math.hypot(directionX, directionY);
-    if (inputLength <= 0.001) {
-      const radialX = this.state.x - ARENA_CENTER.x;
-      const radialY = this.state.y - ARENA_CENTER.y;
-      const radialLength = Math.hypot(radialX, radialY);
-      if (radialLength > 0.001) {
-        directionX = -radialY / radialLength;
-        directionY = radialX / radialLength;
-      } else {
-        directionX = 1;
-        directionY = 0;
-      }
-    } else {
-      directionX /= inputLength;
-      directionY /= inputLength;
-    }
-    this.state.x += directionX * this.phaseShiftDistance;
-    this.state.y += directionY * this.phaseShiftDistance;
-    this.clampToArena(arenaRadius);
-  }
-
-  private clampToArena(arenaRadius: number): void {
-    const maxDistance = Math.max(0, arenaRadius - this.state.radius);
-    const dx = this.state.x - ARENA_CENTER.x;
-    const dy = this.state.y - ARENA_CENTER.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance > maxDistance) {
-      const factor = maxDistance / distance;
-      this.state.x = ARENA_CENTER.x + dx * factor;
-      this.state.y = ARENA_CENTER.y + dy * factor;
-    }
-  }
 }

@@ -11,7 +11,6 @@ export type UpgradeId =
   | 'vampiric_core'
   | 'critical_impact'
   | 'recharging_shield'
-  | 'phase_shift'
   | 'orbit_reach'
   | 'chain_overload'
   | 'hardened_shell';
@@ -38,7 +37,6 @@ export type UpgradeEffect =
   | { readonly type: 'vampirism'; readonly amount: number }
   | { readonly type: 'criticalChance'; readonly amount: number }
   | { readonly type: 'shield'; readonly rechargeSeconds: number }
-  | { readonly type: 'phaseShift'; readonly cooldownSeconds: number; readonly distance: number }
   | { readonly type: 'orbitRadius'; readonly amount: number }
   | { readonly type: 'chainDamage'; readonly amount: number }
   | { readonly type: 'armor'; readonly amount: number };
@@ -123,13 +121,6 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Escudo de fase',
     description: 'Bloquea un impacto y se recarga en 10 s',
     effect: { type: 'shield', rechargeSeconds: 10 },
-    maxStacks: 1
-  },
-  {
-    id: 'phase_shift',
-    title: 'Desplazamiento de fase',
-    description: 'Evita un impacto y se desplaza; recarga en 10 s',
-    effect: { type: 'phaseShift', cooldownSeconds: 10, distance: 52 },
     maxStacks: 1
   },
   {

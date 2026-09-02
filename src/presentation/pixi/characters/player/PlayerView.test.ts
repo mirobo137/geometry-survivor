@@ -36,7 +36,16 @@ describe('PlayerView', () => {
     const view = new PlayerView(textures);
     expect(view.root.children).toHaveLength(11);
     expect(view.skinId).toBe('cyan');
-    view.render(state(300, 400), 0);
+    view.render(state(300, 400), 0, 1);
+    const shield = view.root.children[10] as { visible: boolean };
+    expect(shield.visible).toBe(true);
+    view.render(state(300, 400), 0.1, 0.5);
+    expect(shield.visible).toBe(true);
+    view.render(state(300, 400), 0.2, 0);
+    expect(shield.visible).toBe(false);
+    view.playGuard(0.2);
+    view.render(state(300, 400), 0.3, 0);
+    expect(shield.visible).toBe(true);
     view.render(state(320, 400), 0.4);
     expect(view.root.position.x).toBe(320);
     expect(view.root.rotation).toBeCloseTo(Math.PI / 2);

@@ -5,7 +5,7 @@ describe('UpgradeDefinitions', () => {
   it('keeps every upgrade identifiable and data-driven', () => {
     const ids = UPGRADE_DEFINITIONS.map((upgrade) => upgrade.id);
 
-    expect(ids).toHaveLength(16);
+    expect(ids).toHaveLength(15);
     expect(new Set(ids).size).toBe(ids.length);
     expect(UPGRADE_DEFINITIONS.every((upgrade) => upgrade.title && upgrade.description && upgrade.effect)).toBe(true);
   });

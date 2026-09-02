@@ -18,7 +18,7 @@ describe('level-up SVG assets', () => {
     expect(iconsSvg).toContain('viewBox="0 0 48 48"');
     expect(iconsSvg).toContain('preserveAspectRatio="xMidYMid meet"');
     const ids = [...iconsSvg.matchAll(/<symbol\s+id="([^"]+)"/g)].map((match) => match[1]);
-    expect(ids).toHaveLength(12);
+    expect(ids).toHaveLength(11);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.every((id) => id.startsWith('ui-upgrade-icon-'))).toBe(true);
     expect(iconsSvg).not.toMatch(unsafeSvg);

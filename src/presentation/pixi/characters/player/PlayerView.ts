@@ -51,7 +51,6 @@ export class PlayerView {
   private movementStrength = 0;
   private movementTilt = 0;
   private guardAtSeconds = Number.NEGATIVE_INFINITY;
-  private guardKind: 'shield' | 'phase' = 'shield';
 
   public constructor(
     textures: PlayerTextureSet,
@@ -116,8 +115,7 @@ export class PlayerView {
     this.damageStrength = Math.min(1.4, Math.max(0.6, amount / 12));
   }
 
-  public playGuard(kind: 'shield' | 'phase', animationSeconds: number): void {
-    this.guardKind = kind;
+  public playGuard(animationSeconds: number): void {
     this.guardAtSeconds = animationSeconds;
   }
 
@@ -133,7 +131,7 @@ export class PlayerView {
     this.shotRightOriginY = shot.rightOriginY;
   }
 
-  public render(state: PlayerState, animationSeconds: number): void {
+  public render(state: PlayerState, animationSeconds: number, shieldChargeProgress = 0): void {
     const frameDelta = this.lastAnimationSeconds === null
       ? 1 / 60
       : Math.min(0.1, Math.max(1 / 240, animationSeconds - this.lastAnimationSeconds));
@@ -200,7 +198,7 @@ export class PlayerView {
     this.damageFlash.position.set(0, 0);
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
-    this.renderGuardFx(guardProgress);
+    this.renderGuardFx(guardProgress, shieldChargeProgress, animationSeconds);
     this.renderMovementTrail(animationSeconds);
     this.renderShotFlash(shotPulse, state);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
@@ -227,7 +225,6 @@ export class PlayerView {
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
     this.guardAtSeconds = Number.NEGATIVE_INFINITY;
-    this.guardKind = 'shield';
     this.shotAtSeconds = Number.NEGATIVE_INFINITY;
     this.shotDirectionX = 0;
     this.shotDirectionY = -1;
@@ -344,27 +341,49 @@ export class PlayerView {
       .fill({ color: 0xffffff, alpha: alpha * 0.85 });
   }
 
-  private renderGuardFx(progress: number): void {
+  private renderGuardFx(blockProgress: number, shieldChargeProgress: number, animationSeconds: number): void {
     this.guardFx.clear();
-    if (progress >= 1) {
+    const charge = Math.min(1, Math.max(0, shieldChargeProgress));
+    const blockPulse = blockProgress < 1 ? Math.sin(blockProgress * Math.PI) : 0;
+    if (charge <= 0 && blockPulse <= 0) {
       this.guardFx.visible = false;
       return;
     }
-    const pulse = Math.sin(progress * Math.PI);
-    const color = this.guardKind === 'phase' ? 0x75e6ff : 0xffd166;
-    const radius = 28 + progress * 18;
-    this.guardFx
-      .beginPath()
-      .circle(0, 0, radius)
-      .stroke({ color, width: 2.8 + pulse * 2.2, alpha: pulse * 0.9 });
-    if (this.guardKind === 'phase') {
+
+    const auraPulse = 0.5 + Math.sin(animationSeconds * 4.5) * 0.5;
+    const auraRadius = 29 + auraPulse * 1.5;
+    if (charge > 0) {
       this.guardFx
         .beginPath()
-        .moveTo(-radius * 0.6, -radius * 0.6)
-        .lineTo(radius * 0.6, radius * 0.6)
-        .moveTo(radius * 0.6, -radius * 0.6)
-        .lineTo(-radius * 0.6, radius * 0.6)
-        .stroke({ color, width: 1.8, alpha: pulse * 0.7 });
+        .circle(0, 0, auraRadius)
+        .stroke({ color: 0x75e6ff, width: 1.2, alpha: 0.12 + charge * 0.12 });
+      this.guardFx
+        .beginPath()
+        .arc(0, 0, auraRadius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge)
+        .stroke({ color: 0x8cecff, width: 2.4 + charge * 1.6, alpha: 0.36 + charge * 0.5 + auraPulse * 0.08 });
+      if (charge >= 0.999) {
+        this.guardFx
+          .beginPath()
+          .circle(0, 0, auraRadius - 4)
+          .stroke({ color: 0xd8fbff, width: 0.8, alpha: 0.2 + auraPulse * 0.1 });
+      }
+    }
+    if (blockPulse > 0) {
+      const impactRadius = 29 + blockProgress * 20;
+      this.guardFx
+        .beginPath()
+        .circle(0, 0, impactRadius)
+        .stroke({ color: 0xffd166, width: 2.8 + blockPulse * 2.2, alpha: blockPulse * 0.9 });
+      for (let index = 0; index < 4; index += 1) {
+        const angle = index * (Math.PI / 2) + Math.PI / 4;
+        const inner = impactRadius - 3;
+        const outer = impactRadius + 5 + blockProgress * 5;
+        this.guardFx
+          .beginPath()
+          .moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner)
+          .lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer)
+          .stroke({ color: 0xffe7a1, width: 1.8, alpha: blockPulse * 0.75 });
+      }
     }
     this.guardFx.visible = true;
   }

@@ -62,9 +62,4 @@
     <path d="M24 12v22M14 23h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
     <circle cx="24" cy="23" r="4" fill="currentColor"/>
   </symbol>
-  <symbol id="ui-upgrade-icon-phase" viewBox="0 0 48 48">
-    <path d="m7 24 11-11 5 5 7-7 11 11-11 11-7-7-5 5z" fill="currentColor" opacity="0.3"/>
-    <path d="m7 24 11-11 5 5 7-7 11 11-11 11-7-7-5 5z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="m20 24 4-4 4 4-4 4z" fill="currentColor"/>
-  </symbol>
 </svg>

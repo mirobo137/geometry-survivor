@@ -100,7 +100,7 @@ describe('UpgradeApplier', () => {
     });
   });
 
-  it('applies critical, shield and phase cards with authored limits', () => {
+  it('applies critical and shield cards with authored limits', () => {
     const player = new PlayerModel();
     const combat = new CombatSimulation();
     const applier = new UpgradeApplier(player, combat);
@@ -115,11 +115,7 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('recharging_shield')).toBe(true);
     expect(player.hasShield).toBe(true);
     expect(player.shieldAvailable).toBe(true);
-    expect(applier.apply('phase_shift')).toBe(true);
-    expect(player.hasPhaseShift).toBe(true);
-
     expect(applier.apply('recharging_shield')).toBe(false);
-    expect(applier.apply('phase_shift')).toBe(false);
     expect(applier.apply('critical_impact')).toBe(true);
     expect(applier.apply('critical_impact')).toBe(true);
     expect(applier.apply('critical_impact')).toBe(false);

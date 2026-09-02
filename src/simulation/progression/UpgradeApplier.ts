@@ -85,7 +85,6 @@ export class UpgradeApplier {
           after: this.combat.currentCriticalChance + definition.effect.amount
         };
       case 'shield':
-      case 'phaseShift':
         return null;
       case 'orbitRadius':
         return {
@@ -160,9 +159,6 @@ export class UpgradeApplier {
         break;
       case 'shield':
         this.player.enableShield(definition.effect.rechargeSeconds);
-        break;
-      case 'phaseShift':
-        this.player.enablePhaseShift(definition.effect.cooldownSeconds, definition.effect.distance);
         break;
       case 'orbitRadius':
         this.combat.increaseOrbitRadius(definition.effect.amount);

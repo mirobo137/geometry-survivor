@@ -105,8 +105,8 @@ export class PixiGameView {
     this.bossView.render(state, arenaRadius);
   }
 
-  public renderPlayer(state: PlayerState, animationSeconds = 0): void {
-    this.playerView.render(state, animationSeconds);
+  public renderPlayer(state: PlayerState, animationSeconds = 0, shieldChargeProgress = 0): void {
+    this.playerView.render(state, animationSeconds, shieldChargeProgress);
   }
 
   public playPlayerShot(animationSeconds: number, shot: Readonly<ShotRenderState>): void {
@@ -132,8 +132,8 @@ export class PixiGameView {
     this.screenFxView.play('player-damage');
   }
 
-  public playPlayerGuard(kind: 'shield' | 'phase', animationSeconds: number): void {
-    this.playerView.playGuard(kind, animationSeconds);
+  public playPlayerGuard(animationSeconds: number): void {
+    this.playerView.playGuard(animationSeconds);
   }
 
   public playPlayerDefeat(x: number, y: number): void {

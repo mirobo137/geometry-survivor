@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-hull-title enemy-fast-hull-desc">
+  <title id="enemy-fast-hull-title">Casco del aguijon</title>
+  <desc id="enemy-fast-hull-desc">Casco afilado y espina central del enemigo veloz.</desc>
+  <path id="enemy-fast-hull" d="M0-28 12-10 10 14 0 24-10 14-12-10z" fill="#f0a05f" stroke="#fff4d6" stroke-width="2.2" stroke-linejoin="round"/>
+  <path id="enemy-fast-spine" d="M0-22 5-7 0 14-5-7z" fill="#ffcf78" opacity="0.92"/>
+</svg>

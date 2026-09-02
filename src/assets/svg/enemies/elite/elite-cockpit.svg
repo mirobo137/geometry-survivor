@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-cockpit-title enemy-elite-cockpit-desc">
+  <title id="enemy-elite-cockpit-title">Nucleo de prioridad elite</title>
+  <desc id="enemy-elite-cockpit-desc">Nucleo blanco y miras radiales de una amenaza prioritaria.</desc>
+  <circle id="enemy-elite-core" cx="0" cy="0" r="7" fill="#fff0fb" stroke="#9a246f" stroke-width="2"/>
+  <path id="enemy-elite-sight" d="M0-24v-5M0 24v5M-24 0h-5M24 0h5" fill="none" stroke="#fff4fd" stroke-width="2" stroke-linecap="round"/>
+</svg>

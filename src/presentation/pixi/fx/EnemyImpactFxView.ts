@@ -150,7 +150,10 @@ export class EnemyImpactFxView {
       const progress = 1 - ring.lifeSeconds / ring.maxLifeSeconds;
       const radius = ring.startRadius + (ring.endRadius - ring.startRadius) * progress;
       const alpha = (1 - progress) * 0.72;
-      this.rings.circle(ring.x, ring.y, radius).stroke({ color: ring.color, width: ring.width, alpha });
+      this.rings
+        .beginPath()
+        .circle(ring.x, ring.y, radius)
+        .stroke({ color: ring.color, width: ring.width, alpha });
     }
     this.root.visible = hasActiveRing || this.particles.activeCount > 0;
   }

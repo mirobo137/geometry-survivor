@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-hull-title enemy-elite-hull-desc">
+  <title id="enemy-elite-hull-title">Nucleo de la corona de ruptura</title>
+  <desc id="enemy-elite-hull-desc">Blindaje interior de la nave de elite.</desc>
+  <path id="enemy-elite-inner" d="M0-15 10-10 15 0 10 10 0 15-10 10-15 0-10-10z" fill="#6c1e63" stroke="#ffbfe8" stroke-width="1.6" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-cockpit-title enemy-tank-cockpit-desc">
+  <title id="enemy-tank-cockpit-title">Nucleo blindado del bastion</title>
+  <desc id="enemy-tank-cockpit-desc">Nucleo y marca frontal de prioridad del enemigo resistente.</desc>
+  <circle id="enemy-tank-core" cx="0" cy="-6" r="7" fill="#f0d6ff" stroke="#4a276d" stroke-width="2"/>
+  <path id="enemy-tank-mark" d="M-3-17h6l3 7-6 4-6-4z" fill="#fff7ff" opacity="0.9"/>
+</svg>

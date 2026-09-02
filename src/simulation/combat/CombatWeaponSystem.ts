@@ -290,6 +290,7 @@ export class CombatWeaponSystem {
     projectile.vy = directionY * this.projectileSpeed;
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.projectileDamage;
+    projectile.ageSeconds = 0;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     projectile.muzzle = muzzle;
   }
@@ -406,6 +407,7 @@ export class CombatWeaponSystem {
       if (!projectile.active) continue;
       projectile.x += projectile.vx * dt;
       projectile.y += projectile.vy * dt;
+      projectile.ageSeconds += dt;
       projectile.lifetimeSeconds -= dt;
       if (
         projectile.lifetimeSeconds <= 0

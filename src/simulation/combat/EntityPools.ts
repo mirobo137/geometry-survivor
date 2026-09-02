@@ -24,6 +24,7 @@ export interface ProjectileState {
   vy: number;
   radius: number;
   damage: number;
+  ageSeconds: number;
   lifetimeSeconds: number;
   muzzle: ProjectileMuzzle;
 }
@@ -51,6 +52,7 @@ const createProjectileState = (): ProjectileState => ({
   vy: 0,
   radius: 0,
   damage: 0,
+  ageSeconds: 0,
   lifetimeSeconds: 0,
   muzzle: 0
 });

@@ -79,6 +79,7 @@ export class ImpactFxView {
       const radius = 24 + progress * 36 * this.ringStrength;
       const alpha = (1 - progress) * FX_QUALITY[this.quality].ringAlpha;
       this.ring
+        .beginPath()
         .circle(this.ringX, this.ringY, radius)
         .stroke({ color: PLAYER_DAMAGE_COLOR, width: 3 + (1 - progress) * 2, alpha });
     }

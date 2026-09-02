@@ -59,10 +59,13 @@ export class BossView {
     const top = state.y - state.radius - 17;
     const ratio = state.maxHealth > 0 ? Math.max(0, Math.min(1, state.health / state.maxHealth)) : 0;
     this.health
+      .beginPath()
       .rect(left, top, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
       .fill({ color: BOSS_VISUAL_COLORS.healthTrack, alpha: 0.95 })
+      .beginPath()
       .rect(left, top, HEALTH_BAR_WIDTH * ratio, HEALTH_BAR_HEIGHT)
       .fill({ color: BOSS_VISUAL_COLORS.boss, alpha: 0.95 })
+      .beginPath()
       .rect(left, top, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
       .stroke({ color: BOSS_VISUAL_COLORS.outline, width: 1, alpha: 0.8 });
   }
@@ -76,6 +79,7 @@ export class BossView {
     const endY = ARENA_CENTER.y + directionY * (arenaRadius + 22);
     const active = state.phase === 'sweep-active';
     this.attack
+      .beginPath()
       .moveTo(startX, startY)
       .lineTo(endX, endY)
       .stroke({
@@ -83,6 +87,7 @@ export class BossView {
         width: active ? 14 : 5,
         alpha: active ? 0.3 : 0.45 + state.progress * 0.35
       })
+      .beginPath()
       .moveTo(startX, startY)
       .lineTo(endX, endY)
       .stroke({
@@ -96,6 +101,7 @@ export class BossView {
     const active = state.phase === 'ring-active';
     const ringColor = active ? BOSS_VISUAL_COLORS.danger : BOSS_VISUAL_COLORS.warning;
     this.attack
+      .beginPath()
       .circle(ARENA_CENTER.x, ARENA_CENTER.y, state.ringRadius)
       .stroke({ color: ringColor, width: active ? 12 : 5, alpha: active ? 0.3 : 0.55 });
     const start = state.safeGapAngle - state.safeGapHalfAngle;

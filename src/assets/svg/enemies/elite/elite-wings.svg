@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-wings-title enemy-elite-wings-desc">
+  <title id="enemy-elite-wings-title">Marco de la corona de ruptura</title>
+  <desc id="enemy-elite-wings-desc">Marco energético de la nave de elite.</desc>
+  <path id="enemy-elite-frame" d="M0-23 16-16 23 0 16 16 0 23-16 16-23 0-16-16z" fill="#ff5fd2" stroke="#fff4fd" stroke-width="2.4" stroke-linejoin="round"/>
+</svg>

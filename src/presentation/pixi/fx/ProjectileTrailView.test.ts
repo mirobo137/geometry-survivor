@@ -9,6 +9,8 @@ const projectile = (active: boolean, x: number): ProjectileRenderState => ({
   vx: 460,
   vy: 0,
   radius: 7,
+  ageSeconds: 0.12,
+  lifetimeSeconds: 2.38,
   muzzle: 0
 });
 

@@ -1,6 +1,7 @@
 import type { Application, Ticker } from 'pixi.js';
 import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
+import { FrameProfiler } from '../debug/FrameProfiler';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
 import { mergeBestRun, type CannonSkinSaveData, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
@@ -26,6 +27,11 @@ import { createRunSummary, type RunOutcome } from './RunSummary';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
+const HIT_STOP_SECONDS = {
+  enemyDefeat: 0.008,
+  playerDamage: 0.012,
+  terminal: 0.024
+} as const;
 
 export interface GameElements {
   readonly container: HTMLElement;
@@ -49,6 +55,7 @@ export interface GameOptions {
   readonly playerSkin?: PlayerSkinId;
   readonly cannonSkin?: CannonSkinId;
   readonly fxQuality?: FxQuality;
+  readonly profileMode?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -75,6 +82,7 @@ export class Game {
   private readonly gameState: GameState;
   private readonly view: PixiGameView;
   private readonly debug: DebugPanel;
+  private readonly profiler: FrameProfiler;
   private readonly hud: GameHud;
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
@@ -95,6 +103,7 @@ export class Game {
   private started = false;
   private stopped = false;
   private terminalSummaryTimer: ReturnType<typeof setTimeout> | null = null;
+  private hitStopSeconds = 0;
 
   private readonly queueResize = (): void => {
     if (this.resizeQueued || this.stopped) return;
@@ -181,14 +190,24 @@ export class Game {
   };
 
   private readonly onTick = (ticker: Ticker): void => {
-    this.accumulator += Math.min(ticker.deltaMS / 1000, 0.1);
+    this.profiler.record(ticker.deltaMS);
+    const frameDeltaSeconds = Math.min(ticker.deltaMS / 1000, 0.1);
+    this.accumulator += frameDeltaSeconds;
     while (this.accumulator >= FIXED_STEP_SECONDS) {
-      if (this.gameState.isSimulationRunning) this.updateSimulation();
+      if (this.gameState.isSimulationRunning) {
+        if (this.hitStopSeconds > 0) {
+          this.hitStopSeconds = Math.max(0, this.hitStopSeconds - FIXED_STEP_SECONDS);
+        } else {
+          this.updateSimulation();
+        }
+      } else {
+        this.hitStopSeconds = 0;
+      }
       this.accumulator -= FIXED_STEP_SECONDS;
     }
 
-    if (this.gameState.isSimulationRunning) this.presentationTime += Math.min(ticker.deltaMS / 1000, 0.1);
-    this.renderFrame(Math.min(ticker.deltaMS / 1000, 0.1));
+    if (this.gameState.isSimulationRunning) this.presentationTime += frameDeltaSeconds;
+    this.renderFrame(frameDeltaSeconds);
   };
 
   public constructor(options: GameOptions) {
@@ -204,6 +223,7 @@ export class Game {
     this.playerSkin = options.playerSkin ?? saved.skins.selected;
     this.cannonSkin = options.cannonSkin ?? saved.cannonSkins.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
+    this.profiler = new FrameProfiler(options.profileMode === true);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -216,7 +236,7 @@ export class Game {
       initialElapsedSeconds: this.initialElapsedSeconds
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin);
-    this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0);
+    this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
@@ -301,11 +321,15 @@ export class Game {
       if (event.type === 'enemyDefeated') {
         this.audio.playCue('enemy-defeated');
         this.view.playEnemyDefeat(event.x, event.y, event.kind);
+        if (event.kind === 'tank' || event.kind === 'elite') {
+          this.triggerHitStop(HIT_STOP_SECONDS.enemyDefeat);
+        }
       }
       if (event.type === 'playerDamaged') {
         this.audio.playCue('damage');
         if (this.player.takeDamage(event.amount)) {
           this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
+          this.triggerHitStop(this.player.isAlive ? HIT_STOP_SECONDS.playerDamage : HIT_STOP_SECONDS.terminal);
           if (!this.player.isAlive) {
             this.audio.playCue('player-defeated');
             this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
@@ -317,6 +341,7 @@ export class Game {
       if (event.type === 'bossDefeated') {
         this.audio.playCue('boss-defeated');
         this.view.playBossDefeat(this.combat.renderState.boss.x, this.combat.renderState.boss.y, 48);
+        this.triggerHitStop(HIT_STOP_SECONDS.terminal);
         this.finishRun('victory');
         return;
       }
@@ -327,6 +352,12 @@ export class Game {
   }
 
   private renderFrame(deltaSeconds = 0): void {
+    const presentationDelta = this.gameState.phase === 'paused'
+      || this.gameState.phase === 'level-up'
+      || this.gameState.phase === 'menu'
+      ? 0
+      : deltaSeconds;
+    this.view.updatePresentationFx(presentationDelta);
     this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
@@ -356,6 +387,7 @@ export class Game {
       this.fpsTime = now;
     }
     const state = this.viewport.state;
+    const profile = this.profiler.snapshot();
     this.debug.update({
       target: this.buildTarget,
       orientation: state.orientation,
@@ -363,6 +395,12 @@ export class Game {
       viewport: `${state.cssWidth}×${state.cssHeight}`,
       scale: state.scale,
       dpr: state.dpr,
+      quality: this.fxQuality,
+      profile: profile.enabled ? 'on' : 'off',
+      frameP95: profile.enabled ? `${profile.p95Ms.toFixed(2)} ms` : 'n/a',
+      frameMax: profile.enabled ? `${profile.maxMs.toFixed(2)} ms` : 'n/a',
+      longFrames: profile.enabled ? profile.longFrames : 'n/a',
+      heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
       mode: this.combat.isStressMode ? 'stress' : 'normal',
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
@@ -426,6 +464,7 @@ export class Game {
   private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
     if (this.lifecyclePaused || !this.gameState.enterPause()) return;
     this.lifecyclePaused = true;
+    this.hitStopSeconds = 0;
     this.input.reset();
     this.audio.pause();
     this.lifecycle.onGamePause();
@@ -487,6 +526,7 @@ export class Game {
 
   private resetRunState(): void {
     this.clearTerminalSummaryTimer();
+    this.hitStopSeconds = 0;
     this.input.reset();
     this.arena.reset();
     this.arena.update(this.initialElapsedSeconds);
@@ -515,6 +555,10 @@ export class Game {
     if (this.terminalSummaryTimer === null) return;
     clearTimeout(this.terminalSummaryTimer);
     this.terminalSummaryTimer = null;
+  }
+
+  private triggerHitStop(seconds: number): void {
+    this.hitStopSeconds = Math.max(this.hitStopSeconds, Math.max(0, seconds));
   }
 
   private syncShotFeedback(): void {

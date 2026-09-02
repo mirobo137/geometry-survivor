@@ -1,6 +1,6 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 31-08-2026.
+> Snapshot operativo: 01-09-2026.
 >
 > Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
@@ -44,7 +44,8 @@ Atajos que pueden escribirse después de la URL base:
 ?stress=1
 ?boss=1
 ?skin=cyan|violet|amber|emerald
-?quality=low|high
+?quality=low|medium|high
+?profile=1
 ?spike=rendering
 ?spike=audio
 ```
@@ -60,7 +61,7 @@ Stack y calidad confirmada:
 - Pool de 250 enemigos y 300 proyectiles con spatial grid.
 - CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
 - Builds separados `local`, `poki` y `crazygames`.
-- Última auditoría local: typecheck correcto, 98 tests unitarios/integración en 37 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
+- Última auditoría local: typecheck correcto, 125 tests unitarios/integración en 49 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
 
 Mediciones manuales aportadas desde Android Chrome:
 
@@ -608,7 +609,7 @@ Fecha: 31-08-2026.
   dibuja el anillo y las partículas del primer impacto del player; respeta
   `prefers-reduced-motion`, pausa y descarte por presupuesto.
 - La variante `?skin=violet` permite comparar la segunda paleta en Pages; el
-  parámetro opcional `?quality=low|high` reduce o aumenta el presupuesto del
+  parámetro opcional `?quality=low|medium|high` reduce o aumenta el presupuesto del
   primer recipe. La URL normal sigue usando `cyan`/`medium`.
 - La simulación continúa sin imports de Pixi/DOM/audio. `Game` sólo reenvía el
   evento de daño aceptado a la fachada de presentación; no cambia vida,
@@ -958,5 +959,59 @@ Fecha: 01-09-2026.
   Ninguna modifica radio de colision, vida, velocidad, XP o spawn.
 - `SvgEnemyAssets.test.ts` valida estructura, prefijos, ausencia de recursos
   externos/filtros y presupuesto de primitivas. El siguiente paso visual para
-  Tank y Elite es separar sus masters en piezas reales solo cuando se conecte
-  su desarme pooled; no volver a efectos genericos temporales.
+Tank y Elite es separar sus masters en piezas reales solo cuando se conecte
+su desarme pooled; no volver a efectos genericos temporales.
+
+## 42. Continuacion - naves modulares y arco visual de proyectiles
+
+Fecha: 01-09-2026.
+
+- El `chaser` dejo de renderizarse como tortuga: ahora usa una nave scout de
+  cuatro piezas (`rear`, `wings`, `hull` y `cockpit`). Los SVG de la tortuga y
+  sus pruebas se conservan como base de diseno y referencia historica.
+- Fast, Tank y Elite tambien se componen con cuatro piezas cacheadas. Cada
+  familia tiene un perfil de movimiento sutil: motores pulsantes, alas/placas
+  con sway, respiracion del casco y bob de cabina. La direccion continua
+  viniendo del vector de movimiento y las transformaciones son locales.
+- `EnemyDefeatFxView` reemplaza el desarme exclusivo de la tortuga por un pool
+  comun para las cuatro naves. La separacion dura 420 ms y no retiene la
+  entidad de simulacion ni cambia radio, dano, XP, colisiones o reciclaje.
+- `ProjectileTrailView` ahora usa sprites preasignados en lugar de limpiar y
+  reconstruir `Graphics` cada frame. Las estelas son mas largas y visibles en
+  Medium/High; Low continua sin trail.
+- El paquete `curve` produce un arco visual temporal de 10 unidades: el sprite
+  y la estela se separan suavemente de la linea, alternan el lado por emisor y
+  convergen de nuevo. La posicion logica de colision sigue recta para que la
+  skin no se convierta en ventaja de gameplay.
+
+Validacion de esta iteracion: typecheck correcto, 125 pruebas en 49 archivos,
+smoke browser 9/9 y builds local, Poki y CrazyGames correctos. Queda como
+puerta manual medir FPS/CPU/GPU en un movil real bajo `?stress=1` y revisar la
+legibilidad de naves, separacion de piezas y estelas en Medium/High; esa puerta
+no puede medirse desde este entorno.
+
+## 43. Continuacion - game feel inicial y profiling - 01-09-2026
+
+- Se auditaron los `Graphics` que dibujan formas independientes y cada arco,
+  circulo, rectangulo o segmento reinicia su subpath con `beginPath()` o
+  `moveTo()` explicito. Esto protege contra diagonales heredadas entre figuras.
+- `ScreenFxView` agrega un shake determinista y limitado por calidad. Los
+  impactos normales no mueven la camara en hordas; Tank/Elite, dano del player,
+  expansion, cadena y derrota tienen impulsos acotados. `Game` aplica
+  micro-hit-stop solo a golpes relevantes, conservando input y sin cambiar
+  dano, colisiones, cadencia ni trayectoria logica.
+- `PlayerView` ahora deriva velocidad desde snapshots consecutivos para aplicar
+  tilt local, respuesta elastica y dos trazos de motor en Medium/High. Low no
+  crea ese trail y todas las piezas siguen siendo presentacion.
+- Los enemigos muestran flash de impacto sobre el casco. Chain Lightning tiene
+  doble trazo y un nodo de impacto pooled por salto; Laser tiene carga radial y
+  pulsos de ataque/recuperacion; la expansion de arena emite un shockwave
+  reutilizado y conserva la resonancia existente.
+- `?profile=1` habilita `FrameProfiler`: mantiene 240 muestras sin allocations
+  por frame y expone promedio, p95, maximo, frames largos y heap JS cuando el
+  navegador lo ofrece. No sustituye profiling de CPU/GPU/GC en telefono real.
+
+Validacion de esta iteracion: typecheck correcto, 130 pruebas en 52 archivos,
+smoke browser 9/9 y builds local, Poki y CrazyGames correctos. Queda como
+puerta manual medir en un movil fisico con `?stress=1&profile=1`: registrar
+dispositivo, navegador, preset, FPS/p95, legibilidad y consumo.

@@ -158,6 +158,7 @@ export class LevelUpFxView {
     const progress = Math.min(1, this.selectedTimeSeconds / 0.58);
     const ringRadius = Math.max(width, height) * 0.32 + progress * 45;
     this.ring
+      .beginPath()
       .circle(anchor.x, anchor.y, ringRadius)
       .stroke({ color, width: 3 + (1 - progress) * 3, alpha: (1 - progress) * 0.72 });
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-hull-title enemy-tank-hull-desc">
+  <title id="enemy-tank-hull-title">Cuña del bastion</title>
+  <desc id="enemy-tank-hull-desc">Cuña frontal y costuras de la nave resistente.</desc>
+  <path id="enemy-tank-front-wedge" d="M0-30 15-14 10 6H-10l-5-20z" fill="#c58cff" stroke="#fff5ff" stroke-width="2.5" stroke-linejoin="round"/>
+  <path id="enemy-tank-seam" d="M0-25v31M-18 4h36" fill="none" stroke="#f6d9ff" stroke-width="1.25" opacity="0.82"/>
+</svg>

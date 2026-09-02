@@ -10,6 +10,7 @@ import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { ImpactFxView } from './pixi/fx/ImpactFxView';
+import { ScreenFxView } from './pixi/fx/ScreenFxView';
 import { TerminalFxView } from './pixi/fx/TerminalFxView';
 import { PlayerView } from './pixi/characters/player/PlayerView';
 import { createPlayerTextures } from './pixi/characters/player/PlayerVisualAssets';
@@ -31,8 +32,12 @@ export class PixiGameView {
   private readonly impactFxView: ImpactFxView;
   private readonly terminalFxView: TerminalFxView;
   private readonly levelUpFxView: LevelUpFxView;
+  private readonly screenFxView: ScreenFxView;
   private readonly title: Text;
   private readonly hint: Text;
+  private lastArenaRadius = -1;
+  private worldOffsetX = 0;
+  private worldOffsetY = 0;
 
   public constructor(
     renderer: Renderer,
@@ -41,10 +46,11 @@ export class PixiGameView {
     cannonSkin: CannonSkinId = 'basic'
   ) {
     this.root.addChild(this.world);
+    this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
-    this.weaponView = new WeaponView(renderer);
+    this.weaponView = new WeaponView(renderer, () => this.screenFxView.play('chain-hit'));
     this.levelUpFxView = new LevelUpFxView(renderer);
-    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin);
+    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin, quality);
     this.impactFxView = new ImpactFxView(renderer, quality);
     this.terminalFxView = new TerminalFxView(renderer, quality);
     this.world.addChild(
@@ -90,11 +96,17 @@ export class PixiGameView {
   public resize(viewport: ViewportState): void {
     this.root.scale.set(viewport.scale);
     this.root.position.set(viewport.offsetX, viewport.offsetY);
-    this.world.position.set(viewport.worldOffsetX, viewport.worldOffsetY);
+    this.worldOffsetX = viewport.worldOffsetX;
+    this.worldOffsetY = viewport.worldOffsetY;
+    this.applyWorldOffset();
     this.root.hitArea = undefined;
   }
 
   public renderArena(radius: number, resonance = 0): void {
+    if (this.lastArenaRadius >= 0 && radius > this.lastArenaRadius + 0.5) {
+      this.screenFxView.play('arena-expansion');
+    }
+    this.lastArenaRadius = radius;
     this.arenaView.render(radius, resonance);
   }
 
@@ -105,6 +117,7 @@ export class PixiGameView {
 
   public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind']): void {
     this.entitiesView.playEnemyDefeat(x, y, kind);
+    if (kind === 'tank' || kind === 'elite') this.screenFxView.play('enemy-defeat');
   }
 
   public renderLaser(state: CombatRenderState['laser'], arenaRadius: number): void {
@@ -135,20 +148,29 @@ export class PixiGameView {
   public playPlayerDamage(x: number, y: number, amount: number, animationSeconds: number): void {
     this.playerView.playDamage(amount, animationSeconds);
     this.impactFxView.playPlayerDamage(x, y, amount);
+    this.screenFxView.play('player-damage');
   }
 
   public playPlayerDefeat(x: number, y: number): void {
     this.playerView.playDefeat();
     this.terminalFxView.playPlayerDefeat(x, y);
+    this.screenFxView.play('player-defeat');
   }
 
   public playBossDefeat(x: number, y: number, radius: number): void {
     this.terminalFxView.playBossDefeat(x, y, radius);
+    this.screenFxView.play('boss-defeat');
   }
 
   public renderImpactFx(deltaSeconds: number): void {
     this.impactFxView.update(deltaSeconds);
     this.entitiesView.updateFx(deltaSeconds);
+  }
+
+  public updatePresentationFx(deltaSeconds: number): void {
+    this.arenaView.update(deltaSeconds);
+    this.screenFxView.update(deltaSeconds);
+    this.applyWorldOffset();
   }
 
   public updateTerminalFx(deltaSeconds: number): void {
@@ -161,6 +183,15 @@ export class PixiGameView {
     this.impactFxView.clear();
     this.terminalFxView.clear();
     this.entitiesView.reset();
+    this.arenaView.reset();
+    this.hazardView.reset();
+    this.weaponView.reset();
+    this.screenFxView.reset();
+    this.lastArenaRadius = -1;
+  }
+
+  private applyWorldOffset(): void {
+    this.world.position.set(this.worldOffsetX + this.screenFxView.x, this.worldOffsetY + this.screenFxView.y);
   }
 
   public openLevelUpFx(anchors: readonly LevelUpCardAnchor[]): void {

@@ -1230,7 +1230,7 @@ simulación:
 - `Game` reenvía el evento `playerDamaged` a la presentación después de que la
   simulación acepta el daño. El FX no aplica daño ni cambia invulnerabilidad;
 - `?skin=violet` permite comparar la segunda paleta en GitHub Pages y
-  `?quality=low|high` compara presupuestos; sin parámetro se usa `cyan` y
+  `?quality=low|medium|high` compara presupuestos; sin parámetro se usa `cyan` y
   `medium` para conservar el comportamiento actual;
 - se añadieron pruebas estructurales SVG y pruebas unitarias de tokens, pool,
   impacto y player. Typecheck, 95 tests, los tres builds y los 8 smoke browser
@@ -1876,3 +1876,70 @@ La siguiente iteración de muertes de Tank/Elite debe partir sus masters en
 piezas alineadas con ese mismo frame y reutilizar el patrón pooled de tortuga.
 No se añaden piezas ni compositores antes de ese consumidor real; el cambio de
 esta entrega continúa siendo solo presentación.
+
+## Entrega - naves modulares y arco visual de proyectiles - 01-09-2026
+
+La siguiente iteración de juice aplica el patrón de la tortuga a la temática
+espacial sin llevar geometría de presentación a la simulación.
+
+- `chaser` usa una nave scout nueva de cuatro piezas; los SVG de la tortuga se
+  conservan como referencia de diseño y no se eliminan.
+- Fast, Tank y Elite se componen con cuatro piezas SVG propias, todas con el
+  frame `-32 -32 64 64`, ancla central, frente hacia `-Y` y texturas creadas
+  una sola vez. Sus motores, alas/placas, casco y cabina tienen movimiento
+  sutil mediante transformaciones locales.
+- `EnemyDefeatFxView` reutiliza un pool fijo de copias de piezas para separar
+  las cuatro familias durante 420 ms. El anillo y polvo existentes permanecen
+  como feedback compartido; ninguna parte de la muerte modifica colisiones,
+  daño, XP o reciclaje.
+- `ProjectileTrailView` usa sprites preasignados en lugar de limpiar y
+  reconstruir un `Graphics` dinámico cada frame. La receta se limita por
+  calidad: Low sin trail, Medium/High con segmentos acotados.
+- `Arc Needle` muestra un arco visual de 10 unidades en bala y estela. El
+  desplazamiento lateral es temporal y vuelve a cero al final; la colisión
+  continúa usando la trayectoria lógica recta. Esto conserva el carácter
+  cosmético del paquete y evita una ventaja de balance no declarada.
+
+La elección de sprites pooled sigue la recomendación vigente de PixiJS: sus
+guías describen los sprites como la ruta más rápida para contenido repetido y
+advierten que no se debe limpiar y reconstruir `Graphics` constantemente. Los
+SVG se mantienen como masters y se rasterizan a texturas reutilizadas.
+
+Definition of Done adicional:
+
+- cada familia se reconoce en 32 px y conserva frente/lateral/trasera legible;
+- la animación se congela con pausa y `prefers-reduced-motion`;
+- la separación de piezas no tapa telegraphs ni crea objetos durante el loop;
+- el trail se percibe en Medium/High y no aparece en Low;
+- bala visible, estela y destello conservan la misma dirección y no generan
+  diagonales por subpaths heredados;
+- typecheck, tests, smoke browser y builds local/Poki/CrazyGames pasan;
+- falta todavía medir FPS/CPU/GPU en el teléfono de referencia con
+  `?stress=1` y validar visualmente los cuatro paquetes en una run real.
+
+## Entrega - game feel inicial y profiling - 01-09-2026
+
+La siguiente capa de Fase 6 añade respuesta temporal y cámara sin trasladar
+reglas al renderer ni crear objetos durante el loop:
+
+- todos los `Graphics` con figuras independientes reinician subpaths de forma
+  explícita, protegiendo la regla contra diagonales heredadas entre arcos,
+  círculos, rectángulos y segmentos;
+- `ScreenFxView` centraliza impulsos de cámara deterministas y limitados por
+  calidad. `Game` aplica hit-stop de 8/12/24 ms solo a derrotas importantes,
+  daño aceptado y terminales; input, daño, colisiones, cadencia y trayectoria
+  permanecen bajo los contratos existentes;
+- `PlayerView` deriva movimiento de snapshots, añade tilt elástico y trazos de
+  motor locales en Medium/High; Low conserva lectura sin trail;
+- los impactos enemigos añaden flash, Chain Lightning añade doble trazo y
+  nodos pooled por salto, Laser añade carga/pulso y la arena emite un shockwave
+  reutilizado cuando crece;
+- `?profile=1` activa un sampler de 240 frames que muestra frame p95, máximo,
+  frames largos y heap JS disponible. Es evidencia de frame time, no una
+  afirmación de CPU/GPU/GC; esos valores requieren el teléfono de referencia.
+
+La validación automática de esta entrega queda satisfecha: typecheck, suite
+(130 pruebas en 52 archivos), smoke browser 9/9 y builds local/Poki/CrazyGames.
+Permanece la puerta manual en móvil con `?stress=1&profile=1`: registrar
+dispositivo, navegador, preset, FPS/p95, legibilidad y consumo antes de
+decidir glow adicional, ParticleContainer o calidad adaptativa.

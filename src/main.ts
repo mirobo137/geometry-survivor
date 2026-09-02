@@ -78,9 +78,10 @@ const bootstrap = async (): Promise<void> => {
   const requestedCannon = searchParams.get('cannon');
   const cannonSkin: CannonSkinId | undefined = isCannonSkinId(requestedCannon) ? requestedCannon : undefined;
   const requestedQuality = searchParams.get('quality');
-  const fxQuality: FxQuality = requestedQuality === 'low' || requestedQuality === 'high'
+  const fxQuality: FxQuality = requestedQuality === 'low' || requestedQuality === 'medium' || requestedQuality === 'high'
     ? requestedQuality
     : 'medium';
+  const profileMode = searchParams.get('profile') === '1';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -121,6 +122,7 @@ const bootstrap = async (): Promise<void> => {
     playerSkin,
     cannonSkin,
     fxQuality,
+    profileMode,
     initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode,

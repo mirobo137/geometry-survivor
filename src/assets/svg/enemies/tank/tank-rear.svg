@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-rear-title enemy-tank-rear-desc">
+  <title id="enemy-tank-rear-title">Blindaje trasero del bastion</title>
+  <desc id="enemy-tank-rear-desc">Sombra y placa trasera del enemigo resistente.</desc>
+  <ellipse id="enemy-tank-shadow" cx="0" cy="6" rx="27" ry="23" fill="#050816" opacity="0.5"/>
+  <path id="enemy-tank-rear-plate" d="M-18 4-10 20 0 26 10 20 18 4 10-13H-10z" fill="#6d4b9f" stroke="#f4e9ff" stroke-width="2.2" stroke-linejoin="round"/>
+</svg>

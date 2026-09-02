@@ -69,6 +69,8 @@ export interface ProjectileRenderState {
   readonly vx: number;
   readonly vy: number;
   readonly radius: number;
+  readonly ageSeconds: number;
+  readonly lifetimeSeconds: number;
   readonly muzzle: ProjectileMuzzle;
 }
 

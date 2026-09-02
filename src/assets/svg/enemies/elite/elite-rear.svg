@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-rear-title enemy-elite-rear-desc">
+  <title id="enemy-elite-rear-title">Aura de ruptura</title>
+  <desc id="enemy-elite-rear-desc">Sombra y corona exterior de una amenaza de elite.</desc>
+  <ellipse id="enemy-elite-shadow" cx="0" cy="5" rx="25" ry="22" fill="#050816" opacity="0.52"/>
+  <path id="enemy-elite-spikes" d="M0-29 8-22 20-23 23-12 30 0 23 12 20 23 8 22 0 29-8 22-20 23-23 12-30 0-23-12-20-23-8-22z" fill="#8e285f" stroke="#ffe5f8" stroke-width="2" stroke-linejoin="round"/>
+</svg>

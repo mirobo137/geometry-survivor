@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-hull-title enemy-chaser-hull-desc">
+  <title id="enemy-chaser-hull-title">Casco de la nave scout</title>
+  <desc id="enemy-chaser-hull-desc">Casco central afilado de la nave scout vectorial.</desc>
+  <path id="enemy-chaser-hull" d="M0-29 12-15 13 9 6 20 0 24-6 20-13 9-12-15z" fill="#26718d" stroke="#e2fbff" stroke-width="2.2" stroke-linejoin="round"/>
+  <path id="enemy-chaser-spine" d="M0-23 5-9 0 15-5-9z" fill="#69dff0" opacity="0.85"/>
+</svg>

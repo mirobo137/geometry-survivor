@@ -58,6 +58,7 @@ export class StressCombatScenario {
     projectile.vy = directionY * this.getProjectileSpeed();
     projectile.radius = PROJECTILE_DEFINITION.radius;
     projectile.damage = this.getProjectileDamage();
+    projectile.ageSeconds = 0;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     this.onShot(player, projectile, directionX, directionY, (index % 2) as ProjectileMuzzle);
   }

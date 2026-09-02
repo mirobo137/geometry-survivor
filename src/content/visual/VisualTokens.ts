@@ -72,16 +72,21 @@ export interface FxQualityTokens {
 /** Starting budgets; tune only after comparing the same mobile scenario. */
 export const FX_QUALITY: Readonly<Record<FxQuality, FxQualityTokens>> = {
   low: { particleCount: 3, poolCapacity: 96, ringAlpha: 0.45, projectileTrailAlpha: 0, projectileTrailLimit: 0, damageNumberLimit: 0, healthBarLimit: 8 },
-  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, projectileTrailAlpha: 0.28, projectileTrailLimit: 64, damageNumberLimit: 16, healthBarLimit: 16 },
-  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, projectileTrailAlpha: 0.42, projectileTrailLimit: 120, damageNumberLimit: 24, healthBarLimit: 24 }
+  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, projectileTrailAlpha: 0.46, projectileTrailLimit: 64, damageNumberLimit: 16, healthBarLimit: 16 },
+  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, projectileTrailAlpha: 0.64, projectileTrailLimit: 120, damageNumberLimit: 24, healthBarLimit: 24 }
 } as const;
 
 /** Short trail budget for projectiles; it is presentation-only. */
 export const PROJECTILE_TRAIL_TOKENS = {
-  lengthSeconds: 0.035,
-  maxLength: 22,
-  width: 2.5,
+  lengthSeconds: 0.06,
+  maxLength: 30,
+  width: 3.2,
   color: 0xfff6a8
+} as const;
+
+/** Presentation-only arc for the Arc Needle projectile package. */
+export const PROJECTILE_VISUAL_TOKENS = {
+  curveAmplitude: 10
 } as const;
 
 export const PLAYER_VISUAL_TOKENS = {

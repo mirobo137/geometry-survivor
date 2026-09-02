@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-wings-title enemy-chaser-wings-desc">
+  <title id="enemy-chaser-wings-title">Alas de la nave scout</title>
+  <desc id="enemy-chaser-wings-desc">Alas laterales abiertas para una nave ligera de persecucion.</desc>
+  <path id="enemy-chaser-wings" d="M-7-1-28 8-20 15-8 11M7-1 28 8 20 15 8 11" fill="#2a7898" stroke="#9af4ff" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>

@@ -1,10 +1,13 @@
 import type { AudioSettings } from '../audio/AudioService';
 import heroSceneSvg from '../assets/svg/ui/start/hero-scene.svg?raw';
 import startMarkSvg from '../assets/svg/ui/start/mark.svg?raw';
-import type { BackgroundSaveData, CannonSkinSaveData, SkinSaveData } from '../platform/save/SaveStore';
+import type { BackgroundSaveData, CannonSkinSaveData, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
+import { formatNova } from '../content/meta/EconomyDefinitions';
+import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
 import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
+import { MetaProgressionPanel } from './meta/MetaProgressionPanel';
 
 export interface StartScreenBest {
   readonly timeSeconds: number;
@@ -17,11 +20,15 @@ export interface StartScreenOptions {
   readonly skins: SkinSaveData;
   readonly cannonSkins: CannonSkinSaveData;
   readonly backgrounds: BackgroundSaveData;
+  readonly wallet: WalletSaveData;
+  readonly metaUpgrades: MetaUpgradeSaveData;
   readonly onPlay: () => void;
   readonly onSettingsChange: (settings: AudioSettings) => void;
   readonly onSkinStateChange: (state: SkinSaveData) => void;
   readonly onCannonSkinStateChange: (state: CannonSkinSaveData) => void;
   readonly onBackgroundStateChange: (state: BackgroundSaveData) => void;
+  readonly onWalletChange: (wallet: WalletSaveData) => void;
+  readonly onMetaUpgradesChange: (upgrades: MetaUpgradeSaveData) => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -50,7 +57,12 @@ export class StartScreen {
   private readonly skinsPanel: SkinSelectPanel;
   private readonly cannonPanel: CannonSelectPanel;
   private readonly backgroundPanel: BackgroundSelectPanel;
+  private readonly metaPanel: MetaProgressionPanel;
   private readonly skinsView: HTMLElement;
+  private readonly metaView: HTMLElement;
+  private readonly metaToggle: HTMLButtonElement;
+  private readonly metaBack: HTMLButtonElement;
+  private readonly novaValues: readonly HTMLElement[];
   private readonly playerSkinsTab: HTMLButtonElement;
   private readonly cannonSkinsTab: HTMLButtonElement;
   private readonly backgroundsTab: HTMLButtonElement;
@@ -63,6 +75,8 @@ export class StartScreen {
   private skinState: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
   private cannonSkinState: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
   private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
+  private wallet: WalletSaveData = { nova: 0 };
+  private metaUpgrades: MetaUpgradeSaveData = { levels: {} };
 
   private readonly onSkinStateChange = (state: SkinSaveData): void => {
     this.skinState = state;
@@ -79,6 +93,8 @@ export class StartScreen {
   };
   private cannonSkinStateHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private backgroundStateHandler: ((state: BackgroundSaveData) => void) | null = null;
+  private walletStateHandler: ((wallet: WalletSaveData) => void) | null = null;
+  private metaUpgradesHandler: ((upgrades: MetaUpgradeSaveData) => void) | null = null;
 
   public constructor(root: HTMLElement) {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
@@ -98,10 +114,13 @@ export class StartScreen {
     const playerSkinsTab = root.querySelector<HTMLButtonElement>('#start-player-skins-tab');
     const cannonSkinsTab = root.querySelector<HTMLButtonElement>('#start-cannon-skins-tab');
     const backgroundsTab = root.querySelector<HTMLButtonElement>('#start-backgrounds-tab');
+    const metaToggle = root.querySelector<HTMLButtonElement>('#start-meta');
+    const metaBack = root.querySelector<HTMLButtonElement>('#start-meta-back');
+    const metaView = root.querySelector<HTMLElement>('#start-meta-view');
     const playerSkinsView = root.querySelector<HTMLElement>('#start-player-skins-panel');
     const cannonSkinsView = root.querySelector<HTMLElement>('#start-cannon-skins-panel');
     const backgroundsView = root.querySelector<HTMLElement>('#start-backgrounds-panel');
-    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !playerSkinsView || !cannonSkinsView || !backgroundsView) {
+    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -128,6 +147,19 @@ export class StartScreen {
     this.skinsPanel = new SkinSelectPanel(playerSkinsView);
     this.cannonPanel = new CannonSelectPanel(cannonSkinsView);
     this.backgroundPanel = new BackgroundSelectPanel(backgroundsView);
+    this.metaPanel = new MetaProgressionPanel(metaView);
+    for (const hostId of ['start-nova-icon', 'start-meta-nova-icon']) {
+      const host = root.querySelector<HTMLElement>(`#${hostId}`);
+      if (!host) continue;
+      host.insertAdjacentHTML('afterbegin', novaSvg);
+      const svg = host.querySelector('svg');
+      svg?.setAttribute('aria-hidden', 'true');
+      svg?.setAttribute('focusable', 'false');
+    }
+    this.novaValues = Array.from(root.querySelectorAll<HTMLElement>('[data-nova-value]'));
+    this.metaToggle = metaToggle;
+    this.metaBack = metaBack;
+    this.metaView = metaView;
     this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.playHandler?.());
@@ -137,6 +169,8 @@ export class StartScreen {
     this.playerSkinsTab.addEventListener('click', () => this.selectSkinTab('player'));
     this.cannonSkinsTab.addEventListener('click', () => this.selectSkinTab('cannon'));
     this.backgroundsTab.addEventListener('click', () => this.selectSkinTab('background'));
+    this.metaToggle.addEventListener('click', () => this.openMeta());
+    this.metaBack.addEventListener('click', () => this.closeMeta());
     this.musicInput.addEventListener('input', () => this.emitSettings());
     this.sfxInput.addEventListener('input', () => this.emitSettings());
     this.mutedInput.addEventListener('change', () => this.emitSettings());
@@ -148,14 +182,20 @@ export class StartScreen {
     this.skinStateHandler = options.onSkinStateChange;
     this.cannonSkinStateHandler = options.onCannonSkinStateChange;
     this.backgroundStateHandler = options.onBackgroundStateChange;
+    this.walletStateHandler = options.onWalletChange;
+    this.metaUpgradesHandler = options.onMetaUpgradesChange;
     this.skinState = options.skins;
     this.cannonSkinState = options.cannonSkins;
     this.backgroundState = options.backgrounds;
+    this.wallet = options.wallet;
+    this.metaUpgrades = options.metaUpgrades;
+    this.updateNovaValues();
     this.setSettings(options.settings);
     this.bestTime.textContent = formatTime(options.best.timeSeconds);
     this.bestScore.textContent = String(Math.max(0, Math.floor(options.best.score)));
     this.setSettingsExpanded(false);
     this.closeSkins();
+    this.closeMeta();
     this.root.hidden = false;
     this.playButton.focus({ preventScroll: true });
   }
@@ -167,8 +207,11 @@ export class StartScreen {
     this.skinStateHandler = null;
     this.cannonSkinStateHandler = null;
     this.backgroundStateHandler = null;
+    this.walletStateHandler = null;
+    this.metaUpgradesHandler = null;
     this.setSettingsExpanded(false);
     this.closeSkins();
+    this.closeMeta();
   }
 
   private mountMark(): void {
@@ -195,10 +238,12 @@ export class StartScreen {
 
   private toggleSettings(): void {
     if (!this.skinsPanelIsClosed()) this.closeSkins();
+    if (!this.metaView.hidden) this.closeMeta();
     this.setSettingsExpanded(this.settingsPanel.hidden);
   }
 
   private openSkins(): void {
+    if (!this.metaView.hidden) this.closeMeta();
     this.setSettingsExpanded(false);
     this.mainView.hidden = true;
     this.skinsView.hidden = false;
@@ -219,20 +264,59 @@ export class StartScreen {
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-skins-open');
   }
 
+  private openMeta(): void {
+    this.setSettingsExpanded(false);
+    this.closeSkins();
+    this.mainView.hidden = true;
+    this.metaView.hidden = false;
+    this.root.classList.add('is-meta-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-meta-open');
+    this.metaPanel.open({
+      wallet: this.wallet,
+      upgrades: this.metaUpgrades,
+      onWalletChange: (wallet) => this.onWalletChange(wallet),
+      onUpgradesChange: (upgrades) => this.onMetaUpgradesChange(upgrades)
+    });
+    this.metaBack.focus({ preventScroll: true });
+  }
+
+  private closeMeta(): void {
+    this.metaPanel.close();
+    this.metaView.hidden = true;
+    this.mainView.hidden = false;
+    this.root.classList.remove('is-meta-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-meta-open');
+  }
+
   private selectSkinTab(tab: 'player' | 'cannon' | 'background'): void {
     this.applySkinTab(tab);
     if (tab === 'cannon') {
-      this.cannonPanel.open({ state: this.cannonSkinState, onStateChange: this.onCannonSkinStateChange });
+      this.cannonPanel.open({
+        state: this.cannonSkinState,
+        wallet: this.wallet,
+        onStateChange: this.onCannonSkinStateChange,
+        onWalletChange: (wallet) => this.onWalletChange(wallet)
+      });
       this.skinsPanel.close();
       this.backgroundPanel.close();
     } else if (tab === 'background') {
-      this.backgroundPanel.open({ state: this.backgroundState, onStateChange: this.onBackgroundStateChange });
+      this.backgroundPanel.open({
+        state: this.backgroundState,
+        wallet: this.wallet,
+        onStateChange: this.onBackgroundStateChange,
+        onWalletChange: (wallet) => this.onWalletChange(wallet)
+      });
       this.skinsPanel.close();
       this.cannonPanel.close();
     } else {
       this.cannonPanel.close();
       this.backgroundPanel.close();
-      this.skinsPanel.open({ state: this.skinState, onStateChange: this.onSkinStateChange });
+      this.skinsPanel.open({
+        state: this.skinState,
+        wallet: this.wallet,
+        onStateChange: this.onSkinStateChange,
+        onWalletChange: (wallet) => this.onWalletChange(wallet)
+      });
     }
   }
 
@@ -256,6 +340,23 @@ export class StartScreen {
   private skinsPanelIsClosed(): boolean {
     const view = this.root.querySelector<HTMLElement>('#start-skins-view');
     return view?.hidden ?? true;
+  }
+
+  private onWalletChange(wallet: WalletSaveData): void {
+    this.wallet = wallet;
+    const formatted = formatNova(wallet.nova);
+    for (const value of this.novaValues) value.textContent = formatted;
+    this.walletStateHandler?.(wallet);
+  }
+
+  private onMetaUpgradesChange(upgrades: MetaUpgradeSaveData): void {
+    this.metaUpgrades = upgrades;
+    this.metaUpgradesHandler?.(upgrades);
+  }
+
+  private updateNovaValues(): void {
+    const formatted = formatNova(this.wallet.nova);
+    for (const value of this.novaValues) value.textContent = formatted;
   }
 
   private setSettingsExpanded(expanded: boolean): void {

@@ -4,7 +4,7 @@ import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
-import { mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type SaveStore, type SkinSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -25,6 +25,8 @@ import { StartScreen } from '../ui/StartScreen';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
+import { calculateRunNova } from '../content/meta/EconomyDefinitions';
+import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -130,6 +132,8 @@ export class Game {
 
   private readonly onStartPlay = (): void => {
     if (this.stopped || !this.startOnMenu || !this.gameState.startRun()) return;
+    const saved = this.saveStore.load();
+    this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
     this.activateRun(true);
   };
@@ -167,6 +171,17 @@ export class Game {
     if (!backgrounds.unlocked.includes(backgrounds.selected)) return;
     this.saveStore.save({ ...saved, backgrounds });
     this.view.setBackground(backgrounds.selected);
+  };
+
+  private readonly onStartWalletChange = (wallet: WalletSaveData): void => {
+    const saved = this.saveStore.load();
+    this.saveStore.save({ ...saved, wallet });
+  };
+
+  private readonly onStartMetaUpgradesChange = (metaUpgrades: MetaUpgradeSaveData): void => {
+    const saved = this.saveStore.load();
+    this.saveStore.save({ ...saved, metaUpgrades });
+    this.combat.setPermanentBonuses(getPermanentCombatBonuses(metaUpgrades.levels));
   };
 
   private readonly onPauseRestart = (): void => {
@@ -245,7 +260,8 @@ export class Game {
     this.audio.configure(saved.settings);
     this.combat = new CombatSimulation({
       stress: this.stressMode,
-      initialElapsedSeconds: this.initialElapsedSeconds
+      initialElapsedSeconds: this.initialElapsedSeconds,
+      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels)
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -285,11 +301,15 @@ export class Game {
         skins: saved.skins,
         cannonSkins: saved.cannonSkins,
         backgrounds: saved.backgrounds,
+        wallet: saved.wallet,
+        metaUpgrades: saved.metaUpgrades,
         onPlay: this.onStartPlay,
         onSettingsChange: this.onStartSettingsChange,
         onSkinStateChange: this.onStartSkinStateChange,
         onCannonSkinStateChange: this.onStartCannonSkinStateChange,
-        onBackgroundStateChange: this.onStartBackgroundStateChange
+        onBackgroundStateChange: this.onStartBackgroundStateChange,
+        onWalletChange: this.onStartWalletChange,
+        onMetaUpgradesChange: this.onStartMetaUpgradesChange
       });
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;
@@ -527,12 +547,14 @@ export class Game {
     const summary = createRunSummary(outcome, this.combat.stats);
     const saved = this.saveStore.load();
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
-    this.saveStore.save({ ...saved, best });
+    const novaReward = calculateRunNova(summary);
+    const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + novaReward) };
+    this.saveStore.save({ ...saved, best, wallet });
     this.clearTerminalSummaryTimer();
     this.terminalSummaryTimer = setTimeout(() => {
       this.terminalSummaryTimer = null;
       if (this.stopped || !this.gameState.isTerminal) return;
-      this.gameOver.open(summary, best, () => {
+      this.gameOver.open(summary, best, novaReward, wallet.nova, () => {
         this.restartRun();
       });
     }, TERMINAL_SUMMARY_DELAY_MS);

@@ -47,6 +47,9 @@ const openGame = async (page: Page): Promise<string[]> => {
 
 test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 10000 } }));
+  });
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeVisible();
@@ -102,6 +105,14 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('#start-skins-back').click();
   await expect(page.locator('#start-skins-view')).toBeHidden();
   await expect(page.locator('#start-main-view')).toBeVisible();
+
+  await page.locator('#start-meta').click();
+  await expect(page.locator('#start-meta-view')).toBeVisible();
+  await expect(page.locator('#start-meta-cards .meta-upgrade-card')).toHaveCount(2);
+  await page.locator('.meta-upgrade-card[data-upgrade="weapon_damage"] .meta-upgrade-buy').click();
+  await expect(page.locator('.meta-upgrade-card[data-upgrade="weapon_damage"] .meta-upgrade-level')).toHaveText('NIVEL 1/5');
+  await page.locator('#start-meta-back').click();
+  await expect(page.locator('#start-meta-view')).toBeHidden();
 
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();

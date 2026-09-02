@@ -3,6 +3,7 @@ import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACI
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { BOSS_DEFINITION } from '../../content/bosses/BossDefinition';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getPermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 
@@ -14,6 +15,18 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
+  it('applies permanent weapon bonuses without mixing them with run upgrades', () => {
+    const combat = new CombatSimulation({
+      permanentBonuses: getPermanentCombatBonuses({ weapon_damage: 2, weapon_cadence: 1 })
+    });
+
+    expect(combat.currentProjectileDamage).toBeCloseTo(WEAPON_DEFINITIONS.projectile.damage * 1.1);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(WEAPON_DEFINITIONS.projectile.cooldownSeconds * 0.97);
+    combat.increaseProjectileDamage(4);
+    combat.reset();
+    expect(combat.currentProjectileDamage).toBeCloseTo(WEAPON_DEFINITIONS.projectile.damage * 1.1);
+  });
+
   it('spawns enemies, auto-fires projectiles and resolves defeats without Pixi', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

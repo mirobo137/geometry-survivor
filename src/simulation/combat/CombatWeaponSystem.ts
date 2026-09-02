@@ -9,6 +9,7 @@ import { ProjectilePool, type EnemyState, type ProjectileState } from './EntityP
 import type { ChainSegmentState, OrbitBladeState, ShotRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
+import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 
 const FULL_CIRCLE = Math.PI * 2;
 const CRITICAL_MULTIPLIER = 2;
@@ -69,11 +70,17 @@ export class CombatWeaponSystem {
     rightOriginY: 0
   };
   private readonly stressScenario: StressCombatScenario;
+  private permanentBonuses: PermanentCombatBonuses;
 
   public constructor(
     private readonly enemies: EnemySystem,
-    private readonly onEnemyDefeated: (enemy: EnemyState) => void
+    private readonly onEnemyDefeated: (enemy: EnemyState) => void,
+    permanentBonuses: PermanentCombatBonuses = {
+      projectileDamageMultiplier: 1,
+      projectileCooldownMultiplier: 1
+    }
   ) {
+    this.permanentBonuses = permanentBonuses;
     this.stressScenario = new StressCombatScenario(
       this.projectiles,
       () => this.projectileSpeed,
@@ -86,6 +93,7 @@ export class CombatWeaponSystem {
         this.shotsFired += 1;
       }
     );
+    this.setPermanentBonuses(permanentBonuses);
   }
 
   public get totalShotsFired(): number {
@@ -143,9 +151,9 @@ export class CombatWeaponSystem {
     this.attackAccumulator = 0;
     this.chainAccumulator = 0;
     this.stressScenario.reset();
-    this.projectileDamage = PROJECTILE_DEFINITION.damage;
+    this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.projectileDamageMultiplier;
     this.projectileSpeed = PROJECTILE_DEFINITION.speed;
-    this.projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
+    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.projectileCooldownMultiplier);
     this.orbitBladeCount = 0;
     this.orbitAngle = 0;
     this.orbitRadius = ORBIT_DEFINITION.orbitRadius;
@@ -167,6 +175,12 @@ export class CombatWeaponSystem {
     this.lastShot.leftOriginY = 0;
     this.lastShot.rightOriginX = 0;
     this.lastShot.rightOriginY = 0;
+  }
+
+  public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
+    this.permanentBonuses = permanentBonuses;
+    this.projectileDamage = PROJECTILE_DEFINITION.damage * permanentBonuses.projectileDamageMultiplier;
+    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.projectileCooldownMultiplier);
   }
 
   public increaseProjectileDamage(amount: number): void {

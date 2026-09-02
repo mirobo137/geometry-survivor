@@ -26,6 +26,7 @@
               <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings">Configuración</button>
               <button id="start-level" class="start-secondary start-coming-soon" type="button" disabled aria-describedby="start-coming-soon-note" data-feature="level-select">Niveles <span>PRÓXIMAMENTE</span></button>
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins">Skins <span>ABRIR</span></button>
+              <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta">Mejoras <span>LABORATORIO</span></button>
             </div>
             <p id="start-coming-soon-note" class="start-coming-soon-note">Elige una apariencia visual; no cambia las reglas ni las estadísticas.</p>
           </div>
@@ -43,9 +44,23 @@
           <div class="start-record" aria-label="Mejor marca">
             <span>MEJOR RUN <strong id="start-best-time">00:00</strong></span>
             <span>PUNTOS <strong id="start-best-score">0</strong></span>
+            <span class="start-wallet"><span id="start-nova-icon" class="nova-icon" aria-hidden="true"></span><strong data-nova-value>0</strong> NOVA</span>
           </div>
           <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
           </div>
+          <section id="start-meta-view" class="start-meta-view" hidden aria-labelledby="start-meta-title">
+            <div class="meta-header">
+              <button id="start-meta-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
+              <div>
+                <p class="start-kicker">META / PODER PERMANENTE</p>
+                <h2 id="start-meta-title">Laboratorio meta</h2>
+                <p>Invierte NOVA entre partidas. Estas mejoras no reemplazan las cartas de cada run.</p>
+              </div>
+            </div>
+            <div class="meta-wallet"><span id="start-meta-nova-icon" class="nova-icon" aria-hidden="true"></span><strong id="start-meta-nova-value" data-nova-value>0</strong><span>NOVA disponible</span></div>
+            <div id="start-meta-cards" class="meta-upgrade-cards" aria-label="Mejoras permanentes"></div>
+            <p class="skins-footnote">Las nuevas armas y niveles llegarán después de validar esta economía.</p>
+          </section>
           <section id="start-skins-view" class="start-skins-view" hidden aria-labelledby="start-skins-title">
             <div class="skins-header">
               <button id="start-skins-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
@@ -138,6 +153,7 @@
         <p>RUN COMPLETE</p>
         <h1 id="game-over-title">Fin de la partida</h1>
         <div id="game-over-stats" aria-live="polite">
+          <span id="game-over-nova">NOVA +0</span>
           <span id="game-over-time">Tiempo 00:00</span>
           <span id="game-over-kills">Bajas 0</span>
           <span id="game-over-experience">Experiencia 0</span>

@@ -1,5 +1,6 @@
 export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow';
 export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow';
+import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface CannonSkinDefinition {
   readonly id: CannonSkinId;
@@ -7,7 +8,9 @@ export interface CannonSkinDefinition {
   readonly subtitle: string;
   readonly description: string;
   readonly rarity: string;
-  readonly acquisition: 'default' | 'prototype-free';
+  readonly tier: CosmeticTier;
+  readonly priceNova: number;
+  readonly acquisition: 'default' | 'nova';
   readonly trail: CannonTrailKind;
   readonly accent: number;
   readonly projectileAccent: number;
@@ -21,6 +24,8 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     subtitle: 'Emisor de calibracion',
     description: 'El pulso original: limpio, rapido y facil de leer.',
     rarity: 'INICIAL',
+    tier: 'starter',
+    priceNova: 0,
     acquisition: 'default',
     trail: 'straight',
     accent: 0x75e6ff,
@@ -32,7 +37,9 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     subtitle: 'Estela de arco fino',
     description: 'Una aguja violeta con una curva visual delicada al salir.',
     rarity: 'DESBLOQUEABLE',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'common',
+    priceNova: 250,
     trail: 'curve',
     accent: 0xd2a8ff,
     projectileAccent: 0xffb8df
@@ -43,7 +50,9 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     subtitle: 'Humo de combustion',
     description: 'El impacto deja una nube calida que se disipa rapidamente.',
     rarity: 'NUEVA · DEMO',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'rare',
+    priceNova: 600,
     trail: 'smoke',
     accent: 0xffb86b,
     projectileAccent: 0xffe39a
@@ -54,7 +63,9 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     subtitle: 'Arcoiris prismático',
     description: 'Un proyectil prismático que pinta una estela multicolor.',
     rarity: 'NUEVA · DEMO',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'epic',
+    priceNova: 1200,
     trail: 'rainbow',
     accent: 0x65f2c2,
     projectileAccent: 0xffffff

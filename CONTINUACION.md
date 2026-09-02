@@ -1170,3 +1170,37 @@ tests desktop/mobile completados sin aserciones fallidas (el servidor de
 preview se mantuvo vivo al terminar y se cerro manualmente). Puerta humana:
 comprobar el aura llena, el vaciado al recibir un impacto bloqueado y la
 recomposicion gradual en un telefono real.
+
+## 50. Continuacion - economia NOVA y laboratorio meta - 02-09-2026
+
+El usuario confirma que el preset Low/High ya fue probado en su movil de
+referencia y decide avanzar con contenido meta antes de producir mas armas o
+niveles.
+
+- Se crea la moneda blanda unica **NOVA**. Su emblema vive en
+  `src/assets/svg/ui/nova.svg` y se reutiliza en menu, laboratorio, compras de
+  cosmeticos y resumen de run. Es un SVG autocontenido, sin raster, filtros ni
+  referencias externas; los textos cercanos mantienen la lectura accesible.
+- `EconomyDefinitions` concentra nombre, simbolo, formato y recompensa. Cada
+  run entrega `max(1, bajas + floor(segundos/30))` NOVA, con limite por run y
+  sin decimales visibles.
+- El save pasa a schema v5 con `wallet.nova` y `metaUpgrades.levels`; las
+  partidas v1-v4 migran a cero NOVA y niveles vacios sin perder ajustes,
+  mejores ni loadouts.
+- Las cuatro skins de nucleo y canones usan precios data-driven de 250/600/1200
+  NOVA segun rareza; los fondos usan 150/350/700. La compra se bloquea si no
+  hay saldo y las apariencias siguen sin alterar gameplay.
+- El menu principal incorpora `Mejoras` y `MetaProgressionPanel`. Las dos
+  primeras mejoras permanentes son `weapon_damage` (+5% por nivel, 5 niveles)
+  y `weapon_cadence` (-3% intervalo, 5 niveles). Los modificadores se aplican
+  al comenzar o reiniciar la run y se separan de las cartas temporales.
+- Las armas nuevas, niveles y monetizacion real quedan intencionalmente fuera
+  de esta entrega. Los anuncios mantienen como siguiente frontera los puntos
+  de game over/reinicio y rewarded opcional, aislados por adaptadores de
+  plataforma.
+
+Validacion automatica de esta iteracion: typecheck correcto, 56 archivos y 145
+pruebas unitarias pasando, build local correcto y smoke browser desktop/mobile
+9/9 sin fallos de consola. Pendiente manual: abrir el Laboratorio en Pages,
+terminar una run para acumular NOVA, comprar una skin y una mejora, recargar y
+confirmar que cartera, loadout y niveles permanecen.

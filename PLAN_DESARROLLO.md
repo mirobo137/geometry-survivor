@@ -736,6 +736,30 @@ No mostrar anuncio:
 
 ---
 
+## Fase 8.1 — Economía meta local y laboratorio
+
+Esta fase se activa después de validar el rendimiento móvil del vertical slice y
+antes de producir nuevas armas o niveles. Su objetivo es añadir una progresión
+reversible sin acoplarla a un SDK comercial:
+
+- una única moneda blanda llamada **NOVA**, representada por un SVG compartido;
+- recompensa determinista al terminar una run por bajas y tiempo sobrevivido;
+- precios y rarezas de skins, cañones, proyectiles, estelas y fondos definidos
+  en `content`, sin alterar daño, física ni cadencia cosmética;
+- save schema versionado con cartera y niveles meta, migración segura y payload
+  acotado;
+- botón `Mejoras` en el menú principal y pantalla `Laboratorio de mejoras`;
+- primeras mejoras permanentes limitadas a daño base y cadencia. Las armas
+  nuevas y los niveles adicionales quedan para una fase posterior de balance.
+
+Reglas comerciales: no se introduce moneda premium ni compra real en esta
+entrega. GitHub Pages usa el adaptador local. En Poki solo se podrá usar el
+sistema de anuncios de Poki, sin compras dentro del juego ni anuncios de
+terceros; CrazyGames conservará su adaptador aislado y los anuncios serán
+opcionales. Los puntos candidatos siguen siendo game over/reinicio y una oferta
+rewarded explícita fuera del combate; nunca durante level-up, pausa, jefe o el
+primer minuto.
+
 # 14. ESTRATEGIA DE PRUEBAS SIN DEPENDER DEL PC
 
 ## Automatizadas en GitHub

@@ -1,4 +1,6 @@
 import type { RunSummary } from '../app/RunSummary';
+import { formatNova } from '../content/meta/EconomyDefinitions';
+import novaSvg from '../assets/svg/ui/nova.svg?raw';
 
 export type RestartHandler = () => void;
 
@@ -22,6 +24,7 @@ export class GameOverOverlay {
   private readonly experience: HTMLElement;
   private readonly score: HTMLElement;
   private readonly best: HTMLElement;
+  private readonly nova: HTMLElement;
   private readonly restartButton: HTMLButtonElement;
   private restartHandler: RestartHandler | null = null;
 
@@ -32,8 +35,9 @@ export class GameOverOverlay {
     const experience = root.querySelector<HTMLElement>('#game-over-experience');
     const score = root.querySelector<HTMLElement>('#game-over-score');
     const best = root.querySelector<HTMLElement>('#game-over-best');
+    const nova = root.querySelector<HTMLElement>('#game-over-nova');
     const restartButton = root.querySelector<HTMLButtonElement>('#game-over-restart');
-    if (!title || !time || !kills || !experience || !score || !best || !restartButton) {
+    if (!title || !time || !kills || !experience || !score || !best || !nova || !restartButton) {
       throw new Error('Faltan elementos del resumen de partida');
     }
     this.root = root;
@@ -43,17 +47,24 @@ export class GameOverOverlay {
     this.experience = experience;
     this.score = score;
     this.best = best;
+    this.nova = nova;
     this.restartButton = restartButton;
     this.restartButton.addEventListener('click', () => this.restartHandler?.());
   }
 
-  public open(summary: RunSummary, best: GameOverBestValues, restartHandler: RestartHandler): void {
+  public open(summary: RunSummary, best: GameOverBestValues, novaReward: number, totalNova: number, restartHandler: RestartHandler): void {
     this.title.textContent = summary.outcome === 'victory' ? 'Victoria' : 'Fin de la partida';
     this.time.textContent = `Tiempo ${formatTime(summary.elapsedSeconds)}`;
     this.kills.textContent = `Bajas ${summary.kills}`;
     this.experience.textContent = `Experiencia ${summary.experience}`;
     this.score.textContent = `Puntuación ${summary.score}`;
     this.best.textContent = `Mejor ${formatTime(best.timeSeconds)} · ${best.score} puntos`;
+    this.nova.replaceChildren();
+    this.nova.insertAdjacentHTML('afterbegin', novaSvg);
+    const icon = this.nova.querySelector('svg');
+    icon?.setAttribute('aria-hidden', 'true');
+    icon?.setAttribute('focusable', 'false');
+    this.nova.append(document.createTextNode(` +${formatNova(novaReward)} · Total ${formatNova(totalNova)} NOVA`));
     this.restartHandler = restartHandler;
     this.root.hidden = false;
     this.restartButton.focus({ preventScroll: true });

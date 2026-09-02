@@ -4,11 +4,16 @@ import {
   type CannonSkinId
 } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinSaveData } from '../../platform/save/SaveStore';
+import type { WalletSaveData } from '../../platform/save/SaveStore';
+import { formatNova } from '../../content/meta/EconomyDefinitions';
+import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
 
 export interface CannonSelectPanelOptions {
   readonly state: CannonSkinSaveData;
+  readonly wallet: WalletSaveData;
   readonly onStateChange: (state: CannonSkinSaveData) => void;
+  readonly onWalletChange: (wallet: WalletSaveData) => void;
 }
 
 interface CannonCardEntry {
@@ -25,7 +30,9 @@ export class CannonSelectPanel {
   private readonly selectedStatus: HTMLElement;
   private readonly cardEntries = new Map<CannonSkinId, CannonCardEntry>();
   private state: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
+  private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: CannonSkinSaveData) => void) | null = null;
+  private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
 
   public constructor(root: HTMLElement) {
     const cards = root.querySelector<HTMLElement>('#start-cannon-cards');
@@ -43,13 +50,16 @@ export class CannonSelectPanel {
 
   public open(options: CannonSelectPanelOptions): void {
     this.state = this.normalize(options.state);
+    this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
+    this.walletHandler = options.onWalletChange;
     this.cards.scrollTop = 0;
     this.render();
   }
 
   public close(): void {
     this.changeHandler = null;
+    this.walletHandler = null;
   }
 
   private normalize(state: CannonSkinSaveData): CannonSkinSaveData {
@@ -118,15 +128,33 @@ export class CannonSelectPanel {
       entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
         ? `${selected ? 'Equipado: ' : 'Equipar: '}${cannon.name}`
-        : `Adquirir ${cannon.name}`);
-      entry.action.textContent = selected ? 'EQUIPADO' : unlocked ? 'EQUIPAR' : 'ADQUIRIR · DEMO';
+        : `Adquirir ${cannon.name} por ${formatNova(cannon.priceNova)} NOVA`);
+      if (selected || unlocked) {
+        entry.action.textContent = selected ? 'EQUIPADO' : 'EQUIPAR';
+      } else {
+        const amount = this.wallet.nova >= cannon.priceNova
+          ? formatNova(cannon.priceNova)
+          : `FALTAN ${formatNova(cannon.priceNova - this.wallet.nova)}`;
+        entry.action.replaceChildren();
+        entry.action.insertAdjacentHTML('afterbegin', novaSvg);
+        const icon = entry.action.querySelector('svg');
+        icon?.setAttribute('aria-hidden', 'true');
+        icon?.setAttribute('focusable', 'false');
+        entry.action.append(document.createTextNode(` ${amount}`));
+      }
     }
   }
 
   private select(id: CannonSkinId, unlocked: boolean): void {
+    const definition = getCannonSkinDefinition(id);
+    if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: CannonSkinSaveData = unlocked
       ? { ...this.state, selected: id }
       : { selected: id, unlocked: Array.from(new Set<CannonSkinId>([...this.state.unlocked, id])) };
+    if (!unlocked && definition.priceNova > 0) {
+      this.wallet = { nova: this.wallet.nova - definition.priceNova };
+      this.walletHandler?.(this.wallet);
+    }
     this.state = this.normalize(next);
     this.changeHandler?.(this.state);
     this.render();

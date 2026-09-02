@@ -5,7 +5,7 @@ import {
   LOGICAL_WIDTH
 } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
-import { EnemyPool, type EnemyState } from './EntityPools';
+import { EnemyPool, type EnemyState, type ProjectilePool } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
 import { getSpawnIntervalSeconds } from '../../content/run/DifficultyDefinitions';
@@ -14,6 +14,7 @@ import type { CombatRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
 import { BossSystem } from '../bosses/BossSystem';
+import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -21,6 +22,7 @@ export interface CombatSimulationOptions {
   readonly stress?: boolean;
   /** Optional simulation clock offset used by deterministic development scenarios. */
   readonly initialElapsedSeconds?: number;
+  readonly permanentBonuses?: PermanentCombatBonuses;
 }
 
 export type CombatEvent =
@@ -53,20 +55,12 @@ export class CombatSimulation {
   };
   private readonly enemySystem = new EnemySystem(this.enemies, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
   public readonly boss = new BossSystem(this.enemySystem);
-  private readonly weaponSystem = new CombatWeaponSystem(this.enemySystem, (enemy) => this.defeatEnemy(enemy));
-  public readonly projectiles = this.weaponSystem.projectiles;
+  private readonly weaponSystem: CombatWeaponSystem;
+  public readonly projectiles: ProjectilePool;
   public readonly laser = new LaserHazard();
-  public readonly orbitBlades = this.weaponSystem.orbitBlades;
-  public readonly chainSegments = this.weaponSystem.chainSegments;
-  public readonly renderState: CombatRenderState = {
-    enemies: this.enemies.states,
-    projectiles: this.projectiles.states,
-    orbitBlades: this.orbitBlades,
-    chainSegments: this.chainSegments,
-    laser: this.laser.state,
-    boss: this.boss.state,
-    shot: this.weaponSystem.lastShot
-  };
+  public readonly orbitBlades: CombatWeaponSystem['orbitBlades'];
+  public readonly chainSegments: CombatWeaponSystem['chainSegments'];
+  public readonly renderState: CombatRenderState;
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
   private experienceMultiplier = 1;
@@ -75,6 +69,23 @@ export class CombatSimulation {
   private stressInitialized = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
+    this.weaponSystem = new CombatWeaponSystem(
+      this.enemySystem,
+      (enemy) => this.defeatEnemy(enemy),
+      options.permanentBonuses
+    );
+    this.projectiles = this.weaponSystem.projectiles;
+    this.orbitBlades = this.weaponSystem.orbitBlades;
+    this.chainSegments = this.weaponSystem.chainSegments;
+    this.renderState = {
+      enemies: this.enemies.states,
+      projectiles: this.projectiles.states,
+      orbitBlades: this.orbitBlades,
+      chainSegments: this.chainSegments,
+      laser: this.laser.state,
+      boss: this.boss.state,
+      shot: this.weaponSystem.lastShot
+    };
     this.stressMode = options.stress === true;
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -116,6 +127,11 @@ export class CombatSimulation {
 
   public get currentCriticalChance(): number {
     return this.weaponSystem.currentCriticalChance;
+  }
+
+  /** Updates menu-owned modifiers; they take effect on the next run reset. */
+  public setPermanentBonuses(bonuses: PermanentCombatBonuses): void {
+    this.weaponSystem.setPermanentBonuses(bonuses);
   }
 
   public increaseProjectileDamage(amount: number): void {

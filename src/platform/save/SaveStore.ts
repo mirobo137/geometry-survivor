@@ -5,10 +5,12 @@ import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from '../../content/visual/BackgroundDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
+import { PERMANENT_UPGRADE_DEFINITIONS, type PermanentUpgradeId } from '../../content/meta/PermanentUpgradeDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 4 as const;
+export const SAVE_SCHEMA_VERSION = 5 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
+export const MAX_NOVA = 9_999_999;
 
 export interface SaveSettings {
   readonly musicVolume: number;
@@ -38,6 +40,14 @@ export interface BackgroundSaveData {
   readonly unlocked: readonly BackgroundId[];
 }
 
+export interface WalletSaveData {
+  readonly nova: number;
+}
+
+export interface MetaUpgradeSaveData {
+  readonly levels: Readonly<Partial<Record<PermanentUpgradeId, number>>>;
+}
+
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
   readonly settings: SaveSettings;
@@ -46,6 +56,8 @@ export interface SaveData {
   readonly skins: SkinSaveData;
   readonly cannonSkins: CannonSkinSaveData;
   readonly backgrounds: BackgroundSaveData;
+  readonly wallet: WalletSaveData;
+  readonly metaUpgrades: MetaUpgradeSaveData;
 }
 
 export interface StorageAdapter {
@@ -90,6 +102,12 @@ export const createDefaultSaveData = (): SaveData => ({
   backgrounds: {
     selected: 'deep-space',
     unlocked: ['deep-space']
+  },
+  wallet: {
+    nova: 0
+  },
+  metaUpgrades: {
+    levels: {}
   }
 });
 
@@ -111,6 +129,10 @@ const readControlScheme = (value: unknown, fallback: ControlScheme): ControlSche
   value === 'auto' || value === 'touch' || value === 'keyboard' ? value : fallback
 );
 
+const readNonNegativeInt = (value: unknown, fallback: number, max: number): number => (
+  Math.min(max, Math.max(0, Math.floor(finiteOr(value, fallback))))
+);
+
 /** Migrates unknown/legacy payloads into the current bounded schema. */
 export const migrateSaveData = (value: unknown): SaveData => {
   const defaults = createDefaultSaveData();
@@ -124,6 +146,9 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawSkins = isRecord(value.skins) ? value.skins : {};
   const rawCannonSkins = isRecord(value.cannonSkins) ? value.cannonSkins : {};
   const rawBackgrounds = isRecord(value.backgrounds) ? value.backgrounds : {};
+  const rawWallet = isRecord(value.wallet) ? value.wallet : {};
+  const rawMetaUpgrades = isRecord(value.metaUpgrades) ? value.metaUpgrades : {};
+  const rawMetaLevels = isRecord(rawMetaUpgrades.levels) ? rawMetaUpgrades.levels : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
   const unlocked = Array.isArray(rawSkins.unlocked)
@@ -144,6 +169,11 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const normalizedBackgroundUnlocked = Array.from(new Set<BackgroundId>(['deep-space', ...backgroundUnlocked]));
   const requestedBackground = isBackgroundId(rawBackgrounds.selected) ? rawBackgrounds.selected : 'deep-space';
   const selectedBackground = normalizedBackgroundUnlocked.includes(requestedBackground) ? requestedBackground : 'deep-space';
+  const metaLevels: Partial<Record<PermanentUpgradeId, number>> = {};
+  for (const definition of PERMANENT_UPGRADE_DEFINITIONS) {
+    const level = readNonNegativeInt(rawMetaLevels[definition.id], 0, definition.maxLevel);
+    if (level > 0) metaLevels[definition.id] = level;
+  }
 
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -170,6 +200,12 @@ export const migrateSaveData = (value: unknown): SaveData => {
     backgrounds: {
       selected: selectedBackground,
       unlocked: normalizedBackgroundUnlocked
+    },
+    wallet: {
+      nova: readNonNegativeInt(rawWallet.nova, defaults.wallet.nova, MAX_NOVA)
+    },
+    metaUpgrades: {
+      levels: metaLevels
     }
   };
 };

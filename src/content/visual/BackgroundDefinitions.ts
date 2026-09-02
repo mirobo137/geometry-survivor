@@ -1,5 +1,6 @@
 export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field';
 export type BackgroundPattern = 'constellation' | 'nebula' | 'solar' | 'crystal';
+import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface BackgroundTokens {
   readonly base: number;
@@ -15,7 +16,9 @@ export interface BackgroundDefinition {
   readonly subtitle: string;
   readonly description: string;
   readonly rarity: string;
-  readonly acquisition: 'default' | 'prototype-free';
+  readonly tier: CosmeticTier;
+  readonly priceNova: number;
+  readonly acquisition: 'default' | 'nova';
   readonly tokens: BackgroundTokens;
 }
 
@@ -27,6 +30,8 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     subtitle: 'La señal original',
     description: 'Un campo estelar sobrio para leer cada amenaza sin ruido.',
     rarity: 'INICIAL',
+    tier: 'starter',
+    priceNova: 0,
     acquisition: 'default',
     tokens: { base: 0x080b17, glow: 0x18315d, accent: 0x75e6ff, secondary: 0xaab7d8, pattern: 'constellation' }
   },
@@ -36,7 +41,9 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     subtitle: 'Nubes de carga',
     description: 'Nebulosas frías y pulsos mint para una arena más eléctrica.',
     rarity: 'DESBLOQUEABLE',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'common',
+    priceNova: 150,
     tokens: { base: 0x071321, glow: 0x174c5a, accent: 0x65f2c2, secondary: 0x75e6ff, pattern: 'nebula' }
   },
   {
@@ -45,7 +52,9 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     subtitle: 'Ruta de forja',
     description: 'Arcos cálidos y polvo solar para cambiar el ritmo visual.',
     rarity: 'NUEVA · DEMO',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'rare',
+    priceNova: 350,
     tokens: { base: 0x170d0d, glow: 0x5b2b1f, accent: 0xffb86b, secondary: 0xffe39a, pattern: 'solar' }
   },
   {
@@ -54,7 +63,9 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     subtitle: 'Geometría suspendida',
     description: 'Una retícula violeta que hace eco de la identidad geométrica.',
     rarity: 'NUEVA · DEMO',
-    acquisition: 'prototype-free',
+    acquisition: 'nova',
+    tier: 'epic',
+    priceNova: 700,
     tokens: { base: 0x100b20, glow: 0x38205b, accent: 0xd2a8ff, secondary: 0x75e6ff, pattern: 'crystal' }
   }
 ] as const;

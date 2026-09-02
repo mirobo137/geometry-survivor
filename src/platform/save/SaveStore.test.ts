@@ -41,7 +41,9 @@ describe('LocalSaveStore', () => {
       tutorialSeen: true,
       skins: defaults.skins,
       cannonSkins: defaults.cannonSkins,
-      backgrounds: defaults.backgrounds
+      backgrounds: defaults.backgrounds,
+      wallet: { nova: 425 },
+      metaUpgrades: { levels: { weapon_damage: 2 } }
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
@@ -51,7 +53,9 @@ describe('LocalSaveStore', () => {
       tutorialSeen: true,
       skins: defaults.skins,
       cannonSkins: defaults.cannonSkins,
-      backgrounds: defaults.backgrounds
+      backgrounds: defaults.backgrounds,
+      wallet: { nova: 425 },
+      metaUpgrades: { levels: { weapon_damage: 2 } }
     });
   });
 
@@ -74,7 +78,9 @@ describe('LocalSaveStore', () => {
       tutorialSeen: true,
       skins: { selected: 'cyan', unlocked: ['cyan'] },
       cannonSkins: { selected: 'basic', unlocked: ['basic'] },
-      backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] }
+      backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
+      wallet: { nova: 0 },
+      metaUpgrades: { levels: {} }
     });
   });
 
@@ -99,6 +105,14 @@ describe('LocalSaveStore', () => {
       schemaVersion: SAVE_SCHEMA_VERSION,
       backgrounds: { selected: 'unknown', unlocked: [] }
     }).backgrounds).toEqual({ selected: 'deep-space', unlocked: ['deep-space'] });
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      wallet: { nova: 12_345.9 },
+      metaUpgrades: { levels: { weapon_damage: 99, weapon_cadence: -2, unknown: 4 } }
+    })).toMatchObject({
+      wallet: { nova: 12_345 },
+      metaUpgrades: { levels: { weapon_damage: 5 } }
+    });
   });
 
   it('uses memory fallback when persistent storage rejects writes', () => {

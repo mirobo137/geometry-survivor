@@ -4,11 +4,16 @@ import {
 } from '../../content/visual/SkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import type { SkinSaveData } from '../../platform/save/SaveStore';
+import type { WalletSaveData } from '../../platform/save/SaveStore';
+import { formatNova } from '../../content/meta/EconomyDefinitions';
+import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 
 export interface SkinSelectPanelOptions {
   readonly state: SkinSaveData;
+  readonly wallet: WalletSaveData;
   readonly onStateChange: (state: SkinSaveData) => void;
+  readonly onWalletChange: (wallet: WalletSaveData) => void;
 }
 
 interface SkinCardEntry {
@@ -25,7 +30,9 @@ export class SkinSelectPanel {
   private readonly selectedStatus: HTMLElement;
   private readonly cardEntries = new Map<PlayerSkinId, SkinCardEntry>();
   private state: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
+  private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: SkinSaveData) => void) | null = null;
+  private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
 
   public constructor(root: HTMLElement) {
     const cards = root.querySelector<HTMLElement>('#start-skin-cards');
@@ -43,13 +50,16 @@ export class SkinSelectPanel {
 
   public open(options: SkinSelectPanelOptions): void {
     this.state = this.normalize(options.state);
+    this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
+    this.walletHandler = options.onWalletChange;
     this.cards.scrollTop = 0;
     this.render();
   }
 
   public close(): void {
     this.changeHandler = null;
+    this.walletHandler = null;
   }
 
   private normalize(state: SkinSaveData): SkinSaveData {
@@ -122,15 +132,33 @@ export class SkinSelectPanel {
       entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
         ? `${selected ? 'Equipada: ' : 'Equipar: '}${skin.name}`
-        : `Adquirir ${skin.name}`);
-      entry.action.textContent = selected ? 'EQUIPADA' : unlocked ? 'EQUIPAR' : 'ADQUIRIR \u00b7 DEMO';
+        : `Adquirir ${skin.name} por ${formatNova(skin.priceNova)} NOVA`);
+      if (selected || unlocked) {
+        entry.action.textContent = selected ? 'EQUIPADA' : 'EQUIPAR';
+      } else {
+        const amount = this.wallet.nova >= skin.priceNova
+          ? formatNova(skin.priceNova)
+          : `FALTAN ${formatNova(skin.priceNova - this.wallet.nova)}`;
+        entry.action.replaceChildren();
+        entry.action.insertAdjacentHTML('afterbegin', novaSvg);
+        const icon = entry.action.querySelector('svg');
+        icon?.setAttribute('aria-hidden', 'true');
+        icon?.setAttribute('focusable', 'false');
+        entry.action.append(document.createTextNode(` ${amount}`));
+      }
     }
   }
 
   private select(id: PlayerSkinId, unlocked: boolean): void {
+    const definition = getPlayerSkinDefinition(id);
+    if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: SkinSaveData = unlocked
       ? { ...this.state, selected: id }
       : { selected: id, unlocked: Array.from(new Set<PlayerSkinId>([...this.state.unlocked, id])) };
+    if (!unlocked && definition.priceNova > 0) {
+      this.wallet = { nova: this.wallet.nova - definition.priceNova };
+      this.walletHandler?.(this.wallet);
+    }
     this.state = this.normalize(next);
     this.changeHandler?.(this.state);
     this.render();

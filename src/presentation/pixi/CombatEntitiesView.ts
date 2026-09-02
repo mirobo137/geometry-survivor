@@ -97,8 +97,8 @@ class EnemyVisual {
   private readonly boss: Sprite;
   private hitAtSeconds = Number.NEGATIVE_INFINITY;
 
-  public constructor(textures: EnemyTextureSet, phaseSeed: number) {
-    this.ship = new EnemyShipVisual(textures.ships, phaseSeed);
+  public constructor(textures: EnemyTextureSet, phaseSeed: number, quality: FxQuality) {
+    this.ship = new EnemyShipVisual(textures.ships, phaseSeed, quality);
     this.boss = new Sprite(textures.boss);
     this.boss.anchor.set(0.5);
     this.boss.visible = false;
@@ -180,7 +180,7 @@ export class CombatEntitiesView {
       rainbow: createSvgTexture(renderer, projectileRainbowSvg, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
-      const visual = new EnemyVisual(this.enemyTextures, index * 0.713);
+      const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality);
       this.enemyVisuals.push(visual);
       this.enemyLayer.addChild(visual.root);
     }

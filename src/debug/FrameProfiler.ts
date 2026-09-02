@@ -10,6 +10,17 @@ export interface FrameProfileSnapshot {
 
 const SAMPLE_CAPACITY = 240;
 const LONG_FRAME_MS = 25;
+const REPORT_INTERVAL_MS = 500;
+
+const DISABLED_SNAPSHOT: FrameProfileSnapshot = {
+  enabled: false,
+  samples: 0,
+  averageMs: 0,
+  p95Ms: 0,
+  maxMs: 0,
+  longFrames: 0,
+  heapUsedMb: null
+};
 
 /** Optional low-overhead frame sampler for real-device comparisons. */
 export class FrameProfiler {
@@ -18,6 +29,8 @@ export class FrameProfiler {
   private sampleCount = 0;
   private cursor = 0;
   private longFrames = 0;
+  private lastReportAtMs = Number.NEGATIVE_INFINITY;
+  private cachedSnapshot: FrameProfileSnapshot = DISABLED_SNAPSHOT;
 
   public constructor(public readonly enabled = false) {}
 
@@ -30,10 +43,14 @@ export class FrameProfiler {
     if (value >= LONG_FRAME_MS) this.longFrames += 1;
   }
 
-  public snapshot(): FrameProfileSnapshot {
-    if (!this.enabled || this.sampleCount === 0) {
-      return {
-        enabled: this.enabled,
+  public snapshot(nowMs = performance.now()): FrameProfileSnapshot {
+    if (!this.enabled) return DISABLED_SNAPSHOT;
+    if (nowMs - this.lastReportAtMs < REPORT_INTERVAL_MS) return this.cachedSnapshot;
+    this.lastReportAtMs = nowMs;
+
+    if (this.sampleCount === 0) {
+      this.cachedSnapshot = {
+        enabled: true,
         samples: 0,
         averageMs: 0,
         p95Ms: 0,
@@ -41,6 +58,7 @@ export class FrameProfiler {
         longFrames: this.longFrames,
         heapUsedMb: this.readHeapUsedMb()
       };
+      return this.cachedSnapshot;
     }
 
     let total = 0;
@@ -53,7 +71,7 @@ export class FrameProfiler {
     }
     this.sortedSamples.subarray(0, this.sampleCount).sort();
     const p95Index = Math.max(0, Math.ceil(this.sampleCount * 0.95) - 1);
-    return {
+    this.cachedSnapshot = {
       enabled: true,
       samples: this.sampleCount,
       averageMs: total / this.sampleCount,
@@ -62,6 +80,7 @@ export class FrameProfiler {
       longFrames: this.longFrames,
       heapUsedMb: this.readHeapUsedMb()
     };
+    return this.cachedSnapshot;
   }
 
   private readHeapUsedMb(): number | null {

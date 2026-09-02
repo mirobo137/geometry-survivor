@@ -400,7 +400,7 @@ export class Game {
       this.fpsTime = now;
     }
     const state = this.viewport.state;
-    const profile = this.profiler.snapshot();
+    const profile = this.profiler.snapshot(now);
     this.debug.update({
       target: this.buildTarget,
       orientation: state.orientation,

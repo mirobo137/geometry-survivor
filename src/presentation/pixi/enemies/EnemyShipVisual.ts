@@ -1,6 +1,7 @@
 import { Container, Sprite } from 'pixi.js';
 import type { Texture } from 'pixi.js';
 import type { EnemyKind } from '../../../content/enemies/EnemyDefinitions';
+import type { FxQuality } from '../../../content/visual/VisualTokens';
 import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderState';
 
 export type EnemyShipKind = Exclude<EnemyKind, 'boss'>;
@@ -73,13 +74,16 @@ export class EnemyShipVisual {
   private readonly hull: Sprite;
   private readonly cockpit: Sprite;
   private readonly hitFlash: Sprite;
+  private readonly detailedPartsEnabled: boolean;
   private kind: EnemyShipKind = 'chaser';
   private facing = 0;
 
   public constructor(
     private readonly textures: EnemyShipTextureMap,
-    private readonly phaseSeed = 0
+    private readonly phaseSeed = 0,
+    quality: FxQuality = 'medium'
   ) {
+    this.detailedPartsEnabled = quality !== 'low';
     this.rear = new Sprite(textures.chaser.rear);
     this.wings = new Sprite(textures.chaser.wings);
     this.hull = new Sprite(textures.chaser.hull);
@@ -106,6 +110,9 @@ export class EnemyShipVisual {
     // guard here makes this component safe if another preview sends a boss.
     const kind = state.kind as EnemyShipKind;
     this.setKind(kind);
+    this.rear.visible = this.detailedPartsEnabled;
+    this.wings.visible = this.detailedPartsEnabled;
+    this.cockpit.visible = this.detailedPartsEnabled;
     const profile = MOTION_PROFILES[this.kind];
     const speed = Math.hypot(state.vx, state.vy);
     if (speed > 0.5) this.facing = Math.atan2(state.vy, state.vx) + Math.PI / 2;
@@ -140,7 +147,7 @@ export class EnemyShipVisual {
     this.hitFlash.rotation = this.hull.rotation;
     this.hitFlash.scale.set(1 + hitPulse * 0.06, 1 - hitPulse * 0.03);
     this.hitFlash.alpha = hitPulse * 0.62;
-    this.hitFlash.visible = hitPulse > 0.01;
+    this.hitFlash.visible = this.detailedPartsEnabled && hitPulse > 0.01;
   }
 
   public reset(): void {

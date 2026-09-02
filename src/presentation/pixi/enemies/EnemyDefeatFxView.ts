@@ -56,8 +56,12 @@ export class EnemyDefeatFxView {
     if (this.reducedMotion) return;
     const slot = this.slots.find((candidate) => !candidate.root.visible);
     if (!slot) return;
-    const textureSet = this.textureMapFor(kind);
-    for (let index = 0; index < slot.parts.length; index += 1) slot.parts[index].texture = textureSet[index];
+    const textures = this.textures[kind];
+    const [rear, wings, hull, cockpit] = slot.parts;
+    rear.texture = textures.rear;
+    wings.texture = textures.wings;
+    hull.texture = textures.hull;
+    cockpit.texture = textures.cockpit;
     slot.lifeSeconds = DEFEAT_SECONDS;
     slot.kind = kind;
     slot.root.visible = true;
@@ -116,18 +120,6 @@ export class EnemyDefeatFxView {
     hull.scale.set(1 - progress * 0.14, 1 - progress * 0.04);
     cockpit.position.set(-distance * 0.12, -distance * 1.08);
     cockpit.rotation = progress * 0.54;
-  }
-
-  private textureMapFor(kind: EnemyShipKind): readonly Texture[] {
-    // The active kind is encoded on the cockpit texture reference by the
-    // caller before the pose starts; this array is replaced immediately and
-    // never allocates inside update().
-    return [
-      this.textures[kind].rear,
-      this.textures[kind].wings,
-      this.textures[kind].hull,
-      this.textures[kind].cockpit
-    ];
   }
 
   private readonly textures: EnemyShipTextureMap;

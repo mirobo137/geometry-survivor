@@ -1043,3 +1043,26 @@ La puerta automatica de esta iteracion es typecheck, suite, smoke desktop y
 mobile, build local y builds de plataforma. La puerta manual posterior es
 comparar las cuatro atmosferas en movil real, revisar contraste y confirmar
 que Low mantenga legibilidad y rendimiento.
+
+## 45. Continuacion - protecciones para dispositivos modestos y profiler
+
+Fecha: 02-09-2026.
+
+- El resultado estable del stress en el telefono de referencia valida ese
+  dispositivo, pero no sustituye una medicion en hardware modesto. Las naves
+  mantienen sus cuatro piezas SVG en Medium/High; en Low solo renderizan el
+  casco. La entidad, colision, telegraph y simulacion siguen presentes: se
+  omiten exclusivamente piezas decorativas, flash y movimiento secundario.
+- `EnemyDefeatFxView` deja de crear un array temporal por derrota al asignar
+  directamente las cuatro texturas cacheadas de la familia al slot pooled.
+- `FrameProfiler` conserva sus muestras sin allocations por frame, pero ahora
+  calcula promedio/p95/maximo y heap como maximo cada 500 ms. Cuando no esta
+  activado devuelve un snapshot constante y no consulta memoria en cada frame.
+- Se retiran las clases Pixi obsoletas de la tortuga. Sus SVG y pruebas de
+  contrato permanecen como referencia historica; el runtime comun usa
+  `EnemyShipVisual` y `EnemyDefeatFxView` para las cuatro familias.
+
+Puerta humana pendiente: ejecutar `?stress=1&quality=low&profile=1` en un
+telefono menos potente, mover durante un minuto y registrar modelo, navegador,
+FPS/p95 y cualquier congelamiento. Medium/High siguen siendo el objetivo
+visual; Low es el modo de seguridad, no un cambio de gameplay.

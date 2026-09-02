@@ -41,4 +41,10 @@ describe('EnemyShipVisual', () => {
     view.render(state('boss'), 0.5);
     expect(view.root.visible).toBe(false);
   });
+
+  it('keeps the required hull but hides decorative pieces in Low quality', () => {
+    const view = new EnemyShipVisual(textures, 0, 'low');
+    view.render(state('tank'), 0.5, 1);
+    expect(view.root.children.map((child) => child.visible)).toEqual([false, false, true, false, false]);
+  });
 });

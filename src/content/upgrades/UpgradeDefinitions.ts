@@ -118,7 +118,7 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
   },
   {
     id: 'recharging_shield',
-    title: 'Escudo de fase',
+    title: 'Escudo recargable',
     description: 'Bloquea un impacto y se recarga en 10 s',
     effect: { type: 'shield', rechargeSeconds: 10 },
     maxStacks: 1

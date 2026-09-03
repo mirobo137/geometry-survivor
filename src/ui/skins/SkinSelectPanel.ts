@@ -71,7 +71,10 @@ export class SkinSelectPanel {
   private render(): void {
     const definition = getPlayerSkinDefinition(this.state.selected);
     this.preview.replaceChildren();
-    this.preview.insertAdjacentHTML('afterbegin', createPlayerSkinPreviewSvg(this.state.selected));
+    this.preview.insertAdjacentHTML(
+      'afterbegin',
+      createPlayerSkinPreviewSvg(this.state.selected, { animated: this.shouldAnimatePreview() })
+    );
     this.selectedName.textContent = definition.name;
     this.selectedStatus.textContent = `EQUIPADA \u00b7 ${definition.subtitle}`;
 
@@ -99,7 +102,7 @@ export class SkinSelectPanel {
       const art = document.createElement('span');
       art.className = 'skin-card-art';
       art.setAttribute('aria-hidden', 'true');
-      art.insertAdjacentHTML('afterbegin', createPlayerSkinPreviewSvg(skin.id));
+      art.insertAdjacentHTML('afterbegin', createPlayerSkinPreviewSvg(skin.id, { animated: false }));
       button.append(art);
 
       const copy = document.createElement('span');
@@ -147,6 +150,12 @@ export class SkinSelectPanel {
         entry.action.append(document.createTextNode(` ${amount}`));
       }
     }
+  }
+
+  private shouldAnimatePreview(): boolean {
+    return typeof window === 'undefined'
+      || typeof window.matchMedia !== 'function'
+      || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   private select(id: PlayerSkinId, unlocked: boolean): void {

@@ -979,7 +979,6 @@ body {
   width: min(100%, 9rem);
   height: 100%;
   overflow: visible;
-  animation: skin-preview-float 3.8s ease-in-out infinite;
 }
 
 .skin-preview-copy {
@@ -1342,46 +1341,8 @@ body {
   50% { opacity: 1; }
 }
 
-.skin-preview svg .skin-art-orbit {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-spin 12s linear infinite;
-}
-
-.skin-preview svg .skin-art-shards {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-shard-pulse 2.8s ease-in-out infinite;
-}
-
-.skin-preview svg .skin-art-crown {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-crown-turn 8s ease-in-out infinite;
-}
-
-.skin-preview svg .skin-art-blades {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-blade-turn 6s linear infinite reverse;
-}
-
-.skin-preview svg .skin-art-core {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-core-pulse 2.4s ease-in-out infinite;
-}
-
-.skin-preview svg .skin-art-ring {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-spin 22s linear infinite reverse;
-}
-
-.skin-preview svg .skin-art-hull {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: skin-art-core-pulse 3.6s ease-in-out infinite;
+.skin-preview svg.player-skin-preview.is-animated {
+  animation: skin-preview-float 3.8s ease-in-out infinite;
 }
 
 .skin-card-art svg .skin-art-orbit,
@@ -1654,27 +1615,8 @@ body {
   }
 
   /* Keep a single, small animated surface: the equipped skin preview. */
-  #start-screen.is-skins-mode .skin-preview svg {
+  #start-screen.is-skins-mode .skin-preview svg.is-animated {
     animation: skin-preview-float-mobile 5.6s ease-in-out infinite;
-  }
-
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-orbit {
-    animation: skin-art-orbit-mobile 18s linear infinite;
-  }
-
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-shards,
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-crown,
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-blades {
-    animation: skin-art-signature-mobile 5.2s ease-in-out infinite;
-  }
-
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-core {
-    animation: skin-art-core-mobile 4.8s ease-in-out infinite;
-  }
-
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-ring,
-  #start-screen.is-skins-mode .skin-preview svg .skin-art-hull {
-    animation: skin-art-signature-mobile 5.2s ease-in-out infinite;
   }
 }
 

@@ -22,4 +22,15 @@ describe('SkinPreviewSvg', () => {
     expect(amber).toContain('M0-32 16-11 21 8 16 24-16 24-21 8-16-11z');
     expect(emerald).toContain('M0-27 16-8 11 19 0 27-11 19-16-8z');
   });
+
+  it('omits cannon emitters and only animates the equipped preview', () => {
+    const card = createPlayerSkinPreviewSvg('cyan');
+    const preview = createPlayerSkinPreviewSvg('violet', { animated: true });
+    expect(card).not.toContain('M-22-7-39-18');
+    expect(card).not.toContain('animateTransform');
+    expect(card).toContain('is-static');
+    expect(preview).not.toContain('M-22-7-39-18');
+    expect(preview).toContain('animateTransform');
+    expect(preview).toContain('is-animated');
+  });
 });

@@ -37,7 +37,10 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     const preview = document.querySelector<SVGElement>('.skin-preview svg');
     const previewCore = document.querySelector<SVGElement>('.skin-preview svg .skin-art-core');
     const cardSignature = document.querySelector<SVGElement>('.skin-card-art svg .skin-art-orbit');
-    if (!screen || !panel || !scene || !preview || !previewCore || !cardSignature) throw new Error('Faltan capas del locker');
+    const cardArt = document.querySelector<SVGElement>('.skin-card-art svg');
+    if (!screen || !panel || !scene || !preview || !previewCore || !cardSignature || !cardArt) {
+      throw new Error('Faltan capas del locker');
+    }
     return {
       mode: screen.classList.contains('is-skins-mode'),
       panel: getComputedStyle(panel).animationName,
@@ -45,7 +48,11 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
       sceneAtmosphere: getComputedStyle(scene, '::before').animationName,
       preview: getComputedStyle(preview).animationName,
       previewCore: getComputedStyle(previewCore).animationName,
-      cardArt: getComputedStyle(cardSignature).animationName
+      previewAnimated: preview.classList.contains('is-animated'),
+      previewHasSmil: preview.querySelector('animateTransform') !== null,
+      cardArt: getComputedStyle(cardSignature).animationName,
+      cardHasSmil: cardArt.querySelector('animateTransform') !== null,
+      cardHasEmitters: Boolean(cardArt.querySelector('.skin-art-emitters'))
     };
   });
   expect(lockerMotion).toEqual({
@@ -54,8 +61,12 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     panelInner: 'none',
     sceneAtmosphere: 'none',
     preview: 'skin-preview-float-mobile',
-    previewCore: 'skin-art-core-mobile',
-    cardArt: 'none'
+    previewCore: 'none',
+    previewAnimated: true,
+    previewHasSmil: true,
+    cardArt: 'none',
+    cardHasSmil: false,
+    cardHasEmitters: false
   });
 
   const scrollMetrics = await page.locator('#start-skin-cards').evaluate((element) => ({

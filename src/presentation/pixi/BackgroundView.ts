@@ -70,7 +70,7 @@ interface NebulaSlot {
   readonly sprite: Sprite;
   readonly breathSpeed: number;
   readonly breathPhase: number;
-  readonly baseScale: number;
+  baseScale: number;
   readonly breathAmplitude: number;
 }
 
@@ -264,6 +264,8 @@ export class BackgroundView {
         const nebula = this.nebulae[index];
         nebula.sprite.position.set(px * this.width, py * this.height);
         nebula.sprite.tint = color;
+        nebula.baseScale = baseScale;
+        nebula.sprite.scale.set(baseScale);
       } else {
         const sprite = new Sprite(this.nebulaTexture!);
         sprite.anchor.set(0.5);

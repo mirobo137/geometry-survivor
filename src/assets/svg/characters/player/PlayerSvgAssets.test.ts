@@ -25,6 +25,7 @@ const parts = [shadowSvg, ringSvg, weaponsSvg, bodySvg, coreSvg, accentSvg] as c
 const assertSafeFramed = (svg: string, prefix: string): void => {
   expect(svg).toContain('viewBox="-32 -32 64 64"');
   expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
+  expect(svg).not.toContain('\uFFFD');
   expect(svg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
   const ids = [...svg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
   expect(ids.length).toBeGreaterThan(0);

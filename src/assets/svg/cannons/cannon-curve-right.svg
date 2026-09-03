@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-curve-right-title cannon-curve-right-desc">
   <title id="cannon-curve-right-title">Aguja derecha Arc Needle</title>
-  <desc id="cannon-curve-right-desc">Cañón fino con canal de arco y punta ahorquillada en la ranura derecha.</desc>
+  <desc id="cannon-curve-right-desc">CaÃ±Ã³n fino con canal de arco y punta ahorquillada en la ranura derecha.</desc>
   <g id="cannon-curve-right" stroke-linejoin="round">
     <path id="cannon-curve-right-mount" d="M6-6 11-10 14-3 11 5 6 3z" fill="#4a2d73" stroke="#f5eaff" stroke-width="1.4"/>
     <path id="cannon-curve-right-needle" d="M11-8 20-16 27-13 22-6 16 2 11 3z" fill="#8e6bce" stroke="#f5eaff" stroke-width="1.5"/>

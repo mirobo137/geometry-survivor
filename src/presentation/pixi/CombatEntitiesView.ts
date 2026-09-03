@@ -2,7 +2,7 @@ import { Container, Sprite } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
-import type { FxQuality } from '../../content/visual/VisualTokens';
+import { FX_QUALITY, type FxQuality } from '../../content/visual/VisualTokens';
 import { getCannonSkinDefinition, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
 import chaserRearSvg from '../../assets/svg/enemies/chaser/chaser-rear.svg?raw';
@@ -151,13 +151,13 @@ export class CombatEntitiesView {
   private readonly projectileTrails: ProjectileTrailView;
   private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
   private cannonSkin: CannonSkinId;
-  private readonly glowEnabled: boolean;
+  private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
     this.cannonSkin = cannonSkin;
-    this.glowEnabled = quality !== 'low';
+    this.projectileGlowLimit = FX_QUALITY[quality].projectileGlowLimit;
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
@@ -185,7 +185,7 @@ export class CombatEntitiesView {
       this.enemyLayer.addChild(visual.root);
     }
     for (let index = 0; index < PROJECTILE_POOL_CAPACITY; index += 1) {
-      if (this.glowEnabled) {
+      if (index < this.projectileGlowLimit) {
         const glow = new Sprite(this.projectileTextures[cannonSkin]);
         glow.anchor.set(0.5);
         glow.visible = false;
@@ -234,7 +234,7 @@ export class CombatEntitiesView {
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
       const state = combat.projectiles[index];
       const sprite = this.projectileSprites[index];
-      const glow = this.glowEnabled ? this.projectileGlows[index] : null;
+      const glow = this.projectileGlows[index] ?? null;
       sprite.visible = state.active;
       if (glow) glow.visible = state.active;
       if (!state.active) continue;

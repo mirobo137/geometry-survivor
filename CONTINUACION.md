@@ -1,6 +1,6 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 01-09-2026.
+> Snapshot operativo: 03-09-2026.
 >
 > Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
@@ -1204,3 +1204,72 @@ pruebas unitarias pasando, build local correcto y smoke browser desktop/mobile
 9/9 sin fallos de consola. Pendiente manual: abrir el Laboratorio en Pages,
 terminar una run para acumular NOVA, comprar una skin y una mejora, recargar y
 confirmar que cartera, loadout y niveles permanecen.
+
+## 51. Continuación - estabilización y plan maestro de expansión - 03-09-2026
+
+Se revisaron los cambios realizados con Grok y la investigación de futuro. La
+dirección aprobada no reemplaza el vertical slice: lo convierte en Acto I de
+una estructura Quick Act / Expedition / Overdrive. La sección 16 de
+`PLAN_DESARROLLO.md` es ahora el orden canónico para el trabajo futuro.
+
+Hallazgos corregidos en esta sesión:
+
+- `BackgroundView` actualiza `baseScale` y escala de nebulosas ya existentes al
+  cambiar el viewport; una prueba reproduce el cambio 1280→640.
+- Los 18 SVG guardados accidentalmente como Windows-1252 fueron convertidos a
+  UTF-8. Las pruebas de cañones y player rechazan el carácter de reemplazo para
+  impedir otra corrupción silenciosa.
+- Los glows de proyectil quedan presupuestados por calidad: Low 0, Medium 64 y
+  High 120; los proyectiles restantes siguen visibles sin duplicar hasta 300
+  sprites de glow.
+- `debug.log` sale del repositorio y queda ignorado. Sus mensajes `ReadPixels`
+  provenían de Chromium headless y no demostraban por sí mismos un fallo del
+  juego.
+- El bundle conserva su warning visible. No se oculta aumentando el límite:
+  debe medirse y dividirse por consumidores reales antes de sumar actos y
+  galerías.
+
+Decisiones fijadas:
+
+- Prioridad inmediata: validar NOVA/Laboratorio v1 en Pages y medir su poder
+  combinado; el objetivo meta es 10–15% de ventaja efectiva máxima.
+- Después se crea un contrato rewarded tipado y un simulador local. Los SDK
+  reales llegan sólo cuando success/error/cancel/timeout sean seguros.
+- Los únicos placements aprobados son revive, reroll, double NOVA y un
+  cosmético destacado con alternativa NOVA. Todos requieren pulsación expresa;
+  no habrá anuncios automáticos con la decisión actual.
+- Poki y CrazyGames conservan bundles/adaptadores separados. GitHub Pages nunca
+  pretende validar sus SDK reales.
+- Antes de añadir Vector Boomerang se extraen scheduler y behaviors desde
+  `CombatWeaponSystem`; la cuarta arma es el caso real que justifica hacerlo.
+- El arsenal futuro queda en Projectile, Orbit, Chain, Vector Boomerang, Pulse
+  Ring y Resonant Aura, cada uno con dos evoluciones mutuamente excluyentes y
+  presupuestos de DPS/cobertura detallados en el plan.
+- Acto I es Radial, Acto II Angular y Acto III Fracture. Expedition conserva la
+  build; Calibration permite empezar directamente en actos desbloqueados;
+  Overdrive es opcional y se implementa al final.
+
+Documentación oficial consultada el 03-09-2026: PokiSDK HTML5, CrazyGames Video
+Ads, Advertisement Requirements y Game Events. La integración debe conceder
+premio únicamente con `true`/`adFinished`, restaurar audio/UI/lifecycle en todo
+fallo y ocultar rewarded durante CrazyGames Basic Launch.
+
+Validación automática de la entrega: typecheck correcto; 56 archivos y 154
+tests pasando; SVG completos en UTF-8 válido; builds local, Poki y CrazyGames
+correctos. Los 9 smoke desktop/mobile reportaron `ok`, incluido resize y touch.
+El proceso Playwright todavía permanece vivo después de imprimir los resultados
+en este host Windows y se termina manualmente; se conserva como deuda del
+runner, no como fallo de una aserción del juego. El bundle principal queda en
+aproximadamente 555.3 kB minificado / 156.7 kB gzip y mantiene el warning de
+500 kB para vigilar crecimiento.
+
+Próximo paso después de publicar este commit:
+
+1. probar en Pages la rotación y cambio de tamaño con fondos Medium/High;
+2. terminar una run, comprobar cobro NOVA, comprar/equipar un cosmético y
+   recargar;
+3. comprar un nivel del Laboratorio, reiniciar y confirmar que se aplica;
+4. registrar cualquier parpadeo, texto corrupto o caída con
+   `?stress=1&profile=1`;
+5. con esa puerta humana aprobada, implementar primero el contrato rewarded
+   local, no los SDK reales ni una arma nueva.

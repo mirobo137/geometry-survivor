@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-core-title player-emerald-core-desc">
-  <title id="player-emerald-core-title">Núcleo semilla de Verdant</title>
+  <title id="player-emerald-core-title">NÃºcleo semilla de Verdant</title>
   <desc id="player-emerald-core-desc">Gota direccional con brillo interior.</desc>
   <g id="player-emerald-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
     <path id="player-emerald-core-seed" d="M0-10C6-10 8-1 0 9C-8-1-6-10 0-10z" stroke-width="1.6"/>

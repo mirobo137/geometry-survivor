@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-title player-emerald-desc">
   <title id="player-emerald-title">Verdant Vector</title>
-  <desc id="player-emerald-desc">Nave org·nica vista desde arriba, con hojas diagonales y arcos abiertos.</desc>
+  <desc id="player-emerald-desc">Nave org√°nica vista desde arriba, con hojas diagonales y arcos abiertos.</desc>
   <g id="player-emerald-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
     <path id="player-emerald-ring-n" d="M-11-24A26 26 0 0 1 11-24" stroke-width="2.2"/>
     <path id="player-emerald-ring-e" d="M24-11A26 26 0 0 1 24 11" stroke-width="2.2"/>

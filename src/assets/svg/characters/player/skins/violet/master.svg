@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-title player-violet-desc">
   <title id="player-violet-title">Eclipse Prism</title>
-  <desc id="player-violet-desc">Nave prism·tica vista desde arriba, con casco de diamante y marco de esquinas.</desc>
+  <desc id="player-violet-desc">Nave prism√°tica vista desde arriba, con casco de diamante y marco de esquinas.</desc>
   <g id="player-violet-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
     <path id="player-violet-ring-ne" d="M10-26 26-26 26-10" stroke-width="2.1"/>
     <path id="player-violet-ring-se" d="M26 10 26 26 10 26" stroke-width="2.1"/>

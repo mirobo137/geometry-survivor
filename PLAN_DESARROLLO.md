@@ -1,8 +1,8 @@
 # GEOMETRY SURVIVOR — EVALUACIÓN Y PLAN DE DESARROLLO
 
-> Estado: plan base aprobado para iniciar el proyecto.
+> Estado: vertical slice funcional; prioridades de expansión revisadas y fijadas en la sección 16.
 >
-> Fecha de revisión de documentación externa: 2026-08-25.
+> Fecha de revisión de documentación externa: 2026-09-03.
 >
 > Fuente de visión: [proyecto.md](proyecto.md). Si ambos documentos difieren, este archivo manda en decisiones de ejecución y `proyecto.md` manda en la visión del juego.
 
@@ -180,7 +180,7 @@ Se continúa la producción solo si se cumplen las cuatro condiciones:
 - PixiJS para mundo, arena, proyectiles, enemigos y FX.
 - Vitest para lógica pura.
 - Playwright en CI para smoke tests reales de navegador y redimensionado.
-- Web Audio detrás de `AudioService`; evaluar Howler solo si el spike de Safari/iOS demuestra que ahorra complejidad real.
+- `AudioManager` detrás de `AudioService`: Howler para música empaquetada y ZzFX para SFX procedurales; ningún backend de audio entra en simulación.
 
 ## Razones
 
@@ -718,21 +718,35 @@ El proyecto se prepara técnicamente para ambas plataformas, pero esto no garant
 
 ## Monetización recomendada
 
-No integrar anuncios hasta que la run sea divertida.
+No integrar anuncios reales hasta que la run y el Laboratorio estén validados.
+La política de producto aprobada es **solo rewarded por aceptación explícita**:
+no se programan prerolls ni anuncios comerciales/midgame automáticos. Cada oferta
+debe explicar la recompensa antes de que el jugador pulse el botón de vídeo y
+mostrar una salida equivalente en tamaño y claridad.
 
-Primeros puntos naturales:
+Placements aprobados, todos fuera de gameplay activo:
 
-- anuncio comercial tras game over y antes de reiniciar, si la plataforma lo decide;
-- opcional rewarded revive una vez por run, con alternativa clara de terminar/reiniciar;
-- opcional reroll fuera de gameplay, solo después de validar que no degrada las elecciones.
+- `revive`: una vez por run, después de morir y antes del resumen;
+- `reroll`: una vez por acto en una selección de cartas ya pausada;
+- `double-nova`: una vez al finalizar la run, duplica únicamente la recompensa
+  base de esa run;
+- `cosmetic-unlock`: oferta ocasional dentro del locker, siempre con alternativa
+  permanente de compra mediante NOVA.
 
 No mostrar anuncio:
 
-- en el primer minuto;
-- al abrir una carta normal de level-up;
-- durante un telegraph o boss;
-- por abrir pausa, opciones o menú;
-- al mismo tiempo que una oferta rewarded.
+- sin una pulsación explícita del usuario;
+- durante movimiento, telegraph, boss o resolución de daño;
+- por abrir pausa, opciones, laboratorio, locker o menú;
+- encadenado inmediatamente a otro anuncio;
+- si el SDK informa que los anuncios no están disponibles;
+- durante CrazyGames Basic Launch, donde las ofertas rewarded deben ocultarse;
+- si la alternativa normal —terminar, conservar monedas o pagar NOVA— no es
+  visible desde el principio.
+
+Solo `reward`/`adFinished` concede el beneficio. Cancelación, `unfilled`, adblock,
+timeout, excepción o callback duplicado restauran UI, audio y lifecycle sin
+recompensa y sin bloquear la partida.
 
 ---
 
@@ -2011,3 +2025,391 @@ Definition of Done adicional:
 - typecheck, tests, smoke desktop/mobile y builds local/Poki/CrazyGames pasan;
 - queda validación humana visual en móvil real de contraste, legibilidad y
   rendimiento de las cuatro atmósferas.
+
+# 16. PLAN MAESTRO REVISADO — ACTOS, ARSENAL, META Y PLATAFORMAS
+
+Fecha de decisión: 03-09-2026.
+
+Esta sección gobierna el trabajo posterior al vertical slice. Las fases
+anteriores conservan el historial y sus puertas, pero si un orden futuro entra
+en conflicto con esta sección, se aplica el orden de la sección 16.
+
+La identidad de producto queda fijada así:
+
+> **Geometry Survivor es un survivor de una mano donde la arena es un sistema
+> vivo: armas, enemigos, hazards y bosses obligan a leer reglas geométricas de
+> movimiento.**
+
+El juego no se convierte en una run infinita obligatoria. La unidad principal
+es un acto corto con resultado; una expedición enlaza los actos conservando la
+build y `Overdrive` queda como continuación infinita opcional.
+
+## 16.1 Prioridades cerradas
+
+El orden obligatorio es:
+
+0. **Estabilización actual.** Corregir resize de nebulosas, codificación UTF-8
+   de SVG, presupuesto de glow por calidad y artefactos de logs. Mantener el
+   warning de bundle visible y medirlo; no ocultarlo elevando el límite.
+1. **Cerrar NOVA y Laboratorio v1.** Validar en Pages una run, cobro, compra,
+   recarga y aplicación de mejoras permanentes. Ajustar el poder meta antes de
+   producir contenido nuevo.
+2. **Contrato rewarded local.** Sustituir el anuncio genérico por placements
+   tipados y simular éxito, cancelación, falta de inventario, error, timeout y
+   callback repetido. Todavía sin SDK externo.
+3. **Congelar la línea base del Acto I.** Registrar diez runs, primera subida,
+   tiempo al boss, causa de muerte, elecciones, NOVA, máximo de enemigos,
+   proyectiles/FX y frame p95 por calidad.
+4. **Extraer comportamientos de armas.** La cuarta arma activa la extracción
+   justificada de `CombatWeaponSystem`; no se amplía el archivo monolítico.
+5. **Añadir Vector Boomerang.** Es la prueba de la nueva arquitectura y debe
+   pasar balance, determinismo y stress antes de continuar.
+6. **Consolidar Acto I Radial.** Reutilizar arena, Laser y boss actuales, con
+   una regla radial adicional legible y una victoria parcial.
+7. **Construir Acto II Angular.** Añadir Calibration, una familia de enemigos,
+   Pulse Ring, hazard angular y boss propio.
+8. **Integrar SDKs por build.** Poki y CrazyGames sólo después de que el flujo
+   rewarded local sea completamente seguro. Validar en Inspector/Preview.
+9. **Construir Acto III Fracture.** Añadir barreras temporales, Aura, boss
+   final y evoluciones restantes.
+10. **Overdrive y producción.** Endless, analítica permitida, balance avanzado,
+    promociones y contenido adicional quedan al final.
+
+No se inicia una prioridad si la anterior tiene fallos funcionales o de save.
+Las comprobaciones humanas de diversión pueden convivir con documentación o
+arte que no cambie la simulación, pero no autorizan saltar puertas técnicas.
+
+## 16.2 Estructura de modos y actos
+
+| Modo | Entrada | Duración objetivo | Conserva build | Resultado |
+| --- | --- | ---: | --- | --- |
+| Quick Act | acto desbloqueado + Calibration | 4–5 min | no viene de otro acto | recompensa y victoria del acto |
+| Expedition | Acto I | 12–15 min total | sí, entre actos | boss final y recompensa total |
+| Overdrive | después del Acto III | abierto | sí | ciclos infinitos opcionales |
+
+Al derrotar un boss se detiene gameplay, se cobra la recompensa del acto una
+sola vez y aparece una intermisión con `Continuar` y `Terminar`. Terminar una
+expedición después de un acto no se considera derrota. La victoria del Acto I
+desbloquea el Acto II; la del II desbloquea el III; completar el III desbloquea
+Overdrive.
+
+Un inicio directo en Acto II o III no entrega una build arbitraria ni obliga a
+elegir muchas cartas. `Calibration` ofrece una sola de tres plantillas
+balanceadas —Projectile, Orbit o Chain— con niveles iniciales authored. No
+entrega NOVA adicional ni salta desbloqueos de armas.
+
+| Acto | Regla espacial | Familias que enseña | Hazard | Boss |
+| --- | --- | --- | --- | --- |
+| I — Radial | centro, borde, anillos y distancia | Chaser, Fast, Tank, Elite | Laser y pulso radial | Core Sentinel |
+| II — Angular | sectores, rotación y alineación | Orbiter, Charger, Splitter | barrido/sector angular | Orbital Warden |
+| III — Fracture | cuerdas, corredores y conexiones | Boundary Runner, Linker, Swarm | barreras temporales | Fracture Engine |
+
+Toda reconfiguración peligrosa separa `telegraph`, `attack` y `recovery`. Una
+barrera de Fracture nunca aparece debajo del jugador, siempre conserva al
+menos un corredor de cuatro diámetros del player y se previsualiza durante un
+mínimo inicial de 0.8 s. Estos valores son configurables y se ajustan jugando.
+
+## 16.3 Contratos necesarios, sin reescritura
+
+Los actos se declaran en `content`; simulación ejecuta sus reglas y presentación
+consume snapshots/eventos. La intención del contrato es:
+
+```ts
+interface ActDefinition {
+  id: "radial" | "angular" | "fracture";
+  durationSeconds: number;
+  arenaProfile: string;
+  spawnProfile: string;
+  hazardIds: readonly string[];
+  bossId: string;
+  novaReward: number;
+  nextActId?: string;
+}
+```
+
+`GameState` podrá añadir `actIntermission` y `adBreak`; no contendrá reglas de
+boss, armas o economía. El save almacenará desbloqueos y mejores resultados,
+pero una expedición activa sólo se persistirá cuando exista una restauración
+determinista completa; hasta entonces, recargar termina la run de forma segura.
+
+Antes de la cuarta arma, `CombatWeaponSystem` se divide por responsabilidad:
+
+```text
+CombatWeaponSystem          composición y API pública
+WeaponScheduler             cooldowns y disparadores
+WeaponBehaviorRegistry      id -> comportamiento
+ProjectileBehavior          proyectil actual y variantes
+OrbitBehavior               órbita actual
+ChainBehavior               cadena actual
+BoomerangBehavior           salida, retorno y registro de impactos
+PulseAreaBehavior           anillos instantáneos/expansivos
+AuraBehavior                banda persistente con tick acotado
+```
+
+Los behaviors usan el pool y la spatial grid existentes. No importan Pixi,
+DOM, audio ni plataforma. La presentación de cada arma conserva SVG master,
+textura cacheada, sprites pooled y FX limitados por calidad.
+
+## 16.4 Reglas comunes del arsenal y las evoluciones
+
+- Durante la primera expansión se mantienen **máximo tres armas activas por
+  run**. Las nuevas reemplazan opciones del pool; no se regalan todas juntas.
+- Cada arma tiene niveles 1–7. Nivel 1 desbloquea el verbo, niveles 2–6 mejoran
+  potencia/cobertura con límites y nivel 7 habilita evolución.
+- En la siguiente oportunidad elegible se muestran las dos evoluciones de esa
+  arma. Son mutuamente excluyentes durante la run.
+- Una evolución debe cambiar lectura, posicionamiento o targeting, no limitarse
+  a sumar un porcentaje invisible.
+- Objetivo inicial: +30–45% de contribución efectiva dentro de su escenario
+  ideal, nunca más de 1.6× DPS sostenido contra un solo objetivo ni más de 2×
+  cobertura respecto al nivel 7 base.
+- Todo hit persistente usa cooldown por objetivo. Todo spawn tiene capacidad
+  fija. Ninguna evolución crea objetos durante el loop fuera de sus pools.
+- El balance se compara con la misma semilla, duración, acto y loadout. Una
+  evolución que domina daño, control y seguridad simultáneamente se recorta.
+
+## 16.5 Arsenal aprobado y dos evoluciones por arma
+
+### Projectile / Pulse Cannon — precisión confiable
+
+Dispara al enemigo válido más cercano desde la boca real del cañón. Es la base
+de targeting, proyectiles pooled e impacto directo.
+
+- **Rail Lance (`rail_lance`)**: proyectil más ancho y 35% más fuerte que
+  atraviesa hasta cinco objetivos. Cadencia 35% más lenta y daño decreciente
+  10% por objetivo, con piso de 60%. Se siente como un disparo pesado sin
+  limpiar toda la pantalla.
+- **Pulse Volley (`pulse_volley`)**: tres proyectiles en abanico estrecho, cada
+  uno al 55% del daño y con intervalo 15% mayor. La cobertura mejora contra
+  grupos; la separación evita triplicar automáticamente el daño al boss.
+
+### Orbit — control de espacio cercano
+
+Blades reutilizados giran alrededor del player; obliga a acercarse y colocar
+el cuerpo sin convertirlo en invulnerable.
+
+- **Solar Crown (`solar_crown`)**: mantiene el máximo de seis blades, aumenta
+  20% el radio y 35% el daño, pero gira 10% más lento. Cambia alcance y lectura
+  sin aumentar entidades.
+- **Graviton Halo (`graviton_halo`)**: reduce 15% el daño directo y cada 3 s
+  emite un pulso al 50% del daño con knockback ligero. Controla presión, pero
+  no bloquea hazards ni sustituye el escudo.
+
+### Chain Lightning — selección de grupos
+
+Golpea un objetivo y salta por vecinos encontrados en la spatial grid. Su
+valor depende de densidad, no de daño universal.
+
+- **Closed Circuit (`closed_circuit`)**: añade hasta dos saltos. Si el último
+  objetivo está cerca del borde cargado, una única corriente de retorno recorre
+  la cadena al 35% de daño; intervalo 15% mayor. Es la evolución que conecta
+  arma y arena sin consultas ilimitadas.
+- **Thunderhead (`thunderhead`)**: pierde un salto y cada objetivo alcanzado
+  genera una explosión retardada de radio corto al 45% del daño; intervalo 30%
+  mayor. Cada target sólo puede originar una explosión por cast.
+
+### Vector Boomerang — alinear ida y regreso
+
+Nuevo cuarto comportamiento. Lanza una pieza hacia el target, recorre una fase
+de salida y vuelve al player. Cada enemigo puede recibir un hit en salida y
+otro en regreso. La trayectoria y colisión viven en simulación; no se finge la
+curva únicamente en render.
+
+- **Twin Comet (`twin_comet`)**: lanza dos piezas con apertura opuesta, cada
+  una al 65% del daño y con intervalo 20% mayor. Un mismo enemigo sólo recibe
+  un impacto por pieza durante el cast, limitando el burst a 1.3×.
+- **Singularity Return (`singularity_return`)**: conserva una pieza, suma 20%
+  de daño y, al regresar, produce un pulso de radio 54 al 60% del daño con
+  atracción ligera previa. Intervalo 35% mayor; la atracción no atraviesa el
+  borde ni mueve bosses.
+
+### Pulse Ring — atraer y liberar una onda
+
+Nuevo quinto comportamiento. Después de un telegraph corto genera un anillo
+expansivo que daña una vez y empuja; premia esperar a que el grupo se acerque.
+
+- **Echo Shock (`echo_shock`)**: genera una segunda onda 0.45 s después al 45%
+  del daño. Intervalo 15% mayor y máximo de dos impactos por enemigo.
+- **Compression Wave (`compression_wave`)**: atrae ligeramente durante 0.35 s
+  de telegraph y libera un golpe al 165% con mayor empuje. Intervalo 35% mayor;
+  la fase de atracción no hace daño y el boss no se desplaza.
+
+### Resonant Aura — dominar una distancia concreta
+
+Nuevo sexto comportamiento. Daña en una banda entre radio interior y exterior;
+el centro permanece sin daño. Evita copiar un aura circular que premie quedarse
+quieto encima de los enemigos.
+
+- **Breathing Halo (`breathing_halo`)**: la banda oscila entre radios 65–150,
+  suma 20% de daño y mantiene cooldown por objetivo de al menos 0.35 s. Obliga
+  a acompañar el ritmo del anillo.
+- **Prism Wall (`prism_wall`)**: sustituye el anillo completo por tres arcos
+  rotatorios de 55 grados, con 70% más daño y huecos reales. Premia orientación
+  y movimiento; sólo existen tres segmentos visuales y lógicos.
+
+Los nombres y valores son baseline de contenido, no promesa de balance final.
+Cada implementación empieza con tests de invariantes y termina con runs
+comparativas antes de pasar a la siguiente arma.
+
+## 16.6 NOVA, cosméticos y Laboratorio
+
+NOVA continúa como única moneda blanda, con un único SVG compartido. Debe verse
+en cartera del menú, resumen, locker, precios, confirmaciones, Laboratorio y
+ofertas que tengan alternativa monetaria. Nunca se reemplaza por emoji o un
+icono diferente en otra pantalla.
+
+Fuentes de NOVA:
+
+- recompensa base por bajas y tiempo de cada run;
+- bonus authored por primera victoria de cada acto;
+- objetivos futuros, sólo cuando exista un segundo loop real;
+- `double-nova`, que duplica una vez la recompensa base recién obtenida.
+
+Sumideros de NOVA:
+
+- skins de núcleo, paquetes de cañón/proyectil/estela y fondos;
+- niveles limitados del Laboratorio;
+- alternativa al reroll rewarded;
+- desbloqueos de investigación de armas, cuando la nueva arma ya esté validada.
+
+El Laboratorio v1 ya existe con daño y cadencia, pero sus valores actuales son
+provisionales. Antes del Acto II se mide el loadout por defecto con y sin todos
+los niveles. La ventaja combinada máxima objetivo es 10–15% de potencia
+efectiva; si la combinación actual la supera, se reducen porcentajes o niveles.
+
+Ramas permitidas:
+
+- `Impact Matrix`: daño general pequeño y acotado;
+- `Fire Calibration`: cadencia pequeña con cooldown mínimo absoluto;
+- `Hull Integrity`: candidato posterior, máximo +5% de vida, sólo si las runs
+  demuestran que no elimina decisiones defensivas;
+- `Weapon Research`: desbloquea una arma/evolución en el pool, no añade daño
+  permanente a esa arma.
+
+Crítico, vampirismo, escudo, regeneración, experiencia y control espacial
+permanecen como decisiones de cartas dentro de la run. No se duplican como
+bonos permanentes porque reducirían variedad y harían obligatorio el grind.
+
+La economía no se balancea por intuición. Se registran NOVA por run, tiempo
+para primera compra, compra elegida y saldo después de cinco runs. Los precios
+actuales siguen data-driven y sólo cambian después de esa evidencia.
+
+## 16.7 Rewarded ads y reglas exactas
+
+| Placement | Momento | Recompensa | Límite | Alternativa visible |
+| --- | --- | --- | --- | --- |
+| Revive | muerte, simulación detenida | 35% de vida, 2 s de invulnerabilidad y empuje sin daño | 1 por run | terminar y cobrar / reiniciar |
+| Reroll | level-up pausado | tres cartas nuevas si existen alternativas | 1 por acto | pagar NOVA o elegir carta actual |
+| Double NOVA | resumen final | bonus igual a la recompensa base de esa run | 1 por run | cobrar cantidad normal |
+| Cosmetic unlock | locker | desbloqueo del cosmético destacado | 1 oferta activa | comprar el mismo objeto con NOVA |
+
+Revive no mata enemigos, no concede XP y no puede activarse después de una
+victoria. Reroll evita repetir las mismas tres cartas cuando el catálogo lo
+permite; si no hay tres alternativas, no ofrece anuncio. Double NOVA usa la
+recompensa base registrada, no el saldo total, y no puede cobrarse dos veces
+tras recargar. Ningún cosmético queda exclusivamente detrás de publicidad.
+
+Contrato objetivo:
+
+```ts
+type RewardedPlacement = "revive" | "reroll" | "double-nova" | "cosmetic-unlock";
+type RewardedAdResult = "rewarded" | "dismissed" | "unavailable" | "error";
+
+interface AdService {
+  isRewardedAvailable(placement: RewardedPlacement): Promise<boolean>;
+  showRewarded(placement: RewardedPlacement): Promise<RewardedAdResult>;
+}
+```
+
+Cada solicitud recibe un token local único. Sólo el primer resultado
+`rewarded` consume el token y aplica una transacción; callbacks tardíos o
+duplicados se ignoran. Mientras la solicitud está pendiente se bloquea esa UI,
+la simulación permanece pausada y no puede iniciarse otra oferta.
+
+## 16.8 Estrategia de SDK por plataforma
+
+Documentación oficial verificada el 03-09-2026:
+
+- [PokiSDK HTML5](https://developers.poki.com/guide/sdk-html5): `rewardedBreak`
+  devuelve éxito booleano; el beneficio sólo se concede con `true`; gameplay,
+  input y audio se detienen durante el break.
+- [CrazyGames Video Ads](https://docs.crazygames.com/sdk/video-ads/) y
+  [Advertisement Requirements](https://docs.crazygames.com/requirements/ads/):
+  sólo `adFinished` concede recompensa; `adError`, `unfilled`, adblock y
+  cooldown no conceden nada; el juego debe continuar y estar pausado/muteado.
+- [CrazyGames Game Events](https://docs.crazygames.com/sdk/game/):
+  `gameplayStart` y `gameplayStop` siguen las transiciones reales del juego.
+
+Implementación por puertas:
+
+1. **LocalAdapter:** sin red ni SDK. Un panel/debug flag simula cada resultado,
+   demora, retorno de background y callbacks duplicados en GitHub Pages.
+2. **PokiAdapter:** se incluye exclusivamente en `dist/poki`, inicializa con
+   fallback y traduce `rewardedBreak()` al resultado común.
+3. **CrazyGamesAdapter:** se incluye exclusivamente en `dist/crazygames`, usa
+   el SDK HTML5 vigente y traduce callbacks al contrato común. En Basic Launch
+   oculta CTA rewarded porque los anuncios están desactivados.
+4. **Portal:** Poki Inspector y CrazyGames Preview validan lifecycle, audio,
+   adblock, falta de fill, retorno del anuncio y save. Pages no valida SDK real.
+
+La preferencia del usuario fija que no haya anuncios automáticos. El método de
+commercial/midgame podrá existir internamente si el portal lo exige en una
+revisión futura, pero no tendrá caller ni placement sin una nueva decisión de
+producto documentada.
+
+## 16.9 Estrategia de pruebas por incremento
+
+### Estabilización y responsive
+
+- prueba unitaria de escala de nebulosas al cambiar ancho;
+- matriz Playwright durante gameplay, level-up, pausa, resumen e intermisión;
+- portrait como orientación principal, sin cambiar world space;
+- preset High con máximo 120 glows, Medium 64 y Low 0;
+- `debug.log` ignorado y ningún artefacto generado queda versionado.
+
+### NOVA y Laboratorio
+
+- recompensa determinista y entera;
+- débito atómico: saldo insuficiente nunca desbloquea;
+- una compra repetida no vuelve a cobrar;
+- save migrado, reload y fallback de storage;
+- benchmark seeded con meta 0 y meta completa para comprobar el límite 10–15%.
+
+### Armas y evoluciones
+
+- tests puros de cooldown, targeting, retorno, hits por cast, tick y capacidades;
+- misma trayectoria y resultado a 30/60/144 Hz sobre timestep fijo;
+- boss inmune a knockback, borde respetado y ningún daño inevitable;
+- escenarios seeded single-target, horda dispersa y horda densa;
+- stress por arma y combinación máxima, revisando p95, pools y legibilidad;
+- una run humana por ruta de evolución antes de autorizar la siguiente.
+
+### Actos
+
+- director reproducible por semilla y Calibration válida;
+- transición Acto I→II→III sin resetear build en Expedition;
+- Quick Act no hereda estado anterior;
+- recompensa/desbloqueo idempotentes y save migrado;
+- telegraph, safe corridor, resize e interrupción móvil durante cada boss;
+- diez runs por acto sin softlock, daño inevitable ni estrategia dominante.
+
+### Rewarded y SDK
+
+- matriz `rewarded/dismissed/unavailable/error/timeout` por placement;
+- callback duplicado concede exactamente una recompensa;
+- audio, input y lifecycle se restauran incluso en error;
+- cerrar/recargar no duplica NOVA ni revive;
+- CTA oculta cuando no hay anuncios y alternativa siempre operativa;
+- builds aislados sin globals cruzados ni SDK real en `dist/local`;
+- Inspector/Preview obligatorios antes de declarar Fase 8 terminada.
+
+### Puerta global de cada prioridad
+
+1. typecheck y tests específicos;
+2. suite completa;
+3. build local, Poki y CrazyGames;
+4. smoke desktop y Pixel 5 emulado;
+5. URL corta de Pages para la comprobación móvil requerida;
+6. medición real cuando el cambio afecta rendimiento, audio o lifecycle;
+7. actualización de `CONTINUACION.md`, commit y push sólo con la puerta
+   automática en verde.

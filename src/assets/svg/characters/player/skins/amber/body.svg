@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-body-title player-amber-body-desc">
-  <title id="player-amber-body-title">Casco bastión de Solar</title>
-  <desc id="player-amber-body-desc">Cuña blindada con punta hacia -Y y popa ancha.</desc>
+  <title id="player-amber-body-title">Casco bastiÃ³n de Solar</title>
+  <desc id="player-amber-body-desc">CuÃ±a blindada con punta hacia -Y y popa ancha.</desc>
   <g id="player-amber-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
     <path id="player-amber-body-shell" d="M0-24 12-8 16 6 12 18-12 18-16 6-12-8z" stroke-width="2.6"/>
     <path id="player-amber-body-panel" d="M0-14 7-4 8 10 0 14-8 10-7-4z" fill="none" stroke-width="1.4" opacity="0.8"/>

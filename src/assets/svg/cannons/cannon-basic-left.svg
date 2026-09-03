@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-basic-left-title cannon-basic-left-desc">
-  <title id="cannon-basic-left-title">Cañón izquierdo Pulse Standard</title>
-  <desc id="cannon-basic-left-desc">Cureña, tubo y boca luminosa alineada a la ranura de disparo izquierda.</desc>
+  <title id="cannon-basic-left-title">CaÃ±Ã³n izquierdo Pulse Standard</title>
+  <desc id="cannon-basic-left-desc">CureÃ±a, tubo y boca luminosa alineada a la ranura de disparo izquierda.</desc>
   <g id="cannon-basic-left" stroke-linejoin="round">
     <path id="cannon-basic-left-mount" d="M-6-8 -12-10 -15-2 -12 6 -6 5 -5-1z" fill="#2d5d6e" stroke="#e5fbff" stroke-width="1.5"/>
     <path id="cannon-basic-left-barrel" d="M-12-7 -24-14 -28-8 -16 3 -12 2z" fill="#75e6ff" stroke="#e5fbff" stroke-width="1.6"/>

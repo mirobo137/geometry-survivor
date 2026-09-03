@@ -65,15 +65,16 @@ export interface FxQualityTokens {
   readonly ringAlpha: number;
   readonly projectileTrailAlpha: number;
   readonly projectileTrailLimit: number;
+  readonly projectileGlowLimit: number;
   readonly damageNumberLimit: number;
   readonly healthBarLimit: number;
 }
 
 /** Starting budgets; tune only after comparing the same mobile scenario. */
 export const FX_QUALITY: Readonly<Record<FxQuality, FxQualityTokens>> = {
-  low: { particleCount: 3, poolCapacity: 96, ringAlpha: 0.45, projectileTrailAlpha: 0, projectileTrailLimit: 0, damageNumberLimit: 0, healthBarLimit: 8 },
-  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, projectileTrailAlpha: 0.46, projectileTrailLimit: 64, damageNumberLimit: 16, healthBarLimit: 16 },
-  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, projectileTrailAlpha: 0.64, projectileTrailLimit: 120, damageNumberLimit: 24, healthBarLimit: 24 }
+  low: { particleCount: 3, poolCapacity: 96, ringAlpha: 0.45, projectileTrailAlpha: 0, projectileTrailLimit: 0, projectileGlowLimit: 0, damageNumberLimit: 0, healthBarLimit: 8 },
+  medium: { particleCount: 5, poolCapacity: 160, ringAlpha: 0.6, projectileTrailAlpha: 0.46, projectileTrailLimit: 64, projectileGlowLimit: 64, damageNumberLimit: 16, healthBarLimit: 16 },
+  high: { particleCount: 8, poolCapacity: 240, ringAlpha: 0.72, projectileTrailAlpha: 0.64, projectileTrailLimit: 120, projectileGlowLimit: 120, damageNumberLimit: 24, healthBarLimit: 24 }
 } as const;
 
 /** Short trail budget for projectiles; it is presentation-only. */

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-body-title player-emerald-body-desc">
-  <title id="player-emerald-body-title">Casco org·nico de Verdant</title>
+  <title id="player-emerald-body-title">Casco org√°nico de Verdant</title>
   <desc id="player-emerald-body-desc">Casco en diamante con cuatro hojas diagonales y punta hacia -Y.</desc>
   <g id="player-emerald-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
     <path id="player-emerald-body-shell" d="M0-20 12-6 8 14 0 20-8 14-12-6z" stroke-width="2.6"/>

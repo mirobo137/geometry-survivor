@@ -18,6 +18,7 @@ const masters = [cannonBasicSvg, cannonCurveSvg, cannonSmokeSvg, cannonRainbowSv
 const assertSafeFramed = (svg: string, prefix: string, maxPrimitives = 16): void => {
   expect(svg).toContain('viewBox="-32 -32 64 64"');
   expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
+  expect(svg).not.toContain('\uFFFD');
   expect(svg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
   const ids = [...svg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
   expect(ids.length).toBeGreaterThan(0);
@@ -77,6 +78,7 @@ describe('cannon and projectile SVG assets', () => {
     for (const svg of [projectileBasicSvg, projectileCurveSvg, projectileSmokeSvg, projectileRainbowSvg]) {
       expect(svg).toContain('viewBox="-16 -16 32 32"');
       expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
+      expect(svg).not.toContain('\uFFFD');
       expect(svg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
       const ids = [...svg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
       expect(new Set(ids).size).toBe(ids.length);

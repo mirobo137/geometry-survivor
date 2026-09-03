@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-ring-title player-violet-ring-desc">
   <title id="player-violet-ring-title">Marco cristalino de Eclipse</title>
-  <desc id="player-violet-ring-desc">Esquinas de oct·gono que enmarcan el prisma.</desc>
+  <desc id="player-violet-ring-desc">Esquinas de oct√°gono que enmarcan el prisma.</desc>
   <g id="player-violet-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
     <path id="player-violet-ring-ne" d="M10-26 26-26 26-10" stroke-width="2.1"/>
     <path id="player-violet-ring-se" d="M26 10 26 26 10 26" stroke-width="2.1"/>

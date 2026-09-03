@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-title player-amber-desc">
   <title id="player-amber-title">Solar Bastion</title>
-  <desc id="player-amber-desc">Nave bastión vista desde arriba, con cuña, aletas y corona de destellos.</desc>
+  <desc id="player-amber-desc">Nave bastiÃ³n vista desde arriba, con cuÃ±a, aletas y corona de destellos.</desc>
   <g id="player-amber-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
     <circle id="player-amber-ring-circle" cx="0" cy="0" r="25" stroke-width="2"/>
     <path id="player-amber-ring-flares" d="M0-30v5M0 25v5M-30 0h5M25 0h5M-20-20-24-24M20-20 24-24M20 20 24 24M-20 20-24 24" stroke-width="2.4"/>

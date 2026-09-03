@@ -1342,39 +1342,56 @@ body {
   50% { opacity: 1; }
 }
 
-.skin-preview svg .skin-art-orbit,
-.skin-card-art svg .skin-art-orbit {
+.skin-preview svg .skin-art-orbit {
   transform-box: fill-box;
   transform-origin: center;
   animation: skin-art-spin 12s linear infinite;
 }
 
-.skin-preview svg .skin-art-shards,
-.skin-card-art svg .skin-art-shards {
+.skin-preview svg .skin-art-shards {
   transform-box: fill-box;
   transform-origin: center;
   animation: skin-art-shard-pulse 2.8s ease-in-out infinite;
 }
 
-.skin-preview svg .skin-art-crown,
-.skin-card-art svg .skin-art-crown {
+.skin-preview svg .skin-art-crown {
   transform-box: fill-box;
   transform-origin: center;
   animation: skin-art-crown-turn 8s ease-in-out infinite;
 }
 
-.skin-preview svg .skin-art-blades,
-.skin-card-art svg .skin-art-blades {
+.skin-preview svg .skin-art-blades {
   transform-box: fill-box;
   transform-origin: center;
   animation: skin-art-blade-turn 6s linear infinite reverse;
 }
 
-.skin-preview svg .skin-art-core,
-.skin-card-art svg .skin-art-core {
+.skin-preview svg .skin-art-core {
   transform-box: fill-box;
   transform-origin: center;
   animation: skin-art-core-pulse 2.4s ease-in-out infinite;
+}
+
+.skin-preview svg .skin-art-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-spin 22s linear infinite reverse;
+}
+
+.skin-preview svg .skin-art-hull {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: skin-art-core-pulse 3.6s ease-in-out infinite;
+}
+
+.skin-card-art svg .skin-art-orbit,
+.skin-card-art svg .skin-art-shards,
+.skin-card-art svg .skin-art-crown,
+.skin-card-art svg .skin-art-blades,
+.skin-card-art svg .skin-art-core,
+.skin-card-art svg .skin-art-ring,
+.skin-card-art svg .skin-art-hull {
+  animation: none;
 }
 
 @keyframes skin-art-spin {
@@ -1653,6 +1670,11 @@ body {
 
   #start-screen.is-skins-mode .skin-preview svg .skin-art-core {
     animation: skin-art-core-mobile 4.8s ease-in-out infinite;
+  }
+
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-ring,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-hull {
+    animation: skin-art-signature-mobile 5.2s ease-in-out infinite;
   }
 }
 
@@ -2427,6 +2449,11 @@ body {
   }
 }
 
+.skin-card-art svg,
+.skin-card-art svg * {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #start-screen.is-skins-mode .skin-preview svg,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-orbit,
@@ -2434,12 +2461,16 @@ body {
   #start-screen.is-skins-mode .skin-preview svg .skin-art-crown,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-blades,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-core,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-ring,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-hull,
   .skin-preview svg,
   .skin-preview svg .skin-art-orbit,
   .skin-preview svg .skin-art-shards,
   .skin-preview svg .skin-art-crown,
   .skin-preview svg .skin-art-blades,
   .skin-preview svg .skin-art-core,
+  .skin-preview svg .skin-art-ring,
+  .skin-preview svg .skin-art-hull,
   .skin-card-art svg .skin-art-orbit,
   .skin-card-art svg .skin-art-shards,
   .skin-card-art svg .skin-art-crown,

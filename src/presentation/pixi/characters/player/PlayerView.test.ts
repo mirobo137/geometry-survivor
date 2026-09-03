@@ -2,24 +2,26 @@ import { describe, expect, it } from 'vitest';
 import { Texture } from 'pixi.js';
 import { PlayerView } from './PlayerView';
 
+const skinTextures = {
+  cyan: Texture.WHITE,
+  violet: Texture.WHITE,
+  amber: Texture.WHITE,
+  emerald: Texture.WHITE
+};
+
 const textures = {
   shadow: Texture.WHITE,
-  ring: Texture.WHITE,
+  ring: skinTextures,
   weapons: {
     basic: Texture.WHITE,
     curve: Texture.WHITE,
     smoke: Texture.WHITE,
     rainbow: Texture.WHITE
   },
-  body: Texture.WHITE,
-  core: Texture.WHITE,
+  body: skinTextures,
+  core: skinTextures,
   accent: Texture.WHITE,
-  signature: {
-    cyan: Texture.WHITE,
-    violet: Texture.WHITE,
-    amber: Texture.WHITE,
-    emerald: Texture.WHITE
-  }
+  signature: skinTextures
 };
 
 const state = (x: number, y: number, health = 100) => ({

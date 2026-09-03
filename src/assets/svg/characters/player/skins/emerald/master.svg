@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-title player-emerald-desc">
+  <title id="player-emerald-title">Verdant Vector</title>
+  <desc id="player-emerald-desc">Nave orgánica vista desde arriba, con hojas diagonales y arcos abiertos.</desc>
+  <g id="player-emerald-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+    <path id="player-emerald-ring-n" d="M-11-24A26 26 0 0 1 11-24" stroke-width="2.2"/>
+    <path id="player-emerald-ring-e" d="M24-11A26 26 0 0 1 24 11" stroke-width="2.2"/>
+    <path id="player-emerald-ring-s" d="M11 24A26 26 0 0 1-11 24" stroke-width="2.2"/>
+    <path id="player-emerald-ring-w" d="M-24 11A26 26 0 0 1-24-11" stroke-width="2.2"/>
+  </g>
+  <g id="player-emerald-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-emerald-body-shell" d="M0-20 12-6 8 14 0 20-8 14-12-6z" stroke-width="2.6"/>
+    <path id="player-emerald-body-leaves" d="M-16-16-6-18-10-8zM16-16 6-18 10-8zM-16 14-10 6-6 18zM16 14 10 6 6 18z" stroke-width="1.6"/>
+    <path id="player-emerald-body-panel" d="M0-12 7-3 5 10 0 14-5 10-7-3z" fill="none" stroke-width="1.4" opacity="0.8"/>
+  </g>
+  <g id="player-emerald-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-emerald-core-seed" d="M0-10C6-10 8-1 0 9C-8-1-6-10 0-10z" stroke-width="1.6"/>
+    <circle id="player-emerald-core-dot" cx="0" cy="-2" r="2.2"/>
+  </g>
+</svg>

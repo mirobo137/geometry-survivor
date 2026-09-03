@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-title player-violet-desc">
+  <title id="player-violet-title">Eclipse Prism</title>
+  <desc id="player-violet-desc">Nave prismática vista desde arriba, con casco de diamante y marco de esquinas.</desc>
+  <g id="player-violet-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path id="player-violet-ring-ne" d="M10-26 26-26 26-10" stroke-width="2.1"/>
+    <path id="player-violet-ring-se" d="M26 10 26 26 10 26" stroke-width="2.1"/>
+    <path id="player-violet-ring-sw" d="M-10 26-26 26-26 10" stroke-width="2.1"/>
+    <path id="player-violet-ring-nw" d="M-26-10-26-26-10-26" stroke-width="2.1"/>
+  </g>
+  <g id="player-violet-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-violet-body-shell" d="M0-22 17 0 8 12 0 22-8 12-17 0z" stroke-width="2.6"/>
+    <path id="player-violet-body-panel" d="M0-12 10 0 0 12-10 0z" fill="none" stroke-width="1.4" opacity="0.82"/>
+    <path id="player-violet-body-facet" d="M0-22 0 22M-17 0 17 0" fill="none" stroke-width="1.1" opacity="0.55"/>
+  </g>
+  <g id="player-violet-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
+    <path id="player-violet-core-gem" d="M0-8 7 0 0 8-7 0z" stroke-width="1.6"/>
+    <path id="player-violet-core-facet" d="M0-4 3.5 0 0 4-3.5 0z" fill="none" stroke-width="1.2" opacity="0.8"/>
+  </g>
+</svg>

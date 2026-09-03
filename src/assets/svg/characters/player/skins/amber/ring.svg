@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-ring-title player-amber-ring-desc">
+  <title id="player-amber-ring-title">Corona solar del jugador</title>
+  <desc id="player-amber-ring-desc">Anillo con destellos cardinales y diagonales.</desc>
+  <g id="player-amber-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+    <circle id="player-amber-ring-circle" cx="0" cy="0" r="25" stroke-width="2"/>
+    <path id="player-amber-ring-flares" d="M0-30v5M0 25v5M-30 0h5M25 0h5M-20-20-24-24M20-20 24-24M20 20 24 24M-20 20-24 24" stroke-width="2.4"/>
+  </g>
+</svg>

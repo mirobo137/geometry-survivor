@@ -62,12 +62,12 @@ export class PlayerView {
     this.quality = quality;
     this.shadow = new Sprite(textures.shadow);
     this.movementTrail = new Graphics();
-    this.ring = new Sprite(textures.ring);
+    this.ring = new Sprite(textures.ring[skin]);
     this.weapons = new Sprite(textures.weapons[cannonSkin]);
-    this.body = new Sprite(textures.body);
-    this.core = new Sprite(textures.core);
+    this.body = new Sprite(textures.body[skin]);
+    this.core = new Sprite(textures.core[skin]);
     this.accent = new Sprite(textures.accent);
-    this.damageFlash = new Sprite(textures.body);
+    this.damageFlash = new Sprite(textures.body[skin]);
     this.shotFlash = new Graphics();
     this.guardFx = new Graphics();
     this.signature = new Sprite(textures.signature.cyan);
@@ -85,6 +85,10 @@ export class PlayerView {
     this.skin = skin;
     const colors = PLAYER_SKINS[skin];
     this.signature.texture = this.textures.signature[skin];
+    this.body.texture = this.textures.body[skin];
+    this.ring.texture = this.textures.ring[skin];
+    this.core.texture = this.textures.core[skin];
+    this.damageFlash.texture = this.textures.body[skin];
     this.signature.tint = colors.outer;
     this.shadow.tint = colors.shadow;
     this.ring.tint = colors.outer;

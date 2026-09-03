@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-ring-title player-emerald-ring-desc">
+  <title id="player-emerald-ring-title">Arcos vegetales del jugador</title>
+  <desc id="player-emerald-ring-desc">Cuatro arcos abiertos que dejan huecos en las diagonales.</desc>
+  <g id="player-emerald-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+    <path id="player-emerald-ring-n" d="M-11-24A26 26 0 0 1 11-24" stroke-width="2.2"/>
+    <path id="player-emerald-ring-e" d="M24-11A26 26 0 0 1 24 11" stroke-width="2.2"/>
+    <path id="player-emerald-ring-s" d="M11 24A26 26 0 0 1-11 24" stroke-width="2.2"/>
+    <path id="player-emerald-ring-w" d="M-24 11A26 26 0 0 1-24-11" stroke-width="2.2"/>
+  </g>
+</svg>

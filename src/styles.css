@@ -1891,7 +1891,8 @@ body {
 }
 
 #pause-actions #pause-settings-toggle,
-#pause-actions #pause-restart {
+#pause-actions #pause-restart,
+#pause-actions #pause-menu {
   color: #cde3ff;
   background: transparent;
   border: 1px solid rgba(145, 181, 255, 0.4);

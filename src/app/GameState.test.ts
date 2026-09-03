@@ -68,4 +68,17 @@ describe('GameState', () => {
     expect(state.enterLevelUp()).toBe(true);
     expect(state.restartFromPause()).toBe(false);
   });
+
+  it('allows returning to the menu from manual pause only', () => {
+    const state = new GameState();
+
+    expect(state.returnToMenuFromPause()).toBe(false);
+    expect(state.enterPause()).toBe(true);
+    expect(state.returnToMenuFromPause()).toBe(true);
+    expect(state.phase).toBe('menu');
+    expect(state.isSimulationRunning).toBe(false);
+    expect(state.resume()).toBe(false);
+    expect(state.startRun()).toBe(true);
+    expect(state.phase).toBe('playing');
+  });
 });

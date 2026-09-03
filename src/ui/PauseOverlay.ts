@@ -2,12 +2,14 @@ import type { AudioSettings } from '../audio/AudioService';
 
 export type ResumeHandler = () => void;
 export type RestartHandler = () => void;
+export type ReturnToMenuHandler = () => void;
 export type SettingsChangeHandler = (settings: AudioSettings) => void;
 
 export interface PauseActions {
   readonly settings?: AudioSettings;
   readonly onSettingsChange?: SettingsChangeHandler;
   readonly onRestart?: RestartHandler;
+  readonly onReturnToMenu?: ReturnToMenuHandler;
 }
 
 export class PauseOverlay {
@@ -22,9 +24,11 @@ export class PauseOverlay {
   private readonly musicValue: HTMLOutputElement | null;
   private readonly sfxValue: HTMLOutputElement | null;
   private readonly restartButton: HTMLButtonElement | null;
+  private readonly menuButton: HTMLButtonElement | null;
   private resumeHandler: ResumeHandler | null = null;
   private settingsHandler: SettingsChangeHandler | null = null;
   private restartHandler: RestartHandler | null = null;
+  private menuHandler: ReturnToMenuHandler | null = null;
 
   public constructor(root: HTMLElement) {
     const messageElement = root.querySelector<HTMLElement>('#pause-message');
@@ -41,12 +45,14 @@ export class PauseOverlay {
     this.musicValue = root.querySelector<HTMLOutputElement>('#pause-music-value');
     this.sfxValue = root.querySelector<HTMLOutputElement>('#pause-sfx-value');
     this.restartButton = root.querySelector<HTMLButtonElement>('#pause-restart');
+    this.menuButton = root.querySelector<HTMLButtonElement>('#pause-menu');
     this.resumeButton.addEventListener('click', () => this.resumeHandler?.());
     this.settingsToggle?.addEventListener('click', () => this.toggleSettings());
     this.musicInput?.addEventListener('input', () => this.emitSettings());
     this.sfxInput?.addEventListener('input', () => this.emitSettings());
     this.mutedInput?.addEventListener('change', () => this.emitSettings());
     this.restartButton?.addEventListener('click', () => this.restartHandler?.());
+    this.menuButton?.addEventListener('click', () => this.menuHandler?.());
   }
 
   public open(message: string, resumeHandler: ResumeHandler, actions: PauseActions = {}): void {
@@ -54,6 +60,8 @@ export class PauseOverlay {
     this.resumeHandler = resumeHandler;
     this.settingsHandler = actions.onSettingsChange ?? null;
     this.restartHandler = actions.onRestart ?? null;
+    this.menuHandler = actions.onReturnToMenu ?? null;
+    if (this.menuButton) this.menuButton.hidden = !this.menuHandler;
     if (actions.settings) this.setSettings(actions.settings);
     this.setSettingsExpanded(false);
     this.root.hidden = false;
@@ -65,6 +73,7 @@ export class PauseOverlay {
     this.resumeHandler = null;
     this.settingsHandler = null;
     this.restartHandler = null;
+    this.menuHandler = null;
     this.setSettingsExpanded(false);
   }
 

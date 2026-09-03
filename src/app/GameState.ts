@@ -73,4 +73,11 @@ export class GameState {
     this.phase = 'playing';
     return true;
   }
+
+  /** Abandons the current run and returns to the start menu from manual pause. */
+  public returnToMenuFromPause(): boolean {
+    if (this.phase !== 'paused') return false;
+    this.phase = 'menu';
+    return true;
+  }
 }

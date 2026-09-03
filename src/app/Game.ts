@@ -131,7 +131,7 @@ export class Game {
   };
 
   private readonly onStartPlay = (): void => {
-    if (this.stopped || !this.startOnMenu || !this.gameState.startRun()) return;
+    if (this.stopped || !this.gameState.startRun()) return;
     const saved = this.saveStore.load();
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
@@ -188,6 +188,12 @@ export class Game {
     if (this.contextLost) return;
     if (!this.gameState.restartFromPause()) return;
     this.resetRunState();
+  };
+
+  private readonly onPauseReturnToMenu = (): void => {
+    if (this.contextLost || !this.startScreen) return;
+    if (!this.gameState.returnToMenuFromPause()) return;
+    this.returnToMenuState();
   };
 
   private readonly onWebglContextLost = (event: Event): void => {
@@ -294,23 +300,7 @@ export class Game {
     this.resizeNow();
     await this.lifecycle.init();
     if (this.startOnMenu) {
-      const saved = this.saveStore.load();
-      this.startScreen?.open({
-        settings: saved.settings,
-        best: saved.best,
-        skins: saved.skins,
-        cannonSkins: saved.cannonSkins,
-        backgrounds: saved.backgrounds,
-        wallet: saved.wallet,
-        metaUpgrades: saved.metaUpgrades,
-        onPlay: this.onStartPlay,
-        onSettingsChange: this.onStartSettingsChange,
-        onSkinStateChange: this.onStartSkinStateChange,
-        onCannonSkinStateChange: this.onStartCannonSkinStateChange,
-        onBackgroundStateChange: this.onStartBackgroundStateChange,
-        onWalletChange: this.onStartWalletChange,
-        onMetaUpgradesChange: this.onStartMetaUpgradesChange
-      });
+      this.openStartScreen();
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;
     } else {
@@ -534,7 +524,29 @@ export class Game {
     this.pause.open(message, this.resumeFromLifecycle, {
       settings: this.saveStore.load().settings,
       onSettingsChange: this.onPauseSettingsChange,
-      onRestart: this.onPauseRestart
+      onRestart: this.onPauseRestart,
+      onReturnToMenu: this.startScreen ? this.onPauseReturnToMenu : undefined
+    });
+  }
+
+  private openStartScreen(): void {
+    if (!this.startScreen) return;
+    const saved = this.saveStore.load();
+    this.startScreen.open({
+      settings: saved.settings,
+      best: saved.best,
+      skins: saved.skins,
+      cannonSkins: saved.cannonSkins,
+      backgrounds: saved.backgrounds,
+      wallet: saved.wallet,
+      metaUpgrades: saved.metaUpgrades,
+      onPlay: this.onStartPlay,
+      onSettingsChange: this.onStartSettingsChange,
+      onSkinStateChange: this.onStartSkinStateChange,
+      onCannonSkinStateChange: this.onStartCannonSkinStateChange,
+      onBackgroundStateChange: this.onStartBackgroundStateChange,
+      onWalletChange: this.onStartWalletChange,
+      onMetaUpgradesChange: this.onStartMetaUpgradesChange
     });
   }
 
@@ -566,6 +578,23 @@ export class Game {
   }
 
   private resetRunState(): void {
+    this.clearRunPresentation();
+    this.audio.resume();
+    this.audio.startMusic();
+    this.lifecycle.onGameStart();
+  }
+
+  private returnToMenuState(): void {
+    this.clearRunPresentation();
+    this.input.detach();
+    this.audio.stopMusic();
+    this.lifecycle.onGamePause();
+    this.hudElement.hidden = true;
+    if (this.pauseButton) this.pauseButton.hidden = true;
+    this.openStartScreen();
+  }
+
+  private clearRunPresentation(): void {
     this.clearTerminalSummaryTimer();
     this.hitStopSeconds = 0;
     this.input.reset();
@@ -587,9 +616,6 @@ export class Game {
     this.gameOver.close();
     this.startScreen?.close();
     this.view.closeLevelUpFx();
-    this.audio.resume();
-    this.audio.startMusic();
-    this.lifecycle.onGameStart();
   }
 
   private clearTerminalSummaryTimer(): void {

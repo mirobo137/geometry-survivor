@@ -18,5 +18,14 @@ describe('CannonPreviewSvg', () => {
     expect(svg).toContain('is-static');
     expect(svg).not.toContain('repeatCount="indefinite"');
     expect(svg).toContain('#ff668f');
+    expect(svg).not.toContain('cannon-preview-muzzle-flash');
+  });
+
+  it('inlines the same barrel masters used in-game', () => {
+    const svg = createCannonPreviewSvg('basic');
+    expect(svg).toContain('M-12-7 -24-14 -28-8 -16 3 -12 2z');
+    expect(svg).toContain('cannon-preview-barrel-left');
+    expect(svg).toContain('cannon-preview-muzzle-flash');
+    expect(svg).toContain('cx="-27"');
   });
 });

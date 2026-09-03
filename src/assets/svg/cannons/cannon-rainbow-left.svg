@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-rainbow-left-title cannon-rainbow-left-desc">
+  <title id="cannon-rainbow-left-title">Prisma izquierdo Spectrum Drive</title>
+  <desc id="cannon-rainbow-left-desc">Cañón facetado con bandas de color y boca blanca en la ranura izquierda.</desc>
+  <g id="cannon-rainbow-left" stroke-linejoin="round">
+    <path id="cannon-rainbow-left-mount" d="M-6-7 -12-10 -15-2 -12 6 -6 4z" fill="#2d6b5c" stroke="#ffffff" stroke-width="1.4"/>
+    <path id="cannon-rainbow-left-barrel" d="M-12-8 -23-15 -28-8 -16 3 -12 3z" fill="#65f2c2" stroke="#ffffff" stroke-width="1.5"/>
+    <path id="cannon-rainbow-left-red" d="M-14-6 -21-12 -23-7 -16 0z" fill="#ff668f"/>
+    <path id="cannon-rainbow-left-gold" d="M-16-3 -22-8 -24-5 -17 0z" fill="#ffe39a"/>
+    <circle id="cannon-rainbow-left-muzzle" cx="-27" cy="-11" r="3.5" fill="#ffffff" stroke="#65f2c2" stroke-width="1.5"/>
+    <circle id="cannon-rainbow-left-muzzle-core" cx="-27" cy="-11" r="1.4" fill="#ff668f"/>
+  </g>
+</svg>

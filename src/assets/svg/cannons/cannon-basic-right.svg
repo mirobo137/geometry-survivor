@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-basic-right-title cannon-basic-right-desc">
+  <title id="cannon-basic-right-title">Cañón derecho Pulse Standard</title>
+  <desc id="cannon-basic-right-desc">Cureña, tubo y boca luminosa alineada a la ranura de disparo derecha.</desc>
+  <g id="cannon-basic-right" stroke-linejoin="round">
+    <path id="cannon-basic-right-mount" d="M6-8 12-10 15-2 12 6 6 5 5-1z" fill="#2d5d6e" stroke="#e5fbff" stroke-width="1.5"/>
+    <path id="cannon-basic-right-barrel" d="M12-7 24-14 28-8 16 3 12 2z" fill="#75e6ff" stroke="#e5fbff" stroke-width="1.6"/>
+    <path id="cannon-basic-right-bore" d="M14-4 23-10 25-7 17 0z" fill="#b8ffd9"/>
+    <path id="cannon-basic-right-rail" d="M14-6 23-11" fill="none" stroke="#e5fbff" stroke-width="1.8" stroke-linecap="round"/>
+    <circle id="cannon-basic-right-muzzle" cx="27" cy="-11" r="3.6" fill="#10213c" stroke="#e5fbff" stroke-width="1.7"/>
+    <circle id="cannon-basic-right-muzzle-core" cx="27" cy="-11" r="1.5" fill="#b8ffd9"/>
+  </g>
+</svg>

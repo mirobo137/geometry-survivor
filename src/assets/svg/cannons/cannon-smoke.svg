@@ -1,12 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-smoke-title cannon-smoke-desc">
   <title id="cannon-smoke-title">Emisores Cinder Bloom</title>
-  <desc id="cannon-smoke-desc">Dos cañones calidos con camara cilindrica y anillos de calor.</desc>
-  <g id="cannon-smoke-emitters" fill="#d47b42" stroke="#fff0c5" stroke-linejoin="round">
-    <path id="cannon-smoke-left" d="M-9-7h-17l-7 7 7 7h17l5-7z" stroke-width="1.6"/>
-    <path id="cannon-smoke-right" d="M9-7h17l7 7-7 7H9L4 0z" stroke-width="1.6"/>
-    <path id="cannon-smoke-left-core" d="M-12-4h-12l-3 4 3 4h12z" fill="#ffb86b" stroke="none"/>
-    <path id="cannon-smoke-right-core" d="M12-4h12l3 4-3 4H12z" fill="#ffb86b" stroke="none"/>
-    <circle id="cannon-smoke-left-ring" cx="-18" cy="0" r="5" fill="none" stroke-width="1.4"/>
-    <circle id="cannon-smoke-right-ring" cx="18" cy="0" r="5" fill="none" stroke-width="1.4"/>
+  <desc id="cannon-smoke-desc">Dos morteros calidos con anillo de calor y boca de combustion.</desc>
+  <g id="cannon-smoke-emitters">
+    <g id="cannon-smoke-left" stroke-linejoin="round">
+      <path id="cannon-smoke-left-mount" d="M-5-9 -13-11 -16-2 -13 8 -5 7 -3 0z" fill="#8a4a28" stroke="#fff0c5" stroke-width="1.5"/>
+      <path id="cannon-smoke-left-barrel" d="M-12-8 -22-15 -29-8 -18 5 -12 4z" fill="#d47b42" stroke="#fff0c5" stroke-width="1.6"/>
+      <path id="cannon-smoke-left-bore" d="M-15-4 -22-10 -25-6 -17 1z" fill="#ffb86b"/>
+      <circle id="cannon-smoke-left-ring" cx="-19" cy="-4" r="4.2" fill="none" stroke="#fff0c5" stroke-width="1.35"/>
+      <circle id="cannon-smoke-left-muzzle" cx="-27" cy="-11" r="4" fill="#5a2814" stroke="#fff0c5" stroke-width="1.6"/>
+      <circle id="cannon-smoke-left-muzzle-core" cx="-27" cy="-11" r="1.7" fill="#ffe39a"/>
+    </g>
+    <g id="cannon-smoke-right" stroke-linejoin="round">
+      <path id="cannon-smoke-right-mount" d="M5-9 13-11 16-2 13 8 5 7 3 0z" fill="#8a4a28" stroke="#fff0c5" stroke-width="1.5"/>
+      <path id="cannon-smoke-right-barrel" d="M12-8 22-15 29-8 18 5 12 4z" fill="#d47b42" stroke="#fff0c5" stroke-width="1.6"/>
+      <path id="cannon-smoke-right-bore" d="M15-4 22-10 25-6 17 1z" fill="#ffb86b"/>
+      <circle id="cannon-smoke-right-ring" cx="19" cy="-4" r="4.2" fill="none" stroke="#fff0c5" stroke-width="1.35"/>
+      <circle id="cannon-smoke-right-muzzle" cx="27" cy="-11" r="4" fill="#5a2814" stroke="#fff0c5" stroke-width="1.6"/>
+      <circle id="cannon-smoke-right-muzzle-core" cx="27" cy="-11" r="1.7" fill="#ffe39a"/>
+    </g>
   </g>
 </svg>

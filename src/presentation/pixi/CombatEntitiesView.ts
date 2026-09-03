@@ -31,10 +31,7 @@ import { HealthBarView } from './entities/HealthBarView';
 import { ProjectileTrailView } from './fx/ProjectileTrailView';
 import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/ProjectileMotionVisual';
 
-import projectileBasicSvg from '../../assets/svg/cannons/projectile-basic.svg?raw';
-import projectileCurveSvg from '../../assets/svg/cannons/projectile-curve.svg?raw';
-import projectileSmokeSvg from '../../assets/svg/cannons/projectile-smoke.svg?raw';
-import projectileRainbowSvg from '../../assets/svg/cannons/projectile-rainbow.svg?raw';
+import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -177,10 +174,10 @@ export class CombatEntitiesView {
       this.damageNumbers.root
     );
     this.projectileTextures = {
-      basic: createSvgTexture(renderer, projectileBasicSvg, PROJECTILE_TEXTURE_FRAME),
-      curve: createSvgTexture(renderer, projectileCurveSvg, PROJECTILE_TEXTURE_FRAME),
-      smoke: createSvgTexture(renderer, projectileSmokeSvg, PROJECTILE_TEXTURE_FRAME),
-      rainbow: createSvgTexture(renderer, projectileRainbowSvg, PROJECTILE_TEXTURE_FRAME)
+      basic: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.basic, PROJECTILE_TEXTURE_FRAME),
+      curve: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.curve, PROJECTILE_TEXTURE_FRAME),
+      smoke: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.smoke, PROJECTILE_TEXTURE_FRAME),
+      rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality);

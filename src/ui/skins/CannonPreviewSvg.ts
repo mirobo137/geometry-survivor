@@ -1,9 +1,16 @@
 import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
+import {
+  CANNON_BARREL_SVG,
+  CANNON_PROJECTILE_SVG,
+  extractSvgGraphicMarkup
+} from '../../assets/svg/cannons/CannonSvgMarkup';
 
 export interface CannonPreviewOptions {
   readonly animated?: boolean;
 }
+
+const toHex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
 
 const shotMotion = (skin: CannonSkinId, animated: boolean): string => {
   if (!animated) return '';
@@ -13,19 +20,19 @@ const shotMotion = (skin: CannonSkinId, animated: boolean): string => {
   return `<animateTransform attributeName="transform" type="translate" values="${values}" dur="1.25s" repeatCount="indefinite" begin="-0.08s"/>`;
 };
 
-const cannonMarkup = (skin: CannonSkinId): string => ({
-  basic: `<path d="M-8-4-29-14l4 14-4 14 21-10zM8-4 29-14l-4 14 4 14L8 4z" fill="#75e6ff" stroke="#e5fbff" stroke-width="1.6" stroke-linejoin="round"/><path d="M-12-3-25-9l3 9-3 9 13-6zM12-3 25-9l-3 9 3 9-13-6z" fill="#b8ffd9"/>`,
-  curve: `<path d="M-8-8-30-18l8 18-8 18 22-10 6-8zM8-8 30-18l-8 18 8 18-22-10-6-8z" fill="#8e6bce" stroke="#f5eaff" stroke-width="1.5" stroke-linejoin="round"/><path d="M-12-5-25-12l6 12-6 12 13-7 4-5zM12-5 25-12l-6 12 6 12-13-7-4-5z" fill="#d2a8ff"/>`,
-  smoke: `<path d="M-8-7h-17l-7 7 7 7h17l5-7zM8-7h17l7 7-7 7H8L3 0z" fill="#d47b42" stroke="#fff0c5" stroke-width="1.6"/><path d="M-12-4h-12l-3 4 3 4h12zM12-4h12l3 4-3 4H12z" fill="#ffb86b"/><circle cx="-18" r="5" fill="none" stroke="#fff0c5" stroke-width="1.4"/><circle cx="18" r="5" fill="none" stroke="#fff0c5" stroke-width="1.4"/>`,
-  rainbow: `<path d="M-8-8-30-14l6 14-6 14 22-6 6-8zM8-8 30-14l-6 14 6 14-22-6-6-8z" fill="#65f2c2" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M-12-6-25-10l4 10-4 10 13-4 4-6zM12-6 25-10l-4 10 4 10-13-4-4-6z" fill="#ff668f"/><path d="M-11-3-21-6l3 6-3 6 10-3 3-3zM11-3 21-6l-3 6 3 6-10-3-3-3z" fill="#ffe39a"/>`
-}[skin]);
+const barrelRecoil = (side: 'left' | 'right', animated: boolean): string => {
+  if (!animated) return '';
+  const values = side === 'left' ? '0 0;3 1.4;0 0' : '0 0;-3 1.4;0 0';
+  return `<animateTransform attributeName="transform" type="translate" values="${values}" dur="1.25s" repeatCount="indefinite"/>`;
+};
 
-const bulletMarkup = (skin: CannonSkinId): string => ({
-  basic: `<path d="M-9 0-3-5 10 0l-3 5z" fill="#fff6a8" stroke="#fff" stroke-width="1.4"/><circle cx="2" r="2.2" fill="#fff"/>`,
-  curve: `<path d="M-10 0q6-8 17 0Q-4 8-10 0z" fill="#d2a8ff" stroke="#fff4ff" stroke-width="1.2"/><path d="M-1-3 9 0-1 3z" fill="#ffb8df"/>`,
-  smoke: `<path d="M-10-5H2l7 5-7 5h-12l-4-5z" fill="#ffb86b" stroke="#fff0c5" stroke-width="1.3"/><circle cx="2" r="2.2" fill="#fff7d6"/>`,
-  rainbow: `<path d="M-10 0-4-6 10 0 4 6z" fill="#65f2c2" stroke="#fff" stroke-width="1.2"/><path d="M-4-6 1-2-1 2-7 0z" fill="#ff668f"/><path d="M1-2 10 0 4 6-1 2z" fill="#ffe39a"/>`
-}[skin]);
+const muzzleFlash = (x: number, color: string, animated: boolean): string => {
+  if (!animated) return '';
+  return `<circle class="cannon-preview-muzzle-flash" cx="${x}" cy="-11" r="5" fill="${color}" opacity="0">
+    <animate attributeName="opacity" values="0;.9;0" dur="1.25s" repeatCount="indefinite"/>
+    <animate attributeName="r" values="2.2;7.5;2.2" dur="1.25s" repeatCount="indefinite"/>
+  </circle>`;
+};
 
 const trailMarkup = (skin: CannonSkinId): string => {
   if (skin === 'curve') return `<path class="cannon-preview-trail cannon-preview-trail-curve" d="M30 0Q98-28 190 0" fill="none" stroke="#d2a8ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>`;
@@ -39,6 +46,9 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
   const definition = getCannonSkinDefinition(skin);
   const animated = options.animated !== false;
   const animationClass = animated ? ' is-animated' : ' is-static';
+  const accent = toHex(definition.accent);
+  const barrels = CANNON_BARREL_SVG[skin];
+  const bullet = extractSvgGraphicMarkup(CANNON_PROJECTILE_SVG[skin]);
   const smokeAnimation = animated
     ? '<animate attributeName="opacity" values=".15;.72;.08" dur="1.25s" repeatCount="indefinite"/>'
     : '';
@@ -47,12 +57,13 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
     <ellipse cx="0" cy="20" rx="35" ry="13" fill="#020611" opacity=".6"/>
     <g class="cannon-preview-route">${trailMarkup(skin)}</g>
     <g class="cannon-preview-route cannon-preview-route-reverse" transform="scale(-1 1)">${trailMarkup(skin)}</g>
-    <g class="cannon-preview-shot cannon-preview-shot-right"><g transform="translate(28 0)">${bulletMarkup(skin)}${shotMotion(skin, animated)}</g></g>
-    <g class="cannon-preview-shot cannon-preview-shot-left" transform="scale(-1 1)"><g transform="translate(28 0)">${bulletMarkup(skin)}${shotMotion(skin, animated)}</g></g>
+    <g class="cannon-preview-shot cannon-preview-shot-right"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
+    <g class="cannon-preview-shot cannon-preview-shot-left" transform="scale(-1 1)"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
     <g class="cannon-preview-ship">
+      <g class="cannon-preview-barrel cannon-preview-barrel-left">${extractSvgGraphicMarkup(barrels.left)}${barrelRecoil('left', animated)}${muzzleFlash(-27, accent, animated)}</g>
+      <g class="cannon-preview-barrel cannon-preview-barrel-right">${extractSvgGraphicMarkup(barrels.right)}${barrelRecoil('right', animated)}${muzzleFlash(27, accent, animated)}</g>
       <path d="M0-29 25-15 25 15 0 29-25 15-25-15z" fill="#182844" stroke="#b9d7ff" stroke-width="2.4" stroke-linejoin="round"/>
       <path d="M0-21 15-12 15 12 0 21-15 12-15-12z" fill="none" stroke="#50739e" stroke-width="1.5"/>
-      ${cannonMarkup(skin)}
       <circle cx="0" cy="0" r="10" fill="#75e6ff" stroke="#f4ffff" stroke-width="1.8"/>
       <path d="M0-6V6M-6 0H6" stroke="#10213c" stroke-width="1.8" stroke-linecap="round"/>
       <circle cx="0" cy="0" r="2.4" fill="#fff"/>

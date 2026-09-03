@@ -9,14 +9,16 @@ const skinTextures = {
   emerald: Texture.WHITE
 };
 
+const cannonPair = () => ({ left: Texture.WHITE, right: Texture.WHITE });
+
 const textures = {
   shadow: Texture.WHITE,
   ring: skinTextures,
   weapons: {
-    basic: Texture.WHITE,
-    curve: Texture.WHITE,
-    smoke: Texture.WHITE,
-    rainbow: Texture.WHITE
+    basic: cannonPair(),
+    curve: cannonPair(),
+    smoke: cannonPair(),
+    rainbow: cannonPair()
   },
   body: skinTextures,
   core: skinTextures,
@@ -76,8 +78,9 @@ describe('PlayerView', () => {
     view.render(state(320, 400, 80), 0.63);
     const shotFlash = view.root.children[9] as { visible: boolean };
     expect(shotFlash.visible).toBe(true);
-    const weapons = view.root.children[4] as { position: { y: number } };
-    expect(weapons.position.y).toBeGreaterThan(0);
+    const weapons = view.root.children[4] as { children: { position: { x: number; y: number } }[] };
+    expect(weapons.children[0].position.y).toBeGreaterThan(0);
+    expect(weapons.children[1].position.y).toBe(0);
     view.playDefeat();
     view.updateDefeat(0.3);
     view.render(state(320, 400, 0), 0.5);

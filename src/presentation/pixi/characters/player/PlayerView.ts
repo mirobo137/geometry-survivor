@@ -3,7 +3,7 @@ import type { FxQuality } from '../../../../content/visual/VisualTokens';
 import { PLAYER_SPEED } from '../../../../config/constants';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
 import type { ShotRenderState } from '../../../../simulation/combat/CombatRenderState';
-import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
+import { getCannonSkinDefinition, type CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import {
   PLAYER_SKINS,
   PLAYER_SKIN_MOTION,
@@ -22,7 +22,9 @@ export class PlayerView {
   private readonly shadow: Sprite;
   private readonly movementTrail: Graphics;
   private readonly ring: Sprite;
-  private readonly weapons: Sprite;
+  private readonly weapons = new Container();
+  private readonly weaponLeft: Sprite;
+  private readonly weaponRight: Sprite;
   private readonly body: Sprite;
   private readonly core: Sprite;
   private readonly accent: Sprite;
@@ -63,7 +65,9 @@ export class PlayerView {
     this.shadow = new Sprite(textures.shadow);
     this.movementTrail = new Graphics();
     this.ring = new Sprite(textures.ring[skin]);
-    this.weapons = new Sprite(textures.weapons[cannonSkin]);
+    this.weaponLeft = new Sprite(textures.weapons[cannonSkin].left);
+    this.weaponRight = new Sprite(textures.weapons[cannonSkin].right);
+    this.weapons.addChild(this.weaponLeft, this.weaponRight);
     this.body = new Sprite(textures.body[skin]);
     this.core = new Sprite(textures.core[skin]);
     this.accent = new Sprite(textures.accent);
@@ -73,7 +77,7 @@ export class PlayerView {
     this.signature = new Sprite(textures.signature.cyan);
     this.damageFlash.tint = 0xffffff;
     this.damageFlash.alpha = 0;
-    for (const part of [this.shadow, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash]) {
+    for (const part of [this.shadow, this.signature, this.ring, this.weaponLeft, this.weaponRight, this.body, this.core, this.accent, this.damageFlash]) {
       part.anchor.set(0.5);
     }
     this.root.addChild(this.shadow, this.movementTrail, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash, this.guardFx);
@@ -108,9 +112,12 @@ export class PlayerView {
   /** Cannon cosmetics are independent from the hull skin and only affect presentation. */
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
-    this.weapons.texture = this.textures.weapons[cannonSkin];
+    const barrels = this.textures.weapons[cannonSkin];
+    this.weaponLeft.texture = barrels.left;
+    this.weaponRight.texture = barrels.right;
     // Cannon SVGs own their palette so a body skin never recolors the loadout.
-    this.weapons.tint = 0xffffff;
+    this.weaponLeft.tint = 0xffffff;
+    this.weaponRight.tint = 0xffffff;
   }
 
   /** Called by the app after the simulation accepts a damage event. */
@@ -189,10 +196,16 @@ export class PlayerView {
     const defeat = Math.max(0, this.defeatProgress);
     this.body.rotation = this.movementTilt - damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.weapons.rotation = -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians
-      + shotAimRotation * shotAimActive
-      - shotPulse * 0.025;
+      + shotAimRotation * shotAimActive;
     this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
-    this.weapons.position.set(defeat * 26, defeat * 8 + shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance);
+    this.weapons.position.set(defeat * 26, defeat * 8);
+    const kick = shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance;
+    const leftKick = (this.shotMuzzleMask & 1) !== 0 ? kick : 0;
+    const rightKick = (this.shotMuzzleMask & 2) !== 0 ? kick : 0;
+    this.weaponLeft.position.set(leftKick * 0.88, leftKick * 0.47);
+    this.weaponRight.position.set(-rightKick * 0.88, rightKick * 0.47);
+    this.weaponLeft.rotation = -leftKick * 0.02;
+    this.weaponRight.rotation = rightKick * 0.02;
     this.body.position.set(-defeat * 14, defeat * 12);
     this.core.position.set(0, -defeat * 28);
     this.accent.position.set(defeat * 18, -defeat * 16);
@@ -244,7 +257,12 @@ export class PlayerView {
     this.ring.scale.set(1);
     this.ring.alpha = 1;
     this.core.alpha = 1;
+    this.weapons.rotation = 0;
     this.weapons.position.set(0, 0);
+    this.weaponLeft.position.set(0, 0);
+    this.weaponRight.position.set(0, 0);
+    this.weaponLeft.rotation = 0;
+    this.weaponRight.rotation = 0;
     this.body.position.set(0, 0);
     this.core.position.set(0, 0);
     this.accent.position.set(0, 0);
@@ -305,7 +323,7 @@ export class PlayerView {
       this.shotFlash.visible = false;
       return;
     }
-    const color = PLAYER_SKINS[this.skin].accent;
+    const color = getCannonSkinDefinition(this.cannonSkin).accent;
     const alpha = pulse * 0.9;
     this.shotFlash.visible = true;
     const inverseRoot = -this.root.rotation;
@@ -372,7 +390,7 @@ export class PlayerView {
     const sin = Math.sin(-this.root.rotation);
     const localX = relativeX * cos - relativeY * sin;
     const localY = relativeX * sin + relativeY * cos;
-    const length = 8 + pulse * 10;
+    const length = 10 + pulse * 12;
     this.shotFlash
       .beginPath()
       .moveTo(localX - 2, localY)
@@ -383,7 +401,7 @@ export class PlayerView {
       .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
     this.shotFlash
       .beginPath()
-      .circle(localX, localY, 1.6 + pulse * 1.8)
+      .circle(localX, localY, 2.2 + pulse * 2.4)
       .fill({ color: 0xffffff, alpha: alpha * 0.85 });
   }
 

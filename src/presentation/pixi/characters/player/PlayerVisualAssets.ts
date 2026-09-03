@@ -13,20 +13,22 @@ import emeraldRingSvg from '../../../../assets/svg/characters/player/skins/emera
 import violetBodySvg from '../../../../assets/svg/characters/player/skins/violet/body.svg?raw';
 import violetCoreSvg from '../../../../assets/svg/characters/player/skins/violet/core.svg?raw';
 import violetRingSvg from '../../../../assets/svg/characters/player/skins/violet/ring.svg?raw';
-import cannonBasicSvg from '../../../../assets/svg/cannons/cannon-basic.svg?raw';
-import cannonCurveSvg from '../../../../assets/svg/cannons/cannon-curve.svg?raw';
-import cannonSmokeSvg from '../../../../assets/svg/cannons/cannon-smoke.svg?raw';
-import cannonRainbowSvg from '../../../../assets/svg/cannons/cannon-rainbow.svg?raw';
 import { createPlayerSkinSignatureSvg } from '../../../../assets/svg/characters/player/SkinSignatureSvg';
+import { CANNON_BARREL_SVG } from '../../../../assets/svg/cannons/CannonSvgMarkup';
 import { PLAYER_SKINS } from '../../../../content/visual/VisualTokens';
 import type { PlayerSkinId } from '../../../../content/visual/VisualTokens';
 import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import { createSvgTexture, type SvgTextureFrame } from '../../SvgTextureFactory';
 
+export interface CannonTexturePair {
+  readonly left: Texture;
+  readonly right: Texture;
+}
+
 export interface PlayerTextureSet {
   readonly shadow: Texture;
   readonly ring: Readonly<Record<PlayerSkinId, Texture>>;
-  readonly weapons: Readonly<Record<CannonSkinId, Texture>>;
+  readonly weapons: Readonly<Record<CannonSkinId, CannonTexturePair>>;
   readonly body: Readonly<Record<PlayerSkinId, Texture>>;
   readonly core: Readonly<Record<PlayerSkinId, Texture>>;
   readonly accent: Texture;
@@ -64,10 +66,22 @@ export const createPlayerTextures = (renderer: Renderer): PlayerTextureSet => ({
   shadow: createSvgTexture(renderer, playerShadowSvg, PLAYER_TEXTURE_FRAME),
   ring: rasterizeSkinMap(renderer, (hull) => hull.ring),
   weapons: {
-    basic: createSvgTexture(renderer, cannonBasicSvg, PLAYER_TEXTURE_FRAME),
-    curve: createSvgTexture(renderer, cannonCurveSvg, PLAYER_TEXTURE_FRAME),
-    smoke: createSvgTexture(renderer, cannonSmokeSvg, PLAYER_TEXTURE_FRAME),
-    rainbow: createSvgTexture(renderer, cannonRainbowSvg, PLAYER_TEXTURE_FRAME)
+    basic: {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.right, PLAYER_TEXTURE_FRAME)
+    },
+    curve: {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG.curve.left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG.curve.right, PLAYER_TEXTURE_FRAME)
+    },
+    smoke: {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG.smoke.left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG.smoke.right, PLAYER_TEXTURE_FRAME)
+    },
+    rainbow: {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.right, PLAYER_TEXTURE_FRAME)
+    }
   },
   body: rasterizeSkinMap(renderer, (hull) => hull.body),
   core: rasterizeSkinMap(renderer, (hull) => hull.core),

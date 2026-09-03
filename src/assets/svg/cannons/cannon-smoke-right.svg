@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-smoke-right-title cannon-smoke-right-desc">
+  <title id="cannon-smoke-right-title">Mortero derecho Cinder Bloom</title>
+  <desc id="cannon-smoke-right-desc">Cañón grueso con anillo de calor y boca de combustión en la ranura derecha.</desc>
+  <g id="cannon-smoke-right" stroke-linejoin="round">
+    <path id="cannon-smoke-right-mount" d="M5-9 13-11 16-2 13 8 5 7 3 0z" fill="#8a4a28" stroke="#fff0c5" stroke-width="1.5"/>
+    <path id="cannon-smoke-right-barrel" d="M12-8 22-15 29-8 18 5 12 4z" fill="#d47b42" stroke="#fff0c5" stroke-width="1.6"/>
+    <path id="cannon-smoke-right-bore" d="M15-4 22-10 25-6 17 1z" fill="#ffb86b"/>
+    <circle id="cannon-smoke-right-ring" cx="19" cy="-4" r="4.2" fill="none" stroke="#fff0c5" stroke-width="1.35"/>
+    <circle id="cannon-smoke-right-muzzle" cx="27" cy="-11" r="4" fill="#5a2814" stroke="#fff0c5" stroke-width="1.6"/>
+    <circle id="cannon-smoke-right-muzzle-core" cx="27" cy="-11" r="1.7" fill="#ffe39a"/>
+  </g>
+</svg>

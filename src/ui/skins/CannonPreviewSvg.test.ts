@@ -27,5 +27,6 @@ describe('CannonPreviewSvg', () => {
     expect(svg).toContain('cannon-preview-barrel-left');
     expect(svg).toContain('cannon-preview-muzzle-flash');
     expect(svg).toContain('cx="-27"');
+    expect(svg.indexOf('cannon-preview-hull')).toBeLessThan(svg.indexOf('cannon-preview-hardpoint'));
   });
 });

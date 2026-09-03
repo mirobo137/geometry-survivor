@@ -94,4 +94,30 @@ describe('PlayerView', () => {
     view.reset();
     expect(view.root.rotation).toBe(0);
   });
+
+  it('holds cannon aim on the last shot until the next one', () => {
+    const view = new PlayerView(textures);
+    const weapons = view.root.children[4] as { rotation: number };
+    view.render(state(300, 400), 0);
+    view.render(state(320, 400), 0.1);
+    expect(view.root.rotation).toBeCloseTo(Math.PI / 2);
+    view.playShot(0.2, {
+      sequence: 1,
+      directionX: 0,
+      directionY: -1,
+      muzzleMask: 3,
+      leftOriginX: 320,
+      leftOriginY: 389,
+      rightOriginX: 320,
+      rightOriginY: 389
+    });
+    view.render(state(320, 400, 80), 1);
+    expect(weapons.rotation).toBeCloseTo(-Math.PI / 2);
+    view.render(state(320, 450, 80), 1.1);
+    expect(view.root.rotation).toBeCloseTo(Math.PI);
+    expect(weapons.rotation).toBeCloseTo(-Math.PI);
+    view.reset();
+    view.render(state(300, 400), 0);
+    expect(weapons.rotation).toBeCloseTo(0);
+  });
 });

@@ -47,6 +47,7 @@ export class PlayerView {
   private shotLeftOriginY = 0;
   private shotRightOriginX = 0;
   private shotRightOriginY = 0;
+  private aimHeld = false;
   private defeatProgress = -1;
   private readonly quality: FxQuality;
   private lastAnimationSeconds: number | null = null;
@@ -140,6 +141,7 @@ export class PlayerView {
     this.shotLeftOriginY = shot.leftOriginY;
     this.shotRightOriginX = shot.rightOriginX;
     this.shotRightOriginY = shot.rightOriginY;
+    this.aimHeld = true;
   }
 
   public render(state: PlayerState, animationSeconds: number, shieldChargeProgress = 0): void {
@@ -188,15 +190,17 @@ export class PlayerView {
     const shotAimRotation = Math.atan2(this.shotDirectionY, this.shotDirectionX)
       - this.root.rotation
       + Math.PI / 2;
-    const shotAimActive = shotProgress < 1 ? 1 : 0;
     this.root.scale.set(
       pulse * (1 + damagePulse * PLAYER_VISUAL_TOKENS.damageSquash),
       pulse * (1 - damagePulse * PLAYER_VISUAL_TOKENS.damageSquash)
     );
     const defeat = Math.max(0, this.defeatProgress);
     this.body.rotation = this.movementTilt - damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
-    this.weapons.rotation = -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians
-      + shotAimRotation * shotAimActive;
+    // Turrets hold the last shot heading in world space. Simulation already aims
+    // independently of hull facing; this only stops the barrels snapping back.
+    this.weapons.rotation = this.aimHeld
+      ? shotAimRotation
+      : -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
     this.weapons.position.set(defeat * 26, defeat * 8);
     const kick = shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance;
@@ -248,6 +252,7 @@ export class PlayerView {
     this.shotLeftOriginY = 0;
     this.shotRightOriginX = 0;
     this.shotRightOriginY = 0;
+    this.aimHeld = false;
     this.defeatProgress = -1;
     this.root.rotation = 0;
     this.root.scale.set(1);

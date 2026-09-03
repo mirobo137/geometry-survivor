@@ -60,13 +60,17 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
     <g class="cannon-preview-shot cannon-preview-shot-right"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
     <g class="cannon-preview-shot cannon-preview-shot-left" transform="scale(-1 1)"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
     <g class="cannon-preview-ship">
-      <g class="cannon-preview-barrel cannon-preview-barrel-left">${extractSvgGraphicMarkup(barrels.left)}${barrelRecoil('left', animated)}${muzzleFlash(-27, accent, animated)}</g>
-      <g class="cannon-preview-barrel cannon-preview-barrel-right">${extractSvgGraphicMarkup(barrels.right)}${barrelRecoil('right', animated)}${muzzleFlash(27, accent, animated)}</g>
-      <path d="M0-29 25-15 25 15 0 29-25 15-25-15z" fill="#182844" stroke="#b9d7ff" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M0-21 15-12 15 12 0 21-15 12-15-12z" fill="none" stroke="#50739e" stroke-width="1.5"/>
-      <circle cx="0" cy="0" r="10" fill="#75e6ff" stroke="#f4ffff" stroke-width="1.8"/>
-      <path d="M0-6V6M-6 0H6" stroke="#10213c" stroke-width="1.8" stroke-linecap="round"/>
-      <circle cx="0" cy="0" r="2.4" fill="#fff"/>
+      <g class="cannon-preview-hull">
+        <path d="M0-20 18-10 18 10 0 20-18 10-18-10z" fill="#182844" stroke="#b9d7ff" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M0-14 11-7 11 7 0 14-11 7-11-7z" fill="none" stroke="#50739e" stroke-width="1.5"/>
+        <circle cx="0" cy="0" r="8" fill="#75e6ff" stroke="#f4ffff" stroke-width="1.8"/>
+        <path d="M0-5V5M-5 0H5" stroke="#10213c" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="2.2" fill="#fff"/>
+      </g>
+      <g class="cannon-preview-hardpoint">
+        <g class="cannon-preview-barrel cannon-preview-barrel-left">${extractSvgGraphicMarkup(barrels.left)}${barrelRecoil('left', animated)}${muzzleFlash(-27, accent, animated)}</g>
+        <g class="cannon-preview-barrel cannon-preview-barrel-right">${extractSvgGraphicMarkup(barrels.right)}${barrelRecoil('right', animated)}${muzzleFlash(27, accent, animated)}</g>
+      </g>
       ${animated ? '<animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0;0 2;0 0" dur="2.8s" repeatCount="indefinite"/>' : ''}
     </g>
     ${animated && skin === 'smoke' ? `<g class="cannon-preview-smoke-pulse" fill="#b56b53" opacity=".2"><circle cx="72" cy="-2" r="5">${smokeAnimation}</circle><circle cx="130" cy="4" r="3">${smokeAnimation}</circle></g>` : ''}

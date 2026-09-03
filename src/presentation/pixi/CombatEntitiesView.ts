@@ -146,6 +146,7 @@ export class CombatEntitiesView {
   private readonly enemyTextures: EnemyTextureSet;
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
+  private readonly projectileGlows: Sprite[] = [];
   private readonly enemyImpactFx: EnemyImpactFxView;
   private readonly enemyDefeatFx: EnemyDefeatFxView;
   private readonly damageNumbers: DamageNumberView;
@@ -153,11 +154,13 @@ export class CombatEntitiesView {
   private readonly projectileTrails: ProjectileTrailView;
   private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
   private cannonSkin: CannonSkinId;
+  private readonly glowEnabled: boolean;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
     this.cannonSkin = cannonSkin;
+    this.glowEnabled = quality !== 'low';
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
@@ -185,6 +188,15 @@ export class CombatEntitiesView {
       this.enemyLayer.addChild(visual.root);
     }
     for (let index = 0; index < PROJECTILE_POOL_CAPACITY; index += 1) {
+      if (this.glowEnabled) {
+        const glow = new Sprite(this.projectileTextures[cannonSkin]);
+        glow.anchor.set(0.5);
+        glow.visible = false;
+        glow.alpha = 0.28;
+        glow.scale.set(1.9);
+        this.projectileGlows.push(glow);
+        this.projectileLayer.addChild(glow);
+      }
       const sprite = new Sprite(this.projectileTextures[cannonSkin]);
       sprite.anchor.set(0.5);
       sprite.visible = false;
@@ -196,7 +208,9 @@ export class CombatEntitiesView {
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
     this.projectileTrails.setCannonSkin(cannonSkin);
-    for (const sprite of this.projectileSprites) sprite.texture = this.projectileTextures[cannonSkin];
+    const texture = this.projectileTextures[cannonSkin];
+    for (const sprite of this.projectileSprites) sprite.texture = texture;
+    for (const glow of this.projectileGlows) glow.texture = texture;
   }
 
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
@@ -223,7 +237,9 @@ export class CombatEntitiesView {
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
       const state = combat.projectiles[index];
       const sprite = this.projectileSprites[index];
+      const glow = this.glowEnabled ? this.projectileGlows[index] : null;
       sprite.visible = state.active;
+      if (glow) glow.visible = state.active;
       if (!state.active) continue;
       const speed = Math.hypot(state.vx, state.vy);
       const directionX = speed > 0.5 ? state.vx / speed : 1;
@@ -231,9 +247,20 @@ export class CombatEntitiesView {
       const normalX = -directionY;
       const normalY = directionX;
       const curveOffset = getProjectileCurveOffset(state, trailKind);
-      sprite.position.set(state.x + normalX * curveOffset, state.y + normalY * curveOffset);
+      const px = state.x + normalX * curveOffset;
+      const py = state.y + normalY * curveOffset;
+      sprite.position.set(px, py);
       const curveVelocity = getProjectileCurveVelocity(state, trailKind);
-      sprite.rotation = Math.atan2(state.vy + normalY * curveVelocity, state.vx + normalX * curveVelocity);
+      const rot = Math.atan2(state.vy + normalY * curveVelocity, state.vx + normalX * curveVelocity);
+      sprite.rotation = rot;
+      const pulse = 1 + Math.sin(state.ageSeconds * 28) * 0.09;
+      sprite.scale.set(pulse);
+      if (glow) {
+        glow.position.set(px, py);
+        glow.rotation = rot;
+        glow.scale.set(pulse * 1.9);
+        glow.alpha = 0.22 + Math.sin(state.ageSeconds * 14) * 0.06;
+      }
     }
   }
 
@@ -260,5 +287,6 @@ export class CombatEntitiesView {
       this.enemyVisuals[index].reset();
     }
     for (const sprite of this.projectileSprites) sprite.visible = false;
+    for (const glow of this.projectileGlows) glow.visible = false;
   }
 }

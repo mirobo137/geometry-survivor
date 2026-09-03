@@ -187,9 +187,7 @@ export class PlayerView {
     this.weapons.rotation = -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians
       + shotAimRotation * shotAimActive
       - shotPulse * 0.025;
-    this.signature.rotation = animationSeconds * motion.signatureSpin;
-    this.signature.scale.set(1 + Math.sin(animationSeconds * 3.2) * motion.signaturePulse);
-    this.ring.rotation = -animationSeconds * motion.signatureSpin * 0.35;
+    this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
     this.weapons.position.set(defeat * 26, defeat * 8 + shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance);
     this.body.position.set(-defeat * 14, defeat * 12);
     this.core.position.set(0, -defeat * 28);
@@ -240,6 +238,8 @@ export class PlayerView {
     this.signature.scale.set(1);
     this.ring.rotation = 0;
     this.ring.scale.set(1);
+    this.ring.alpha = 1;
+    this.core.alpha = 1;
     this.weapons.position.set(0, 0);
     this.body.position.set(0, 0);
     this.core.position.set(0, 0);
@@ -251,6 +251,48 @@ export class PlayerView {
     this.shotFlash.visible = false;
     this.shotFlash.position.set(0, 0);
     this.shotFlash.rotation = 0;
+  }
+
+  /**
+   * Each skin has a distinctive animation personality. All transforms are
+   * presentation-only and use the existing sprites — no allocations.
+   */
+  private animateSkinSignature(t: number, motion: { signatureSpin: number; signaturePulse: number }, movementStrength: number): void {
+    const skin = this.skin;
+    if (skin === 'cyan') {
+      // Aurora: smooth heartbeat on ring, signature orbits steadily, ring
+      // pulses stronger when moving
+      const heartbeat = Math.sin(t * 2.8) * 0.5 + 0.5;
+      this.signature.rotation = t * motion.signatureSpin;
+      this.signature.scale.set(1 + Math.sin(t * 3.2) * motion.signaturePulse);
+      this.ring.rotation = -t * motion.signatureSpin * 0.35;
+      this.ring.alpha = 0.7 + heartbeat * 0.3 * Math.max(0.3, movementStrength);
+    } else if (skin === 'violet') {
+      // Eclipse: signature fragments orbit with variable speed, ring counter-
+      // rotates and breathes with a crystalline stutter
+      const stutter = Math.sin(t * 5.5) * 0.15;
+      this.signature.rotation = t * motion.signatureSpin + stutter;
+      this.signature.scale.set(1 + Math.sin(t * 2.4) * 0.03 + Math.sin(t * 7.1) * 0.015);
+      this.ring.rotation = -t * 0.25;
+      this.ring.alpha = 0.6 + Math.sin(t * 3.8) * 0.25;
+    } else if (skin === 'amber') {
+      // Solar: aspas spin faster, ring throbs with heat, core glows brighter
+      // when still (charging up)
+      const heat = 1 - movementStrength * 0.5;
+      this.signature.rotation = t * motion.signatureSpin * 1.5;
+      this.signature.scale.set(1 + Math.sin(t * 4.2) * 0.025 * heat);
+      this.ring.rotation = -t * motion.signatureSpin * 0.55;
+      this.core.alpha = 0.85 + heat * 0.15 * (0.5 + Math.sin(t * 6) * 0.5);
+      this.ring.alpha = 0.55 + heat * 0.35 * (0.5 + Math.sin(t * 3.5) * 0.5);
+    } else {
+      // Verdant: blades open when moving, close when idle, each rotates
+      // independently with organic asymmetry
+      const openness = 0.85 + movementStrength * 0.15;
+      this.signature.rotation = t * motion.signatureSpin + Math.sin(t * 1.8) * 0.08;
+      this.signature.scale.set(openness + Math.sin(t * 2.5) * 0.02);
+      this.ring.rotation = -t * motion.signatureSpin * 0.4 + Math.sin(t * 3.3) * 0.04;
+      this.ring.alpha = 0.6 + movementStrength * 0.3;
+    }
   }
 
   private renderShotFlash(pulse: number, state: PlayerState): void {

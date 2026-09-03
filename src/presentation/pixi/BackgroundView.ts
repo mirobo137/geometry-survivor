@@ -1,11 +1,14 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import type { Renderer } from 'pixi.js';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../../config/constants';
 import {
   getBackgroundDefinition,
   type BackgroundDefinition,
-  type BackgroundId
+  type BackgroundId,
+  type BackgroundPattern
 } from '../../content/visual/BackgroundDefinitions';
 import type { FxQuality } from '../../content/visual/VisualTokens';
+import { createTexture } from './TextureFactory';
 
 const STAR_POINTS = [
   [0.08, 0.16, 1.2], [0.17, 0.74, 1.6], [0.25, 0.29, 0.9], [0.32, 0.86, 1.3],
@@ -25,6 +28,18 @@ const QUALITY_STAR_LIMIT: Readonly<Record<FxQuality, number>> = {
   high: STAR_POINTS.length
 };
 
+const QUALITY_AMBIENT_LIMIT: Readonly<Record<FxQuality, number>> = {
+  low: 0,
+  medium: 10,
+  high: 18
+};
+
+const QUALITY_NEBULA_COUNT: Readonly<Record<FxQuality, number>> = {
+  low: 0,
+  medium: 2,
+  high: 3
+};
+
 const drawCircle = (graphics: Graphics, x: number, y: number, radius: number, color: number, alpha: number): void => {
   graphics.beginPath().circle(x, y, radius).fill({ color, alpha });
 };
@@ -33,22 +48,72 @@ const drawLine = (graphics: Graphics, startX: number, startY: number, endX: numb
   graphics.beginPath().moveTo(startX, startY).lineTo(endX, endY).stroke({ color, width, alpha });
 };
 
+interface StarSlot {
+  readonly sprite: Sprite;
+  readonly baseAlpha: number;
+  readonly speed: number;
+  readonly phase: number;
+}
+
+interface AmbientParticle {
+  readonly sprite: Sprite;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  baseAlpha: number;
+  speed: number;
+  phase: number;
+}
+
+interface NebulaSlot {
+  readonly sprite: Sprite;
+  readonly breathSpeed: number;
+  readonly breathPhase: number;
+  readonly baseScale: number;
+  readonly breathAmplitude: number;
+}
+
+type AmbientBehavior = 'drift' | 'float-up' | 'electric' | 'rotate';
+
+const PATTERN_BEHAVIOR: Readonly<Record<BackgroundPattern, AmbientBehavior>> = {
+  constellation: 'drift',
+  nebula: 'electric',
+  solar: 'float-up',
+  crystal: 'rotate'
+};
+
 /**
- * Static, presentation-only atmosphere. It is rebuilt only on theme/viewport
- * changes, never in the ticker, and remains one display object in the scene.
+ * Atmospheric background with animated layers. The static base is redrawn only
+ * on theme/viewport changes. Stars twinkle, nebulae breathe and ambient
+ * particles drift — all using pooled sprites, no allocations in the ticker.
  */
 export class BackgroundView {
   public readonly root = new Container();
-  private readonly art = new Graphics();
+  private readonly staticArt = new Graphics();
+  private readonly starLayer = new Container();
+  private readonly nebulaLayer = new Container();
+  private readonly ambientLayer = new Container();
   private readonly quality: FxQuality;
+  private readonly renderer: Renderer;
   private width = LOGICAL_WIDTH;
   private height = LOGICAL_HEIGHT;
   private _backgroundId: BackgroundId = 'deep-space';
+  private stars: StarSlot[] = [];
+  private ambientParticles: AmbientParticle[] = [];
+  private nebulae: NebulaSlot[] = [];
+  private parallaxStrength = 0.02;
+  private playerX = 0;
+  private playerY = 0;
+  private dotTexture: Texture | null = null;
+  private nebulaTexture: Texture | null = null;
 
-  public constructor(backgroundId: BackgroundId = 'deep-space', quality: FxQuality = 'medium') {
+  public constructor(renderer: Renderer, backgroundId: BackgroundId = 'deep-space', quality: FxQuality = 'medium') {
+    this.renderer = renderer;
     this.quality = quality;
     this.root.eventMode = 'none';
-    this.root.addChild(this.art);
+    this.root.addChild(this.staticArt, this.nebulaLayer, this.starLayer, this.ambientLayer);
+    this.ensureTextures();
     this.setBackground(backgroundId);
   }
 
@@ -62,42 +127,217 @@ export class BackgroundView {
     if (nextWidth === this.width && nextHeight === this.height) return;
     this.width = nextWidth;
     this.height = nextHeight;
-    this.render(getBackgroundDefinition(this._backgroundId));
+    this.rebuild();
   }
 
   public setBackground(backgroundId: BackgroundId): void {
-    if (this._backgroundId === backgroundId && this.art.context.instructions.length > 0) return;
+    if (this._backgroundId === backgroundId && this.stars.length > 0) return;
     this._backgroundId = backgroundId;
-    this.render(getBackgroundDefinition(backgroundId));
+    this.rebuild();
   }
 
-  private render(definition: BackgroundDefinition): void {
-    const { tokens } = definition;
-    const centerX = this.width * 0.5;
-    const centerY = this.height * 0.5;
-    const scale = Math.max(this.width, this.height);
-
-    this.art.clear();
-    this.art.beginPath().rect(0, 0, this.width, this.height).fill({ color: tokens.base, alpha: 1 });
-    drawCircle(this.art, this.width * 0.22, this.height * 0.2, scale * 0.32, tokens.glow, 0.16);
-    drawCircle(this.art, this.width * 0.8, this.height * 0.76, scale * 0.38, tokens.secondary, 0.07);
-    drawCircle(this.art, centerX, centerY, scale * 0.25, tokens.glow, 0.05);
-
-    this.drawPattern(tokens.pattern, tokens.accent, tokens.secondary);
-    this.drawStars(tokens.accent, tokens.secondary);
+  /** Call once per frame with the player world position for parallax. */
+  public setPlayerPosition(x: number, y: number): void {
+    this.playerX = x;
+    this.playerY = y;
   }
 
-  private drawStars(primary: number, secondary: number): void {
-    const limit = QUALITY_STAR_LIMIT[this.quality];
-    for (let index = 0; index < limit; index += 1) {
-      const [x, y, radius] = STAR_POINTS[index];
-      const color = index % 4 === 0 ? secondary : primary;
-      const alpha = 0.2 + (index % 3) * 0.08;
-      drawCircle(this.art, x * this.width, y * this.height, radius, color, alpha);
+  /** Advances all animated layers. Call every frame with presentation delta. */
+  public update(deltaSeconds: number, animationSeconds: number): void {
+    const delta = Math.min(Math.max(deltaSeconds, 0), 0.1);
+
+    // Parallax offset based on player position
+    const parallaxX = -this.playerX * this.parallaxStrength;
+    const parallaxY = -this.playerY * this.parallaxStrength;
+    this.starLayer.position.set(parallaxX * 0.5, parallaxY * 0.5);
+    this.ambientLayer.position.set(parallaxX, parallaxY);
+
+    // Twinkle stars
+    for (const star of this.stars) {
+      star.sprite.alpha = star.baseAlpha * (0.55 + 0.45 * Math.sin(animationSeconds * star.speed + star.phase));
+    }
+
+    // Breathe nebulae
+    for (const nebula of this.nebulae) {
+      const breath = Math.sin(animationSeconds * nebula.breathSpeed + nebula.breathPhase);
+      nebula.sprite.scale.set(nebula.baseScale * (1 + breath * nebula.breathAmplitude));
+      nebula.sprite.alpha = 0.06 + breath * 0.025;
+    }
+
+    // Move ambient particles
+    for (const particle of this.ambientParticles) {
+      particle.x += particle.vx * delta;
+      particle.y += particle.vy * delta;
+      // Wrap around with margin
+      if (particle.x < -20) particle.x = this.width + 20;
+      if (particle.x > this.width + 20) particle.x = -20;
+      if (particle.y < -20) particle.y = this.height + 20;
+      if (particle.y > this.height + 20) particle.y = -20;
+      particle.sprite.position.set(particle.x, particle.y);
+      particle.sprite.alpha = particle.baseAlpha * (0.5 + 0.5 * Math.sin(animationSeconds * particle.speed + particle.phase));
     }
   }
 
-  private drawPattern(pattern: BackgroundDefinition['tokens']['pattern'], primary: number, secondary: number): void {
+  private ensureTextures(): void {
+    if (this.dotTexture) return;
+    this.dotTexture = createTexture(this.renderer, (graphics) => {
+      graphics.circle(0, 0, 4).fill({ color: 0xffffff, alpha: 1 });
+    });
+    this.nebulaTexture = createTexture(this.renderer, (graphics) => {
+      graphics.circle(0, 0, 64).fill({ color: 0xffffff, alpha: 0.5 });
+    });
+  }
+
+  private rebuild(): void {
+    const definition = getBackgroundDefinition(this._backgroundId);
+    this.renderStaticBase(definition);
+    this.rebuildStars(definition);
+    this.rebuildNebulae(definition);
+    this.rebuildAmbientParticles(definition);
+  }
+
+  private renderStaticBase(definition: BackgroundDefinition): void {
+    const { tokens } = definition;
+    const scale = Math.max(this.width, this.height);
+    this.staticArt.clear();
+    this.staticArt.beginPath().rect(0, 0, this.width, this.height).fill({ color: tokens.base, alpha: 1 });
+    drawCircle(this.staticArt, this.width * 0.22, this.height * 0.2, scale * 0.32, tokens.glow, 0.16);
+    drawCircle(this.staticArt, this.width * 0.8, this.height * 0.76, scale * 0.38, tokens.secondary, 0.07);
+    drawCircle(this.staticArt, this.width * 0.5, this.height * 0.5, scale * 0.25, tokens.glow, 0.05);
+    this.drawPattern(tokens.pattern, tokens.accent, tokens.secondary);
+  }
+
+  private rebuildStars(definition: BackgroundDefinition): void {
+    const limit = QUALITY_STAR_LIMIT[this.quality];
+    const { tokens } = definition;
+    // Reuse existing sprites or create/remove as needed
+    while (this.stars.length > limit) {
+      const removed = this.stars.pop()!;
+      this.starLayer.removeChild(removed.sprite);
+    }
+    this.ensureTextures();
+    for (let index = 0; index < limit; index += 1) {
+      const [x, y, radius] = STAR_POINTS[index];
+      const color = index % 4 === 0 ? tokens.secondary : tokens.accent;
+      const baseAlpha = 0.2 + (index % 3) * 0.12;
+      if (index < this.stars.length) {
+        const star = this.stars[index];
+        star.sprite.position.set(x * this.width, y * this.height);
+        star.sprite.tint = color;
+        star.sprite.scale.set(radius * 0.5);
+      } else {
+        const sprite = new Sprite(this.dotTexture!);
+        sprite.anchor.set(0.5);
+        sprite.position.set(x * this.width, y * this.height);
+        sprite.tint = color;
+        sprite.scale.set(radius * 0.5);
+        sprite.alpha = baseAlpha;
+        this.starLayer.addChild(sprite);
+        this.stars.push({
+          sprite,
+          baseAlpha,
+          speed: 1.2 + (index % 7) * 0.6,
+          phase: index * 1.37
+        });
+      }
+    }
+  }
+
+  private rebuildNebulae(definition: BackgroundDefinition): void {
+    const count = QUALITY_NEBULA_COUNT[this.quality];
+    const { tokens } = definition;
+    while (this.nebulae.length > count) {
+      const removed = this.nebulae.pop()!;
+      this.nebulaLayer.removeChild(removed.sprite);
+    }
+    this.ensureTextures();
+    const positions = [
+      [0.28, 0.54, 0.22],
+      [0.72, 0.32, 0.20],
+      [0.5, 0.82, 0.18]
+    ] as const;
+    for (let index = 0; index < count; index += 1) {
+      const [px, py, sizeRatio] = positions[index] ?? [0.5, 0.5, 0.15];
+      const baseScale = this.width * sizeRatio / 64;
+      const color = index % 2 === 0 ? tokens.glow : tokens.secondary;
+      if (index < this.nebulae.length) {
+        const nebula = this.nebulae[index];
+        nebula.sprite.position.set(px * this.width, py * this.height);
+        nebula.sprite.tint = color;
+      } else {
+        const sprite = new Sprite(this.nebulaTexture!);
+        sprite.anchor.set(0.5);
+        sprite.position.set(px * this.width, py * this.height);
+        sprite.tint = color;
+        sprite.alpha = 0.07;
+        sprite.scale.set(baseScale);
+        this.nebulaLayer.addChild(sprite);
+        this.nebulae.push({
+          sprite,
+          breathSpeed: 0.3 + index * 0.15,
+          breathPhase: index * 2.1,
+          baseScale,
+          breathAmplitude: 0.035
+        });
+      }
+    }
+  }
+
+  private rebuildAmbientParticles(definition: BackgroundDefinition): void {
+    const count = QUALITY_AMBIENT_LIMIT[this.quality];
+    const { tokens } = definition;
+    const behavior = PATTERN_BEHAVIOR[tokens.pattern];
+    while (this.ambientParticles.length > count) {
+      const removed = this.ambientParticles.pop()!;
+      this.ambientLayer.removeChild(removed.sprite);
+    }
+    this.ensureTextures();
+    for (let index = 0; index < count; index += 1) {
+      const x = ((index * 0.618 + 0.1) % 1) * this.width;
+      const y = ((index * 0.414 + 0.2) % 1) * this.height;
+      const { vx, vy } = this.getAmbientVelocity(behavior, index);
+      if (index < this.ambientParticles.length) {
+        const p = this.ambientParticles[index];
+        p.x = x;
+        p.y = y;
+        p.vx = vx;
+        p.vy = vy;
+        p.sprite.tint = index % 3 === 0 ? tokens.secondary : tokens.accent;
+        p.sprite.position.set(x, y);
+      } else {
+        const sprite = new Sprite(this.dotTexture!);
+        sprite.anchor.set(0.5);
+        sprite.position.set(x, y);
+        sprite.tint = index % 3 === 0 ? tokens.secondary : tokens.accent;
+        sprite.scale.set(0.3 + (index % 4) * 0.15);
+        sprite.alpha = 0.25;
+        this.ambientLayer.addChild(sprite);
+        this.ambientParticles.push({
+          sprite, x, y, vx, vy,
+          baseAlpha: 0.18 + (index % 5) * 0.06,
+          speed: 0.8 + (index % 6) * 0.35,
+          phase: index * 0.89
+        });
+      }
+    }
+  }
+
+  private getAmbientVelocity(behavior: AmbientBehavior, index: number): { vx: number; vy: number } {
+    const sign = index % 2 === 0 ? 1 : -1;
+    const speed = 6 + (index % 5) * 3;
+    switch (behavior) {
+      case 'drift':
+        return { vx: sign * speed * 0.7, vy: speed * 0.3 };
+      case 'float-up':
+        return { vx: sign * speed * 0.2, vy: -speed };
+      case 'electric':
+        return { vx: sign * speed * 1.2, vy: sign * speed * 0.5 * (index % 3 === 0 ? -1 : 1) };
+      case 'rotate':
+        return { vx: sign * speed * 0.5, vy: speed * 0.5 * (index % 3 === 0 ? -1 : 1) };
+    }
+  }
+
+  private drawPattern(pattern: BackgroundPattern, primary: number, secondary: number): void {
     if (pattern === 'constellation') {
       const points = [
         [0.08, 0.16], [0.25, 0.29], [0.39, 0.12], [0.54, 0.24], [0.68, 0.11], [0.81, 0.22]
@@ -105,15 +345,12 @@ export class BackgroundView {
       for (let index = 0; index < points.length - 1; index += 1) {
         const [startX, startY] = points[index];
         const [endX, endY] = points[index + 1];
-        drawLine(this.art, startX * this.width, startY * this.height, endX * this.width, endY * this.height, primary, 1, 0.11);
+        drawLine(this.staticArt, startX * this.width, startY * this.height, endX * this.width, endY * this.height, primary, 1, 0.11);
       }
       return;
     }
 
     if (pattern === 'nebula') {
-      drawCircle(this.art, this.width * 0.28, this.height * 0.54, this.width * 0.22, primary, 0.08);
-      drawCircle(this.art, this.width * 0.72, this.height * 0.32, this.width * 0.2, secondary, 0.07);
-      drawCircle(this.art, this.width * 0.58, this.height * 0.84, this.width * 0.18, primary, 0.06);
       return;
     }
 
@@ -121,21 +358,21 @@ export class BackgroundView {
       const centerX = this.width * 0.78;
       const centerY = this.height * 0.48;
       for (const radius of [0.2, 0.31, 0.42] as const) {
-        this.art.beginPath()
+        this.staticArt.beginPath()
           .arc(centerX, centerY, this.width * radius, Math.PI * 0.7, Math.PI * 1.72)
           .stroke({ color: primary, width: 2, alpha: 0.16 });
       }
-      drawCircle(this.art, centerX, centerY, this.width * 0.045, secondary, 0.13);
+      drawCircle(this.staticArt, centerX, centerY, this.width * 0.045, secondary, 0.13);
       return;
     }
 
     for (let index = -2; index < 11; index += 1) {
       const offset = index * this.width * 0.12;
-      drawLine(this.art, offset, 0, offset + this.height, this.height, primary, 1, 0.08);
+      drawLine(this.staticArt, offset, 0, offset + this.height, this.height, primary, 1, 0.08);
     }
     for (let index = 1; index < 6; index += 1) {
       const y = this.height * index / 6;
-      drawLine(this.art, 0, y, this.width, y, secondary, 1, 0.06);
+      drawLine(this.staticArt, 0, y, this.width, y, secondary, 1, 0.06);
     }
   }
 }

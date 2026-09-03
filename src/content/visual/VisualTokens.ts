@@ -78,8 +78,8 @@ export const FX_QUALITY: Readonly<Record<FxQuality, FxQualityTokens>> = {
 
 /** Short trail budget for projectiles; it is presentation-only. */
 export const PROJECTILE_TRAIL_TOKENS = {
-  lengthSeconds: 0.06,
-  maxLength: 30,
+  lengthSeconds: 0.11,
+  maxLength: 48,
   width: 3.2,
   color: 0xfff6a8
 } as const;

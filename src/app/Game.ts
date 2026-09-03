@@ -396,7 +396,7 @@ export class Game {
       || this.gameState.phase === 'menu'
       ? 0
       : deltaSeconds;
-    this.view.updatePresentationFx(presentationDelta);
+    this.view.updatePresentationFx(presentationDelta, this.presentationTime);
     this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);

@@ -46,7 +46,7 @@ export class PixiGameView {
     cannonSkin: CannonSkinId = 'basic',
     background: BackgroundId = 'deep-space'
   ) {
-    this.backgroundView = new BackgroundView(background, quality);
+    this.backgroundView = new BackgroundView(renderer, background, quality);
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
@@ -107,6 +107,7 @@ export class PixiGameView {
 
   public renderPlayer(state: PlayerState, animationSeconds = 0, shieldChargeProgress = 0): void {
     this.playerView.render(state, animationSeconds, shieldChargeProgress);
+    this.backgroundView.setPlayerPosition(state.x, state.y);
   }
 
   public playPlayerShot(animationSeconds: number, shot: Readonly<ShotRenderState>): void {
@@ -152,9 +153,10 @@ export class PixiGameView {
     this.entitiesView.updateFx(deltaSeconds);
   }
 
-  public updatePresentationFx(deltaSeconds: number): void {
+  public updatePresentationFx(deltaSeconds: number, animationSeconds = 0): void {
     this.arenaView.update(deltaSeconds);
     this.screenFxView.update(deltaSeconds);
+    this.backgroundView.update(deltaSeconds, animationSeconds);
     this.applyWorldOffset();
   }
 

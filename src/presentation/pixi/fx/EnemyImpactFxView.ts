@@ -94,6 +94,19 @@ export class EnemyImpactFxView {
     const color = ENEMY_DEFINITIONS[kind].color;
     this.spawnRing(x, y, radius * 0.85, radius * 1.4, HIT_RING_SECONDS, color, 2);
     this.root.visible = true;
+
+    // Bright impact flash at the hit point — a single white particle that
+    // expands and fades quickly, giving every hit a visible "pop".
+    this.particles.spawn(
+      x, y, 0xffffff,
+      0.1,   // lifeSeconds
+      0, 0,  // no velocity
+      0.99,  // drag
+      Math.max(1.2, radius / 10),
+      this.dustTexture,
+      0.85
+    );
+
     if (this.reducedMotion) return;
 
     const count = this.quality === 'high' ? 5 : this.quality === 'medium' ? 4 : 3;
@@ -101,13 +114,8 @@ export class EnemyImpactFxView {
       minSpeed: 102,
       maxSpeed: 152,
       lifeSeconds: 0.35,
-      // FxPool drag is applied once per 60 Hz frame. Keep it close to one so
-      // dust travels outward instead of losing most of its velocity instantly.
       drag: 0.97,
       scale: Math.max(0.9, radius / 20),
-      // Chasers use a large composed SVG while their collision radius is
-      // compact. This minimum starts dust at the visible silhouette instead
-      // of its center; larger enemies still scale from their own radius.
       spawnRadius: Math.max(22, radius * 1.2),
       texture: this.dustTexture,
       alpha: 0.88

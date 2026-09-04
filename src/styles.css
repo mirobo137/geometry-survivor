@@ -1958,6 +1958,39 @@ body {
   color: #ffe39a;
 }
 
+#game-over-rewarded {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  color: #b8ffd9;
+  background: rgba(48, 100, 95, 0.18);
+  border: 1px solid rgba(184, 255, 217, 0.32);
+  border-radius: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+#game-over-rewarded[hidden],
+#game-over-double-nova[hidden] {
+  display: none;
+}
+
+#game-over-double-nova {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.8rem;
+  color: #07101f;
+  background: #b8ffd9;
+  border: 0;
+  border-radius: 0.4rem;
+  font: inherit;
+  touch-action: manipulation;
+}
+
+#game-over-double-nova:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
 #game-over-restart {
   min-height: 3rem;
   padding: 0.7rem 1rem;

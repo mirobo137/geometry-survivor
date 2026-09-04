@@ -9,8 +9,14 @@ export interface PlatformLifecycle {
   onGameOver(): void;
 }
 
+/** Rewarded placements are product decisions, not SDK-specific strings. */
+export type RewardedPlacement = 'revive' | 'reroll' | 'double-nova' | 'cosmetic-unlock';
+
+export type RewardedAdResult = 'rewarded' | 'dismissed' | 'unavailable' | 'error';
+
 export interface AdService {
-  showMidgameAd(): Promise<void>;
+  isRewardedAvailable(placement: RewardedPlacement): Promise<boolean>;
+  showRewarded(placement: RewardedPlacement): Promise<RewardedAdResult>;
 }
 
 /** Platform composition root; gameplay consumes the narrow services it needs. */

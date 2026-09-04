@@ -2405,6 +2405,21 @@ producto documentada.
 
 ### Puerta global de cada prioridad
 
+**Estado de implementacion - 04-09-2026.**
+
+La prioridad 2 comenzo con un contrato rewarded local, sin red ni SDK externo.
+`AdService` ya expone placements tipados (`revive`, `reroll`, `double-nova` y
+`cosmetic-unlock`) y resultados seguros (`rewarded`, `dismissed`, `unavailable`
+o `error`). `RewardedAdController` bloquea solicitudes simultaneas y
+`RewardedOfferLedger` evita consumir una oferta mas de una vez por run.
+
+El primer consumidor es `double-nova` en el resumen de partida. La oferta solo
+aparece si el adaptador informa disponibilidad y siempre requiere pulsacion.
+El simulador local usa `?ad=success` (por defecto), `?ad=dismissed`,
+`?ad=unavailable`, `?ad=error` o `?ad=timeout`; un resultado que no sea
+`rewarded` conserva la recompensa normal. Revive, reroll, cosmetico y los SDK
+reales quedan para las siguientes iteraciones de esta misma prioridad.
+
 1. typecheck y tests específicos;
 2. suite completa;
 3. build local, Poki y CrazyGames;

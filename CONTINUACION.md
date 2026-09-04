@@ -1240,6 +1240,7 @@ Decisiones fijadas:
   no habrá anuncios automáticos con la decisión actual.
 - Poki y CrazyGames conservan bundles/adaptadores separados. GitHub Pages nunca
   pretende validar sus SDK reales.
+
 - Antes de añadir Vector Boomerang se extraen scheduler y behaviors desde
   `CombatWeaponSystem`; la cuarta arma es el caso real que justifica hacerlo.
 - El arsenal futuro queda en Projectile, Orbit, Chain, Vector Boomerang, Pulse
@@ -1273,3 +1274,21 @@ Próximo paso después de publicar este commit:
    `?stress=1&profile=1`;
 5. con esa puerta humana aprobada, implementar primero el contrato rewarded
    local, no los SDK reales ni una arma nueva.
+
+## 52. Inicio de prioridad 2 - rewarded local - 04-09-2026
+
+La prioridad 2 comenzo con un contrato rewarded local, sin red ni SDK externo.
+`AdService` reemplaza el anuncio generico por placements tipados (`revive`,
+`reroll`, `double-nova`, `cosmetic-unlock`) y resultados seguros
+(`rewarded`, `dismissed`, `unavailable`, `error`).
+
+`RewardedAdController` serializa solicitudes y `RewardedOfferLedger` aplica
+idempotencia por run: una cancelacion o error se puede reintentar, un exito no
+se consume dos veces y una respuesta tardia de otra run no altera el saldo.
+El resumen de partida ya ofrece `double-nova` solo tras comprobar disponibilidad
+y con pulsacion expresa; el saldo sigue limitado a `MAX_NOVA`.
+
+En Pages se pueden simular estados con `?ad=success` (por defecto),
+`?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`. Revive, reroll,
+cosmetico y los adaptadores reales de Poki/CrazyGames quedan como siguientes
+incrementos, despues de aprobar la matriz local en movil.

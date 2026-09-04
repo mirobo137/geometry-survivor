@@ -4,6 +4,8 @@ import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
+import { RewardedAdController } from '../platform/RewardedAdController';
+import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
 import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
@@ -78,6 +80,8 @@ export class Game {
   private readonly background: BackgroundId;
   private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
+  private readonly rewardedAds: RewardedAdController;
+  private readonly rewardedOffers = new RewardedOfferLedger();
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
   private readonly viewport = new ViewportTransform();
@@ -109,6 +113,9 @@ export class Game {
   private started = false;
   private stopped = false;
   private terminalSummaryTimer: ReturnType<typeof setTimeout> | null = null;
+  private terminalRunToken = 0;
+  private terminalNovaReward = 0;
+  private terminalTotalNova = 0;
   private hitStopSeconds = 0;
 
   private readonly queueResize = (): void => {
@@ -132,6 +139,7 @@ export class Game {
 
   private readonly onStartPlay = (): void => {
     if (this.stopped || !this.gameState.startRun()) return;
+    this.rewardedOffers.reset();
     const saved = this.saveStore.load();
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
@@ -262,6 +270,7 @@ export class Game {
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
     this.lifecycle = options.platform.lifecycle;
+    this.rewardedAds = new RewardedAdController(options.platform.ads);
     this.audio = options.platform.audio;
     this.audio.configure(saved.settings);
     this.combat = new CombatSimulation({
@@ -562,18 +571,61 @@ export class Game {
     const novaReward = calculateRunNova(summary);
     const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + novaReward) };
     this.saveStore.save({ ...saved, best, wallet });
+    this.terminalRunToken += 1;
+    const terminalToken = this.terminalRunToken;
+    this.terminalNovaReward = novaReward;
+    this.terminalTotalNova = wallet.nova;
     this.clearTerminalSummaryTimer();
     this.terminalSummaryTimer = setTimeout(() => {
       this.terminalSummaryTimer = null;
       if (this.stopped || !this.gameState.isTerminal) return;
-      this.gameOver.open(summary, best, novaReward, wallet.nova, () => {
-        this.restartRun();
-      });
+      void this.openGameOverSummary(summary, best, novaReward, wallet.nova, terminalToken);
     }, TERMINAL_SUMMARY_DELAY_MS);
+  }
+
+  private async openGameOverSummary(
+    summary: ReturnType<typeof createRunSummary>,
+    best: ReturnType<typeof mergeBestRun>,
+    novaReward: number,
+    totalNova: number,
+    terminalToken: number
+  ): Promise<void> {
+    const canDoubleNova = novaReward > 0 && totalNova < MAX_NOVA
+      && this.rewardedOffers.canOffer('double-nova')
+      && await this.rewardedAds.isAvailable('double-nova');
+    if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    this.gameOver.open(summary, best, novaReward, totalNova, () => {
+      this.restartRun();
+    }, {
+      doubleNovaAvailable: canDoubleNova,
+      onDoubleNova: canDoubleNova ? () => { void this.requestDoubleNova(terminalToken); } : undefined
+    });
+  }
+
+  private async requestDoubleNova(terminalToken: number): Promise<void> {
+    const offerToken = this.rewardedOffers.begin('double-nova');
+    if (offerToken === null || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    this.gameOver.setDoubleNovaPending();
+    const result = await this.rewardedAds.request('double-nova');
+    this.rewardedOffers.settle('double-nova', offerToken, result);
+    if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (result === 'rewarded') {
+      const saved = this.saveStore.load();
+      const extraNova = Math.min(MAX_NOVA - saved.wallet.nova, this.terminalNovaReward);
+      if (extraNova > 0) {
+        const wallet = { nova: saved.wallet.nova + extraNova };
+        this.saveStore.save({ ...saved, wallet });
+        this.terminalTotalNova = wallet.nova;
+        this.gameOver.updateNova(this.terminalNovaReward + extraNova, this.terminalTotalNova);
+      }
+    }
+    this.gameOver.setDoubleNovaResult(result);
   }
 
   private restartRun(): void {
     if (!this.gameState.restart()) return;
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
     this.resetRunState();
   }
 

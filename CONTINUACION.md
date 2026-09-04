@@ -1307,3 +1307,26 @@ inventario o error deja activas las cartas originales y permite reintentar.
 Mientras el anuncio esta pendiente se bloquean las cartas y el CTA para evitar
 doble input. El simulador sigue sin SDK externo y usa los mismos parametros
 `?ad=success`, `?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`.
+
+## 54. Cosmetic unlock rewarded local - 04-09-2026
+
+El locker tiene una oferta unica y contextual en la franja `OFERTA DESTACADA ·
+REWARDED`. La pestaña activa elige el primer cosmetico bloqueado de su catalogo:
+nucleo, paquete de cañones/balas o fondo. La oferta informa el nombre y el
+precio NOVA alternativo; no cambia daño, fisica, cadencia, colisiones ni reglas.
+
+El resultado `rewarded` desbloquea y equipa el objeto de forma idempotente y lo
+persiste mediante `SaveStore`. Cancelacion, error o falta de inventario no
+conceden el objeto y dejan visible la alternativa de compra cuando corresponde.
+Mientras la solicitud esta pendiente se bloquea el CTA, y un token de vista
+ignora respuestas tardias si el usuario cierra el locker o empieza la partida.
+
+La disponibilidad se consulta antes de abrir el menu. En Pages se prueba con
+`?ad=success` (por defecto) o `?ad=unavailable`; las rutas de cancelacion/error
+comparten el contrato local ya validado en revive, double-NOVA y reroll. Los
+adaptadores reales de Poki/CrazyGames siguen pendientes de la puerta de SDK.
+
+Validacion de esta iteracion: typecheck correcto, 59 archivos y 170 tests
+unitarios/integracion, 11 smoke desktop/mobile y builds `local`, `poki` y
+`crazygames` correctos. El warning del bundle de aproximadamente 572 kB
+minificado sigue visible por decision del plan.

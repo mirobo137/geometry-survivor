@@ -3,7 +3,7 @@ import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
 import { InputManager } from '../input/InputManager';
-import type { PlatformAdapter, PlatformLifecycle } from '../platform/Platform';
+import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
 import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
@@ -15,8 +15,9 @@ import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
 import type { UpgradeDefinition } from '../content/upgrades/UpgradeDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
-import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
-import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
+import { isPlayerSkinId } from '../content/visual/SkinDefinitions';
+import { isCannonSkinId, type CannonSkinId } from '../content/visual/CannonSkinDefinitions';
+import { isBackgroundId, type BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
@@ -24,7 +25,7 @@ import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay } from '../ui/level-up/LevelUpOverlay';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
-import { StartScreen } from '../ui/StartScreen';
+import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
@@ -118,6 +119,7 @@ export class Game {
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
   private levelUpRequestToken = 0;
+  private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
 
   private readonly queueResize = (): void => {
@@ -141,6 +143,7 @@ export class Game {
 
   private readonly onStartPlay = (): void => {
     if (this.stopped || !this.gameState.startRun()) return;
+    this.startScreenRequestToken += 1;
     this.rewardedOffers.reset();
     const saved = this.saveStore.load();
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
@@ -193,6 +196,10 @@ export class Game {
     this.saveStore.save({ ...saved, metaUpgrades });
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(metaUpgrades.levels));
   };
+
+  private readonly onStartCosmeticUnlock = (target: CosmeticUnlockTarget): Promise<RewardedAdResult> => (
+    this.requestCosmeticUnlock(target)
+  );
 
   private readonly onPauseRestart = (): void => {
     if (this.contextLost) return;
@@ -311,7 +318,7 @@ export class Game {
     this.resizeNow();
     await this.lifecycle.init();
     if (this.startOnMenu) {
-      this.openStartScreen();
+      await this.openStartScreen();
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;
     } else {
@@ -582,8 +589,12 @@ export class Game {
     });
   }
 
-  private openStartScreen(): void {
+  private async openStartScreen(): Promise<void> {
     if (!this.startScreen) return;
+    const requestToken = ++this.startScreenRequestToken;
+    const cosmeticUnlockAvailable = this.rewardedOffers.canOffer('cosmetic-unlock')
+      && await this.rewardedAds.isAvailable('cosmetic-unlock');
+    if (this.stopped || requestToken !== this.startScreenRequestToken || this.gameState.phase !== 'menu') return;
     const saved = this.saveStore.load();
     this.startScreen.open({
       settings: saved.settings,
@@ -599,7 +610,9 @@ export class Game {
       onCannonSkinStateChange: this.onStartCannonSkinStateChange,
       onBackgroundStateChange: this.onStartBackgroundStateChange,
       onWalletChange: this.onStartWalletChange,
-      onMetaUpgradesChange: this.onStartMetaUpgradesChange
+      onMetaUpgradesChange: this.onStartMetaUpgradesChange,
+      cosmeticUnlockAvailable,
+      onCosmeticUnlock: this.onStartCosmeticUnlock
     });
   }
 
@@ -701,6 +714,38 @@ export class Game {
     this.gameOver.setDoubleNovaResult(result);
   }
 
+  private async requestCosmeticUnlock(target: CosmeticUnlockTarget): Promise<RewardedAdResult> {
+    if (this.gameState.phase !== 'menu') return 'unavailable';
+    const saved = this.saveStore.load();
+    const alreadyUnlocked = target.kind === 'player'
+      ? !isPlayerSkinId(target.id) || saved.skins.unlocked.includes(target.id)
+      : target.kind === 'cannon'
+        ? !isCannonSkinId(target.id) || saved.cannonSkins.unlocked.includes(target.id)
+        : !isBackgroundId(target.id) || saved.backgrounds.unlocked.includes(target.id);
+    if (alreadyUnlocked) return 'unavailable';
+    const offerToken = this.rewardedOffers.begin('cosmetic-unlock');
+    if (offerToken === null) return 'unavailable';
+    const result = await this.rewardedAds.request('cosmetic-unlock');
+    this.rewardedOffers.settle('cosmetic-unlock', offerToken, result);
+    if (result !== 'rewarded') return result;
+
+    const current = this.saveStore.load();
+    if (target.kind === 'player' && isPlayerSkinId(target.id)) {
+      const unlocked = Array.from(new Set<PlayerSkinId>([...current.skins.unlocked, target.id]));
+      this.saveStore.save({ ...current, skins: { selected: target.id, unlocked } });
+      this.view.setPlayerSkin(target.id);
+    } else if (target.kind === 'cannon' && isCannonSkinId(target.id)) {
+      const unlocked = Array.from(new Set<CannonSkinId>([...current.cannonSkins.unlocked, target.id]));
+      this.saveStore.save({ ...current, cannonSkins: { selected: target.id, unlocked } });
+      this.view.setCannonSkin(target.id);
+    } else if (target.kind === 'background' && isBackgroundId(target.id)) {
+      const unlocked = Array.from(new Set<BackgroundId>([...current.backgrounds.unlocked, target.id]));
+      this.saveStore.save({ ...current, backgrounds: { selected: target.id, unlocked } });
+      this.view.setBackground(target.id);
+    }
+    return result;
+  }
+
   private restartRun(): void {
     if (!this.gameState.restart()) return;
     this.terminalRunToken += 1;
@@ -722,7 +767,7 @@ export class Game {
     this.lifecycle.onGamePause();
     this.hudElement.hidden = true;
     if (this.pauseButton) this.pauseButton.hidden = true;
-    this.openStartScreen();
+    void this.openStartScreen();
   }
 
   private clearRunPresentation(): void {

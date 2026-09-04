@@ -722,6 +722,84 @@ body {
   display: none;
 }
 
+.cosmetic-rewarded {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid rgba(184, 255, 217, 0.4);
+  border-radius: 0.72rem;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(184, 255, 217, 0.14), transparent 42%),
+    linear-gradient(135deg, rgba(13, 48, 54, 0.92), rgba(11, 21, 42, 0.94));
+  box-shadow: inset 0 0 0 1px rgba(117, 230, 255, 0.08), 0 0 1.1rem rgba(101, 242, 194, 0.08);
+}
+
+.cosmetic-rewarded[hidden] {
+  display: none;
+}
+
+.cosmetic-rewarded-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.cosmetic-rewarded-label {
+  color: #b8ffd9;
+  font: 800 0.59rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+.cosmetic-rewarded-copy strong {
+  overflow: hidden;
+  color: #f1f5ff;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cosmetic-rewarded-copy > span:last-child {
+  color: #a9c9cf;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.cosmetic-rewarded button {
+  min-height: 2.55rem;
+  padding: 0.55rem 0.75rem;
+  color: #07101f;
+  background: #b8ffd9;
+  border: 0;
+  border-radius: 0.45rem;
+  font: 800 0.68rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.03em;
+  touch-action: manipulation;
+}
+
+.cosmetic-rewarded button:focus-visible {
+  outline: 3px solid #ffe39a;
+  outline-offset: 3px;
+}
+
+.cosmetic-rewarded button:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.cosmetic-rewarded[data-state="success"] {
+  border-color: rgba(184, 255, 217, 0.68);
+  background: linear-gradient(135deg, rgba(18, 73, 57, 0.94), rgba(11, 31, 41, 0.94));
+}
+
+.cosmetic-rewarded[data-state="error"],
+.cosmetic-rewarded[data-state="dismissed"] {
+  border-color: rgba(255, 227, 154, 0.48);
+}
+
 .skin-tab {
   flex: 1 0 8rem;
   min-height: 2.45rem;
@@ -1580,7 +1658,8 @@ body {
   }
 
   #start-screen.is-skins-mode .skin-tabs,
-  #start-screen.is-skins-mode .skins-header {
+  #start-screen.is-skins-mode .skins-header,
+  #start-screen.is-skins-mode .cosmetic-rewarded {
     flex: 0 0 auto;
   }
 
@@ -2048,6 +2127,14 @@ body {
 
   .background-cards {
     grid-template-columns: 1fr;
+  }
+
+  .cosmetic-rewarded {
+    grid-template-columns: 1fr;
+  }
+
+  .cosmetic-rewarded button {
+    width: 100%;
   }
 
   #level-up-options {

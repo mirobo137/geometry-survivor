@@ -140,6 +140,42 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(failures).toEqual([]);
 });
 
+test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?ad=success');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await page.locator('#start-skins').click();
+  const offer = page.locator('#start-cosmetic-rewarded');
+  await expect(offer).toBeVisible();
+  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Eclipse Prism');
+  await page.locator('#start-cannon-skins-tab').click();
+  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Arc Needle');
+  await page.locator('#start-backgrounds-tab').click();
+  await expect(page.locator('#start-cosmetic-rewarded-name')).toContainText('Tormenta');
+  await page.locator('#start-player-skins-tab').click();
+  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Eclipse Prism');
+  await page.locator('#start-cosmetic-rewarded-button').click();
+  await expect(page.locator('#start-cosmetic-rewarded-button')).toHaveText('Anuncio en curso');
+  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/, { timeout: 5_000 });
+  await expect(offer).toContainText('desbloqueado y equipado');
+  await expect(page.locator('#start-cosmetic-rewarded-button')).toBeHidden();
+
+  const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
+  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'violet'] });
+  expect(failures).toEqual([]);
+});
+
+test('oculta la oferta cosmetica cuando el adaptador local no tiene inventario', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?ad=unavailable');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-skins').click();
+  await expect(page.locator('#start-cosmetic-rewarded')).toBeHidden();
+  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
+  expect(failures).toEqual([]);
+});
+
 const getPlayerPosition = async (page: Page): Promise<{ x: number; y: number }> => {
   const debugText = await page.locator('#debug-panel').textContent();
   const match = debugText?.match(/player: (-?[\d.]+), (-?[\d.]+)/);

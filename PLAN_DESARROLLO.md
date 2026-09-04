@@ -2421,6 +2421,22 @@ abierta hasta registrar diez runs en un mismo dispositivo/preset y adjuntar
 modelo, navegador, calidad y observaciones humanas. Esos datos, no los valores
 del panel por si solos, congelan el baseline de balance.
 
+### Extraccion previa a Vector Boomerang (prioridad 4)
+
+La API publica de `CombatWeaponSystem` se conserva como fachada, pero su
+implementacion se compone de `WeaponScheduler`, `ProjectileBehavior`,
+`OrbitBehavior` y `ChainBehavior`. El scheduler es el unico dueño de los
+acumuladores de cooldown; cada behavior posee su pool/estado y recibe una
+superficie de consulta de enemigos mas un callback tipado de derrota. Ningun
+behavior importa Pixi, DOM, audio o plataforma y todos reutilizan el pool,
+spatial grid, timestep fijo y semilla critica actuales.
+
+Esta extraccion no habilita contenido ni altera el balance. Su Definition of
+Done es: API publica equivalente, stress conservado, tests de catch-up/reset y
+suite completa en verde, los tres builds y smoke desktop/mobile pasando. Sólo
+despues se implementa Vector Boomerang como el primer consumidor nuevo de esta
+frontera.
+
 ### Puerta global de cada prioridad
 
 **Estado de implementacion - 04-09-2026.**

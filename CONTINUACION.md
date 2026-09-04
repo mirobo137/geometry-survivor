@@ -1362,3 +1362,30 @@ Prueba movil corta:
 4. pulsar `Copiar reporte` y conservar el texto junto con modelo del telefono,
    navegador y calidad;
 5. si se quiere descartar una sesion de prueba, pulsar `Borrar datos`.
+
+## 56. Extraccion de comportamientos de armas - 04-09-2026
+
+Se cerro el siguiente incremento arquitectonico sin agregar una arma nueva ni
+cambiar el balance. `CombatWeaponSystem` conserva la API que consume
+`CombatSimulation`, pero ahora compone:
+
+- `WeaponScheduler`: acumuladores y orden de disparo por cooldown;
+- `ProjectileBehavior`: targeting, origen de boca, pool, colisiones y snapshot
+  del ultimo disparo;
+- `OrbitBehavior`: blades, radio y cooldown por objetivo;
+- `ChainBehavior`: saltos, segmentos y exclusiones por cast.
+
+Todos los contratos permanecen en `simulation`, sin Pixi, DOM, audio o SDK.
+`StressCombatScenario` sigue usando los mismos pools y ahora reutiliza el
+behavior de proyectil para conservar origen, dano y senal visual. Los
+modificadores de cartas y Laboratorio siguen entrando por la fachada publica;
+no se duplicaron reglas en la UI.
+
+Validacion automatica de esta iteracion: typecheck correcto, suite completa y
+tests del scheduler/combat en verde. La suite queda en 61 archivos y 176
+pruebas; smoke desktop/mobile 12/12 y builds `local`, `poki` y `crazygames`
+tambien pasan. El warning del bundle se mantiene visible (aprox. 583 kB
+minificados) para vigilar crecimiento. La puerta humana de la linea base (diez
+runs) continua pendiente; el siguiente incremento despues de esta extraccion
+sera diseñar y probar Vector Boomerang con escenarios seeded antes de
+exponerlo en cartas.

@@ -1958,7 +1958,8 @@ body {
   color: #ffe39a;
 }
 
-#game-over-rewarded {
+#game-over-rewarded,
+#game-over-revive {
   display: grid;
   gap: 0.55rem;
   padding: 0.75rem;
@@ -1971,11 +1972,14 @@ body {
 }
 
 #game-over-rewarded[hidden],
-#game-over-double-nova[hidden] {
+#game-over-revive[hidden],
+#game-over-double-nova[hidden],
+#game-over-revive-button[hidden] {
   display: none;
 }
 
-#game-over-double-nova {
+#game-over-double-nova,
+#game-over-revive-button {
   min-height: 2.6rem;
   padding: 0.55rem 0.8rem;
   color: #07101f;
@@ -1986,7 +1990,8 @@ body {
   touch-action: manipulation;
 }
 
-#game-over-double-nova:disabled {
+#game-over-double-nova:disabled,
+#game-over-revive-button:disabled {
   cursor: wait;
   opacity: 0.64;
 }

@@ -1289,6 +1289,9 @@ El resumen de partida ya ofrece `double-nova` solo tras comprobar disponibilidad
 y con pulsacion expresa; el saldo sigue limitado a `MAX_NOVA`.
 
 En Pages se pueden simular estados con `?ad=success` (por defecto),
-`?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`. Revive, reroll,
-cosmetico y los adaptadores reales de Poki/CrazyGames quedan como siguientes
-incrementos, despues de aprobar la matriz local en movil.
+`?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`. El revive
+queda cableado como segundo consumidor: una sola vez por run, unicamente tras
+muerte, con 35% de vida y dos segundos de invulnerabilidad; no reinicia XP,
+bajas, arena ni build. Reroll, cosmetico y los adaptadores reales de
+Poki/CrazyGames quedan como siguientes incrementos, despues de aprobar la
+matriz local en movil.

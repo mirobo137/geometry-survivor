@@ -115,6 +115,19 @@ describe('PlayerModel', () => {
     expect(player.state.health).toBe(50);
   });
 
+  it('revives at the authored percentage and protects the return window', () => {
+    const player = new PlayerModel();
+    player.takeDamage(200);
+
+    expect(player.revive(0.35, 2)).toBe(true);
+    expect(player.state.health).toBeCloseTo(35);
+    expect(player.takeDamage(20)).toBe(false);
+    player.update({ x: 0, y: 0 }, 2);
+    expect(player.takeDamage(20)).toBe(true);
+    expect(player.state.health).toBeCloseTo(15);
+    expect(player.revive()).toBe(false);
+  });
+
   it('restores the base player state for an in-place restart', () => {
     const player = new PlayerModel();
     player.increaseMovementSpeed(25);

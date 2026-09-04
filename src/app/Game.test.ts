@@ -6,6 +6,9 @@ import { Game } from './Game';
 
 const mocks = vi.hoisted(() => ({
   gameOverOpen: vi.fn(),
+  gameOverClose: vi.fn(),
+  revivePending: vi.fn(),
+  reviveResult: vi.fn(),
   playerShot: vi.fn()
 }));
 
@@ -13,6 +16,7 @@ vi.mock('../presentation/PixiGameView', () => ({
   PixiGameView: class {
     public readonly root = {};
     public closeLevelUpFx = vi.fn();
+    public playPlayerRevive = vi.fn();
     public playPlayerShot = mocks.playerShot;
   }
 }));
@@ -32,11 +36,18 @@ vi.mock('../ui/PauseOverlay', () => ({
 vi.mock('../ui/GameOverOverlay', () => ({
   GameOverOverlay: class {
     public open = mocks.gameOverOpen;
+    public close = mocks.gameOverClose;
+    public setRevivePending = mocks.revivePending;
+    public setReviveResult = mocks.reviveResult;
   }
 }));
 
 const createElements = (): GameElements => ({
-  container: {} as HTMLElement,
+  container: {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    getBoundingClientRect: () => ({ left: 0, top: 0, width: 720, height: 1280 })
+  } as unknown as HTMLElement,
   debug: {} as HTMLElement,
   hud: {} as HTMLElement,
   levelUp: {} as HTMLElement,
@@ -89,8 +100,15 @@ const createOptions = (): GameOptions => ({
 describe('Game', () => {
   beforeEach(() => {
     mocks.gameOverOpen.mockReset();
+    mocks.gameOverClose.mockReset();
+    mocks.revivePending.mockReset();
+    mocks.reviveResult.mockReset();
     mocks.playerShot.mockReset();
-    vi.stubGlobal('window', { location: { search: '' } });
+    vi.stubGlobal('window', {
+      location: { search: '' },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn()
+    });
   });
 
   afterEach(() => {
@@ -132,5 +150,26 @@ describe('Game', () => {
     runtime.combat.renderState.shot.sequence = 1;
     runtime.syncShotFeedback();
     expect(mocks.playerShot).toHaveBeenCalledTimes(2);
+  });
+
+  it('revives a death run with the rewarded health window and keeps its progress', async () => {
+    vi.useFakeTimers();
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'game-over') => void;
+      requestRevive: (terminalToken: number) => Promise<void>;
+      player: { state: { health: number; maxHealth: number } };
+      gameState: { phase: string };
+    };
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+
+    await runtime.requestRevive.call(game, 1);
+
+    expect(runtime.gameState.phase).toBe('playing');
+    expect(runtime.player.state.health).toBeCloseTo(35);
+    expect(mocks.gameOverClose).toHaveBeenCalledTimes(1);
+    expect(mocks.revivePending).toHaveBeenCalledTimes(1);
+    expect(mocks.reviveResult).not.toHaveBeenCalled();
   });
 });

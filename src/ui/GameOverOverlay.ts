@@ -4,6 +4,7 @@ import novaSvg from '../assets/svg/ui/nova.svg?raw';
 
 export type RestartHandler = () => void;
 export type DoubleNovaHandler = () => void;
+export type ReviveHandler = () => void;
 
 export interface GameOverBestValues {
   readonly timeSeconds: number;
@@ -13,6 +14,8 @@ export interface GameOverBestValues {
 export interface GameOverRewardedOptions {
   readonly doubleNovaAvailable?: boolean;
   readonly onDoubleNova?: DoubleNovaHandler;
+  readonly reviveAvailable?: boolean;
+  readonly onRevive?: ReviveHandler;
 }
 
 const formatTime = (seconds: number): string => {
@@ -35,8 +38,12 @@ export class GameOverOverlay {
   private readonly rewardedSection: HTMLElement;
   private readonly rewardedMessage: HTMLElement;
   private readonly doubleNovaButton: HTMLButtonElement;
+  private readonly reviveSection: HTMLElement;
+  private readonly reviveMessage: HTMLElement;
+  private readonly reviveButton: HTMLButtonElement;
   private restartHandler: RestartHandler | null = null;
   private doubleNovaHandler: DoubleNovaHandler | null = null;
+  private reviveHandler: ReviveHandler | null = null;
 
   public constructor(root: HTMLElement) {
     const title = root.querySelector<HTMLElement>('#game-over-title');
@@ -50,8 +57,12 @@ export class GameOverOverlay {
     const rewardedSection = root.querySelector<HTMLElement>('#game-over-rewarded');
     const rewardedMessage = root.querySelector<HTMLElement>('#game-over-rewarded-message');
     const doubleNovaButton = root.querySelector<HTMLButtonElement>('#game-over-double-nova');
+    const reviveSection = root.querySelector<HTMLElement>('#game-over-revive');
+    const reviveMessage = root.querySelector<HTMLElement>('#game-over-revive-message');
+    const reviveButton = root.querySelector<HTMLButtonElement>('#game-over-revive-button');
     if (!title || !time || !kills || !experience || !score || !best || !nova || !restartButton
-      || !rewardedSection || !rewardedMessage || !doubleNovaButton) {
+      || !rewardedSection || !rewardedMessage || !doubleNovaButton
+      || !reviveSection || !reviveMessage || !reviveButton) {
       throw new Error('Faltan elementos del resumen de partida');
     }
     this.root = root;
@@ -66,8 +77,12 @@ export class GameOverOverlay {
     this.rewardedSection = rewardedSection;
     this.rewardedMessage = rewardedMessage;
     this.doubleNovaButton = doubleNovaButton;
+    this.reviveSection = reviveSection;
+    this.reviveMessage = reviveMessage;
+    this.reviveButton = reviveButton;
     this.restartButton.addEventListener('click', () => this.restartHandler?.());
     this.doubleNovaButton.addEventListener('click', () => this.doubleNovaHandler?.());
+    this.reviveButton.addEventListener('click', () => this.reviveHandler?.());
   }
 
   public open(
@@ -87,12 +102,19 @@ export class GameOverOverlay {
     this.renderNova(novaReward, totalNova);
     this.restartHandler = restartHandler;
     this.doubleNovaHandler = rewarded.onDoubleNova ?? null;
+    this.reviveHandler = summary.outcome === 'game-over' ? rewarded.onRevive ?? null : null;
     const canDouble = rewarded.doubleNovaAvailable === true && this.doubleNovaHandler !== null;
+    const canRevive = rewarded.reviveAvailable === true && this.reviveHandler !== null;
     this.rewardedSection.hidden = !canDouble;
     this.rewardedMessage.textContent = canDouble ? 'Recompensa opcional: duplica la NOVA de esta run.' : '';
     this.doubleNovaButton.hidden = !canDouble;
     this.doubleNovaButton.disabled = !canDouble;
     this.doubleNovaButton.textContent = 'Ver anuncio · duplicar NOVA';
+    this.reviveSection.hidden = !canRevive;
+    this.reviveMessage.textContent = canRevive ? 'Vuelve con 35% de vida y 2 s de proteccion.' : '';
+    this.reviveButton.hidden = !canRevive;
+    this.reviveButton.disabled = !canRevive;
+    this.reviveButton.textContent = 'Ver anuncio · revivir';
     this.root.hidden = false;
     this.restartButton.focus({ preventScroll: true });
   }
@@ -105,6 +127,12 @@ export class GameOverOverlay {
     this.rewardedMessage.textContent = 'Cargando recompensa...';
     this.doubleNovaButton.disabled = true;
     this.doubleNovaButton.textContent = 'Anuncio en curso';
+  }
+
+  public setRevivePending(): void {
+    this.reviveMessage.textContent = 'Cargando recompensa...';
+    this.reviveButton.disabled = true;
+    this.reviveButton.textContent = 'Anuncio en curso';
   }
 
   public setDoubleNovaResult(result: 'rewarded' | 'dismissed' | 'unavailable' | 'error'): void {
@@ -126,10 +154,31 @@ export class GameOverOverlay {
     this.doubleNovaButton.textContent = 'Reintentar · duplicar NOVA';
   }
 
+  public setReviveResult(result: 'rewarded' | 'dismissed' | 'unavailable' | 'error'): void {
+    if (result === 'rewarded') {
+      this.reviveMessage.textContent = 'Recompensa aplicada. Regresas a la arena.';
+      this.reviveSection.hidden = true;
+      this.reviveButton.hidden = true;
+      this.reviveButton.disabled = true;
+      return;
+    }
+    if (result === 'unavailable') {
+      this.reviveMessage.textContent = 'Anuncio no disponible. La run termina de forma normal.';
+      this.reviveSectionHidden();
+      return;
+    }
+    this.reviveMessage.textContent = result === 'dismissed'
+      ? 'Anuncio cancelado. Puedes intentarlo otra vez.'
+      : 'No se pudo completar el anuncio. Puedes intentarlo otra vez.';
+    this.reviveButton.disabled = false;
+    this.reviveButton.textContent = 'Reintentar · revivir';
+  }
+
   public close(): void {
     this.root.hidden = true;
     this.restartHandler = null;
     this.doubleNovaHandler = null;
+    this.reviveHandler = null;
   }
 
   private renderNova(novaReward: number, totalNova: number): void {
@@ -145,5 +194,11 @@ export class GameOverOverlay {
     this.doubleNovaButton.hidden = true;
     this.doubleNovaButton.disabled = true;
     this.rewardedSection.hidden = true;
+  }
+
+  private reviveSectionHidden(): void {
+    this.reviveButton.hidden = true;
+    this.reviveButton.disabled = true;
+    this.reviveSection.hidden = true;
   }
 }

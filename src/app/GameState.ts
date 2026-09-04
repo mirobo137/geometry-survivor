@@ -57,6 +57,13 @@ export class GameState {
     return true;
   }
 
+  /** Returns a death terminal run to gameplay; victories cannot be revived. */
+  public reviveRun(): boolean {
+    if (this.phase !== 'game-over') return false;
+    this.phase = 'playing';
+    return true;
+  }
+
   public restart(): boolean {
     if (!this.isTerminal) return false;
     this.phase = 'playing';

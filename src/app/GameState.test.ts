@@ -69,6 +69,17 @@ describe('GameState', () => {
     expect(state.restartFromPause()).toBe(false);
   });
 
+  it('revives only a death terminal run, never a victory', () => {
+    const state = new GameState();
+
+    expect(state.reviveRun()).toBe(false);
+    expect(state.endRun()).toBe(true);
+    expect(state.reviveRun()).toBe(true);
+    expect(state.phase).toBe('playing');
+    expect(state.winRun()).toBe(true);
+    expect(state.reviveRun()).toBe(false);
+  });
+
   it('allows returning to the menu from manual pause only', () => {
     const state = new GameState();
 

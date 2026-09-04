@@ -593,13 +593,47 @@ export class Game {
     const canDoubleNova = novaReward > 0 && totalNova < MAX_NOVA
       && this.rewardedOffers.canOffer('double-nova')
       && await this.rewardedAds.isAvailable('double-nova');
+    const canRevive = summary.outcome === 'game-over'
+      && this.rewardedOffers.canOffer('revive')
+      && await this.rewardedAds.isAvailable('revive');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
     this.gameOver.open(summary, best, novaReward, totalNova, () => {
       this.restartRun();
     }, {
       doubleNovaAvailable: canDoubleNova,
-      onDoubleNova: canDoubleNova ? () => { void this.requestDoubleNova(terminalToken); } : undefined
+      onDoubleNova: canDoubleNova ? () => { void this.requestDoubleNova(terminalToken); } : undefined,
+      reviveAvailable: canRevive,
+      onRevive: canRevive ? () => { void this.requestRevive(terminalToken); } : undefined
     });
+  }
+
+  private async requestRevive(terminalToken: number): Promise<void> {
+    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    const offerToken = this.rewardedOffers.begin('revive');
+    if (offerToken === null) return;
+    this.gameOver.setRevivePending();
+    const result = await this.rewardedAds.request('revive');
+    this.rewardedOffers.settle('revive', offerToken, result);
+    if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (result !== 'rewarded') {
+      this.gameOver.setReviveResult(result);
+      return;
+    }
+    if (!this.gameState.reviveRun() || !this.player.revive(0.35, 2)) {
+      this.gameOver.setReviveResult('error');
+      return;
+    }
+    // A revived run is no longer terminal. Invalidate callbacks owned by the
+    // old summary while preserving the once-per-run ledger entries.
+    this.terminalRunToken += 1;
+    this.gameOver.close();
+    this.view.playPlayerRevive();
+    // Game over only resets input state; listeners remain attached for an
+    // in-place revive, so attaching again would duplicate pointer handlers.
+    this.lifecyclePaused = false;
+    this.audio.resume();
+    this.audio.startMusic();
+    this.lifecycle.onGameStart();
   }
 
   private async requestDoubleNova(terminalToken: number): Promise<void> {

@@ -96,6 +96,18 @@ export class PlayerModel {
     return this.state.health - previousHealth;
   }
 
+  /** Restores a defeated player without resetting the current run build. */
+  public revive(healthPercent = 0.35, invulnerabilitySeconds = 2): boolean {
+    if (this.isAlive) return false;
+    const ratio = Math.min(1, Math.max(0, healthPercent));
+    if (ratio <= 0) return false;
+    this.state.health = Math.max(1, this.state.maxHealth * ratio);
+    this.invulnerabilitySeconds = Math.max(0, invulnerabilitySeconds);
+    this.healthRecoveryTimer = 0;
+    this.vampirismCooldownSeconds = 0;
+    return true;
+  }
+
   public increaseHealthRecovery(amount: number): void {
     this.healthRecoveryPercent = Math.max(0, this.healthRecoveryPercent + amount);
   }

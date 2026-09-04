@@ -2413,12 +2413,13 @@ La prioridad 2 comenzo con un contrato rewarded local, sin red ni SDK externo.
 o `error`). `RewardedAdController` bloquea solicitudes simultaneas y
 `RewardedOfferLedger` evita consumir una oferta mas de una vez por run.
 
-El primer consumidor es `double-nova` en el resumen de partida. La oferta solo
-aparece si el adaptador informa disponibilidad y siempre requiere pulsacion.
+Los primeros consumidores son `double-nova` en el resumen y `revive` tras una
+muerte. Las ofertas solo aparecen si el adaptador informa disponibilidad y
+siempre requieren pulsacion.
 El simulador local usa `?ad=success` (por defecto), `?ad=dismissed`,
 `?ad=unavailable`, `?ad=error` o `?ad=timeout`; un resultado que no sea
-`rewarded` conserva la recompensa normal. Revive, reroll, cosmetico y los SDK
-reales quedan para las siguientes iteraciones de esta misma prioridad.
+`rewarded` conserva la recompensa normal. Reroll, cosmetico y los SDK reales
+quedan para las siguientes iteraciones de esta misma prioridad.
 
 1. typecheck y tests específicos;
 2. suite completa;

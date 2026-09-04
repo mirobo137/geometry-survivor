@@ -143,6 +143,11 @@ export class PixiGameView {
     this.screenFxView.play('player-defeat');
   }
 
+  public playPlayerRevive(): void {
+    this.playerView.playRevive();
+    this.terminalFxView.clear();
+  }
+
   public playBossDefeat(x: number, y: number, radius: number): void {
     this.terminalFxView.playBossDefeat(x, y, radius);
     this.screenFxView.play('boss-defeat');

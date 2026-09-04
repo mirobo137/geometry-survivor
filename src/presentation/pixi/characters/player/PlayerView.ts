@@ -227,6 +227,17 @@ export class PlayerView {
     this.defeatProgress = 0;
   }
 
+  /** Clears only the terminal presentation so an in-place revive keeps the run visuals. */
+  public playRevive(): void {
+    this.defeatProgress = -1;
+    this.root.alpha = 1;
+    this.weapons.position.set(0, 0);
+    this.body.position.set(0, 0);
+    this.core.position.set(0, 0);
+    this.accent.position.set(0, 0);
+    this.ring.scale.set(1);
+  }
+
   public updateDefeat(deltaSeconds: number): void {
     if (this.defeatProgress < 0) return;
     // Keep the composed SVG pieces readable long enough to register the loss.

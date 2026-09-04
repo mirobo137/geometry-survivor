@@ -603,8 +603,9 @@ export class Game {
   }
 
   private async requestDoubleNova(terminalToken: number): Promise<void> {
+    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
     const offerToken = this.rewardedOffers.begin('double-nova');
-    if (offerToken === null || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (offerToken === null) return;
     this.gameOver.setDoubleNovaPending();
     const result = await this.rewardedAds.request('double-nova');
     this.rewardedOffers.settle('double-nova', offerToken, result);

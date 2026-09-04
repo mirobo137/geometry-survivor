@@ -184,6 +184,18 @@
         <button id="game-over-restart" type="button">Jugar de nuevo</button>
       </section>
       <div id="debug-panel" hidden></div>
+      <aside id="baseline-panel" hidden aria-labelledby="baseline-title">
+        <div class="baseline-heading">
+          <strong id="baseline-title">LINEA BASE · ACTO I</strong>
+          <span id="baseline-count">0/10 runs</span>
+        </div>
+        <pre id="baseline-output" aria-live="polite"></pre>
+        <div class="baseline-actions">
+          <button id="baseline-copy" type="button">Copiar reporte</button>
+          <button id="baseline-clear" type="button">Borrar datos</button>
+        </div>
+        <span id="baseline-status" role="status" aria-live="polite"></span>
+      </aside>
     </main>
     <script>
       (function () {

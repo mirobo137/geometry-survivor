@@ -140,6 +140,21 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(failures).toEqual([]);
 });
 
+test('muestra y conserva el reporte local de linea base con ?baseline=1', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?baseline=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#baseline-panel')).toBeVisible();
+  await expect(page.locator('#baseline-count')).toHaveText('0/10 runs');
+  await expect(page.locator('#debug-panel')).toContainText('baseline: 0/10');
+
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await expect.poll(async () => page.locator('#baseline-output').textContent())
+    .toContain('Run en curso: si');
+  expect(failures).toEqual([]);
+});
+
 test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
   await page.goto('/?ad=success');

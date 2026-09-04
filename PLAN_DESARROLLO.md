@@ -2403,6 +2403,24 @@ producto documentada.
 - builds aislados sin globals cruzados ni SDK real en `dist/local`;
 - Inspector/Preview obligatorios antes de declarar Fase 8 terminada.
 
+### Instrumento de linea base Acto I (prioridad 3)
+
+`?baseline=1` activa un registrador local y el profiler de frames sin cambiar
+la simulacion. La herramienta conserva hasta diez runs y muestra/copia:
+
+- tiempo total, primera subida y llegada del boss;
+- causa de muerte por fuente tipada (`contact`, `laser`, `boss`), o victoria;
+- cartas elegidas y NOVA obtenida;
+- maximos de enemigos, proyectiles y FX activos de pools acotados;
+- frame medio, FPS derivado y p95 del profiler rolling.
+
+El reporte se guarda bajo una clave de diagnostico separada del save de juego,
+sin red ni SDK, y ofrece borrado explicito. La implementacion automatica queda
+cerrada cuando pasan typecheck, suite y smoke; la puerta de prioridad 3 sigue
+abierta hasta registrar diez runs en un mismo dispositivo/preset y adjuntar
+modelo, navegador, calidad y observaciones humanas. Esos datos, no los valores
+del panel por si solos, congelan el baseline de balance.
+
 ### Puerta global de cada prioridad
 
 **Estado de implementacion - 04-09-2026.**

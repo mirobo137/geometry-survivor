@@ -34,7 +34,11 @@ export type CombatEvent =
     readonly experience: number;
   }
   | { readonly type: 'bossDefeated' }
-  | { readonly type: 'playerDamaged'; readonly amount: number };
+  | {
+    readonly type: 'playerDamaged';
+    readonly amount: number;
+    readonly source: 'contact' | 'laser' | 'boss';
+  };
 
 export interface CombatStats {
   elapsedSeconds: number;
@@ -202,7 +206,7 @@ export class CombatSimulation {
     this.spawnAccumulator += dt;
     if (this.laser.update(dt, this.stats.elapsedSeconds, player, arenaRadius)) {
       this.stats.damageTaken += LASER_DEFINITION.damage;
-      this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage });
+      this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
 
     const spawnInterval = getSpawnIntervalSeconds(this.stats.elapsedSeconds);
@@ -219,14 +223,14 @@ export class CombatSimulation {
       const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
       if (bossDamage > 0) {
         this.stats.damageTaken += bossDamage;
-        this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage });
+        this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage, source: 'boss' });
       }
     }
 
     const contactDamage = this.enemySystem.update(dt, player);
     if (contactDamage !== null) {
       this.stats.damageTaken += contactDamage;
-      this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage });
+      this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage, source: 'contact' });
     }
     this.enemySystem.rebuildGrid();
     this.weaponSystem.update(dt, player);

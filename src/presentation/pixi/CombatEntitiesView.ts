@@ -210,6 +210,15 @@ export class CombatEntitiesView {
     for (const glow of this.projectileGlows) glow.texture = texture;
   }
 
+  /** Bounded presentation count used by the local baseline profiler. */
+  public get activeFxCount(): number {
+    return this.enemyImpactFx.activeParticleCount
+      + this.enemyImpactFx.activeRingCount
+      + this.enemyDefeatFx.activeCount
+      + this.damageNumbers.activeCount
+      + this.projectileTrails.activeSegmentCount;
+  }
+
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
     this.projectileTrails.render(combat.projectiles);
     const trailKind = getCannonSkinDefinition(this.cannonSkin).trail;

@@ -158,6 +158,13 @@ export class PixiGameView {
     this.entitiesView.updateFx(deltaSeconds);
   }
 
+  /** Exposes only a bounded presentation metric; gameplay never reads it. */
+  public get activeFxCount(): number {
+    return this.entitiesView.activeFxCount
+      + this.impactFxView.activeParticleCount
+      + (this.impactFxView.isActive ? 1 : 0);
+  }
+
   public updatePresentationFx(deltaSeconds: number, animationSeconds = 0): void {
     this.arenaView.update(deltaSeconds);
     this.screenFxView.update(deltaSeconds);

@@ -2,6 +2,8 @@ import type { Application, Ticker } from 'pixi.js';
 import { FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
+import { BaselinePanel } from '../debug/BaselinePanel';
+import { BaselineRunRecorder } from '../debug/BaselineRunRecorder';
 import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
@@ -50,6 +52,7 @@ export interface GameElements {
   readonly gameOver: HTMLElement;
   readonly startScreen?: HTMLElement;
   readonly pauseButton?: HTMLButtonElement;
+  readonly baseline?: HTMLElement;
 }
 
 export interface GameOptions {
@@ -65,6 +68,7 @@ export interface GameOptions {
   readonly background?: BackgroundId;
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
+  readonly baselineMode?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -95,6 +99,9 @@ export class Game {
   private readonly view: PixiGameView;
   private readonly debug: DebugPanel;
   private readonly profiler: FrameProfiler;
+  private readonly baselineMode: boolean;
+  private readonly baseline: BaselineRunRecorder;
+  private readonly baselinePanel: BaselinePanel | null;
   private readonly hud: GameHud;
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
@@ -121,6 +128,7 @@ export class Game {
   private levelUpRequestToken = 0;
   private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
+  private baselinePanelSeconds = 0;
 
   private readonly queueResize = (): void => {
     if (this.resizeQueued || this.stopped) return;
@@ -273,7 +281,8 @@ export class Game {
     this.cannonSkin = options.cannonSkin ?? saved.cannonSkins.selected;
     this.background = options.background ?? saved.backgrounds.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
-    this.profiler = new FrameProfiler(options.profileMode === true);
+    this.baselineMode = options.baselineMode === true;
+    this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -289,6 +298,10 @@ export class Game {
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
+    this.baseline = new BaselineRunRecorder(this.baselineMode);
+    this.baselinePanel = this.baselineMode && options.elements.baseline
+      ? new BaselinePanel(options.elements.baseline, this.baseline)
+      : null;
     this.hud = new GameHud(options.elements.hud);
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
@@ -370,6 +383,7 @@ export class Game {
       }
       if (event.type === 'playerDamaged') {
         const resolution = this.player.resolveDamage(event.amount);
+        if (resolution.outcome === 'damaged') this.baseline.noteDamageSource(event.source);
         if (resolution.outcome === 'shielded') {
           this.view.playPlayerGuard(this.presentationTime);
           this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
@@ -414,6 +428,7 @@ export class Game {
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
     this.view.updateTerminalFx(deltaSeconds);
     this.view.renderLevelUpFx(deltaSeconds);
+    if (this.combat.renderState.boss.active) this.baseline.noteBoss(this.combat.stats.elapsedSeconds);
     this.hud.update({
       elapsedSeconds: this.combat.stats.elapsedSeconds,
       health: this.player.state.health,
@@ -422,6 +437,18 @@ export class Game {
       kills: this.combat.stats.kills,
       level: this.progression.state.level
     });
+    this.baseline.observe({
+      enemies: this.combat.enemies.activeCount,
+      projectiles: this.combat.projectiles.activeCount,
+      fx: this.view.activeFxCount
+    });
+    if (this.baselinePanel) {
+      this.baselinePanelSeconds += Math.max(deltaSeconds, 1 / 60);
+      if (this.baselinePanelSeconds >= 0.25) {
+        this.baselinePanelSeconds = 0;
+        this.baselinePanel.render(this.baseline);
+      }
+    }
     if (this.pauseButton) {
       this.pauseButton.hidden = !this.gameState.isSimulationRunning || this.lifecyclePaused;
     }
@@ -461,7 +488,8 @@ export class Game {
       boss: this.combat.renderState.boss.active
         ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
         : 'inactive',
-      player: `${this.player.state.x.toFixed(1)}, ${this.player.state.y.toFixed(1)}`
+      player: `${this.player.state.x.toFixed(1)}, ${this.player.state.y.toFixed(1)}`,
+      baseline: this.baselineMode ? `${this.baseline.records.length}/10` : 'off'
     });
   }
 
@@ -469,6 +497,7 @@ export class Game {
     if (this.gameState.enterLevelUp()) {
       this.lifecycle.onGamePause();
       this.audio.playCue('level-up');
+      this.baseline.noteLevelUp(this.combat.stats.elapsedSeconds);
     }
     const level = this.progression.state.level;
     const choices = this.upgradeApplier.getChoices(level);
@@ -492,6 +521,7 @@ export class Game {
     this.levelUp.open(level, choices, (upgradeId) => {
       this.view.closeLevelUpFx();
       this.input.reset();
+      this.baseline.noteUpgrade(upgradeId);
       this.upgradeApplier.apply(upgradeId);
       this.progression.consumeLevelUp();
       if (this.progression.state.pendingLevelUps > 0) {
@@ -561,6 +591,7 @@ export class Game {
   }
 
   private activateRun(unlockAudio: boolean): void {
+    this.baseline.beginRun(this.fxQuality);
     this.input.attach();
     this.hudElement.hidden = false;
     if (unlockAudio) void this.audio.unlock();
@@ -626,6 +657,17 @@ export class Game {
     const saved = this.saveStore.load();
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
     const novaReward = calculateRunNova(summary);
+    const profile = this.profiler.enabled ? this.profiler.snapshot(performance.now() + 500) : null;
+    this.baseline.finish({
+      outcome,
+      elapsedSeconds: summary.elapsedSeconds,
+      nova: novaReward,
+      frameProfile: {
+        averageMs: profile?.averageMs ?? null,
+        p95Ms: profile?.p95Ms ?? null
+      }
+    });
+    this.baselinePanel?.render(this.baseline);
     const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + novaReward) };
     this.saveStore.save({ ...saved, best, wallet });
     this.terminalRunToken += 1;
@@ -684,6 +726,7 @@ export class Game {
     // old summary while preserving the once-per-run ledger entries.
     this.terminalRunToken += 1;
     this.gameOver.close();
+    this.baseline.resumeAfterRevive();
     this.view.playPlayerRevive();
     // Game over only resets input state; listeners remain attached for an
     // in-place revive, so attaching again would duplicate pointer handlers.
@@ -762,6 +805,7 @@ export class Game {
 
   private returnToMenuState(): void {
     this.clearRunPresentation();
+    this.baseline.cancelRun();
     this.input.detach();
     this.audio.stopMusic();
     this.lifecycle.onGamePause();
@@ -788,6 +832,7 @@ export class Game {
     this.fps = 0;
     this.presentationTime = 0;
     this.presentedShotsFired = 0;
+    this.baselinePanelSeconds = 0;
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();

@@ -47,6 +47,7 @@ Atajos que pueden escribirse después de la URL base:
 ?background=deep-space|ion-storm|solar-drift|crystal-field
 ?quality=low|medium|high
 ?profile=1
+?baseline=1
 ?spike=rendering
 ?spike=audio
 ```
@@ -1330,3 +1331,34 @@ Validacion de esta iteracion: typecheck correcto, 59 archivos y 170 tests
 unitarios/integracion, 11 smoke desktop/mobile y builds `local`, `poki` y
 `crazygames` correctos. El warning del bundle de aproximadamente 572 kB
 minificado sigue visible por decision del plan.
+
+## 55. Linea base reproducible del Acto I - 04-09-2026
+
+Se implemento el instrumento de medicion de la prioridad 3 sin tocar las
+reglas de la run. `?baseline=1` activa el profiler, el panel de debug y un
+panel local de reporte. Cada run terminada registra tiempo total, primera
+subida, llegada del boss, causa de muerte (contacto, laser o boss), cartas
+elegidas, NOVA, maximos de enemigos/proyectiles/FX y frame medio/p95. El
+registro vive en memoria y en `localStorage` bajo una clave separada del save,
+queda limitado a las ultimas diez runs y puede copiarse o borrarse desde Pages.
+
+Los eventos de dano ahora incluyen una fuente tipada; esto solo mejora la
+observabilidad y no cambia la cantidad ni el momento del dano. El contador FX
+consume exclusivamente contadores ya acotados de los pools de presentacion.
+La vista normal no muestra el panel ni crea overhead de medicion salvo que se
+use el flag.
+
+Validacion automatica: typecheck correcto, 60 archivos y 174 pruebas unitarias
+pasando, y 12 smoke desktop/mobile en verde (incluido `?baseline=1`). Falta la
+puerta humana: registrar diez runs en el mismo telefono, anotando navegador,
+preset de calidad y cualquier observacion de balance o rendimiento. No se
+considera congelada la linea base hasta completar ese registro.
+
+Prueba movil corta:
+
+1. abrir `https://mirobo137.github.io/geometry-survivor/?baseline=1`;
+2. jugar y terminar una run; el panel debe cambiar de `0/10` a `1/10`;
+3. repetir hasta diez runs sin borrar los datos;
+4. pulsar `Copiar reporte` y conservar el texto junto con modelo del telefono,
+   navegador y calidad;
+5. si se quiere descartar una sesion de prueba, pulsar `Borrar datos`.

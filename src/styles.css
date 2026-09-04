@@ -2230,6 +2230,83 @@ body {
   pointer-events: none;
 }
 
+#baseline-panel {
+  position: fixed;
+  z-index: 6;
+  right: max(0.6rem, env(safe-area-inset-right));
+  bottom: max(0.6rem, env(safe-area-inset-bottom));
+  width: min(35rem, calc(100vw - 1.2rem));
+  max-height: min(42vh, 28rem);
+  padding: 0.7rem;
+  color: #d7f7ef;
+  background: rgba(5, 14, 28, 0.92);
+  border: 1px solid rgba(117, 230, 255, 0.42);
+  border-radius: 0.55rem;
+  box-shadow: 0 0 1.8rem rgba(57, 209, 224, 0.12);
+  pointer-events: auto;
+}
+
+.baseline-heading,
+.baseline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.baseline-heading {
+  color: #75e6ff;
+  font: 800 0.72rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+#baseline-output {
+  max-height: 25vh;
+  margin: 0.55rem 0;
+  overflow: auto;
+  color: #b9edd8;
+  font: 0.68rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.baseline-actions button {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+  color: #07111f;
+  background: #75e6ff;
+  border: 0;
+  border-radius: 0.35rem;
+  font: 700 0.78rem/1.1 inherit;
+}
+
+.baseline-actions button + button {
+  color: #dce7ff;
+  background: transparent;
+  border: 1px solid rgba(145, 181, 255, 0.38);
+}
+
+#baseline-status {
+  display: block;
+  min-height: 1.1em;
+  margin-top: 0.4rem;
+  color: #9eb5d8;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 600px) {
+  #baseline-panel {
+    left: max(0.6rem, env(safe-area-inset-left));
+    right: max(0.6rem, env(safe-area-inset-right));
+    width: auto;
+    max-height: 38vh;
+  }
+
+  #baseline-output {
+    max-height: 20vh;
+  }
+}
+
 /* Level-up card system: the frame and icon geometry stay vectorial while
    text, focus and the touch target remain native HTML controls. */
 #level-up {

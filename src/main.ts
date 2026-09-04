@@ -54,6 +54,7 @@ const createPixiApplication = async (container: HTMLElement): Promise<Applicatio
 const bootstrap = async (): Promise<void> => {
   const container = document.querySelector<HTMLElement>('#game-container');
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
+  const baselineElement = document.querySelector<HTMLElement>('#baseline-panel');
   const bootStatus = document.querySelector<HTMLElement>('#boot-status');
   const startScreenElement = document.querySelector<HTMLElement>('#start-screen');
   const hudElement = document.querySelector<HTMLElement>('#game-hud');
@@ -85,6 +86,7 @@ const bootstrap = async (): Promise<void> => {
     ? requestedQuality
     : 'medium';
   const profileMode = searchParams.get('profile') === '1';
+  const baselineMode = searchParams.get('baseline') === '1';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -119,7 +121,8 @@ const bootstrap = async (): Promise<void> => {
       pauseButton,
       levelUp: levelUpElement,
       pause: pauseElement,
-      gameOver: gameOverElement
+      gameOver: gameOverElement,
+      baseline: baselineElement ?? undefined
     },
     stressMode,
     playerSkin,
@@ -127,6 +130,7 @@ const bootstrap = async (): Promise<void> => {
     background,
     fxQuality,
     profileMode,
+    baselineMode,
     initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode,

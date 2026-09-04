@@ -1295,3 +1295,15 @@ muerte, con 35% de vida y dos segundos de invulnerabilidad; no reinicia XP,
 bajas, arena ni build. Reroll, cosmetico y los adaptadores reales de
 Poki/CrazyGames quedan como siguientes incrementos, despues de aprobar la
 matriz local en movil.
+
+## 53. Reroll rewarded local - 04-09-2026
+
+El level-up ahora muestra una oferta opcional de reroll cuando existen tres
+alternativas validas. El resultado es determinista, excluye las cartas que ya
+se estaban mostrando y no consume el nivel pendiente. La oferta se consume
+una sola vez por run (equivalente al Acto I actual); una cancelacion, falta de
+inventario o error deja activas las cartas originales y permite reintentar.
+
+Mientras el anuncio esta pendiente se bloquean las cartas y el CTA para evitar
+doble input. El simulador sigue sin SDK externo y usa los mismos parametros
+`?ad=success`, `?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`.

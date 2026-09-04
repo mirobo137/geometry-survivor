@@ -133,4 +133,16 @@ describe('UpgradeApplier', () => {
     expect(applier.getStacks('chain_lightning')).toBe(0);
     expect(applier.canApply('orbit_reach')).toBe(false);
   });
+
+  it('generates a deterministic reroll without repeating the current cards', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const current = applier.getChoices(2);
+    const rerolled = applier.getRerollChoices(2, current);
+    const repeated = applier.getRerollChoices(2, current);
+
+    expect(rerolled).toHaveLength(3);
+    expect(new Set(rerolled.map((choice) => choice.id)).size).toBe(3);
+    expect(rerolled.map((choice) => choice.id)).toEqual(repeated.map((choice) => choice.id));
+    expect(rerolled.every((choice) => !current.some((currentChoice) => currentChoice.id === choice.id))).toBe(true);
+  });
 });

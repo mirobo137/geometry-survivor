@@ -2413,13 +2413,15 @@ La prioridad 2 comenzo con un contrato rewarded local, sin red ni SDK externo.
 o `error`). `RewardedAdController` bloquea solicitudes simultaneas y
 `RewardedOfferLedger` evita consumir una oferta mas de una vez por run.
 
-Los primeros consumidores son `double-nova` en el resumen y `revive` tras una
-muerte. Las ofertas solo aparecen si el adaptador informa disponibilidad y
-siempre requieren pulsacion.
+Los primeros consumidores son `double-nova` en el resumen, `revive` tras una
+muerte y `reroll` en el level-up pausado. Las ofertas solo aparecen si el
+adaptador informa disponibilidad y siempre requieren pulsacion. Reroll entrega
+tres alternativas deterministas sin repetir las cartas actuales y se limita a
+una oferta por run en el alcance actual del Acto I.
 El simulador local usa `?ad=success` (por defecto), `?ad=dismissed`,
 `?ad=unavailable`, `?ad=error` o `?ad=timeout`; un resultado que no sea
-`rewarded` conserva la recompensa normal. Reroll, cosmetico y los SDK reales
-quedan para las siguientes iteraciones de esta misma prioridad.
+`rewarded` conserva la recompensa normal. Cosmetico y los SDK reales quedan
+para las siguientes iteraciones de esta misma prioridad.
 
 1. typecheck y tests específicos;
 2. suite completa;

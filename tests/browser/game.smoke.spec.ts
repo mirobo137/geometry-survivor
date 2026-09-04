@@ -237,6 +237,14 @@ test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
   await expect(levelUp).toBeVisible({ timeout: 20_000 });
   const choices = page.locator('#level-up-options button');
   await expect(choices).toHaveCount(3);
+  const initialChoiceIds = await choices.evaluateAll((buttons) => buttons.map((button) => button.getAttribute('data-upgrade-id')));
+  const reroll = page.locator('#level-up-reroll');
+  await expect(reroll).toBeVisible();
+  await reroll.click();
+  await expect(reroll).toBeHidden({ timeout: 5_000 });
+  const rerolledChoiceIds = await choices.evaluateAll((buttons) => buttons.map((button) => button.getAttribute('data-upgrade-id')));
+  expect(rerolledChoiceIds).toHaveLength(3);
+  expect(rerolledChoiceIds.some((id) => initialChoiceIds.includes(id))).toBe(false);
   await choices.first().click();
   await expect(choices.first()).toHaveClass(/is-selected/);
   await expect(choices.first()).toHaveAttribute('aria-pressed', 'true');

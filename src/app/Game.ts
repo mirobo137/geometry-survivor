@@ -13,6 +13,7 @@ import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
+import type { UpgradeDefinition } from '../content/upgrades/UpgradeDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
@@ -116,6 +117,7 @@ export class Game {
   private terminalRunToken = 0;
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
+  private levelUpRequestToken = 0;
   private hitStopSeconds = 0;
 
   private readonly queueResize = (): void => {
@@ -461,8 +463,26 @@ export class Game {
       this.lifecycle.onGamePause();
       this.audio.playCue('level-up');
     }
-    const choices = this.upgradeApplier.getChoices(this.progression.state.level);
-    this.levelUp.open(this.progression.state.level, choices, (upgradeId) => {
+    const level = this.progression.state.level;
+    const choices = this.upgradeApplier.getChoices(level);
+    const requestToken = ++this.levelUpRequestToken;
+    void this.prepareLevelUp(level, choices, requestToken);
+  }
+
+  private async prepareLevelUp(
+    level: number,
+    choices: readonly UpgradeDefinition[],
+    requestToken: number
+  ): Promise<void> {
+    const rerollAvailable = choices.length === 3
+      && this.rewardedOffers.canOffer('reroll')
+      && await this.rewardedAds.isAvailable('reroll');
+    if (this.stopped || requestToken !== this.levelUpRequestToken || this.gameState.phase !== 'level-up') return;
+    this.showLevelUp(level, choices, rerollAvailable);
+  }
+
+  private showLevelUp(level: number, choices: readonly UpgradeDefinition[], rerollAvailable: boolean): void {
+    this.levelUp.open(level, choices, (upgradeId) => {
       this.view.closeLevelUpFx();
       this.input.reset();
       this.upgradeApplier.apply(upgradeId);
@@ -475,8 +495,32 @@ export class Game {
           this.lifecycle.onGameResume();
         }
       }
-    }, (upgrade) => this.upgradeApplier.getPreview(upgrade), this.onLevelUpInteraction);
+    }, (upgrade) => this.upgradeApplier.getPreview(upgrade), this.onLevelUpInteraction, {
+      rerollAvailable,
+      onReroll: () => { void this.requestReroll(level, choices); }
+    });
     this.syncLevelUpFx();
+  }
+
+  private async requestReroll(level: number, currentChoices: readonly UpgradeDefinition[]): Promise<void> {
+    if (this.gameState.phase !== 'level-up') return;
+    const requestToken = this.levelUpRequestToken;
+    const offerToken = this.rewardedOffers.begin('reroll');
+    if (offerToken === null) return;
+    this.levelUp.setRerollPending();
+    const result = await this.rewardedAds.request('reroll');
+    this.rewardedOffers.settle('reroll', offerToken, result);
+    if (this.stopped || requestToken !== this.levelUpRequestToken || this.gameState.phase !== 'level-up') return;
+    if (result !== 'rewarded') {
+      this.levelUp.setRerollResult(result);
+      return;
+    }
+    const rerolledChoices = this.upgradeApplier.getRerollChoices(level, currentChoices);
+    if (rerolledChoices.length < 3) {
+      this.levelUp.setRerollResult('error');
+      return;
+    }
+    this.showLevelUp(level, rerolledChoices, false);
   }
 
   private syncLevelUpFx(): void {
@@ -683,6 +727,7 @@ export class Game {
 
   private clearRunPresentation(): void {
     this.clearTerminalSummaryTimer();
+    this.levelUpRequestToken += 1;
     this.hitStopSeconds = 0;
     this.input.reset();
     this.arena.reset();

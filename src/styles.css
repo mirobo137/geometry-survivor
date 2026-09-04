@@ -2200,6 +2200,42 @@ body {
   margin: 0;
 }
 
+#level-up-rewarded {
+  display: grid;
+  gap: 0.55rem;
+  width: min(26rem, 100%);
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.8rem;
+  color: #b8ffd9;
+  background: rgba(48, 100, 95, 0.18);
+  border: 1px solid rgba(184, 255, 217, 0.32);
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+#level-up-rewarded[hidden],
+#level-up-reroll[hidden] {
+  display: none;
+}
+
+#level-up-reroll {
+  min-height: 2.55rem;
+  padding: 0.55rem 0.8rem;
+  color: #07101f;
+  background: #b8ffd9;
+  border: 0;
+  border-radius: 0.4rem;
+  font: inherit;
+  touch-action: manipulation;
+}
+
+#level-up-reroll:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
 #level-up-options button.upgrade-card {
   --card-accent: #75e6ff;
   --card-line: #315773;

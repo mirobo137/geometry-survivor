@@ -8,6 +8,12 @@ import type { LevelUpCardInteraction, LevelUpCardLayout } from './LevelUpCardInt
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 export type UpgradePreviewProvider = (upgrade: UpgradeDefinition) => UpgradePreview | null;
 export type LevelUpInteractionHandler = (interaction: LevelUpCardInteraction) => void;
+export type RerollHandler = () => void;
+
+export interface LevelUpRewardedOptions {
+  readonly rerollAvailable?: boolean;
+  readonly onReroll?: RerollHandler;
+}
 
 const CARD_SELECTION_DELAY_MS = 220;
 
@@ -46,16 +52,29 @@ export class LevelUpOverlay {
   private readonly root: HTMLElement;
   private readonly title: HTMLElement;
   private readonly options: HTMLElement;
+  private readonly rewardedSection: HTMLElement;
+  private readonly rewardedMessage: HTMLElement;
+  private readonly rerollButton: HTMLButtonElement;
   private selectionTimer: number | null = null;
+  private rerollHandler: RerollHandler | null = null;
 
   public constructor(root: HTMLElement) {
     const title = root.querySelector<HTMLElement>('#level-up-title');
     const options = root.querySelector<HTMLElement>('#level-up-options');
-    if (!title || !options) throw new Error('Faltan elementos del level-up');
+    const rewardedSection = root.querySelector<HTMLElement>('#level-up-rewarded');
+    const rewardedMessage = root.querySelector<HTMLElement>('#level-up-rewarded-message');
+    const rerollButton = root.querySelector<HTMLButtonElement>('#level-up-reroll');
+    if (!title || !options || !rewardedSection || !rewardedMessage || !rerollButton) {
+      throw new Error('Faltan elementos del level-up');
+    }
     this.root = root;
     this.title = title;
     this.options = options;
+    this.rewardedSection = rewardedSection;
+    this.rewardedMessage = rewardedMessage;
+    this.rerollButton = rerollButton;
     this.mountIconSprite();
+    this.rerollButton.addEventListener('click', () => this.rerollHandler?.());
   }
 
   private mountIconSprite(): void {
@@ -68,7 +87,8 @@ export class LevelUpOverlay {
     choices: readonly UpgradeDefinition[],
     onSelection: UpgradeSelectionHandler,
     getPreview: UpgradePreviewProvider = () => null,
-    onInteraction?: LevelUpInteractionHandler
+    onInteraction?: LevelUpInteractionHandler,
+    rewarded: LevelUpRewardedOptions = {}
   ): void {
     this.cancelPendingSelection();
     this.title.textContent = `Nivel ${level}`;
@@ -147,6 +167,7 @@ export class LevelUpOverlay {
           other.disabled = true;
           if (other !== button) other.classList.add('is-dimmed');
         }
+        this.rerollButton.disabled = true;
         onInteraction?.({ kind: 'select', index, upgradeId: choice.id });
         this.selectionTimer = window.setTimeout(() => {
           this.selectionTimer = null;
@@ -157,7 +178,47 @@ export class LevelUpOverlay {
       button.append(frame, content);
       this.options.appendChild(button);
     });
+    this.rerollHandler = rewarded.onReroll ?? null;
+    const canReroll = rewarded.rerollAvailable === true && this.rerollHandler !== null;
+    this.rewardedSection.hidden = !canReroll;
+    this.rewardedMessage.textContent = canReroll
+      ? 'Oferta opcional: cambia estas tres cartas por alternativas.'
+      : '';
+    this.rerollButton.hidden = !canReroll;
+    this.rerollButton.disabled = !canReroll;
+    this.rerollButton.textContent = 'Ver anuncio · reroll';
     this.root.hidden = false;
+  }
+
+  public setRerollPending(): void {
+    this.rewardedMessage.textContent = 'Cargando recompensa...';
+    this.rerollButton.disabled = true;
+    this.rerollButton.textContent = 'Anuncio en curso';
+    this.setCardButtonsDisabled(true);
+  }
+
+  public setRerollResult(result: 'rewarded' | 'dismissed' | 'unavailable' | 'error'): void {
+    if (result === 'rewarded') {
+      this.rewardedMessage.textContent = 'Cartas renovadas.';
+      this.rewardedSection.hidden = true;
+      this.rerollButton.hidden = true;
+      this.rerollButton.disabled = true;
+      return;
+    }
+    if (result === 'unavailable') {
+      this.rewardedMessage.textContent = 'Anuncio no disponible. Elige una carta actual.';
+      this.rewardedSection.hidden = true;
+      this.rerollButton.hidden = true;
+      this.rerollButton.disabled = true;
+      this.setCardButtonsDisabled(false);
+      return;
+    }
+    this.rewardedMessage.textContent = result === 'dismissed'
+      ? 'Anuncio cancelado. Puedes elegir una carta o intentarlo otra vez.'
+      : 'No se pudo completar el anuncio. Puedes elegir una carta o reintentarlo.';
+    this.rerollButton.disabled = false;
+    this.rerollButton.textContent = 'Reintentar · reroll';
+    this.setCardButtonsDisabled(false);
   }
 
   /**
@@ -189,11 +250,18 @@ export class LevelUpOverlay {
   public close(): void {
     this.cancelPendingSelection();
     this.root.hidden = true;
+    this.rerollHandler = null;
   }
 
   private cancelPendingSelection(): void {
     if (this.selectionTimer === null) return;
     window.clearTimeout(this.selectionTimer);
     this.selectionTimer = null;
+  }
+
+  private setCardButtonsDisabled(disabled: boolean): void {
+    for (const button of this.options.querySelectorAll<HTMLButtonElement>('button.upgrade-card')) {
+      button.disabled = disabled;
+    }
   }
 }

@@ -21,6 +21,12 @@ export class UpgradeApplier {
     return getLevelUpChoices(level, (upgrade) => this.canApply(upgrade));
   }
 
+  /** Returns the next deterministic cards, excluding the current offer. */
+  public getRerollChoices(level: number, currentChoices: readonly UpgradeDefinition[]): readonly UpgradeDefinition[] {
+    const excluded = new Set(currentChoices.map((choice) => choice.id));
+    return getLevelUpChoices(level, (upgrade) => !excluded.has(upgrade.id) && this.canApply(upgrade));
+  }
+
   public getStacks(upgradeId: UpgradeId): number {
     return this.stacks.get(upgradeId) ?? 0;
   }

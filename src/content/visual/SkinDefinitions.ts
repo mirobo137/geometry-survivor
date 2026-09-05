@@ -6,7 +6,7 @@ import {
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export type SkinAcquisition = 'default' | 'nova';
-export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant';
+export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar';
 
 export interface PlayerSkinDefinition {
   readonly id: PlayerSkinId;
@@ -73,11 +73,23 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     tier: 'epic',
     priceNova: 1200,
     signature: 'verdant'
+  },
+  {
+    id: 'obsidian',
+    name: 'Obsidian Relay',
+    subtitle: 'Señal de vacío',
+    description: 'Placas oscuras y un faro rosa que corta la negrura en cada giro.',
+    rarity: 'NUEVA · DEMO',
+    tier: 'epic',
+    priceNova: 1800,
+    palette: PLAYER_SKINS.obsidian,
+    acquisition: 'nova',
+    signature: 'quasar'
   }
 ] as const;
 
 export const isPlayerSkinId = (value: unknown): value is PlayerSkinId => (
-  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald'
+  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald' || value === 'obsidian'
 );
 
 export const getPlayerSkinDefinition = (id: PlayerSkinId): PlayerSkinDefinition => (

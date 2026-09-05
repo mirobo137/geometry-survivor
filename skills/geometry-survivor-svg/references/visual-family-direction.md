@@ -82,6 +82,7 @@ ya exista la ciudadela.
 | Violet | Rombo longitudinal / cristal en diamante | Esquinas abiertas y prismas |
 | Amber | Proa ancha con soportes traseros / cámara hexagonal | Corona solar |
 | Emerald | Casco estrecho con aletas separadas / núcleo de huso | Cuchillas orbitales |
+| Obsidian | Placas oscuras de relevo / faro hexagonal rosa | Cuásar cardinal y retícula rota |
 
 Fuentes: `characters/player/`; registro compartido `PlayerHullSvg.ts`.
 
@@ -111,12 +112,14 @@ Para aprobar arte usar la preview tintada y Pixi, nunca sólo el master gris.
 ## Cañones: mecanismo, boca y ruta de salida
 
 Fuente y registro único: `assets/svg/cannons/CannonSvgMarkup.ts`. La UI ya toma
-las mismas piezas que Pixi. Hay cuatro estilos, NO cuatro armas nuevas:
+las mismas piezas que Pixi. Hay cinco estilos, NO cinco armas nuevas:
 
 - Basic: tubo y rail, cara superior clara, recámara oscura.
 - Curve: aguja y horquilla; conservar el canal longitudinal.
 - Smoke: cuerpo grueso y collar de combustión; mayor boca que Curve.
 - Rainbow: prisma con bandas cromáticas acotadas; no volver blanco todo el tubo.
+- Lattice: emisor oscuro angular, collar rosa y halo de retícula; la geometría
+  debe seguir siendo legible aunque la estela se apague en Low.
 
 Frame 64×64; boca izquierda `(-27,-11)`, derecha `(27,-11)`. No mover el centro
 de los círculos de muzzle para lograr una composición más bonita: su posición
@@ -171,7 +174,7 @@ No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
 4. Ejecutar typecheck/tests y abrir la lámina en oscuro, claro, grises y silueta.
    Comparar 32/64/128 px del frame y después tamaño real en partida.
 5. Ejecutar `node docs/visual/capture-reference.mjs` con Vite dev en 5173:
-   verifica 13 assets, IDs únicos, vistas y fondos. Capturas en test-results,
+   verifica 15 assets, IDs únicos, vistas y fondos. Capturas en test-results,
    nunca importarlas como texturas del juego ni versionarlas como fuente.
 6. Builds local/Poki/CrazyGames y smoke. Las capturas `art-low-*`/`art-high-*`
    provienen del juego, no del SVG DOM. No confundir foto con benchmark.

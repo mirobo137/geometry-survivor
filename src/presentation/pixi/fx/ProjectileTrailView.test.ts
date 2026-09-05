@@ -32,4 +32,13 @@ describe('ProjectileTrailView', () => {
     expect(view.activeSegmentCount).toBe(0);
     expect(view.root.visible).toBe(false);
   });
+
+  it('renders the lattice recipe inside the existing bounded pool', () => {
+    const view = new ProjectileTrailView(1, 'medium', 'lattice');
+    view.render([projectile(true, 320)]);
+    view.render([projectile(true, 327)]);
+    expect(view.activeSegmentCount).toBe(1);
+    expect(view.root.visible).toBe(true);
+    expect(view.root.children.length).toBeGreaterThanOrEqual(3);
+  });
 });

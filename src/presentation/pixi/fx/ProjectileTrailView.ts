@@ -114,6 +114,21 @@ export class ProjectileTrailView {
                 alpha * 0.92
               );
             }
+          } else if (recipe === 'lattice') {
+            const midX = (tailX + headX) * 0.5;
+            const midY = (tailY + headY) * 0.5;
+            this.setBeam(slot, tailX, tailY, headX, headY, 0xff7ca8, 2.4, alpha * 0.86);
+            this.setBeam(
+              slot + 1,
+              midX - normalX * 5,
+              midY - normalY * 5,
+              midX + normalX * 5,
+              midY + normalY * 5,
+              0xd3e8ff,
+              1.25,
+              alpha * 0.78
+            );
+            this.setDot(slot + 2, midX, midY, 2.4, 0xfff0fa, alpha * 0.82);
           } else {
             this.setBeam(slot, tailX, tailY, headX, headY, PROJECTILE_TRAIL_TOKENS.color, PROJECTILE_TRAIL_TOKENS.width + 0.6, alpha);
           }

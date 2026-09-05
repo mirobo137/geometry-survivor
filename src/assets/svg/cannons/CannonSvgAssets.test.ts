@@ -4,16 +4,18 @@ import cannonBasicSvg from './cannon-basic.svg?raw';
 import cannonCurveSvg from './cannon-curve.svg?raw';
 import cannonSmokeSvg from './cannon-smoke.svg?raw';
 import cannonRainbowSvg from './cannon-rainbow.svg?raw';
+import cannonLatticeSvg from './cannon-lattice.svg?raw';
 import projectileBasicSvg from './projectile-basic.svg?raw';
 import projectileCurveSvg from './projectile-curve.svg?raw';
 import projectileSmokeSvg from './projectile-smoke.svg?raw';
 import projectileRainbowSvg from './projectile-rainbow.svg?raw';
+import projectileLatticeSvg from './projectile-lattice.svg?raw';
 import {
   CANNON_BARREL_SVG,
   extractSvgGraphicMarkup
 } from './CannonSvgMarkup';
 
-const masters = [cannonBasicSvg, cannonCurveSvg, cannonSmokeSvg, cannonRainbowSvg] as const;
+const masters = [cannonBasicSvg, cannonCurveSvg, cannonSmokeSvg, cannonRainbowSvg, cannonLatticeSvg] as const;
 
 const assertSafeFramed = (svg: string, prefix: string, maxPrimitives = 16): void => {
   expect(svg).toContain('viewBox="-32 -32 64 64"');
@@ -37,7 +39,7 @@ describe('cannon and projectile SVG assets', () => {
   it('keeps left and right barrels aligned to the shared frame and muzzle slots', () => {
     const [leftMuzzle, rightMuzzle] = PROJECTILE_MUZZLE_OFFSETS;
     const barrelPaths = Object.values(CANNON_BARREL_SVG).map((pair) => pair.left.match(/\sd="([^"]+)"/)?.[1]);
-    expect(new Set(barrelPaths).size).toBe(4);
+    expect(new Set(barrelPaths).size).toBe(5);
 
     for (const [id, pair] of Object.entries(CANNON_BARREL_SVG)) {
       assertSafeFramed(pair.left, `cannon-${id}-`, 12);
@@ -54,7 +56,8 @@ describe('cannon and projectile SVG assets', () => {
       basic: cannonBasicSvg,
       curve: cannonCurveSvg,
       smoke: cannonSmokeSvg,
-      rainbow: cannonRainbowSvg
+      rainbow: cannonRainbowSvg,
+      lattice: cannonLatticeSvg
     } as const;
     for (const [id, pair] of Object.entries(CANNON_BARREL_SVG)) {
       const master = masterById[id as keyof typeof masterById];
@@ -75,7 +78,7 @@ describe('cannon and projectile SVG assets', () => {
   });
 
   it('keeps projectiles centered and aligned to +X', () => {
-    for (const svg of [projectileBasicSvg, projectileCurveSvg, projectileSmokeSvg, projectileRainbowSvg]) {
+    for (const svg of [projectileBasicSvg, projectileCurveSvg, projectileSmokeSvg, projectileRainbowSvg, projectileLatticeSvg]) {
       expect(svg).toContain('viewBox="-16 -16 32 32"');
       expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
       expect(svg).not.toContain('\uFFFD');

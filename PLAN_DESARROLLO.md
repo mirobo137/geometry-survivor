@@ -2580,3 +2580,21 @@ CONTINUACION §58. VIS-01 queda parcial (falta anticipación mecánica por fase)
 VIS-02 espera medición física y aprobación visual. VIS-03 no se ejecuta en este
 lote. No declarar rendimiento físico por pasar smoke emulado. Sin publicación
 automática, commit ni push.
+
+## 22.6 Prueba de extensión de la guía SVG — quinta skin y quinto cañón, 05-09-2026
+
+Como prueba de que otro modelo puede continuar la dirección de Astra sin
+divagar, se añade un paquete cosmético demo sin abrir una rama de gameplay:
+`obsidian` / Obsidian Relay y `lattice` / Lattice Halo. Ambos deben recorrer el
+mismo registro data-driven que los paquetes anteriores, compartir frame, anclas,
+tint y límites, y mantenerse fuera de `PlayerModel`, simulación, daño, economía
+real y save por defecto.
+
+Obsidian usa `body`, `core`, `ring` y firma `quasar`; Lattice usa dos cañones
+modulares, proyectil hexagonal y una receta de estela de tres segmentos como
+máximo. La integración obliga a actualizar fuentes compartidas, preview, Pixi,
+selector, URL de desarrollo, CSS, galería, tests y documentación. La prueba no
+autoriza subir el presupuesto FX, filtros SVG, texturas rasterizadas nuevas ni
+una sexta variante sin revisión. La puerta es typecheck, tests, galería de 15
+assets/45 muestras y smoke/build existentes; la inspección física Low/High y la
+aprobación visual siguen pendientes.

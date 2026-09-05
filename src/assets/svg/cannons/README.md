@@ -10,6 +10,7 @@ pieces share the player frame `-32 -32 64 64` and the projectile frame
 | curve | Aguja fina con canal y punta ahorquillada |
 | smoke | Mortero grueso con anillo de calor |
 | rainbow | Prisma facetado con bandas y boca blanca |
+| lattice | Emisor angular con collar de resonancia y halo de retícula |
 
 The left and right barrels are separate files so Pixi can recoil only the
 firing muzzle. They are rasterized once with an explicit 64×64 frame; SMIL

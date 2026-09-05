@@ -48,7 +48,7 @@
   for(const kind of ['chaser','fast','tank','elite','boss']) {
     card('#enemies',kind,sources[`../../src/assets/svg/enemies/${kind}/${kind}.svg`]);
   }
-  for(const skin of ['cyan','violet','amber','emerald']) card('#skins',skin,createPlayerSkinPreviewSvg(skin));
+  for(const skin of ['cyan','violet','amber','emerald','obsidian']) card('#skins',skin,createPlayerSkinPreviewSvg(skin));
   for(const [kind,pair] of Object.entries(CANNON_BARREL_SVG)) {
     card('#cannons',kind,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64">${extractSvgGraphicMarkup(pair.left)}${extractSvgGraphicMarkup(pair.right)}</svg>`);
   }

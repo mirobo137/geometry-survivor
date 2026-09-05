@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-obsidian-core-title player-obsidian-core-desc">
+  <title id="player-obsidian-core-title">Obsidian Relay: core</title>
+  <desc id="player-obsidian-core-desc">Cavidad hexagonal con un faro central facetado.</desc>
+  <path id="player-obsidian-core-well" d="M0-12 9-6 9 5 0 11-9 5-9-6Z" fill="#252525"/>
+  <path id="player-obsidian-core-energy" d="M0-8 6-4 6 3 0 7-6 3-6-4Z" fill="#bdbdbd"/>
+  <path id="player-obsidian-core-reflection" d="M0-8 6-4 0-1-6-4Z" fill="#ffffff"/>
+</svg>

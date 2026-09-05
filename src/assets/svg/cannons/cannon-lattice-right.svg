@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-lattice-right-title cannon-lattice-right-desc">
+  <title id="cannon-lattice-right-title">Emisor derecho Lattice Halo</title>
+  <desc id="cannon-lattice-right-desc">Cañón angular con retícula de resonancia y boca rosa en la ranura derecha.</desc>
+  <g id="cannon-lattice-right" stroke-linejoin="round">
+    <path id="cannon-lattice-right-mount" d="M6-8 12-11 16-2 12 7 6 5 5-1z" fill="#4b203d" stroke="#ffe4f0" stroke-width="0.8"/>
+    <path id="cannon-lattice-right-barrel" d="M12-8 24-14 29-8 17 4 12 3z" fill="#b45f85" stroke="#fff0fa" stroke-width="0.8"/>
+    <path id="cannon-lattice-right-facet" d="M12-8 24-14 22-10 14-5z" fill="#e6b4ca"/>
+    <path id="cannon-lattice-right-return" d="M25-4 17 4 12 3 16 0z" fill="#632c50"/>
+    <path id="cannon-lattice-right-spark" d="M20-12 17-15 14-12 17-9z" fill="#ffe4f0"/>
+    <circle id="cannon-lattice-right-collar" cx="19" cy="-4" r="3.5" fill="none" stroke="#ff7ca8" stroke-width="0.9"/>
+    <circle id="cannon-lattice-right-muzzle" cx="27" cy="-11" r="3.5" fill="#241126" stroke="#ffe4f0" stroke-width="0.8"/>
+    <circle id="cannon-lattice-right-muzzle-core" cx="27" cy="-11" r="1.4" fill="#ffb8d9"/>
+  </g>
+</svg>

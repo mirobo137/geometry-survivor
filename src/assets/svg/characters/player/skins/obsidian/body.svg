@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-obsidian-body-title player-obsidian-body-desc">
+  <title id="player-obsidian-body-title">Obsidian Relay: body</title>
+  <desc id="player-obsidian-body-desc">Casco oscuro de cinco placas con faros laterales.</desc>
+  <path id="player-obsidian-body-shell" d="M0-26 10-19 19-4 16 15 6 25 0 28-6 25-16 15-19-4-10-19Z" fill="#626262"/>
+  <path id="player-obsidian-body-prow-bevel" d="M0-26 10-19 6-17 0-22-6-17-10-19Z" fill="#ffffff"/>
+  <path id="player-obsidian-body-lit-plane" d="M0-22 6-17 13-3 10 12 0 21Z" fill="#c9c9c9"/>
+  <path id="player-obsidian-body-shade-plane" d="M0-22-6-17-13-3-10 12 0 21Z" fill="#8f8f8f"/>
+  <path id="player-obsidian-body-side-mounts" d="M-16-4-25 1-21 14-14 17-12 8ZM16-4 25 1 21 14 14 17 12 8Z" fill="#3c3c3c"/>
+  <path id="player-obsidian-body-engine-accents" d="M-21 2-18 5-18 12-21 10ZM21 2 18 5 18 12 21 10ZM-8 20-4 22-5 27-9 24ZM8 20 4 22 5 27 9 24Z" fill="#e3e3e3"/>
+</svg>

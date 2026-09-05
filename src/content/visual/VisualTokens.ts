@@ -1,4 +1,4 @@
-export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian';
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -43,6 +43,14 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     bodyDetail: 0x2f8d7c,
     core: 0xb8ffd9,
     accent: 0xe5fff3
+  },
+  obsidian: {
+    shadow: 0x0d0610,
+    outer: 0xff7ca8,
+    body: 0xb47695,
+    bodyDetail: 0x7e3f61,
+    core: 0xffb8d9,
+    accent: 0xfff0fa
   }
 } as const;
 
@@ -56,7 +64,8 @@ export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionT
   cyan: { signatureSpin: 0.12, signaturePulse: 0.012 },
   violet: { signatureSpin: -0.18, signaturePulse: 0.02 },
   amber: { signatureSpin: 0.28, signaturePulse: 0.016 },
-  emerald: { signatureSpin: -0.34, signaturePulse: 0.024 }
+  emerald: { signatureSpin: -0.34, signaturePulse: 0.024 },
+  obsidian: { signatureSpin: 0.22, signaturePulse: 0.018 }
 } as const;
 
 export interface FxQualityTokens {

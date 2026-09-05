@@ -65,6 +65,10 @@ export const createPlayerTextures = (renderer: Renderer): PlayerTextureSet => ({
     rainbow: {
       left: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.left, PLAYER_TEXTURE_FRAME),
       right: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.right, PLAYER_TEXTURE_FRAME)
+    },
+    lattice: {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG.lattice.left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG.lattice.right, PLAYER_TEXTURE_FRAME)
     }
   },
   body: rasterizeSkinMap(renderer, (hull) => hull.body),

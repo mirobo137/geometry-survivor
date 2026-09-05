@@ -909,6 +909,12 @@ body {
   background: linear-gradient(150deg, rgba(12, 53, 51, 0.94), rgba(7, 24, 29, 0.92));
 }
 
+.cannon-card[data-cannon="lattice"] {
+  --cannon-accent: #ff7ca8;
+  --cannon-line: rgba(255, 124, 168, 0.5);
+  background: linear-gradient(150deg, rgba(64, 25, 53, 0.96), rgba(19, 10, 25, 0.94));
+}
+
 .cannon-card.is-selected {
   border-color: var(--cannon-accent);
   box-shadow: 0 0 1.25rem color-mix(in srgb, var(--cannon-accent) 24%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--cannon-accent) 22%, transparent);
@@ -1118,6 +1124,12 @@ body {
   background: linear-gradient(150deg, rgba(12, 53, 51, 0.94), rgba(7, 24, 29, 0.92));
 }
 
+.skin-card[data-tone="obsidian"] {
+  --skin-accent: #ff7ca8;
+  --skin-line: rgba(255, 124, 168, 0.5);
+  background: linear-gradient(150deg, rgba(64, 25, 53, 0.96), rgba(19, 10, 25, 0.94));
+}
+
 .skin-card.is-selected {
   border-color: var(--skin-accent);
   box-shadow: 0 0 1.25rem color-mix(in srgb, var(--skin-accent) 24%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 22%, transparent);
@@ -1189,6 +1201,11 @@ body {
 .skin-card[data-tone="emerald"] .skin-card-meta,
 .skin-card[data-tone="emerald"] .skin-card-action {
   color: #65f2c2;
+}
+
+.skin-card[data-tone="obsidian"] .skin-card-meta,
+.skin-card[data-tone="obsidian"] .skin-card-action {
+  color: #ff7ca8;
 }
 
 .skin-card-copy strong {
@@ -1427,6 +1444,7 @@ body {
 .skin-card-art svg .skin-art-shards,
 .skin-card-art svg .skin-art-crown,
 .skin-card-art svg .skin-art-blades,
+.skin-card-art svg .skin-art-quasar,
 .skin-card-art svg .skin-art-core,
 .skin-card-art svg .skin-art-ring,
 .skin-card-art svg .skin-art-hull {
@@ -2640,6 +2658,7 @@ body {
   #start-screen.is-skins-mode .skin-preview svg .skin-art-shards,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-crown,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-blades,
+  #start-screen.is-skins-mode .skin-preview svg .skin-art-quasar,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-core,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-ring,
   #start-screen.is-skins-mode .skin-preview svg .skin-art-hull,
@@ -2648,6 +2667,7 @@ body {
   .skin-preview svg .skin-art-shards,
   .skin-preview svg .skin-art-crown,
   .skin-preview svg .skin-art-blades,
+  .skin-preview svg .skin-art-quasar,
   .skin-preview svg .skin-art-core,
   .skin-preview svg .skin-art-ring,
   .skin-preview svg .skin-art-hull,
@@ -2655,6 +2675,7 @@ body {
   .skin-card-art svg .skin-art-shards,
   .skin-card-art svg .skin-art-crown,
   .skin-card-art svg .skin-art-blades,
+  .skin-card-art svg .skin-art-quasar,
   .skin-card-art svg .skin-art-core {
     animation: none;
   }

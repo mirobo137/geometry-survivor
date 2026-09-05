@@ -84,7 +84,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(4);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(5);
   const cannonScrollMetrics = await page.locator('#start-cannon-cards').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

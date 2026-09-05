@@ -3,7 +3,7 @@ import { FX_QUALITY, PLAYER_SKINS, PLAYER_SKIN_MOTION } from './VisualTokens';
 
 describe('VisualTokens', () => {
   it('keeps skins presentation-only and complete', () => {
-    expect(Object.keys(PLAYER_SKINS)).toEqual(['cyan', 'violet', 'amber', 'emerald']);
+    expect(Object.keys(PLAYER_SKINS)).toEqual(['cyan', 'violet', 'amber', 'emerald', 'obsidian']);
     for (const skin of Object.values(PLAYER_SKINS)) {
       expect(Object.values(skin).every((color) => Number.isInteger(color))).toBe(true);
     }

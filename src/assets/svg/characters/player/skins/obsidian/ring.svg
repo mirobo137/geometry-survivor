@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-obsidian-ring-title player-obsidian-ring-desc">
+  <title id="player-obsidian-ring-title">Halo de vacío del jugador</title>
+  <desc id="player-obsidian-ring-desc">Cuatro arcos quebrados con ventanas cardinales.</desc>
+  <g id="player-obsidian-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path id="player-obsidian-ring-n" d="M-9-25A26 26 0 0 1 9-25M-4-29 0-26 4-29" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-e" d="M25-9A26 26 0 0 1 25 9M29-4 26 0 29 4" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-s" d="M9 25A26 26 0 0 1-9 25M4 29 0 26-4 29" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-w" d="M-25 9A26 26 0 0 1-25-9M-29 4-26 0-29-4" stroke-width="2.1"/>
+  </g>
+</svg>

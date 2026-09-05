@@ -8,6 +8,9 @@ import amberRingSvg from './skins/amber/ring.svg?raw';
 import emeraldBodySvg from './skins/emerald/body.svg?raw';
 import emeraldCoreSvg from './skins/emerald/core.svg?raw';
 import emeraldRingSvg from './skins/emerald/ring.svg?raw';
+import obsidianBodySvg from './skins/obsidian/body.svg?raw';
+import obsidianCoreSvg from './skins/obsidian/core.svg?raw';
+import obsidianRingSvg from './skins/obsidian/ring.svg?raw';
 import violetBodySvg from './skins/violet/body.svg?raw';
 import violetCoreSvg from './skins/violet/core.svg?raw';
 import violetRingSvg from './skins/violet/ring.svg?raw';
@@ -16,7 +19,8 @@ export const PLAYER_HULL_SVG: Readonly<Record<PlayerSkinId, { body: string; ring
   cyan: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   violet: { body: violetBodySvg, ring: violetRingSvg, core: violetCoreSvg },
   amber: { body: amberBodySvg, ring: amberRingSvg, core: amberCoreSvg },
-  emerald: { body: emeraldBodySvg, ring: emeraldRingSvg, core: emeraldCoreSvg }
+  emerald: { body: emeraldBodySvg, ring: emeraldRingSvg, core: emeraldCoreSvg },
+  obsidian: { body: obsidianBodySvg, ring: obsidianRingSvg, core: obsidianCoreSvg }
 };
 
 /** DOM preview mirrors Sprite.tint on explicit RGB source attributes. No runtime parsing. */
@@ -28,4 +32,3 @@ export const tintPlayerSvgMarkup = (svg: string, tint: number): string => svg
     const channel = (shift: number): number => Math.round(((color >> shift) & 255) * ((tint >> shift) & 255) / 255);
     return '#' + ((channel(16) << 16) | (channel(8) << 8) | channel(0)).toString(16).padStart(6, '0');
   }).trim();
-

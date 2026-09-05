@@ -185,7 +185,8 @@ export class CombatEntitiesView {
       basic: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.basic, PROJECTILE_TEXTURE_FRAME),
       curve: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.curve, PROJECTILE_TEXTURE_FRAME),
       smoke: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.smoke, PROJECTILE_TEXTURE_FRAME),
-      rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME)
+      rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME),
+      lattice: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.lattice, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.boss);

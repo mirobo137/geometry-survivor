@@ -4,7 +4,7 @@ import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/character
 
 describe('SkinPreviewSvg', () => {
   it('keeps a bounded, vector-only preview for each skin', () => {
-    for (const skin of ['cyan', 'violet', 'amber', 'emerald'] as const) {
+    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian'] as const) {
       const svg = createPlayerSkinPreviewSvg(skin);
       expect(svg).toContain('viewBox="-52 -52 104 104"');
       expect(svg).toContain('<path');
@@ -15,14 +15,14 @@ describe('SkinPreviewSvg', () => {
 
   it('uses a distinct hull silhouette in the locker preview', () => {
     const silhouettes = new Set<string>();
-    for (const skin of ['cyan', 'violet', 'amber', 'emerald'] as const) {
+    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian'] as const) {
       const preview = createPlayerSkinPreviewSvg(skin);
       for (const source of Object.values(PLAYER_HULL_SVG[skin])) {
         for (const [, path] of source.matchAll(/\sd="([^"]+)"/g)) expect(preview).toContain(`d="${path}"`);
       }
       silhouettes.add(PLAYER_HULL_SVG[skin].body.match(/\sd="([^"]+)"/)![1]);
     }
-    expect(silhouettes.size).toBe(4);
+    expect(silhouettes.size).toBe(5);
   });
 
   it('mirrors multiplicative Sprite tint without retaining duplicate IDs', () => {

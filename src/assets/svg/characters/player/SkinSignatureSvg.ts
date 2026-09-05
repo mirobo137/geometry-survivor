@@ -35,6 +35,12 @@ export const createPlayerSkinSignatureSvg = (skin: PlayerSkinId): string => {
         <path d="M-36 0-23-8-17 0-23 8zM36 0 23-8 17 0 23 8z" stroke-width="1.2"/>
         <path d="M-26-26-13-20-20-13zM26-26 13-20 20-13zM-26 26-13 20-20 13zM26 26 13 20 20 13z" stroke-width="1.2" opacity=".88"/>
         <path d="M0-30 4-18M30 0 18 4M0 30-4 18M-30 0-18-4" fill="none" stroke-width="1.6" opacity=".8"/>
+      </g>`,
+    quasar: `
+      <g id="player-signature-quasar" class="skin-art-quasar" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0-36 6-26 0-21-6-26zM0 36 6 26 0 21-6 26zM-36 0-26-6-21 0-26 6zM36 0 26-6 21 0 26 6z" fill="#ffffff" stroke-width="1.4"/>
+        <path d="M-27-16 0-29 27-16 29 0 16 27 0 29-16 27-29 0z" stroke-width="1.3" stroke-dasharray="5 6" opacity=".84"/>
+        <path d="M-17-7A18 18 0 0 1 17-7M17 7A18 18 0 0 1-17 7" stroke-width="1.8" opacity=".9"/>
       </g>`
   }[signature];
 

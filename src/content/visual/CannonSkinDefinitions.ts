@@ -1,5 +1,5 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow';
-export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice';
+export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface CannonSkinDefinition {
@@ -69,11 +69,24 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     trail: 'rainbow',
     accent: 0x65f2c2,
     projectileAccent: 0xffffff
+  },
+  {
+    id: 'lattice',
+    name: 'Lattice Halo',
+    subtitle: 'Estela de resonancia',
+    description: 'Un emisor de anillos que deja una retícula breve alrededor del pulso.',
+    rarity: 'NUEVA · DEMO',
+    tier: 'epic',
+    priceNova: 1800,
+    acquisition: 'nova',
+    trail: 'lattice',
+    accent: 0xff7ca8,
+    projectileAccent: 0xffd3e8
   }
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow'
+  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

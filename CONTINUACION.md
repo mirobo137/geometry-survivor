@@ -1513,3 +1513,44 @@ la lámina con el Playwright ya instalado. Todo es de desarrollo, fuera del buil
 
 Estado: IMPLEMENTADO Y VALIDADO AUTOMÁTICAMENTE / VALIDACIÓN HUMANA FÍSICA
 PENDIENTE. Sin commit, push, deploy ni publicación a portales.
+
+## 59. Prueba de continuidad SVG — quinta skin y quinto cañón, 05-09-2026
+
+El usuario solicitó comprobar que la guía artística detallada puede ser
+ejecutada por otro modelo. Se añadió `Obsidian Relay` (`obsidian`) como quinta
+skin y `Lattice Halo` (`lattice`) como quinto paquete de cañón/proyectil/estela.
+
+- Obsidian mantiene el contrato de casco por piezas: `body`, `core`, `ring` y
+  firma `quasar`; sus SVG usan frame `-32 -32 64 64`, IDs semánticos, planos
+  grises explícitos y cero filtros/URLs. La paleta runtime sigue siendo tint,
+  por lo que el arte no modifica colisión, stats ni balance.
+- Lattice tiene masters izquierdo/derecho y master compuesto, proyectil en
+  `-16 -16 32 32`, bocas exactamente en `(-27,-11)` y `(27,-11)`, además de un
+  collar rosa y núcleo de resonancia. Pixi rasteriza una vez las piezas y
+  cambia la textura del pool existente; la preview comparte los mismos masters.
+- La receta visual Lattice conserva el presupuesto: un haz, un cruce corto y
+  un punto por segmento activo (tres sprites como máximo). Low continúa con la
+  estela apagada por el presupuesto de calidad; no se toca la trayectoria real.
+- Se actualizaron contratos/selector/URL, CSS, galería, captura, README y la
+  guía canónica para contar cinco skins/cañones. La galería esperada queda en
+  15 assets y 45 muestras SVG inline.
+
+### Evidencia y siguiente puerta
+
+- Typecheck correcto; suite completa: 185 tests en 63 archivos. `git diff --check`
+  correcto. Se corrigieron también las expectativas del smoke para comprobar
+  cinco tarjetas y persistir explícitamente `obsidian`/`lattice`.
+- Builds local, Poki y CrazyGames correctos. El warning existente de chunk
+  principal grande permanece; no se añadió dependencia ni se elevó el presupuesto
+  de FX.
+- Galería ejecutada: 15 assets, 45 muestras SVG inline, IDs únicos, cuatro modos
+  de inspección y ocho vistas de fondo. Smoke Chromium completo: 14/14 casos,
+  incluidos Low/High con boss y el locker portrait móvil.
+- Después probar manualmente `?skin=obsidian&cannon=lattice&boss=1` en Low y
+  High, revisar lectura a 32/64/128 px, movimiento, trail, pausa y muerte del
+  boss. Repetir en móvil físico antes de afirmar que el nuevo paquete es una
+  aprobación visual humana.
+- No crear una sexta skin ni un nuevo tipo de proyectil hasta cerrar esta puerta.
+
+Estado: IMPLEMENTACIÓN COMPLETA / VALIDACIÓN AUTOMÁTICA COMPLETA / VALIDACIÓN
+HUMANA FÍSICA PENDIENTE.

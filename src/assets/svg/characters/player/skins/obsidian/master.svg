@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-obsidian-title player-obsidian-desc">
+  <title id="player-obsidian-title">Obsidian Relay: assembled hull</title>
+  <desc id="player-obsidian-desc">Master compuesto de halo, casco y faro central.</desc>
+  <g id="player-obsidian-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path id="player-obsidian-ring-n" d="M-9-25A26 26 0 0 1 9-25M-4-29 0-26 4-29" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-e" d="M25-9A26 26 0 0 1 25 9M29-4 26 0 29 4" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-s" d="M9 25A26 26 0 0 1-9 25M4 29 0 26-4 29" stroke-width="2.1"/>
+    <path id="player-obsidian-ring-w" d="M-25 9A26 26 0 0 1-25-9M-29 4-26 0-29-4" stroke-width="2.1"/>
+  </g>
+  <path id="player-obsidian-body-shell" d="M0-26 10-19 19-4 16 15 6 25 0 28-6 25-16 15-19-4-10-19Z" fill="#626262"/>
+  <path id="player-obsidian-body-prow-bevel" d="M0-26 10-19 6-17 0-22-6-17-10-19Z" fill="#ffffff"/>
+  <path id="player-obsidian-body-lit-plane" d="M0-22 6-17 13-3 10 12 0 21Z" fill="#c9c9c9"/>
+  <path id="player-obsidian-body-shade-plane" d="M0-22-6-17-13-3-10 12 0 21Z" fill="#8f8f8f"/>
+  <path id="player-obsidian-body-side-mounts" d="M-16-4-25 1-21 14-14 17-12 8ZM16-4 25 1 21 14 14 17 12 8Z" fill="#3c3c3c"/>
+  <path id="player-obsidian-body-engine-accents" d="M-21 2-18 5-18 12-21 10ZM21 2 18 5 18 12 21 10ZM-8 20-4 22-5 27-9 24ZM8 20 4 22 5 27 9 24Z" fill="#e3e3e3"/>
+  <path id="player-obsidian-core-well" d="M0-12 9-6 9 5 0 11-9 5-9-6Z" fill="#252525"/>
+  <path id="player-obsidian-core-energy" d="M0-8 6-4 6 3 0 7-6 3-6-4Z" fill="#bdbdbd"/>
+  <path id="player-obsidian-core-reflection" d="M0-8 6-4 0-1-6-4Z" fill="#ffffff"/>
+</svg>

@@ -15,8 +15,8 @@ try {
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   await page.goto('http://127.0.0.1:5173/docs/visual/fleet-reference.html');
   await page.locator('#background canvas').waitFor();
-  assert.equal(await page.locator('article').count(), 13);
-  assert.equal(await page.locator('article svg').count(), 39);
+  assert.equal(await page.locator('article').count(), 15);
+  assert.equal(await page.locator('article svg').count(), 45);
   const ids = await page.locator('[id]').evaluateAll(nodes => nodes.map(node => node.id));
   assert.equal(new Set(ids).size, ids.length, 'Inline SVG IDs must stay unique');
   for (const [name, mode] of [['dark', ''], ['light', 'light'], ['gray', 'gray'], ['silhouette', 'light silhouette']]) {
@@ -35,7 +35,7 @@ try {
   await page.click('#motion');
   assert.equal(await page.locator('#motion').getAttribute('aria-pressed'), 'false');
   assert.deepEqual(errors, []);
-  console.log(`Fleet gallery verified: 13 assets, unique IDs, four inspection modes, eight backgrounds. Captures: ${output}`);
+  console.log(`Fleet gallery verified: 15 assets, unique IDs, four inspection modes, eight backgrounds. Captures: ${output}`);
 } finally {
   await browser.close();
 }

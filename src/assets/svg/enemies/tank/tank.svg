@@ -1,12 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-title enemy-tank-desc">
-  <title id="enemy-tank-title">Bastión hexagonal</title>
-  <desc id="enemy-tank-desc">Enemigo resistente visto desde arriba, con placas hexagonales, una cuña frontal y núcleo blindado.</desc>
-  <ellipse id="enemy-tank-shadow" cx="0" cy="6" rx="27" ry="23" fill="#050816" opacity="0.5"/>
-  <path id="enemy-tank-rear-plate" d="M-18 4-10 20 0 26 10 20 18 4 10-13H-10z" fill="#6d4b9f" stroke="#f4e9ff" stroke-width="2.2" stroke-linejoin="round"/>
-  <path id="enemy-tank-left-plate" d="M-10-13-25-5-24 10-18 15-10 6z" fill="#8e63c8" stroke="#f4e9ff" stroke-width="1.8" stroke-linejoin="round"/>
-  <path id="enemy-tank-right-plate" d="M10-13 25-5 24 10 18 15 10 6z" fill="#8e63c8" stroke="#f4e9ff" stroke-width="1.8" stroke-linejoin="round"/>
-  <path id="enemy-tank-front-wedge" d="M0-30 15-14 10 6H-10l-5-20z" fill="#c58cff" stroke="#fff5ff" stroke-width="2.5" stroke-linejoin="round"/>
-  <path id="enemy-tank-seam" d="M0-25v31M-18 4h36" fill="none" stroke="#f6d9ff" stroke-width="1.25" opacity="0.82"/>
-  <circle id="enemy-tank-core" cx="0" cy="-6" r="7" fill="#f0d6ff" stroke="#4a276d" stroke-width="2"/>
-  <path id="enemy-tank-mark" d="M-3-17h6l3 7-6 4-6-4z" fill="#fff7ff" opacity="0.9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-master-title enemy-tank-master-desc">
+  <title id="enemy-tank-master-title">Bastión — master</title>
+  <desc id="enemy-tank-master-desc">Nave blindada top-down, proa hacia arriba, placas biseladas y reactor empotrado. Pieza master.</desc>
+  <path id="enemy-tank-chassis" d="M-12-16H12L18-5V16L11 25H-11L-18 16V-5Z" fill="#15182e"/>
+  <path id="enemy-tank-engine-housings" d="M-12 13H-4V26L-8 29-12 26ZM4 13H12V26L8 29 4 26Z" fill="#3c3557"/>
+  <path id="enemy-tank-exhaust" d="M-10 22H-6V27H-10ZM6 22H10V27H6Z" fill="#d5adff"/>
+  <path id="enemy-tank-brace" d="M-20-3H20V3H-20Z" fill="#5d507b"/>
+  <path id="enemy-tank-shoulders" d="M-14-19-23-17-29-6-27 13-18 21-12 13-13-3ZM14-19 23-17 29-6 27 13 18 21 12 13 13-3Z" fill="#30283f" stroke="#a795c8" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="enemy-tank-armor-faces" d="M-15-16-21-14-26-5-24 10-18 16-15 11-16-3ZM15-16 21-14 26-5 24 10 18 16 15 11 16-3Z" fill="#80629f"/>
+  <path id="enemy-tank-armor-light" d="M-15-16-21-14-26-5-23-6-19-11-15-12ZM15-16 21-14 26-5 23-6 19-11 15-12Z" fill="#d6bbee"/>
+  <path id="enemy-tank-armor-shadow" d="M-26-5-24 10-18 16-18 11-21 7-23-6ZM26-5 24 10 18 16 18 11 21 7 23-6Z" fill="#50395f"/>
+  <path id="enemy-tank-vents" d="M-23 0-19-2V1L-23 3ZM-22 5-18 3V6L-22 8ZM23 0 19-2V1L23 3ZM22 5 18 3V6L22 8Z" fill="#201e30"/>
+  <path id="enemy-tank-shoulder-marks" d="M-23-9-21-12-18-13-20-10ZM23-9 21-12 18-13 20-10Z" fill="#eddaaa"/>
+  <path id="enemy-tank-keel" d="M-8-27H8L14-18 11-7 12 14 6 23H-6L-12 14-11-7-14-18Z" fill="#292638" stroke="#bca5d5" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="enemy-tank-prow" d="M-7-25H7L11-18 8-11H-8L-11-18Z" fill="#a789c3"/>
+  <path id="enemy-tank-prow-bevel" d="M-7-25H7L11-18 7-20H-7L-11-18Z" fill="#e9d7f5"/>
+  <path id="enemy-tank-prow-shadow" d="M-11-18-7-20V-14H7V-20L11-18 8-11H-8Z" fill="#6b507f"/>
+  <path id="enemy-tank-spine" d="M-9 5H9L9 13 4 20H-4L-9 13Z" fill="#9474b0"/>
+  <path id="enemy-tank-spine-bevel" d="M-9 5H-6V12L-2 18H4L4 20H-4L-9 13Z" fill="#c9abdf"/>
+  <path id="enemy-tank-reactor-well" d="M-6-11H6L11-6V3L6 8H-6L-11 3V-6Z" fill="#0b1120"/>
+  <path id="enemy-tank-stern-inset" d="M-3 11H3V16H-3Z" fill="#31283f"/>
+  <path id="enemy-tank-reactor-mount" d="M-5-8H5L8-5V2L5 5H-5L-8 2V-5Z" fill="#523668" stroke="#a288bd" stroke-width="1"/>
+  <path id="enemy-tank-reactor-glass" d="M-4-6H4L6-4V1L4 3H-4L-6 1V-4Z" fill="#a978dd"/>
+  <path id="enemy-tank-reactor-facet" d="M-4-6H4L6-4 0-1-6-4Z" fill="#edd7ff"/>
+  <path id="enemy-tank-reactor-depth" d="M-6-4 0-1V3H-4L-6 1Z" fill="#79519f"/>
+  <path id="enemy-tank-reactor-slit" d="M-1-4H1V1H-1Z" fill="#fff5ff"/>
 </svg>

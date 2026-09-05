@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-wings-title enemy-fast-wings-desc">
-  <title id="enemy-fast-wings-title">Aletas del aguijon</title>
-  <desc id="enemy-fast-wings-desc">Aletas laterales del enemigo veloz.</desc>
-  <path id="enemy-fast-fin-left" d="M-8 10-25 16-18 2z" fill="#bf633f" stroke="#fff4d6" stroke-width="1.6" stroke-linejoin="round"/>
-  <path id="enemy-fast-fin-right" d="M8 10 25 16 18 2z" fill="#bf633f" stroke="#fff4d6" stroke-width="1.6" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-wings-title">
+  <title id="enemy-fast-wings-title">fast: wings</title>
+  <path id="enemy-fast-wings-swept-armor" d="M-7-5 -16-14 -28 17 -22 20 -9 7Z M7-5 16-14 28 17 22 20 9 7Z" fill="#9e473a"/>
+  <path id="enemy-fast-wings-leading-bevel" d="M-16-14 -28 17 -24 15 -15-7Z M16-14 28 17 24 15 15-7Z" fill="#ffd194"/>
+  <path id="enemy-fast-wings-trailing-shadow" d="M-24 15 -22 20 -9 7 -12 6Z M24 15 22 20 9 7 12 6Z" fill="#4c2934"/>
 </svg>

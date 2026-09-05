@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-boss-cockpit-title">
+  <title id="enemy-boss-cockpit-title">Bastion: cockpit</title>
+  <path id="enemy-boss-cockpit-reactor-well" d="M-9-19H9L22-6V10L9 23H-9L-22 10V-6Z" fill="#151d31"/>
+  <path id="enemy-boss-cockpit-reactor-mount" d="M-7-15H7L18-4V8L7 19H-7L-18 8V-4Z" fill="#774877"/>
+  <path id="enemy-boss-cockpit-mount-bevel" d="M-7-15H7L18-4 14-3 5-11H-5L-14-3 -18-4Z" fill="#d9b3d6"/>
+  <path id="enemy-boss-cockpit-inner-well" d="M-5-10H5L13-2V7L5 15H-5L-13 7V-2Z" fill="#1c3043"/>
+  <path id="enemy-boss-cockpit-energy" d="M0-7 8 1 5 10H-5L-8 1Z" fill="#64d9e4"/>
+  <path id="enemy-boss-cockpit-reflection" d="M0-7 8 1 0 3 -8 1Z" fill="#d4fff4"/>
+</svg>

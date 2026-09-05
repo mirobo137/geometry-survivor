@@ -2,6 +2,8 @@
 
 > Estado: vertical slice funcional; prioridades de expansión revisadas y fijadas en la sección 16.
 >
+> **Continuación vigente — 04-09-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
+>
 > Fecha de revisión de documentación externa: 2026-09-03.
 >
 > Fuente de visión: [proyecto.md](proyecto.md). Si ambos documentos difieren, este archivo manda en decisiones de ejecución y `proyecto.md` manda en la visión del juego.
@@ -1498,7 +1500,11 @@ Un identificador de modelo no basta para controlar el repositorio. Codex/GPT o G
 
 ---
 
-# 20. PRÓXIMA ACCIÓN RECOMENDADA
+# 20. ARRANQUE HISTÓRICO — NO USAR PARA RETOMAR
+
+Esta secuencia describe el arranque original, ya implementado. Para continuar
+el repositorio existente usar [§22](#ejecucion-vigente), no reinicializar Vite,
+recrear carpetas ni volver a ejecutar las fases iniciales como tareas nuevas.
 
 La primera implementación debe ser únicamente la **Fase 0**. No se deben crear todavía todas las carpetas, armas o skills descritas en `proyecto.md`.
 
@@ -2457,7 +2463,7 @@ un resultado rewarded, lo desbloquea y equipa sin cobrar NOVA.
 El simulador local usa `?ad=success` (por defecto), `?ad=dismissed`,
 `?ad=unavailable`, `?ad=error` o `?ad=timeout`; un resultado que no sea
 `rewarded` conserva la recompensa normal. Los SDK reales quedan para la
-siguiente iteracion de esta misma prioridad.
+prioridad 8 de §16.1, no para el siguiente incremento del contrato local.
 
 1. typecheck y tests específicos;
 2. suite completa;
@@ -2467,3 +2473,110 @@ siguiente iteracion de esta misma prioridad.
 6. medición real cuando el cambio afecta rendimiento, audio o lifecycle;
 7. actualización de `CONTINUACION.md`, commit y push sólo con la puerta
    automática en verde.
+
+<a id="ejecucion-vigente"></a>
+
+# 22. EJECUCIÓN VIGENTE POR TAREAS — 04-09-2026
+
+La [guía operativa](docs/PLAN_EJECUCION.md) desglosa §16.1 en unidades pequeñas
+con entradas, alcance, módulos, pruebas y salidas. Es una extensión operativa
+de este plan, no una fuente de visión independiente. Se aplica igual a cualquier
+modelo y no requiere recordar conversaciones anteriores.
+
+## 22.1 Estado y siguiente acción
+
+Referencia inspeccionada: `a3d0ccd` (`refactor: extract weapon behaviors`).
+El repositorio ya tiene NOVA/Laboratorio, cuatro placements rewarded locales,
+registrador de baseline y scheduler/behaviors de las tres armas. La existencia
+de esos módulos no aprueba por sí sola balance, móvil físico ni plataformas.
+
+La próxima tarea de implementación es **EX-01: cierre económico de run y
+revive**, seguida de **EX-02: calibración del Laboratorio**. Primero se prueban
+las rutas señaladas; no se presenta la revisión estática como bug reproducido.
+Después se completa la matriz local y la evidencia de diez runs. No se rehace
+la extracción de armas ya entregada ni se expone Boomerang en cartas antes de
+cerrar estas puertas. El orden de §16.1 no cambia: se cierran pendientes de
+prioridades 1–3 antes de avanzar a 5.
+
+## 22.2 Resolución de instrucciones históricas
+
+- Las secciones de entrega describen el momento de su fecha. Por ejemplo,
+  fondos estáticos, adquisición gratuita, trails con Graphics y scheduler
+  pendiente no describen necesariamente el código actual.
+- Las referencias ambiguas a «sección 16» significan **PLAN MAESTRO REVISADO**,
+  no el encabezado anterior «RIESGOS PRINCIPALES» que conserva su número histórico.
+- §16.7 prevalece sobre la prohibición antigua de reroll durante level-up:
+  sólo se ofrece con la selección pausada y aceptación explícita.
+- SDKs en prioridad 8; no se adelantan por una nota de continuación antigua.
+- La duración 4–5 min es objetivo futuro de Quick Act, no autorización para
+  recortar ahora el boss de 4:20 o modificar la línea base de 5–6 min.
+- La cámara implementada no se reescribe para satisfacer una recomendación
+  histórica de seguimiento. Cualquier cambio exige tarea responsive propia,
+  evidencia del problema y aprobación; se preserva la matriz actual de input.
+- La demora terminal de 3 s está documentada e implementada. No se alarga ni
+  elimina incidentalmente al cambiar el boss; su conveniencia queda en revisión
+  de UX, separada de la corrección económica.
+- La meta objetivo sigue siendo 10–15% de ventaja efectiva, no los porcentajes
+  provisionales del código. EX-02 define cómo medir y corregir la discrepancia.
+- La puerta stress usa XP directa, no pickups. Si una skill antigua pide
+  pickups de XP, aplica §9 y señala la discrepancia; no los construyas.
+- Las cifras y APIs de portales se vuelven a verificar en fuentes oficiales
+  al ejecutar EX-09; su fecha histórica no certifica vigencia futura.
+- Tests verdes permiten preparar una entrega; no autorizan por sí solos un
+  commit, push, deploy, contratación o submission. Hace falta autorización de
+  la solicitud vigente. Sin ella se informa «validado localmente, sin publicar».
+
+## 22.3 Propuestas visuales y decisiones pendientes
+
+La revisión del 04-09 sugirió boss modular, mejor integración fondo/arena,
+resonancia coordinada y recompensas por dominio. Se conservan como fichas
+**VIS-01 a VIS-03 y DEC-04** en la guía, no como cambios ya implementados ni
+como autorización automática para añadir sistemas. Un «continúa el plan»
+selecciona la siguiente EX habilitada; no activa todas las propuestas visuales.
+
+El objetivo de diferenciación aprobado permanece: usar movimiento y geometría
+de arena para decisiones de build. Se valida con las armas/actos de §16, no
+añadiendo por iniciativa del agente sectores capturables, nuevas monedas,
+árboles de talento, botones de combate o un modo infinito obligatorio.
+
+## 22.4 Ejemplo SVG autorizado — Tank de referencia
+
+El usuario solicita explícitamente construir el Tank de ejemplo y dejar el
+procedimiento para futuros agentes. Esta entrega visual no activa VIS-01 (boss)
+ni cambia el orden EX de gameplay. Se mantienen frame, simulación, cuatro piezas
+y animaciones existentes. El Tank tiene un presupuesto específico de 24
+primitivas de fuente (23 usadas), no una ampliación global del resto de assets.
+Los planos/biseles se hornean a texturas; Low usa el master compuesto compartido
+en un sprite para conservar identidad. No se añaden filtros ni partículas.
+
+La instrucción canónica vive en
+[dirección artística de naves](skills/geometry-survivor-svg/references/ship-art-direction.md),
+enrutada obligatoriamente por la skill SVG. La ficha concreta vive en
+[Tank README](src/assets/svg/enemies/tank/README.md), y la comparación visual en
+`docs/visual/tank-reference.html` (Vite desarrollo, no incluida en builds).
+No se declara aprobado artísticamente por el usuario ni medido en móvil hasta
+recibir esas evidencias. No se copian estas reglas completas a cada modelo.
+
+## 22.5 Extensión artística autorizada — flota y cosméticos, 05-09-2026
+
+El usuario aprueba la dirección del Tank y solicita explícitamente extenderla
+a los demás enemigos, crear asset de boss y abordar las cuatro skins, cañones
+y fondos. Esta petición autoriza el lote visual, no gameplay/economía ni el
+cierre automático de todas las propuestas VIS. EX-01a sigue como siguiente EX.
+
+Se implementan Chaser/Fast/Elite facetados, flat Low para las cuatro familias,
+boss modular único fuera del pool (cuatro piezas / una en Low), skins con fuentes
+compartidas entre preview y Pixi, cañones con planos y atmósferas de composición
+distinta. Los masters comunes tienen techo 24 primitivas, el boss 28 y los cañones
+12 por lado; son presupuestos de estas familias, no permiso para inflar otros SVG.
+Low de fondos añade dos sprites estáticos compartiendo textura suave 128×128,
+mantiene 12 estrellas y elimina actualización ambiental. Arena alpha 0.84 es
+un ajuste de presentación, no cambio de límites. Se conservan los 3 s terminales.
+
+Contratos y procedimiento canónicos:
+[dirección por familias](skills/geometry-survivor-svg/references/visual-family-direction.md).
+Referencia viva `docs/visual/fleet-reference.html`; evidencia operativa en
+CONTINUACION §58. VIS-01 queda parcial (falta anticipación mecánica por fase);
+VIS-02 espera medición física y aprobación visual. VIS-03 no se ejecuta en este
+lote. No declarar rendimiento físico por pasar smoke emulado. Sin publicación
+automática, commit ni push.

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-boss-wings-title">
+  <title id="enemy-boss-wings-title">Bastion: wings</title>
+  <path id="enemy-boss-wings-shoulder-armor" d="M-20-27 -35-35 -47-19 -46 15 -33 30 -26 17 -31 1Z M20-27 35-35 47-19 46 15 33 30 26 17 31 1Z" fill="#683859"/>
+  <path id="enemy-boss-wings-leading-bevel" d="M-35-35 -47-19 -42-16 -34-28 -24-22Z M35-35 47-19 42-16 34-28 24-22Z" fill="#d8a2bd"/>
+  <path id="enemy-boss-wings-return-shadow" d="M-46-10 -46 15 -33 30 -35 19 -39 10 -39-8Z M46-10 46 15 33 30 35 19 39 10 39-8Z" fill="#422c46"/>
+  <path id="enemy-boss-wings-sensors" d="M-43-14 -39-18 -35-14 -39-10Z M43-14 39-18 35-14 39-10Z" fill="#f2c4de"/>
+  <path id="enemy-boss-wings-vents" d="M-44 0H-41V8H-44Z M41 0H44V8H41Z" fill="#dd79b2"/>
+</svg>

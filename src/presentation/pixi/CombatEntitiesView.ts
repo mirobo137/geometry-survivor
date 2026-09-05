@@ -1,11 +1,20 @@
 import { Container, Sprite } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
-import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { FX_QUALITY, type FxQuality } from '../../content/visual/VisualTokens';
 import { getCannonSkinDefinition, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
 import chaserRearSvg from '../../assets/svg/enemies/chaser/chaser-rear.svg?raw';
+import chaserSvg from '../../assets/svg/enemies/chaser/chaser.svg?raw';
+import fastSvg from '../../assets/svg/enemies/fast/fast.svg?raw';
+import eliteSvg from '../../assets/svg/enemies/elite/elite.svg?raw';
+import bossSvg from '../../assets/svg/enemies/boss/boss.svg?raw';
+import bossRearSvg from '../../assets/svg/enemies/boss/boss-rear.svg?raw';
+import bossWingsSvg from '../../assets/svg/enemies/boss/boss-wings.svg?raw';
+import bossHullSvg from '../../assets/svg/enemies/boss/boss-hull.svg?raw';
+import bossCockpitSvg from '../../assets/svg/enemies/boss/boss-cockpit.svg?raw';
+import { BossShipVisual, type BossShipTextures } from './enemies/BossShipVisual';
 import chaserWingsSvg from '../../assets/svg/enemies/chaser/chaser-wings.svg?raw';
 import chaserHullSvg from '../../assets/svg/enemies/chaser/chaser-hull.svg?raw';
 import chaserCockpitSvg from '../../assets/svg/enemies/chaser/chaser-cockpit.svg?raw';
@@ -14,6 +23,7 @@ import fastWingsSvg from '../../assets/svg/enemies/fast/fast-wings.svg?raw';
 import fastHullSvg from '../../assets/svg/enemies/fast/fast-hull.svg?raw';
 import fastCockpitSvg from '../../assets/svg/enemies/fast/fast-cockpit.svg?raw';
 import tankRearSvg from '../../assets/svg/enemies/tank/tank-rear.svg?raw';
+import tankSvg from '../../assets/svg/enemies/tank/tank.svg?raw';
 import tankWingsSvg from '../../assets/svg/enemies/tank/tank-wings.svg?raw';
 import tankHullSvg from '../../assets/svg/enemies/tank/tank-hull.svg?raw';
 import tankCockpitSvg from '../../assets/svg/enemies/tank/tank-cockpit.svg?raw';
@@ -24,7 +34,6 @@ import eliteCockpitSvg from '../../assets/svg/enemies/elite/elite-cockpit.svg?ra
 import { EnemyDefeatFxView } from './enemies/EnemyDefeatFxView';
 import { EnemyShipVisual, type EnemyShipTextureMap } from './enemies/EnemyShipVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
-import { createTexture } from './TextureFactory';
 import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
 import { DamageNumberView } from './fx/DamageNumberView';
 import { HealthBarView } from './entities/HealthBarView';
@@ -49,57 +58,56 @@ const PROJECTILE_TEXTURE_FRAME: SvgTextureFrame = {
 
 interface EnemyTextureSet {
   readonly ships: EnemyShipTextureMap;
-  readonly boss: Texture;
+  readonly boss: BossShipTextures;
 }
 
 const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
   ships: {
     chaser: {
+      flat: createSvgTexture(renderer, chaserSvg, ENEMY_TEXTURE_FRAME),
       rear: createSvgTexture(renderer, chaserRearSvg, ENEMY_TEXTURE_FRAME),
       wings: createSvgTexture(renderer, chaserWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, chaserHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, chaserCockpitSvg, ENEMY_TEXTURE_FRAME)
     },
     fast: {
+      flat: createSvgTexture(renderer, fastSvg, ENEMY_TEXTURE_FRAME),
       rear: createSvgTexture(renderer, fastRearSvg, ENEMY_TEXTURE_FRAME),
       wings: createSvgTexture(renderer, fastWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, fastHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, fastCockpitSvg, ENEMY_TEXTURE_FRAME)
     },
     tank: {
+      flat: createSvgTexture(renderer, tankSvg, ENEMY_TEXTURE_FRAME),
       rear: createSvgTexture(renderer, tankRearSvg, ENEMY_TEXTURE_FRAME),
       wings: createSvgTexture(renderer, tankWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, tankHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, tankCockpitSvg, ENEMY_TEXTURE_FRAME)
     },
     elite: {
+      flat: createSvgTexture(renderer, eliteSvg, ENEMY_TEXTURE_FRAME),
       rear: createSvgTexture(renderer, eliteRearSvg, ENEMY_TEXTURE_FRAME),
       wings: createSvgTexture(renderer, eliteWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, eliteHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, eliteCockpitSvg, ENEMY_TEXTURE_FRAME)
     }
   },
-  boss: createTexture(renderer, (graphics) => {
-      graphics.beginPath().regularPoly(0, 0, ENEMY_DEFINITIONS.boss.radius, 8, Math.PI / 8)
-        .fill(ENEMY_DEFINITIONS.boss.color)
-        .stroke({ color: 0xffe8ff, width: 4 });
-      graphics.beginPath().circle(0, 0, 22).fill({ color: 0x241044, alpha: 0.92 }).stroke({ color: 0xffffff, width: 3 });
-      graphics.beginPath().circle(0, 0, 8).fill({ color: 0x75e6ff, alpha: 0.95 });
-  })
+  boss: {
+    flat: createSvgTexture(renderer, bossSvg, { x: -56, y: -56, width: 112, height: 112 }),
+    parts: [bossRearSvg, bossWingsSvg, bossHullSvg, bossCockpitSvg].map(svg =>
+      createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
+    ) as [Texture, Texture, Texture, Texture]
+  }
 });
 
 class EnemyVisual {
   public readonly root = new Container();
   private readonly ship: EnemyShipVisual;
-  private readonly boss: Sprite;
   private hitAtSeconds = Number.NEGATIVE_INFINITY;
 
-  public constructor(textures: EnemyTextureSet, phaseSeed: number, quality: FxQuality) {
+  public constructor(textures: EnemyTextureSet, phaseSeed: number, quality: FxQuality, private readonly boss: BossShipVisual) {
     this.ship = new EnemyShipVisual(textures.ships, phaseSeed, quality);
-    this.boss = new Sprite(textures.boss);
-    this.boss.anchor.set(0.5);
-    this.boss.visible = false;
-    this.root.addChild(this.ship.root, this.boss);
+    this.root.addChild(this.ship.root);
   }
 
   public render(state: EnemyRenderState, animationSeconds: number): void {
@@ -114,12 +122,10 @@ class EnemyVisual {
     const punch = hitProgress < 1 ? 1 + Math.sin(hitProgress * Math.PI) * 0.045 : 1;
     this.root.scale.set(punch);
     if (state.kind === 'boss') {
-      this.ship.root.visible = false;
-      this.boss.visible = true;
-      this.boss.alpha = Math.max(0.55, state.health / state.maxHealth);
+      this.root.visible = false;
+      this.boss.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
       return;
     }
-    this.boss.visible = false;
     this.ship.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
   }
 
@@ -132,7 +138,6 @@ class EnemyVisual {
     this.root.visible = false;
     this.root.scale.set(1);
     this.ship.reset();
-    this.boss.visible = false;
   }
 }
 
@@ -141,6 +146,7 @@ export class CombatEntitiesView {
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
   private readonly enemyTextures: EnemyTextureSet;
+  private readonly boss: BossShipVisual;
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
   private readonly projectileGlows: Sprite[] = [];
@@ -163,6 +169,8 @@ export class CombatEntitiesView {
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
     this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
     this.enemyTextures = createEnemyTextures(renderer);
+    this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
+    this.enemyLayer.addChild(this.boss.root);
     this.enemyDefeatFx = new EnemyDefeatFxView(this.enemyTextures.ships, quality);
     this.root.addChild(
       this.projectileLayer,
@@ -180,7 +188,7 @@ export class CombatEntitiesView {
       rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
-      const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality);
+      const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.boss);
       this.enemyVisuals.push(visual);
       this.enemyLayer.addChild(visual.root);
     }
@@ -220,6 +228,7 @@ export class CombatEntitiesView {
   }
 
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
+    this.boss.beginFrame();
     this.projectileTrails.render(combat.projectiles);
     const trailKind = getCannonSkinDefinition(this.cannonSkin).trail;
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
@@ -275,6 +284,14 @@ export class CombatEntitiesView {
     if (kind !== 'boss') this.enemyDefeatFx.play(x, y, kind);
   }
 
+  public playBossDefeat(x: number, y: number): void {
+    this.boss.playDefeat(x, y);
+  }
+
+  public updateBossDefeat(deltaSeconds: number): void {
+    this.boss.update(deltaSeconds);
+  }
+
   public updateFx(deltaSeconds: number): void {
     this.enemyImpactFx.update(deltaSeconds);
     this.enemyDefeatFx.update(deltaSeconds);
@@ -282,6 +299,7 @@ export class CombatEntitiesView {
   }
 
   public reset(): void {
+    this.boss.reset();
     this.enemyImpactFx.clear();
     this.enemyDefeatFx.clear();
     this.damageNumbers.clear();

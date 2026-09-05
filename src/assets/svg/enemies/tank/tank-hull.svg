@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-hull-title enemy-tank-hull-desc">
-  <title id="enemy-tank-hull-title">Cuña del bastion</title>
-  <desc id="enemy-tank-hull-desc">Cuña frontal y costuras de la nave resistente.</desc>
-  <path id="enemy-tank-front-wedge" d="M0-30 15-14 10 6H-10l-5-20z" fill="#c58cff" stroke="#fff5ff" stroke-width="2.5" stroke-linejoin="round"/>
-  <path id="enemy-tank-seam" d="M0-25v31M-18 4h36" fill="none" stroke="#f6d9ff" stroke-width="1.25" opacity="0.82"/>
+  <title id="enemy-tank-hull-title">Bastión — hull</title>
+  <desc id="enemy-tank-hull-desc">Nave blindada top-down, proa hacia arriba, placas biseladas y reactor empotrado. Pieza hull.</desc>
+  <path id="enemy-tank-keel" d="M-8-27H8L14-18 11-7 12 14 6 23H-6L-12 14-11-7-14-18Z" fill="#292638" stroke="#bca5d5" stroke-width="1.2" stroke-linejoin="round"/>
+  <path id="enemy-tank-prow" d="M-7-25H7L11-18 8-11H-8L-11-18Z" fill="#a789c3"/>
+  <path id="enemy-tank-prow-bevel" d="M-7-25H7L11-18 7-20H-7L-11-18Z" fill="#e9d7f5"/>
+  <path id="enemy-tank-prow-shadow" d="M-11-18-7-20V-14H7V-20L11-18 8-11H-8Z" fill="#6b507f"/>
+  <path id="enemy-tank-spine" d="M-9 5H9L9 13 4 20H-4L-9 13Z" fill="#9474b0"/>
+  <path id="enemy-tank-spine-bevel" d="M-9 5H-6V12L-2 18H4L4 20H-4L-9 13Z" fill="#c9abdf"/>
+  <path id="enemy-tank-reactor-well" d="M-6-11H6L11-6V3L6 8H-6L-11 3V-6Z" fill="#0b1120"/>
+  <path id="enemy-tank-stern-inset" d="M-3 11H3V16H-3Z" fill="#31283f"/>
 </svg>

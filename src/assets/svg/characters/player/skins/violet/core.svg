@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-core-title player-violet-core-desc">
-  <title id="player-violet-core-title">Núcleo cristalino de Eclipse</title>
-  <desc id="player-violet-core-desc">Diamante interior con faceta de lectura.</desc>
-  <g id="player-violet-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-violet-core-gem" d="M0-8 7 0 0 8-7 0z" stroke-width="1.6"/>
-    <path id="player-violet-core-facet" d="M0-4 3.5 0 0 4-3.5 0z" fill="none" stroke-width="1.2" opacity="0.8"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-core-title">
+  <title id="player-violet-core-title">violet: core</title>
+  <path id="player-violet-core-well" d="M0-12 8-2 0 10 -8-2Z" fill="#252525"/>
+  <path id="player-violet-core-energy" d="M0-9 5-2 0 6 -5-2Z" fill="#bbbbbb"/>
+  <path id="player-violet-core-reflection" d="M0-9 5-2 0 0 -5-2Z" fill="#ffffff"/>
 </svg>

@@ -160,6 +160,16 @@ La IA debe dejar el SVG y cualquier generador en el repositorio, no solo pegar u
 
 ## Ficha de diseno para personajes top-down
 
+Para construir o rediseñar naves, leer obligatoriamente
+[la dirección artística de naves](references/ship-art-direction.md) antes del
+XML. El Tank y su lámina comparativa son el ejemplo de ensamblaje y volumen;
+seguir el procedimiento sin copiar su silueta a todas las familias. La guía
+incluye jerarquía de bordes, planos, espacios negativos y equivalencia Low.
+
+Para enemigos existentes, boss, skins, cañones o fondos, leer también
+[dirección por familias](references/visual-family-direction.md): contratos
+concretos, fuentes compartidas, límites por categoría y referencia ejecutable.
+
 La ficha siguiente es obligatoria antes de generar un player, enemigo o boss. Evita que el modelo salte directamente a un XML correcto pero sin identidad:
 
 ```md

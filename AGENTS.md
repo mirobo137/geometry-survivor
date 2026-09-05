@@ -17,6 +17,7 @@ Si detectas una contradicción material, no inventes una solución silenciosa: e
 ## Antes de actuar
 
 - Al retomar el proyecto en otra sesión, lee [CONTINUACION.md](CONTINUACION.md) como snapshot operativo y comprueba que siga vigente frente al plan, el código y Git. No es una fuente de verdad superior.
+- Para «continuar el plan», entra por [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y su [guía de tareas](docs/PLAN_EJECUCION.md); no ejecutes como pendientes las instrucciones históricas de arranque o entregas ya realizadas.
 - Para cambios importantes de arquitectura, alcance o plataforma, lee completos `proyecto.md` y `PLAN_DESARROLLO.md`.
 - Para tareas acotadas, lee este archivo, la skill correspondiente y las secciones que esa skill indique.
 - Inspecciona el código existente antes de proponer archivos o abstracciones nuevas.

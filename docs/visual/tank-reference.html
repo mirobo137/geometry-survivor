@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bastión · referencia SVG</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#e9e4f5;font:16px system-ui;padding:36px}main{max-width:1060px;margin:auto}h1{font-size:38px;margin:8px 0}p{color:#aaa9bf;max-width:760px;line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}section{background:#131b30;border:1px solid #30364d;border-radius:16px;padding:22px;margin:12px 0}h2{font-size:16px;color:#c6addf}img.hero{width:220px;height:220px;display:block;margin:auto}.sizes{display:flex;align-items:center;gap:20px;min-height:115px}.light{background:#e5e2ea}.silhouette{filter:brightness(0)}.gray{filter:grayscale(1)}canvas{max-width:100%;display:block}button{background:#c9ade6;color:#171226;border:0;padding:12px;border-radius:8px;cursor:pointer}.parts{display:flex;flex-wrap:wrap;gap:16px}.parts figure{margin:0;text-align:center}.parts img{width:112px;height:112px}figcaption{font-size:13px;color:#aaa9bf}
+</style><main>
+<p>GEOMETRY SURVIVOR / ESTUDIO 01</p><h1>Bastión de placas</h1>
+<p>Blindaje escalonado, chasis oscuro y reactor hundido. Cuatro piezas animables; los biseles son planos de color dentro de la textura, no filtros.</p>
+<div class="grid"><section><h2>Antes · referencia histórica</h2><img class="hero" src="tank-before.svg" alt="Tank anterior, cuña con contornos claros"></section>
+<section><h2>Ahora · SVG master</h2><img class="hero" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Nuevo Tank, placas laterales y reactor facetado"></section>
+<section><h2>Pixi · piezas de producción</h2><div id="pixi"></div><button id="motion" type="button">Pausar movimiento</button></section></div>
+<section><h2>Tamaño real · 32 / 48 / 64 / 96 px</h2><div class="sizes" id="sizes"></div></section>
+<div class="grid"><section class="light"><h2>Silueta sin color</h2><img class="hero silhouette" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Silueta negra"></section><section><h2>Jerarquía de valores</h2><img class="hero gray" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Tank en escala de grises"></section><section><h2>Low · un sprite compuesto</h2><div id="low"></div></section></div>
+<section><h2>Ensamblaje · rear → wings → hull → cockpit</h2><div class="parts" id="parts"></div></section>
+<p>Esta lámina es documentación de desarrollo, no se importa en el juego. La aprobación artística y el perfil en teléfono físico siguen siendo pruebas humanas.</p>
+</main><script type="module">
+import { Application } from 'pixi.js';
+import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
+import { EnemyShipVisual } from '../../src/presentation/pixi/enemies/EnemyShipVisual.ts';
+import rear from '../../src/assets/svg/enemies/tank/tank-rear.svg?raw';
+import wings from '../../src/assets/svg/enemies/tank/tank-wings.svg?raw';
+import hull from '../../src/assets/svg/enemies/tank/tank-hull.svg?raw';
+import cockpit from '../../src/assets/svg/enemies/tank/tank-cockpit.svg?raw';
+import flat from '../../src/assets/svg/enemies/tank/tank.svg?raw';
+for(const size of [32,48,64,96]){const img=document.createElement('img');img.src='../../src/assets/svg/enemies/tank/tank.svg';img.width=size;img.height=size;img.alt=`Tank ${size}px`;document.querySelector('#sizes').append(img);}
+for(const part of ['rear','wings','hull','cockpit']){const f=document.createElement('figure');const img=document.createElement('img');img.src=`../../src/assets/svg/enemies/tank/tank-${part}.svg`;img.alt=part;const label=document.createElement('figcaption');label.textContent=part;f.append(img,label);document.querySelector('#parts').append(f);}
+let moving=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+const button=document.querySelector('#motion');const label=()=>button.textContent=moving?'Pausar movimiento':'Animar piezas';label();button.onclick=()=>{moving=!moving;label();};
+for(const [id,quality] of [['pixi','high'],['low','low']]){
+ const app=new Application();await app.init({width:240,height:220,backgroundAlpha:0,preference:'webgl',resolution:1});document.getElementById(id).append(app.canvas);
+ const frame={x:-32,y:-32,width:64,height:64};const textures=Object.fromEntries(Object.entries({rear,wings,hull,cockpit,flat}).map(([key,svg])=>[key,createSvgTexture(app.renderer,svg,frame)]));
+ const view=new EnemyShipVisual({tank:textures,chaser:textures,fast:textures,elite:textures},0,quality);view.root.position.set(120,110);view.root.scale.set(2.8);app.stage.addChild(view.root);
+ let seconds=0;const state={active:true,kind:'tank',x:0,y:0,vx:0,vy:-40,radius:18,health:100,maxHealth:100};view.render(state,0);
+ app.ticker.add(t=>{if(moving&&!document.hidden){seconds+=t.deltaMS/1000;view.render(state,seconds);}});
+}
+</script></html>

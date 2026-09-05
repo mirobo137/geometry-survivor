@@ -1,7 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-rear-title enemy-chaser-rear-desc">
-  <title id="enemy-chaser-rear-title">Motores de la nave scout</title>
-  <desc id="enemy-chaser-rear-desc">Sombra y motores dobles de la nave scout vectorial.</desc>
-  <ellipse id="enemy-chaser-shadow" cx="0" cy="7" rx="22" ry="15" fill="#050816" opacity="0.52"/>
-  <path id="enemy-chaser-engine-left" d="M-13 14-19 25-10 21-5 13z" fill="#4cd6e8" stroke="#dffeff" stroke-width="1.5" stroke-linejoin="round"/>
-  <path id="enemy-chaser-engine-right" d="M13 14 19 25 10 21 5 13z" fill="#4cd6e8" stroke="#dffeff" stroke-width="1.5" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-rear-title">
+  <title id="enemy-chaser-rear-title">chaser: rear</title>
+  <path id="enemy-chaser-rear-chassis" d="M-12 8H12L10 23 5 27H-5L-10 23Z" fill="#162942"/>
+  <path id="enemy-chaser-rear-thrusters" d="M-8 17H-3V25H-6Z M3 17H8L6 25H3Z" fill="#5cceee"/>
 </svg>

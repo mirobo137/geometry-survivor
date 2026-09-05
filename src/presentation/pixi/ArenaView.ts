@@ -34,7 +34,7 @@ export class ArenaView {
         .circle(0, 0, ARENA_RADIUS)
         // Keep a restrained amount of the selected atmosphere visible inside
         // the arena while preserving contrast for enemies and telegraphs.
-        .fill({ color: 0x111a36, alpha: 0.92 })
+        .fill({ color: 0x111a36, alpha: 0.84 })
         .stroke({ color: 0x4b6cb7, width: 3, alpha: 0.9 })
         .beginPath()
         .circle(0, 0, Math.max(0, ARENA_RADIUS - 40))

@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-core-title player-amber-core-desc">
-  <title id="player-amber-core-title">Núcleo de forja de Solar</title>
-  <desc id="player-amber-core-desc">Hexágono forjado con brasa central.</desc>
-  <g id="player-amber-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-amber-core-hex" d="M0-8 7-4 7 4 0 8-7 4-7-4z" stroke-width="1.6"/>
-    <circle id="player-amber-core-ember" cx="0" cy="0" r="2.6" fill="#ffffff"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-core-title">
+  <title id="player-amber-core-title">amber: core</title>
+  <path id="player-amber-core-well" d="M-5-10H5L9-3 5 7H-5L-9-3Z" fill="#252525"/>
+  <path id="player-amber-core-energy" d="M-3-7H3L6-3 3 4H-3L-6-3Z" fill="#c4c4c4"/>
+  <path id="player-amber-core-reflection" d="M-3-7H3L6-3H-6Z" fill="#ffffff"/>
 </svg>

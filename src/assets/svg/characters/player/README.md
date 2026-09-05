@@ -2,6 +2,13 @@
 
 Contrato reservado para el jugador:
 
+Dirección artística y límites concretos:
+[guía por familias](../../../../../skills/geometry-survivor-svg/references/visual-family-direction.md).
+`PlayerHullSvg.ts` es el registro único de body/ring/core para Pixi y UI. Los
+masters de casco no incluyen cañones; `player-weapons.svg` se conserva como
+fuente histórica, no como loadout. Las muestras de color final están en
+`docs/visual/fleet-reference.html`, no en los masters grises sin tint.
+
 - declarar frente base, ancla de colision y `viewBox` antes de dibujar;
 - separar solo piezas con lectura clara (sombra, anillo, cuerpo, nucleo,
   canones y acentos);

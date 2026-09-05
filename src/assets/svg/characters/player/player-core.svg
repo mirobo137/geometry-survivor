@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-core-title player-core-desc">
-  <title id="player-core-title">Núcleo del jugador</title>
-  <desc id="player-core-desc">Orbe central de energía con cruz direccional.</desc>
-  <g id="player-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <circle id="player-core-orb" cx="0" cy="0" r="8" stroke-width="1.6"/>
-    <path id="player-core-cross" d="M0-5v10M-5 0h10" fill="none" stroke-width="1.4"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-core-title">
+  <title id="player-core-title">cyan: core</title>
+  <path id="player-core-well" d="M-5-9H5L8-4V4L5 8H-5L-8 4V-4Z" fill="#242424"/>
+  <path id="player-core-energy" d="M-3-6H3L5-3V3L3 5H-3L-5 3V-3Z" fill="#c9c9c9"/>
+  <path id="player-core-reflection" d="M-3-6H3L5-3 0-1 -5-3Z" fill="#ffffff"/>
 </svg>

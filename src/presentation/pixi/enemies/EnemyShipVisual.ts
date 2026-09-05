@@ -7,6 +7,8 @@ import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderSt
 export type EnemyShipKind = Exclude<EnemyKind, 'boss'>;
 
 export interface EnemyShipTextureSet {
+  /** Optional flattened source for Low: preserve silhouette with one sprite. */
+  readonly flat?: Texture;
   readonly rear: Texture;
   readonly wings: Texture;
   readonly hull: Texture;
@@ -86,7 +88,7 @@ export class EnemyShipVisual {
     this.detailedPartsEnabled = quality !== 'low';
     this.rear = new Sprite(textures.chaser.rear);
     this.wings = new Sprite(textures.chaser.wings);
-    this.hull = new Sprite(textures.chaser.hull);
+    this.hull = new Sprite(!this.detailedPartsEnabled && textures.chaser.flat ? textures.chaser.flat : textures.chaser.hull);
     this.cockpit = new Sprite(textures.chaser.cockpit);
     this.hitFlash = new Sprite(textures.chaser.hull);
     for (const part of [this.rear, this.wings, this.hull, this.cockpit, this.hitFlash]) part.anchor.set(0.5);
@@ -151,7 +153,7 @@ export class EnemyShipVisual {
   }
 
   public reset(): void {
-    this.kind = 'chaser';
+    this.setKind('chaser');
     this.facing = 0;
     this.root.visible = false;
     this.root.rotation = 0;
@@ -173,7 +175,7 @@ export class EnemyShipVisual {
     const textures = this.textures[kind];
     this.rear.texture = textures.rear;
     this.wings.texture = textures.wings;
-    this.hull.texture = textures.hull;
+    this.hull.texture = !this.detailedPartsEnabled && textures.flat ? textures.flat : textures.hull;
     this.cockpit.texture = textures.cockpit;
     this.hitFlash.texture = textures.hull;
   }

@@ -15,7 +15,7 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   cyan: {
     shadow: 0x050816,
     outer: 0x75e6ff,
-    body: 0x1b3158,
+    body: 0x6397bc,
     bodyDetail: 0x2e5d88,
     core: 0x75e6ff,
     accent: 0xf4ffff
@@ -23,7 +23,7 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   violet: {
     shadow: 0x090515,
     outer: 0xd2a8ff,
-    body: 0x302050,
+    body: 0x9e7fc4,
     bodyDetail: 0x68489a,
     core: 0xffb8df,
     accent: 0xfff4ff
@@ -31,7 +31,7 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   amber: {
     shadow: 0x130b03,
     outer: 0xffb86b,
-    body: 0x53321d,
+    body: 0xc39a62,
     bodyDetail: 0x9b5c2d,
     core: 0xffe39a,
     accent: 0xfffff2
@@ -39,7 +39,7 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   emerald: {
     shadow: 0x03120f,
     outer: 0x65f2c2,
-    body: 0x123d3d,
+    body: 0x64ae96,
     bodyDetail: 0x2f8d7c,
     core: 0xb8ffd9,
     accent: 0xe5fff3

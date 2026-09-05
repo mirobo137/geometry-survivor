@@ -38,6 +38,11 @@ describe('enemy SVG masters', () => {
 });
 
 describe('enemy SVG masters', () => {
+  it('keeps Tank master identical to the ordered modular geometry', () => {
+    const geometry = (svg: string): string[] => svg.match(/<(?:path|circle|ellipse|polygon|rect)\b[^>]*\/>/g) ?? [];
+    expect(geometry(tankSvg)).toEqual([tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg].flatMap(geometry));
+    expect(geometry(tankSvg)).toHaveLength(23);
+  });
   it('keeps the Fast, Tank and Elite family masters self-contained and directional', () => {
     const families = [
       ['enemy-chaser-', chaserSvg, [chaserRearSvg, chaserWingsSvg, chaserHullSvg, chaserCockpitSvg]],
@@ -54,7 +59,10 @@ describe('enemy SVG masters', () => {
       expect(ids.length).toBeGreaterThanOrEqual(5);
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids.every((id) => id.startsWith(prefix))).toBe(true);
-      expect((svg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(12);
+      // Tank bakes bevels into textures; its source budget is documented in tank/README.md.
+      expect((svg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(24);
+      const geometry = (source: string): string[] => source.match(/<(?:path|circle|ellipse|polygon|rect)\b[^>]*\/>/g) ?? [];
+      expect(geometry(svg)).toEqual(parts.flatMap(geometry));
       for (const part of parts) {
         expect(part).toContain('viewBox="-32 -32 64 64"');
         expect(part).toContain('preserveAspectRatio="xMidYMid meet"');

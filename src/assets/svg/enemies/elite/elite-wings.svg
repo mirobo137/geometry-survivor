@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-wings-title enemy-elite-wings-desc">
-  <title id="enemy-elite-wings-title">Marco de la corona de ruptura</title>
-  <desc id="enemy-elite-wings-desc">Marco energético de la nave de elite.</desc>
-  <path id="enemy-elite-frame" d="M0-23 16-16 23 0 16 16 0 23-16 16-23 0-16-16z" fill="#ff5fd2" stroke="#fff4fd" stroke-width="2.4" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-wings-title">
+  <title id="enemy-elite-wings-title">elite: wings</title>
+  <path id="enemy-elite-wings-crown-armor" d="M-10-14 -21-23 -28-9 -25 10 -17 18 -13 3Z M10-14 21-23 28-9 25 10 17 18 13 3Z" fill="#773366"/>
+  <path id="enemy-elite-wings-leading-bevel" d="M-21-23 -28-9 -24-7 -20-17 -13-10Z M21-23 28-9 24-7 20-17 13-10Z" fill="#efb5dc"/>
+  <path id="enemy-elite-wings-return-plane" d="M-25-3 -25 10 -17 18 -19 10 -21 0Z M25-3 25 10 17 18 19 10 21 0Z" fill="#a64c8c"/>
+  <path id="enemy-elite-wings-sensors" d="M-22-7 -19-11 -17-7 -20-3Z M22-7 19-11 17-7 20-3Z" fill="#ffdaf3"/>
 </svg>

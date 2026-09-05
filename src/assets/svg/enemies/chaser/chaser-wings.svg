@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-wings-title enemy-chaser-wings-desc">
-  <title id="enemy-chaser-wings-title">Alas de la nave scout</title>
-  <desc id="enemy-chaser-wings-desc">Alas laterales abiertas para una nave ligera de persecucion.</desc>
-  <path id="enemy-chaser-wings" d="M-7-1-28 8-20 15-8 11M7-1 28 8 20 15 8 11" fill="#2a7898" stroke="#9af4ff" stroke-width="1.8" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-wings-title">
+  <title id="enemy-chaser-wings-title">chaser: wings</title>
+  <path id="enemy-chaser-wings-armor" d="M-9-13 -25 5 -23 16 -12 11 -6 0Z M9-13 25 5 23 16 12 11 6 0Z" fill="#315877"/>
+  <path id="enemy-chaser-wings-leading-bevel" d="M-9-13 -25 5 -23 9 -12-2Z M9-13 25 5 23 9 12-2Z" fill="#89c4d8"/>
+  <path id="enemy-chaser-wings-trailing-shadow" d="M-24 10 -14 7 -12 11 -23 16Z M24 10 14 7 12 11 23 16Z" fill="#142b45"/>
 </svg>

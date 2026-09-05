@@ -20,7 +20,7 @@ import emeraldBody from './skins/emerald/body.svg?raw';
 import emeraldRing from './skins/emerald/ring.svg?raw';
 import emeraldCore from './skins/emerald/core.svg?raw';
 
-const parts = [shadowSvg, ringSvg, weaponsSvg, bodySvg, coreSvg, accentSvg] as const;
+const parts = [ringSvg, bodySvg, coreSvg] as const;
 
 const assertSafeFramed = (svg: string, prefix: string): void => {
   expect(svg).toContain('viewBox="-32 -32 64 64"');
@@ -31,12 +31,14 @@ const assertSafeFramed = (svg: string, prefix: string): void => {
   expect(ids.length).toBeGreaterThan(0);
   expect(new Set(ids).size).toBe(ids.length);
   expect(ids.every((id) => id.startsWith(prefix))).toBe(true);
-  expect((svg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(16);
+  // Faceted planes are baked, not additional runtime sprites. Master budget: 24.
+  expect((svg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(24);
 };
 
 describe('player SVG assets', () => {
   it('keeps modular pieces aligned, safe and linked to the master', () => {
-    for (const svg of [masterSvg, ...parts]) {
+    // Historical utility sources remain safe; weapons are not part of a hull master.
+    for (const svg of [masterSvg, ...parts, shadowSvg, weaponsSvg, accentSvg]) {
       assertSafeFramed(svg, 'player-');
     }
 

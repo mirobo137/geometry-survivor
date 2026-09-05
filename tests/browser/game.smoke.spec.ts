@@ -19,6 +19,23 @@ const RESIZE_MATRIX = [
   { width: 412, height: 915 }
 ] as const;
 
+for (const quality of ['low', 'high']) {
+  test(`carga el arte de las cuatro familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
+    const failures = captureRuntimeFailures(page);
+    const skins = ['cyan', 'violet', 'amber', 'emerald'];
+    const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
+    const cannons = ['basic', 'curve', 'smoke', 'rainbow'];
+    for (let index = 0; index < skins.length; index += 1) {
+      await page.goto(`/?boss=1&quality=${quality}&skin=${skins[index]}&background=${backgrounds[index]}&cannon=${cannons[index]}`);
+      await expect(page.locator('#boot-status')).toBeHidden();
+      await expect(page.locator('#game-container canvas')).toBeVisible();
+      await expect(page.locator('#debug-panel')).toContainText('boss: intro');
+      await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`art-${quality}-${skins[index]}.png`) });
+    }
+    expect(failures).toEqual([]);
+  });
+}
+
 const captureRuntimeFailures = (page: Page): string[] => {
   const failures: string[] = [];
   page.on('console', (message) => {

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-boss-rear-title">
+  <title id="enemy-boss-rear-title">Bastion: rear</title>
+  <path id="enemy-boss-rear-chassis" d="M-22 15H22L28 32 15 44H-15L-28 32Z" fill="#261c39"/>
+  <path id="enemy-boss-rear-thrusters" d="M-18 30H-9L-11 41H-16Z M9 30H18L16 41H11Z" fill="#b3588f"/>
+</svg>

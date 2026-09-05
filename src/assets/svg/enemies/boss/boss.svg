@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-boss-title">
+  <title id="enemy-boss-title">Bastion: orbital command citadel</title>
+  <desc id="enemy-boss-desc">Split armored shoulders around a recessed energy reactor. Decoration only; attack signals belong to BossView.</desc>
+  <path id="enemy-boss-rear-chassis" d="M-22 15H22L28 32 15 44H-15L-28 32Z" fill="#261c39"/>
+  <path id="enemy-boss-rear-thrusters" d="M-18 30H-9L-11 41H-16Z M9 30H18L16 41H11Z" fill="#b3588f"/>
+  <path id="enemy-boss-wings-shoulder-armor" d="M-20-27 -35-35 -47-19 -46 15 -33 30 -26 17 -31 1Z M20-27 35-35 47-19 46 15 33 30 26 17 31 1Z" fill="#683859"/>
+  <path id="enemy-boss-wings-leading-bevel" d="M-35-35 -47-19 -42-16 -34-28 -24-22Z M35-35 47-19 42-16 34-28 24-22Z" fill="#d8a2bd"/>
+  <path id="enemy-boss-wings-return-shadow" d="M-46-10 -46 15 -33 30 -35 19 -39 10 -39-8Z M46-10 46 15 33 30 35 19 39 10 39-8Z" fill="#422c46"/>
+  <path id="enemy-boss-wings-sensors" d="M-43-14 -39-18 -35-14 -39-10Z M43-14 39-18 35-14 39-10Z" fill="#f2c4de"/>
+  <path id="enemy-boss-wings-vents" d="M-44 0H-41V8H-44Z M41 0H44V8H41Z" fill="#dd79b2"/>
+  <path id="enemy-boss-hull-shell" d="M-13-44H13L30-24 34 8 21 31 0 39 -21 31 -34 8 -30-24Z" fill="#4c2d4b"/>
+  <path id="enemy-boss-hull-prow-bevel" d="M-13-44H13L30-24 24-23 10-38H-10L-24-23 -30-24Z" fill="#ead0dd"/>
+  <path id="enemy-boss-hull-foredeck" d="M-10-38H10L24-23 19-14H-19L-24-23Z" fill="#a86791"/>
+  <path id="enemy-boss-hull-port-plane" d="M-30-19 -23-15 -22 12 -12 27 -21 31 -34 8Z" fill="#995079"/>
+  <path id="enemy-boss-hull-starboard-plane" d="M30-19 23-15 22 12 12 27 21 31 34 8Z" fill="#6c3c64"/>
+  <path id="enemy-boss-hull-keel" d="M-14 27 0 31 14 27 0 37Z" fill="#ba709f"/>
+  <path id="enemy-boss-hull-bridge-well" d="M-10-33H10L7-26H-7Z" fill="#201e32"/>
+  <path id="enemy-boss-hull-bridge" d="M-3-32H3V-27H-3Z" fill="#e6c4d8"/>
+  <path id="enemy-boss-cockpit-reactor-well" d="M-9-19H9L22-6V10L9 23H-9L-22 10V-6Z" fill="#151d31"/>
+  <path id="enemy-boss-cockpit-reactor-mount" d="M-7-15H7L18-4V8L7 19H-7L-18 8V-4Z" fill="#774877"/>
+  <path id="enemy-boss-cockpit-mount-bevel" d="M-7-15H7L18-4 14-3 5-11H-5L-14-3 -18-4Z" fill="#d9b3d6"/>
+  <path id="enemy-boss-cockpit-inner-well" d="M-5-10H5L13-2V7L5 15H-5L-13 7V-2Z" fill="#1c3043"/>
+  <path id="enemy-boss-cockpit-energy" d="M0-7 8 1 5 10H-5L-8 1Z" fill="#64d9e4"/>
+  <path id="enemy-boss-cockpit-reflection" d="M0-7 8 1 0 3 -8 1Z" fill="#d4fff4"/>
+</svg>

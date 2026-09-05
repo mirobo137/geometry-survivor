@@ -149,6 +149,7 @@ export class PixiGameView {
   }
 
   public playBossDefeat(x: number, y: number, radius: number): void {
+    this.entitiesView.playBossDefeat(x, y);
     this.terminalFxView.playBossDefeat(x, y, radius);
     this.screenFxView.play('boss-defeat');
   }
@@ -173,6 +174,7 @@ export class PixiGameView {
   }
 
   public updateTerminalFx(deltaSeconds: number): void {
+    this.entitiesView.updateBossDefeat(deltaSeconds);
     this.playerView.updateDefeat(deltaSeconds);
     this.terminalFxView.update(deltaSeconds);
   }

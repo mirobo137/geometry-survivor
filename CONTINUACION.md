@@ -1,6 +1,10 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 03-09-2026.
+> Snapshot operativo: 05-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
+>
+> **Próxima tarea: EX-01a**, caracterizar cierre económico de una run con revive, seguida de EX-02 (Laboratorio) y EX-03 (matriz local/baseline humano). Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
+>
+> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01a sigue siendo la próxima tarea de la ruta principal; no repetir el trabajo visual ya implementado.
 >
 > Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
@@ -1389,3 +1393,123 @@ minificados) para vigilar crecimiento. La puerta humana de la linea base (diez
 runs) continua pendiente; el siguiente incremento despues de esta extraccion
 sera diseñar y probar Vector Boomerang con escenarios seeded antes de
 exponerlo en cartas.
+
+## 57. Tank de referencia y dirección artística SVG — 04-09-2026
+
+Entrega solicitada explícitamente después de la guía de ejecución. Se rediseña
+el Tank como Bastión de placas: proa truncada, hombros biselados, chasis,
+ranuras y reactor facetado empotrado. Conserva las cuatro piezas y su animación
+y muerte existentes; no se modifica simulación ni balance. El master y las
+piezas comparten 23 paths idénticos en orden; test de equivalencia nuevo.
+
+Low usa una textura compuesta cacheada en su único sprite visible en lugar de
+ocultar partes de la silueta. Añade una textura compartida 64×64, resolución 1,
+sin nuevos sprites por instancia, filtros ni partículas. Se conserva el flash
+existente de Medium/High. El test cubre Low/High y reutilización entre familias.
+
+La skill SVG enruta a `references/ship-art-direction.md`: planos de volumen,
+jerarquía de bordes, función/silueta, ensamblaje, Low y revisión comparativa.
+Ficha: `src/assets/svg/enemies/tank/README.md`. Lámina de desarrollo:
+`docs/visual/tank-reference.html` bajo Vite; incluye el master anterior conservado
+en docs, versión actual, piezas, tamaños y compositor Pixi. No se empaqueta en
+los builds de juego. El adaptador Grok sigue apuntando a la misma skill.
+
+Validación: typecheck; 178 tests en 61 archivos; builds local/Poki/CrazyGames
+correctos; `npx playwright test --reporter=line`: 12/12, exit code 0. El build
+local se ejecutó antes de añadir el último test de equivalencia; los builds
+posteriores ejecutaron los 178 tests y el código de producción no cambió entre
+ellos. XML de los cinco SVG válido y diff sin errores de whitespace.
+Chunk local principal: 588.51 kB / 163.76 kB gzip; warning 500 kB conservado.
+
+Inspección real realizada: exportación Inkscape de master a 512 px y 32 px.
+Se observa el ensamblaje y se conservan hombros/proa/reactor en pequeño. No
+hubo navegador de inspección disponible (ninguna superficie CUA), por lo que
+la lámina interactiva y la comparación visual Pixi no se declaran verificadas.
+Los smoke no sustituyen esa inspección ni miden GPU/frame time en teléfono.
+
+Estado: AUTOMÁTICO OK / ESPERA HUMANA para revisión artística en partida y
+perfil físico Low/High. Siguiente paso visual: abrir la lámina con `npm run dev`
+y comprobar Tank en `?stress=1`; solicitar aprobación antes de extender el
+lenguaje al resto. Próxima tarea principal sigue siendo EX-01a; esta petición
+no activa boss modular ni otros VIS. Sin commit, push o deploy.
+
+## 58. Flota, boss y cosméticos — extensión autorizada, 05-09-2026
+
+El usuario aprobó la dirección artística del Tank y pidió extender el trabajo
+a los demás enemigos, boss, cuatro skins, cañones y fondos. §57 es el registro
+histórico de la entrega anterior; su petición de autorización ya está resuelta
+para ESTE lote. No interpretar eso como aprobación humana de todo el resultado.
+
+### Implementado
+
+- Chaser, Fast y Elite: nuevas superficies facetadas, cavidades, motores y
+  siluetas propias. Tank aprobado preservado; tortuga histórica intacta.
+  Todos los comunes usan flat completo en Low y cuatro piezas animables en
+  Medium/High. Despiece existente reutilizado. Corregido reset del pool que
+  podía dejar textura de otra familia, y primera textura Low de Chaser.
+- Boss: asset propio con cuatro SVG y master 112×112, 21 paths. Una instancia
+  `BossShipVisual` fuera del pool: cuatro sprites detallados o uno completo Low.
+  Movimiento ambiental de maquinaria, impacto y separación terminal de 1.2 s.
+  Cableado a `playBossDefeat` y al reloj terminal (no al evento de enemigo común).
+  No modifica fases, HP, daño, telegraphs ni los 3 s antes del resumen.
+- Cuatro skins: cascos/core con planos de volumen grises multiplicados por
+  paleta. `PlayerHullSvg.ts` comparte fuentes entre UI y Pixi; se elimina el
+  segundo dibujo independiente de la preview. Firmas del mismo generador,
+  ajustadas al frame; cañones siguen separados del casco y de su tint.
+- Cuatro cañones: biseles, retornos oscuros y bordes jerarquizados, conservando
+  las bocas en ±27,-11 y nueve primitivas por lado. Sin cambios a proyectiles,
+  curva, estelas, cadencia o daño. Se reutiliza el registro UI/runtime existente.
+- Fondos: textura suave 128×128 horneada sin blur; composiciones propias por
+  tema y detalles periféricos. Low conserva dos nubes estáticas/12 estrellas,
+  sin actualización ambiental; no queda plano por eliminar capas esenciales.
+  Alpha decorativa de arena 0.84; borde, mundo e input no cambian.
+
+### Guía y ejemplos para cualquier agente
+
+La skill SVG ahora enruta obligatoriamente a
+`skills/geometry-survivor-svg/references/visual-family-direction.md`: ficha por
+rol, construcción, fuente compartida, orden/pivotes, tint, slots, Low, presupuesto,
+errores que rechazar y secuencia de validación. Leerla junto a la dirección
+general de naves. No duplicarla en prompts de modelos; adaptador Grok sin cambios.
+
+Lámina viva: `docs/visual/fleet-reference.html` con `npm run dev`. Muestra fuentes
+reales de 13 assets en 32/64/128 px, oscuro/claro/grises/silueta y compositor Pixi
+de los cuatro fondos. `node docs/visual/capture-reference.mjs` captura y verifica
+la lámina con el Playwright ya instalado. Todo es de desarrollo, fuera del build.
+`player-weapons.svg` queda histórico: los masters de casco no llevan cañones.
+
+### Evidencia automática y revisión visual
+
+- Typecheck correcto; 184 tests en 63 archivos, incluidos master/piezas,
+  fuentes UI compartidas, tint, reset Low, boss terminal y presupuesto de fondo.
+- Builds local/Poki/CrazyGames correctos. Chunk principal local 596.33 kB /
+  165.02 kB gzip (Tank previo: 588.51 / 163.76); +1.26 kB gzip aproximados.
+  Poki 596.28 / 164.98, CrazyGames 596.29 / 164.99. Warning de chunk >500 kB
+  conservado; ninguna dependencia añadida ni aumento de DPR.
+- XML y viewBox válidos en los 72 SVG fuente. `git diff --check` correcto.
+- Smoke Chromium: 14 casos, incluidos Pixel 5 emulado y dos casos nuevos que
+  recorren cuatro combinaciones skin/cañón/fondo con boss en Low y High.
+- Lámina: 13 assets, 39 muestras SVG inline sin IDs duplicados, cuatro modos de
+  inspección y ocho vistas de fondo. Capturas generadas en `test-results`, no
+  importadas al juego. Inspeccionadas capturas oscuras, claras y siluetas, además
+  del juego Pixi Low Cyan y High Emerald. En ellas se conservan proa, reactor,
+  planos y diferencias de familia. No equivalen a una run manual completa.
+
+### Qué sigue / qué NO está cerrado
+
+1. Usuario: revisar la nueva flota en PC/móvil con `?boss=1&quality=low` y High,
+   probar skins/cañones y confirmar contraste, movimiento y muerte del boss.
+   Comparar stress físico contra la misma línea base; falta medición CPU/GPU,
+   memoria/overdraw y tiempos de carga en teléfono. No certificar rendimiento
+   con FPS instantáneos de Chromium automatizado.
+2. VIS-01 parcial: ya hay asset/despiece; falta anticipación mecánica ligada a
+   fases si se decide continuar esa ficha. No duplicar `BossShipVisual`.
+3. VIS-02 espera validación física y aprobación. La tarjeta CSS del menú sigue
+   indicativa; la lámina usa el fondo exacto. No declarar paridad píxel a píxel
+   de tarjeta y runtime. No añadir más capas sin medir las actuales.
+4. VIS-03/resonancia no ejecutada. Ruta principal: EX-01a sigue pendiente;
+   después EX-02/EX-03 y puertas anteriores a Boomerang. El lote artístico no
+   sustituye esas validaciones de economía ni autoriza sistemas nuevos.
+
+Estado: IMPLEMENTADO Y VALIDADO AUTOMÁTICAMENTE / VALIDACIÓN HUMANA FÍSICA
+PENDIENTE. Sin commit, push, deploy ni publicación a portales.

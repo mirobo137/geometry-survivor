@@ -2,11 +2,14 @@
   <title id="cannon-basic-left-title">Cañón izquierdo Pulse Standard</title>
   <desc id="cannon-basic-left-desc">Cureña, tubo y boca luminosa alineada a la ranura de disparo izquierda.</desc>
   <g id="cannon-basic-left" stroke-linejoin="round">
-    <path id="cannon-basic-left-mount" d="M-6-8 -12-10 -15-2 -12 6 -6 5 -5-1z" fill="#2d5d6e" stroke="#e5fbff" stroke-width="1.5"/>
-    <path id="cannon-basic-left-barrel" d="M-12-7 -24-14 -28-8 -16 3 -12 2z" fill="#75e6ff" stroke="#e5fbff" stroke-width="1.6"/>
+    <path id="cannon-basic-left-mount" d="M-6-8 -12-10 -15-2 -12 6 -6 5 -5-1z" fill="#2d5d6e" stroke="#e5fbff" stroke-width="0.7"/>
+    <path id="cannon-basic-left-barrel" d="M-12-7 -24-14 -28-8 -16 3 -12 2z" fill="#5296ae" stroke="#e5fbff" stroke-width="0.7"/>
     <path id="cannon-basic-left-bore" d="M-14-4 -23-10 -25-7 -17 0z" fill="#b8ffd9"/>
-    <path id="cannon-basic-left-rail" d="M-14-6 -23-11" fill="none" stroke="#e5fbff" stroke-width="1.8" stroke-linecap="round"/>
-    <circle id="cannon-basic-left-muzzle" cx="-27" cy="-11" r="3.6" fill="#10213c" stroke="#e5fbff" stroke-width="1.7"/>
+    <path id="cannon-basic-left-rail" d="M-14-6 -23-11" fill="none" stroke="#e5fbff" stroke-width="0.7" stroke-linecap="round"/>
+    <path id="cannon-basic-left-facet-0" d="M-12-7 -24-14 -23-11 -14-5Z" fill="#d5edf1"/>
+    <path id="cannon-basic-left-facet-1" d="M-25-5 -16 3 -12 2 -14-1Z" fill="#264858"/>
+    <path id="cannon-basic-left-facet-2" d="M-10-4 -8-3 -8 2 -10 3Z" fill="#87bbc5"/>
+    <circle id="cannon-basic-left-muzzle" cx="-27" cy="-11" r="3.6" fill="#10213c" stroke="#e5fbff" stroke-width="0.7"/>
     <circle id="cannon-basic-left-muzzle-core" cx="-27" cy="-11" r="1.5" fill="#b8ffd9"/>
   </g>
 </svg>

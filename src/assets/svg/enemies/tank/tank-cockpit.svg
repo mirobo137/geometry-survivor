@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-tank-cockpit-title enemy-tank-cockpit-desc">
-  <title id="enemy-tank-cockpit-title">Nucleo blindado del bastion</title>
-  <desc id="enemy-tank-cockpit-desc">Nucleo y marca frontal de prioridad del enemigo resistente.</desc>
-  <circle id="enemy-tank-core" cx="0" cy="-6" r="7" fill="#f0d6ff" stroke="#4a276d" stroke-width="2"/>
-  <path id="enemy-tank-mark" d="M-3-17h6l3 7-6 4-6-4z" fill="#fff7ff" opacity="0.9"/>
+  <title id="enemy-tank-cockpit-title">Bastión — cockpit</title>
+  <desc id="enemy-tank-cockpit-desc">Nave blindada top-down, proa hacia arriba, placas biseladas y reactor empotrado. Pieza cockpit.</desc>
+  <path id="enemy-tank-reactor-mount" d="M-5-8H5L8-5V2L5 5H-5L-8 2V-5Z" fill="#523668" stroke="#a288bd" stroke-width="1"/>
+  <path id="enemy-tank-reactor-glass" d="M-4-6H4L6-4V1L4 3H-4L-6 1V-4Z" fill="#a978dd"/>
+  <path id="enemy-tank-reactor-facet" d="M-4-6H4L6-4 0-1-6-4Z" fill="#edd7ff"/>
+  <path id="enemy-tank-reactor-depth" d="M-6-4 0-1V3H-4L-6 1Z" fill="#79519f"/>
+  <path id="enemy-tank-reactor-slit" d="M-1-4H1V1H-1Z" fill="#fff5ff"/>
 </svg>

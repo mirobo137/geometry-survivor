@@ -1,30 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="-32 -32 64 64"
-     preserveAspectRatio="xMidYMid meet"
-     role="img"
-     aria-labelledby="player-title player-desc">
-  <title id="player-title">Núcleo geométrico del jugador</title>
-  <desc id="player-desc">Nave compacta vista desde arriba, con núcleo, anillo exterior y dos emisores.</desc>
-
-  <ellipse id="player-shadow" cx="0" cy="5" rx="25" ry="16" fill="#ffffff" opacity="0.42"/>
-  <g id="player-outer-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-title">
+  <title id="player-title">Cyan: assembled hull, independent cannon loadout</title>
+<g id="player-outer-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
     <circle id="player-outer-ring-circle" cx="0" cy="0" r="25" stroke-width="2.2"/>
     <path id="player-outer-ring-notch" d="M0-29v7M0 22v7M-29 0h7M22 0h7" stroke-width="2.6"/>
   </g>
-  <g id="player-weapons" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-weapon-left" d="M-17-5l-10-6 2 13z" stroke-width="1.4"/>
-    <path id="player-weapon-right" d="M17-5l10-6-2 13z" stroke-width="1.4"/>
-  </g>
-  <g id="player-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-body-shell" d="M0-20 18-10 18 10 0 20-18 10-18-10z" stroke-width="2.6"/>
-    <path id="player-body-panel" d="M0-14 11-7 11 7 0 14-11 7-11-7z" fill="none" stroke-width="1.4" opacity="0.78"/>
-  </g>
-  <g id="player-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <circle id="player-core-orb" cx="0" cy="0" r="8" stroke-width="1.6"/>
-    <path id="player-core-cross" d="M0-5v10M-5 0h10" fill="none" stroke-width="1.4"/>
-  </g>
-  <g id="player-accent" fill="#ffffff">
-    <circle id="player-accent-left" cx="-14" cy="0" r="2"/>
-    <circle id="player-accent-right" cx="14" cy="0" r="2"/>
-  </g>
+<path id="player-body-shell" d="M0-23 17-12 20 7 11 20H-11L-20 7 -17-12Z" fill="#626262"/>
+  <path id="player-body-prow-bevel" d="M0-23 17-12 14-9 0-18 -14-9 -17-12Z" fill="#ffffff"/>
+  <path id="player-body-lit-plane" d="M0-18 14-9 16 6 9 15 0 18Z" fill="#c4c4c4"/>
+  <path id="player-body-shade-plane" d="M0-18 -14-9 -16 6 -9 15 0 18Z" fill="#969696"/>
+  <path id="player-body-side-mounts" d="M-16-3 -11 0 -10 10 -14 7Z M16-3 11 0 10 10 14 7Z" fill="#303030"/>
+  <path id="player-body-engine-accents" d="M-8 16H-3V20H-8Z M3 16H8V20H3Z" fill="#eeeeee"/>
+<path id="player-core-well" d="M-5-9H5L8-4V4L5 8H-5L-8 4V-4Z" fill="#242424"/>
+  <path id="player-core-energy" d="M-3-6H3L5-3V3L3 5H-3L-5 3V-3Z" fill="#c9c9c9"/>
+  <path id="player-core-reflection" d="M-3-6H3L5-3 0-1 -5-3Z" fill="#ffffff"/>
 </svg>

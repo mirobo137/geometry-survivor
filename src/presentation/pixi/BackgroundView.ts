@@ -35,7 +35,7 @@ const QUALITY_AMBIENT_LIMIT: Readonly<Record<FxQuality, number>> = {
 };
 
 const QUALITY_NEBULA_COUNT: Readonly<Record<FxQuality, number>> = {
-  low: 0,
+  low: 2,
   medium: 2,
   high: 3
 };
@@ -144,6 +144,8 @@ export class BackgroundView {
 
   /** Advances all animated layers. Call every frame with presentation delta. */
   public update(deltaSeconds: number, animationSeconds: number): void {
+    // Low retains the composition, but no ambient motion or twinkle work.
+    if (this.quality === 'low') return;
     const delta = Math.min(Math.max(deltaSeconds, 0), 0.1);
 
     // Parallax offset based on player position
@@ -161,7 +163,7 @@ export class BackgroundView {
     for (const nebula of this.nebulae) {
       const breath = Math.sin(animationSeconds * nebula.breathSpeed + nebula.breathPhase);
       nebula.sprite.scale.set(nebula.baseScale * (1 + breath * nebula.breathAmplitude));
-      nebula.sprite.alpha = 0.06 + breath * 0.025;
+      nebula.sprite.alpha = 0.24 + breath * 0.035;
     }
 
     // Move ambient particles
@@ -184,7 +186,10 @@ export class BackgroundView {
       graphics.circle(0, 0, 4).fill({ color: 0xffffff, alpha: 1 });
     });
     this.nebulaTexture = createTexture(this.renderer, (graphics) => {
-      graphics.circle(0, 0, 64).fill({ color: 0xffffff, alpha: 0.5 });
+      // Bake a feathered falloff once into 128x128. No filter or shader per frame.
+      for (let radius = 64; radius >= 2; radius -= 2) {
+        graphics.beginPath().circle(0, 0, radius).fill({ color: 0xffffff, alpha: 0.025 });
+      }
     });
   }
 
@@ -198,12 +203,8 @@ export class BackgroundView {
 
   private renderStaticBase(definition: BackgroundDefinition): void {
     const { tokens } = definition;
-    const scale = Math.max(this.width, this.height);
     this.staticArt.clear();
     this.staticArt.beginPath().rect(0, 0, this.width, this.height).fill({ color: tokens.base, alpha: 1 });
-    drawCircle(this.staticArt, this.width * 0.22, this.height * 0.2, scale * 0.32, tokens.glow, 0.16);
-    drawCircle(this.staticArt, this.width * 0.8, this.height * 0.76, scale * 0.38, tokens.secondary, 0.07);
-    drawCircle(this.staticArt, this.width * 0.5, this.height * 0.5, scale * 0.25, tokens.glow, 0.05);
     this.drawPattern(tokens.pattern, tokens.accent, tokens.secondary);
   }
 
@@ -251,11 +252,12 @@ export class BackgroundView {
       this.nebulaLayer.removeChild(removed.sprite);
     }
     this.ensureTextures();
-    const positions = [
-      [0.28, 0.54, 0.22],
-      [0.72, 0.32, 0.20],
-      [0.5, 0.82, 0.18]
-    ] as const;
+    const positions = {
+      constellation: [[0.12, 0.24, 0.32], [0.88, 0.8, 0.3], [0.7, 0.1, 0.2]],
+      nebula: [[0.14, 0.72, 0.4], [0.85, 0.22, 0.38], [0.85, 0.8, 0.22]],
+      solar: [[0.88, 0.2, 0.42], [0.15, 0.82, 0.3], [0.7, 0.82, 0.22]],
+      crystal: [[0.1, 0.18, 0.3], [0.87, 0.74, 0.34], [0.4, 0.9, 0.18]]
+    }[tokens.pattern];
     for (let index = 0; index < count; index += 1) {
       const [px, py, sizeRatio] = positions[index] ?? [0.5, 0.5, 0.15];
       const baseScale = this.width * sizeRatio / 64;
@@ -271,7 +273,7 @@ export class BackgroundView {
         sprite.anchor.set(0.5);
         sprite.position.set(px * this.width, py * this.height);
         sprite.tint = color;
-        sprite.alpha = 0.07;
+        sprite.alpha = 0.24;
         sprite.scale.set(baseScale);
         this.nebulaLayer.addChild(sprite);
         this.nebulae.push({
@@ -353,28 +355,39 @@ export class BackgroundView {
     }
 
     if (pattern === 'nebula') {
+      // Broad currents, not lightning: no resemblance to an attack telegraph.
+      for (let index = 0; index < 3; index += 1) {
+        const offset = index * this.height * 0.04;
+        this.staticArt.beginPath().moveTo(0, this.height * 0.8 + offset)
+          .bezierCurveTo(this.width * 0.14, this.height * 0.42 + offset,
+            this.width * 0.72, this.height * 0.28 + offset, this.width, this.height * 0.05 + offset)
+          .stroke({ color: secondary, width: 12 - index * 3, alpha: 0.025 });
+      }
       return;
     }
 
     if (pattern === 'solar') {
-      const centerX = this.width * 0.78;
-      const centerY = this.height * 0.48;
+      const centerX = this.width * 0.9;
+      const centerY = this.height * 0.18;
       for (const radius of [0.2, 0.31, 0.42] as const) {
         this.staticArt.beginPath()
           .arc(centerX, centerY, this.width * radius, Math.PI * 0.7, Math.PI * 1.72)
-          .stroke({ color: primary, width: 2, alpha: 0.16 });
+          .stroke({ color: primary, width: 1.5, alpha: 0.09 });
       }
       drawCircle(this.staticArt, centerX, centerY, this.width * 0.045, secondary, 0.13);
       return;
     }
 
-    for (let index = -2; index < 11; index += 1) {
-      const offset = index * this.width * 0.12;
-      drawLine(this.staticArt, offset, 0, offset + this.height, this.height, primary, 1, 0.08);
-    }
-    for (let index = 1; index < 6; index += 1) {
-      const y = this.height * index / 6;
-      drawLine(this.staticArt, 0, y, this.width, y, secondary, 1, 0.06);
+    // Four distant facets at the periphery, not a grid over the playable center.
+    for (const [px, py, size] of [[0.1, 0.24, 0.1], [0.88, 0.18, 0.07], [0.83, 0.8, 0.11], [0.18, 0.87, 0.06]]) {
+      const x = this.width * px;
+      const y = this.height * py;
+      const r = Math.min(this.width, this.height) * size;
+      this.staticArt.beginPath().moveTo(x, y - r).lineTo(x + r * 0.6, y)
+        .lineTo(x, y + r).lineTo(x - r * 0.6, y).closePath()
+        .fill({ color: primary, alpha: 0.045 });
+      this.staticArt.beginPath().moveTo(x, y - r).lineTo(x, y + r)
+        .lineTo(x - r * 0.6, y).closePath().fill({ color: secondary, alpha: 0.035 });
     }
   }
 }

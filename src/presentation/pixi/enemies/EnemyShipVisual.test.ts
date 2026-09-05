@@ -23,6 +23,22 @@ const state = (kind: EnemyRenderState['kind'], vx = 80, vy = 0): EnemyRenderStat
 });
 
 describe('EnemyShipVisual', () => {
+  it('uses a complete Low silhouette on first chaser and after pool reset', () => {
+    const map = { ...textures, chaser: { ...textures.chaser, flat: Texture.EMPTY } };
+    const view = new EnemyShipVisual(map, 0, 'low');
+    view.render(state('chaser'), 0);
+    expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
+    view.render(state('elite'), 1);
+    view.reset();
+    view.render(state('chaser'), 2);
+    expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
+    const high = new EnemyShipVisual(map, 0, 'high');
+    high.render(state('elite'), 1);
+    high.reset();
+    high.render(state('chaser'), 2);
+    expect(high.currentKind).toBe('chaser');
+    expect((high.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
+  });
   it('composes four pieces, follows movement direction and animates locally', () => {
     const view = new EnemyShipVisual(textures, 0.7);
     view.render(state('chaser'), 0.2);
@@ -46,5 +62,17 @@ describe('EnemyShipVisual', () => {
     const view = new EnemyShipVisual(textures, 0, 'low');
     view.render(state('tank'), 0.5, 1);
     expect(view.root.children.map((child) => child.visible)).toEqual([false, false, true, false, false]);
+  });
+
+  it('uses flattened Tank in Low and restores the hull when changing family', () => {
+    const map = { ...textures, tank: { ...textures.tank, flat: Texture.EMPTY } };
+    const view = new EnemyShipVisual(map, 0, 'low');
+    view.render(state('tank'), 0);
+    expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
+    view.render(state('fast'), 0);
+    expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
+    const detailed = new EnemyShipVisual(map, 0, 'high');
+    detailed.render(state('tank'), 0);
+    expect((detailed.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
   });
 });

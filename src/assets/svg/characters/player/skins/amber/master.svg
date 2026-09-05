@@ -1,17 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-title player-amber-desc">
-  <title id="player-amber-title">Solar Bastion</title>
-  <desc id="player-amber-desc">Nave bastión vista desde arriba, con cuña, aletas y corona de destellos.</desc>
-  <g id="player-amber-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-amber-title">
+  <title id="player-amber-title">amber: assembled hull</title>
+<g id="player-amber-ring" fill="none" stroke="#ffffff" stroke-linecap="round">
     <circle id="player-amber-ring-circle" cx="0" cy="0" r="25" stroke-width="2"/>
     <path id="player-amber-ring-flares" d="M0-30v5M0 25v5M-30 0h5M25 0h5M-20-20-24-24M20-20 24-24M20 20 24 24M-20 20-24 24" stroke-width="2.4"/>
   </g>
-  <g id="player-amber-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-amber-body-shell" d="M0-24 12-8 16 6 12 18-12 18-16 6-12-8z" stroke-width="2.6"/>
-    <path id="player-amber-body-panel" d="M0-14 7-4 8 10 0 14-8 10-7-4z" fill="none" stroke-width="1.4" opacity="0.8"/>
-    <path id="player-amber-body-fins" d="M-16 4-22 12-12 16M16 4 22 12 12 16" fill="none" stroke-width="1.8"/>
-  </g>
-  <g id="player-amber-core" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-amber-core-hex" d="M0-8 7-4 7 4 0 8-7 4-7-4z" stroke-width="1.6"/>
-    <circle id="player-amber-core-ember" cx="0" cy="0" r="2.6" fill="#ffffff"/>
-  </g>
+<path id="player-amber-body-shell" d="M0-24 13-11 19 4 15 20H-15L-19 4 -13-11Z" fill="#656565"/>
+  <path id="player-amber-body-prow-bevel" d="M0-24 13-11 10-8 0-18 -10-8 -13-11Z" fill="#ffffff"/>
+  <path id="player-amber-body-lit-plane" d="M0-18 10-8 14 5 10 15H0Z" fill="#cccccc"/>
+  <path id="player-amber-body-shade-plane" d="M0-18 -10-8 -14 5 -10 15H0Z" fill="#949494"/>
+  <path id="player-amber-body-side-mounts" d="M-19 4 -11 7 -11 16 -15 20 -20 12Z M19 4 11 7 11 16 15 20 20 12Z" fill="#424242"/>
+  <path id="player-amber-body-engine-accents" d="M-18 7 -14 9 -14 15 -17 13Z M18 7 14 9 14 15 17 13Z M-5 17H5V20H-5Z" fill="#e8e8e8"/>
+<path id="player-amber-core-well" d="M-5-10H5L9-3 5 7H-5L-9-3Z" fill="#252525"/>
+  <path id="player-amber-core-energy" d="M-3-7H3L6-3 3 4H-3L-6-3Z" fill="#c4c4c4"/>
+  <path id="player-amber-core-reflection" d="M-3-7H3L6-3H-6Z" fill="#ffffff"/>
 </svg>

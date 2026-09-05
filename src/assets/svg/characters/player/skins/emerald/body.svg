@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-body-title player-emerald-body-desc">
-  <title id="player-emerald-body-title">Casco orgánico de Verdant</title>
-  <desc id="player-emerald-body-desc">Casco en diamante con cuatro hojas diagonales y punta hacia -Y.</desc>
-  <g id="player-emerald-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-emerald-body-shell" d="M0-20 12-6 8 14 0 20-8 14-12-6z" stroke-width="2.6"/>
-    <path id="player-emerald-body-leaves" d="M-16-16-6-18-10-8zM16-16 6-18 10-8zM-16 14-10 6-6 18zM16 14 10 6 6 18z" stroke-width="1.6"/>
-    <path id="player-emerald-body-panel" d="M0-12 7-3 5 10 0 14-5 10-7-3z" fill="none" stroke-width="1.4" opacity="0.8"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-emerald-body-title">
+  <title id="player-emerald-body-title">emerald: body</title>
+  <path id="player-emerald-body-shell" d="M0-23 12-9 10 15 0 23 -10 15 -12-9Z" fill="#656565"/>
+  <path id="player-emerald-body-prow-bevel" d="M0-23 12-9 8-8 0-18 -8-8 -12-9Z" fill="#ffffff"/>
+  <path id="player-emerald-body-lit-plane" d="M0-18 8-8 7 12 0 18Z" fill="#cccccc"/>
+  <path id="player-emerald-body-shade-plane" d="M0-18 -8-8 -7 12 0 18Z" fill="#969696"/>
+  <path id="player-emerald-body-side-mounts" d="M-10-12 -20-18 -18 2 -12 10 -14-3Z M10-12 20-18 18 2 12 10 14-3Z" fill="#4a4a4a"/>
+  <path id="player-emerald-body-engine-accents" d="M-20-18 -16-12 -16-1 -18 2Z M20-18 16-12 16-1 18 2Z M-9 13 -5 16 -6 21 -10 18Z M9 13 5 16 6 21 10 18Z" fill="#dfdfdf"/>
 </svg>

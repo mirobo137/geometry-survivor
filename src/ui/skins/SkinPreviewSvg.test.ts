@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
+import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/characters/player/PlayerHullSvg';
 
 describe('SkinPreviewSvg', () => {
   it('keeps a bounded, vector-only preview for each skin', () => {
@@ -13,14 +14,20 @@ describe('SkinPreviewSvg', () => {
   });
 
   it('uses a distinct hull silhouette in the locker preview', () => {
-    const cyan = createPlayerSkinPreviewSvg('cyan');
-    const violet = createPlayerSkinPreviewSvg('violet');
-    const amber = createPlayerSkinPreviewSvg('amber');
-    const emerald = createPlayerSkinPreviewSvg('emerald');
-    expect(cyan).toContain('M0-28 25-15 25 15 0 28-25 15-25-15z');
-    expect(violet).toContain('M0-30 23 0 11 16 0 30-11 16-23 0z');
-    expect(amber).toContain('M0-32 16-11 21 8 16 24-16 24-21 8-16-11z');
-    expect(emerald).toContain('M0-27 16-8 11 19 0 27-11 19-16-8z');
+    const silhouettes = new Set<string>();
+    for (const skin of ['cyan', 'violet', 'amber', 'emerald'] as const) {
+      const preview = createPlayerSkinPreviewSvg(skin);
+      for (const source of Object.values(PLAYER_HULL_SVG[skin])) {
+        for (const [, path] of source.matchAll(/\sd="([^"]+)"/g)) expect(preview).toContain(`d="${path}"`);
+      }
+      silhouettes.add(PLAYER_HULL_SVG[skin].body.match(/\sd="([^"]+)"/)![1]);
+    }
+    expect(silhouettes.size).toBe(4);
+  });
+
+  it('mirrors multiplicative Sprite tint without retaining duplicate IDs', () => {
+    const markup = tintPlayerSvgMarkup('<svg><path id="test" fill="#808080" stroke="#ffffff"/></svg>', 0x804020);
+    expect(markup).toBe('<path fill="#402010" stroke="#804020"/>');
   });
 
   it('omits cannon emitters and only animates the equipped preview', () => {

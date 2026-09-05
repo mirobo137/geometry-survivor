@@ -5,6 +5,16 @@ mantiene su master, piezas, ficha y pruebas. Usan un `viewBox` centrado y se
 convierten una sola vez en texturas Pixi cacheadas. La simulacion conserva sus
 radios y reglas; el SVG solo define la representacion visual.
 
+El [Tank de referencia](tank/README.md) demuestra blindaje por planos, cavidad
+de reactor y ensamblaje. Su master compuesto se utiliza también en Low para
+conservar la silueta. La extensión autorizada a Chaser, Fast, Elite y boss
+se detalla en [la guía por familias](../../../../skills/geometry-survivor-svg/references/visual-family-direction.md).
+Los cuatro enemigos comunes tienen master Low completo; el boss usa una
+instancia modular independiente con frame 112×112. Lámina viva:
+`docs/visual/fleet-reference.html` desde la raíz del repositorio.
+Seguir la referencia `ship-art-direction.md` enlazada desde la skill SVG antes
+de construir otra nave. No copiar la silueta del Tank a todos los roles.
+
 | Asset | Rol | ViewBox | Ancla | Render | Instancias |
 | --- | --- | --- | --- | --- | --- |
 | `chaser/chaser.svg` | scout / enemigo comun (master de nave) | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |

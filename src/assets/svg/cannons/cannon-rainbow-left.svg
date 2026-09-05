@@ -2,11 +2,14 @@
   <title id="cannon-rainbow-left-title">Prisma izquierdo Spectrum Drive</title>
   <desc id="cannon-rainbow-left-desc">Cañón facetado con bandas de color y boca blanca en la ranura izquierda.</desc>
   <g id="cannon-rainbow-left" stroke-linejoin="round">
-    <path id="cannon-rainbow-left-mount" d="M-6-7 -12-10 -15-2 -12 6 -6 4z" fill="#2d6b5c" stroke="#ffffff" stroke-width="1.4"/>
-    <path id="cannon-rainbow-left-barrel" d="M-12-8 -23-15 -28-8 -16 3 -12 3z" fill="#65f2c2" stroke="#ffffff" stroke-width="1.5"/>
+    <path id="cannon-rainbow-left-mount" d="M-6-7 -12-10 -15-2 -12 6 -6 4z" fill="#2d6b5c" stroke="#ffffff" stroke-width="0.7"/>
+    <path id="cannon-rainbow-left-barrel" d="M-12-8 -23-15 -28-8 -16 3 -12 3z" fill="#70b8ad" stroke="#ffffff" stroke-width="0.7"/>
     <path id="cannon-rainbow-left-red" d="M-14-6 -21-12 -23-7 -16 0z" fill="#ff668f"/>
     <path id="cannon-rainbow-left-gold" d="M-16-3 -22-8 -24-5 -17 0z" fill="#ffe39a"/>
-    <circle id="cannon-rainbow-left-muzzle" cx="-27" cy="-11" r="3.5" fill="#ffffff" stroke="#65f2c2" stroke-width="1.5"/>
+    <path id="cannon-rainbow-left-facet-0" d="M-12-8 -23-15 -24-12 -15-6Z" fill="#d0eee4"/>
+    <path id="cannon-rainbow-left-facet-1" d="M-25-5 -16 3 -12 3 -15 0Z" fill="#345263"/>
+    <path id="cannon-rainbow-left-facet-2" d="M-10-4 -8-3 -8 2 -10 3Z" fill="#b5ddde"/>
+    <circle id="cannon-rainbow-left-muzzle" cx="-27" cy="-11" r="3.5" fill="#ffffff" stroke="#65f2c2" stroke-width="0.7"/>
     <circle id="cannon-rainbow-left-muzzle-core" cx="-27" cy="-11" r="1.4" fill="#ff668f"/>
   </g>
 </svg>

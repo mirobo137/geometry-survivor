@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flota — referencia artística</title>
+<style>
+  :root{color-scheme:dark;font:16px system-ui;background:#090e1b;color:#ddeaf4}
+  body{max-width:1160px;margin:32px auto;padding:0 20px}
+  h1{font-size:30px}p{max-width:85ch;line-height:1.6;color:#a7b8cc}
+  section{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  article{background:#131b30;border:1px solid #2b3b53;border-radius:12px;padding:16px}
+  .art{display:flex;align-items:center;justify-content:space-around;min-height:140px;gap:8px}
+  .art svg,.art img{flex-shrink:0;object-fit:contain}
+  .light article{background:#e4e9ec;color:#162134}.gray .art{filter:grayscale(1)}
+  .silhouette .art{filter:brightness(0)}
+  label,button,select{margin:8px 8px 8px 0}select,button{padding:8px;background:#213149;color:inherit;border:1px solid #63758c;border-radius:6px}
+  canvas{max-width:100%;height:auto;border-radius:12px}
+  a{color:#91dded}
+</style>
+<h1>Flota · planos, identidad y Low completo</h1>
+<p>Fuentes reales, no dibujos alternativos de marketing. Tamaños 32/64/128 px del frame. El boss usa frame 112; las naves, 64. Esta lámina es de desarrollo y no se incluye en el juego publicado.</p>
+<label>Inspección <select id="inspection"><option value="">Color oscuro</option><option value="light">Color claro</option><option value="gray">Grises</option><option value="light silhouette">Silueta</option></select></label>
+<h2>Enemigos y boss</h2><section id="enemies"></section>
+<h2>Skins — mismo casco que en partida</h2><section id="skins"></section>
+<h2>Cañones — independientes de las skins</h2><section id="cannons"></section>
+<h2>Fondos — compositor Pixi real</h2>
+<p>Low conserva dos nubes suaves estáticas y 12 estrellas. High añade movimiento ambiental. El fondo no representa peligros ni modifica el mundo jugable.</p>
+<select id="theme" aria-label="Fondo"><option>deep-space</option><option>ion-storm</option><option>solar-drift</option><option>crystal-field</option></select>
+<select id="quality" aria-label="Calidad"><option>low</option><option>high</option></select>
+<button id="motion" aria-pressed="false">Activar movimiento</button><div id="background"></div>
+<p>Para ensamblaje animado de enemigos, ver <a href="./tank-reference.html">el compositor Tank</a>. Para juego real, probar <a href="../../?boss=1&quality=low">boss Low</a> y <a href="../../?boss=1&quality=high">boss High</a>. Revisar también muerte, pausa y stress en móvil físico.</p>
+<script type="module">
+  import { Application } from 'pixi.js';
+  import { createPlayerSkinPreviewSvg } from '../../src/ui/skins/SkinPreviewSvg.ts';
+  import { CANNON_BARREL_SVG, extractSvgGraphicMarkup } from '../../src/assets/svg/cannons/CannonSvgMarkup.ts';
+  import { BackgroundView } from '../../src/presentation/pixi/BackgroundView.ts';
+  const sources = import.meta.glob('../../src/assets/svg/enemies/*/*.svg', { query: '?raw', import: 'default', eager: true });
+  const card = (target, title, markup) => {
+    const article = document.createElement('article');
+    const heading = document.createElement('h3'); heading.textContent = title;
+    const art = document.createElement('div'); art.className = 'art';
+    // Only trusted, bundled SVG sources enter this development document.
+    art.innerHTML = [32,64,128].map(size => markup
+      .replace(/\b(id|aria-labelledby)="([^"]+)"/g, (_, attribute, value) => `${attribute}="${value.split(' ').map(id => `${title}-${size}-${id}`).join(' ')}"`)
+      .replace('<svg ', `<svg width="${size}" height="${size}" `)).join('');
+    article.append(heading,art);document.querySelector(target).append(article);
+  };
+  for(const kind of ['chaser','fast','tank','elite','boss']) {
+    card('#enemies',kind,sources[`../../src/assets/svg/enemies/${kind}/${kind}.svg`]);
+  }
+  for(const skin of ['cyan','violet','amber','emerald']) card('#skins',skin,createPlayerSkinPreviewSvg(skin));
+  for(const [kind,pair] of Object.entries(CANNON_BARREL_SVG)) {
+    card('#cannons',kind,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64">${extractSvgGraphicMarkup(pair.left)}${extractSvgGraphicMarkup(pair.right)}</svg>`);
+  }
+  document.querySelector('#inspection').onchange = event => { document.body.className = event.target.value; };
+  const app = new Application();
+  await app.init({width:640,height:360,resolution:1,antialias:false,autoStart:false});
+  document.querySelector('#background').append(app.canvas);
+  const views = {low:new BackgroundView(app.renderer,'deep-space','low'),high:new BackgroundView(app.renderer,'deep-space','high')};
+  for(const view of Object.values(views)){view.root.scale.set(0.5);app.stage.addChild(view.root);}
+  let running = false, seconds = 0;
+  const redraw = () => {
+    for(const [quality,view] of Object.entries(views)) {
+      view.root.visible = quality === document.querySelector('#quality').value;
+      view.setBackground(document.querySelector('#theme').value);
+      if(view.root.visible) view.update(0,seconds);
+    }
+    app.render();
+  };
+  document.querySelector('#theme').onchange = redraw;
+  document.querySelector('#quality').onchange = redraw;
+  const button = document.querySelector('#motion');
+  button.onclick = () => {
+    running = !running;button.setAttribute('aria-pressed',String(running));
+    button.textContent = running ? 'Pausar movimiento' : 'Activar movimiento';
+    if(running) frame = requestAnimationFrame(animate); else cancelAnimationFrame(frame);
+  };
+  let frame = 0, previous = 0;
+  const animate = now => {
+    if(!running || document.hidden) {previous=0;return;}
+    const dt = previous ? Math.min((now-previous)/1000,0.1) : 0;previous=now;seconds+=dt;
+    views.high.update(dt,seconds);app.render();frame=requestAnimationFrame(animate);
+  };
+  document.addEventListener('visibilitychange',()=>{
+    cancelAnimationFrame(frame);previous=0;
+    if(!document.hidden && running) frame=requestAnimationFrame(animate);
+  });
+  redraw();
+  window.addEventListener('pagehide',()=>{cancelAnimationFrame(frame);app.destroy(true,{children:true,texture:true,textureSource:true});},{once:true});
+</script>
+</html>

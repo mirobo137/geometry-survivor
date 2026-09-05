@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-hull-title enemy-fast-hull-desc">
-  <title id="enemy-fast-hull-title">Casco del aguijon</title>
-  <desc id="enemy-fast-hull-desc">Casco afilado y espina central del enemigo veloz.</desc>
-  <path id="enemy-fast-hull" d="M0-28 12-10 10 14 0 24-10 14-12-10z" fill="#f0a05f" stroke="#fff4d6" stroke-width="2.2" stroke-linejoin="round"/>
-  <path id="enemy-fast-spine" d="M0-22 5-7 0 14-5-7z" fill="#ffcf78" opacity="0.92"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-hull-title">
+  <title id="enemy-fast-hull-title">fast: hull</title>
+  <path id="enemy-fast-hull-shell" d="M0-29 9-5 7 15 0 22 -7 15 -9-5Z" fill="#bd6246"/>
+  <path id="enemy-fast-hull-prow-bevel" d="M0-29 9-5 5-7 0-23 -5-7 -9-5Z" fill="#ffe0b1"/>
+  <path id="enemy-fast-hull-lit-plane" d="M0-23 5-7 4 12 0 16Z" fill="#f9955d"/>
+  <path id="enemy-fast-hull-shade-plane" d="M0-23 -5-7 -4 12 0 16Z" fill="#b4533b"/>
+  <path id="enemy-fast-hull-exhaust-well" d="M-4 9 0 13 4 9 3 17 0 20 -3 17Z" fill="#532a32"/>
 </svg>

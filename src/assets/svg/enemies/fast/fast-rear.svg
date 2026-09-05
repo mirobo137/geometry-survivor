@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-rear-title enemy-fast-rear-desc">
-  <title id="enemy-fast-rear-title">Motores del aguijon</title>
-  <desc id="enemy-fast-rear-desc">Sombra y estabilizador trasero del enemigo veloz.</desc>
-  <ellipse id="enemy-fast-shadow" cx="0" cy="5" rx="15" ry="19" fill="#050816" opacity="0.48"/>
-  <path id="enemy-fast-tail" d="M-5 20 0 29 5 20z" fill="#8a402f" stroke="#fff4d6" stroke-width="1.4" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-rear-title">
+  <title id="enemy-fast-rear-title">fast: rear</title>
+  <path id="enemy-fast-rear-chassis" d="M-9 10 -5 26 0 20 5 26 9 10Z" fill="#482b37"/>
+  <path id="enemy-fast-rear-thrusters" d="M-6 16 -4 25 -2 18Z M2 18 4 25 6 16Z" fill="#ffdb96"/>
 </svg>

@@ -1,8 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-body-title player-body-desc">
-  <title id="player-body-title">Cuerpo geométrico del jugador</title>
-  <desc id="player-body-desc">Cuerpo hexagonal con panel interior.</desc>
-  <g id="player-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-body-shell" d="M0-20 18-10 18 10 0 20-18 10-18-10z" stroke-width="2.6"/>
-    <path id="player-body-panel" d="M0-14 11-7 11 7 0 14-11 7-11-7z" fill="none" stroke-width="1.4" opacity="0.78"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-body-title">
+  <title id="player-body-title">cyan: body</title>
+  <path id="player-body-shell" d="M0-23 17-12 20 7 11 20H-11L-20 7 -17-12Z" fill="#626262"/>
+  <path id="player-body-prow-bevel" d="M0-23 17-12 14-9 0-18 -14-9 -17-12Z" fill="#ffffff"/>
+  <path id="player-body-lit-plane" d="M0-18 14-9 16 6 9 15 0 18Z" fill="#c4c4c4"/>
+  <path id="player-body-shade-plane" d="M0-18 -14-9 -16 6 -9 15 0 18Z" fill="#969696"/>
+  <path id="player-body-side-mounts" d="M-16-3 -11 0 -10 10 -14 7Z M16-3 11 0 10 10 14 7Z" fill="#303030"/>
+  <path id="player-body-engine-accents" d="M-8 16H-3V20H-8Z M3 16H8V20H3Z" fill="#eeeeee"/>
 </svg>

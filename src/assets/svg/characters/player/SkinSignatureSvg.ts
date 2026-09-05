@@ -40,6 +40,6 @@ export const createPlayerSkinSignatureSvg = (skin: PlayerSkinId): string => {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-signature-title player-signature-desc">
   <title id="player-signature-title">Firma visual de ${getPlayerSkinDefinition(skin).name}</title>
-  <desc id="player-signature-desc">Piezas geométricas animables que diferencian esta skin.</desc>${markup}
+  <desc id="player-signature-desc">Piezas geométricas animables que diferencian esta skin.</desc><g transform="scale(0.82)">${markup}</g>
 </svg>`;
 };

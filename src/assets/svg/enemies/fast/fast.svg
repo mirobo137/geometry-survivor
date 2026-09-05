@@ -1,11 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-title enemy-fast-desc">
-  <title id="enemy-fast-title">Aguijon geométrico</title>
-  <desc id="enemy-fast-desc">Enemigo veloz visto desde arriba, con punta adelantada, aletas laterales y núcleo luminoso.</desc>
-  <ellipse id="enemy-fast-shadow" cx="0" cy="5" rx="15" ry="19" fill="#050816" opacity="0.48"/>
-  <path id="enemy-fast-fin-left" d="M-8 10-25 16-18 2z" fill="#bf633f" stroke="#fff4d6" stroke-width="1.6" stroke-linejoin="round"/>
-  <path id="enemy-fast-fin-right" d="M8 10 25 16 18 2z" fill="#bf633f" stroke="#fff4d6" stroke-width="1.6" stroke-linejoin="round"/>
-  <path id="enemy-fast-hull" d="M0-28 12-10 10 14 0 24-10 14-12-10z" fill="#f0a05f" stroke="#fff4d6" stroke-width="2.2" stroke-linejoin="round"/>
-  <path id="enemy-fast-spine" d="M0-22 5-7 0 14-5-7z" fill="#ffcf78" opacity="0.92"/>
-  <circle id="enemy-fast-core" cx="0" cy="-7" r="4.4" fill="#fff3b0" stroke="#8a402f" stroke-width="1.5"/>
-  <path id="enemy-fast-tail" d="M-5 20 0 29 5 20z" fill="#8a402f" stroke="#fff4d6" stroke-width="1.4" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-title">
+  <title id="enemy-fast-title">fast: assembled spacecraft</title>
+  <path id="enemy-fast-rear-chassis" d="M-9 10 -5 26 0 20 5 26 9 10Z" fill="#482b37"/>
+  <path id="enemy-fast-rear-thrusters" d="M-6 16 -4 25 -2 18Z M2 18 4 25 6 16Z" fill="#ffdb96"/>
+  <path id="enemy-fast-wings-swept-armor" d="M-7-5 -16-14 -28 17 -22 20 -9 7Z M7-5 16-14 28 17 22 20 9 7Z" fill="#9e473a"/>
+  <path id="enemy-fast-wings-leading-bevel" d="M-16-14 -28 17 -24 15 -15-7Z M16-14 28 17 24 15 15-7Z" fill="#ffd194"/>
+  <path id="enemy-fast-wings-trailing-shadow" d="M-24 15 -22 20 -9 7 -12 6Z M24 15 22 20 9 7 12 6Z" fill="#4c2934"/>
+  <path id="enemy-fast-hull-shell" d="M0-29 9-5 7 15 0 22 -7 15 -9-5Z" fill="#bd6246"/>
+  <path id="enemy-fast-hull-prow-bevel" d="M0-29 9-5 5-7 0-23 -5-7 -9-5Z" fill="#ffe0b1"/>
+  <path id="enemy-fast-hull-lit-plane" d="M0-23 5-7 4 12 0 16Z" fill="#f9955d"/>
+  <path id="enemy-fast-hull-shade-plane" d="M0-23 -5-7 -4 12 0 16Z" fill="#b4533b"/>
+  <path id="enemy-fast-hull-exhaust-well" d="M-4 9 0 13 4 9 3 17 0 20 -3 17Z" fill="#532a32"/>
+  <path id="enemy-fast-cockpit-well" d="M0-13 4-3 2 7 0 10 -2 7 -4-3Z" fill="#3b2533"/>
+  <path id="enemy-fast-cockpit-needle-core" d="M0-10 2-3 1 5 0 7 -1 5 -2-3Z" fill="#fff0c0"/>
 </svg>

@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-body-title player-violet-body-desc">
-  <title id="player-violet-body-title">Casco prismático de Eclipse</title>
-  <desc id="player-violet-body-desc">Diamante facetado con punta hacia -Y.</desc>
-  <g id="player-violet-body" fill="#ffffff" stroke="#ffffff" stroke-linejoin="round">
-    <path id="player-violet-body-shell" d="M0-22 17 0 8 12 0 22-8 12-17 0z" stroke-width="2.6"/>
-    <path id="player-violet-body-panel" d="M0-12 10 0 0 12-10 0z" fill="none" stroke-width="1.4" opacity="0.82"/>
-    <path id="player-violet-body-facet" d="M0-22 0 22M-17 0 17 0" fill="none" stroke-width="1.1" opacity="0.55"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-violet-body-title">
+  <title id="player-violet-body-title">violet: body</title>
+  <path id="player-violet-body-shell" d="M0-25 17-4 14 8 5 19 0 24 -5 19 -14 8 -17-4Z" fill="#666666"/>
+  <path id="player-violet-body-prow-bevel" d="M0-25 17-4 13-3 0-19 -13-3 -17-4Z" fill="#ffffff"/>
+  <path id="player-violet-body-lit-plane" d="M0-19 13-3 10 7 0 19Z" fill="#c8c8c8"/>
+  <path id="player-violet-body-shade-plane" d="M0-19 -13-3 -10 7 0 19Z" fill="#929292"/>
+  <path id="player-violet-body-side-mounts" d="M-16-2 -20 8 -13 14 -9 7Z M16-2 20 8 13 14 9 7Z" fill="#4c4c4c"/>
+  <path id="player-violet-body-engine-accents" d="M-16 2 -18 8 -13 11 -12 7Z M16 2 18 8 13 11 12 7Z" fill="#dedede"/>
 </svg>

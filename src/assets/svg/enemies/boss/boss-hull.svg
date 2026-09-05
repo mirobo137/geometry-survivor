@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-boss-hull-title">
+  <title id="enemy-boss-hull-title">Bastion: hull</title>
+  <path id="enemy-boss-hull-shell" d="M-13-44H13L30-24 34 8 21 31 0 39 -21 31 -34 8 -30-24Z" fill="#4c2d4b"/>
+  <path id="enemy-boss-hull-prow-bevel" d="M-13-44H13L30-24 24-23 10-38H-10L-24-23 -30-24Z" fill="#ead0dd"/>
+  <path id="enemy-boss-hull-foredeck" d="M-10-38H10L24-23 19-14H-19L-24-23Z" fill="#a86791"/>
+  <path id="enemy-boss-hull-port-plane" d="M-30-19 -23-15 -22 12 -12 27 -21 31 -34 8Z" fill="#995079"/>
+  <path id="enemy-boss-hull-starboard-plane" d="M30-19 23-15 22 12 12 27 21 31 34 8Z" fill="#6c3c64"/>
+  <path id="enemy-boss-hull-keel" d="M-14 27 0 31 14 27 0 37Z" fill="#ba709f"/>
+  <path id="enemy-boss-hull-bridge-well" d="M-10-33H10L7-26H-7Z" fill="#201e32"/>
+  <path id="enemy-boss-hull-bridge" d="M-3-32H3V-27H-3Z" fill="#e6c4d8"/>
+</svg>

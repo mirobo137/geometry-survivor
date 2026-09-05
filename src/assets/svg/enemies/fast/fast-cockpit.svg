@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-cockpit-title enemy-fast-cockpit-desc">
-  <title id="enemy-fast-cockpit-title">Nucleo del aguijon</title>
-  <desc id="enemy-fast-cockpit-desc">Nucleo adelantado del enemigo veloz.</desc>
-  <circle id="enemy-fast-core" cx="0" cy="-7" r="4.4" fill="#fff3b0" stroke="#8a402f" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-fast-cockpit-title">
+  <title id="enemy-fast-cockpit-title">fast: cockpit</title>
+  <path id="enemy-fast-cockpit-well" d="M0-13 4-3 2 7 0 10 -2 7 -4-3Z" fill="#3b2533"/>
+  <path id="enemy-fast-cockpit-needle-core" d="M0-10 2-3 1 5 0 7 -1 5 -2-3Z" fill="#fff0c0"/>
 </svg>

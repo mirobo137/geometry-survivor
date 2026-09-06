@@ -1,5 +1,5 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice';
-export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix';
+export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface CannonSkinDefinition {
@@ -82,11 +82,24 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     trail: 'lattice',
     accent: 0xff7ca8,
     projectileAccent: 0xffd3e8
+  },
+  {
+    id: 'helix',
+    name: 'Helix Lance',
+    subtitle: 'Curva de retorno',
+    description: 'Una lanza premium que serpentea en dos pulsos antes de recuperar su eje.',
+    rarity: 'NUEVA · PREMIUM',
+    tier: 'epic',
+    priceNova: 3000,
+    acquisition: 'nova',
+    trail: 'helix',
+    accent: 0x8de8ff,
+    projectileAccent: 0xffd978
   }
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice'
+  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

@@ -23,6 +23,10 @@ import obsidianMaster from './skins/obsidian/master.svg?raw';
 import obsidianBody from './skins/obsidian/body.svg?raw';
 import obsidianRing from './skins/obsidian/ring.svg?raw';
 import obsidianCore from './skins/obsidian/core.svg?raw';
+import novaMaster from './skins/nova/master.svg?raw';
+import novaBody from './skins/nova/body.svg?raw';
+import novaRing from './skins/nova/ring.svg?raw';
+import novaCore from './skins/nova/core.svg?raw';
 
 const parts = [ringSvg, bodySvg, coreSvg] as const;
 
@@ -56,13 +60,14 @@ describe('player SVG assets', () => {
       ['player-violet-', violetMaster, [violetBody, violetRing, violetCore]],
       ['player-amber-', amberMaster, [amberBody, amberRing, amberCore]],
       ['player-emerald-', emeraldMaster, [emeraldBody, emeraldRing, emeraldCore]],
-      ['player-obsidian-', obsidianMaster, [obsidianBody, obsidianRing, obsidianCore]]
+      ['player-obsidian-', obsidianMaster, [obsidianBody, obsidianRing, obsidianCore]],
+      ['player-nova-', novaMaster, [novaBody, novaRing, novaCore]]
     ] as const;
-    const shells = [bodySvg, violetBody, amberBody, emeraldBody, obsidianBody].map((svg) => {
+    const shells = [bodySvg, violetBody, amberBody, emeraldBody, obsidianBody, novaBody].map((svg) => {
       const match = svg.match(/id="[^"]*body-shell"[^>]*d="([^"]+)"/);
       return match?.[1] ?? svg.match(/\sd="([^"]+)"/)?.[1];
     });
-    expect(new Set(shells).size).toBe(5);
+    expect(new Set(shells).size).toBe(6);
 
     for (const [prefix, master, skinParts] of families) {
       assertSafeFramed(master, prefix);
@@ -76,7 +81,7 @@ describe('player SVG assets', () => {
   });
 
   it('keeps every skin signature vector-only and framed for the player texture', () => {
-    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian'] as const) {
+    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'] as const) {
       const svg = createPlayerSkinSignatureSvg(skin);
       expect(svg).toContain('viewBox="-32 -32 64 64"');
       expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');

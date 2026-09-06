@@ -21,6 +21,13 @@ describe('CannonPreviewSvg', () => {
     expect(svg).not.toContain('cannon-preview-muzzle-flash');
   });
 
+  it('samples Helix as its own two-lobed preview route', () => {
+    const svg = createCannonPreviewSvg('helix');
+    expect(svg).toContain('cannon-preview-trail-helix');
+    expect(svg).toContain('stroke="#8de8ff"');
+    expect(svg).not.toContain('cannon-preview-trail-curve');
+  });
+
   it('inlines the same barrel masters used in-game', () => {
     const svg = createCannonPreviewSvg('basic');
     expect(svg).toContain('M-12-7 -24-14 -28-8 -16 3 -12 2z');

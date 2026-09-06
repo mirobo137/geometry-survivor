@@ -41,6 +41,12 @@ export const createPlayerSkinSignatureSvg = (skin: PlayerSkinId): string => {
         <path d="M0-36 6-26 0-21-6-26zM0 36 6 26 0 21-6 26zM-36 0-26-6-21 0-26 6zM36 0 26-6 21 0 26 6z" fill="#ffffff" stroke-width="1.4"/>
         <path d="M-27-16 0-29 27-16 29 0 16 27 0 29-16 27-29 0z" stroke-width="1.3" stroke-dasharray="5 6" opacity=".84"/>
         <path d="M-17-7A18 18 0 0 1 17-7M17 7A18 18 0 0 1-17 7" stroke-width="1.8" opacity=".9"/>
+      </g>`,
+    supernova: `
+      <g id="player-signature-supernova" class="skin-art-supernova" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0-36 6-25 0-18-6-25zM0 36 6 25 0 18-6 25zM-36 0-25-6-18 0-25 6zM36 0 25-6 18 0 25 6z" fill="#ffffff" stroke-width="1.3"/>
+        <path d="M-26-13A30 20 0 0 1 26 13M26-13A30 20 0 0 0-26 13" stroke-width="1.45" opacity=".9"/>
+        <path d="M0-29 3-22 0-18-3-22zM0 29 3 22 0 18-3 22z" stroke-width="1.2" opacity=".86"/>
       </g>`
   }[signature];
 

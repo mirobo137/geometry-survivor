@@ -83,6 +83,7 @@ ya exista la ciudadela.
 | Amber | Proa ancha con soportes traseros / cámara hexagonal | Corona solar |
 | Emerald | Casco estrecho con aletas separadas / núcleo de huso | Cuchillas orbitales |
 | Obsidian | Placas oscuras de relevo / faro hexagonal rosa | Cuásar cardinal y retícula rota |
+| Nova | Casco de vigía facetado / estrella de energía dorada | Supernova orbital y puntas cardinales |
 
 Fuentes: `characters/player/`; registro compartido `PlayerHullSvg.ts`.
 
@@ -111,8 +112,12 @@ Para aprobar arte usar la preview tintada y Pixi, nunca sólo el master gris.
 
 ## Cañones: mecanismo, boca y ruta de salida
 
+Para balas, curvas y estelas, aplicar también
+[dirección de proyectiles](projectile-direction.md). Incluye compositor real,
+desvanecimiento, presupuesto y causa del arco antes imperceptible.
+
 Fuente y registro único: `assets/svg/cannons/CannonSvgMarkup.ts`. La UI ya toma
-las mismas piezas que Pixi. Hay cinco estilos, NO cinco armas nuevas:
+las mismas piezas que Pixi. Hay seis estilos, NO seis armas nuevas:
 
 - Basic: tubo y rail, cara superior clara, recámara oscura.
 - Curve: aguja y horquilla; conservar el canal longitudinal.
@@ -120,6 +125,8 @@ las mismas piezas que Pixi. Hay cinco estilos, NO cinco armas nuevas:
 - Rainbow: prisma con bandas cromáticas acotadas; no volver blanco todo el tubo.
 - Lattice: emisor oscuro angular, collar rosa y halo de retícula; la geometría
   debe seguir siendo legible aunque la estela se apague en Low.
+- Helix: emisor azul frío con rail de espiral y boca dorada; su estela dibuja
+  una S de dos lóbulos y recupera el eje antes de competir con un telegraph.
 
 Frame 64×64; boca izquierda `(-27,-11)`, derecha `(27,-11)`. No mover el centro
 de los círculos de muzzle para lograr una composición más bonita: su posición
@@ -164,6 +171,36 @@ No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
 - La tarjeta CSS del menú es indicativa de tema, NO una captura exacta. La lámina
   de desarrollo usa el compositor real para aprobación y comparación Low/High.
 
+## Base visual aprobada y regla de extensión
+
+La inspección humana del usuario aprobó el resultado actual como referencia de
+calidad premium: las seis skins (`cyan`, `violet`, `amber`, `emerald`,
+`obsidian`, `nova`) y los seis paquetes de cañón/proyectil (`basic`, `curve`,
+`smoke`, `rainbow`, `lattice`, `helix`) cumplen las expectativas visuales. Esta
+aprobación es una decisión de dirección para el estado actual, no una aprobación
+automática de cualquier asset futuro.
+
+Para construir nuevos enemigos, skins, cañones o proyectiles, tomar estas
+familias y sus masters de la galería viva como referencias visuales directas:
+
+1. Elegir la referencia más cercana por rol, silueta, densidad de planos,
+   paleta, firma o comportamiento de estela, y declarar esa referencia antes
+   de dibujar.
+2. Conservar el contrato técnico de la familia: frame, ancla, orden de piezas,
+   slots, IDs semánticos, budgets, Low/Medium/High y compositor compartido.
+3. Diseñar una diferencia legible y deliberada. No copiar la silueta, la
+   combinación de colores, la firma, el patrón de movimiento ni la receta de
+   proyectil de otra variante; tampoco crear un simple recolor o una escala.
+4. Comparar el resultado junto a las referencias en la lámina y en el juego a
+   tamaño real. La referencia establece el nivel de acabado, no autoriza a
+   aumentar primitivas, sprites, filtros ni coste por frame.
+
+Las familias enemigas actuales (Chaser, Fast, Tank, Elite y boss) también son
+la biblioteca de referencia por rol: una nave nueva debe ampliar el lenguaje
+de siluetas y ensamblaje, no borrar ni reemplazar las existentes. La
+aprobación del paquete actual no elimina la revisión humana de cada variante
+nueva.
+
 ## Secuencia de entrega y puerta para el siguiente agente
 
 1. Leer la solicitud actual, §22 del plan y la ficha de categoría anterior.
@@ -174,7 +211,7 @@ No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
 4. Ejecutar typecheck/tests y abrir la lámina en oscuro, claro, grises y silueta.
    Comparar 32/64/128 px del frame y después tamaño real en partida.
 5. Ejecutar `node docs/visual/capture-reference.mjs` con Vite dev en 5173:
-   verifica 15 assets, IDs únicos, vistas y fondos. Capturas en test-results,
+   verifica 17 assets, IDs únicos, vistas y fondos. Capturas en test-results,
    nunca importarlas como texturas del juego ni versionarlas como fuente.
 6. Builds local/Poki/CrazyGames y smoke. Las capturas `art-low-*`/`art-high-*`
    provienen del juego, no del SVG DOM. No confundir foto con benchmark.

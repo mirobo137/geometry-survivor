@@ -20,13 +20,13 @@ const RESIZE_MATRIX = [
 ] as const;
 
 for (const quality of ['low', 'high']) {
-  test(`carga el arte de las cuatro familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
+  test(`carga el arte de las seis familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);
-    const skins = ['cyan', 'violet', 'amber', 'emerald'];
+    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'];
     const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
-    const cannons = ['basic', 'curve', 'smoke', 'rainbow'];
+    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix'];
     for (let index = 0; index < skins.length; index += 1) {
-      await page.goto(`/?boss=1&quality=${quality}&skin=${skins[index]}&background=${backgrounds[index]}&cannon=${cannons[index]}`);
+      await page.goto(`/?boss=1&quality=${quality}&skin=${skins[index]}&background=${backgrounds[index % backgrounds.length]}&cannon=${cannons[index]}`);
       await expect(page.locator('#boot-status')).toBeHidden();
       await expect(page.locator('#game-container canvas')).toBeVisible();
       await expect(page.locator('#debug-panel')).toContainText('boss: intro');
@@ -65,7 +65,7 @@ const openGame = async (page: Page): Promise<string[]> => {
 test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
   await page.addInitScript(() => {
-    localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 10000 } }));
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 20000 } }));
   });
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
@@ -83,12 +83,12 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-skin-preview svg')).toBeVisible();
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(5);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(6);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-skin-selected-name')).toHaveText('Eclipse Prism');
-  for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian']) {
+  for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova']) {
     await page.locator(`.skin-card[data-skin="${skin}"] button`).click();
     await expect(page.locator(`.skin-card[data-skin="${skin}"]`)).toHaveClass(/is-selected/);
   }
@@ -97,12 +97,12 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
   await expect(page.locator('#start-cannon-preview .cannon-preview-shot')).toHaveCount(2);
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(5);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(6);
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-cannon-selected-name')).toHaveText('Arc Needle');
-  for (const cannon of ['basic', 'curve', 'smoke', 'rainbow', 'lattice']) {
+  for (const cannon of ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix']) {
     await page.locator(`.cannon-card[data-cannon="${cannon}"] button`).click();
     await expect(page.locator(`.cannon-card[data-cannon="${cannon}"]`)).toHaveClass(/is-selected/);
   }
@@ -151,8 +151,8 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
   expect(saved).not.toBeNull();
   expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
-  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'obsidian', unlocked: ['cyan', 'violet', 'amber', 'emerald', 'obsidian'] });
-  expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'lattice', unlocked: ['basic', 'curve', 'smoke', 'rainbow', 'lattice'] });
+  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'] });
+  expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix'] });
   expect(JSON.parse(saved ?? '{}').backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'] });
   expect(failures).toEqual([]);
 });

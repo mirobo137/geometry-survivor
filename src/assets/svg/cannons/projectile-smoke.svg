@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-smoke-title projectile-smoke-desc">
-  <title id="projectile-smoke-title">Semilla de ceniza</title>
-  <desc id="projectile-smoke-desc">Proyectil calido con nucleo de combustion.</desc>
-  <path id="projectile-smoke-body" d="M-10-5h12l7 5-7 5h-12l-4-5z" fill="#ffb86b" stroke="#fff0c5" stroke-width="1.4" stroke-linejoin="round"/>
-  <circle id="projectile-smoke-core" cx="2" cy="0" r="2.3" fill="#fff7d6"/>
+  <title id="projectile-smoke-title">Ascua de combustion</title>
+  <desc id="projectile-smoke-desc">Cabeza luminosa hacia +X, nucleo compacto y retorno afinado; estela independiente en runtime.</desc>
+  <path id="projectile-smoke-aura" d="M-13 0-6-3-4-6 6-5 12 0 6 5-4 6-6 3Z" fill="#ff995a" opacity=".2" transform="scale(1.12)"/>
+  <path id="projectile-smoke-body" d="M-13 0-6-3-4-6 6-5 12 0 6 5-4 6-6 3Z" fill="#ff995a"/>
+  <path id="projectile-smoke-facet" d="M-5-4 5-5 8-2 0-2Z" fill="#ffffff" opacity=".65"/>
+  <path id="projectile-smoke-core" d="M-7 0-1-3 8 0-1 3Z" fill="#fff8ef"/>
+  <path id="projectile-smoke-wake" d="M-14 0-6-1-3 0-6 1Z" fill="#ff995a" opacity=".5"/>
 </svg>

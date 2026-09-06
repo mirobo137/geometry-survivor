@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-basic-title projectile-basic-desc">
-  <title id="projectile-basic-title">Pulso basico</title>
-  <desc id="projectile-basic-desc">Proyectil compacto con punta luminosa.</desc>
-  <path id="projectile-basic-body" d="M-10 0-3-6 10 0l-3 6z" fill="#fff6a8" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-  <circle id="projectile-basic-core" cx="2" cy="0" r="2.4" fill="#ffffff"/>
+  <title id="projectile-basic-title">Pulso de plasma</title>
+  <desc id="projectile-basic-desc">Cabeza luminosa hacia +X, nucleo compacto y retorno afinado; estela independiente en runtime.</desc>
+  <path id="projectile-basic-aura" d="M-12 0Q-3-7 7-4L12 0 7 4Q-3 7-12 0Z" fill="#ffd86b" opacity=".2" transform="scale(1.12)"/>
+  <path id="projectile-basic-body" d="M-12 0Q-3-7 7-4L12 0 7 4Q-3 7-12 0Z" fill="#ffd86b"/>
+  <path id="projectile-basic-facet" d="M-7-2 3-4 7-3 0-1Z" fill="#ffffff" opacity=".65"/>
+  <path id="projectile-basic-core" d="M-8 0 2-3 10 0 2 3Z" fill="#fff8ef"/>
+  <path id="projectile-basic-wake" d="M-14 0-6-1-3 0-6 1Z" fill="#ffd86b" opacity=".5"/>
 </svg>

@@ -6,7 +6,7 @@ import {
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export type SkinAcquisition = 'default' | 'nova';
-export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar';
+export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar' | 'supernova';
 
 export interface PlayerSkinDefinition {
   readonly id: PlayerSkinId;
@@ -85,11 +85,23 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     palette: PLAYER_SKINS.obsidian,
     acquisition: 'nova',
     signature: 'quasar'
+  },
+  {
+    id: 'nova',
+    name: 'Nova Warden',
+    subtitle: 'Núcleo de supernova',
+    description: 'Un casco de vigía con aletas de eclipse y un reactor que late como una estrella.',
+    rarity: 'NUEVA · PREMIUM',
+    tier: 'epic',
+    priceNova: 3000,
+    palette: PLAYER_SKINS.nova,
+    acquisition: 'nova',
+    signature: 'supernova'
   }
 ] as const;
 
 export const isPlayerSkinId = (value: unknown): value is PlayerSkinId => (
-  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald' || value === 'obsidian'
+  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald' || value === 'obsidian' || value === 'nova'
 );
 
 export const getPlayerSkinDefinition = (id: PlayerSkinId): PlayerSkinDefinition => (

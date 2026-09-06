@@ -1,5 +1,6 @@
 import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
+import { getProjectileCurveOffset } from '../../presentation/pixi/fx/ProjectileMotionVisual';
 import {
   CANNON_BARREL_SVG,
   CANNON_PROJECTILE_SVG,
@@ -14,9 +15,11 @@ const toHex = (value: number): string => `#${value.toString(16).padStart(6, '0')
 
 const shotMotion = (skin: CannonSkinId, animated: boolean): string => {
   if (!animated) return '';
-  const values = skin === 'curve'
-    ? '28 0;98 -16;168 8;228 0'
-    : '28 0;100 0;172 0;232 0';
+  const values = Array.from({ length: 25 }, (_, index) => {
+    const ageSeconds = index * 0.025;
+    const state = { active: true, x: 0, y: 0, vx: 340, vy: 0, radius: 7, ageSeconds, lifetimeSeconds: 2.5 - ageSeconds, muzzle: 1 as const };
+    return `${28 + ageSeconds * 340} ${getProjectileCurveOffset(state, getCannonSkinDefinition(skin).trail).toFixed(3)}`;
+  }).join(';');
   return `<animateTransform attributeName="transform" type="translate" values="${values}" dur="1.25s" repeatCount="indefinite" begin="-0.08s"/>`;
 };
 
@@ -34,8 +37,20 @@ const muzzleFlash = (x: number, color: string, animated: boolean): string => {
   </circle>`;
 };
 
+const previewCurvePath = (skin: CannonSkinId): string => {
+  const trailKind = getCannonSkinDefinition(skin).trail;
+  return Array.from({ length: 25 }, (_, index) => {
+    const ageSeconds = index * 0.025;
+    const state = { active: true, x: 0, y: 0, vx: 340, vy: 0, radius: 7, ageSeconds, lifetimeSeconds: 2.5 - ageSeconds, muzzle: 1 as const };
+    return `${index === 0 ? 'M' : 'L'}${28 + ageSeconds * 340} ${getProjectileCurveOffset(state, trailKind).toFixed(3)}`;
+  }).join(' ');
+};
+
 const trailMarkup = (skin: CannonSkinId): string => {
-  if (skin === 'curve') return `<path class="cannon-preview-trail cannon-preview-trail-curve" d="M30 0Q98-28 190 0" fill="none" stroke="#d2a8ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>`;
+  if (skin === 'curve') {
+    return `<path class="cannon-preview-trail cannon-preview-trail-curve" d="${previewCurvePath(skin)}" fill="none" stroke="#d2a8ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>`;
+  }
+  if (skin === 'helix') return `<path class="cannon-preview-trail cannon-preview-trail-helix" d="${previewCurvePath(skin)}" fill="none" stroke="#8de8ff" stroke-width="2.1" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M52-5 58 0 52 5M120-5 126 0 120 5" fill="none" stroke="#ffd978" stroke-width="1.2"/>`;
   if (skin === 'smoke') return `<path class="cannon-preview-trail" d="M30 0H190" fill="none" stroke="#ffb86b" stroke-width="2.4" stroke-linecap="round"/><g class="cannon-preview-smoke" fill="#b56b53"><circle cx="66" cy="4" r="6"/><circle cx="103" cy="-3" r="4.5"/><circle cx="140" cy="4" r="3.3"/></g>`;
   if (skin === 'rainbow') return `<path class="cannon-preview-trail" d="M30-5H190M30-2H190M30 2H190M30 5H190" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="7 4"/><path d="M30-5H190" stroke="#ff668f" stroke-width="1.6"/><path d="M30-2H190" stroke="#ffb86b" stroke-width="1.6"/><path d="M30 2H190" stroke="#65f2c2" stroke-width="1.6"/><path d="M30 5H190" stroke="#75e6ff" stroke-width="1.6"/>`;
   if (skin === 'lattice') return `<path class="cannon-preview-trail cannon-preview-trail-lattice" d="M30 0H190" fill="none" stroke="#ff7ca8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 8"/><path d="M72-8 82 0 72 8 62 0zM132-8 142 0 132 8 122 0z" fill="none" stroke="#d3e8ff" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="72" cy="0" r="2.5" fill="#fff0fa"/><circle cx="132" cy="0" r="2.5" fill="#fff0fa"/>`;

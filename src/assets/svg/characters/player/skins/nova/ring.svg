@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-nova-ring-title player-nova-ring-desc">
+  <title id="player-nova-ring-title">Halo de supernova del jugador</title>
+  <desc id="player-nova-ring-desc">Cuatro órbitas quebradas con puntas de navegación cardinales.</desc>
+  <g id="player-nova-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path id="player-nova-ring-n" d="M-8-25A26 26 0 0 1 8-25M-4-29 0-26 4-29" stroke-width="2.2"/>
+    <path id="player-nova-ring-e" d="M25-8A26 26 0 0 1 25 8M29-4 26 0 29 4" stroke-width="2.2"/>
+    <path id="player-nova-ring-s" d="M8 25A26 26 0 0 1-8 25M4 29 0 26-4 29" stroke-width="2.2"/>
+    <path id="player-nova-ring-w" d="M-25 8A26 26 0 0 1-25-8M-29 4-26 0-29-4" stroke-width="2.2"/>
+  </g>
+</svg>

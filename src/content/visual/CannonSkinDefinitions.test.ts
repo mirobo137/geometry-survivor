@@ -2,15 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { CANNON_SKIN_DEFINITIONS, isCannonSkinId } from './CannonSkinDefinitions';
 
 describe('CannonSkinDefinitions', () => {
-  it('contains the five complete cosmetic packages', () => {
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice']);
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice']);
+  it('contains the six complete cosmetic packages', () => {
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix']);
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice', 'helix']);
     expect(CANNON_SKIN_DEFINITIONS.every((definition) => Number.isInteger(definition.accent))).toBe(true);
   });
 
   it('rejects unknown cannon ids before they reach a renderer', () => {
     expect(isCannonSkinId('rainbow')).toBe(true);
     expect(isCannonSkinId('lattice')).toBe(true);
+    expect(isCannonSkinId('helix')).toBe(true);
     expect(isCannonSkinId('plasma')).toBe(false);
   });
 });

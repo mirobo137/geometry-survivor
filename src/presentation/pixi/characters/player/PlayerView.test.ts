@@ -7,7 +7,8 @@ const skinTextures = {
   violet: Texture.WHITE,
   amber: Texture.WHITE,
   emerald: Texture.WHITE,
-  obsidian: Texture.WHITE
+  obsidian: Texture.WHITE,
+  nova: Texture.WHITE
 };
 
 const cannonPair = () => ({ left: Texture.WHITE, right: Texture.WHITE });
@@ -20,7 +21,8 @@ const textures = {
     curve: cannonPair(),
     smoke: cannonPair(),
     rainbow: cannonPair(),
-    lattice: cannonPair()
+    lattice: cannonPair(),
+    helix: cannonPair()
   },
   body: skinTextures,
   core: skinTextures,

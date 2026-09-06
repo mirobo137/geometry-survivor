@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-nova-core-title player-nova-core-desc">
+  <title id="player-nova-core-title">Nova Warden: core</title>
+  <desc id="player-nova-core-desc">Cavidad octogonal con estrella de energía cálida y reflejo localizado.</desc>
+  <path id="player-nova-core-well" d="M0-13 10-8 11 3 5 12-5 12-11 3-10-8Z" fill="#252b39"/>
+  <path id="player-nova-core-energy" d="M0-9 7-5 8 2 3 8-3 8-8 2-7-5Z" fill="#c7cbd3"/>
+  <path id="player-nova-core-reflection" d="M0-9 7-5 0-2-7-5Z" fill="#ffffff"/>
+</svg>

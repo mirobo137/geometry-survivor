@@ -2598,3 +2598,61 @@ autoriza subir el presupuesto FX, filtros SVG, texturas rasterizadas nuevas ni
 una sexta variante sin revisión. La puerta es typecheck, tests, galería de 15
 assets/45 muestras y smoke/build existentes; la inspección física Low/High y la
 aprobación visual siguen pendientes.
+
+## 22.7 Balas y estelas — extensión visual solicitada
+
+El usuario autoriza rehacer las cinco balas y sus estelas, conservando los
+cañones. Cabezas SVG compartidas, cinta con punta/alpha horneados y arco
+cosmético temprano reemplazan la cola rectangular y la curva ligada al TTL
+máximo. Contrato y secuencia de extensión:
+[dirección de proyectiles](skills/geometry-survivor-svg/references/projectile-direction.md).
+No cambia daño, cadencia, targeting ni colisiones. Low conserva las cabezas y
+el arco; las estelas siguen limitadas a Medium/High. EX mantiene su orden.
+
+## 22.8 Prueba premium — sexta skin y sexto cañón, 05-09-2026
+
+La solicitud actual autoriza una segunda extensión visual para comprobar que la
+guía puede ser ejecutada de forma consistente por modelos posteriores. Se
+añaden `nova` / Nova Warden y `helix` / Helix Lance como un paquete cosmético
+premium, sin convertirlos en contenido de gameplay.
+
+Nova conserva el contrato `body`, `core`, `ring` y firma `supernova` en el frame
+64×64, con casco de vigía facetado, reactor dorado localizado y halo orbital.
+Helix conserva dos cañones modulares, proyectil en frame 32×32 y bocas en las
+ranuras oficiales; su cinta alterna cian/oro dentro del mismo pool de cuatro
+bandas.
+
+La nueva curva no reutiliza el arco morado: usa `11 × sin(2πt/T) × sin(πt/T)`
+con `T = min(0,46 s, TTL inicial)`, por lo que forma dos lóbulos opuestos,
+vuelve a la línea y orienta la cabeza con la derivada analítica. La simulación
+sigue rectilínea: no cambia daño, targeting, cadencia, colisión, economía,
+save ni capacidad de pools. Gameplay, trail y preview consumen la misma receta.
+
+La entrega exige actualizar registro, texturas cacheadas, selector, URL de
+desarrollo, CSS, galería, tests y documentación. No autoriza filtros, nuevas
+dependencias, más instancias por frame ni adelantar EX-01. La puerta automática
+es typecheck, suite, tres builds, galería de 17 assets/51 muestras, smoke y
+capturas de Curve/Helix en Low/High. La aprobación visual humana del usuario
+queda cerrada; la medición física de rendimiento y legibilidad en móvil sigue
+siendo una validación separada.
+
+## 22.9 Base visual aprobada para futuras extensiones, 05-09-2026
+
+El usuario confirma que la inspección humana del paquete premium fue realizada y
+aprobada. Las seis skins (`cyan`, `violet`, `amber`, `emerald`, `obsidian`,
+`nova`) y los seis conjuntos de cañón/bala (`basic`, `curve`, `smoke`,
+`rainbow`, `lattice`, `helix`) cumplen las expectativas visuales actuales y
+establecen la referencia oficial de presentación del proyecto.
+
+Desde ahora, todo enemigo, skin, cañón o proyectil nuevo debe tomar como base
+visual las familias ya construidas y sus referencias de `fleet-reference` y
+`projectile-reference`. El agente debe indicar qué referencia adopta y qué eje
+la diferencia: silueta, planos, paleta, firma, ensamblaje, movimiento o receta
+de estela. No se acepta un duplicado, recolor, escala ni una curva aproximada.
+
+La referencia aprobada fija calidad y lenguaje, no aumenta presupuestos ni
+autoriza copiar assets. Se conservan los contratos de frame, ancla, slots,
+registro compartido, Low/Medium/High, pooling y separación entre presentación y
+simulación. Cada variante futura requiere sus propias pruebas automáticas,
+capturas a tamaño real y revisión humana; la aprobación de estas seis familias
+no es una aprobación anticipada de diseños posteriores.

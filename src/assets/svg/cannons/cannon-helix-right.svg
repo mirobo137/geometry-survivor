@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-helix-right-title cannon-helix-right-desc">
+  <title id="cannon-helix-right-title">Emisor derecho Helix Lance</title>
+  <desc id="cannon-helix-right-desc">Cañón premium con rail de espiral y boca cian en la ranura derecha.</desc>
+  <g id="cannon-helix-right" stroke-linejoin="round">
+    <path id="cannon-helix-right-mount" d="M6-8 13-11 17-2 12 8 6 5 5-1Z" fill="#243e61" stroke="#e5fbff" stroke-width="0.8"/>
+    <path id="cannon-helix-right-barrel" d="M12-8 24-14 29-8 17 4 12 3Z" fill="#4b7497" stroke="#f0f6ff" stroke-width="0.8"/>
+    <path id="cannon-helix-right-facet" d="M12-8 24-14 22-10 14-5Z" fill="#a9d2df"/>
+    <path id="cannon-helix-right-return" d="M25-4 17 4 12 3 16 0Z" fill="#2c5278"/>
+    <path id="cannon-helix-right-coil" d="M23-9Q18-5 22-1T17 5" fill="none" stroke="#ffd978" stroke-width="1.3" stroke-linecap="round"/>
+    <path id="cannon-helix-right-coil-inner" d="M20-10Q16-6 19-3T15 2" fill="none" stroke="#8de8ff" stroke-width="0.9" stroke-linecap="round"/>
+    <circle id="cannon-helix-right-collar" cx="19" cy="-4" r="3.6" fill="none" stroke="#8de8ff" stroke-width="0.9"/>
+    <circle id="cannon-helix-right-muzzle" cx="27" cy="-11" r="3.5" fill="#101d34" stroke="#e5fbff" stroke-width="0.8"/>
+    <circle id="cannon-helix-right-muzzle-core" cx="27" cy="-11" r="1.4" fill="#ffd978"/>
+  </g>
+</svg>

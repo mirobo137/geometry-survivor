@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-nova-title player-nova-desc">
+  <title id="player-nova-title">Nova Warden: assembled hull</title>
+  <desc id="player-nova-desc">Master compuesto de halo orbital, casco de vigía y reactor de supernova.</desc>
+  <g id="player-nova-ring" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path id="player-nova-ring-n" d="M-8-25A26 26 0 0 1 8-25M-4-29 0-26 4-29" stroke-width="2.2"/>
+    <path id="player-nova-ring-e" d="M25-8A26 26 0 0 1 25 8M29-4 26 0 29 4" stroke-width="2.2"/>
+    <path id="player-nova-ring-s" d="M8 25A26 26 0 0 1-8 25M4 29 0 26-4 29" stroke-width="2.2"/>
+    <path id="player-nova-ring-w" d="M-25 8A26 26 0 0 1-25-8M-29 4-26 0-29-4" stroke-width="2.2"/>
+  </g>
+  <path id="player-nova-body-shell" d="M0-28 9-20 12-8 22-1 18 8 10 10 6 25 0 29-6 25-10 10-18 8-22-1-12-8-9-20Z" fill="#656b78"/>
+  <path id="player-nova-body-prow-bevel" d="M0-28 9-20 0-22-9-20Z" fill="#ffffff"/>
+  <path id="player-nova-body-lit-plane" d="M0-22 9-18 10-7 18-1 13 4 5 6 0 18Z" fill="#d6d8df"/>
+  <path id="player-nova-body-shade-plane" d="M0-22-9-18-10-7-18-1-13 4-5 6 0 18Z" fill="#9297a1"/>
+  <path id="player-nova-body-wing-pods" d="M-12-8-24-12-28-5-19 5-13 4ZM12-8 24-12 28-5 19 5 13 4Z" fill="#343b4c"/>
+  <path id="player-nova-body-engine-accents" d="M-5 20-2 23-3 29-7 25ZM5 20 2 23 3 29 7 25ZM-22-4-19-2-20 3-24 0ZM22-4 19-2 20 3 24 0Z" fill="#f1f2f5"/>
+  <path id="player-nova-core-well" d="M0-13 10-8 11 3 5 12-5 12-11 3-10-8Z" fill="#252b39"/>
+  <path id="player-nova-core-energy" d="M0-9 7-5 8 2 3 8-3 8-8 2-7-5Z" fill="#c7cbd3"/>
+  <path id="player-nova-core-reflection" d="M0-9 7-5 0-2-7-5Z" fill="#ffffff"/>
+</svg>

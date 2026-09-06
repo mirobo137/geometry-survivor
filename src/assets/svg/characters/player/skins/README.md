@@ -9,6 +9,8 @@ y el ancla `(0, 0)` con las piezas comunes (sombra, acentos, cañones).
 | violet | diamante + marco de esquinas |
 | amber | cuña bastión + destellos solares |
 | emerald | diamante con hojas + arcos abiertos |
+| obsidian | placas de relevo oscuro + faro cardinal |
+| nova | casco de vigía + halo orbital de supernova |
 
 Las firmas siguen en `SkinSignatureSvg.ts`. El runtime rasteriza cada pieza una
 vez; no se parsea SVG por frame ni se cambia radio, daño o colisión.

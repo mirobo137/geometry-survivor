@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proyectiles — compositor real</title>
+<style>body{background:#090e1b;color:#e8ecff;font:16px system-ui;margin:24px}canvas{max-width:100%;height:auto}button{padding:12px;margin:8px}</style>
+<h1>Proyectiles · cabeza, arco y desvanecimiento</h1>
+<p>Seis recetas Pixi reales. La morada hace un arco de salida de 0,32 s; Helix hace una S de dos lóbulos de 0,46 s. El botón congela el reloj.</p>
+<button id="motion">Animar</button><button id="theme">Fondo claro</button><button id="quality">Low</button><div id="scene"></div>
+<script type="module">
+import { Application, Sprite, Container } from 'pixi.js';
+import { CANNON_SKIN_DEFINITIONS } from '../../src/content/visual/CannonSkinDefinitions.ts';
+import { CANNON_PROJECTILE_SVG } from '../../src/assets/svg/cannons/CannonSvgMarkup.ts';
+import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
+import { ProjectileTrailView } from '../../src/presentation/pixi/fx/ProjectileTrailView.ts';
+import { getProjectileCurveOffset, getProjectileCurveVelocity } from '../../src/presentation/pixi/fx/ProjectileMotionVisual.ts';
+const app = new Application();
+await app.init({width:1000,height:770,resolution:1,autoStart:false,background:0x090e1b});
+document.querySelector('#scene').append(app.canvas);
+const rows = CANNON_SKIN_DEFINITIONS.map((definition,index)=>{
+  const root = new Container(); root.position.set(30,65+index*120); root.scale.set(2);app.stage.addChild(root);
+  const trail = new ProjectileTrailView(3,'high',definition.id);root.addChild(trail.root);
+  const texture = createSvgTexture(app.renderer,CANNON_PROJECTILE_SVG[definition.id],{x:-16,y:-16,width:32,height:32});
+  const heads = Array.from({length:3},()=>{const sprite=new Sprite(texture);sprite.anchor.set(.5);root.addChild(sprite);return sprite;});
+  return {definition,trail,heads};
+});
+let running=false,low=false,light=false,seconds=0,previous=0;
+function render(){
+  for(const row of rows){
+    const states=row.heads.map((_,index)=>{const age=.08+index*.18+(seconds%0.12);return {active:true,x:65+index*145+(seconds%0.12)*100,y:0,vx:460,vy:0,radius:7,ageSeconds:age,lifetimeSeconds:2.5-age,muzzle:0};});
+    row.trail.render(states);row.trail.render(states);row.trail.root.visible=!low;
+    for(let i=0;i<states.length;i++){const state=states[i];row.heads[i].position.set(state.x,getProjectileCurveOffset(state,row.definition.trail));row.heads[i].rotation=Math.atan2(getProjectileCurveVelocity(state,row.definition.trail),460);}
+  }app.render();
+}
+function frame(now){if(!running)return;seconds+=previous?Math.min((now-previous)/1000,.05):0;previous=now;render();requestAnimationFrame(frame);}
+document.querySelector('#motion').onclick=()=>{running=!running;previous=0;document.querySelector('#motion').textContent=running?'Pausar':'Animar';if(running)requestAnimationFrame(frame);};
+document.querySelector('#theme').onclick=()=>{light=!light;app.renderer.background.color=light?0xe4e9ec:0x090e1b;render();};
+document.querySelector('#quality').onclick=()=>{low=!low;document.querySelector('#quality').textContent=low?'High':'Low';render();};
+document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;previous=0;document.querySelector('#motion').textContent='Animar';}});
+render();
+</script></html>

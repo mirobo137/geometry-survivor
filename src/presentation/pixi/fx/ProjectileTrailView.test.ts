@@ -39,6 +39,28 @@ describe('ProjectileTrailView', () => {
     view.render([projectile(true, 327)]);
     expect(view.activeSegmentCount).toBe(1);
     expect(view.root.visible).toBe(true);
-    expect(view.root.children.length).toBeGreaterThanOrEqual(3);
+    expect(view.root.children.filter(child => child.visible)).toHaveLength(4);
+  });
+
+  it('renders the Helix recipe with the same bounded four-band ribbon', () => {
+    const view = new ProjectileTrailView(1, 'high', 'helix');
+    view.render([projectile(true, 320)]);
+    view.render([projectile(true, 327)]);
+    expect(view.activeSegmentCount).toBe(1);
+    expect(view.root.children.filter(child => child.visible)).toHaveLength(4);
+    expect((view.root.children[0] as { tint: number }).tint).toBe(0x8de8ff);
+  });
+
+  it('caps a young tail at the muzzle and reuses its sprites when changing recipes', () => {
+    const view = new ProjectileTrailView(1, 'high', 'curve');
+    const state = { ...projectile(true, 320), ageSeconds: 0.01 };
+    const children = [...view.root.children];
+    view.render([state]);
+    view.render([state]);
+    expect(view.root.children[0].position.x).toBeCloseTo(320 - 460 * 0.01);
+    view.setCannonSkin('smoke');
+    expect(view.root.visible).toBe(false);
+    expect(view.root.children).toEqual(children);
+    view.root.destroy({ children: true });
   });
 });

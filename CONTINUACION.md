@@ -6,6 +6,11 @@
 >
 > Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01a sigue siendo la próxima tarea de la ruta principal; no repetir el trabajo visual ya implementado.
 >
+> Aprobación visual vigente: el usuario inspeccionó y aprobó las seis skins y
+> los seis paquetes de cañón/bala. Son la biblioteca premium de referencia para
+> futuras variantes; deben inspirar sin repetirse. Cada diseño nuevo conserva
+> contratos y presupuestos, declara su referencia y requiere validación propia.
+>
 > Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
 >
 > Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
@@ -47,7 +52,7 @@ Atajos que pueden escribirse después de la URL base:
 ?debug=1
 ?stress=1
 ?boss=1
-?skin=cyan|violet|amber|emerald
+?skin=cyan|violet|amber|emerald|obsidian|nova
 ?background=deep-space|ion-storm|solar-drift|crystal-field
 ?quality=low|medium|high
 ?profile=1
@@ -1550,7 +1555,60 @@ skin y `Lattice Halo` (`lattice`) como quinto paquete de cañón/proyectil/estel
   High, revisar lectura a 32/64/128 px, movimiento, trail, pausa y muerte del
   boss. Repetir en móvil físico antes de afirmar que el nuevo paquete es una
   aprobación visual humana.
-- No crear una sexta skin ni un nuevo tipo de proyectil hasta cerrar esta puerta.
+- Esta puerta quedó cerrada con la extensión premium documentada en §60; la
+  siguiente variante visual debe seguir el mismo contrato y no abrir gameplay.
 
 Estado: IMPLEMENTACIÓN COMPLETA / VALIDACIÓN AUTOMÁTICA COMPLETA / VALIDACIÓN
 HUMANA FÍSICA PENDIENTE.
+
+## 60. Proyectiles y estelas — dirección de continuidad
+
+Petición actual: rehacer balas y colas, conservar cañones y hacer visible el
+arco morado durante gameplay. Cinco SVG actualizados: aura tenue, cuerpo,
+faceta, núcleo y retorno direccional; misma fuente para locker y Pixi.
+
+Causa del arco imperceptible: el seno se repartía en 2,5 s de TTL, aunque los
+impactos cercanos terminaban mucho antes. Ahora el arco cosmético de salida
+dura 0,32 s, alcanza 14 px y regresa suavemente con sin². Tangente y estela
+usan la misma función; preview muestrea esa curva. Sigue siendo cosmético:
+la colisión es rectilínea, no hay homing ni ventaja por skin.
+
+Se sustituyen rectángulos blancos y puntos cuadrados por una cinta afilada
+con desvanecimiento longitudinal/transversal horneado en una fuente 128×32
+compartida (16 KiB RGBA teóricos). Cuatro bandas por proyectil, pool y límites
+FX conservados; no generar geometría por frame. Longitud limitada por edad
+real, 0,14 s y 64 unidades; jamás nace cola detrás del muzzle. Low no carga
+la textura de cola y conserva cabeza completa y curva. Reset/cambio de receta
+limpian continuidad y la raíz libera la fuente al destruirse.
+
+Guía canónica nueva:
+`skills/geometry-survivor-svg/references/projectile-direction.md`, enlazada
+desde la dirección por familias y el README de cañones. Incluye diferencias
+entre curva cosmética y física, contratos, presupuestos y pruebas obligatorias.
+Lámina Pixi reproducible: `docs/visual/projectile-reference.html`.
+Captura: `node docs/visual/capture-projectiles.mjs` con Vite en 5173.
+
+Extensión premium posterior: `Nova Warden` (`nova`) es la sexta skin con
+`body`, `core`, `ring`, master y firma `supernova`; `Helix Lance` (`helix`) es
+el sexto paquete de cañón/proyectil/estela. Helix usa una S de dos lóbulos,
+`11 × sin(2πt/T) × sin(πt/T)`, `T=0,46 s`, compartida por cabeza, tangente,
+estela y preview. Ambos conservan frames, tint, pools y separación de la
+simulación; la galería pasa a 17 assets/51 muestras. El usuario inspeccionó y
+aprobó visualmente las seis skins y los seis paquetes de cañón/bala como la
+referencia premium vigente. La ruta principal sigue siendo EX-01a; la medición
+de rendimiento y legibilidad en móvil físico queda como validación separada.
+
+Regla vigente para futuras extensiones: todo enemigo, skin, cañón o proyectil
+nuevo debe partir visualmente de las familias ya construidas, declarar cuál es
+su referencia y diferenciarse de ella de forma deliberada. No se permiten
+duplicados, recolores, escalas ni curvas aproximadas. Las referencias fijan el
+nivel de acabado y los contratos técnicos, pero cada variante nueva requiere
+sus propios tests, capturas a tamaño real y revisión humana.
+
+Verificado: 191 tests/64 archivos, typecheck, builds local/Poki/CrazyGames;
+14/14 smoke Chromium (incluye móvil emulado). Último ajuste de la ruta estática
+del preview validado con typecheck y sus tres tests específicos.
+capturas oscuras y claras inspeccionadas, curva visible en compositor real;
+carga de partida con morada en Low/High sin errores de runtime. Sin medición
+de teléfono físico: pendiente contrastar legibilidad de disparos cercanos,
+stress y sensación del arco con el usuario. No cerrar puertas EX por este arte.

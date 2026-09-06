@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-curve-title projectile-curve-desc">
-  <title id="projectile-curve-title">Aguja curva</title>
-  <desc id="projectile-curve-desc">Proyectil fino con punta de media luna.</desc>
-  <path id="projectile-curve-body" d="M-11 0q6-8 17 0Q-5 8-11 0z" fill="#d2a8ff" stroke="#fff4ff" stroke-width="1.3"/>
-  <path id="projectile-curve-core" d="M-1-3 9 0-1 3z" fill="#ffb8df" stroke="none"/>
+  <title id="projectile-curve-title">Aguja lunar</title>
+  <desc id="projectile-curve-desc">Cabeza luminosa hacia +X, nucleo compacto y retorno afinado; estela independiente en runtime.</desc>
+  <path id="projectile-curve-aura" d="M-13 0Q-4-8 9-3L13 0 9 3Q-4 8-13 0Z" fill="#bc83ff" opacity=".2" transform="scale(1.12)"/>
+  <path id="projectile-curve-body" d="M-13 0Q-4-8 9-3L13 0 9 3Q-4 8-13 0Z" fill="#bc83ff"/>
+  <path id="projectile-curve-facet" d="M-9-2Q-3-7 5-4L0-2Z" fill="#ffffff" opacity=".65"/>
+  <path id="projectile-curve-core" d="M-8 0Q0-4 11 0Q0 4-8 0Z" fill="#fff8ef"/>
+  <path id="projectile-curve-wake" d="M-14 0-6-1-3 0-6 1Z" fill="#bc83ff" opacity=".5"/>
 </svg>

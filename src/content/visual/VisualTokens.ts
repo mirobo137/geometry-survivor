@@ -1,4 +1,4 @@
-export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova';
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -51,6 +51,14 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
     bodyDetail: 0x7e3f61,
     core: 0xffb8d9,
     accent: 0xfff0fa
+  },
+  nova: {
+    shadow: 0x080b18,
+    outer: 0x8de8ff,
+    body: 0xb6bfd0,
+    bodyDetail: 0x687995,
+    core: 0xffd978,
+    accent: 0xfff4cf
   }
 } as const;
 
@@ -65,7 +73,8 @@ export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionT
   violet: { signatureSpin: -0.18, signaturePulse: 0.02 },
   amber: { signatureSpin: 0.28, signaturePulse: 0.016 },
   emerald: { signatureSpin: -0.34, signaturePulse: 0.024 },
-  obsidian: { signatureSpin: 0.22, signaturePulse: 0.018 }
+  obsidian: { signatureSpin: 0.22, signaturePulse: 0.018 },
+  nova: { signatureSpin: -0.26, signaturePulse: 0.021 }
 } as const;
 
 export interface FxQualityTokens {
@@ -88,15 +97,19 @@ export const FX_QUALITY: Readonly<Record<FxQuality, FxQualityTokens>> = {
 
 /** Short trail budget for projectiles; it is presentation-only. */
 export const PROJECTILE_TRAIL_TOKENS = {
-  lengthSeconds: 0.11,
-  maxLength: 48,
+  lengthSeconds: 0.14,
+  maxLength: 64,
   width: 3.2,
   color: 0xfff6a8
 } as const;
 
 /** Presentation-only arc for the Arc Needle projectile package. */
 export const PROJECTILE_VISUAL_TOKENS = {
-  curveAmplitude: 10
+  curveAmplitude: 14,
+  curveDurationSeconds: 0.32,
+  /** A two-lobed S curve for the premium Helix Lance package. */
+  helixAmplitude: 11,
+  helixDurationSeconds: 0.46
 } as const;
 
 export const PLAYER_VISUAL_TOKENS = {

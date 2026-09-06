@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   gameOverClose: vi.fn(),
   revivePending: vi.fn(),
   reviveResult: vi.fn(),
+  doubleNovaPending: vi.fn(),
+  doubleNovaResult: vi.fn(),
+  gameOverUpdateNova: vi.fn(),
   playerShot: vi.fn()
 }));
 
@@ -16,6 +19,7 @@ vi.mock('../presentation/PixiGameView', () => ({
   PixiGameView: class {
     public readonly root = {};
     public closeLevelUpFx = vi.fn();
+    public resetPresentation = vi.fn();
     public playPlayerRevive = vi.fn();
     public playPlayerShot = mocks.playerShot;
   }
@@ -30,7 +34,9 @@ vi.mock('../ui/level-up/LevelUpOverlay', () => ({
 }));
 
 vi.mock('../ui/PauseOverlay', () => ({
-  PauseOverlay: class {}
+  PauseOverlay: class {
+    public close = vi.fn();
+  }
 }));
 
 vi.mock('../ui/GameOverOverlay', () => ({
@@ -39,6 +45,9 @@ vi.mock('../ui/GameOverOverlay', () => ({
     public close = mocks.gameOverClose;
     public setRevivePending = mocks.revivePending;
     public setReviveResult = mocks.reviveResult;
+    public setDoubleNovaPending = mocks.doubleNovaPending;
+    public setDoubleNovaResult = mocks.doubleNovaResult;
+    public updateNova = mocks.gameOverUpdateNova;
   }
 }));
 
@@ -55,7 +64,13 @@ const createElements = (): GameElements => ({
   gameOver: {} as HTMLElement
 });
 
-const createPlatform = (): PlatformAdapter => ({
+interface PlatformOverrides {
+  readonly ads?: PlatformAdapter['ads'];
+  readonly saveStore?: PlatformAdapter['saveStore'];
+  readonly baselineMode?: boolean;
+}
+
+const createPlatform = (overrides: PlatformOverrides = {}): PlatformAdapter => ({
   name: 'test',
   lifecycle: {
     init: vi.fn(async () => undefined),
@@ -64,7 +79,7 @@ const createPlatform = (): PlatformAdapter => ({
     onGameResume: vi.fn(),
     onGameOver: vi.fn()
   },
-  ads: {
+  ads: overrides.ads ?? {
     isRewardedAvailable: vi.fn(async () => true),
     showRewarded: vi.fn(async (): Promise<RewardedAdResult> => 'rewarded')
   },
@@ -78,14 +93,14 @@ const createPlatform = (): PlatformAdapter => ({
     playCue: vi.fn(),
     shutdown: vi.fn()
   },
-  saveStore: {
+  saveStore: overrides.saveStore ?? {
     load: vi.fn(() => createDefaultSaveData()),
     save: vi.fn(() => true),
     clear: vi.fn()
   }
 });
 
-const createOptions = (): GameOptions => ({
+const createOptions = (overrides: PlatformOverrides = {}): GameOptions => ({
   app: {
     renderer: {},
     stage: { addChild: vi.fn() },
@@ -94,7 +109,8 @@ const createOptions = (): GameOptions => ({
   elements: createElements(),
   stressMode: false,
   buildTarget: 'test',
-  platform: createPlatform()
+  baselineMode: overrides.baselineMode,
+  platform: createPlatform(overrides)
 });
 
 describe('Game', () => {
@@ -103,6 +119,9 @@ describe('Game', () => {
     mocks.gameOverClose.mockReset();
     mocks.revivePending.mockReset();
     mocks.reviveResult.mockReset();
+    mocks.doubleNovaPending.mockReset();
+    mocks.doubleNovaResult.mockReset();
+    mocks.gameOverUpdateNova.mockReset();
     mocks.playerShot.mockReset();
     vi.stubGlobal('window', {
       location: { search: '' },
@@ -171,5 +190,243 @@ describe('Game', () => {
     expect(mocks.gameOverClose).toHaveBeenCalledTimes(1);
     expect(mocks.revivePending).toHaveBeenCalledTimes(1);
     expect(mocks.reviveResult).not.toHaveBeenCalled();
+  });
+
+  it('clears input and restores audio/lifecycle when a run is revived', async () => {
+    const platform = createPlatform();
+    const game = new Game({ ...createOptions(), platform });
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'game-over') => void;
+      requestRevive: (terminalToken: number) => Promise<void>;
+      input: { keys: Set<string>; getMovement: () => { x: number; y: number } };
+      player: { state: { health: number } };
+    };
+    runtime.input.keys.add('ArrowRight');
+    expect(runtime.input.getMovement().x).toBe(1);
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+    expect(runtime.input.getMovement()).toEqual({ x: 0, y: 0 });
+
+    await runtime.requestRevive.call(game, 1);
+
+    expect(platform.audio.resume).toHaveBeenCalledTimes(1);
+    expect(platform.audio.startMusic).toHaveBeenCalledTimes(1);
+    expect(platform.lifecycle.onGameStart).toHaveBeenCalledTimes(1);
+  });
+
+  it('defers NOVA until the run is definitive and settles a revived run once', async () => {
+    vi.useFakeTimers();
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const game = new Game(createOptions({
+      saveStore: {
+        load: () => saved,
+        save,
+        clear: vi.fn()
+      }
+    }));
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'game-over') => void;
+      requestRevive: (terminalToken: number) => Promise<void>;
+      openGameOverSummary: (...args: unknown[]) => Promise<void>;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+      player: { state: { health: number } };
+      gameState: { phase: string };
+      pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+    };
+
+    runtime.combat.stats.elapsedSeconds = 60;
+    runtime.combat.stats.kills = 10;
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+    expect(save).not.toHaveBeenCalled();
+
+    await runtime.requestRevive.call(game, 1);
+    expect(runtime.gameState.phase).toBe('playing');
+    expect(save).not.toHaveBeenCalled();
+    await runtime.openGameOverSummary.call(
+      game,
+      { outcome: 'game-over', elapsedSeconds: 60, kills: 10, experience: 0, score: 10 },
+      { timeSeconds: 60, score: 10 },
+      12,
+      12,
+      1
+    );
+    expect(mocks.gameOverOpen).not.toHaveBeenCalled();
+
+    runtime.combat.stats.elapsedSeconds = 120;
+    runtime.combat.stats.kills = 20;
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+    const pending = runtime.pendingTerminalRun;
+    expect(pending?.token).toBe(3);
+    if (!pending) throw new Error('Expected a pending terminal run');
+
+    await runtime.openGameOverSummary.call(game, pending.summary, pending.best, pending.novaReward, pending.novaReward, pending.token);
+    expect(saved.wallet.nova).toBe(24);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    await runtime.openGameOverSummary.call(game, pending.summary, pending.best, pending.novaReward, pending.novaReward, pending.token);
+    expect(saved.wallet.nova).toBe(24);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('settles victory immediately and ignores a repeated terminal transition', () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const game = new Game(createOptions({
+      saveStore: {
+        load: () => saved,
+        save,
+        clear: vi.fn()
+      }
+    }));
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+      gameState: { phase: string };
+    };
+    runtime.combat.stats.elapsedSeconds = 90;
+    runtime.combat.stats.kills = 30;
+
+    runtime.finishRun.call(game, 'victory');
+    runtime.finishRun.call(game, 'victory');
+
+    expect(runtime.gameState.phase).toBe('victory');
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(saved.wallet.nova).toBe(33);
+  });
+
+  it('rejects a stale revive callback after a victory', async () => {
+    const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
+    const game = new Game(createOptions({
+      ads: {
+        isRewardedAvailable: vi.fn(async () => true),
+        showRewarded
+      }
+    }));
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      requestRevive: (terminalToken: number) => Promise<void>;
+    };
+
+    runtime.finishRun.call(game, 'victory');
+    await runtime.requestRevive.call(game, 1);
+
+    expect(showRewarded).not.toHaveBeenCalled();
+  });
+
+  it('offers double NOVA only after final settlement and never revives victory', async () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
+    const game = new Game(createOptions({
+      ads: {
+        isRewardedAvailable: vi.fn(async () => true),
+        showRewarded
+      },
+      saveStore: {
+        load: () => saved,
+        save,
+        clear: vi.fn()
+      }
+    }));
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      requestDoubleNova: (terminalToken: number) => Promise<void>;
+      requestRevive: (terminalToken: number) => Promise<void>;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+    };
+    runtime.combat.stats.elapsedSeconds = 90;
+    runtime.combat.stats.kills = 30;
+    runtime.finishRun.call(game, 'victory');
+
+    await runtime.requestDoubleNova.call(game, 1);
+    await runtime.requestRevive.call(game, 1);
+
+    expect(saved.wallet.nova).toBe(66);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(showRewarded).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads a settled wallet without granting the terminal reward again', () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const saveStore = {
+      load: () => saved,
+      save,
+      clear: vi.fn()
+    };
+    const firstGame = new Game(createOptions({ saveStore }));
+    const firstRuntime = firstGame as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+    };
+    firstRuntime.combat.stats.elapsedSeconds = 90;
+    firstRuntime.combat.stats.kills = 30;
+    firstRuntime.finishRun.call(firstGame, 'victory');
+
+    const secondGame = new Game(createOptions({ saveStore }));
+
+    expect(saved.wallet.nova).toBe(33);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(secondGame).toBeInstanceOf(Game);
+  });
+
+  it('starts a fresh baseline record after an explicit terminal restart', () => {
+    vi.useFakeTimers();
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const platform = createPlatform({
+      ads: {
+        isRewardedAvailable: vi.fn(async () => false),
+        showRewarded: vi.fn(async (): Promise<RewardedAdResult> => 'unavailable')
+      },
+      saveStore: {
+        load: () => saved,
+        save,
+        clear: vi.fn()
+      }
+    });
+    const game = new Game({ ...createOptions({ baselineMode: true }), platform });
+    const runtime = game as unknown as {
+      activateRun: (unlockAudio: boolean) => void;
+      finishRun: (outcome: 'victory') => void;
+      restartRun: () => void;
+      baseline: { isActive: boolean; records: readonly unknown[] };
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+    };
+
+    runtime.activateRun(false);
+    expect(runtime.baseline.isActive).toBe(true);
+    runtime.combat.stats.elapsedSeconds = 90;
+    runtime.combat.stats.kills = 30;
+    runtime.finishRun.call(game, 'victory');
+    expect(runtime.baseline.records).toHaveLength(1);
+
+    runtime.restartRun.call(game);
+    expect(runtime.baseline.records).toHaveLength(1);
+    expect(runtime.baseline.isActive).toBe(true);
+
+    runtime.combat.stats.elapsedSeconds = 120;
+    runtime.combat.stats.kills = 20;
+    runtime.finishRun.call(game, 'victory');
+    expect(runtime.baseline.records).toHaveLength(2);
+    expect(save).toHaveBeenCalledTimes(2);
   });
 });

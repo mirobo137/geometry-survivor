@@ -2,9 +2,9 @@
 
 > Snapshot operativo: 05-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
 >
-> **Próxima tarea: EX-01a**, caracterizar cierre económico de una run con revive, seguida de EX-02 (Laboratorio) y EX-03 (matriz local/baseline humano). Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
+> **Próxima tarea: EX-02b**, definir la semántica del bonus por arma a partir de la matriz reproducible de EX-02a. EX-03 (matriz local/baseline humano) sigue después. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
 >
-> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01a sigue siendo la próxima tarea de la ruta principal; no repetir el trabajo visual ya implementado.
+> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a está validado automáticamente y EX-02b es la próxima tarea de la ruta principal. No repetir el trabajo visual ya implementado.
 >
 > Aprobación visual vigente: el usuario inspeccionó y aprobó las seis skins y
 > los seis paquetes de cañón/bala. Son la biblioteca premium de referencia para
@@ -1595,7 +1595,8 @@ el sexto paquete de cañón/proyectil/estela. Helix usa una S de dos lóbulos,
 estela y preview. Ambos conservan frames, tint, pools y separación de la
 simulación; la galería pasa a 17 assets/51 muestras. El usuario inspeccionó y
 aprobó visualmente las seis skins y los seis paquetes de cañón/bala como la
-referencia premium vigente. La ruta principal sigue siendo EX-01a; la medición
+referencia premium vigente. EX-01 automático quedó cerrado y la ruta principal
+continúa con EX-02; la medición
 de rendimiento y legibilidad en móvil físico queda como validación separada.
 
 Regla vigente para futuras extensiones: todo enemigo, skin, cañón o proyectil
@@ -1605,10 +1606,74 @@ duplicados, recolores, escalas ni curvas aproximadas. Las referencias fijan el
 nivel de acabado y los contratos técnicos, pero cada variante nueva requiere
 sus propios tests, capturas a tamaño real y revisión humana.
 
-Verificado: 191 tests/64 archivos, typecheck, builds local/Poki/CrazyGames;
+Verificado: 202 tests/65 archivos, typecheck, builds local/Poki/CrazyGames;
 14/14 smoke Chromium (incluye móvil emulado). Último ajuste de la ruta estática
 del preview validado con typecheck y sus tres tests específicos.
 capturas oscuras y claras inspeccionadas, curva visible en compositor real;
 carga de partida con morada en Low/High sin errores de runtime. Sin medición
 de teléfono físico: pendiente contrastar legibilidad de disparos cercanos,
 stress y sensación del arco con el usuario. No cerrar puertas EX por este arte.
+
+## 61. EX-01a/EX-01b — cierre provisional y liquidación idempotente
+
+La caracterización de la ruta muerte → revive → resultado definitivo encontró
+que la versión anterior acreditaba NOVA y cerraba baseline demasiado pronto.
+`Game` ahora conserva un terminal provisional: una muerte no guarda recompensa
+ni registro baseline hasta resolver el revive o reiniciar; una victoria se
+liquida inmediatamente. La liquidación usa las estadísticas definitivas y no
+puede repetirse.
+
+También quedó cubierto que el doble NOVA sólo aparece después de liquidar, que
+un callback de una terminal anterior no reabre la partida y que una victoria no
+acepta revive. Prueba específica: `npm test -- --run src/app/Game.test.ts`, 7/7.
+
+Estado: EX-01a y EX-01b AUTOMÁTICO OK. Siguiente tarea: EX-01c, validar reload,
+restart, restauración de audio/input y que un cierre definitivo genere un solo
+registro baseline. EX-01 completo permanece abierto hasta esa regresión.
+
+## 62. EX-01c — regresión de cierre, reload y baseline — 05-09-2026
+
+La regresión confirmó que una recompensa terminal liquidada permanece única al
+recargar `Game` con el mismo `SaveStore`; no aparece un segundo pago
+provisional. También confirmó que revivir limpia input retenido y restaura
+audio, música y lifecycle, y que reiniciar desde una terminal comienza un
+registro baseline nuevo sin alterar el registro cerrado anterior.
+
+El cambio de producción fue mínimo: `resetRunState()` llama a
+`baseline.beginRun()` para cubrir los reinicios explícitos. La cobertura nueva
+incluye 10/10 pruebas de `Game.test.ts` y la suite completa queda en 198/198.
+También pasaron typecheck, smoke browser 14/14 y los builds local, Poki y
+CrazyGames. Se conserva el aviso conocido del chunk principal mayor a 500 kB;
+la medición de rendimiento físico y la validación real de SDK/portal no se
+presentan como cubiertas por esta tarea.
+
+Estado: EX-01a/EX-01b/EX-01c AUTOMÁTICO OK. Próxima tarea: EX-02, Laboratorio:
+medir antes de ajustar.
+
+## 63. EX-02a — matriz reproducible del Laboratorio — 05-09-2026
+
+Se añadió el escenario de validación aislado
+`src/debug/BalanceCombatScenario.ts`, que utiliza los behaviors y pools reales
+sin levantar Pixi, DOM, audio ni director de oleadas. Con reloj fijo de 60 Hz,
+semilla `334462`, posición inicial y 20 segundos por pasada, compara meta 0 y
+meta 5 para Projectile, Orbit y Chain en layouts single, dispersed y dense.
+
+La salida separa una pasada de eliminación con Tanks de 72 HP y otra de DPS
+sostenido con 100000 HP. La matriz completa, la definición de cada posición y
+la lectura de los resultados están en
+`docs/balance/EX-02a-matrix.md`. El resultado clave es que Projectile sube de
+25.20 a 36.75 DPS en single-target (+45.8%), mientras Orbit y Chain quedan en
+0% de cambio con meta 5. Esto confirma la discrepancia de EX-02b; no autoriza
+todavía ajustar porcentajes ni extender el bonus a todas las armas.
+
+Para evitar que el instrumento mezclara armas, `CombatWeaponSystem` y
+`WeaponScheduler` aceptan habilitación selectiva sólo para esta medición; sus
+valores por defecto mantienen el runtime normal sin cambios.
+
+Evidencia: typecheck correcto, suite completa 202/202 en 65 archivos, smoke
+browser 14/14 y builds local/Poki/CrazyGames correctos. Se mantiene el warning
+conocido del chunk principal mayor a 500 kB. No se midieron rendimiento físico,
+GPU, memoria ni SDKs/portales.
+
+Estado: EX-02a AUTOMÁTICO OK. Próxima tarea: EX-02b, definir semántica por arma
+y fuente única de fórmula/preview antes de recalibrar porcentajes.

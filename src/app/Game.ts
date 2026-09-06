@@ -43,6 +43,18 @@ const HIT_STOP_SECONDS = {
   terminal: 0.024
 } as const;
 
+interface PendingTerminalRun {
+  readonly token: number;
+  readonly summary: ReturnType<typeof createRunSummary>;
+  readonly best: ReturnType<typeof mergeBestRun>;
+  readonly novaReward: number;
+  readonly frameProfile: {
+    readonly averageMs: number | null;
+    readonly p95Ms: number | null;
+  };
+  settled: boolean;
+}
+
 export interface GameElements {
   readonly container: HTMLElement;
   readonly debug: HTMLElement;
@@ -125,6 +137,7 @@ export class Game {
   private terminalRunToken = 0;
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
+  private pendingTerminalRun: PendingTerminalRun | null = null;
   private levelUpRequestToken = 0;
   private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
@@ -658,28 +671,50 @@ export class Game {
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
     const novaReward = calculateRunNova(summary);
     const profile = this.profiler.enabled ? this.profiler.snapshot(performance.now() + 500) : null;
-    this.baseline.finish({
-      outcome,
-      elapsedSeconds: summary.elapsedSeconds,
-      nova: novaReward,
-      frameProfile: {
-        averageMs: profile?.averageMs ?? null,
-        p95Ms: profile?.p95Ms ?? null
-      }
-    });
-    this.baselinePanel?.render(this.baseline);
-    const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + novaReward) };
-    this.saveStore.save({ ...saved, best, wallet });
     this.terminalRunToken += 1;
     const terminalToken = this.terminalRunToken;
     this.terminalNovaReward = novaReward;
-    this.terminalTotalNova = wallet.nova;
+    this.terminalTotalNova = Math.min(MAX_NOVA, saved.wallet.nova + novaReward);
+    this.pendingTerminalRun = {
+      token: terminalToken,
+      summary,
+      best,
+      novaReward,
+      frameProfile: {
+        averageMs: profile?.averageMs ?? null,
+        p95Ms: profile?.p95Ms ?? null
+      },
+      settled: false
+    };
+    // Victory cannot be revived, so it is definitive immediately. Death stays
+    // provisional until the revive opportunity has been resolved.
+    if (outcome === 'victory') this.settleTerminalRun(terminalToken);
     this.clearTerminalSummaryTimer();
     this.terminalSummaryTimer = setTimeout(() => {
       this.terminalSummaryTimer = null;
       if (this.stopped || !this.gameState.isTerminal) return;
-      void this.openGameOverSummary(summary, best, novaReward, wallet.nova, terminalToken);
+      void this.openGameOverSummary(summary, best, novaReward, this.terminalTotalNova, terminalToken);
     }, TERMINAL_SUMMARY_DELAY_MS);
+  }
+
+  private settleTerminalRun(terminalToken: number): boolean {
+    const pending = this.pendingTerminalRun;
+    if (!pending || pending.token !== terminalToken) return false;
+    if (pending.settled) return true;
+
+    const saved = this.saveStore.load();
+    const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + pending.novaReward) };
+    if (!this.saveStore.save({ ...saved, best: pending.best, wallet })) return false;
+    this.baseline.finish({
+      outcome: pending.summary.outcome,
+      elapsedSeconds: pending.summary.elapsedSeconds,
+      nova: pending.novaReward,
+      frameProfile: pending.frameProfile
+    });
+    this.baselinePanel?.render(this.baseline);
+    pending.settled = true;
+    this.terminalTotalNova = wallet.nova;
+    return true;
   }
 
   private async openGameOverSummary(
@@ -689,14 +724,18 @@ export class Game {
     totalNova: number,
     terminalToken: number
   ): Promise<void> {
-    const canDoubleNova = novaReward > 0 && totalNova < MAX_NOVA
-      && this.rewardedOffers.canOffer('double-nova')
-      && await this.rewardedAds.isAvailable('double-nova');
     const canRevive = summary.outcome === 'game-over'
       && this.rewardedOffers.canOffer('revive')
       && await this.rewardedAds.isAvailable('revive');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
-    this.gameOver.open(summary, best, novaReward, totalNova, () => {
+    if (summary.outcome === 'game-over' && !canRevive) this.settleTerminalRun(terminalToken);
+    const settled = this.pendingTerminalRun?.token === terminalToken
+      && this.pendingTerminalRun.settled;
+    const canDoubleNova = settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
+      && this.rewardedOffers.canOffer('double-nova')
+      && await this.rewardedAds.isAvailable('double-nova');
+    if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
       this.restartRun();
     }, {
       doubleNovaAvailable: canDoubleNova,
@@ -707,13 +746,13 @@ export class Game {
   }
 
   private async requestRevive(terminalToken: number): Promise<void> {
-    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (terminalToken !== this.terminalRunToken || this.gameState.phase !== 'game-over') return;
     const offerToken = this.rewardedOffers.begin('revive');
     if (offerToken === null) return;
     this.gameOver.setRevivePending();
     const result = await this.rewardedAds.request('revive');
     this.rewardedOffers.settle('revive', offerToken, result);
-    if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (this.stopped || terminalToken !== this.terminalRunToken || this.gameState.phase !== 'game-over') return;
     if (result !== 'rewarded') {
       this.gameOver.setReviveResult(result);
       return;
@@ -723,10 +762,12 @@ export class Game {
       return;
     }
     // A revived run is no longer terminal. Invalidate callbacks owned by the
-    // old summary while preserving the once-per-run ledger entries.
+    // old summary while preserving the once-per-run ledger entries. The
+    // terminal reward and baseline record are still provisional and therefore
+    // have not been written yet.
     this.terminalRunToken += 1;
+    this.pendingTerminalRun = null;
     this.gameOver.close();
-    this.baseline.resumeAfterRevive();
     this.view.playPlayerRevive();
     // Game over only resets input state; listeners remain attached for an
     // in-place revive, so attaching again would duplicate pointer handlers.
@@ -737,7 +778,9 @@ export class Game {
   }
 
   private async requestDoubleNova(terminalToken: number): Promise<void> {
-    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal
+      || this.pendingTerminalRun?.token !== terminalToken
+      || !this.pendingTerminalRun.settled) return;
     const offerToken = this.rewardedOffers.begin('double-nova');
     if (offerToken === null) return;
     this.gameOver.setDoubleNovaPending();
@@ -790,6 +833,8 @@ export class Game {
   }
 
   private restartRun(): void {
+    if (!this.gameState.isTerminal) return;
+    this.settleTerminalRun(this.terminalRunToken);
     if (!this.gameState.restart()) return;
     this.terminalRunToken += 1;
     this.rewardedOffers.reset();
@@ -798,6 +843,7 @@ export class Game {
 
   private resetRunState(): void {
     this.clearRunPresentation();
+    this.baseline.beginRun(this.fxQuality);
     this.audio.resume();
     this.audio.startMusic();
     this.lifecycle.onGameStart();
@@ -833,6 +879,7 @@ export class Game {
     this.presentationTime = 0;
     this.presentedShotsFired = 0;
     this.baselinePanelSeconds = 0;
+    this.pendingTerminalRun = null;
     this.fpsTime = performance.now();
     this.pause.close();
     this.gameOver.close();

@@ -16,6 +16,12 @@ const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 
+export interface CombatWeaponUpdateOptions {
+  readonly projectileEnabled?: boolean;
+  readonly orbitEnabled?: boolean;
+  readonly chainEnabled?: boolean;
+}
+
 /** Runs authored weapon behavior against the enemy query surface. */
 export class CombatWeaponSystem {
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
@@ -188,18 +194,23 @@ export class CombatWeaponSystem {
     this.criticalChance = Math.min(1, Math.max(0, this.criticalChance + Math.max(0, amount)));
   }
 
-  public update(dtSeconds: number, player: PlayerState): void {
+  public update(
+    dtSeconds: number,
+    player: PlayerState,
+    options: CombatWeaponUpdateOptions = {}
+  ): void {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (dt === 0) return;
 
     this.chainBehavior.updateSegments(dt);
-    this.orbitBehavior.update(dt, player);
+    if (options.orbitEnabled ?? true) this.orbitBehavior.update(dt, player);
     this.scheduler.update(
       dt,
       this.projectileCooldown,
-      this.chainBehavior.isUnlocked,
+      options.chainEnabled ?? this.chainBehavior.isUnlocked,
       CHAIN_DEFINITION.cooldownSeconds,
-      player
+      player,
+      options.projectileEnabled ?? true
     );
     this.projectileBehavior.update(dt);
   }

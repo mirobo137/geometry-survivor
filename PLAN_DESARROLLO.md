@@ -2490,10 +2490,13 @@ El repositorio ya tiene NOVA/Laboratorio, cuatro placements rewarded locales,
 registrador de baseline y scheduler/behaviors de las tres armas. La existencia
 de esos módulos no aprueba por sí sola balance, móvil físico ni plataformas.
 
-La próxima tarea de implementación es **EX-01: cierre económico de run y
-revive**, seguida de **EX-02: calibración del Laboratorio**. Primero se prueban
-las rutas señaladas; no se presenta la revisión estática como bug reproducido.
-Después se completa la matriz local y la evidencia de diez runs. No se rehace
+La puerta automática de **EX-01: cierre económico de run y revive** quedó
+cerrada con EX-01a/EX-01b/EX-01c: la secuencia fue caracterizada, la liquidación
+prematura corregida y la regresión de save/reload, audio/input y baseline pasó.
+**EX-02a** ya dejó una matriz reproducible de las tres armas y confirmó la
+discrepancia entre la descripción del meta y el bonus aplicado; la siguiente
+subtarea es **EX-02b**, definir esa semántica antes de tocar porcentajes. Después
+se toma la evidencia de diez runs de EX-03. No se rehace
 la extracción de armas ya entregada ni se expone Boomerang en cartas antes de
 cerrar estas puertas. El orden de §16.1 no cambia: se cierran pendientes de
 prioridades 1–3 antes de avanzar a 5.

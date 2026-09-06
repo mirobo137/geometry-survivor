@@ -17,16 +17,21 @@ export class WeaponScheduler {
     projectileCooldownSeconds: number,
     chainEnabled: boolean,
     chainCooldownSeconds: number,
-    player: PlayerState
+    player: PlayerState,
+    projectileEnabled = true
   ): void {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (dt <= 0) return;
 
-    this.projectileAccumulator += dt;
-    const projectileCooldown = Math.max(0.001, projectileCooldownSeconds);
-    while (this.projectileAccumulator >= projectileCooldown) {
-      this.projectileAccumulator -= projectileCooldown;
-      this.callbacks.fireProjectile(player);
+    if (projectileEnabled) {
+      this.projectileAccumulator += dt;
+      const projectileCooldown = Math.max(0.001, projectileCooldownSeconds);
+      while (this.projectileAccumulator >= projectileCooldown) {
+        this.projectileAccumulator -= projectileCooldown;
+        this.callbacks.fireProjectile(player);
+      }
+    } else {
+      this.projectileAccumulator = 0;
     }
 
     if (!chainEnabled) return;

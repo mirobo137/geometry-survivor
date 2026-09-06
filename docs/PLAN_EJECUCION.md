@@ -45,8 +45,8 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | ID | Prioridad del plan | Entrega | Estado al redactar |
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
-| EX-01 | 1–2 | cierre económico y revive sin doble cobro | PRÓXIMA; requiere tests de integración |
-| EX-02 | 1 | Laboratorio medido y acotado | discrepancia código/objetivo pendiente |
+| EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
+| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a OK, EX-02b pendiente |
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | instrumentos existen; puerta humana pendiente |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | pendiente, depende de EX-01 a EX-04 |
@@ -84,10 +84,9 @@ duplicar recompensas. Cierra un riesgo de prioridades 1–2, no crea monetizaci�
 `src/platform/RewardedOfferLedger.ts`, `src/platform/save/SaveStore.ts`,
 `src/ui/GameOverOverlay.ts`, `src/debug/BaselineRunRecorder.ts` y tests.
 
-**Evidencia de entrada:** `finishRun()` calcula y acredita la recompensa al
-entrar al terminal; revive conserva estadísticas y permite volver a terminar.
-Esta revisión estática exige una prueba de secuencia, no se etiqueta como fallo
-reproducido hasta ejecutar la aserción.
+**Evidencia de entrada:** la revisión estática detectó que `finishRun()` podía
+acreditar NOVA y cerrar baseline antes de resolver el revive. La aserción de
+secuencia reprodujo el riesgo y habilitó la corrección mínima de EX-01b.
 
 Subtareas, en orden:
 
@@ -115,6 +114,41 @@ build, reloj y XP, otorga 35% HP y 2 s de protección, una vez por run.
 **No hacer:** cambiar precios, porcentajes meta, timers visuales, daño del boss,
 SDKs o la dificultad para facilitar la prueba. Reutilizar reloj falso y mocks
 existentes. Si todos los casos ya pasan, documentarlo y no refactorizar.
+
+### Resultado actual EX-01a/EX-01b — 05-09-2026
+
+- **EX-01a AUTOMÁTICO OK:** `Game.test.ts` cubre muerte → revive → segunda
+  muerte con estadísticas crecientes, victoria, saldo, callbacks obsoletos,
+  doble NOVA y el bloqueo de revive después de victoria.
+- **EX-01b IMPLEMENTADO:** `Game` mantiene un terminal provisional. La muerte
+  no acredita NOVA ni registra baseline hasta que no hay revive disponible o el
+  jugador elige reiniciar; la victoria se liquida inmediatamente. La liquidación
+  es idempotente y usa el resumen definitivo, no suma el resultado provisional.
+- El callback de una terminal anterior queda invalidado al revivir y revive sólo
+  acepta la fase `game-over`; el doble NOVA sólo se ofrece después de liquidar.
+- Prueba específica: `npm test -- --run src/app/Game.test.ts` → 7/7.
+
+### Resultado actual EX-01c — 05-09-2026
+
+- **EX-01c AUTOMÁTICO OK:** la liquidación conserva el saldo al reconstruir
+  `Game` desde el mismo `SaveStore` y no vuelve a acreditar la recompensa
+  terminal. Un reinicio explícito comienza un registro baseline nuevo, sin
+  duplicar el registro de la run anterior.
+- La ruta de revive limpia el input retenido y restaura audio, música y
+  lifecycle una sola vez; el revive sigue siendo único por run y conserva el
+  contrato de 35% HP + 2 s de invulnerabilidad.
+- Cambio mínimo de producción: `resetRunState()` inicia `baseline.beginRun()`
+  para que un reinicio desde terminal o pausa tenga una nueva medición.
+- Regresión específica: `Game.test.ts` → 10/10. Validación completa: `npm run
+  typecheck`, `npm test -- --run` → 198/198, `npm run test:browser` → 14/14,
+  `npm run build:poki` y `npm run build:crazygames` en verde.
+- Los builds conservan el aviso conocido de chunk principal mayor a 500 kB;
+  no bloquea EX-01c y queda para la puerta de rendimiento correspondiente.
+
+EX-01 queda cerrado en su puerta automática. La validación humana de economía,
+rendimiento físico y SDKs/portales sigue perteneciendo a EX-03 y §16.1.
+
+**Siguiente ID:** `EX-02`, Laboratorio: medir antes de ajustar.
 
 ### EX-02 — Laboratorio: medir antes de ajustar
 
@@ -150,6 +184,31 @@ de eliminación; no reducir todo a una fórmula aislada.
 **No hacer:** borrar saves, regalar/reembolsar NOVA sin decisión, cambiar precios
 o añadir vida, crítico, vampirismo, XP o escudo permanentes. Si conservar compras
 requiere una política nueva de compensación, pedir esa decisión.
+
+### Resultado actual EX-02a — 05-09-2026
+
+- **EX-02a AUTOMÁTICO OK:** `BalanceCombatScenario` ejecuta 18 casos
+  reproducibles: Projectile, Orbit y Chain; layouts single, dispersed y dense;
+  meta 0 y meta 5. Mantiene semilla, posición, carta, duración y timestep.
+- Cada caso separa una pasada de eliminación (`72 HP`) y una pasada de DPS
+  sostenido (`100000 HP`). Reporta daño aplicado, golpes, bajas, primer tiempo
+  de eliminación, daño por paquete y cooldown mínimo en
+  [`docs/balance/EX-02a-matrix.md`](balance/EX-02a-matrix.md).
+- La matriz confirma el riesgo previsto: Projectile pasa de `25.20` a `36.75`
+  DPS en single-target (`+45.8%`) con meta 5, mientras Orbit y Chain no cambian
+  (`0%`) porque los bonuses permanentes actuales sólo se aplican a Projectile.
+  Esto es caracterización, no ajuste ni aceptación del objetivo final `10–15%`.
+- Para aislar contribuciones, `CombatWeaponSystem` y `WeaponScheduler` aceptan
+  la habilitación selectiva de cada arma; el valor por defecto conserva las tres
+  activas y el runtime no cambia.
+- Prueba específica: `npm test -- --run src/debug/BalanceCombatScenario.test.ts`
+  → 4/4. Validación completa: `npm run typecheck`, `npm test -- --run` →
+  202/202, `npm run test:browser` → 14/14, y builds Poki/CrazyGames en verde.
+- Se conserva el warning conocido del chunk principal mayor a 500 kB. No se
+  midieron FPS, GPU, memoria, móvil físico ni SDKs: no son parte de EX-02a.
+
+**Siguiente ID:** `EX-02b`, definir semántica por arma y una única fuente para
+fórmula/preview antes de recalibrar porcentajes.
 
 ### EX-03 — Cerrar evidencia local y baseline humano
 

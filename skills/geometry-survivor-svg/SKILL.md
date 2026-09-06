@@ -38,6 +38,10 @@ Para detalles tecnicos selectivos, consulta:
 
 ## Flujo code-first
 
+Para iconos, cartas, botones, HUD y contenedores, leer primero
+[dirección premium de UI](references/ui-art-direction.md). Incluye contratos
+por tamaño, materiales, estados, adaptación y la lámina ejecutable de referencia.
+
 ### 1. Define el contrato antes del dibujo
 
 Escribe una ficha breve para cada asset:

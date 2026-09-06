@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="ui-upgrade-icons" viewBox="0 0 48 48" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+  <!-- Navigation-console family. Upper-left facets; dark wells; local energy. -->
+  <symbol id="ui-upgrade-icon-speed" viewBox="0 0 48 48">
+    <path d="M18 8 32 4 28 18 39 18 18 44 21 28 9 28Z" fill="currentColor"/>
+    <path d="m18 8 14-4-8 17-9 3Z" fill="#eef8ff"/>
+    <path d="m24 25 15-7-21 26Z" fill="#12334a" opacity=".7"/>
+    <path d="M5 14h8M3 21h7M32 34h10M29 41h9" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-projectile" viewBox="0 0 48 48">
+    <path d="m24 3 10 15-2 15-8 8-8-8-2-15Z" fill="#0a1425" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 7 7 12-7 15-7-15Z" fill="currentColor"/>
+    <path d="m24 7 0 17-7-5Z" fill="#eef8ff"/>
+    <path d="m24 24 7-5-3 13-4 4Z" fill="#234057"/>
+    <path d="M10 23 7 33l7-4M38 23l3 10-7-4" fill="currentColor" opacity=".6"/>
+    <path d="M21 38v6M27 38v6" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-core" viewBox="0 0 48 48">
+    <path d="m24 3 18 10v22L24 45 6 35V13Z" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 3 18 10-7 4-11-6-11 6-7-4Z" fill="#d1e2ec"/>
+    <path d="m42 13 0 22-18 10v-8l11-6V17Z" fill="#0a1425"/>
+    <path d="m24 13 10 6v12l-10 6-10-6V19Z" fill="#060d19" stroke="currentColor" stroke-width="1.5"/>
+    <path d="m24 18 6 4v6l-6 4-6-4v-6Z" fill="currentColor"/>
+    <path d="m24 18 0 7-6-3Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-orbit" viewBox="0 0 48 48">
+    <ellipse cx="24" cy="24" rx="20" ry="11" transform="rotate(-32 24 24)" fill="none" stroke="currentColor" stroke-width="2" opacity=".55"/>
+    <path d="m24 15 8 5v9l-8 5-8-5v-9Z" fill="#16283c" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 15 8 5-8 5-8-5Z" fill="#d1e2ec"/>
+    <path d="m24 21 4 3-4 5-4-5Z" fill="currentColor"/>
+    <path d="m33 7 12 1-5 14-4-7-8-2Z" fill="currentColor"/>
+    <path d="m33 7 12 1-9 7Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-chain" viewBox="0 0 48 48">
+    <path d="m9 33 14-15 14-6M23 18l-1 13 17 7" fill="none" stroke="#183448" stroke-width="6" stroke-linejoin="round"/>
+    <path d="m9 33 14-15 14-6M23 18l-1 13 17 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="m9 27 6 6-6 6-6-6Zm28-21 6 6-6 6-6-6Zm2 26 6 6-6 6-6-6Z" fill="#14293b" stroke="currentColor" stroke-width="2"/>
+    <path d="m9 29 4 4H5Zm28-21 4 4h-8Zm2 26 4 4h-8Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-armor" viewBox="0 0 48 48">
+    <path d="m24 4 17 7-2 20-15 13L9 31 7 11Z" fill="#203347" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 4 17 7-7 5-10-4-10 4-7-5Z" fill="#d1e2ec"/>
+    <path d="m24 12 10 4-2 12-8 8-8-8-2-12Z" fill="currentColor" opacity=".6"/>
+    <path d="m24 12 10 4-2 12-8 8Z" fill="#0c1b2b"/>
+    <path d="m14 24 10 9 10-9M15 18l9 8 9-8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-experience" viewBox="0 0 48 48">
+    <path d="m24 4 6 12 13 3-10 10 1 14-10-7-10 7 1-14L5 19l13-3Z" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 4 0 21-19-6 13-3Z" fill="#d1e2ec"/>
+    <path d="m24 25 19-6-10 10 1 14Z" fill="currentColor"/>
+    <path d="m24 25 0 11-10 7 1-14Z" fill="currentColor" opacity=".55"/>
+    <path d="m24 19 5 6-5 6-5-6Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-repair" viewBox="0 0 48 48">
+    <path d="M24 42 8 28 6 17l7-9h8l3 4 3-4h8l7 9-2 11Z" fill="#162b3b" stroke="currentColor" stroke-width="2"/>
+    <path d="m6 17 7-9h8l3 4-8 2-5 8Z" fill="#d1e2ec"/>
+    <path d="m24 42 16-14 2-11-7 5-11 13Z" fill="currentColor" opacity=".5"/>
+    <path d="M21 17h6v6h6v6h-6v6h-6v-6h-6v-6h6Z" fill="currentColor"/>
+    <path d="M21 17h6v3h-6Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-vampirism" viewBox="0 0 48 48">
+    <path d="m24 3 16 17-16 25L8 20Z" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 3 0 17H8Z" fill="#d1e2ec"/>
+    <path d="m24 3 16 17H24Z" fill="currentColor"/>
+    <path d="m8 20 16 25-6-25Zm32 0L24 45l6-25Z" fill="currentColor" opacity=".55"/>
+    <path d="m19 19 5 4 5-4-5 17Z" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-critical" viewBox="0 0 48 48">
+    <path d="m26 3-17 24h12l-2 18 20-27H27Z" fill="#18293d" stroke="currentColor" stroke-width="2"/>
+    <path d="m26 3-17 24 15-7Z" fill="#eef8ff"/>
+    <path d="m24 20 15-2-20 27 7-18Z" fill="currentColor"/>
+    <path d="m5 8 6 4M38 35l6 4M38 8l5-4" stroke="currentColor" stroke-width="2.5"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-shield" viewBox="0 0 48 48">
+    <path d="m24 3 18 9v13L24 44 6 25V12Z" fill="#102638" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 3 18 9-7 4-11-6-11 6-7-4Z" fill="#d1e2ec"/>
+    <path d="m13 16 11-6 11 6v8L24 36 13 24Z" fill="currentColor" opacity=".18"/>
+    <path d="m24 15 8 5v5l-8 9-8-9v-5Z" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M24 19v10M19 24h10" stroke="#eef8ff" stroke-width="2"/>
+  </symbol>
+</svg>

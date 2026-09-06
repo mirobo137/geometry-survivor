@@ -2478,6 +2478,14 @@ prioridad 8 de §16.1, no para el siguiente incremento del contrato local.
 
 # 22. EJECUCIÓN VIGENTE POR TAREAS — 04-09-2026
 
+Encargo visual posterior: guía premium de UI y lote de referencia autorizados
+por el usuario. Fuente canónica:
+[dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md).
+Cubre contenedores, cartas, iconos, botones y HUD. El lote integrado comprende
+once iconos de cartas, marco, emblema de inicio y pausa/ajustes; no equivale a
+rediseñar todas las pantallas. La ruta EX se conserva y la aprobación humana
+del nuevo lote sigue pendiente.
+
 La [guía operativa](docs/PLAN_EJECUCION.md) desglosa §16.1 en unidades pequeñas
 con entradas, alcance, módulos, pruebas y salidas. Es una extensión operativa
 de este plan, no una fuente de visión independiente. Se aplica igual a cualquier

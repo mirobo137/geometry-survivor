@@ -28,3 +28,8 @@ because it is a decorative nine-zone-like border; the icon sprite preserves its
 aspect ratio and is mounted once. Card tone, focus, hover and reduced-motion
 states are CSS concerns, so a new visual variant does not require changing the
 simulation or duplicating SVG markup.
+# Dirección premium vigente
+
+Consultar [la guía de UI](../../../../skills/geometry-survivor-svg/references/ui-art-direction.md)
+y `docs/visual/ui-reference.html`. Las cartas consumen `premium-icons.svg` y
+`premium-card-frame.svg`; las fuentes anteriores se conservan para comparación.

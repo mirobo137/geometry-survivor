@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <!-- Broad structural facets only: this frame stretches in portrait. -->
+  <path d="M18 2h284l16 16v224l-16 16H18L2 242V18Z" fill="#050a13"/>
+  <path d="M20 5h280l15 15v219l-15 15H20L5 239V20Z" fill="var(--card-line, #315773)"/>
+  <path d="M20 5h280l15 15h-9L296 12H24L12 24v211l-7 4V20Z" fill="#b8cbdc" opacity=".38"/>
+  <path d="M12 24 24 12h272l12 12v210l-13 13H25l-13-13Z" fill="var(--card-surface, #0d1a31)"/>
+  <path d="M24 12h272l12 12v22H12V24Z" fill="#eef8ff" opacity=".035"/>
+  <path d="M12 208h296v26l-13 13H25l-13-13Z" fill="#030911" opacity=".32"/>
+  <path d="M26 7h68l6 5H24Z" fill="var(--card-accent, #75e6ff)"/>
+  <path d="M5 27v44l7-7V24Z" fill="var(--card-accent, #75e6ff)" opacity=".65"/>
+  <path d="M295 247h-46l-7 7h58l15-15v-35l-7 7v23Z" fill="#03070e"/>
+  <path d="M271 250h22l8-8" fill="none" stroke="var(--card-accent, #75e6ff)" stroke-width="2" opacity=".6" vector-effect="non-scaling-stroke"/>
+</svg>

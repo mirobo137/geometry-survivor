@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geometry Survivor — referencia UI</title>
+<style>
+  body{margin:0;padding:24px;background:#080f1c;color:#eaf0ff;font:15px system-ui;overflow:auto;height:auto}
+  body.light{background:#d9e2ea;color:#18283b}main{max-width:1100px;margin:auto}
+  h1{font-size:28px}h2{margin-top:32px;font-size:18px}p{max-width:75ch;line-height:1.6}
+  .controls,.icons,.comparison{display:flex;flex-wrap:wrap;gap:16px}
+  .tile{padding:16px;border:1px solid #385269;border-radius:12px;display:grid;gap:12px;text-align:center}
+  .icons svg{width:48px;height:48px;color:#75e6ff}.light .icons svg{color:#167185}
+  .controls button{display:flex;align-items:center;justify-content:center;gap:10px;min-width:48px;min-height:48px;background:#16283c;color:#d9f4ff;border:1px solid #456780;border-radius:8px;font:inherit;padding:10px 16px}
+  .controls button svg{width:24px;height:24px}.controls button:focus-visible{outline:3px solid #75e6ff;outline-offset:3px}
+  .controls button:active{transform:translateY(1px)}.controls button:disabled{opacity:.55}
+  #mark svg{width:128px;height:128px;color:#75e6ff}#mark{display:flex;align-items:center;gap:28px}
+  .comparison svg{width:48px;height:48px;color:#ffe39a}.comparison section{padding:20px;background:#0d1a31;color:#eef8ff;border-radius:12px}
+  #level-up{position:relative;inset:auto;background:none;display:block;padding:0;backdrop-filter:none}
+  #level-up-title,#level-up-rewarded{display:none}#level-up-options{max-width:none}
+  #ui-upgrade-icons{position:absolute;width:0;height:0;overflow:hidden}
+  @media(max-width:480px){body{padding:16px}h1{font-size:22px}}
+</style>
+<main>
+  <h1>Consola de navegación</h1>
+  <p>Referencia de autoría · fuentes del juego, once símbolos y cartas reales.
+  Material fijo; acento por categoría. La aprobación artística de este lote queda pendiente.</p>
+  <div class="controls"><button id="theme" type="button">Cambiar fondo</button></div>
+  <div id="mark"></div>
+  <h2>Controles · 24 px dentro de área táctil</h2><div id="controls" class="controls"></div>
+  <h2>Antes / candidato · mismo tamaño</h2><div id="comparison" class="comparison"></div>
+  <h2>Biblioteca de símbolos · 48 px</h2><div id="icons" class="icons"></div>
+  <h2>Cartas · componente real, con preview</h2>
+  <div id="level-up"><h2 id="level-up-title"></h2><div id="level-up-options"></div>
+    <div id="level-up-rewarded"><span id="level-up-rewarded-message"></span><button id="level-up-reroll"></button></div>
+  </div>
+</main>
+<script type="module" src="./ui-reference.ts"></script>
+</html>

@@ -15,6 +15,10 @@
   <circle id="ui-start-mark-node-left" cx="-57" cy="0" r="5" fill="#b8ffd9" />
   <polygon id="ui-start-mark-core-shadow" points="0,-31 27,-15 27,15 0,31 -27,15 -27,-15" fill="#0b1930" stroke="currentColor" stroke-width="4" />
   <polygon id="ui-start-mark-core" points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="currentColor" opacity="0.95" />
+  <path id="ui-start-mark-crown-bevel" d="M0-31 27-15 19-11 0-22-19-11-27-15Z" fill="#eef8ff" />
+  <path id="ui-start-mark-return-plane" d="M27-15V15L0 31V22L19 11V-11Z" fill="#243e56" />
+  <path id="ui-start-mark-core-facet" d="M0-22V0L-19-11Z" fill="#eef8ff" />
   <polygon id="ui-start-mark-core-cut" points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="#081020" />
+  <path id="ui-start-mark-reactor" d="m0-6 5 3v6L0 6-5 3v-6Z" fill="#eef8ff" />
   <path id="ui-start-mark-energy" d="M-7-37 0-47 7-37M-37 7-47 0-37-7M7 37 0 47-7 37M37-7 47 0 37 7" fill="none" stroke="#75e6ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" />
 </svg>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import cardFrameSvg from './card-frame.svg?raw';
-import iconsSvg from './icons.svg?raw';
+import cardFrameSvg from './premium-card-frame.svg?raw';
+import iconsSvg from './premium-icons.svg?raw';
 
 const unsafeSvg = /<(?:script|foreignObject|image)\b|(?:url\(|on[a-z]+\s*=|filter\s*=|mask\s*=)/i;
 
@@ -22,5 +22,11 @@ describe('level-up SVG assets', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.every((id) => id.startsWith('ui-upgrade-icon-'))).toBe(true);
     expect(iconsSvg).not.toMatch(unsafeSvg);
+    for (const match of iconsSvg.matchAll(/<symbol\b[^>]*>([\s\S]*?)<\/symbol>/g)) {
+      const primitives = match[1].match(/<(?:path|circle|ellipse|rect|polygon|line)\b/g) ?? [];
+      expect(primitives.length).toBeLessThanOrEqual(8);
+      expect(new TextEncoder().encode(match[0]).length).toBeLessThanOrEqual(2048);
+    }
+    expect(new TextEncoder().encode(cardFrameSvg).length).toBeLessThanOrEqual(3072);
   });
 });

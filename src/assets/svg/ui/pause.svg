@@ -6,6 +6,7 @@
      focusable="false">
   <title id="ui-pause-title">Pausa</title>
   <desc id="ui-pause-desc">Dos barras verticales que indican que la partida puede pausarse</desc>
-  <rect id="ui-pause-bar-left" x="6" y="4" width="4" height="16" rx="1" fill="currentColor" />
-  <rect id="ui-pause-bar-right" x="14" y="4" width="4" height="16" rx="1" fill="currentColor" />
+  <path id="ui-pause-bar-left" d="M7 4h3v16H5V6Z" fill="currentColor" />
+  <path id="ui-pause-bar-right" d="M16 4h3v16h-5V6Z" fill="currentColor" />
+  <path id="ui-pause-bevel" d="M7 4h3v2H5Zm9 0h3v2h-5Z" fill="#eef8ff" />
 </svg>

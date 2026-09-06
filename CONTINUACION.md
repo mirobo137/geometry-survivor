@@ -2,6 +2,10 @@
 
 > Snapshot operativo: 05-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
 >
+> Encargo visual posterior: guía premium de UI y ejemplo integrado; ver
+> [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md)
+> y `docs/visual/ui-reference.html`. Pendiente aprobación humana del lote UI.
+>
 > **Próxima tarea: EX-02b**, definir la semántica del bonus por arma a partir de la matriz reproducible de EX-02a. EX-03 (matriz local/baseline humano) sigue después. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
 >
 > Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a está validado automáticamente y EX-02b es la próxima tarea de la ruta principal. No repetir el trabajo visual ya implementado.
@@ -1677,3 +1681,35 @@ GPU, memoria ni SDKs/portales.
 
 Estado: EX-02a AUTOMÁTICO OK. Próxima tarea: EX-02b, definir semántica por arma
 y fuente única de fórmula/preview antes de recalibrar porcentajes.
+
+## 64. UI premium — guía y lote de referencia
+
+Solicitud: extender la dirección premium a toda la UI mediante una guía
+concreta y ejemplos que otros agentes puedan seguir. Dirección canónica:
+`skills/geometry-survivor-svg/references/ui-art-direction.md`, enlazada desde
+la skill SVG y §22 del plan. Define materiales, construcción geométrica,
+presupuestos por categoría, responsive, accesibilidad, estados y continuidad.
+
+Integrado: once símbolos premium de cartas, marco de placa biselada, facetas
+del emblema inicial e iconos pausa/ajustes. El consumidor `LevelUpOverlay`
+utiliza los masters premium; los originales de cartas quedan como comparación.
+Guía preparada para paneles, botones, locker, Laboratorio, pausa/resultados y
+HUD; esas pantallas NO se presentan como completamente rediseñadas.
+
+Lámina: `docs/visual/ui-reference.html`, consumidor real de LevelUpOverlay,
+con antes/después, once símbolos, controles y preview de stats. Captura:
+`node docs/visual/capture-ui.mjs` con Vite en 5173; admite URL base como argumento.
+Capturas en `test-results/ui-reference`: oscuro/claro a 1200/390/320 px,
+foco y símbolos a 24/32/64 px. Inspeccionadas desktop oscuro, móvil claro y
+símbolos a 32 px. IDs únicos y sin overflow horizontal ni errores de página/red.
+
+Fuentes medidas: sprite de iconos 5202 bytes; marco 1057; emblema 2093.
+Sin nuevos filtros, gradientes, dependencias ni bucles de animación.
+Validación: typecheck, 202 tests/65 archivos, 14 smoke browser y tres builds
+correctos. El build Poki inicial tuvo timeout de 5 s en el test existente del
+Laboratorio al correr builds concurrentes; la repetición aislada pasó completa.
+Warning de chunk >500 kB conservado (local 615.64 kB, gzip 169.95 kB).
+
+Puerta: AUTOMÁTICO OK / aprobación artística humana pendiente. No se midieron
+frame times en móvil físico. Sin commit, push ni deploy. Ruta principal al
+retomar el plan: EX-02b; este encargo visual no cambia la puerta de balance.

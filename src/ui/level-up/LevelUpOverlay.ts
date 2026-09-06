@@ -1,7 +1,7 @@
 import type { UpgradeDefinition, UpgradeId } from '../../content/upgrades/UpgradeDefinitions';
 import type { UpgradePreview, UpgradePreviewStat } from '../../simulation/progression/UpgradePreview';
-import cardFrameSvg from '../../assets/svg/ui/level-up/card-frame.svg?raw';
-import upgradeIconsSvg from '../../assets/svg/ui/level-up/icons.svg?raw';
+import cardFrameSvg from '../../assets/svg/ui/level-up/premium-card-frame.svg?raw';
+import upgradeIconsSvg from '../../assets/svg/ui/level-up/premium-icons.svg?raw';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
 import type { LevelUpCardInteraction, LevelUpCardLayout } from './LevelUpCardInteraction';
 

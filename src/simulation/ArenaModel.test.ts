@@ -7,6 +7,7 @@ import {
   ARENA_RADIUS,
   ARENA_SECOND_EXPANSION_START_SECONDS
 } from '../config/constants';
+import { getArenaRadiusAtAngle } from './ArenaBoundary';
 import { ArenaModel } from './ArenaModel';
 
 describe('ArenaModel', () => {
@@ -62,6 +63,58 @@ describe('ArenaModel', () => {
     expect(arena.state.expansionProgress).toBe(1);
   });
 
+  it('telegraphs and morphs the Act I arena deterministically', () => {
+    const arena = new ArenaModel();
+
+    arena.update(131.99);
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('circle');
+
+    arena.update(0.01);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeTo).toBe('hexagon');
+    expect(arena.state.shapeTelegraphProgress).toBe(0);
+
+    arena.update(1.4);
+    expect(arena.state.shapePhase).toBe('morph');
+    expect(arena.state.morphProgress).toBe(0);
+
+    const circleRadius = getArenaRadiusAtAngle({
+      radius: arena.state.radius,
+      shapeFrom: 'circle',
+      shapeTo: 'circle',
+      morphProgress: 0
+    }, Math.PI / 6);
+    const hexagonRadius = getArenaRadiusAtAngle({
+      radius: arena.state.radius,
+      shapeFrom: 'hexagon',
+      shapeTo: 'hexagon',
+      morphProgress: 0
+    }, Math.PI / 6);
+    expect(hexagonRadius).toBeLessThan(circleRadius);
+
+    arena.update(0.85);
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('hexagon');
+    expect(arena.state.shapeIndex).toBe(1);
+  });
+
+  it('returns to the circular boundary before repeating during the boss window', () => {
+    const arena = new ArenaModel();
+
+    arena.update(212.25);
+
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('circle');
+    expect(arena.state.shapeIndex).toBe(2);
+
+    arena.update(75.75);
+
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shape).toBe('hexagon');
+    expect(arena.state.shapeIndex).toBe(3);
+  });
+
   it('returns to the opening arena for an in-place restart', () => {
     const arena = new ArenaModel();
     arena.update(ARENA_SECOND_EXPANSION_START_SECONDS + 1);
@@ -73,7 +126,14 @@ describe('ArenaModel', () => {
       radius: ARENA_RADIUS,
       expansionProgress: 0,
       expansionIndex: 0,
-      resonance: 0
+      resonance: 0,
+      shape: 'circle',
+      shapeFrom: 'circle',
+      shapeTo: 'circle',
+      morphProgress: 0,
+      shapeTelegraphProgress: 0,
+      shapePhase: 'stable',
+      shapeIndex: 0
     });
   });
 });

@@ -383,8 +383,8 @@ export class Game {
 
   private updateSimulation(): void {
     this.arena.update(FIXED_STEP_SECONDS);
-    this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state.radius);
-    this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state.radius);
+    this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state);
+    this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state);
     for (const event of this.combat.events) {
       if (event.type === 'enemyDefeated') {
         this.player.applyVampirism();
@@ -432,8 +432,8 @@ export class Game {
       ? 0
       : deltaSeconds;
     this.view.updatePresentationFx(presentationDelta, this.presentationTime);
-    this.view.renderArena(this.arena.state.radius, this.arena.state.resonance);
-    this.view.renderLaser(this.combat.renderState.laser, this.arena.state.radius);
+    this.view.renderArena(this.arena.state);
+    this.view.renderLaser(this.combat.renderState.laser, this.arena.state);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.syncShotFeedback();
@@ -496,7 +496,8 @@ export class Game {
       chain: this.combat.hasChainLightning ? 'ready' : 'locked',
       paused: this.lifecyclePaused ? 'lifecycle' : this.gameState.phase,
       level: this.progression.state.level,
-      arena: `${this.arena.state.radius.toFixed(1)} | expansión ${this.arena.state.expansionIndex}`,
+      arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
+      laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active
         ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`

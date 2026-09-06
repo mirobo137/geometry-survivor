@@ -6,9 +6,9 @@
 > [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md)
 > y `docs/visual/ui-reference.html`. Pendiente aprobación humana del lote UI.
 >
-> **Próxima tarea: EX-02b**, definir la semántica del bonus por arma a partir de la matriz reproducible de EX-02a. EX-03 (matriz local/baseline humano) sigue después. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
+> **Ruta actual: prototipo ACT-I-PROTOTYPE ampliado; siguiente puerta técnica EX-03.** EX-02c queda pendiente para la pasada final de balance junto con vida de enemigos y daño general. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
 >
-> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a está validado automáticamente y EX-02b es la próxima tarea de la ruta principal. No repetir el trabajo visual ya implementado.
+> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a y EX-02b están validados automáticamente; EX-02c está diferida por decisión de producto. La definición de meta, actos y Overdrive queda en `docs/design/ACTOS_Y_META.md`. No repetir el trabajo visual ya implementado.
 >
 > Aprobación visual vigente: el usuario inspeccionó y aprobó las seis skins y
 > los seis paquetes de cañón/bala. Son la biblioteca premium de referencia para
@@ -1679,8 +1679,9 @@ browser 14/14 y builds local/Poki/CrazyGames correctos. Se mantiene el warning
 conocido del chunk principal mayor a 500 kB. No se midieron rendimiento físico,
 GPU, memoria ni SDKs/portales.
 
-Estado: EX-02a AUTOMÁTICO OK. Próxima tarea: EX-02b, definir semántica por arma
-y fuente única de fórmula/preview antes de recalibrar porcentajes.
+Estado: EX-02a y EX-02b AUTOMÁTICO OK. EX-02c queda PENDIENTE por decisión de
+producto; se retomará junto con el balance final de vida de enemigos y daño.
+La ruta documental pasa a META-01 y la siguiente puerta técnica es EX-03.
 
 ## 64. UI premium — guía y lote de referencia
 
@@ -1712,4 +1713,175 @@ Warning de chunk >500 kB conservado (local 615.64 kB, gzip 169.95 kB).
 
 Puerta: AUTOMÁTICO OK / aprobación artística humana pendiente. No se midieron
 frame times en móvil físico. Sin commit, push ni deploy. Ruta principal al
-retomar el plan: EX-02b; este encargo visual no cambia la puerta de balance.
+retomar el plan: EX-02c; este encargo visual no cambia la puerta de balance.
+
+## 65. Pausa premium - panel, acciones y mezclador - 05-09-2026
+
+La pausa real ahora sigue la misma gramática de consola que la guía de Astra:
+una atmósfera de pantalla completa ligera en CSS y un panel interno con
+superficie, bisel superior, retorno inferior y marco estructural SVG. Se
+conservaron los IDs y los handlers existentes, pero la jerarquía visual ahora
+separa claramente continuar, configuración, reinicio y salida.
+
+Arte nuevo: `src/assets/svg/ui/pause-panel-frame.svg` para el marco responsive y
+`src/assets/svg/ui/pause-icons.svg` como sprite único con símbolos para
+continuar, reiniciar, menú y los tres controles de audio. `pause.svg` y
+`settings.svg` siguen siendo los masters directos del HUD y del toggle. Los
+sliders y el checkbox siguen siendo HTML nativo; los iconos son decorativos y
+los botones mantienen objetivos táctiles de al menos 44×44 CSS px.
+
+El cambio vive en `index.html`, `src/main.ts` y `src/styles.css`. La guía SVG
+ahora registra el consumidor real de pausa y la prueba visual reproducible es
+`node docs/visual/capture-pause.mjs http://127.0.0.1:5174`. Se inspeccionaron
+capturas de 1200 px oscuro, mezclador abierto, foco de teclado y 390/320 px móvil;
+no hubo overflow horizontal. La captura móvil midió `scrollWidth=390`,
+`clientWidth=390` y panel de `369.22` px.
+
+Validación: typecheck correcto, 203 tests en 65 archivos, smoke browser 14/14
+y builds local/Poki/CrazyGames correctos. La prueba específica comprueba seis
+símbolos, IDs únicos, recursos externos ausentes y presupuestos del sprite y
+marco. Se conserva el warning conocido del chunk principal mayor a 500 kB.
+Estado: AUTOMÁTICO OK / aprobación artística humana pendiente. Sin commit, push
+ni deploy. La ruta principal continúa en EX-02c.
+
+## 66. EX-02b — semántica de meta por arma — 05-09-2026
+
+Se cerró la discrepancia descubierta por EX-02a: los dos upgrades permanentes
+de combate ya tienen semántica explícita y común para las tres armas actuales.
+Daño afecta cada evento authored de daño: cada proyectil, cada contacto de una
+hoja orbital y cada salto de cadena. Cadencia afecta el intervalo authored de
+cada evento: disparo de proyectil, hit por objetivo de órbita y lanzamiento de
+cadena. No altera velocidad, targeting, TTL, radio, rotación orbital, cantidad
+de objetivos ni duración de segmentos.
+
+La fuente única vive en `src/content/meta/PermanentUpgradeDefinitions.ts`:
+`PERMANENT_UPGRADE_RULES` alimenta el runtime mediante
+`getPermanentCombatBonuses()` y alimenta el texto visible mediante
+`getPermanentUpgradeEffectLabel()` y `definition.effectLabel`. En nivel 5 la
+regla vigente es +25% daño base y -15% intervalo, con multiplicadores
+normalizados y sin tocar precios, niveles, guardado ni upgrades de run. La
+decisión completa está en `docs/balance/EX-02b-semantics.md`.
+
+El Laboratorio y la matriz reproducible ahora configuran las tres armas con la
+misma regla. Las pruebas cubren fórmulas, etiquetas, restauración tras reset,
+daño/cadencia por arma y ratios de la matriz: 24 pruebas específicas y 204 en
+la suite completa. Validación: `npm run build:local`, `npm run build:poki`,
+`npm run build:crazygames` y `npm run test:browser` correctos; smoke browser
+14/14 en desktop y móvil. Se conserva el warning conocido del chunk principal
+mayor a 500 kB. No se midieron frame times, GPU ni memoria en dispositivo
+físico.
+
+Estado: AUTOMÁTICO OK. EX-02c queda PENDIENTE por decisión de producto. Sin
+commit, push ni deploy.
+
+## 67. META-01 — tres actos y Overdrive definidos — 05-09-2026
+
+Por decisión del usuario se documentó el bucle meta y la campaña que deben
+guiar las siguientes implementaciones. La ficha canónica está en
+`docs/design/ACTOS_Y_META.md` y queda enlazada desde §16 y §22 del plan.
+
+La campaña principal se divide en tres actos con victorias claras: Acto I
+Radial (centro, borde y distancia; Core Sentinel), Acto II Angular (sectores,
+alineación y rotación; Orbital Warden) y Acto III Fracture (corredores,
+conexiones y barreras; Fracture Engine). `Expedition` conserva la build entre
+actos; `Quick Act` empieza limpio con Calibration. Completar el Acto III dentro
+de `Expedition` desbloquea `Overdrive`, un modo infinito opcional que mezcla las reglas por
+ciclos, aumenta presión con composición/densidad/patrones/espacio dentro de
+caps y conserva telegraphs y corredores seguros.
+
+La meta queda separada en desbloqueos de actos, Laboratorio de poder pequeño,
+investigación de contenido y colección cosmética. NOVA se liquida una sola vez
+por sesión; Overdrive no paga por ciclo. Los cosméticos no alteran gameplay y
+los porcentajes actuales del Laboratorio siguen provisionales.
+
+El contrato completo todavía no crea `ActDefinition`, campos nuevos de save,
+ciclos infinitos ni behaviors. Como slice exploratorio autorizado, sí se
+implementó la primera regla espacial del Acto I: círculo ↔ hexágono con aviso,
+morph gradual y frontera compartida por jugador y láser. La campaña completa
+queda en EX-06/EX-07/EX-10/EX-11 después de EX-03/EX-04/EX-05. EX-02c permanece
+pendiente para la pasada final de balance.
+
+Estado: ACT-I-PROTOTYPE AUTOMÁTICO OK / prueba humana pendiente. Siguiente
+puerta técnica: EX-03. Sin commit, push ni deploy.
+
+## 68. ACT-I-PROTOTYPE — arena radial cambiante — 05-09-2026
+
+Se implementó el primer slice jugable para comprobar el gancho diferencial
+antes de construir los tres actos completos. Acto I conserva el círculo y
+añade cambios authored, deterministas y legibles hacia el hexágono:
+
+- 02:12: círculo → hexágono, aviso 1.4 s y morph 0.85 s.
+- 03:30: hexágono → círculo, aviso 1.4 s y morph 0.85 s.
+- 04:48: círculo → hexágono, aviso 1.6 s y morph 1.05 s durante el tramo del boss.
+
+La frontera interpolada alimenta el clamp del jugador y el alcance del láser
+lineal; la vista dibuja la forma objetivo durante el aviso y redibuja una
+polilínea ligera sólo cuando cambia la geometría. No se añadieron todavía
+triángulo, rectángulo, selección de actos, save, Overdrive ni balance final.
+
+Prueba específica: **16/16** en cinco archivos. Falta validación humana en
+desktop y móvil para decidir si la lectura, el control y la presión se sienten
+divertidos y diferenciadores. Siguiente evidencia técnica: **EX-03**. EX-02c
+sigue pendiente junto con el balance final de vida y daño. Sin commit, push ni
+deploy.
+
+## 69. ACT-I-PROTOTYPE — presión dinámica de láser — 06-09-2026
+
+Se amplió el slice de arena cambiante para que el láser también sea parte de
+la identidad espacial. En círculo, uno de cada tres disparos realiza un barrido
+horario corto durante el telegraph y el inicio del attack. En la primera
+intervención hexagonal el intervalo authored baja a 14 s y el barrido aparece
+cada dos disparos; en la segunda baja a 10.5 s, aparece en cada disparo y
+recorre un arco mayor en menos tiempo.
+
+El ángulo visible y el ángulo de colisión se actualizan juntos. La colisión se
+comprueba durante `attack`, con la frontera actual de la arena y sin daño
+durante `telegraph`. El cambio conserva `telegraph → attack → recovery`, una
+respuesta perpendicular posible y no crea líneas simultáneas ni entidades
+nuevas por frame.
+
+Pruebas específicas: **19/19**; el build local, Poki y CrazyGames continúan
+compilando. El smoke browser aislado de los escenarios que habían perdido el
+servidor fue **5/5**. Falta la prueba humana para medir si el barrido se siente
+claro y si el incremento hexagonal es emocionante sin volverse injusto.
+Siguiente evidencia técnica: **EX-03**. Sin commit, push ni deploy.
+
+## 70. ACT-I-PROTOTYPE — detonación móvil durante el recorrido — 06-09-2026
+
+Se ajustó la semántica del barrido a la intención jugable: todos los láseres
+inician con el mismo `telegraph` estático. El jugador no sabe si un disparo es
+móvil hasta que entra en `active`. Si lo es, la fase de detonación dura lo que
+necesita su recorrido; el ángulo se actualiza durante todo ese tiempo y la
+colisión se comprueba en cada paso, hasta alcanzar el final del arco.
+
+Los láseres estáticos conservan su detonación corta. Los móviles usan las
+duraciones authored de cada identidad geométrica y continúan respetando
+`telegraph → attack → recovery`; no hacen daño durante el aviso y no saltan
+visualmente al ángulo final. Esto hace que la expectativa provenga de la
+lectura del hazard, no de una señal distinta para el disparo móvil.
+
+Pruebas específicas: **8/8** para perfiles y semántica de `LaserHazard`;
+suite completa: **215/215**; smoke browser: **14/14** en desktop y móvil;
+build local, Poki y CrazyGames correctos. Falta validar manualmente que el
+recorrido sea legible y que la duración adicional de la detonación no resulte
+opresiva en desktop y móvil. Sin commit, push ni deploy.
+
+## 71. ACT-I-LASER-VISUAL — detonación premium por capas — 06-09-2026
+
+Se elevó la presentación del láser sin tocar sus reglas de daño ni cadencia.
+El `telegraph` ahora es una línea ámbar estática con carga central, nodos y
+diamantes en los extremos. La detonación usa halo exterior, aura intermedia,
+núcleo caliente, centro blanco, pulsos y nodos de energía. Los barridos móviles
+añaden dos ecos de baja intensidad detrás del frente; los disparos estáticos no
+reciben esos ecos y el jugador no puede identificar el tipo durante el aviso.
+
+La vista reutiliza cuatro `Graphics` persistentes (`beamEcho`, `laser`, `pulse`,
+`nodes`) y cada línea, círculo o diamante independiente inicia `beginPath()`.
+No se agregaron SVG, blur ni partículas por frame; Low conserva la lectura
+crítica del hazard.
+
+Se corrigieron colores RGB fuera de rango detectados por la prueba visual y se
+añadió `src/presentation/pixi/HazardView.test.ts`. La prueba visual queda en
+**2/2**; suite completa **217/217**; smoke browser **14/14**; builds local,
+Poki y CrazyGames correctos. Falta aprobación humana de jerarquía, saturación
+y rendimiento percibido en desktop y móvil. Sin commit, push ni deploy.

@@ -34,6 +34,7 @@ export class CombatWeaponSystem {
   private projectileDamage = PROJECTILE_DEFINITION.damage;
   private projectileSpeed = PROJECTILE_DEFINITION.speed;
   private projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
+  private chainCooldown = CHAIN_DEFINITION.cooldownSeconds;
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
@@ -45,8 +46,8 @@ export class CombatWeaponSystem {
     private readonly enemies: EnemySystem,
     private readonly onEnemyDefeated: (enemy: EnemyState) => void,
     permanentBonuses: PermanentCombatBonuses = {
-      projectileDamageMultiplier: 1,
-      projectileCooldownMultiplier: 1
+      weaponDamageMultiplier: 1,
+      weaponCadenceMultiplier: 1
     }
   ) {
     this.permanentBonuses = permanentBonuses;
@@ -115,8 +116,20 @@ export class CombatWeaponSystem {
     return this.orbitBehavior.currentRadius;
   }
 
+  public get currentOrbitDamage(): number {
+    return this.orbitBehavior.currentDamage;
+  }
+
+  public get currentOrbitHitCooldown(): number {
+    return this.orbitBehavior.currentHitCooldown;
+  }
+
   public get currentChainDamage(): number {
     return this.chainBehavior.currentDamage;
+  }
+
+  public get currentChainCooldown(): number {
+    return this.chainCooldown;
   }
 
   public get currentCriticalChance(): number {
@@ -134,9 +147,10 @@ export class CombatWeaponSystem {
     this.orbitBehavior.reset();
     this.chainBehavior.reset();
     this.stressScenario.reset();
-    this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.projectileDamageMultiplier;
+    this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.weaponDamageMultiplier;
     this.projectileSpeed = PROJECTILE_DEFINITION.speed;
-    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.projectileCooldownMultiplier);
+    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier;
     this.criticalChance = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
@@ -144,8 +158,14 @@ export class CombatWeaponSystem {
 
   public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
     this.permanentBonuses = permanentBonuses;
-    this.projectileDamage = PROJECTILE_DEFINITION.damage * permanentBonuses.projectileDamageMultiplier;
-    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.projectileCooldownMultiplier);
+    this.projectileDamage = PROJECTILE_DEFINITION.damage * permanentBonuses.weaponDamageMultiplier;
+    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
+    this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
+    this.orbitBehavior.setPermanentBonuses(
+      permanentBonuses.weaponDamageMultiplier,
+      permanentBonuses.weaponCadenceMultiplier
+    );
+    this.chainBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -208,7 +228,7 @@ export class CombatWeaponSystem {
       dt,
       this.projectileCooldown,
       options.chainEnabled ?? this.chainBehavior.isUnlocked,
-      CHAIN_DEFINITION.cooldownSeconds,
+      this.chainCooldown,
       player,
       options.projectileEnabled ?? true
     );

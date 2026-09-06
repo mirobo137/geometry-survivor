@@ -5,6 +5,8 @@ import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import type { CombatRenderState, ShotRenderState } from '../simulation/combat/CombatRenderState';
 import type { PlayerState } from '../simulation/PlayerModel';
+import type { ArenaBoundaryInput } from '../simulation/ArenaBoundary';
+import type { ArenaState } from '../simulation/ArenaModel';
 import { ArenaView } from './pixi/ArenaView';
 import { BackgroundView } from './pixi/BackgroundView';
 import { BossView } from './pixi/BossView';
@@ -79,12 +81,12 @@ export class PixiGameView {
     this.root.hitArea = undefined;
   }
 
-  public renderArena(radius: number, resonance = 0): void {
-    if (this.lastArenaRadius >= 0 && radius > this.lastArenaRadius + 0.5) {
+  public renderArena(state: Readonly<ArenaState>): void {
+    if (this.lastArenaRadius >= 0 && state.radius > this.lastArenaRadius + 0.5) {
       this.screenFxView.play('arena-expansion');
     }
-    this.lastArenaRadius = radius;
-    this.arenaView.render(radius, resonance);
+    this.lastArenaRadius = state.radius;
+    this.arenaView.render(state);
   }
 
   public renderCombat(combat: CombatRenderState, animationSeconds = 0): void {
@@ -97,8 +99,8 @@ export class PixiGameView {
     if (kind === 'tank' || kind === 'elite') this.screenFxView.play('enemy-defeat');
   }
 
-  public renderLaser(state: CombatRenderState['laser'], arenaRadius: number): void {
-    this.hazardView.renderLaser(state, arenaRadius);
+  public renderLaser(state: CombatRenderState['laser'], arena: ArenaBoundaryInput): void {
+    this.hazardView.renderLaser(state, arena);
   }
 
   public renderBoss(state: CombatRenderState['boss'], arenaRadius: number): void {

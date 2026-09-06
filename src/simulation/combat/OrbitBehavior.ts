@@ -28,6 +28,9 @@ export class OrbitBehavior {
   private angle = 0;
   private radius = ORBIT_DEFINITION.orbitRadius;
   private damage = ORBIT_DEFINITION.damage;
+  private hitCooldownSeconds = ORBIT_DEFINITION.hitCooldownSeconds;
+  private permanentDamageMultiplier = 1;
+  private permanentCadenceMultiplier = 1;
 
   public constructor(private readonly context: OrbitBehaviorContext) {}
 
@@ -37,6 +40,14 @@ export class OrbitBehavior {
 
   public get currentRadius(): number {
     return this.radius;
+  }
+
+  public get currentDamage(): number {
+    return this.damage;
+  }
+
+  public get currentHitCooldown(): number {
+    return this.hitCooldownSeconds;
   }
 
   public addBlade(): boolean {
@@ -51,6 +62,17 @@ export class OrbitBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  /**
+   * Cadence changes the per-target hit tick, never the authored orbit
+   * rotation. Damage remains a base multiplier before run-card additions.
+   */
+  public setPermanentBonuses(damageMultiplier: number, cadenceMultiplier: number): void {
+    this.permanentDamageMultiplier = normalizeMultiplier(damageMultiplier);
+    this.permanentCadenceMultiplier = normalizeMultiplier(cadenceMultiplier);
+    this.damage = ORBIT_DEFINITION.damage * this.permanentDamageMultiplier;
+    this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
   }
 
   public update(dtSeconds: number, player: PlayerState): void {
@@ -71,7 +93,7 @@ export class OrbitBehavior {
         const hitDistance = blade.radius + enemy.radius;
         if (Math.hypot(blade.x - enemy.x, blade.y - enemy.y) > hitDistance) continue;
         enemy.health -= this.context.rollCriticalDamage(this.damage);
-        enemy.orbitHitCooldown = ORBIT_DEFINITION.hitCooldownSeconds;
+        enemy.orbitHitCooldown = this.hitCooldownSeconds;
         if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
         break;
       }
@@ -88,6 +110,11 @@ export class OrbitBehavior {
     this.bladeCount = 0;
     this.angle = 0;
     this.radius = ORBIT_DEFINITION.orbitRadius;
-    this.damage = ORBIT_DEFINITION.damage;
+    this.damage = ORBIT_DEFINITION.damage * this.permanentDamageMultiplier;
+    this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
   }
 }
+
+const normalizeMultiplier = (value: number): number => (
+  Number.isFinite(value) && value > 0 ? value : 1
+);

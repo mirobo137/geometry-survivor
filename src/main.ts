@@ -2,6 +2,8 @@ import { Application } from 'pixi.js';
 import './styles.css';
 import { Game } from './app/Game';
 import pauseIcon from './assets/svg/ui/pause.svg?raw';
+import pauseActionIcons from './assets/svg/ui/pause-icons.svg?raw';
+import pausePanelFrame from './assets/svg/ui/pause-panel-frame.svg?raw';
 import settingsIcon from './assets/svg/ui/settings.svg?raw';
 import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
 import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens';
@@ -32,6 +34,11 @@ const mountInlineIcon = (host: HTMLElement, svg: string, replaceChildren: boolea
     icon.setAttribute('aria-hidden', 'true');
     icon.setAttribute('focusable', 'false');
   }
+};
+
+const mountSymbolIcon = (host: HTMLElement, symbol: string): void => {
+  host.replaceChildren();
+  host.insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ui-pause-action-${symbol}"></use></svg>`);
 };
 
 const createPixiApplication = async (container: HTMLElement): Promise<Application> => {
@@ -66,6 +73,13 @@ const bootstrap = async (): Promise<void> => {
     throw new Error('Faltan elementos de la interfaz');
   }
   mountInlineIcon(pauseButton, pauseIcon, true);
+  const pausePanelFrameElement = pauseElement.querySelector<HTMLElement>('#pause-panel-frame');
+  if (pausePanelFrameElement) mountInlineIcon(pausePanelFrameElement, pausePanelFrame, true);
+  pauseElement.insertAdjacentHTML('afterbegin', pauseActionIcons);
+  pauseElement.querySelectorAll<HTMLElement>('[data-pause-icon]').forEach((iconHost) => {
+    const symbol = iconHost.dataset.pauseIcon;
+    if (symbol) mountSymbolIcon(iconHost, symbol);
+  });
   const settingsToggle = pauseElement.querySelector<HTMLButtonElement>('#pause-settings-toggle');
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 

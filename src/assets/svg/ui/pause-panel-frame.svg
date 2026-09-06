@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 640 520"
+     preserveAspectRatio="none"
+     role="img"
+     aria-hidden="true"
+     focusable="false">
+  <path d="M28 2h584l26 26v464l-26 26H28L2 492V28Z" fill="#0b1424" stroke="#314d68" stroke-width="2" />
+  <path d="M28 2h584l26 26H28L2 54V28Z" fill="#1b334c" />
+  <path d="M28 2h584l26 26H28L2 54V28Z" fill="none" stroke="#eef8ff" stroke-opacity=".72" stroke-width="1.5" />
+  <path d="M2 492 28 518h584l26-26H28Z" fill="#060d19" />
+  <path d="M2 492 28 518h584l26-26" fill="none" stroke="#17283b" stroke-width="2" />
+  <path d="M28 2 2 28v464l26 26M612 2l26 26v464l-26 26" fill="none" stroke="#132238" stroke-width="3" />
+  <path d="M28 2h584M28 518h584" fill="none" stroke="#75e6ff" stroke-opacity=".5" stroke-width="2" vector-effect="non-scaling-stroke" />
+</svg>

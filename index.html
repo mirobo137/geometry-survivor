@@ -140,26 +140,56 @@
           <button id="level-up-reroll" type="button">Ver anuncio · reroll</button>
         </div>
       </section>
-      <section id="pause-overlay" aria-labelledby="pause-title" hidden>
-        <p>PAUSA</p>
-        <h1 id="pause-title">Partida pausada</h1>
-        <span id="pause-message">La partida se detuvo al salir de la ventana.</span>
-        <div id="pause-actions">
-          <button id="pause-resume" type="button">Continuar</button>
-          <button id="pause-settings-toggle" type="button" aria-expanded="false" aria-controls="pause-settings">Configuracion</button>
-          <button id="pause-restart" type="button">Reiniciar partida</button>
-          <button id="pause-menu" type="button">Volver al menu</button>
-        </div>
-        <div id="pause-settings" hidden>
-          <h2>Audio</h2>
-          <label for="pause-music">Musica <output id="pause-music-value" for="pause-music">100%</output></label>
-          <input id="pause-music" type="range" min="0" max="100" step="5" value="100" />
-          <label for="pause-sfx">Efectos <output id="pause-sfx-value" for="pause-sfx">100%</output></label>
-          <input id="pause-sfx" type="range" min="0" max="100" step="5" value="100" />
-          <label class="pause-checkbox" for="pause-muted">
-            <input id="pause-muted" type="checkbox" />
-            Silenciar todo
-          </label>
+      <section id="pause-overlay" class="pause-overlay" aria-labelledby="pause-title" aria-describedby="pause-message" hidden>
+        <div class="pause-panel">
+          <span id="pause-panel-frame" class="pause-panel-frame" aria-hidden="true"></span>
+          <div class="pause-panel-content">
+            <header class="pause-header">
+              <p class="pause-kicker"><span class="pause-kicker-line" aria-hidden="true"></span>SISTEMA EN ESPERA</p>
+              <h1 id="pause-title">Partida pausada</h1>
+              <span id="pause-message">La partida se detuvo al salir de la ventana.</span>
+            </header>
+            <div id="pause-actions" class="pause-actions">
+              <button id="pause-resume" class="pause-action pause-action-primary" type="button">
+                <span class="pause-button-icon" data-pause-icon="resume" aria-hidden="true"></span>
+                <span class="pause-button-label">Continuar</span>
+                <span class="pause-button-hint" aria-hidden="true">ENTER</span>
+              </button>
+              <button id="pause-settings-toggle" class="pause-action" type="button" aria-expanded="false" aria-controls="pause-settings">
+                <span class="pause-button-label">Configuracion</span>
+                <span class="pause-button-hint" aria-hidden="true">AUDIO</span>
+              </button>
+              <button id="pause-restart" class="pause-action" type="button">
+                <span class="pause-button-icon" data-pause-icon="restart" aria-hidden="true"></span>
+                <span class="pause-button-label">Reiniciar partida</span>
+              </button>
+              <button id="pause-menu" class="pause-action" type="button">
+                <span class="pause-button-icon" data-pause-icon="menu" aria-hidden="true"></span>
+                <span class="pause-button-label">Volver al menu</span>
+              </button>
+            </div>
+            <div id="pause-settings" class="pause-settings" hidden>
+              <div class="pause-settings-heading">
+                <span class="pause-settings-heading-mark" aria-hidden="true"></span>
+                <h2>Audio</h2>
+                <span class="pause-settings-status">MEZCLADOR</span>
+              </div>
+              <label for="pause-music">
+                <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="music" aria-hidden="true"></span><span>Musica</span></span>
+                <output id="pause-music-value" for="pause-music">100%</output>
+              </label>
+              <input id="pause-music" type="range" min="0" max="100" step="5" value="100" />
+              <label for="pause-sfx">
+                <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="sfx" aria-hidden="true"></span><span>Efectos</span></span>
+                <output id="pause-sfx-value" for="pause-sfx">100%</output>
+              </label>
+              <input id="pause-sfx" type="range" min="0" max="100" step="5" value="100" />
+              <label class="pause-checkbox" for="pause-muted">
+                <input id="pause-muted" type="checkbox" />
+                <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="mute" aria-hidden="true"></span><span>Silenciar todo</span></span>
+              </label>
+            </div>
+          </div>
         </div>
       </section>
       <section id="game-over" aria-labelledby="game-over-title" hidden>

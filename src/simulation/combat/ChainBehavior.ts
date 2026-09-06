@@ -27,6 +27,7 @@ export class ChainBehavior {
   private readonly hitIndices = Array.from({ length: CHAIN_DEFINITION.maxTargets }, () => -1);
   private unlocked = false;
   private damage = CHAIN_DEFINITION.damage;
+  private permanentDamageMultiplier = 1;
 
   public constructor(private readonly context: ChainBehaviorContext) {}
 
@@ -46,6 +47,12 @@ export class ChainBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  /** Applies the permanent damage branch to every jump in a cast. */
+  public setPermanentDamageMultiplier(multiplier: number): void {
+    this.permanentDamageMultiplier = normalizeMultiplier(multiplier);
+    this.damage = CHAIN_DEFINITION.damage * this.permanentDamageMultiplier;
   }
 
   public updateSegments(dtSeconds: number): void {
@@ -97,6 +104,10 @@ export class ChainBehavior {
     }
     this.hitIndices.fill(-1);
     this.unlocked = false;
-    this.damage = CHAIN_DEFINITION.damage;
+    this.damage = CHAIN_DEFINITION.damage * this.permanentDamageMultiplier;
   }
 }
+
+const normalizeMultiplier = (value: number): number => (
+  Number.isFinite(value) && value > 0 ? value : 1
+);

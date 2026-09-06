@@ -8,6 +8,7 @@ import {
   PLAYER_SPEED,
   PLAYER_VAMPIRISM_COOLDOWN_SECONDS
 } from '../config/constants';
+import { clampPointToArena, type ArenaBoundaryInput } from './ArenaBoundary';
 import type { MovementVector } from './MovementVector';
 
 export interface PlayerState {
@@ -47,7 +48,7 @@ export class PlayerModel {
   private shieldRechargeSeconds = PLAYER_SHIELD_RECHARGE_SECONDS;
   private shieldRechargeTimer = 0;
 
-  public update(input: MovementVector, dtSeconds: number, arenaRadius = ARENA_RADIUS): void {
+  public update(input: MovementVector, dtSeconds: number, arena: ArenaBoundaryInput = ARENA_RADIUS): void {
     const dt = Math.max(0, dtSeconds);
     this.invulnerabilitySeconds = Math.max(0, this.invulnerabilitySeconds - dt);
     this.vampirismCooldownSeconds = Math.max(0, this.vampirismCooldownSeconds - dt);
@@ -56,15 +57,9 @@ export class PlayerModel {
     this.state.x += input.x * this.movementSpeed * dt;
     this.state.y += input.y * this.movementSpeed * dt;
 
-    const maxDistance = Math.max(0, arenaRadius - this.state.radius);
-    const dx = this.state.x - ARENA_CENTER.x;
-    const dy = this.state.y - ARENA_CENTER.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance > maxDistance) {
-      const factor = maxDistance / distance;
-      this.state.x = ARENA_CENTER.x + dx * factor;
-      this.state.y = ARENA_CENTER.y + dy * factor;
-    }
+    const clamped = clampPointToArena(this.state.x, this.state.y, this.state.radius, arena);
+    this.state.x = clamped.x;
+    this.state.y = clamped.y;
   }
 
   public takeDamage(amount: number): boolean {

@@ -15,16 +15,23 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
-  it('applies permanent weapon bonuses without mixing them with run upgrades', () => {
+  it('applies permanent weapon bonuses to damage events and weapon intervals', () => {
     const combat = new CombatSimulation({
       permanentBonuses: getPermanentCombatBonuses({ weapon_damage: 2, weapon_cadence: 1 })
     });
 
     expect(combat.currentProjectileDamage).toBeCloseTo(WEAPON_DEFINITIONS.projectile.damage * 1.1);
     expect(combat.currentProjectileCooldown).toBeCloseTo(WEAPON_DEFINITIONS.projectile.cooldownSeconds * 0.97);
+    expect(combat.currentOrbitDamage).toBeCloseTo(WEAPON_DEFINITIONS.orbit.damage * 1.1);
+    expect(combat.currentOrbitHitCooldown).toBeCloseTo(WEAPON_DEFINITIONS.orbit.hitCooldownSeconds * 0.97);
+    expect(combat.currentChainDamage).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.damage * 1.1);
+    expect(combat.currentChainCooldown).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.cooldownSeconds * 0.97);
     combat.increaseProjectileDamage(4);
+    combat.increaseChainDamage(4);
     combat.reset();
     expect(combat.currentProjectileDamage).toBeCloseTo(WEAPON_DEFINITIONS.projectile.damage * 1.1);
+    expect(combat.currentOrbitDamage).toBeCloseTo(WEAPON_DEFINITIONS.orbit.damage * 1.1);
+    expect(combat.currentChainDamage).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.damage * 1.1);
   });
 
   it('spawns enemies, auto-fires projectiles and resolves defeats without Pixi', () => {

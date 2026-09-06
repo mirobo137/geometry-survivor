@@ -258,9 +258,30 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-overlay')).toBeVisible();
   await expect(page.locator('#pause-toggle')).toBeHidden();
+  await expect(page.locator('#pause-overlay')).toHaveAttribute('aria-describedby', 'pause-message');
+  await expect(page.locator('#pause-panel-frame svg')).toBeVisible();
+  await expect(page.locator('#pause-overlay button svg')).toHaveCount(4);
+  const pauseLayout = await page.locator('#pause-overlay').evaluate((overlay) => {
+    const buttons = [...overlay.querySelectorAll<HTMLButtonElement>('button')];
+    const panel = overlay.querySelector<HTMLElement>('.pause-panel');
+    return {
+      buttonsHaveTouchTarget: buttons.every((button) => {
+        const box = button.getBoundingClientRect();
+        return box.width >= 44 && box.height >= 44;
+      }),
+      panelFitsViewport: panel !== null && panel.getBoundingClientRect().right <= window.innerWidth + 1
+    };
+  });
+  expect(pauseLayout).toEqual({ buttonsHaveTouchTarget: true, panelFitsViewport: true });
+  const pauseIds = await page.locator('#pause-overlay').evaluate((overlay) => {
+    const ids = [...overlay.querySelectorAll<HTMLElement>('[id]')].map((element) => element.id);
+    return { ids, unique: new Set(ids).size === ids.length };
+  });
+  expect(pauseIds.unique).toBe(true);
 
   await page.locator('#pause-settings-toggle').click();
   await expect(page.locator('#pause-settings-toggle svg')).toBeVisible();
+  await expect(page.locator('#pause-settings .pause-setting-icon svg')).toHaveCount(3);
   await page.locator('#pause-music').fill('35');
   await page.locator('#pause-sfx').fill('55');
   await page.locator('#pause-muted').check();

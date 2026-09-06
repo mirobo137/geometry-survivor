@@ -7,13 +7,21 @@ import {
   ARENA_RESONANCE_DURATION_SECONDS,
   ARENA_SECOND_EXPANSION_START_SECONDS
 } from '../config/constants';
+import { ACT_I_ARENA_SHAPE_CHANGES } from '../content/run/ArenaShapeDefinitions';
+import type { ArenaBoundary, ArenaShape } from './ArenaBoundary';
 
-export interface ArenaState {
+export type ArenaShapePhase = 'stable' | 'telegraph' | 'morph';
+
+export interface ArenaState extends ArenaBoundary {
   readonly elapsedSeconds: number;
   readonly radius: number;
   readonly expansionProgress: number;
   readonly expansionIndex: number;
   readonly resonance: number;
+  readonly shape: ArenaShape;
+  readonly shapeTelegraphProgress: number;
+  readonly shapePhase: ArenaShapePhase;
+  readonly shapeIndex: number;
 }
 
 const clamp01 = (value: number): number => Math.min(Math.max(value, 0), 1);
@@ -28,7 +36,14 @@ export class ArenaModel {
     radius: ARENA_RADIUS,
     expansionProgress: 0,
     expansionIndex: 0,
-    resonance: 0
+    resonance: 0,
+    shape: 'circle',
+    shapeFrom: 'circle',
+    shapeTo: 'circle',
+    morphProgress: 0,
+    shapeTelegraphProgress: 0,
+    shapePhase: 'stable',
+    shapeIndex: 0
   };
 
   public update(dtSeconds: number): void {
@@ -51,8 +66,16 @@ export class ArenaModel {
       this.expansionResonance(elapsedSeconds, ARENA_EXPANSION_START_SECONDS),
       this.expansionResonance(elapsedSeconds, ARENA_SECOND_EXPANSION_START_SECONDS)
     );
+    const shapeFrame = getShapeFrame(elapsedSeconds);
 
-    this.state = { elapsedSeconds, radius, expansionProgress, expansionIndex, resonance };
+    this.state = {
+      elapsedSeconds,
+      radius,
+      expansionProgress,
+      expansionIndex,
+      resonance,
+      ...shapeFrame
+    };
   }
 
   public reset(): void {
@@ -61,7 +84,14 @@ export class ArenaModel {
       radius: ARENA_RADIUS,
       expansionProgress: 0,
       expansionIndex: 0,
-      resonance: 0
+      resonance: 0,
+      shape: 'circle',
+      shapeFrom: 'circle',
+      shapeTo: 'circle',
+      morphProgress: 0,
+      shapeTelegraphProgress: 0,
+      shapePhase: 'stable',
+      shapeIndex: 0
     };
   }
 
@@ -72,3 +102,57 @@ export class ArenaModel {
     return Math.sin(progress * Math.PI);
   }
 }
+
+interface ArenaShapeFrame {
+  readonly shape: ArenaShape;
+  readonly shapeFrom: ArenaShape;
+  readonly shapeTo: ArenaShape;
+  readonly morphProgress: number;
+  readonly shapeTelegraphProgress: number;
+  readonly shapePhase: ArenaShapePhase;
+  readonly shapeIndex: number;
+}
+
+const getShapeFrame = (elapsedSeconds: number): ArenaShapeFrame => {
+  let stableShape: ArenaShape = 'circle';
+  let shapeIndex = 0;
+  for (let index = 0; index < ACT_I_ARENA_SHAPE_CHANGES.length; index += 1) {
+    const change = ACT_I_ARENA_SHAPE_CHANGES[index];
+    const telegraphEnd = change.startSeconds + change.telegraphSeconds;
+    const morphEnd = telegraphEnd + change.morphSeconds;
+    if (elapsedSeconds < change.startSeconds) break;
+    if (elapsedSeconds < telegraphEnd) {
+      return {
+        shape: change.to,
+        shapeFrom: change.from,
+        shapeTo: change.to,
+        morphProgress: 0,
+        shapeTelegraphProgress: clamp01((elapsedSeconds - change.startSeconds) / change.telegraphSeconds),
+        shapePhase: 'telegraph',
+        shapeIndex: index + 1
+      };
+    }
+    if (elapsedSeconds < morphEnd) {
+      return {
+        shape: change.to,
+        shapeFrom: change.from,
+        shapeTo: change.to,
+        morphProgress: clamp01((elapsedSeconds - telegraphEnd) / change.morphSeconds),
+        shapeTelegraphProgress: 1,
+        shapePhase: 'morph',
+        shapeIndex: index + 1
+      };
+    }
+    stableShape = change.to;
+    shapeIndex = index + 1;
+  }
+  return {
+    shape: stableShape,
+    shapeFrom: stableShape,
+    shapeTo: stableShape,
+    morphProgress: 0,
+    shapeTelegraphProgress: 0,
+    shapePhase: 'stable',
+    shapeIndex
+  };
+};

@@ -1,6 +1,6 @@
 # Guía de ejecución — Geometry Survivor
 
-Fecha: 04-09-2026. Referencia de código: `a3d0ccd`.
+Fecha: 05-09-2026. Referencia de código: `a3d0ccd`.
 
 ## 1. Para qué sirve y cómo empezar
 
@@ -46,7 +46,10 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a OK, EX-02b pendiente |
+| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK, EX-02c pendiente diferida |
+| META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
+| ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
+| ACT-I-LASER-VISUAL | — | detonación premium por capas y barrido legible | AUTOMÁTICO OK; prueba humana pendiente |
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | instrumentos existen; puerta humana pendiente |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | pendiente, depende de EX-01 a EX-04 |
@@ -168,10 +171,10 @@ architecture sólo si aparece una frontera compartida necesaria.
    no extender los porcentajes actuales a todas las armas sin recalibrar.
    Cadencia debe tener una semántica explícita por arma (disparo o tick), sin
    acelerar rotación ni duplicar aplicación. Fórmula y preview usan una fuente.
-3. **EX-02c:** ajustar porcentajes, conservando IDs, cinco niveles y compras
-   existentes salvo decisión explícita distinta. Como candidato de ensayo,
-   probar +1.5% daño/nivel y −1% intervalo/nivel: `1.075/0.95 ≈ 1.132` antes
-   de caps/cartas. Es una hipótesis de calibración, no aceptación automática.
+3. **EX-02c — PENDIENTE POR DECISIÓN DE PRODUCTO:** ajustar porcentajes,
+   conservando IDs, cinco niveles y compras existentes, junto con el balance
+   integral de vida de enemigos y daño general. No ejecutar esta recalibración
+   ahora ni presentar los valores actuales como aceptación del objetivo.
 4. **EX-02d:** guardar resultado y casos en `docs/balance/` al producir evidencia
    real. Comparar también cartas que acerquen cooldown/tick a su mínimo.
 
@@ -207,8 +210,115 @@ requiere una política nueva de compensación, pedir esa decisión.
 - Se conserva el warning conocido del chunk principal mayor a 500 kB. No se
   midieron FPS, GPU, memoria, móvil físico ni SDKs: no son parte de EX-02a.
 
-**Siguiente ID:** `EX-02b`, definir semántica por arma y una única fuente para
-fórmula/preview antes de recalibrar porcentajes.
+**Siguiente ID después de EX-02a:** `EX-02b`, definir semántica por arma y una
+única fuente para fórmula/preview antes de recalibrar porcentajes.
+
+### Resultado actual EX-02b — 05-09-2026
+
+- **EX-02b AUTOMÁTICO OK:** el daño permanente se aplica al evento de daño de
+  Projectile, a cada contacto de Orbit y a cada salto de Chain Lightning.
+- La cadencia se aplica al intervalo entre disparos de Projectile, al cooldown
+  por objetivo de Orbit y al intervalo entre casts de Chain. No acelera la
+  rotación orbital, no crea eventos duplicados ni cambia saltos, radios, TTL o
+  colisiones.
+- `PERMANENT_UPGRADE_RULES` es la fuente única para multiplicadores y labels;
+  `getPermanentCombatBonuses()` alimenta la simulación y `effectLabel` alimenta
+  el Laboratorio sin repetir porcentajes.
+- La matriz mantiene semilla, duración, layouts y cartas. En nivel 5 las tres
+  armas muestran `×1.25` de daño base y `×0.85` de intervalo authored. Los
+  valores numéricos y exclusiones están en
+  [`docs/balance/EX-02b-semantics.md`](balance/EX-02b-semantics.md).
+- Prueba específica: 24/24 entre definiciones, simulación y matriz. Falta la
+  recalibración de porcentajes y la aceptación de ventaja efectiva; no se cierra
+  todavía EX-02 completo.
+
+**Siguiente ID de evidencia:** `EX-03`; la recalibración `EX-02c` queda
+pendiente hasta la pasada final de balance.
+
+### Decisión de ruta EX-02c — 05-09-2026
+
+Por decisión del usuario, **EX-02c queda PENDIENTE**. La recalibración del
+Laboratorio se hará al final, en la misma pasada que balancee vida de enemigos,
+daño del jugador/armas y dificultad general. EX-02a y EX-02b permanecen como
+instrumentación y semántica válidas, pero los porcentajes actuales son
+provisionales y no cierran la aceptación 10–15%.
+
+La siguiente tarea documental es `META-01`: fijar la progresión de NOVA, los
+desbloqueos de los tres actos, `Quick Act`, `Expedition` y Overdrive. Su ficha
+está en [`docs/design/ACTOS_Y_META.md`](design/ACTOS_Y_META.md). Esta decisión
+no adelanta la implementación de actos por encima de EX-03, EX-04 y EX-05.
+
+### META-01 — contrato de meta, tres actos y Overdrive
+
+**Salida:** una experiencia principal de tres actos con victoria clara y un
+modo infinito opcional posterior. Acto I Radial enseña centro/borde/distancia;
+Acto II Angular enseña sectores/alineación; Acto III Fracture enseña
+corredores/conexiones. `Expedition` conserva la build entre actos, `Quick Act`
+no hereda estado y completar el Acto III dentro de `Expedition` desbloquea
+Overdrive.
+
+Overdrive mezcla reglas ya aprendidas por ciclos authored, aumenta la presión
+por composición/densidad/patrones/espacio dentro de caps y conserva
+`telegraph → attack → recovery`. No paga NOVA por ciclo, no exige jugarlo para
+terminar la campaña y no usa HP infinito como única dificultad.
+
+El contrato completo, los límites de save y las puertas de aceptación viven en
+[`docs/design/ACTOS_Y_META.md`](design/ACTOS_Y_META.md). Esta ficha documental
+no crea todavía `ActDefinition`, campos de save, ciclos ni nuevos behaviors;
+cada consumidor se implementará en su EX correspondiente.
+
+**Siguiente ID de evidencia:** `EX-03`; la ruta técnica conserva sus puertas.
+
+### ACT-I-PROTOTYPE — primer slice de arena cambiante
+
+Este slice fue autorizado para comprobar temprano el gancho del Acto I sin
+abrir todavía la campaña completa. Mantiene el círculo como lectura inicial y
+añade sólo círculo ↔ hexágono con calendario determinista:
+
+| Tiempo | Fase | Configuración |
+| ---: | --- | --- |
+| 02:12 | aviso 1.4 s + morph 0.85 s | círculo → hexágono |
+| 03:30 | aviso 1.4 s + morph 0.85 s | hexágono → círculo |
+| 04:48 | aviso 1.6 s + morph 1.05 s | círculo → hexágono, tramo de boss |
+
+La frontera interpolada es contrato compartido por clamp del jugador, alcance
+del láser lineal y dibujo de arena. El aviso y el morph son legibles; la forma
+no se elige con aleatoriedad pura ni genera daño inevitable. La vista usa una
+polilínea cacheada de baja complejidad y no añade objetos por entidad o por
+frame. Durante `telegraph` todos los disparos son iguales; en círculo uno de
+cada tres revela su barrido sólo al entrar en `active` y mantiene la detonación
+hasta terminar el recorrido. En el primer hexágono los disparos pasan a 14 s
+y en el segundo a 10.5 s, con barridos más frecuentes, amplios y rápidos. El
+daño se prueba contra el ángulo actual durante todo `attack`, no contra un
+salto visual al final.
+
+**Salida automática actual:** 19/19 pruebas específicas pasan en cinco
+archivos (`ArenaBoundary`, `ArenaShapeDefinitions`, `ArenaModel`,
+`LaserHazard`, `ArenaView`). Falta jugarlo y observar legibilidad, diversión,
+control y rendimiento en desktop y móvil. El resultado humano decidirá si el
+slice se conserva como regla del Acto I; no se deben agregar aún triángulo,
+rectángulo u otras formas por inferencia.
+
+El prototipo no implementa `ActDefinition`, save, selección de actos ni
+Overdrive, y no reemplaza las puertas EX-03–EX-06.
+
+### ACT-I-LASER-VISUAL — detonación premium por capas
+
+Esta entrega cambia sólo la presentación del hazard. El `telegraph` usa una
+línea ámbar estática, anillos de carga y diamantes en origen/extremos. La
+detonación añade cinco capas de beam, pulsos centrales, nodos de energía y,
+únicamente mientras un disparo móvil barre, dos ecos con menor alpha detrás
+del frente. El ángulo dibujado sigue siendo el ángulo de simulación.
+
+La vista reutiliza cuatro `Graphics` persistentes y cada subpath independiente
+empieza con `beginPath()`; no se parsean SVG ni se crean partículas por láser.
+La prioridad visual conserva `hazard crítico > player > boss`. Low no elimina
+telegraphs ni la lectura del ataque.
+
+**Salida automática actual:** `HazardView.test.ts` pasa 2/2 y cubre las capas
+de aviso, detonación, ecos de barrido y limpieza a idle. La suite completa pasa
+217/217, los builds local/Poki/CrazyGames son correctos y el smoke browser pasa
+14/14. La apariencia, jerarquía y saturación quedan sujetas a prueba humana.
 
 ### EX-03 — Cerrar evidencia local y baseline humano
 

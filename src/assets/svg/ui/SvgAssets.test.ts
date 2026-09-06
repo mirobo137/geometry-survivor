@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import pauseSvg from './pause.svg?raw';
+import pauseActionIcons from './pause-icons.svg?raw';
+import pausePanelFrame from './pause-panel-frame.svg?raw';
 import settingsSvg from './settings.svg?raw';
 
 const validateIcon = (svg: string, idPrefix: string): void => {
@@ -18,5 +20,20 @@ describe('UI SVG masters', () => {
   it('keeps the pause and settings assets safe and deterministic', () => {
     validateIcon(pauseSvg, 'ui-pause-');
     validateIcon(settingsSvg, 'ui-settings-');
+  });
+
+  it('keeps the pause action sprite and structural frame within their budgets', () => {
+    expect(pauseActionIcons).toContain('class="pause-icon-sprite"');
+    expect(pauseActionIcons.match(/<symbol\b/g)?.length).toBe(6);
+    const symbolIds = [...pauseActionIcons.matchAll(/<symbol id="([^"]+)"/g)].map((match) => match[1]);
+    expect(new Set(symbolIds).size).toBe(symbolIds.length);
+    expect(symbolIds.every((id) => id.startsWith('ui-pause-action-'))).toBe(true);
+    expect(pauseActionIcons).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=/i);
+    expect(new TextEncoder().encode(pauseActionIcons).byteLength).toBeLessThanOrEqual(3072);
+
+    expect(pausePanelFrame).toContain('viewBox="0 0 640 520"');
+    expect(pausePanelFrame).toContain('preserveAspectRatio="none"');
+    expect(pausePanelFrame).not.toMatch(/id="|<script|<foreignObject|<image|url\(|on[a-z]+=/i);
+    expect(new TextEncoder().encode(pausePanelFrame).byteLength).toBeLessThanOrEqual(3072);
   });
 });

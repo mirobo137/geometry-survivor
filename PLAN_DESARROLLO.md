@@ -2048,7 +2048,9 @@ La identidad de producto queda fijada así:
 
 El juego no se convierte en una run infinita obligatoria. La unidad principal
 es un acto corto con resultado; una expedición enlaza los actos conservando la
-build y `Overdrive` queda como continuación infinita opcional.
+build y `Overdrive` queda como continuación infinita opcional. La definición
+operativa de esa progresión está en
+[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md).
 
 ## 16.1 Prioridades cerradas
 
@@ -2085,6 +2087,19 @@ No se inicia una prioridad si la anterior tiene fallos funcionales o de save.
 Las comprobaciones humanas de diversión pueden convivir con documentación o
 arte que no cambie la simulación, pero no autorizan saltar puertas técnicas.
 
+### Desvío autorizado de balance — 05-09-2026
+
+El usuario decide dejar **EX-02c PENDIENTE**. La recalibración de porcentajes
+del Laboratorio se pospone junto con el balance integral de vida de enemigos y
+daño del jugador/armas, para una pasada final basada en runs. Los valores
+actuales de EX-02b permanecen provisionales: no se declaran dentro del objetivo
+10–15% ni se cambia el precio, el nivel máximo o el save para compensar.
+
+Se permite avanzar ahora con la definición del bucle meta y de los tres actos
+como trabajo documental y de contratos. Esta decisión no salta las puertas de
+EX-03, EX-04 y EX-05 para implementar los actos; sólo evita que una
+recalibración prematura bloquee el diseño de la campaña y de Overdrive.
+
 ## 16.2 Estructura de modos y actos
 
 | Modo | Entrada | Duración objetivo | Conserva build | Resultado |
@@ -2096,8 +2111,9 @@ arte que no cambie la simulación, pero no autorizan saltar puertas técnicas.
 Al derrotar un boss se detiene gameplay, se cobra la recompensa del acto una
 sola vez y aparece una intermisión con `Continuar` y `Terminar`. Terminar una
 expedición después de un acto no se considera derrota. La victoria del Acto I
-desbloquea el Acto II; la del II desbloquea el III; completar el III desbloquea
-Overdrive.
+desbloquea el Acto II; la del II desbloquea el III; completar el Acto III dentro
+de `Expedition` desbloquea Overdrive. `Quick Act` permite repetir el Acto III
+cuando está desbloqueado, pero no sustituye la finalización de la Expedition.
 
 Un inicio directo en Acto II o III no entrega una build arbitraria ni obliga a
 elegir muchas cartas. `Calibration` ofrece una sola de tres plantillas
@@ -2114,6 +2130,12 @@ Toda reconfiguración peligrosa separa `telegraph`, `attack` y `recovery`. Una
 barrera de Fracture nunca aparece debajo del jugador, siempre conserva al
 menos un corredor de cuatro diámetros del player y se previsualiza durante un
 mínimo inicial de 0.8 s. Estos valores son configurables y se ajustan jugando.
+
+La relación entre desbloqueos, `Quick Act`, `Expedition`, recompensa única y
+Overdrive está fijada en
+[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md). Ese documento es
+la ficha de producto; la implementación seguirá las EX correspondientes y no
+creará campos de save o ciclos infinitos sin consumidor real.
 
 ## 16.3 Contratos necesarios, sin reescritura
 
@@ -2279,9 +2301,18 @@ Sumideros de NOVA:
 - desbloqueos de investigación de armas, cuando la nueva arma ya esté validada.
 
 El Laboratorio v1 ya existe con daño y cadencia, pero sus valores actuales son
-provisionales. Antes del Acto II se mide el loadout por defecto con y sin todos
-los niveles. La ventaja combinada máxima objetivo es 10–15% de potencia
-efectiva; si la combinación actual la supera, se reducen porcentajes o niveles.
+provisionales. **EX-02c queda pendiente por decisión del usuario** y se
+reabrirá junto con la vida de enemigos y el daño general, antes de congelar el
+balance de los actos. La ventaja combinada máxima objetivo continúa siendo
+10–15% de potencia efectiva; hasta esa medición no se presenta el Laboratorio
+como balanceado ni se cambian porcentajes por intuición.
+
+La meta de producto se divide en desbloqueo de actos, poder permanente pequeño,
+investigación de contenido y colección cosmética. Los actos se desbloquean por
+victoria, no por grind obligatorio; skins, cañones, balas, estelas y fondos no
+alteran gameplay. Overdrive se desbloquea al completar la Expedition en el
+Acto III, conserva la build y liquida NOVA una sola vez al terminar la sesión,
+sin pago por ciclo.
 
 Ramas permitidas:
 
@@ -2482,9 +2513,10 @@ Encargo visual posterior: guía premium de UI y lote de referencia autorizados
 por el usuario. Fuente canónica:
 [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md).
 Cubre contenedores, cartas, iconos, botones y HUD. El lote integrado comprende
-once iconos de cartas, marco, emblema de inicio y pausa/ajustes; no equivale a
-rediseñar todas las pantallas. La ruta EX se conserva y la aprobación humana
-del nuevo lote sigue pendiente.
+once iconos de cartas, marco, emblema de inicio y una pausa premium completa
+(panel, marco, acciones y mezclador de audio); no equivale a rediseñar todas
+las pantallas. La ruta EX se conserva y la aprobación humana del nuevo lote
+sigue pendiente.
 
 La [guía operativa](docs/PLAN_EJECUCION.md) desglosa §16.1 en unidades pequeñas
 con entradas, alcance, módulos, pruebas y salidas. Es una extensión operativa
@@ -2501,13 +2533,41 @@ de esos módulos no aprueba por sí sola balance, móvil físico ni plataformas.
 La puerta automática de **EX-01: cierre económico de run y revive** quedó
 cerrada con EX-01a/EX-01b/EX-01c: la secuencia fue caracterizada, la liquidación
 prematura corregida y la regresión de save/reload, audio/input y baseline pasó.
-**EX-02a** ya dejó una matriz reproducible de las tres armas y confirmó la
-discrepancia entre la descripción del meta y el bonus aplicado; la siguiente
-subtarea es **EX-02b**, definir esa semántica antes de tocar porcentajes. Después
-se toma la evidencia de diez runs de EX-03. No se rehace
-la extracción de armas ya entregada ni se expone Boomerang en cartas antes de
-cerrar estas puertas. El orden de §16.1 no cambia: se cierran pendientes de
-prioridades 1–3 antes de avanzar a 5.
+**EX-02a** dejó una matriz reproducible de las tres armas y **EX-02b** ya
+unificó la semántica del bonus por arma sin tocar porcentajes. Por decisión del
+usuario, **EX-02c queda PENDIENTE** y se retomará en la pasada final de vida de
+enemigos, daño general y meta. La siguiente acción documental es consolidar el
+contrato de actos y meta en
+[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md); la siguiente EX
+de evidencia sigue siendo **EX-03**. No se rehace la extracción de armas ni se
+expone Boomerang en cartas antes de cerrar sus puertas.
+
+### 22.1a Prototipo autorizado del Acto I
+
+Por solicitud del usuario se implementó un slice exploratorio del gancho del
+Acto I antes de abrir EX-06 completo. La arena ahora alterna de forma authored
+entre círculo y hexágono en 02:12, 03:30 y 04:48, con aviso visual y morph
+gradual. El clamp del jugador y la extensión de los láseres lineales consultan
+la misma frontera geométrica interpolada. Durante `telegraph` todos los
+disparos son visualmente iguales; uno de cada tres láseres circulares revela su
+barrido sólo al entrar en `active` y mantiene la detonación hasta completar el
+recorrido. En la primera intervención hexagonal el intervalo baja a 14 s y en
+la segunda a 10.5 s, con barridos más frecuentes, amplios y rápidos.
+
+La entrega está limitada a la validación de la idea: no crea todavía
+`ActDefinition`, selección de actos, persistencia, nuevos polígonos, balance
+final ni Overdrive. Por tanto no cierra EX-06 ni mueve la siguiente puerta
+técnica, que continúa siendo **EX-03**. La aceptación de diversión,
+legibilidad y ausencia de frustración queda pendiente de prueba humana en
+desktop y móvil.
+
+Los módulos y pruebas del prototipo son:
+`src/content/run/ArenaShapeDefinitions.ts`, `src/simulation/ArenaBoundary.ts`,
+`src/simulation/ArenaModel.ts`, `src/simulation/PlayerModel.ts`,
+`src/simulation/hazards/LaserHazard.ts`, `src/presentation/pixi/ArenaView.ts`
+y sus pruebas asociadas. La referencia de diseño, calendario, perfiles de
+presión y exclusiones vive en
+[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md).
 
 ## 22.2 Resolución de instrucciones históricas
 

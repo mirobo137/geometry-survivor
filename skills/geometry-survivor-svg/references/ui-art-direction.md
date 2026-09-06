@@ -13,9 +13,14 @@ exigencia: reconocer una acción antes de observar su decoración.
 - Iconos de cartas: `src/assets/svg/ui/level-up/premium-icons.svg`.
 - Marco: `src/assets/svg/ui/level-up/premium-card-frame.svg`.
 - Emblema: `src/assets/svg/ui/start/mark.svg`; controles: `ui/pause.svg` y
-  `ui/settings.svg` bajo la misma carpeta de assets.
+  `ui/settings.svg`, `ui/pause-icons.svg` y `ui/pause-panel-frame.svg` bajo la
+  misma carpeta de assets. La pausa real consume el frame y el sprite de
+  acciones; sus sliders siguen siendo controles HTML.
 - `icons.svg` y `card-frame.svg` son referencia anterior para comparación,
   no una segunda familia activa. El consumidor es `LevelUpOverlay.ts`.
+- La pausa real se puede capturar con `node docs/visual/capture-pause.mjs` y una
+  URL base de Vite; la captura cubre modal cerrado, mezclador abierto, foco y
+  móvil.
 - La aprobación humana de las seis skins/cañones no se extiende automáticamente
   a esta UI. Este lote es candidato de dirección pendiente de revisión humana.
 
@@ -144,7 +149,10 @@ referencia. Orden sugerido para una migración completa:
 4. Pausa, resultados y rewarded: jerarquía de salidas y feedback.
 5. HUD: lectura en combate, safe areas, barras y alertas.
 
-Este lote implementa once iconos de cartas, marco, emblema y pausa/ajustes.
+Este lote implementa once iconos de cartas, marco, emblema y una pausa completa:
+panel, marco estructural, acciones y mezclador de audio. Los iconos `pause.svg`
+y `settings.svg` conservan sus consumidores directos; `pause-icons.svg` se
+monta una sola vez y sus símbolos se referencian con `<use>`.
 El resto del orden es guía para encargos futuros, no una migración ya hecha.
 Conservar la próxima tarea EX documentada; arte no cierra balance ni plataformas.
 

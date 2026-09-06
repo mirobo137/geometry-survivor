@@ -74,7 +74,8 @@ interface ScenarioRunResult {
 }
 
 /**
- * Runs a deterministic, simulation-only matrix for EX-02a.
+ * Runs the deterministic, simulation-only matrix used by EX-02. The same
+ * harness is reused after EX-02b so semantic changes remain comparable.
  *
  * Each meta comparison keeps seed, player position, target layout, duration and
  * authored weapon card fixed. It intentionally does not roll criticals or run
@@ -88,7 +89,7 @@ export const runBalanceMatrix = (): readonly BalanceMeasurement[] => (
 
 export const formatBalanceMatrix = (measurements: readonly BalanceMeasurement[]): string => {
   const lines = [
-    'Geometry Survivor | EX-02a Laboratorio',
+    'Geometry Survivor | EX-02 balance matrix',
     `seed ${BALANCE_SCENARIO_SEED} | ${BALANCE_DURATION_SECONDS}s | fijo ${BALANCE_FIXED_STEP_SECONDS}s`,
     ''
   ];
@@ -241,9 +242,9 @@ const getConfiguredDamage = (
   weapon: BalanceWeapon,
   permanentBonuses: ReturnType<typeof getPermanentCombatBonuses>
 ): number => {
-  if (weapon === 'projectile') return WEAPON_DEFINITIONS.projectile.damage * permanentBonuses.projectileDamageMultiplier;
-  if (weapon === 'orbit') return WEAPON_DEFINITIONS.orbit.damage;
-  return WEAPON_DEFINITIONS.chainLightning.damage;
+  if (weapon === 'projectile') return WEAPON_DEFINITIONS.projectile.damage * permanentBonuses.weaponDamageMultiplier;
+  if (weapon === 'orbit') return WEAPON_DEFINITIONS.orbit.damage * permanentBonuses.weaponDamageMultiplier;
+  return WEAPON_DEFINITIONS.chainLightning.damage * permanentBonuses.weaponDamageMultiplier;
 };
 
 const getMinimumCooldown = (
@@ -251,10 +252,10 @@ const getMinimumCooldown = (
   permanentBonuses: ReturnType<typeof getPermanentCombatBonuses>
 ): number => {
   if (weapon === 'projectile') {
-    return Math.max(0.18, WEAPON_DEFINITIONS.projectile.cooldownSeconds * permanentBonuses.projectileCooldownMultiplier);
+    return Math.max(0.18, WEAPON_DEFINITIONS.projectile.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
   }
-  if (weapon === 'orbit') return WEAPON_DEFINITIONS.orbit.hitCooldownSeconds;
-  return WEAPON_DEFINITIONS.chainLightning.cooldownSeconds;
+  if (weapon === 'orbit') return WEAPON_DEFINITIONS.orbit.hitCooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
+  return WEAPON_DEFINITIONS.chainLightning.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
 };
 
 const formatSeconds = (seconds: number | null): string => (

@@ -1,6 +1,8 @@
 import { LASER_DEFINITION, type LaserDefinition } from '../../content/hazards/LaserDefinition';
+import { getActIArenaLaserPressure } from '../../content/run/ArenaShapeDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
+import { asArenaBoundary, getArenaRadiusAtAngle, type ArenaBoundaryInput } from '../ArenaBoundary';
 
 export type LaserPhase = 'idle' | 'telegraph' | 'active' | 'recovery';
 
@@ -9,6 +11,8 @@ export interface LaserHazardState {
   angle: number;
   progress: number;
   width: number;
+  sweepProgress: number;
+  sweeping: boolean;
 }
 
 const FULL_LINE = Math.PI;
@@ -22,6 +26,10 @@ export class LaserHazard {
   private nextTriggerSeconds: number;
   private strikeIndex = 0;
   private hitApplied = false;
+  private strikeIntervalSeconds = LASER_DEFINITION.intervalSeconds;
+  private strikeStartAngle = 0;
+  private strikeSweepAngle = 0;
+  private strikeSweepAttackSeconds = 0;
 
   public constructor(private readonly definition: LaserDefinition = LASER_DEFINITION) {
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
@@ -29,7 +37,9 @@ export class LaserHazard {
       phase: 'idle',
       angle: 0,
       progress: 0,
-      width: definition.width
+      width: definition.width,
+      sweepProgress: 0,
+      sweeping: false
     };
   }
 
@@ -37,7 +47,7 @@ export class LaserHazard {
     dtSeconds: number,
     elapsedSeconds: number,
     player: PlayerState,
-    arenaRadius: number
+    arena: ArenaBoundaryInput
   ): boolean {
     let remaining = Math.max(0, dtSeconds);
     let damagedPlayer = false;
@@ -45,7 +55,7 @@ export class LaserHazard {
     while (remaining > EPSILON) {
       if (this.phase === 'idle') {
         if (elapsedSeconds + EPSILON < this.nextTriggerSeconds) break;
-        this.startStrike();
+        this.startStrike(arena);
       }
 
       const duration = this.phaseDuration();
@@ -53,9 +63,12 @@ export class LaserHazard {
       this.phaseTimer += step;
       remaining -= step;
 
+      this.syncState();
       if (this.phase === 'active' && !this.hitApplied) {
-        this.hitApplied = true;
-        if (this.intersectsPlayer(player, arenaRadius)) damagedPlayer = true;
+        if (this.intersectsPlayer(player, arena)) {
+          this.hitApplied = true;
+          damagedPlayer = true;
+        }
       }
 
       if (this.phaseTimer + EPSILON < duration) continue;
@@ -67,7 +80,7 @@ export class LaserHazard {
         this.phase = 'recovery';
       } else {
         this.phase = 'idle';
-        this.nextTriggerSeconds += this.definition.intervalSeconds;
+        this.nextTriggerSeconds += this.strikeIntervalSeconds;
       }
     }
 
@@ -81,23 +94,42 @@ export class LaserHazard {
     this.nextTriggerSeconds = this.definition.firstTriggerSeconds;
     this.strikeIndex = 0;
     this.hitApplied = false;
+    this.strikeIntervalSeconds = this.definition.intervalSeconds;
+    this.strikeStartAngle = 0;
+    this.strikeSweepAngle = 0;
+    this.strikeSweepAttackSeconds = 0;
     this.state.phase = 'idle';
     this.state.angle = 0;
     this.state.progress = 0;
     this.state.width = this.definition.width;
+    this.state.sweepProgress = 0;
+    this.state.sweeping = false;
   }
 
-  private startStrike(): void {
+  private startStrike(arena: ArenaBoundaryInput): void {
+    const boundary = asArenaBoundary(arena);
+    const shape = boundary.shape ?? boundary.shapeTo;
+    const shapeIndex = boundary.shapeIndex ?? 0;
+    const pressure = getActIArenaLaserPressure(shape, shapeIndex);
+    const shouldSweep = this.strikeIndex % pressure.sweepEveryStrikes === 0;
     this.phase = 'telegraph';
     this.phaseTimer = 0;
     this.hitApplied = false;
-    this.state.angle = (this.strikeIndex * ANGLE_STEP) % FULL_LINE;
+    this.strikeIntervalSeconds = pressure.intervalSeconds;
+    this.strikeStartAngle = (this.strikeIndex * ANGLE_STEP) % FULL_LINE;
+    this.strikeSweepAngle = shouldSweep ? pressure.sweepAngleRadians : 0;
+    this.strikeSweepAttackSeconds = pressure.sweepAttackSeconds;
+    this.state.angle = this.strikeStartAngle;
     this.strikeIndex += 1;
   }
 
   private phaseDuration(): number {
     if (this.phase === 'telegraph') return this.definition.telegraphSeconds;
-    if (this.phase === 'active') return this.definition.attackSeconds;
+    if (this.phase === 'active') {
+      return this.strikeSweepAngle === 0
+        ? this.definition.attackSeconds
+        : this.strikeSweepAttackSeconds;
+    }
     return this.definition.recoverySeconds;
   }
 
@@ -107,14 +139,38 @@ export class LaserHazard {
     this.state.progress = this.phase === 'idle'
       ? 0
       : Math.min(1, this.phaseTimer / this.phaseDuration());
+    const sweepProgress = this.phase !== 'active' && this.phase !== 'recovery'
+      || this.strikeSweepAngle === 0
+      ? 0
+      : Math.min(1, this.phase === 'recovery'
+        ? 1
+        : this.phaseTimer / Math.max(this.strikeSweepAttackSeconds, EPSILON));
+    this.state.sweepProgress = smoothstep(sweepProgress);
+    this.state.sweeping = this.phase === 'active' && this.strikeSweepAngle !== 0 && sweepProgress < 1;
+    if (this.phase === 'active' || this.phase === 'recovery') {
+      this.state.angle = normalizeLineAngle(
+        this.strikeStartAngle + this.strikeSweepAngle * this.state.sweepProgress
+      );
+    }
   }
 
-  private intersectsPlayer(player: PlayerState, arenaRadius: number): boolean {
+  private intersectsPlayer(player: PlayerState, arena: ArenaBoundaryInput): boolean {
     const dx = player.x - ARENA_CENTER.x;
     const dy = player.y - ARENA_CENTER.y;
     const perpendicularDistance = Math.abs(dx * Math.sin(this.state.angle) - dy * Math.cos(this.state.angle));
     const alongDistance = Math.abs(dx * Math.cos(this.state.angle) + dy * Math.sin(this.state.angle));
+    const playerAngle = Math.atan2(dy, dx);
     return perpendicularDistance <= player.radius + this.definition.width * 0.5
-      && alongDistance <= arenaRadius + player.radius;
+      && alongDistance <= getArenaRadiusAtAngle(arena, playerAngle) + player.radius;
   }
 }
+
+const smoothstep = (value: number): number => {
+  const clamped = Math.min(1, Math.max(0, value));
+  return clamped * clamped * (3 - 2 * clamped);
+};
+
+const normalizeLineAngle = (angle: number): number => {
+  const normalized = angle % FULL_LINE;
+  return normalized < 0 ? normalized + FULL_LINE : normalized;
+};

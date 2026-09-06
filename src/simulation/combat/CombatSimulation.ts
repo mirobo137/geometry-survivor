@@ -15,6 +15,7 @@ import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
 import { BossSystem } from '../bosses/BossSystem';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
+import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -117,8 +118,20 @@ export class CombatSimulation {
     return this.weaponSystem.currentOrbitRadius;
   }
 
+  public get currentOrbitDamage(): number {
+    return this.weaponSystem.currentOrbitDamage;
+  }
+
+  public get currentOrbitHitCooldown(): number {
+    return this.weaponSystem.currentOrbitHitCooldown;
+  }
+
   public get currentChainDamage(): number {
     return this.weaponSystem.currentChainDamage;
+  }
+
+  public get currentChainCooldown(): number {
+    return this.weaponSystem.currentChainCooldown;
   }
 
   public get currentExperienceMultiplier(): number {
@@ -193,10 +206,12 @@ export class CombatSimulation {
     this.weaponSystem.increaseCriticalChance(amount);
   }
 
-  public update(dtSeconds: number, player: PlayerState, arenaRadius: number): void {
+  public update(dtSeconds: number, player: PlayerState, arena: ArenaBoundaryInput): void {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     this.pendingEvents.length = 0;
     if (dt === 0) return;
+    const arenaBoundary = asArenaBoundary(arena);
+    const arenaRadius = arenaBoundary.radius;
 
     if (this.stressMode && !this.stressInitialized) {
       this.initializeStress(player, arenaRadius);
@@ -204,7 +219,7 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
-    if (this.laser.update(dt, this.stats.elapsedSeconds, player, arenaRadius)) {
+    if (this.laser.update(dt, this.stats.elapsedSeconds, player, arenaBoundary)) {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }

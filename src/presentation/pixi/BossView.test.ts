@@ -19,8 +19,8 @@ const createRingState = (safeGapAngle: number): BossRenderState => ({
 });
 
 const getArcPathActions = (view: BossView): string[][] => {
-  const attack = (view as unknown as { attack: Graphics }).attack;
-  return attack.context.instructions
+  const safeGuide = (view as unknown as { safeGuide: Graphics }).safeGuide;
+  return safeGuide.context.instructions
     .filter((instruction) => instruction.action === 'stroke')
     .map((instruction) => instruction.data.path.instructions)
     .filter((path) => path.some((instruction) => instruction.action === 'arc'))
@@ -34,6 +34,7 @@ describe('BossView', () => {
     view.render(createRingState(Math.PI), 300);
 
     expect(getArcPathActions(view)).toEqual([['arc']]);
+    expect((view as unknown as { safeGuide: Graphics }).safeGuide.visible).toBe(true);
     view.root.destroy({ children: true });
   });
 
@@ -43,6 +44,7 @@ describe('BossView', () => {
     view.render(createRingState(0), 300);
 
     expect(getArcPathActions(view)).toEqual([['arc'], ['arc']]);
+    expect((view as unknown as { safeGuide: Graphics }).safeGuide.visible).toBe(true);
     view.root.destroy({ children: true });
   });
 });

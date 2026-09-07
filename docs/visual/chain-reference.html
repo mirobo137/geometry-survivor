@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chain lightning — Arc Relay</title>
+<style>
+body{margin:0;background:#080c18;color:#e8e5dc;font:15px system-ui;padding:24px}
+h1{font-size:26px;margin:0}p{color:#adb7ca;max-width:800px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;margin-top:24px}
+article{border:1px solid #344056;border-radius:10px;overflow:hidden;background:#111a2e}
+h2{font-size:14px;padding:0 16px;margin:16px 0 12px;color:#f4ffff}canvas{width:100%;display:block}
+</style>
+<h1>CHAIN LIGHTNING / Arc Relay</h1>
+<p>La cadena conserva su origen y destino reales, pero viaja por dos quiebres energéticos.
+El underlay, el cuerpo violeta, el núcleo cian/blanco, los nodos dorados y el pulso
+direccional convierten cada salto en una transferencia legible.</p>
+<div class="grid"></div>
+<script type="module">
+import { Application, Graphics } from 'pixi.js';
+import { WeaponView } from '../../src/presentation/pixi/WeaponView.ts';
+import { WEAPON_DEFINITIONS } from '../../src/content/weapons/WeaponDefinitions.ts';
+
+const cases = [
+  ['High · Arc Relay completo', 'high', 0x090f22, 0x111a36],
+  ['Medium · pulso de transferencia', 'medium', 0x090f22, 0x111a36],
+  ['Low · peligro legible', 'low', 0x090f22, 0x111a36],
+  ['High · contraste sobre fondo claro', 'high', 0xd9dfe4, 0xe7ebef]
+];
+
+const segments = [
+  { active: true, x1: 110, y1: 154, x2: 270, y2: 82, lifeSeconds: 0.09 },
+  { active: true, x1: 270, y1: 82, x2: 430, y2: 174, lifeSeconds: 0.09 },
+  { active: true, x1: 430, y1: 174, x2: 600, y2: 94, lifeSeconds: 0.09 }
+];
+
+const drawArena = (stage, background, light) => {
+  const arena = new Graphics();
+  arena.beginPath().rect(0, 0, 720, 260).fill({ color: background, alpha: 1 });
+  arena.beginPath().moveTo(78, 214).lineTo(642, 214).stroke({ color: light ? 0x8a98ad : 0x22335a, width: 1, alpha: 0.7 });
+  stage.addChild(arena);
+  const actors = new Graphics();
+  actors.beginPath().circle(110, 154, 13).fill({ color: 0x75e6ff }).stroke({ color: 0xf4ffff, width: 2 });
+  actors.beginPath().circle(110, 154, 4).fill({ color: 0x11142f });
+  for (const point of [[270, 82], [430, 174], [600, 94]]) {
+    actors.beginPath().regularPoly(point[0], point[1], 14, 6, Math.PI / 6)
+      .fill({ color: light ? 0x7c4f9f : 0x382557, alpha: 1 })
+      .stroke({ color: 0xff8be8, width: 2, alpha: 0.95 });
+    actors.beginPath().circle(point[0], point[1], 3).fill({ color: 0xffd978 });
+  }
+  stage.addChild(actors);
+};
+
+for (const [label, quality, background, arenaColor] of cases) {
+  const article = document.createElement('article');
+  article.innerHTML = '<h2>' + label + '</h2>';
+  document.querySelector('.grid').append(article);
+  const app = new Application();
+  await app.init({ width: 720, height: 260, background, antialias: true, resolution: 1 });
+  article.append(app.canvas);
+  drawArena(app.stage, arenaColor, background > 0x800000);
+  const view = new WeaponView(app.renderer, undefined, quality);
+  app.stage.addChild(view.root);
+  view.render({
+    orbitBlades: Array.from({ length: WEAPON_DEFINITIONS.orbit.maxBlades }, () => ({
+      active: false, x: 0, y: 0, radius: 10, angle: 0
+    })),
+    chainSegments: segments
+  });
+}
+document.body.dataset.ready = 'true';
+</script>
+</html>

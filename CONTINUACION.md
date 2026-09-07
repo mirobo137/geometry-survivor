@@ -1,6 +1,8 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 05-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
+> Snapshot operativo: 06-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
+>
+> Último encargo: preparar la continuación de EX-03b/EX-03c con las diez runs humanas ya reportadas; ver §77, [EX-03b-human-observations.md](docs/balance/EX-03b-human-observations.md) y [EX-03c-stress-pending.md](docs/performance/EX-03c-stress-pending.md).
 >
 > Encargo visual posterior: guía premium de UI y ejemplo integrado; ver
 > [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md)
@@ -1885,3 +1887,180 @@ añadió `src/presentation/pixi/HazardView.test.ts`. La prueba visual queda en
 **2/2**; suite completa **217/217**; smoke browser **14/14**; builds local,
 Poki y CrazyGames correctos. Falta aprobación humana de jerarquía, saturación
 y rendimiento percibido en desktop y móvil. Sin commit, push ni deploy.
+
+## 72. Solar Rail — revisión visual del láser y guía de FX — 06-09-2026
+
+El usuario no quedó satisfecho con la apariencia de §71. Se reemplazó sólo
+`HazardView`, sin cambiar simulación, daño, cadencia ni barrido activo:
+
+- Emisores mecánicos facetados, cavidades y biseles en la frontera real.
+- Aviso de raíles discontinuos y carga; plasma coral/dorado afinado con
+  núcleo marfil; encendido breve y filamentos contenidos en el haz.
+- Recuperación sin cuerpo sólido: segmentos débiles que se disipan.
+- Sin ecos angulares en zonas seguras. El aviso sigue sin revelar el barrido.
+- Geometría construida una vez y transformada por progreso de simulación.
+  Low conserva materiales y señal; sólo se omiten filamentos decorativos.
+
+La receta canónica de esta entrega está en `docs/design/EFECTOS_PREMIUM.md`,
+enlazada desde §22.1a del plan y la guía de ejecución. Leerla para futuros FX
+junto a las skills rendering/mobile-performance; no copiar simplemente más
+capas ni asumir que la aprobación de SVG aprueba también estos efectos.
+
+Referencia: `docs/visual/laser-reference.html`, con seis paneles del renderer
+real. `node docs/visual/capture-lasers.mjs` con Vite activo genera capturas
+desktop/móvil y gameplay Low en `test-results/laser-reference/`.
+Las capturas se inspeccionaron: fases diferenciadas, lectura sobre fondo claro
+y oscuro, acabado Low y láser activo con boss. No equivalen a prueba sostenida
+en móvil físico ni a aprobación del usuario.
+
+Validación: 218 tests, incluidos tres de HazardView; builds local, Poki y
+CrazyGames correctos; smoke browser 14/14. Permanece el warning conocido de
+chunk principal >500 kB. No se agregaron dependencias ni filtros. No se ha
+medido aquí una mejora de FPS; el presupuesto estructural es 11/15/17 Graphics
+persistentes según calidad, sin reconstrucción de paths por frame.
+
+Siguiente: aprobación humana del nuevo láser en PC/móvil (aviso, barrido,
+contraste y saturación en combate). EX-03 continúa como siguiente puerta del
+plan; EX-02c sigue diferida. Sin commit, push ni deploy.
+
+## 73. Prism Aegis - orbita geometrica premium - 06-09-2026
+
+Se aplico la guia de efectos premium a la orbita geometrica. La presentacion
+plana de un rombo fue reemplazada por cinco capas cacheadas: estela tangencial,
+halo de arcos rotos, carcasa facetada con cavidad oscura, acentos orbitales y
+nucleo hexagonal/romboidal. El root sigue state.x, state.y y state.angle; el
+nucleo y el halo tienen movimiento secundario determinista derivado del mismo
+angulo. No se cambio OrbitBehavior, radio de dano, cadencia, numero maximo ni
+colisiones.
+
+Low conserva carcasa, cavidad, acentos, nucleo y halo tenue; solo omite la
+estela decorativa. High aumenta la presencia de halo/estela sin filtros ni
+particulas por frame. Las texturas se generan una vez y se reutilizan por los
+seis modulos. La ficha canonica esta en
+docs/design/ORBITA_PREMIUM.md y la referencia ejecutable en
+docs/visual/orbit-reference.html. El script docs/visual/capture-orbit.mjs
+genera capturas desktop/movil con el renderer real.
+
+Validacion final: typecheck y suite completa correctos, 219 tests en 69 archivos;
+builds local, Poki y CrazyGames correctos; smoke browser 14/14. Capturas visuales
+desktop/movil de cuatro paneles del renderer real inspeccionadas. Falta inspeccion humana dentro de
+una partida con la orbita desbloqueada, especialmente jerarquia frente al
+player/enemigos y saturacion. El laser Solar Rail de §72 no se modifica.
+EX-03 continua como puerta del plan; EX-02c sigue diferida. Sin commit, push ni
+deploy.
+
+## 74. Boss FX - command rail y corredor seguro - 06-09-2026
+
+Se corrigio la causa por la que el boss seguia usando lasers viejos: sus
+patrones viven en `BossView`, separado de `HazardView`, que es la vista del
+laser de arena Solar Rail. `BossView` ahora comparte jerarquia de materiales
+pero conserva contratos propios para sweep y ring.
+
+- Sweep: aviso discontinuo, nucleo caliente, centro claro, emisores en ambos
+  extremos y fragmentos de recuperacion.
+- Ring: el aro peligroso se dibuja excluyendo el hueco seguro; no se pinta ya
+  una circunferencia completa debajo del hueco.
+- El hueco seguro se comunica desde telegraph con cuña translúcida de alpha
+  bajo, arco de ruta, brackets de entrada y ticks. En active aumenta contraste.
+- El radio, angulos y dano siguen perteneciendo a `BossSystem`; la vista no
+  crea una hitbox ni modifica `safeGapAngle`/`safeGapHalfAngle`.
+- Se conservan subpaths independientes y el caso wrap-around de 0/2pi.
+
+La ficha queda en `docs/design/BOSS_FX_PREMIUM.md`, enlazada desde la guía de
+efectos premium. La referencia real es
+`docs/visual/boss-laser-reference.html`; `node
+docs/visual/capture-boss-lasers.mjs` genera cinco paneles desktop/movil.
+La captura fue inspeccionada: el sweep activo tiene cuerpo/nucleo y el ring
+deja visible un corredor seguro sobre fondo oscuro y claro.
+
+Validacion: typecheck y suite 219/219 correctos; builds local, Poki y
+CrazyGames correctos; smoke browser 14/14; captura boss sin errores runtime.
+Falta prueba humana en el encuentro real con pausa, resize, Low/High y player
+rodeado de enemigos. EX-03 continua como puerta del plan; EX-02c sigue
+diferida. Sin commit, push ni deploy.
+
+## 75. Arc Relay - chain lightning premium - 06-09-2026
+
+Se reemplazo la linea plana del disparo en cadena por una transferencia
+angular entre origen y objetivo. La simulacion no cambio: `ChainBehavior`
+continua decidiendo objetivos, saltos, dano y `segmentLifetimeSeconds`.
+
+- Cada segmento usa underlay oscuro, cuerpo violeta, capa cian y nucleo
+  blanco, con alpha derivado de la vida real del segmento.
+- Dos quiebres perpendiculares y deterministas, alternados por indice,
+  mantienen la ruta estable y hacen visible que la energia salta entre nodos.
+- Nodos dorados en los quiebres, modulo hexagonal en el destino y pulso
+  romboidal direccional completan la lectura del relay.
+- Low conserva cuerpo, contraste y destino; Medium agrega el pulso; High
+  agrega el marcador transversal. No hay filtros ni particulas libres.
+- `WeaponView` conserva una `Graphics`, tres modulos de impacto y tres pulsos;
+  no crea arrays/objetos temporales dentro del render caliente y cada path
+  comienza en el origen real y termina en el destino real.
+
+La guia canonica queda en `docs/design/CHAIN_FX_PREMIUM.md`, enlazada desde
+`docs/design/EFECTOS_PREMIUM.md`. La referencia ejecutable es
+`docs/visual/chain-reference.html`; `node docs/visual/capture-chain.mjs`
+genera cuatro paneles del renderer real en desktop y movil.
+
+Validacion cerrada: `npm run typecheck`; `npm test -- --run` con 220/220;
+`npm run build:local`, `npm run build:poki` y `npm run build:crazygames`;
+smoke browser 14/14; y `node docs/visual/capture-chain.mjs` con cuatro
+paneles desktop/movil sin errores runtime. Permanece el warning conocido de
+chunk principal mayor a 500 kB. Falta inspeccion humana dentro de una cadena
+real en combate, especialmente saturacion con muchos enemigos y lectura en
+movil fisico. CHAIN-VISUAL queda registrado en `docs/PLAN_EJECUCION.md`;
+EX-03 continua como puerta del plan y EX-02c sigue diferida. Sin commit, push
+ni deploy.
+
+## 76. EX-03a - matriz automatica de rewarded - 06-09-2026
+
+Se retomo el plan por la puerta vigente EX-03. La cobertura automatica de
+rewarded se amplio para los cuatro placements (`revive`, `reroll`,
+`double-nova` y `cosmetic-unlock`): exito, unavailable, errores/timeout,
+concurrencia, excepciones, token tardio y settlement repetido.
+
+- `LocalAdService.test.ts`: 13 casos verifican el contrato local en cada
+  placement y sus modos de simulacion.
+- `RewardedAdController.test.ts`: 8 casos verifican disponibilidad, lock,
+  excepciones y exito por placement.
+- `RewardedOfferLedger.test.ts`: 5 casos verifican consumo unico, reintento y
+  callback repetido/tardio.
+- Resultado especifico: 3 archivos y 26 tests en verde.
+
+La ficha queda en `docs/balance/EX-03a-rewarded-matrix.md`. Se confirmo una
+deuda de producto: la alternativa de reroll con NOVA queda PENDIENTE DE
+VALIDACION. DEC-05 debe fijar coste y momento del debito antes de
+implementarla; no se invento un precio. Las diez runs ya fueron reportadas de
+forma cualitativa; falta conservar el reporte numerico, las pruebas fisicas de
+background/audio/input y la comparacion `stress/profile` Low vs Medium/High.
+EX-03 sigue pendiente por esas puertas. No se implementa
+Boomerang hasta cerrar EX-03 y conservar EX-04. Sin commit, push ni deploy.
+
+## 77. Handoff EX-03b/EX-03c - runs humanas y stress pendiente - 06-09-2026
+
+El usuario confirmo que ya realizo las diez runs en las calidades disponibles.
+El resultado cualitativo es positivo: no hubo softlocks, perdida de progreso,
+dano inevitable ni stutter; los controles, telegraphs y decisiones se
+entendieron; builds distintas cambiaron el recorrido; y una persona nueva
+entendio el juego desde la primera partida.
+
+El hallazgo que queda como requisito de controles es movil: con dedos gruesos
+el player puede quedar completamente cubierto. Antes de cerrar EX-03 hay que
+probar una segunda opcion de desplazamiento o dejar una decision explicita que
+resuelva esa condicion.
+
+Tambien se registro que Doble canon + disparo rapido domina el early, Chain con
+danio escala fuerte en late y la orbita geometrica se siente debil. Estos datos
+van a EX-02c; no tocar todavia dano, vida o resistencia de enemigos.
+
+Entorno confirmado: Samsung S25+ y PC; los moviles de menor gama solo tienen
+pruebas exploratorias. Para cerrar la evidencia faltan el reporte copiado de
+`?baseline=1`, commit/modelo/navegador exactos y la tabla de
+`?stress=1&profile=1` en Low/Medium/High. Las plantillas y preguntas estan en
+`docs/balance/EX-03b-human-observations.md` y
+`docs/performance/EX-03c-stress-pending.md`.
+
+La alternativa de reroll con NOVA permanece PENDIENTE DE VALIDACION por DEC-05;
+no implementar precio ni debito. Hasta recibir el reporte numerico y resolver
+la condicion de input movil, EX-03 no se cierra y Boomerang no se expone.
+Sin commit, push ni deploy.

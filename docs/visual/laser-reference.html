@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solar rail — referencia de efectos</title>
+<style>
+body{margin:0;background:#090d19;color:#e8e5dc;font:15px system-ui;padding:24px}
+h1{font-size:26px;margin:0}p{color:#adb7ca;max-width:760px}
+button{background:#27344d;color:white;border:1px solid #64728a;padding:10px 18px;border-radius:6px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:24px}
+article{border:1px solid #344056;border-radius:10px;overflow:hidden;background:#121c30}h2{font-size:14px;padding:0 16px}
+canvas{width:100%;display:block}small{color:#adb7ca}
+</style>
+<h1>SOLAR RAIL / reactor de borde</h1>
+<p>Renderer real del juego. Aviso inmóvil → plasma activo → filamentos fríos.
+Los emisores conservan su volumen en Low. El blanco se concentra en el núcleo.</p>
+<button id="play">Animar / congelar</button>
+<div class="grid"></div>
+<script type="module">
+import { Application } from 'pixi.js';
+import { HazardView } from '../../src/presentation/pixi/HazardView.ts';
+const cases = [
+ ['Aviso · carga al 70%','telegraph',0.7,'high',false],
+ ['Detonación · núcleo y filamentos','active',0.42,'high',false],
+ ['Disipación · ya no hace daño','recovery',0.45,'high',false],
+ ['Low · misma señal de peligro','active',0.42,'low',false],
+ ['Fondo claro · contraste del núcleo','active',0.42,'high',true],
+ ['Barrido · misma geometría autoritativa','active',0.6,'high',false]
+];
+let playing = false;
+document.querySelector('#play').onclick = () => playing = !playing;
+for (const [label, phase, progress, quality, light] of cases) {
+ const article=document.createElement('article');
+ article.innerHTML='<h2>'+label+'</h2>';
+ document.querySelector('.grid').append(article);
+ const app=new Application();
+ await app.init({width:540,height:210,background:light?0xd9dfe4:0x101a30,antialias:true,resolution:1});
+ article.append(app.canvas);
+ const view=new HazardView(quality);
+ view.root.position.set(270,105);
+ app.stage.addChild(view.root);
+ let age=0;
+ const render=(p)=> view.renderLaser({phase,progress:p,angle:label.startsWith('Barrido')?0.12+p*0.34:0.09,
+  width:22,sweepProgress:p,sweeping:phase==='active'},225);
+ render(progress);
+ app.ticker.add(t=>{if(playing){age+=t.deltaMS/1000;render((age%2)/2);}});
+}
+document.body.dataset.ready='true';
+</script></html>

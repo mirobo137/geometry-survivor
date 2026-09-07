@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LocalAdService } from './LocalAdService';
+import type { RewardedPlacement } from '../Platform';
+
+const placements: readonly RewardedPlacement[] = ['revive', 'reroll', 'double-nova', 'cosmetic-unlock'];
 
 describe('LocalAdService', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -14,6 +17,22 @@ describe('LocalAdService', () => {
 
     await expect(ads.isRewardedAvailable('double-nova')).resolves.toBe(true);
     await expect(ads.showRewarded('double-nova')).resolves.toBe('rewarded');
+  });
+
+  it.each(placements)('keeps the successful local contract for %s', async (placement) => {
+    setSearch('');
+    const ads = new LocalAdService();
+
+    await expect(ads.isRewardedAvailable(placement)).resolves.toBe(true);
+    await expect(ads.showRewarded(placement)).resolves.toBe('rewarded');
+  });
+
+  it.each(placements)('marks %s unavailable without pretending it was rewarded', async (placement) => {
+    setSearch('?ad=unavailable');
+    const ads = new LocalAdService();
+
+    await expect(ads.isRewardedAvailable(placement)).resolves.toBe(false);
+    await expect(ads.showRewarded(placement)).resolves.toBe('unavailable');
   });
 
   it.each([

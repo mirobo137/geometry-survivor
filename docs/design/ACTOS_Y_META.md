@@ -70,20 +70,25 @@ de presión a otro acto sin medirlo.
 
 ### Presentación premium del láser
 
-El láser es un hazard prioritario y debe leerse como una detonación, no como
-una línea plana. El `telegraph` conserva una línea ámbar limpia, carga el
-origen con anillos y diamantes de advertencia y mantiene iguales los disparos
-estáticos y móviles. En `active`, la composición usa halo exterior, aura
-intermedia, núcleo caliente, centro blanco, pulsos y nodos en ambos extremos.
-Los barridos móviles añaden sólo dos ecos detrás del frente actual; los ecos no
-existen en disparos estáticos ni durante el aviso.
+La referencia vigente es **Solar Rail**: emisores mecánicos facetados en la
+frontera, aviso discontinuo, plasma afinado con núcleo marfil y recuperación
+fragmentada que ya no parece dañina. Sustituye la receta anterior de anillos,
+capas paralelas y ecos angulares, que no satisfizo al usuario. No cambia la
+simulación ni revela el barrido antes de `active`.
 
-La receta usa cuatro `Graphics` persistentes (`beamEcho`, `laser`, `pulse` y
-`nodes`), se limpian y reutilizan sin crear objetos durante el frame. Cada
-línea, círculo o diamante independiente inicia su propio `beginPath()` y
-`moveTo()`/geometría, de acuerdo con la regla anti-diagonal de PixiJS. Low
-conserva el telegraph, la detonación y los nodos críticos; sólo puede reducir
-la intensidad visual en una futura medición, nunca ocultar la señal de daño.
+La geometría se construye una vez y se anima mediante transformaciones y
+alpha. Low conserva los materiales y la señal completa; sólo omite filamentos
+decorativos. Para crear o modificar FX, leer
+[EFECTOS_PREMIUM.md](EFECTOS_PREMIUM.md), que define receta, presupuesto,
+referencia reproducible y validación. La nueva apariencia espera aprobación
+humana; no hereda la aprobación de los assets SVG.
+
+La órbita geométrica usa ahora la receta persistente **Prism Aegis**:
+carcasa facetada, apertura oscura, núcleo energético, halo segmentado y estela
+tangencial breve. La ficha específica está en
+[ORBITA_PREMIUM.md](ORBITA_PREMIUM.md) y su referencia reproducible en
+`docs/visual/orbit-reference.html`. Las variantes futuras deben conservar una
+identidad propia y no reducirse a un rombo plano recoloreado.
 
 La implementación está deliberadamente acotada a `ArenaShape`,
 `ArenaBoundary`, `ArenaModel`, `PlayerModel`, `LaserHazard` y sus vistas. El

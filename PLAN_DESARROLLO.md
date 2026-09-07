@@ -2346,6 +2346,11 @@ permite; si no hay tres alternativas, no ofrece anuncio. Double NOVA usa la
 recompensa base registrada, no el saldo total, y no puede cobrarse dos veces
 tras recargar. Ningún cosmético queda exclusivamente detrás de publicidad.
 
+**Estado de producto (06-09-2026):** la alternativa de reroll con NOVA queda
+PENDIENTE DE VALIDACIÓN. El flujo activo por ahora es anuncio rewarded o
+elección de una carta actual; no se fija coste ni momento de débito hasta
+resolver DEC-05 con evidencia y aprobación del usuario.
+
 Contrato objetivo:
 
 ```ts
@@ -2543,6 +2548,17 @@ de evidencia sigue siendo **EX-03**. No se rehace la extracción de armas ni se
 expone Boomerang en cartas antes de cerrar sus puertas.
 
 ### 22.1a Prototipo autorizado del Acto I
+
+Para trabajo visual de hazards y futuros efectos, leer la dirección
+[EFECTOS_PREMIUM.md](docs/design/EFECTOS_PREMIUM.md) junto a las skills de
+rendering y mobile-performance. Solar Rail reemplaza la primera propuesta
+visual del láser; su aceptación humana sigue pendiente. No cambia las puertas
+de ejecución ni autoriza recalibrar el balance diferido.
+
+La órbita geométrica queda documentada como segundo patrón de referencia:
+**Prism Aegis** es un arma persistente compuesta por placas, apertura, núcleo,
+halo segmentado y estela tangencial; no es un hazard y no modifica colisiones.
+Su aceptación humana también queda pendiente hasta probarla en combate.
 
 Por solicitud del usuario se implementó un slice exploratorio del gancho del
 Acto I antes de abrir EX-06 completo. La arena ahora alterna de forma authored

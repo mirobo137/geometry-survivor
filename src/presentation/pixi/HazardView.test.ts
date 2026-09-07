@@ -1,47 +1,68 @@
+import { Graphics } from 'pixi.js';
 import { describe, expect, it } from 'vitest';
 import type { LaserHazardState } from '../../simulation/hazards/LaserHazard';
 import { HazardView } from './HazardView';
 
-const createState = (overrides: Partial<LaserHazardState> = {}): LaserHazardState => ({
-  phase: 'telegraph',
-  angle: 0.2,
-  progress: 0.5,
-  width: 22,
-  sweepProgress: 0,
-  sweeping: false,
-  ...overrides
-});
+const state = (phase: LaserHazardState['phase'], progress = 0.5): LaserHazardState =>
+  ({ phase, progress, angle: 0.8, width: 22, sweeping: true, sweepProgress: progress });
 
 describe('HazardView', () => {
-  it('keeps telegraph, beam, pulse and endpoint layers visible without a flat single stroke', () => {
+  it('removes the solid damaging silhouette immediately during harmless recovery', () => {
     const view = new HazardView();
-    const telegraph = view.root.children[1];
-
-    view.renderLaser(createState(), 300);
-
-    expect(view.root.children).toHaveLength(4);
-    expect(view.root.children[0].visible).toBe(false);
-    expect(view.root.children.slice(1).every((child) => child.visible)).toBe(true);
-    expect(telegraph).toBe(view.root.children[1]);
-    expect((telegraph as unknown as { context: { instructions: Array<{ action: string }> } }).context.instructions
-      .filter((instruction) => instruction.action === 'stroke')).toHaveLength(3);
+    const axis = view.root.children[0];
+    view.renderLaser(state('active'), 300);
+    expect(axis.children[2].visible).toBe(true);
+    view.renderLaser(state('recovery'), 300);
+    expect(axis.children[2].visible).toBe(false);
+    expect(axis.children[3].visible).toBe(false);
+    expect(axis.children[4].visible).toBe(true);
+    const earlier = axis.children[4].alpha;
+    view.renderLaser(state('recovery', 0.9), 300);
+    expect(axis.children[4].alpha).toBeLessThan(earlier);
+    view.reset();
+    expect(view.root.visible).toBe(false);
+    view.root.destroy({ children: true });
   });
 
-  it('adds sweep echoes only while an active beam is moving and clears all layers at idle', () => {
-    const view = new HazardView();
-    const echo = view.root.children[0];
-
-    view.renderLaser(createState({ phase: 'active', progress: 0.4, sweepProgress: 0.35, sweeping: true }), 300);
-
-    expect(echo.visible).toBe(true);
-    expect((echo as unknown as { context: { instructions: Array<{ action: string }> } }).context.instructions
-      .filter((instruction) => instruction.action === 'stroke')).toHaveLength(2);
-
-    view.renderLaser(createState({ phase: 'active', progress: 0.9, sweepProgress: 1, sweeping: false }), 300);
-    expect(echo.visible).toBe(false);
-
-    view.renderLaser(createState({ phase: 'idle', progress: 0 }), 300);
-    expect(view.root.children.every((child) => !child.visible)).toBe(true);
+  it('reuses geometry across frames, rotation wrap, pause and restart', () => {
+    const view = new HazardView('high');
+    const graphics: Graphics[] = [];
+    const visit = (root: typeof view.root): void => {
+      if (root instanceof Graphics) graphics.push(root);
+      for (const child of root.children) visit(child);
+    };
+    visit(view.root);
+    const paths = graphics.map(g => g.context.instructions.slice());
+    for (let i = 0; i < 300; i += 1) {
+      view.renderLaser({ ...state('active', (i % 100) / 100), angle: i / 20 }, 300);
+    }
+    for (let i = 0; i < graphics.length; i += 1) {
+      expect(graphics[i].context.instructions).toEqual(paths[i]);
+    }
+    const input = state('telegraph');
+    view.renderLaser(input, 300);
+    const transform = view.root.children[0].rotation;
+    view.renderLaser(input, 300);
+    expect(view.root.children[0].rotation).toBe(transform);
+    view.reset();
+    view.renderLaser(input, 300);
+    expect(view.root.visible).toBe(true);
     view.root.destroy({ children: true });
+  });
+
+  it('preserves the active width and emitters in Low and does not expose sweep during warning', () => {
+    for (const quality of ['low', 'high'] as const) {
+      const view = new HazardView(quality);
+      const axis = view.root.children[0];
+      view.renderLaser(state('active'), 300);
+      expect(axis.children[2].scale.y).toBe(22);
+      expect(axis.rotation).toBe(0.8);
+      expect(axis.children.at(-1)?.x).toBe(300);
+      expect(axis.children.at(-2)?.x).toBe(-300);
+      view.renderLaser(state('telegraph'), 300);
+      expect(axis.children[2].visible).toBe(false);
+      expect(axis.children[0].visible).toBe(true);
+      view.root.destroy({ children: true });
+    }
   });
 });

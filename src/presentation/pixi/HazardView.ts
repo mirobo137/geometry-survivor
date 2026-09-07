@@ -1,268 +1,161 @@
 import { Container, Graphics } from 'pixi.js';
 import { ARENA_CENTER } from '../../config/constants';
+import type { FxQuality } from '../../content/visual/VisualTokens';
 import type { LaserHazardState } from '../../simulation/hazards/LaserHazard';
 import { getArenaRadiusAtAngle, type ArenaBoundaryInput } from '../../simulation/ArenaBoundary';
 
-interface BeamStyle {
-  readonly color: number;
-  readonly width: number;
-  readonly alpha: number;
+// All geometry is built once in local +X space. Rendering only transforms it.
+const INK = 0x11182b;
+const ARMOR = 0x495673;
+const EDGE = 0xaab6cc;
+const EMBER = 0xf26449;
+const GOLD = 0xffbe69;
+const HOT = 0xfff3d1;
+
+function line(g: Graphics, x1: number, y1: number, x2: number, y2: number,
+  color: number, width: number, alpha = 1): void {
+  g.beginPath().moveTo(x1, y1).lineTo(x2, y2).stroke({ color, width, alpha });
 }
 
-/** Renders the laser as a readable layered hazard, without changing gameplay. */
+function ribbon(g: Graphics, halfWidth: number, color: number, alpha: number): void {
+  g.beginPath().moveTo(-1, 0).lineTo(-0.96, -halfWidth * 0.5)
+    .lineTo(-0.82, -halfWidth).lineTo(0.82, -halfWidth)
+    .lineTo(0.96, -halfWidth * 0.5).lineTo(1, 0)
+    .lineTo(0.96, halfWidth * 0.5).lineTo(0.82, halfWidth)
+    .lineTo(-0.82, halfWidth).lineTo(-0.96, halfWidth * 0.5)
+    .closePath().fill({ color, alpha });
+}
+
+/** Solar rail: faceted emitters, converging charge, contained plasma, cold decay.
+ * No display-object creation, path rebuilding, filters or wall-clock animation in render.
+ */
 export class HazardView {
   public readonly root = new Container();
-  private readonly beamEcho = new Graphics();
-  private readonly laser = new Graphics();
-  private readonly pulse = new Graphics();
-  private readonly nodes = new Graphics();
+  private readonly axis = new Container();
+  private readonly warning = new Graphics();
+  private readonly charge = new Graphics();
+  private readonly plasma = new Graphics();
+  private readonly ignition = new Graphics();
+  private readonly residue = new Graphics();
+  private readonly left = new Container();
+  private readonly right = new Container();
+  private readonly leftLight = new Graphics();
+  private readonly rightLight = new Graphics();
+  private readonly leftCharge = new Graphics();
+  private readonly rightCharge = new Graphics();
+  private readonly streaks: Graphics[] = [];
 
-  public constructor() {
-    this.root.addChild(this.beamEcho, this.laser, this.pulse, this.nodes);
-  }
-
-  public renderLaser(state: Readonly<LaserHazardState>, arena: ArenaBoundaryInput): void {
-    this.clearIfIdle(state.phase === 'idle');
-    if (state.phase === 'idle') return;
-
-    const directionX = Math.cos(state.angle);
-    const directionY = Math.sin(state.angle);
-    const arenaRadius = getArenaRadiusAtAngle(arena, state.angle) + 18;
-    const startX = ARENA_CENTER.x - directionX * arenaRadius;
-    const startY = ARENA_CENTER.y - directionY * arenaRadius;
-    const endX = ARENA_CENTER.x + directionX * arenaRadius;
-    const endY = ARENA_CENTER.y + directionY * arenaRadius;
-    const isTelegraph = state.phase === 'telegraph';
-    const isActive = state.phase === 'active';
-
-    this.beamEcho.clear();
-    this.laser.clear();
-    this.pulse.clear();
-    this.nodes.clear();
-    this.beamEcho.visible = isActive && state.sweeping;
-    this.laser.visible = true;
-    this.pulse.visible = true;
-    this.nodes.visible = true;
-
-    if (isTelegraph) {
-      this.drawTelegraph(startX, startY, endX, endY, state.progress);
-      return;
+  public constructor(quality: FxQuality = 'medium') {
+    this.root.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
+    this.root.addChild(this.axis);
+    this.axis.addChild(this.warning, this.charge, this.plasma, this.ignition, this.residue);
+    // Twin broken rails are visibly a warning, never the solid active beam.
+    for (let i = 0; i < 24; i += 1) {
+      const x = -1 + i / 12;
+      line(this.warning, x, -8, x + 0.045, -8, GOLD, 1, 0.7);
+      line(this.warning, x, 8, x + 0.045, 8, GOLD, 1, 0.7);
     }
-
-    this.drawActiveBeam(state, arena, arenaRadius, startX, startY, endX, endY);
-    this.drawDetonationPulse(state, startX, startY, endX, endY);
-  }
-
-  public reset(): void {
-    this.beamEcho.clear();
-    this.laser.clear();
-    this.pulse.clear();
-    this.nodes.clear();
-    this.beamEcho.visible = false;
-    this.laser.visible = false;
-    this.pulse.visible = false;
-    this.nodes.visible = false;
-  }
-
-  private clearIfIdle(isIdle: boolean): void {
-    if (!isIdle || (!this.beamEcho.visible && !this.laser.visible && !this.pulse.visible && !this.nodes.visible)) return;
+    line(this.warning, -1, 0, 1, 0, GOLD, 1, 0.45);
+    ribbon(this.charge, 2.2, HOT, 0.9);
+    // Dark underlay gives the hot center contrast even over light backgrounds.
+    ribbon(this.plasma, 0.56, INK, 0.8);
+    ribbon(this.plasma, 0.5, EMBER, 0.95);
+    ribbon(this.plasma, 0.34, GOLD, 1);
+    ribbon(this.plasma, 0.14, HOT, 1);
+    // Fine asymmetric inner filaments keep the broad band from looking flat.
+    line(this.plasma, -0.76, -0.25, 0.62, -0.25, HOT, 0.035, 0.65);
+    line(this.plasma, -0.58, 0.23, 0.82, 0.23, EMBER, 0.06, 0.8);
+    ribbon(this.ignition, 0.5, HOT, 0.32);
+    for (let i = 0; i < 13; i += 1) {
+      const x = -0.9 + i * 0.14;
+      line(this.residue, x, 0, x + 0.055, 0, GOLD, 1, 0.55);
+    }
+    const count = quality === 'low' ? 0 : quality === 'high' ? 6 : 4;
+    for (let i = 0; i < count; i += 1) {
+      const streak = new Graphics();
+      ribbon(streak, 0.65, HOT, 0.8);
+      this.streaks.push(streak);
+      this.axis.addChild(streak);
+    }
+    this.buildEmitter(this.left, this.leftLight, this.leftCharge);
+    this.buildEmitter(this.right, this.rightLight, this.rightCharge);
+    this.right.rotation = Math.PI;
+    this.axis.addChild(this.left, this.right);
     this.reset();
   }
 
-  private drawTelegraph(
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-    progress: number
-  ): void {
-    const warning = 0.24 + progress * 0.36;
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0x6d4762,
-      width: 11,
-      alpha: warning * 0.42
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xffd166,
-      width: 3,
-      alpha: warning
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xf8c978,
-      width: 1,
-      alpha: 0.55 + progress * 0.35
-    });
-
-    const charge = 0.35 + progress * 0.65;
-    this.drawCircle(this.pulse, ARENA_CENTER.x, ARENA_CENTER.y, 9 + progress * 13, {
-      color: 0xfff1a8,
-      width: 2,
-      alpha: 0.24 + progress * 0.42
-    });
-    this.drawCircle(this.pulse, ARENA_CENTER.x, ARENA_CENTER.y, 4 + progress * 4, {
-      color: 0xfffff2,
-      width: 1,
-      alpha: charge * 0.72
-    });
-    this.drawEndpointNode(this.nodes, startX, startY, 5 + progress * 3, 0xffd166, warning * 0.9);
-    this.drawEndpointNode(this.nodes, endX, endY, 5 + progress * 3, 0xffd166, warning * 0.9);
-    this.drawDiamond(this.nodes, ARENA_CENTER.x, ARENA_CENTER.y, 4 + progress * 2, 0xffffdc, charge * 0.8);
-  }
-
-  private drawActiveBeam(
-    state: Readonly<LaserHazardState>,
-    arena: ArenaBoundaryInput,
-    arenaRadius: number,
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number
-  ): void {
-    if (state.sweeping) {
-      const echoStrength = Math.min(1, state.sweepProgress * 1.5);
-      this.drawBeamAtAngle(this.beamEcho, state.angle - 0.22 * echoStrength, arena, arenaRadius, {
-        color: 0xff8b63,
-        width: state.width + 12,
-        alpha: 0.08 * echoStrength
-      });
-      this.drawBeamAtAngle(this.beamEcho, state.angle - 0.1 * echoStrength, arena, arenaRadius, {
-        color: 0xffd166,
-        width: state.width + 7,
-        alpha: 0.16 * echoStrength
-      });
+  public renderLaser(state: Readonly<LaserHazardState>, arena: ArenaBoundaryInput): void {
+    this.root.visible = state.phase !== 'idle';
+    if (!this.root.visible) return;
+    const radius = getArenaRadiusAtAngle(arena, state.angle);
+    const p = Math.min(1, Math.max(0, state.progress));
+    const active = state.phase === 'active';
+    const warning = state.phase === 'telegraph';
+    const recovery = state.phase === 'recovery';
+    // Angle is authoritative. No fake trailing rays in a safe part of the arena.
+    this.axis.rotation = state.angle;
+    this.left.position.set(-radius, 0);
+    this.right.position.set(radius, 0);
+    this.warning.visible = warning;
+    this.warning.scale.set(radius, 1);
+    this.warning.alpha = 0.4 + 0.6 * p;
+    this.charge.visible = warning;
+    this.charge.scale.set(radius * p * p, 0.4 + p * 0.6);
+    this.charge.alpha = 0.12 + 0.48 * p;
+    this.plasma.visible = active;
+    this.plasma.scale.set(radius, state.width);
+    this.ignition.visible = active && p < 0.22;
+    this.ignition.scale.set(radius, state.width * (1.1 + 0.4 * p / 0.22));
+    this.ignition.alpha = Math.max(0, 1 - p / 0.22);
+    this.residue.visible = recovery;
+    this.residue.scale.set(radius, 1);
+    this.residue.alpha = (1 - p) * (1 - p) * 0.5;
+    const intensity = warning ? 0.3 + p * 0.6 : active ? 1 : (1 - p) * 0.35;
+    this.leftLight.alpha = intensity;
+    this.rightLight.alpha = intensity;
+    const chargeScale = warning ? 1.8 - 0.8 * p : active ? 1 + 0.25 * p : 1.3 + p;
+    this.leftCharge.scale.set(chargeScale);
+    this.rightCharge.scale.set(chargeScale);
+    this.leftCharge.alpha = intensity * 0.65;
+    this.rightCharge.alpha = intensity * 0.65;
+    this.left.alpha = this.right.alpha = recovery ? 1 - p : 1;
+    for (let i = 0; i < this.streaks.length; i += 1) {
+      const streak = this.streaks[i];
+      streak.visible = active;
+      const travel = (p * 2 + i / this.streaks.length) % 1;
+      const sign = i % 2 === 0 ? 1 : -1;
+      streak.position.set(sign * radius * (0.08 + travel * 0.8), sign * state.width * 0.23);
+      streak.scale.set(Math.min(26, radius * 0.07), 1);
+      streak.alpha = Math.sin(travel * Math.PI) * 0.7;
     }
-
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0x4b294c,
-      width: state.width + 28,
-      alpha: 0.16
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xff5f6d,
-      width: state.width + 12,
-      alpha: 0.28
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xffb86b,
-      width: state.width + 3,
-      alpha: 0.76
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xf7c978,
-      width: 6,
-      alpha: 0.98
-    });
-    this.drawBeam(this.laser, startX, startY, endX, endY, {
-      color: 0xfffff5,
-      width: 2,
-      alpha: 0.98
-    });
-
-    const nodeAlpha = 0.7 + Math.sin(state.progress * Math.PI) * 0.3;
-    this.drawEndpointNode(this.nodes, startX, startY, 9 + nodeAlpha * 3, 0xfff1a8, nodeAlpha);
-    this.drawEndpointNode(this.nodes, endX, endY, 9 + nodeAlpha * 3, 0xfff1a8, nodeAlpha);
-    this.drawDiamond(this.nodes, ARENA_CENTER.x, ARENA_CENTER.y, 6 + nodeAlpha * 2, 0xffffdc, nodeAlpha);
   }
 
-  private drawDetonationPulse(
-    state: Readonly<LaserHazardState>,
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number
-  ): void {
-    const pulse = 0.5 + Math.sin(state.progress * Math.PI) * 0.5;
-    this.drawCircle(this.pulse, ARENA_CENTER.x, ARENA_CENTER.y, 11 + pulse * 13, {
-      color: 0xffffdc,
-      width: 2 + pulse * 2,
-      alpha: pulse * 0.58
-    });
-    this.drawCircle(this.pulse, ARENA_CENTER.x, ARENA_CENTER.y, 4 + pulse * 3, {
-      color: 0xffffff,
-      width: 1,
-      alpha: 0.8
-    });
-    this.drawCircle(this.pulse, startX, startY, 4 + pulse * 3, {
-      color: 0xffffdc,
-      width: 2,
-      alpha: pulse * 0.7
-    });
-    this.drawCircle(this.pulse, endX, endY, 4 + pulse * 3, {
-      color: 0xffffdc,
-      width: 2,
-      alpha: pulse * 0.7
-    });
+  public reset(): void {
+    this.root.visible = false;
   }
 
-  private drawBeamAtAngle(
-    graphics: Graphics,
-    angle: number,
-    arena: ArenaBoundaryInput,
-    fallbackRadius: number,
-    style: BeamStyle
-  ): void {
-    const boundaryRadius = getArenaRadiusAtAngle(arena, angle) + 18;
-    const radius = Number.isFinite(boundaryRadius) && boundaryRadius > 0 ? boundaryRadius : fallbackRadius;
-    const directionX = Math.cos(angle);
-    const directionY = Math.sin(angle);
-    this.drawBeam(
-      graphics,
-      ARENA_CENTER.x - directionX * radius,
-      ARENA_CENTER.y - directionY * radius,
-      ARENA_CENTER.x + directionX * radius,
-      ARENA_CENTER.y + directionY * radius,
-      style
-    );
-  }
-
-  private drawBeam(
-    graphics: Graphics,
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-    style: BeamStyle
-  ): void {
-    graphics
-      .beginPath()
-      .moveTo(startX, startY)
-      .lineTo(endX, endY)
-      .stroke(style);
-  }
-
-  private drawCircle(
-    graphics: Graphics,
-    x: number,
-    y: number,
-    radius: number,
-    style: { readonly color: number; readonly width: number; readonly alpha: number }
-  ): void {
-    graphics
-      .beginPath()
-      .circle(x, y, radius)
-      .stroke(style);
-  }
-
-  private drawEndpointNode(
-    graphics: Graphics,
-    x: number,
-    y: number,
-    size: number,
-    color: number,
-    alpha: number
-  ): void {
-    this.drawCircle(graphics, x, y, size, { color, width: 2, alpha: alpha * 0.7 });
-    this.drawDiamond(graphics, x, y, size * 0.56, color, alpha);
-  }
-
-  private drawDiamond(graphics: Graphics, x: number, y: number, size: number, color: number, alpha: number): void {
-    graphics
-      .beginPath()
-      .moveTo(x, y - size)
-      .lineTo(x + size, y)
-      .lineTo(x, y + size)
-      .lineTo(x - size, y)
-      .lineTo(x, y - size)
-      .fill({ color, alpha });
+  private buildEmitter(root: Container, light: Graphics, charge: Graphics): void {
+    const body = new Graphics();
+    // Inward-facing split jaws: dark cavity, planar armor, selective lit bevel.
+    body.beginPath().moveTo(-12, -17).lineTo(5, -17).lineTo(13, -9)
+      .lineTo(6, -5).lineTo(-4, -7).lineTo(-4, 7).lineTo(6, 5)
+      .lineTo(13, 9).lineTo(5, 17).lineTo(-12, 17).lineTo(-18, 8)
+      .lineTo(-18, -8).closePath().fill(INK);
+    for (const sign of [-1, 1]) {
+      body.beginPath().moveTo(-11, sign * 15).lineTo(4, sign * 15)
+        .lineTo(10, sign * 10).lineTo(4, sign * 8).lineTo(-9, sign * 10)
+        .closePath().fill(ARMOR);
+      line(body, -10, sign * 15, 4, sign * 15, EDGE, 1.5);
+      line(light, -7, sign * 9, 5, sign * 7, GOLD, 2);
+      line(body, -15, sign * 7, -15, sign * 2, EDGE, 1);
+    }
+    light.beginPath().moveTo(-5, 0).lineTo(0, -4).lineTo(7, 0)
+      .lineTo(0, 4).closePath().fill(HOT);
+    // Disjoint brackets avoid the generic concentric target-circle look.
+    for (const sign of [-1, 1]) {
+      line(charge, -10, sign * 21, 3, sign * 21, GOLD, 1);
+      line(charge, 3, sign * 21, 9, sign * 15, GOLD, 1);
+    }
+    root.addChild(body, light, charge);
   }
 }

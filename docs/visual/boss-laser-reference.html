@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boss command rail — referencia</title>
+<style>
+body{margin:0;background:#090d19;color:#e8e5dc;font:15px system-ui;padding:24px}
+h1{font-size:26px;margin:0}p{color:#adb7ca;max-width:760px}
+button{background:#27344d;color:white;border:1px solid #64728a;padding:10px 18px;border-radius:6px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:24px}
+article{border:1px solid #344056;border-radius:10px;overflow:hidden;background:#121c30}
+h2{font-size:14px;padding:0 16px}canvas{width:100%;display:block}
+</style>
+<h1>BOSS / command rail + safe corridor</h1>
+<p>Renderer real del boss. El rayo lineal conserva daño legible con núcleo y
+emisores; el anillo corta el peligro alrededor del hueco y marca un corredor
+seguro translúcido. El corredor comunica una ruta, no una hitbox nueva.</p>
+<button id="play">Animar / congelar</button>
+<div class="grid"></div>
+<script type="module">
+import { Application, Graphics } from 'pixi.js';
+import { BossView } from '../../src/presentation/pixi/BossView.ts';
+import { ARENA_CENTER } from '../../src/config/constants.ts';
+
+const cases = [
+  ['Sweep · aviso de carga', 'sweep-telegraph', 0.54, 0.28],
+  ['Sweep · command rail activo', 'sweep-active', 0.14, 0.28],
+  ['Ring · hueco telegraph', 'ring-telegraph', 0.48, 0.25],
+  ['Ring · corredor seguro activo', 'ring-active', 0.42, 0.25],
+  ['Ring · contraste sobre fondo claro', 'ring-active', 0.42, 0.25, true]
+];
+let playing = false;
+document.querySelector('#play').onclick = () => { playing = !playing; };
+
+for (const [label, phase, progress, sweepAngle, light] of cases) {
+  const article = document.createElement('article');
+  article.innerHTML = '<h2>' + label + '</h2>';
+  document.querySelector('.grid').append(article);
+  const app = new Application();
+  await app.init({ width: 1280, height: 720, background: light ? 0xd9dfe4 : 0x090f22, antialias: true, resolution: 1 });
+  article.append(app.canvas);
+  const arena = new Graphics();
+  arena.beginPath().circle(640, 360, 300).fill({ color: light ? 0xe7ebef : 0x111a36, alpha: 0.9 });
+  arena.beginPath().circle(640, 360, 300).stroke({ color: light ? 0x53617b : 0x4b6cb7, width: 3, alpha: 0.9 });
+  app.stage.addChild(arena);
+  const view = new BossView();
+  app.stage.addChild(view.root);
+  let age = progress;
+  const render = () => view.render({
+    active: true, x: 640, y: 260, radius: 42, health: 80, maxHealth: 100,
+    phase, progress: age, sweepAngle, ringRadius: 150 + age * 120,
+    safeGapAngle: 0.25, safeGapHalfAngle: 0.52
+  }, 300);
+  render();
+  app.ticker.add((ticker) => {
+    if (!playing) return;
+    age = (age + ticker.deltaMS / 1000 * 0.35) % 1;
+    render();
+  });
+}
+document.body.dataset.ready = 'true';
+</script>
+</html>

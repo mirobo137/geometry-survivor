@@ -50,7 +50,10 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ACT-I-LASER-VISUAL | — | detonación premium por capas y barrido legible | AUTOMÁTICO OK; prueba humana pendiente |
-| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | instrumentos existen; puerta humana pendiente |
+| ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
+| BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
+| CHAIN-VISUAL | — | Arc Relay: cadena angular con transferencia legible | AUTOMÁTICO OK; prueba humana pendiente |
+| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | EX-03a OK; observaciones humanas recibidas; baseline numérico, stress y controles móviles pendientes |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | pendiente, depende de EX-01 a EX-04 |
 | EX-06 | 6 | Acto I Radial y contrato de actos | pendiente, depende de EX-05 |
@@ -304,21 +307,25 @@ Overdrive, y no reemplaza las puertas EX-03–EX-06.
 
 ### ACT-I-LASER-VISUAL — detonación premium por capas
 
-Esta entrega cambia sólo la presentación del hazard. El `telegraph` usa una
-línea ámbar estática, anillos de carga y diamantes en origen/extremos. La
-detonación añade cinco capas de beam, pulsos centrales, nodos de energía y,
-únicamente mientras un disparo móvil barre, dos ecos con menor alpha detrás
-del frente. El ángulo dibujado sigue siendo el ángulo de simulación.
+La revisión vigente **Solar Rail** reemplaza la apariencia anterior, que no
+satisfizo al usuario: mordazas mecánicas, plasma con extremos afinados y
+núcleo caliente, encendido breve y disipación fragmentada. Se eliminan los
+ecos angulares para no sugerir daño en espacio seguro. Sólo cambia presentación.
 
-La vista reutiliza cuatro `Graphics` persistentes y cada subpath independiente
-empieza con `beginPath()`; no se parsean SVG ni se crean partículas por láser.
-La prioridad visual conserva `hazard crítico > player > boss`. Low no elimina
-telegraphs ni la lectura del ataque.
+La geometría se construye una vez: 11/15/17 Graphics en Low/Medium/High.
+Low conserva materiales y señal jugable. Para cualquier trabajo de efectos,
+leer [EFECTOS_PREMIUM.md](design/EFECTOS_PREMIUM.md) junto a rendering y
+mobile-performance. La lámina `/docs/visual/laser-reference.html` usa el
+renderer real y permite comparar fases, calidad, fondos y barrido.
 
-**Salida automática actual:** `HazardView.test.ts` pasa 2/2 y cubre las capas
-de aviso, detonación, ecos de barrido y limpieza a idle. La suite completa pasa
-217/217, los builds local/Poki/CrazyGames son correctos y el smoke browser pasa
-14/14. La apariencia, jerarquía y saturación quedan sujetas a prueba humana.
+**Evidencia actual:** suite local 218/218 y build local correctos; tres tests
+de HazardView verifican fases, reutilización de geometría, reinicio y calidad.
+Builds Poki/CrazyGames correctos y smoke de navegador 14/14. Permanece el
+aviso de Vite sobre el chunk principal mayor de 500 kB.
+Capturas desktop/móvil de seis paneles inspeccionadas, sin errores runtime.
+Captura adicional del láser activo en gameplay Low con boss inspeccionada.
+Eso no constituye aprobación humana ni medición de FPS móvil. Apariencia,
+jerarquía y saturación en combate quedan sujetas a prueba del usuario.
 
 ### EX-03 — Cerrar evidencia local y baseline humano
 
@@ -350,6 +357,26 @@ dos builds cambian el recorrido; controles y amenazas se entienden. El autor
 puede validar balance, pero para comprensión inicial pedir además una sesión
 de alguien nuevo, anotada aparte. Un fallo humano se reproduce y corrige antes
 de congelar la nueva línea base. Sin teléfono/reporte: ESPERA HUMANA; no inventar.
+
+**Resultado EX-03a (06-09-2026):** la matriz automática de los cuatro placements
+ya cubre éxito, unavailable, dismissed, error/timeout, concurrencia,
+excepciones y callbacks repetidos/tardíos; ver
+[`docs/balance/EX-03a-rewarded-matrix.md`](balance/EX-03a-rewarded-matrix.md).
+La alternativa de NOVA para reroll queda explícitamente PENDIENTE DE
+VALIDACIÓN por DEC-05: falta aprobar coste y momento del débito. El flujo
+activo conserva anuncio rewarded o elección de una carta actual. EX-03b y
+EX-03c siguen siendo evidencia humana real.
+
+**Observaciones humanas preliminares recibidas (06-09-2026):** el usuario
+reporta diez runs positivas en el sentido de la puerta: sin softlock, pérdida de
+progreso, daño inevitable ni stutter perceptible; controles, amenazas y cartas
+se entienden y builds distintas cambian el recorrido. La condición pendiente es
+una segunda opción de desplazamiento móvil porque dedos gruesos pueden cubrir al
+player. Samsung S25+ y PC fueron probados; faltan modelo/navegador/commit exactos,
+el texto del reporte `?baseline=1` y los datos comparables de
+`?stress=1&profile=1` en Low/Medium/High. Ver
+[`docs/balance/EX-03b-human-observations.md`](balance/EX-03b-human-observations.md)
+y [`docs/performance/EX-03c-stress-pending.md`](performance/EX-03c-stress-pending.md).
 
 ### EX-04 — Conservar lo ya extraído
 

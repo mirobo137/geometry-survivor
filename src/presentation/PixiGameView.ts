@@ -31,7 +31,7 @@ export class PixiGameView {
   private readonly bossView = new BossView();
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
-  private readonly hazardView = new HazardView();
+  private readonly hazardView: HazardView;
   private readonly playerView: PlayerView;
   private readonly impactFxView: ImpactFxView;
   private readonly terminalFxView: TerminalFxView;
@@ -49,10 +49,11 @@ export class PixiGameView {
     background: BackgroundId = 'deep-space'
   ) {
     this.backgroundView = new BackgroundView(renderer, background, quality);
+    this.hazardView = new HazardView(quality);
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
-    this.weaponView = new WeaponView(renderer, () => this.screenFxView.play('chain-hit'));
+    this.weaponView = new WeaponView(renderer, () => this.screenFxView.play('chain-hit'), quality);
     this.levelUpFxView = new LevelUpFxView(renderer);
     this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin, quality);
     this.impactFxView = new ImpactFxView(renderer, quality);

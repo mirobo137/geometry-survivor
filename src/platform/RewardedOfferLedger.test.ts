@@ -12,6 +12,18 @@ describe('RewardedOfferLedger', () => {
     expect(ledger.canOffer('double-nova')).toBe(false);
   });
 
+  it('ignores a repeated settlement callback after the token was consumed', () => {
+    const ledger = new RewardedOfferLedger();
+    const token = ledger.begin('reroll');
+
+    expect(token).not.toBeNull();
+    ledger.settle('reroll', token ?? -1, 'rewarded');
+    ledger.settle('reroll', token ?? -1, 'rewarded');
+
+    expect(ledger.canOffer('reroll')).toBe(false);
+    expect(ledger.begin('reroll')).toBeNull();
+  });
+
   it('keeps a dismissed or failed offer retryable', () => {
     const ledger = new RewardedOfferLedger();
 

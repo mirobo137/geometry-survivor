@@ -1,5 +1,6 @@
 import type { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import type { MovementVector } from '../simulation/MovementVector';
+import type { ControlScheme } from './ControlScheme';
 
 export type InputVector = MovementVector;
 
@@ -16,13 +17,18 @@ const MOVEMENT_KEYS: Record<string, InputVector> = {
   KeyD: { x: 1, y: 0 }
 };
 
+const RELATIVE_TOUCH_DEAD_ZONE = 10;
+const RELATIVE_TOUCH_MAX_DISTANCE = 120;
+
 export class InputManager {
   private readonly keys = new Set<string>();
   private readonly supportsPointerEvents = 'PointerEvent' in window;
   private pointerId: number | null = null;
   private touchId: number | null = null;
   private pointerPosition = { x: 0, y: 0 };
+  private pointerStartPosition = { x: 0, y: 0 };
   private firstInputNotified = false;
+  private controlScheme: ControlScheme;
   private readonly onKeyDownBound = (event: KeyboardEvent): void => this.onKeyDown(event);
   private readonly onKeyUpBound = (event: KeyboardEvent): void => this.onKeyUp(event);
   private readonly onPointerDownBound = (event: PointerEvent): void => this.onPointerDown(event);
@@ -36,8 +42,21 @@ export class InputManager {
     private readonly element: HTMLElement,
     private readonly viewport: ViewportTransform,
     private readonly getPlayerPosition: () => { x: number; y: number },
-    private readonly onFirstInput: () => void = () => undefined
-  ) {}
+    private readonly onFirstInput: () => void = () => undefined,
+    controlScheme: ControlScheme = 'auto'
+  ) {
+    this.controlScheme = controlScheme;
+  }
+
+  public setControlScheme(controlScheme: ControlScheme): void {
+    if (this.controlScheme === controlScheme) return;
+    this.controlScheme = controlScheme;
+    this.clearPointerState();
+  }
+
+  public get currentControlScheme(): ControlScheme {
+    return this.controlScheme;
+  }
 
   public attach(): void {
     window.addEventListener('keydown', this.onKeyDownBound, { passive: false });
@@ -84,10 +103,16 @@ export class InputManager {
       }
     }
 
-    if (this.pointerId !== null || this.touchId !== null) {
-      const player = this.getPlayerPosition();
-      x += this.pointerPosition.x - player.x;
-      y += this.pointerPosition.y - player.y;
+    if (this.controlScheme !== 'keyboard' && (this.pointerId !== null || this.touchId !== null)) {
+      if (this.controlScheme === 'relative-touch') {
+        const relative = this.getRelativePointerMovement();
+        x += relative.x;
+        y += relative.y;
+      } else {
+        const player = this.getPlayerPosition();
+        x += this.pointerPosition.x - player.x;
+        y += this.pointerPosition.y - player.y;
+      }
     }
 
     const length = Math.hypot(x, y);
@@ -97,8 +122,7 @@ export class InputManager {
 
   public reset(): void {
     this.keys.clear();
-    this.pointerId = null;
-    this.touchId = null;
+    this.clearPointerState();
   }
 
   private isInteractiveTarget(target: EventTarget | null): boolean {
@@ -124,6 +148,7 @@ export class InputManager {
     this.notifyFirstInput();
     this.pointerId = event.pointerId;
     this.updatePointer(event);
+    this.pointerStartPosition = { ...this.pointerPosition };
     try {
       this.element.setPointerCapture(event.pointerId);
     } catch {
@@ -155,6 +180,7 @@ export class InputManager {
     const touch = event.changedTouches[0];
     this.touchId = touch.identifier;
     this.updateTouch(touch);
+    this.pointerStartPosition = { ...this.pointerPosition };
     event.preventDefault();
   }
 
@@ -186,6 +212,25 @@ export class InputManager {
       touch.clientY,
       this.element.getBoundingClientRect()
     );
+  }
+
+  private getRelativePointerMovement(): InputVector {
+    const x = this.pointerPosition.x - this.pointerStartPosition.x;
+    const y = this.pointerPosition.y - this.pointerStartPosition.y;
+    const distance = Math.hypot(x, y);
+    if (distance <= RELATIVE_TOUCH_DEAD_ZONE) return { x: 0, y: 0 };
+    const strength = Math.min(
+      1,
+      (distance - RELATIVE_TOUCH_DEAD_ZONE) / (RELATIVE_TOUCH_MAX_DISTANCE - RELATIVE_TOUCH_DEAD_ZONE)
+    );
+    return { x: (x / distance) * strength, y: (y / distance) * strength };
+  }
+
+  private clearPointerState(): void {
+    this.pointerId = null;
+    this.touchId = null;
+    this.pointerPosition = { x: 0, y: 0 };
+    this.pointerStartPosition = { x: 0, y: 0 };
   }
 
   private notifyFirstInput(): void {

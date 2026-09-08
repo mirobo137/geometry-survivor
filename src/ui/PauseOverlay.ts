@@ -1,13 +1,17 @@
 import type { AudioSettings } from '../audio/AudioService';
+import type { ControlScheme } from '../platform/save/SaveStore';
 
 export type ResumeHandler = () => void;
 export type RestartHandler = () => void;
 export type ReturnToMenuHandler = () => void;
 export type SettingsChangeHandler = (settings: AudioSettings) => void;
+export type ControlSchemeChangeHandler = (controlScheme: ControlScheme) => void;
 
 export interface PauseActions {
   readonly settings?: AudioSettings;
   readonly onSettingsChange?: SettingsChangeHandler;
+  readonly controlScheme?: ControlScheme;
+  readonly onControlSchemeChange?: ControlSchemeChangeHandler;
   readonly onRestart?: RestartHandler;
   readonly onReturnToMenu?: ReturnToMenuHandler;
 }
@@ -21,12 +25,14 @@ export class PauseOverlay {
   private readonly musicInput: HTMLInputElement | null;
   private readonly sfxInput: HTMLInputElement | null;
   private readonly mutedInput: HTMLInputElement | null;
+  private readonly controlSchemeInput: HTMLSelectElement | null;
   private readonly musicValue: HTMLOutputElement | null;
   private readonly sfxValue: HTMLOutputElement | null;
   private readonly restartButton: HTMLButtonElement | null;
   private readonly menuButton: HTMLButtonElement | null;
   private resumeHandler: ResumeHandler | null = null;
   private settingsHandler: SettingsChangeHandler | null = null;
+  private controlSchemeHandler: ControlSchemeChangeHandler | null = null;
   private restartHandler: RestartHandler | null = null;
   private menuHandler: ReturnToMenuHandler | null = null;
 
@@ -42,6 +48,7 @@ export class PauseOverlay {
     this.musicInput = root.querySelector<HTMLInputElement>('#pause-music');
     this.sfxInput = root.querySelector<HTMLInputElement>('#pause-sfx');
     this.mutedInput = root.querySelector<HTMLInputElement>('#pause-muted');
+    this.controlSchemeInput = root.querySelector<HTMLSelectElement>('#pause-control-scheme');
     this.musicValue = root.querySelector<HTMLOutputElement>('#pause-music-value');
     this.sfxValue = root.querySelector<HTMLOutputElement>('#pause-sfx-value');
     this.restartButton = root.querySelector<HTMLButtonElement>('#pause-restart');
@@ -51,6 +58,7 @@ export class PauseOverlay {
     this.musicInput?.addEventListener('input', () => this.emitSettings());
     this.sfxInput?.addEventListener('input', () => this.emitSettings());
     this.mutedInput?.addEventListener('change', () => this.emitSettings());
+    this.controlSchemeInput?.addEventListener('change', () => this.emitControlScheme());
     this.restartButton?.addEventListener('click', () => this.restartHandler?.());
     this.menuButton?.addEventListener('click', () => this.menuHandler?.());
   }
@@ -59,10 +67,12 @@ export class PauseOverlay {
     this.messageElement.textContent = message;
     this.resumeHandler = resumeHandler;
     this.settingsHandler = actions.onSettingsChange ?? null;
+    this.controlSchemeHandler = actions.onControlSchemeChange ?? null;
     this.restartHandler = actions.onRestart ?? null;
     this.menuHandler = actions.onReturnToMenu ?? null;
     if (this.menuButton) this.menuButton.hidden = !this.menuHandler;
     if (actions.settings) this.setSettings(actions.settings);
+    if (actions.controlScheme) this.setControlScheme(actions.controlScheme);
     this.setSettingsExpanded(false);
     this.root.hidden = false;
     this.resumeButton.focus({ preventScroll: true });
@@ -72,6 +82,7 @@ export class PauseOverlay {
     this.root.hidden = true;
     this.resumeHandler = null;
     this.settingsHandler = null;
+    this.controlSchemeHandler = null;
     this.restartHandler = null;
     this.menuHandler = null;
     this.setSettingsExpanded(false);
@@ -94,6 +105,10 @@ export class PauseOverlay {
     this.updateVolumeLabels();
   }
 
+  private setControlScheme(controlScheme: ControlScheme): void {
+    if (this.controlSchemeInput) this.controlSchemeInput.value = controlScheme;
+  }
+
   private emitSettings(): void {
     this.updateVolumeLabels();
     this.settingsHandler?.({
@@ -101,6 +116,13 @@ export class PauseOverlay {
       sfxVolume: this.readVolume(this.sfxInput),
       muted: this.mutedInput?.checked ?? false
     });
+  }
+
+  private emitControlScheme(): void {
+    const value = this.controlSchemeInput?.value;
+    if (value === 'auto' || value === 'touch' || value === 'relative-touch' || value === 'keyboard') {
+      this.controlSchemeHandler?.(value);
+    }
   }
 
   private updateVolumeLabels(): void {

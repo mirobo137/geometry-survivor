@@ -2,13 +2,13 @@
 
 > Snapshot operativo: 06-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
 >
-> Último encargo: preparar la continuación de EX-03b/EX-03c con las diez runs humanas ya reportadas; ver §77, [EX-03b-human-observations.md](docs/balance/EX-03b-human-observations.md) y [EX-03c-stress-pending.md](docs/performance/EX-03c-stress-pending.md).
+> Último encargo: resolver la condición de dedos gruesos detectada en EX-03 con una segunda modalidad de desplazamiento; ver §80.
 >
 > Encargo visual posterior: guía premium de UI y ejemplo integrado; ver
 > [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md)
 > y `docs/visual/ui-reference.html`. Pendiente aprobación humana del lote UI.
 >
-> **Ruta actual: prototipo ACT-I-PROTOTYPE ampliado; siguiente puerta técnica EX-03.** EX-02c queda pendiente para la pasada final de balance junto con vida de enemigos y daño general. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
+> **Ruta actual: prototipo ACT-I-PROTOTYPE ampliado; EX-03 sigue abierto solo por evidencia baseline pendiente.** La condición de dedos gruesos ya tiene una solución implementada y validada en browser móvil. EX-02c queda pendiente para la pasada final de balance junto con vida de enemigos y daño general. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
 >
 > Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a y EX-02b están validados automáticamente; EX-02c está diferida por decisión de producto. La definición de meta, actos y Overdrive queda en `docs/design/ACTOS_Y_META.md`. No repetir el trabajo visual ya implementado.
 >
@@ -39,6 +39,9 @@ Codex/GPT y Grok deben aplicar las mismas decisiones. Las skills canónicas vive
 - Destinos separados: GitHub Pages/local, Poki y CrazyGames.
 - Run objetivo del vertical slice: 5–6 minutos.
 - Control de movimiento con un dedo, mouse-drag y teclado; ataques automáticos.
+- En móvil se conservan táctil directo/automático y se ofrece `relative-touch`:
+  el gesto define dirección desde su punto inicial y no obliga a mantener el dedo
+  sobre el player; la selección se guarda y puede cambiarse desde inicio o pausa.
 - Arena viva como gancho: expansiones, resonancia, borde y hazards relacionados.
 - XP acreditada directamente al derrotar enemigos. No existen gemas físicas de experiencia.
 - Assets visuales creados por IA mediante código. SVG es el master preferido para UI/assets, aunque las masas repetidas pueden convertirse a textura/atlas en runtime por rendimiento.
@@ -2064,3 +2067,84 @@ La alternativa de reroll con NOVA permanece PENDIENTE DE VALIDACION por DEC-05;
 no implementar precio ni debito. Hasta recibir el reporte numerico y resolver
 la condicion de input movil, EX-03 no se cierra y Boomerang no se expone.
 Sin commit, push ni deploy.
+
+## 78. EX-03c - stress PC Low/Medium/High - 07-09-2026
+
+Se recibieron capturas del preset `?stress=1&profile=1` en una PC media con
+RTX 4060 Ti, Ryzen 7 y 32 GB de RAM. Las tres calidades mantuvieron el stress
+real en `250/250` enemigos y `300/300` proyectiles, con landscape, logico
+`1280x720`, viewport `1302x890`, scale `1.02` y DPR `1.00`.
+
+| Calidad | FPS | p95 | Max frame | Long frames | Heap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Low | 59.99 | 16.80 ms | 17.00 ms | 2 | 24.2 MB |
+| Medium | 59.88 | 16.80 ms | 16.80 ms | 3 | 29.0 MB |
+| High | 59.98 | 16.80 ms | 16.90 ms | 1 | 33.2 MB |
+
+La evidencia confirma estabilidad alrededor de 60 FPS en PC. Los long frames
+son bajos y los maximos se mantienen cerca de 17 ms; no se declara aun una
+medicion de headroom GPU ni de movil. En las tres capturas Orbit esta `0/6` y
+Chain Lightning aparece `locked`, por lo que el preset no ejercita los FX
+premium de esas armas. El panel tampoco expone maximo de FX en estas capturas.
+
+La tabla queda en `docs/performance/EX-03c-stress-pending.md`. La matriz de PC
+ya esta completa; en Samsung S25+ queda confirmacion cualitativa, pero faltan
+capturas/metricas, navegador/commit/duracion exactos y legibilidad sostenida.
+EX-03 queda parcialmente validado y no se cierra aun. Sin commit, push ni
+deploy.
+
+## 79. EX-03c - confirmacion cualitativa Samsung S25+ - 07-09-2026
+
+El usuario confirma que el juego tambien corre bien en el Samsung S25+. Se
+registra como validacion manual cualitativa positiva: no se reportan problemas
+practicos de rendimiento o estabilidad durante las pruebas realizadas.
+
+No se recibieron capturas ni numeros de FPS, p95, heap, duracion o conteos del
+panel del telefono. Por eso no se presentan metricas inventadas ni se declara
+que el S25+ tenga la misma matriz numerica que la PC. EX-03c queda validado
+cuantitativamente en PC y cualitativamente en S25+; la evidencia mas estricta
+del movil queda pendiente si despues se desea conservar el panel completo.
+
+La recomendacion actual es no optimizar mas la PC por ahora y concentrar el
+siguiente trabajo de producto en la segunda opcion de desplazamiento para dedos
+gruesos. El balance de armas continua reservado para EX-02c. Sin commit, push
+ni deploy.
+
+## 80. EX-03 - segunda modalidad de desplazamiento movil - 07-09-2026
+
+Se resolvio la condicion de dedos gruesos sin alterar el control existente ni la
+simulacion. `InputManager` ahora conserva cuatro valores compatibles de
+`controlScheme`:
+
+- `auto`: comportamiento historico, combinando teclado y tactil directo;
+- `touch`: tactil directo, donde el player sigue la posicion del dedo;
+- `relative-touch`: el primer punto del gesto fija un origen invisible y el
+  desplazamiento define la direccion, con zona muerta de 10 unidades y limite
+  de 120 unidades; el dedo puede permanecer lejos del player;
+- `keyboard`: ignora el puntero y conserva WASD/flechas.
+
+El selector de desplazamiento quedo disponible en configuracion de inicio y de
+pausa. La eleccion se migra de forma segura en `SaveStore`, se persiste sin
+cambiar el schema versionado y se aplica al input en caliente; al cambiar de
+modalidad se limpia cualquier gesto anterior para no arrastrar direccion stale.
+La presentacion no decide movimiento: solo emite la preferencia; el calculo
+continua en `InputManager` y el player recibe el mismo `MovementVector`.
+
+Validacion cerrada:
+
+- typecheck correcto;
+- 70 archivos unitarios, 237 tests en verde;
+- `InputManager.test.ts` cubre arrastre relativo sin consultar la posicion del
+  player, limpieza al soltar y compatibilidad tactil directa;
+- smoke mobile Pixel 5: 2/2, incluyendo seleccion en inicio, desplazamiento en
+  portrait, persistencia visible en pausa y cambio de vuelta a automatico;
+- smoke desktop: 12/12 tras actualizar la expectativa visual del cuarto icono;
+- build local correcto; permanece el warning conocido del chunk principal mayor
+  de 500 kB.
+
+Esto resuelve el hallazgo de controles moviles de EX-03, pero no cierra la
+puerta completa: sigue pendiente conservar el reporte numerico `?baseline=1`
+de las diez runs y completar los metadatos/duracion de la evidencia de stress.
+DEC-05 (reroll con NOVA) continua pendiente de validacion y no se implementa.
+El siguiente paso de plan es cerrar esas evidencias de EX-03; despues podra
+abrirse EX-04/EX-05 para el primer incremento de arsenal, sin tocar aun EX-02c.

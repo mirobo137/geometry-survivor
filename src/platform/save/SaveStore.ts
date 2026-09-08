@@ -1,5 +1,8 @@
+import type { ControlScheme } from '../../input/ControlScheme';
+import { isControlScheme } from '../../input/ControlScheme';
+
 export type QualityPreset = 'low' | 'medium' | 'high';
-export type ControlScheme = 'auto' | 'touch' | 'keyboard';
+export type { ControlScheme } from '../../input/ControlScheme';
 
 import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
@@ -126,7 +129,7 @@ const readQuality = (value: unknown, fallback: QualityPreset): QualityPreset => 
 );
 
 const readControlScheme = (value: unknown, fallback: ControlScheme): ControlScheme => (
-  value === 'auto' || value === 'touch' || value === 'keyboard' ? value : fallback
+  isControlScheme(value) ? value : fallback
 );
 
 const readNonNegativeInt = (value: unknown, fallback: number, max: number): number => (

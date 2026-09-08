@@ -1,7 +1,7 @@
 import type { AudioSettings } from '../audio/AudioService';
 import heroSceneSvg from '../assets/svg/ui/start/hero-scene.svg?raw';
 import startMarkSvg from '../assets/svg/ui/start/mark.svg?raw';
-import type { BackgroundSaveData, CannonSkinSaveData, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
+import type { BackgroundSaveData, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
@@ -37,6 +37,8 @@ export interface StartScreenOptions {
   readonly metaUpgrades: MetaUpgradeSaveData;
   readonly onPlay: () => void;
   readonly onSettingsChange: (settings: AudioSettings) => void;
+  readonly controlScheme: ControlScheme;
+  readonly onControlSchemeChange: (controlScheme: ControlScheme) => void;
   readonly onSkinStateChange: (state: SkinSaveData) => void;
   readonly onCannonSkinStateChange: (state: CannonSkinSaveData) => void;
   readonly onBackgroundStateChange: (state: BackgroundSaveData) => void;
@@ -62,6 +64,7 @@ export class StartScreen {
   private readonly musicInput: HTMLInputElement;
   private readonly sfxInput: HTMLInputElement;
   private readonly mutedInput: HTMLInputElement;
+  private readonly controlSchemeInput: HTMLSelectElement;
   private readonly musicValue: HTMLOutputElement;
   private readonly sfxValue: HTMLOutputElement;
   private readonly bestTime: HTMLElement;
@@ -90,6 +93,7 @@ export class StartScreen {
   private readonly cosmeticRewardedButton: HTMLButtonElement;
   private playHandler: (() => void) | null = null;
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
+  private controlSchemeHandler: ((controlScheme: ControlScheme) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
   private skinState: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
   private cannonSkinState: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
@@ -132,6 +136,7 @@ export class StartScreen {
     const musicInput = root.querySelector<HTMLInputElement>('#start-music');
     const sfxInput = root.querySelector<HTMLInputElement>('#start-sfx');
     const mutedInput = root.querySelector<HTMLInputElement>('#start-muted');
+    const controlSchemeInput = root.querySelector<HTMLSelectElement>('#start-control-scheme');
     const musicValue = root.querySelector<HTMLOutputElement>('#start-music-value');
     const sfxValue = root.querySelector<HTMLOutputElement>('#start-sfx-value');
     const bestTime = root.querySelector<HTMLElement>('#start-best-time');
@@ -153,7 +158,7 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -163,6 +168,7 @@ export class StartScreen {
     this.musicInput = musicInput;
     this.sfxInput = sfxInput;
     this.mutedInput = mutedInput;
+    this.controlSchemeInput = controlSchemeInput;
     this.musicValue = musicValue;
     this.sfxValue = sfxValue;
     this.bestTime = bestTime;
@@ -212,11 +218,13 @@ export class StartScreen {
     this.musicInput.addEventListener('input', () => this.emitSettings());
     this.sfxInput.addEventListener('input', () => this.emitSettings());
     this.mutedInput.addEventListener('change', () => this.emitSettings());
+    this.controlSchemeInput.addEventListener('change', () => this.emitControlScheme());
   }
 
   public open(options: StartScreenOptions): void {
     this.playHandler = options.onPlay;
     this.settingsHandler = options.onSettingsChange;
+    this.controlSchemeHandler = options.onControlSchemeChange;
     this.skinStateHandler = options.onSkinStateChange;
     this.cannonSkinStateHandler = options.onCannonSkinStateChange;
     this.backgroundStateHandler = options.onBackgroundStateChange;
@@ -235,6 +243,7 @@ export class StartScreen {
     this.cosmeticTarget = null;
     this.updateNovaValues();
     this.setSettings(options.settings);
+    this.setControlScheme(options.controlScheme);
     this.bestTime.textContent = formatTime(options.best.timeSeconds);
     this.bestScore.textContent = String(Math.max(0, Math.floor(options.best.score)));
     this.setSettingsExpanded(false);
@@ -248,6 +257,7 @@ export class StartScreen {
     this.root.hidden = true;
     this.playHandler = null;
     this.settingsHandler = null;
+    this.controlSchemeHandler = null;
     this.skinStateHandler = null;
     this.cannonSkinStateHandler = null;
     this.backgroundStateHandler = null;
@@ -528,6 +538,10 @@ export class StartScreen {
     this.updateVolumeLabels();
   }
 
+  private setControlScheme(controlScheme: ControlScheme): void {
+    this.controlSchemeInput.value = controlScheme;
+  }
+
   private emitSettings(): void {
     this.updateVolumeLabels();
     this.settingsHandler?.({
@@ -535,6 +549,13 @@ export class StartScreen {
       sfxVolume: this.readVolume(this.sfxInput),
       muted: this.mutedInput.checked
     });
+  }
+
+  private emitControlScheme(): void {
+    const value = this.controlSchemeInput.value;
+    if (value === 'auto' || value === 'touch' || value === 'relative-touch' || value === 'keyboard') {
+      this.controlSchemeHandler?.(value);
+    }
   }
 
   private updateVolumeLabels(): void {

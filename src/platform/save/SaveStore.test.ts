@@ -84,6 +84,17 @@ describe('LocalSaveStore', () => {
     });
   });
 
+  it('conserva el nuevo esquema de arrastre relativo para dedos gruesos', () => {
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      settings: { controlScheme: 'relative-touch' }
+    }).settings.controlScheme).toBe('relative-touch');
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      settings: { controlScheme: 'unknown' }
+    }).settings.controlScheme).toBe('auto');
+  });
+
   it('normalizes skin ownership and never equips a locked or unknown skin', () => {
     expect(migrateSaveData({
       schemaVersion: 1,

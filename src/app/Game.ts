@@ -8,7 +8,7 @@ import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
-import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -186,6 +186,14 @@ export class Game {
     this.persistAudioSettings(settings);
   };
 
+  private readonly onPauseControlSchemeChange = (controlScheme: ControlScheme): void => {
+    this.persistControlScheme(controlScheme);
+  };
+
+  private readonly onStartControlSchemeChange = (controlScheme: ControlScheme): void => {
+    this.persistControlScheme(controlScheme);
+  };
+
   private readonly onStartSkinStateChange = (skins: SkinSaveData): void => {
     const saved = this.saveStore.load();
     if (!skins.unlocked.includes(skins.selected)) return;
@@ -322,7 +330,7 @@ export class Game {
     this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
       void this.audio.unlock();
-    });
+    }, saved.settings.controlScheme);
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.queueResize);
   }
@@ -625,10 +633,25 @@ export class Game {
     });
   }
 
+  private persistControlScheme(controlScheme: ControlScheme): void {
+    this.input.setControlScheme(controlScheme);
+    const saved = this.saveStore.load();
+    this.saveStore.save({
+      ...saved,
+      settings: {
+        ...saved.settings,
+        controlScheme
+      }
+    });
+  }
+
   private openPause(message: string): void {
+    const settings = this.saveStore.load().settings;
     this.pause.open(message, this.resumeFromLifecycle, {
-      settings: this.saveStore.load().settings,
+      settings,
+      controlScheme: settings.controlScheme,
       onSettingsChange: this.onPauseSettingsChange,
+      onControlSchemeChange: this.onPauseControlSchemeChange,
       onRestart: this.onPauseRestart,
       onReturnToMenu: this.startScreen ? this.onPauseReturnToMenu : undefined
     });
@@ -651,6 +674,8 @@ export class Game {
       metaUpgrades: saved.metaUpgrades,
       onPlay: this.onStartPlay,
       onSettingsChange: this.onStartSettingsChange,
+      controlScheme: saved.settings.controlScheme,
+      onControlSchemeChange: this.onStartControlSchemeChange,
       onSkinStateChange: this.onStartSkinStateChange,
       onCannonSkinStateChange: this.onStartCannonSkinStateChange,
       onBackgroundStateChange: this.onStartBackgroundStateChange,

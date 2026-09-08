@@ -53,7 +53,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
 | BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
 | CHAIN-VISUAL | — | Arc Relay: cadena angular con transferencia legible | AUTOMÁTICO OK; prueba humana pendiente |
-| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | EX-03a OK; observaciones humanas recibidas; baseline numérico, stress y controles móviles pendientes |
+| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | EX-03a OK; control móvil relativo implementado y validado; baseline numérico y metadatos finales de stress pendientes |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | pendiente, depende de EX-01 a EX-04 |
 | EX-06 | 6 | Acto I Radial y contrato de actos | pendiente, depende de EX-05 |
@@ -377,6 +377,21 @@ el texto del reporte `?baseline=1` y los datos comparables de
 `?stress=1&profile=1` en Low/Medium/High. Ver
 [`docs/balance/EX-03b-human-observations.md`](balance/EX-03b-human-observations.md)
 y [`docs/performance/EX-03c-stress-pending.md`](performance/EX-03c-stress-pending.md).
+El stress ya fue capturado en PC media para Low, Medium y High con `250/250`
+enemigos y `300/300` proyectiles; las tres calidades quedaron alrededor de 60
+FPS. El usuario también confirma una ejecución positiva en Samsung S25+; queda
+como evidencia móvil cualitativa porque no hay captura ni métricas numéricas del
+panel. Duración y navegador exactos siguen pendientes.
+
+**Control móvil resuelto (07-09-2026):** la condición de dedos gruesos ya no
+bloquea la aceptación de controles. Se añadió `relative-touch` como segunda
+modalidad persistente en inicio y pausa: el gesto conserva un origen invisible,
+usa su desplazamiento para calcular dirección y no requiere mantener el dedo
+encima del player. `InputManager.test.ts`, smoke mobile Pixel 5 (2/2) y smoke
+desktop (12/12) cubren la ruta; `auto`/`touch` conservan el comportamiento
+anterior y `keyboard` sigue disponible. EX-03 continúa abierto únicamente por
+el reporte numérico `?baseline=1`, duración/navegador del stress y los metadatos
+faltantes; no se debe marcar cerrado ni abrir Boomerang antes de esa evidencia.
 
 ### EX-04 — Conservar lo ya extraído
 

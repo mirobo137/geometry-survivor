@@ -281,7 +281,7 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
 
   await page.locator('#pause-settings-toggle').click();
   await expect(page.locator('#pause-settings-toggle svg')).toBeVisible();
-  await expect(page.locator('#pause-settings .pause-setting-icon svg')).toHaveCount(3);
+  await expect(page.locator('#pause-settings .pause-setting-icon svg')).toHaveCount(4);
   await page.locator('#pause-music').fill('35');
   await page.locator('#pause-sfx').fill('55');
   await page.locator('#pause-muted').check();

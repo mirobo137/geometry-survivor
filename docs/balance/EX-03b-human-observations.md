@@ -1,5 +1,15 @@
 # EX-03b — observaciones humanas de las runs baseline
 
+## Estado actualizado — 07-09-2026
+
+La condición de dedos gruesos ya tiene resolución implementada: `relative-touch`
+fija un origen invisible y usa el desplazamiento del gesto para definir la
+dirección, sin exigir que el dedo permanezca sobre el player. Se ofrece desde
+inicio y pausa, se persiste en `SaveStore` y quedó validada en el smoke mobile
+de Pixel 5. `auto` y `touch` conservan el comportamiento anterior. Esta
+condición ya no bloquea EX-03; el baseline numérico y sus metadatos siguen
+pendientes.
+
 Fecha del registro: 06-09-2026  
 Estado: EVIDENCIA CUALITATIVA RECIBIDA; baseline numérico pendiente  
 Fuente: reporte del usuario después de probar las diez runs en las calidades disponibles
@@ -70,5 +80,5 @@ Reroll usado (run/cantidad):
 Siguiente observación nueva o reproducción pendiente:
 ```
 
-La puerta EX-03b no se marca cerrada hasta conservar este reporte numérico y
-resolver la condición de controles móviles o registrar su decisión explícita.
+La puerta EX-03b no se marca cerrada hasta conservar este reporte numérico; la
+condición de controles móviles ya tiene una decisión e implementación explícita.

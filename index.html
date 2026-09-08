@@ -36,6 +36,13 @@
             <input id="start-music" type="range" min="0" max="100" step="5" value="100" />
             <label for="start-sfx">Efectos <output id="start-sfx-value" for="start-sfx">100%</output></label>
             <input id="start-sfx" type="range" min="0" max="100" step="5" value="100" />
+            <label for="start-control-scheme">Desplazamiento</label>
+            <select id="start-control-scheme" class="control-scheme-select">
+              <option value="auto">Automático</option>
+              <option value="touch">Táctil directo</option>
+              <option value="relative-touch">Arrastre relativo · dedos gruesos</option>
+              <option value="keyboard">Teclado · WASD / flechas</option>
+            </select>
             <label class="start-checkbox" for="start-muted">
               <input id="start-muted" type="checkbox" />
               Silenciar todo
@@ -184,6 +191,15 @@
                 <output id="pause-sfx-value" for="pause-sfx">100%</output>
               </label>
               <input id="pause-sfx" type="range" min="0" max="100" step="5" value="100" />
+              <label for="pause-control-scheme">
+                <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="control" aria-hidden="true"></span><span>Desplazamiento</span></span>
+              </label>
+              <select id="pause-control-scheme" class="control-scheme-select">
+                <option value="auto">Automático</option>
+                <option value="touch">Táctil directo</option>
+                <option value="relative-touch">Arrastre relativo · dedos gruesos</option>
+                <option value="keyboard">Teclado · WASD / flechas</option>
+              </select>
               <label class="pause-checkbox" for="pause-muted">
                 <input id="pause-muted" type="checkbox" />
                 <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="mute" aria-hidden="true"></span><span>Silenciar todo</span></span>

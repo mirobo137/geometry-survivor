@@ -457,6 +457,23 @@ body {
   touch-action: manipulation;
 }
 
+.control-scheme-select {
+  width: 100%;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.65rem;
+  color: #dce9ff;
+  background: rgba(11, 23, 46, 0.92);
+  border: 1px solid rgba(117, 230, 255, 0.34);
+  border-radius: 0.45rem;
+  font: 700 0.72rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  touch-action: manipulation;
+}
+
+.control-scheme-select:focus-visible {
+  outline: 2px solid #ffe39a;
+  outline-offset: 2px;
+}
+
 .start-checkbox {
   justify-content: flex-start !important;
   padding-top: 0.2rem;
@@ -2214,6 +2231,12 @@ body {
   margin: -0.15rem 0 0.05rem;
   accent-color: #75e6ff;
   touch-action: manipulation;
+}
+
+#pause-settings .control-scheme-select {
+  color: #dce9ff;
+  background: rgba(11, 23, 46, 0.94);
+  border-color: rgba(117, 230, 255, 0.42);
 }
 
 #pause-settings .pause-checkbox {

@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { registerHomeChecks } from './home.checks';
+
+registerHomeChecks();
 
 const RESIZE_MATRIX = [
   { width: 640, height: 360 },

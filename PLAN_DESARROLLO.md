@@ -1645,6 +1645,16 @@ a squash, sonido, timing y contraste de la carta.
 
 ## Pantalla de inicio y presentacion - 28-08-2026
 
+Actualización vigente 08-09-2026: el arranque tiene cobertura opaca desde HTML
+antes de JS/WebGL; se retira al completar el arranque, sin demora artificial.
+Menú premium con placas e iconos DOM SVG, acciones en dos columnas (una en
+320 px) y composición lateral en desktop amplio. Texto HTML sin recortes,
+botones con altura flexible y scroll en pantallas bajas. Conserva la escena
+y los límites anti-parpadeo existentes. Contratos y consumidores actuales:
+`src/assets/svg/ui/start/README.md`; regresión `tests/browser/home.checks.ts`.
+La aprobación artística móvil sigue siendo humana. El registro siguiente
+describe la entrega original, no el catálogo vigente de funciones.
+
 La aplicacion ahora abre en un menu de presentacion antes de iniciar la
 simulacion. `GameState` usa la fase `menu`, por lo que no avanzan tiempo,
 enemigos, armas ni input hasta pulsar `JUGAR`; los atajos `?boss=1` siguen

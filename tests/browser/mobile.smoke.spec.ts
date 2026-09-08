@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { registerHomeChecks } from './home.checks';
+
+registerHomeChecks();
 
 const captureRuntimeFailures = (page: Page): string[] => {
   const failures: string[] = [];

@@ -1,8 +1,29 @@
 # Geometry Survivor — estado y continuación
 
-> Snapshot operativo: 06-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
+## Encargo más reciente — 08-09-2026: presentación inicial
+
+- Se sustituyó el aviso flotante de carga por cobertura HTML opaca de viewport
+  completo, visible incluso antes de ejecutar JS. Reutiliza `mark.svg`.
+- Menú con placa de consola, acciones con iconos SVG, textos adaptables y
+  distribución desktop/portrait. Estilos específicos: `src/ui/home.css`.
+- Se corrigió `#game-hud[hidden]`: su display CSS anulaba el hidden nativo.
+- Regresión: `tests/browser/home.checks.ts`, compartida desktop/móvil,
+  bloquea temporalmente el entry JS y comprueba cobertura, relevo al menú,
+  textos en 320/390/640/1280 px, ajustes y entrada al juego.
+- No cambia balance, saves, arsenal ni las tareas EX pendientes abajo.
+- Validación: typecheck, 237 tests unitarios y builds local/Poki/CrazyGames
+  correctos. Los 16 casos browser dieron `ok`; hubo bloqueo al cerrar el
+  servidor de Playwright en Windows y se interrumpió ese proceso. Repetición
+  de los 2 casos de inicio con servidor independiente: `2 passed`, exit 0.
+  Capturas revisadas en 320/390/1280 px y carga. Persiste aviso Vite por
+  chunk principal de ~640 kB minificado (~176 kB gzip), no error de build.
+- Pendiente aprobación visual en Android real, especialmente carga fría,
+  cerrar ajustes y volver de skins. No se afirma rendimiento en móvil modesto.
+
+
+> Snapshot operativo: 08-09-2026. Entrada vigente: [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](docs/PLAN_EJECUCION.md).
 >
-> Último encargo: resolver la condición de dedos gruesos detectada en EX-03 con una segunda modalidad de desplazamiento; ver §80.
+> Encargo anterior: resolver la condición de dedos gruesos detectada en EX-03 con una segunda modalidad de desplazamiento; ver §80. Último encargo: presentación inicial descrita arriba.
 >
 > Encargo visual posterior: guía premium de UI y ejemplo integrado; ver
 > [dirección de UI](skills/geometry-survivor-svg/references/ui-art-direction.md)

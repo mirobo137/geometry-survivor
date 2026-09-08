@@ -41,19 +41,8 @@ body {
 }
 
 #boot-status {
-  position: absolute;
-  z-index: 20;
-  top: 50%;
-  left: 50%;
-  width: min(30rem, calc(100% - 2rem));
-  padding: 0.8rem 1rem;
-  transform: translate(-50%, -50%);
-  color: #cde3ff;
-  background: rgba(7, 12, 28, 0.92);
-  border: 1px solid rgba(145, 181, 255, 0.35);
-  border-radius: 0.55rem;
-  text-align: center;
-  pointer-events: none;
+  background: radial-gradient(ellipse at center, #122b40, #080b17 65%);
+  overflow-wrap: anywhere;
 }
 
 #boot-status[data-state="error"] {
@@ -367,7 +356,7 @@ body {
 
 .start-menu-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem;
 }
 
@@ -1776,6 +1765,10 @@ body {
   .start-scene {
     opacity: 0.58;
   }
+}
+
+#game-hud[hidden] {
+  display: none;
 }
 
 #game-hud {

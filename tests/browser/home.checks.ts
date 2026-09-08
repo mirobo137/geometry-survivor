@@ -27,6 +27,13 @@ export const registerHomeChecks = (): void => {
     await expect(page.locator('#boot-status')).toBeHidden();
     await expect(page.locator('#start-screen')).toBeVisible();
     await expect(page.locator('#game-hud')).toBeHidden();
+    expect(await page.evaluate(() => {
+      const mark = document.querySelector<SVGElement>('#start-mark svg');
+      const orbit = document.querySelector<SVGElement>('.start-scene .start-hero-orbit-outer');
+      if (!mark || !orbit) return false;
+      return getComputedStyle(mark).animationName !== 'none'
+        && getComputedStyle(orbit).animationName !== 'none';
+    })).toBe(true);
     for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
       await page.setViewportSize({ width: width!, height: height! });
       const buttons = page.locator('.start-actions button');

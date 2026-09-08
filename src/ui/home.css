@@ -14,7 +14,11 @@
 }
 .start-brand { gap: .65rem; }
 #start-mark { width: clamp(6rem, 20vw, 8rem); filter: none; }
-#start-mark svg { animation: none; color: inherit; }
+#start-mark svg {
+  color: inherit;
+  transform-origin: center;
+  animation: home-mark-drift 28s linear infinite;
+}
 #start-title { font-size: clamp(1.7rem, 7vw, 3rem); line-height: 1.1; }
 #start-title span { margin-top: .15rem; }
 .start-kicker { letter-spacing: .12em; }
@@ -78,6 +82,52 @@
   .start-menu-grid { grid-template-columns: minmax(0, 1fr); }
   .start-actions .start-secondary { min-height: 3.3rem; }
 }
+
+/*
+ * Re-enable a restrained home loop on mobile. The previous anti-flicker rule
+ * freezes the whole scene below 60rem; the home-only override keeps skins and
+ * meta static while allowing dash/opacity animation on a single SVG scene.
+ * No group translation or per-frame DOM work is introduced.
+ */
+@media (max-width: 60rem) {
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-outer {
+    animation: start-hero-orbit 46s linear infinite;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-diagonal {
+    animation: start-hero-orbit-reverse 58s linear infinite;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-inner {
+    animation: start-hero-orbit 34s linear infinite reverse;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-rays {
+    animation: start-hero-rays 18s ease-in-out infinite alternate;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-sweeps {
+    animation: start-hero-sweeps 24s ease-in-out infinite;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-sweep {
+    animation: start-hero-dash 18s linear infinite;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-shards {
+    animation: start-hero-shards 26s ease-in-out infinite alternate;
+  }
+
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-core {
+    animation: start-hero-core-breathe 12s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes home-mark-drift {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @media (max-height: 540px) {
   #start-screen { align-items: start; }
   .start-screen-panel:not(.is-skins-open):not(.is-meta-open) { max-height: none; }
@@ -85,4 +135,15 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .boot-track::after { animation: none; width: 100%; }
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) #start-mark svg,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-outer,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-diagonal,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-orbit-inner,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-rays,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-sweeps,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-sweep,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-shards,
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode) .start-scene .start-hero-core {
+    animation: none;
+  }
 }

@@ -1655,6 +1655,11 @@ y los límites anti-parpadeo existentes. Contratos y consumidores actuales:
 La aprobación artística móvil sigue siendo humana. El registro siguiente
 describe la entrega original, no el catálogo vigente de funciones.
 
+La revisión posterior reactivó un movimiento sutil sólo en la vista principal:
+la marca gira en 28 s y la escena usa dash/opacity con ciclos de 12–58 s. Las
+vistas de skins y Laboratorio mantienen sus adornos congelados para conservar
+el scroll móvil estable; reduced-motion los desactiva.
+
 La aplicacion ahora abre en un menu de presentacion antes de iniciar la
 simulacion. `GameState` usa la fase `menu`, por lo que no avanzan tiempo,
 enemigos, armas ni input hasta pulsar `JUGAR`; los atajos `?boss=1` siguen

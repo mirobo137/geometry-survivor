@@ -11,6 +11,10 @@
   bloquea temporalmente el entry JS y comprueba cobertura, relevo al menú,
   textos en 320/390/640/1280 px, ajustes y entrada al juego.
 - No cambia balance, saves, arsenal ni las tareas EX pendientes abajo.
+- La pantalla principal conserva ahora movimiento sutil en móvil: marca lenta,
+  órbitas, rayos, barridos, fragmentos y núcleo mediante dash/opacity con
+  ciclos largos. Skins y Laboratorio siguen estáticos para proteger scroll;
+  `prefers-reduced-motion` congela todos los adornos.
 - Validación: typecheck, 237 tests unitarios y builds local/Poki/CrazyGames
   correctos. Los 16 casos browser dieron `ok`; hubo bloqueo al cerrar el
   servidor de Playwright en Windows y se interrumpió ese proceso. Repetición

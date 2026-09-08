@@ -7,7 +7,8 @@
 - Render: SVG inline en `StartScreen` para conservar escalado y recolor CSS.
 - Carga inicial: el mismo master se usa como `img` desde HTML, antes de JS.
   Color cyan de fallback para ese consumidor; el menú inline puede heredarlo.
-- Animación: marca quieta en el menú; el master no contiene scripts ni filtros.
+- Animación: el consumidor gira la marca una vuelta lenta (28 s) y el master
+  no contiene scripts ni filtros. `prefers-reduced-motion` la congela.
 
 ## Controles del menú y carga — 08-09-2026
 
@@ -24,8 +25,10 @@
   `boot-status.hidden` sólo entrega la pantalla tras terminar `game.start()`;
   errores conservan la cobertura. Barra indeterminada, sin porcentaje ficticio
   ni retraso artificial; reduced-motion la detiene.
-- El fondo SVG/RGB existente conserva sus límites móviles. No hay nuevos
-  loops Pixi, dependencias, filtros ni cambios de simulación.
+- El fondo SVG/RGB existente conserva sus límites móviles. El menú principal
+  mantiene una animación móvil sutil de dash/opacity (18–58 s); skins y
+  laboratorio siguen congelados para proteger el scroll. No hay nuevos loops
+  Pixi, dependencias, filtros ni cambios de simulación.
 
 ## `hero-scene.svg`
 

@@ -13,7 +13,7 @@ export class ProjectileTrailView {
   private readonly segments: Sprite[];
   private readonly previousActive: boolean[];
   private readonly ribbonTextures: readonly Texture[];
-  private readonly smokeTexture?: Texture;
+  private smokeTexture?: Texture;
   private definition;
   private activeSegments = 0;
   private visibleSegments = 0;
@@ -47,6 +47,12 @@ export class ProjectileTrailView {
   }
 
   public get activeSegmentCount(): number { return this.activeSegments; }
+
+  /** Attach the optional bitmap only when the smoke cosmetic is selected. */
+  public setSmokeTexture(texture?: Texture): void {
+    this.smokeTexture = texture;
+    this.clear();
+  }
 
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.definition = getCannonSkinDefinition(cannonSkin);

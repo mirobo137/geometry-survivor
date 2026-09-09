@@ -157,24 +157,26 @@ export class CombatEntitiesView {
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
   private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
+  private readonly quality: FxQuality;
+  private smokeTexture?: Texture;
   private cannonSkin: CannonSkinId;
   private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
+    this.quality = quality;
     this.cannonSkin = cannonSkin;
     this.projectileGlowLimit = FX_QUALITY[quality].projectileGlowLimit;
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
-    // Keep Low free of the bitmap request; Medium/High receive one cached
-    // texture and reuse it across every pooled smoke puff. Unit tests stay
-    // DOM-free and exercise the branch by injecting a texture directly.
-    const smokeTexture = quality !== 'low' && typeof window !== 'undefined'
+    // Keep the normal menu/game boot free of the bitmap request. Medium/High
+    // load it only for the smoke cosmetic and reuse it across the pool.
+    this.smokeTexture = quality !== 'low' && cannonSkin === 'smoke' && typeof window !== 'undefined'
       ? Texture.from(smokeParticleUrl)
       : undefined;
-    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin, smokeTexture);
+    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin, this.smokeTexture);
     this.enemyTextures = createEnemyTextures(renderer);
     this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
     this.enemyLayer.addChild(this.boss.root);
@@ -224,6 +226,10 @@ export class CombatEntitiesView {
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
     this.projectileTrails.setCannonSkin(cannonSkin);
+    if (cannonSkin === 'smoke' && !this.smokeTexture && this.quality !== 'low' && typeof window !== 'undefined') {
+      this.smokeTexture = Texture.from(smokeParticleUrl);
+      this.projectileTrails.setSmokeTexture(this.smokeTexture);
+    }
     const texture = this.projectileTextures[cannonSkin];
     for (const sprite of this.projectileSprites) sprite.texture = texture;
     for (const glow of this.projectileGlows) glow.texture = texture;

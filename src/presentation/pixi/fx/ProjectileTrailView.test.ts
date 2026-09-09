@@ -73,6 +73,16 @@ describe('ProjectileTrailView', () => {
     view.root.destroy({ children: true });
   });
 
+  it('can attach the smoke texture after boot when the cosmetic is selected later', () => {
+    const smokeTexture = Texture.WHITE;
+    const view = new ProjectileTrailView(1, 'medium', 'smoke');
+    view.setSmokeTexture(smokeTexture);
+    view.render([projectile(true, 320)]);
+    view.render([projectile(true, 327)]);
+    expect((view.root.children[0] as unknown as { texture: Texture }).texture).toBe(smokeTexture);
+    view.root.destroy({ children: true });
+  });
+
   it('caps a young tail at the muzzle and reuses its sprites when changing recipes', () => {
     const view = new ProjectileTrailView(1, 'high', 'curve');
     const state = { ...projectile(true, 320), ageSeconds: 0.01 };

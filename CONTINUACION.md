@@ -7,13 +7,18 @@
   transparente. `identify` confirma `srgba` y alpha 0 en la esquina.
 - El paquete cosmético `smoke` usa ahora esa textura en su estela: cuatro puffs
   por proyectil, con tamaño, rotación, posición y alpha deterministas. La
-  textura se carga una vez y se reutiliza en el pool existente; no se crean
-  sprites ni texturas durante el loop. Si el runtime no dispone de la textura
-  (tests Node), la estela conserva el ribbon procedural anterior.
+  textura se carga de forma perezosa al seleccionar ese paquete, se reutiliza
+  en el pool existente y no crea sprites ni texturas durante el loop. Si el
+  runtime no dispone de la textura (tests Node), la estela conserva el ribbon
+  procedural anterior.
 - Low mantiene el presupuesto de trail en cero; Medium/High reutilizan el
   mismo recurso acotado. La prueba no toca daño, colisión, trayectoria ni
   simulación. El contrato y la razón de esta excepción a SVG están en
   `src/assets/fx/README.md`.
+- El primer deploy con la textura reportó dos timeouts de Playwright con la
+  sesión Chromium cerrada durante el menú. Se eliminó la petición al arrancar
+  cuando el cañón no es `smoke`; la textura se adjunta al cambiar de paquete.
+  La suite completa local quedó en 16/16 browser, además de 239 tests unitarios.
 
 ## Encargo anterior — 08-09-2026: presentación inicial
 

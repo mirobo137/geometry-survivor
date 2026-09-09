@@ -67,15 +67,17 @@ const RESIZE_MATRIX = [
 ] as const;
 
 for (const quality of ['low', 'high']) {
-  test(`carga el arte de las seis familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
+  test(`carga el arte de las siete familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);
     const smokeAssetResponses: string[] = [];
+    const bloomAssetResponses: string[] = [];
     page.on('response', (response) => {
       if (response.url().includes('projectile-smoke-puff-') && response.ok()) smokeAssetResponses.push(response.url());
+      if (response.url().includes('bloom-trail-') && response.ok()) bloomAssetResponses.push(response.url());
     });
-    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'];
+    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta'];
     const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
-    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix'];
+    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom'];
     for (let index = 0; index < skins.length; index += 1) {
       await page.goto(`/?boss=1&quality=${quality}&skin=${skins[index]}&background=${backgrounds[index % backgrounds.length]}&cannon=${cannons[index]}`);
       await expect(page.locator('#boot-status')).toBeHidden();
@@ -85,6 +87,8 @@ for (const quality of ['low', 'high']) {
     }
     if (quality === 'high') expect(smokeAssetResponses).toHaveLength(1);
     else expect(smokeAssetResponses).toHaveLength(0);
+    if (quality === 'high') expect(bloomAssetResponses).toHaveLength(1);
+    else expect(bloomAssetResponses).toHaveLength(0);
     expect(failures).toEqual([]);
   });
 }
@@ -154,7 +158,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
   await expect(page.locator('#start-cannon-preview .cannon-preview-shot')).toHaveCount(2);
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(6);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(7);
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-selected/);

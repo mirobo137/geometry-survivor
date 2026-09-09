@@ -23,3 +23,9 @@ lives only in the locker preview. Trail recipes stay in presentation code so
 cosmetic skins cannot change simulation damage, cadence or trajectory.
 
 The authored muzzle rings sit on `PROJECTILE_MUZZLE_OFFSETS` (`±27, -11`).
+
+`bloom` (Bloomwake) is the seventh hybrid package. Its SVG barrel/projectile
+masters remain the source of truth; `src/assets/skins/cannons/bloom/` contains
+the generated transparent trail texture and its typed asset contract. The PNG
+is an optional presentation layer, lazy-loaded only when equipped on Medium or
+High and replaced by the bounded procedural ribbon on Low or decode failure.

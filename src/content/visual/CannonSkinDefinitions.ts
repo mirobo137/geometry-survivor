@@ -1,5 +1,5 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix';
-export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom';
+export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface CannonSkinDefinition {
@@ -95,11 +95,24 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     trail: 'helix',
     accent: 0x8de8ff,
     projectileAccent: 0xffd978
+  },
+  {
+    id: 'bloom',
+    name: 'Bloomwake',
+    subtitle: 'Estela de pétalos híbrida',
+    description: 'Un emisor floral de cristal que abre una ráfaga luminosa en cada disparo.',
+    rarity: 'NUEVA · HÍBRIDA',
+    tier: 'epic',
+    priceNova: 0,
+    acquisition: 'nova',
+    trail: 'bloom',
+    accent: 0xff8fd8,
+    projectileAccent: 0x9fffe8
   }
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix'
+  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

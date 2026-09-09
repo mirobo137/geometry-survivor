@@ -42,6 +42,7 @@ import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/Proje
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
+import { BLOOM_TRAIL_ASSET } from '../../assets/skins/cannons/bloom/BloomAssets';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -160,6 +161,8 @@ export class CombatEntitiesView {
   private readonly quality: FxQuality;
   private smokeTexture?: Texture;
   private smokeTextureLoading = false;
+  private bloomTexture?: Texture;
+  private bloomTextureLoading = false;
   private cannonSkin: CannonSkinId;
   private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
@@ -176,6 +179,7 @@ export class CombatEntitiesView {
     // load it only for the smoke cosmetic and reuse it across the pool.
     this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
     if (cannonSkin === 'smoke') this.loadSmokeTexture();
+    if (cannonSkin === 'bloom') this.loadBloomTexture();
     this.enemyTextures = createEnemyTextures(renderer);
     this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
     this.enemyLayer.addChild(this.boss.root);
@@ -197,7 +201,8 @@ export class CombatEntitiesView {
       smoke: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.smoke, PROJECTILE_TEXTURE_FRAME),
       rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME),
       lattice: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.lattice, PROJECTILE_TEXTURE_FRAME),
-      helix: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.helix, PROJECTILE_TEXTURE_FRAME)
+      helix: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.helix, PROJECTILE_TEXTURE_FRAME),
+      bloom: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.bloom, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.boss);
@@ -226,6 +231,7 @@ export class CombatEntitiesView {
     this.cannonSkin = cannonSkin;
     this.projectileTrails.setCannonSkin(cannonSkin);
     if (cannonSkin === 'smoke') this.loadSmokeTexture();
+    if (cannonSkin === 'bloom') this.loadBloomTexture();
     const texture = this.projectileTextures[cannonSkin];
     for (const sprite of this.projectileSprites) sprite.texture = texture;
     for (const glow of this.projectileGlows) glow.texture = texture;
@@ -247,6 +253,21 @@ export class CombatEntitiesView {
       this.smokeTextureLoading = false;
     }, { once: true });
     image.src = smokeParticleUrl;
+  }
+
+  /** Bloomwake keeps its generated bitmap optional; the SVG/procedural fallback is always valid. */
+  private loadBloomTexture(): void {
+    if (this.bloomTexture || this.bloomTextureLoading || this.quality === 'low' || typeof window === 'undefined') return;
+    this.bloomTextureLoading = true;
+    const image = new Image();
+    image.decoding = 'async';
+    image.addEventListener('load', () => {
+      this.bloomTexture = Texture.from(image);
+      this.bloomTextureLoading = false;
+      this.projectileTrails.setBloomTexture(this.bloomTexture);
+    }, { once: true });
+    image.addEventListener('error', () => { this.bloomTextureLoading = false; }, { once: true });
+    image.src = BLOOM_TRAIL_ASSET.url;
   }
 
   /** Bounded presentation count used by the local baseline profiler. */

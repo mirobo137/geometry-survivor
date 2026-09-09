@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-bloom-title cannon-bloom-desc">
+  <title id="cannon-bloom-title">Bloomwake emitters</title><desc id="cannon-bloom-desc">Paired crystal petal emitters with luminous muzzles.</desc>
+  <path d="M-5-29 4-25 11-10 6 1-2-2-8-17Z" fill="#1c3152" stroke="#ffb8e6" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M5-29-4-25-11-10-6 1 2-2 8-17Z" fill="#1c3152" stroke="#ffb8e6" stroke-width="2" stroke-linejoin="round"/>
+  <path d="m-1-24 7 3 5 11-6 5-5-3Z" fill="#ff8fd8" stroke="#fff1fb" stroke-width="1.2"/>
+  <path d="m1-24-7 3-5 11 6 5 5-3Z" fill="#ff8fd8" stroke="#fff1fb" stroke-width="1.2"/>
+  <path d="m-4-15 8-3 4 4-7 4Z" fill="#9fffe8"/><path d="m4-15-8-3-4 4 7 4Z" fill="#9fffe8"/>
+  <path d="M-10-11-3-5M-8-4-2-2" fill="none" stroke="#ffcf72"/><path d="M10-11 3-5M8-4 2-2" fill="none" stroke="#ffcf72"/>
+  <circle cx="-27" cy="-11" r="3.2" fill="#fff" stroke="#9fffe8" stroke-width="1.4"/>
+  <circle cx="27" cy="-11" r="3.2" fill="#fff" stroke="#9fffe8" stroke-width="1.4"/>
+</svg>

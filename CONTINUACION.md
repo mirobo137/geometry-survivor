@@ -1,5 +1,23 @@
 # Geometry Survivor — estado y continuación
 
+## Encargo más reciente — 09-09-2026: Bloomwake, séptimo cañón híbrido
+
+- Añadido el paquete cosmético `bloom` / **Bloomwake** al stock: cañones
+  compuestos SVG, proyectil semilla SVG y estela PNG RGBA generada para el
+  proyecto (`src/assets/skins/cannons/bloom/`). No cambia daño, cadencia,
+  trayectoria, colisión ni selección de objetivos.
+- La estela se carga de forma diferida sólo al equipar en Medium/High, se
+  comparte en el pool existente y conserva ribbon procedural en Low o si falla
+  la decodificación. El arranque normal no solicita el PNG.
+- Preview del locker incluye una receta floral animada; la partida usa la
+  textura híbrida real. URL opcional: `?cannon=bloom&quality=high`.
+- Contrato y prompt en `src/assets/skins/cannons/bloom/README.md`; reglas
+  generales en `docs/design/ARTE_HIBRIDO.md`. La galería de flota pasa a 19
+  assets / 57 muestras.
+- Validación pendiente al cerrar esta sesión: suite Playwright y builds de
+  local/Poki/CrazyGames; inspección visual manual del disparo en Android sigue
+  siendo necesaria.
+
 ## Encargo más reciente — 09-09-2026: Manta Veil, séptima skin híbrida
 
 - Implementación guardada en `fccc6fd` antes de retomar la validación. No

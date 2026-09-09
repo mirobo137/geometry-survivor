@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CANNON_SKIN_DEFINITIONS, isCannonSkinId } from './CannonSkinDefinitions';
 
 describe('CannonSkinDefinitions', () => {
-  it('contains the six complete cosmetic packages', () => {
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix']);
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice', 'helix']);
+  it('contains the seven complete cosmetic packages', () => {
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom']);
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom']);
     expect(CANNON_SKIN_DEFINITIONS.every((definition) => Number.isInteger(definition.accent))).toBe(true);
   });
 

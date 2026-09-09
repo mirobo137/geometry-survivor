@@ -14,6 +14,7 @@ export class ProjectileTrailView {
   private readonly previousActive: boolean[];
   private readonly ribbonTextures: readonly Texture[];
   private smokeTexture?: Texture;
+  private bloomTexture?: Texture;
   private definition;
   private activeSegments = 0;
   private visibleSegments = 0;
@@ -22,10 +23,12 @@ export class ProjectileTrailView {
     capacity: number,
     private readonly quality: FxQuality = 'medium',
     cannonSkin: CannonSkinId = 'basic',
-    smokeTexture?: Texture
+    smokeTexture?: Texture,
+    bloomTexture?: Texture
   ) {
     this.definition = getCannonSkinDefinition(cannonSkin);
     this.smokeTexture = smokeTexture;
+    this.bloomTexture = bloomTexture;
     this.previousActive = Array.from({ length: Math.max(0, Math.floor(capacity)) }, () => false);
     const limit = FX_QUALITY[quality].projectileTrailLimit;
     const textures = limit > 0 ? createProjectileTrailTextures() : [];
@@ -51,6 +54,11 @@ export class ProjectileTrailView {
   /** Attach the optional bitmap only when the smoke cosmetic is selected. */
   public setSmokeTexture(texture?: Texture): void {
     this.smokeTexture = texture;
+    this.clear();
+  }
+
+  public setBloomTexture(texture?: Texture): void {
+    this.bloomTexture = texture;
     this.clear();
   }
 
@@ -88,25 +96,25 @@ export class ProjectileTrailView {
           const endX = state.x - state.vx * behind + normalX * offset;
           const endY = state.y - state.vy * behind + normalY * offset;
           const sprite = this.segments[this.activeSegments * 4 + band];
-          const smoke = recipe === 'smoke' && this.smokeTexture;
-          if (smoke) {
-            sprite.texture = smoke;
+          const bitmap = recipe === 'smoke' ? this.smokeTexture : recipe === 'bloom' ? this.bloomTexture : undefined;
+          if (bitmap) {
+            sprite.texture = bitmap;
             sprite.anchor.set(0.5, 0.5);
             sprite.position.set((x + endX) * 0.5, (y + endY) * 0.5);
             // A tiny deterministic rotation keeps pooled puffs from looking stamped.
             sprite.rotation = (index * 1.37 + band * 0.73) % (Math.PI * 2);
-            const size = 24 + (band % 2) * 4;
+            const size = recipe === 'bloom' ? 19 + (band % 2) * 5 : 24 + (band % 2) * 4;
             sprite.width = size;
             sprite.height = size;
-            sprite.tint = 0xffd6b8;
-            sprite.alpha = alpha * (0.72 + band * 0.08);
+            sprite.tint = recipe === 'bloom' ? [0xffb8e6, 0x9fffe8, 0xffcf72, 0xffffff][band] : 0xffd6b8;
+            sprite.alpha = alpha * (recipe === 'bloom' ? 0.62 + band * 0.1 : 0.72 + band * 0.08);
           } else {
             sprite.texture = this.ribbonTextures[band];
             sprite.anchor.set(0, 0.5);
             sprite.position.set(x, y);
             sprite.rotation = Math.atan2(endY - y, endX - x);
             sprite.width = Math.max(0.01, Math.hypot(endX - x, endY - y));
-            sprite.height = recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : 8;
+            sprite.height = recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : recipe === 'bloom' ? 6 : 8;
             sprite.tint = recipe === 'rainbow' ? SPECTRUM[band]
               : recipe === 'lattice' && band % 2 === 0 ? 0xd3e8ff
                 : recipe === 'helix' && band % 2 === 0 ? this.definition.accent

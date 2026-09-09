@@ -23,7 +23,8 @@ const textures = {
     smoke: cannonPair(),
     rainbow: cannonPair(),
     lattice: cannonPair(),
-    helix: cannonPair()
+    helix: cannonPair(),
+    bloom: cannonPair()
   },
   body: skinTextures,
   core: skinTextures,

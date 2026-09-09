@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -16 32 32" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="projectile-bloom-title projectile-bloom-desc">
+  <title id="projectile-bloom-title">Bloomwake projectile</title><desc id="projectile-bloom-desc">Small crystal seed projectile with three petals.</desc>
+  <path d="M10 0 2-3-2-10-5-3-11 0-5 3-2 10 2 3Z" fill="#9fffe8" stroke="#f7ffff" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M7 0 0-2-7 0 0 2Z" fill="#ff8fd8" opacity=".95"/>
+  <circle cx="2" cy="0" r="2.2" fill="#fff"/>
+</svg>

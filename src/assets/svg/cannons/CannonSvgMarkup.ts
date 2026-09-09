@@ -10,12 +10,15 @@ import cannonLatticeLeftSvg from './cannon-lattice-left.svg?raw';
 import cannonLatticeRightSvg from './cannon-lattice-right.svg?raw';
 import cannonHelixLeftSvg from './cannon-helix-left.svg?raw';
 import cannonHelixRightSvg from './cannon-helix-right.svg?raw';
+import cannonBloomLeftSvg from './cannon-bloom-left.svg?raw';
+import cannonBloomRightSvg from './cannon-bloom-right.svg?raw';
 import projectileBasicSvg from './projectile-basic.svg?raw';
 import projectileCurveSvg from './projectile-curve.svg?raw';
 import projectileSmokeSvg from './projectile-smoke.svg?raw';
 import projectileRainbowSvg from './projectile-rainbow.svg?raw';
 import projectileLatticeSvg from './projectile-lattice.svg?raw';
 import projectileHelixSvg from './projectile-helix.svg?raw';
+import projectileBloomSvg from './projectile-bloom.svg?raw';
 
 export interface CannonBarrelSvgPair {
   readonly left: string;
@@ -39,7 +42,8 @@ export const CANNON_BARREL_SVG = {
   smoke: { left: cannonSmokeLeftSvg, right: cannonSmokeRightSvg },
   rainbow: { left: cannonRainbowLeftSvg, right: cannonRainbowRightSvg },
   lattice: { left: cannonLatticeLeftSvg, right: cannonLatticeRightSvg },
-  helix: { left: cannonHelixLeftSvg, right: cannonHelixRightSvg }
+  helix: { left: cannonHelixLeftSvg, right: cannonHelixRightSvg },
+  bloom: { left: cannonBloomLeftSvg, right: cannonBloomRightSvg }
 } as const satisfies Readonly<Record<string, CannonBarrelSvgPair>>;
 
 export const CANNON_PROJECTILE_SVG = {
@@ -48,5 +52,6 @@ export const CANNON_PROJECTILE_SVG = {
   smoke: projectileSmokeSvg,
   rainbow: projectileRainbowSvg,
   lattice: projectileLatticeSvg,
-  helix: projectileHelixSvg
+  helix: projectileHelixSvg,
+  bloom: projectileBloomSvg
 } as const;

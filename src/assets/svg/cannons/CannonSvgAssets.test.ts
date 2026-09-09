@@ -53,6 +53,11 @@ describe('cannon and projectile SVG assets', () => {
       expect(pair.right).toContain(`cx="${rightMuzzle.x}"`);
       expect(pair.right).toContain(`cy="${rightMuzzle.y}"`);
     }
+    // Pixi rasterizes this pair for the in-game player. Keep Bloomwake's
+    // mirrored coordinates explicit: the DOM preview accepts path transforms,
+    // but an unsupported transform must never erase a live muzzle in Pixi.
+    expect(CANNON_BARREL_SVG.bloom.right).not.toContain('transform=');
+    expect(CANNON_BARREL_SVG.bloom.right).toContain('d="M7-5 14-8 22-3');
   });
 
   it('links modular barrels to their package masters', () => {

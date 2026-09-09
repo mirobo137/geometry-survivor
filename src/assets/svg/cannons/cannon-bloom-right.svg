@@ -2,14 +2,14 @@
   <title id="cannon-bloom-right-title">Bloomwake · emisor nacarado</title>
   <desc id="cannon-bloom-right-desc">Pétalos envolventes conectan la montura con una recámara oscura y boca de energía.</desc>
   <g id="cannon-bloom-right" stroke-linejoin="round">
-    <path id="cannon-bloom-right-mount" transform="scale(-1 1)" d="M-7-5-14-8-22-3-19 7-10 8-6 3Z" fill="#192e42" stroke="#59777e" stroke-width=".8"/>
-    <path id="cannon-bloom-right-shell" transform="scale(-1 1)" d="M-11 5Q-23 10-28 0L-31-9Q-31-15-27-18Q-22-18-19-11L-12-7Z" fill="#92bfb7" stroke="#203b49" stroke-width="1"/>
-    <path id="cannon-bloom-right-upper-petal" transform="scale(-1 1)" d="M-12-7Q-14-19-23-23L-29-20-28-15Q-22-12-20-4Z" fill="#eddcdd" stroke="#856d86" stroke-width=".8"/>
-    <path id="cannon-bloom-right-pearl-plane" transform="scale(-1 1)" d="M-14-9Q-17-19-23-23L-29-20-26-18Q-21-18-19-10Z" fill="#fff3e7"/>
-    <path id="cannon-bloom-right-lower-petal" transform="scale(-1 1)" d="M-12 4Q-23 12-29 1L-31-7-27-9Q-24 0-18-1Z" fill="#80d4c5" stroke="#345b71" stroke-width=".8"/>
-    <path id="cannon-bloom-right-lower-return" transform="scale(-1 1)" d="M-12 4Q-23 12-29 1L-27 0Q-23 6-16 2Z" fill="#467788"/>
-    <path id="cannon-bloom-right-chamber" transform="scale(-1 1)" d="M-14-5-23-13-28-11-25-4-18 1Z" fill="#14293c" stroke="#e6b887" stroke-width=".9"/>
-    <path id="cannon-bloom-right-channel" transform="scale(-1 1)" d="M-17-2-24-9-27-11" fill="none" stroke="#a1ffee" stroke-width="1.8" stroke-linecap="round"/>
+    <path id="cannon-bloom-right-mount" d="M7-5 14-8 22-3 19 7 10 8 6 3Z" fill="#192e42" stroke="#59777e" stroke-width=".8"/>
+    <path id="cannon-bloom-right-shell" d="M11 5Q23 10 28 0L31-9Q31-15 27-18Q22-18 19-11L12-7Z" fill="#92bfb7" stroke="#203b49" stroke-width="1"/>
+    <path id="cannon-bloom-right-upper-petal" d="M12-7Q14-19 23-23L29-20 28-15Q22-12 20-4Z" fill="#eddcdd" stroke="#856d86" stroke-width=".8"/>
+    <path id="cannon-bloom-right-pearl-plane" d="M14-9Q17-19 23-23L29-20 26-18Q21-18 19-10Z" fill="#fff3e7"/>
+    <path id="cannon-bloom-right-lower-petal" d="M12 4Q23 12 29 1L31-7 27-9Q24 0 18-1Z" fill="#80d4c5" stroke="#345b71" stroke-width=".8"/>
+    <path id="cannon-bloom-right-lower-return" d="M12 4Q23 12 29 1L27 0Q23 6 16 2Z" fill="#467788"/>
+    <path id="cannon-bloom-right-chamber" d="M14-5 23-13 28-11 25-4 18 1Z" fill="#14293c" stroke="#e6b887" stroke-width=".9"/>
+    <path id="cannon-bloom-right-channel" d="M17-2 24-9 27-11" fill="none" stroke="#a1ffee" stroke-width="1.8" stroke-linecap="round"/>
     <circle id="cannon-bloom-right-collar" cx="27" cy="-11" r="4" fill="#19243b" stroke="#e9cba8" stroke-width="1"/>
     <circle id="cannon-bloom-right-muzzle" cx="27" cy="-11" r="2.2" fill="#9cffee"/>
     <circle id="cannon-bloom-right-muzzle-core" cx="27" cy="-11" r=".85" fill="#fff7ec"/>

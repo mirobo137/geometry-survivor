@@ -34,8 +34,10 @@ equivale a una aprobación humana de tres prototipos visuales.
 - 11 primitivas por lado / 22 por master, dos sprites de cañón existentes.
   SVG cacheado en texturas de frame explícito; ningún filtro ni objeto nuevo
   por frame. El PNG sigue perteneciendo a la estela, no a la porcelana del cañón.
-- Derecha es reflejo exacto de izquierda: paths con `scale(-1 1)`, círculos con
-  X positiva explícita para conservar el contrato de slots y sus tests.
+- Derecha es reflejo exacto de izquierda con coordenadas positivas explícitas,
+  nunca `transform="scale(-1 1)"` dentro de los paths. El preview DOM acepta
+  esa transformación, pero el consumidor real `Graphics.svg()` puede omitirla.
+  Mantener los círculos de boca en X positiva y el master idéntico a las piezas.
 - Material: plano marfil cálido, retorno verde azulado, recámara azul oscuro,
   collar dorado y núcleo menta. Blanco sólo en el núcleo y plano superior;
   no aplicar borde blanco grueso a todo ni tint del casco sobre el cañón.

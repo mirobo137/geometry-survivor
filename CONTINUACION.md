@@ -13,6 +13,21 @@
 - Typecheck y pruebas específicas pasaron: 14/14. Debe repetirse el smoke
   completo y el build de Pages antes de considerar esta corrección publicada.
 
+## Corrección Bloomwake — cañón derecho rasterizado, 09-09-2026
+
+- Tras la prueba real del usuario, se confirmó que el catálogo DOM mostraba
+  ambos cañones pero Pixi sólo mostraba el izquierdo. Causa: los paths del
+  SVG derecho dependían de `transform="scale(-1 1)"`; el parser SVG de Pixi
+  no lo interpretó de forma fiable durante `generateTexture`.
+- El derecho ahora usa coordenadas espejadas explícitas, como Helix y los
+  demás paquetes. El master se actualizó con los mismos paths y una prueba
+  estructural bloquea que Bloomwake vuelva a depender de `transform`.
+- Validación de esta corrección: typecheck y 245 pruebas unitarias correctas;
+  smoke visual dirigido de Pixi 2/2 y captura inspeccionada con ambos sockets
+  y cañones presentes. Builds local y CrazyGames correctos; Poki completó
+  typecheck y sus 245 pruebas antes de empaquetar. Falta únicamente la prueba
+  física del usuario tras el deploy de Pages.
+
 ## Revisión Bloomwake — cañón nacarado, 09-09-2026
 
 - Se rediseñaron los dos emisores y su master: montura lateral, dos pétalos

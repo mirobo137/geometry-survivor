@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-manta-body-title">
+  <title id="player-manta-body-title">Manta Veil — quilla de porcelana</title>
+  <path id="player-manta-body-shell" d="M0-26C-4-20-7-12-7 0L-4 14 0 23 4 14 7 0C7-12 4-20 0-26Z" fill="#343d48"/>
+  <path id="player-manta-body-armor" d="M0-25-5-10-4 9 0 17 4 9 5-10Z" fill="#bfc6cb"/>
+  <path id="player-manta-body-bevel" d="M0-25-5-10-4 9-2 5-2-10Z" fill="#ffffff"/>
+  <path id="player-manta-body-return" d="M0-25 5-10 4 9 2 5 2-10Z" fill="#737f88"/>
+  <path id="player-manta-body-well" d="M0-16-3-8-2 5 0 9 2 5 3-8Z" fill="#101820"/>
+  <path id="player-manta-body-mounts" d="M-7-4-12 0-10 5-5 3ZM7-4 12 0 10 5 5 3Z" fill="#76818b"/>
+</svg>

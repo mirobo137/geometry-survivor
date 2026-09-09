@@ -11,6 +11,7 @@ import {
   type PlayerSkinId
 } from '../../../../content/visual/VisualTokens';
 import type { PlayerTextureSet } from './PlayerVisualAssets';
+import { MantaWingView } from './MantaWingView';
 
 /**
  * Modular player presentation. Every piece shares the SVG frame and is
@@ -32,6 +33,7 @@ export class PlayerView {
   private readonly guardFx: Graphics;
   private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
+  private mantaWings?: MantaWingView;
   private skin: PlayerSkinId = 'cyan';
   private cannonSkin: CannonSkinId = 'basic';
   private facing = 0;
@@ -88,6 +90,18 @@ export class PlayerView {
 
   public setSkin(skin: PlayerSkinId): void {
     this.skin = skin;
+    if (skin === 'manta' && !this.mantaWings) {
+      this.mantaWings = new MantaWingView();
+      this.root.addChildAt(this.mantaWings.root, 4);
+    }
+    if (this.mantaWings) this.mantaWings.root.visible = false;
+    this.ring.visible = true;
+    this.ring.rotation = 0;
+    this.ring.alpha = 1;
+    this.signature.rotation = 0;
+    this.signature.scale.set(1);
+    this.core.alpha = 1;
+    this.accent.visible = skin !== 'manta';
     const colors = PLAYER_SKINS[skin];
     this.signature.texture = this.textures.signature[skin];
     this.body.texture = this.textures.body[skin];
@@ -202,6 +216,8 @@ export class PlayerView {
       ? shotAimRotation
       : -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
+    const hybridReady = this.mantaWings?.render(this.skin === 'manta', animationSeconds, this.movementStrength, defeat, damagePulse) ?? false;
+    this.ring.visible = !hybridReady;
     this.weapons.position.set(defeat * 26, defeat * 8);
     const kick = shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance;
     const leftKick = (this.shotMuzzleMask & 1) !== 0 ? kick : 0;
@@ -297,7 +313,12 @@ export class PlayerView {
    */
   private animateSkinSignature(t: number, motion: { signatureSpin: number; signaturePulse: number }, movementStrength: number): void {
     const skin = this.skin;
-    if (skin === 'cyan') {
+    if (skin === 'manta') {
+      this.signature.rotation = Math.sin(t * 1.4) * 0.06;
+      this.signature.scale.set(1, 1 + Math.sin(t * 1.4) * 0.025);
+      this.ring.rotation = 0;
+      this.core.alpha = 0.88 + Math.sin(t * 2) * 0.12;
+    } else if (skin === 'cyan') {
       // Aurora: smooth heartbeat on ring, signature orbits steadily, ring
       // pulses stronger when moving
       const heartbeat = Math.sin(t * 2.8) * 0.5 + 0.5;

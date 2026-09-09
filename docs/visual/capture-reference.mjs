@@ -15,8 +15,10 @@ try {
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   await page.goto('http://127.0.0.1:5173/docs/visual/fleet-reference.html');
   await page.locator('#background canvas').waitFor();
-  assert.equal(await page.locator('article').count(), 17);
-  assert.equal(await page.locator('article svg').count(), 51);
+  assert.equal(await page.locator('article').count(), 18);
+  assert.equal(await page.locator('article svg').count(), 54);
+  await page.locator('h3').filter({ hasText: 'manta' }).scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => [...document.querySelectorAll('.manta-preview img')].every(img => img.complete && img.naturalWidth === 256));
   const ids = await page.locator('[id]').evaluateAll(nodes => nodes.map(node => node.id));
   assert.equal(new Set(ids).size, ids.length, 'Inline SVG IDs must stay unique');
   for (const [name, mode] of [['dark', ''], ['light', 'light'], ['gray', 'gray'], ['silhouette', 'light silhouette']]) {
@@ -35,7 +37,7 @@ try {
   await page.click('#motion');
   assert.equal(await page.locator('#motion').getAttribute('aria-pressed'), 'false');
   assert.deepEqual(errors, []);
-  console.log(`Fleet gallery verified: 17 assets, unique IDs, four inspection modes, eight backgrounds. Captures: ${output}`);
+  console.log(`Fleet gallery verified: 18 assets, unique IDs, four inspection modes, eight backgrounds. Captures: ${output}`);
 } finally {
   await browser.close();
 }

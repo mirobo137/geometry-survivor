@@ -40,15 +40,15 @@
     const heading = document.createElement('h3'); heading.textContent = title;
     const art = document.createElement('div'); art.className = 'art';
     // Only trusted, bundled SVG sources enter this development document.
-    art.innerHTML = [32,64,128].map(size => markup
+    art.innerHTML = [32,64,128].map(size => `<span style="display:block;position:relative;flex-shrink:0;width:${size}px;height:${size}px">` + markup
       .replace(/\b(id|aria-labelledby)="([^"]+)"/g, (_, attribute, value) => `${attribute}="${value.split(' ').map(id => `${title}-${size}-${id}`).join(' ')}"`)
-      .replace('<svg ', `<svg width="${size}" height="${size}" `)).join('');
+      .replace('<svg ', `<svg width="${size}" height="${size}" `) + '</span>').join('');
     article.append(heading,art);document.querySelector(target).append(article);
   };
   for(const kind of ['chaser','fast','tank','elite','boss']) {
     card('#enemies',kind,sources[`../../src/assets/svg/enemies/${kind}/${kind}.svg`]);
   }
-  for(const skin of ['cyan','violet','amber','emerald','obsidian','nova']) card('#skins',skin,createPlayerSkinPreviewSvg(skin));
+  for(const skin of ['cyan','violet','amber','emerald','obsidian','nova','manta']) card('#skins',skin,createPlayerSkinPreviewSvg(skin));
   for(const [kind,pair] of Object.entries(CANNON_BARREL_SVG)) {
     card('#cannons',kind,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64">${extractSvgGraphicMarkup(pair.left)}${extractSvgGraphicMarkup(pair.right)}</svg>`);
   }

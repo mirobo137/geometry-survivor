@@ -40,6 +40,8 @@ Si una tarea cruza dominios, combina únicamente las skills necesarias. Por ejem
 
 ## Portabilidad
 
+- Para skins híbridas o PNG generados por IA, aplicar [Arte híbrido](docs/design/ARTE_HIBRIDO.md), enlazado desde §8 del plan. Manta Veil es el primer consumidor; el contrato incluye generación, identidad, transparencia, coste y pruebas, independientemente del modelo.
+
 - `skills/` es la fuente canónica neutral y se carga mediante este `AGENTS.md`.
 - `.grok/skills/` contiene adaptadores finos de descubrimiento para Grok y no debe duplicar reglas.
 - No cambies una decisión técnica según el nombre del modelo que ejecuta la tarea.

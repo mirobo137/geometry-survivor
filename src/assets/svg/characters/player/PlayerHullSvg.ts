@@ -1,4 +1,7 @@
 import type { PlayerSkinId } from '../../../../content/visual/VisualTokens';
+import mantaBodySvg from './skins/manta/body.svg?raw';
+import mantaCoreSvg from './skins/manta/core.svg?raw';
+import mantaRingSvg from './skins/manta/ring.svg?raw';
 import cyanBodySvg from './player-body.svg?raw';
 import cyanCoreSvg from './player-core.svg?raw';
 import cyanRingSvg from './player-ring.svg?raw';
@@ -19,6 +22,7 @@ import violetCoreSvg from './skins/violet/core.svg?raw';
 import violetRingSvg from './skins/violet/ring.svg?raw';
 
 export const PLAYER_HULL_SVG: Readonly<Record<PlayerSkinId, { body: string; ring: string; core: string }>> = {
+  manta: { body: mantaBodySvg, ring: mantaRingSvg, core: mantaCoreSvg },
   cyan: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   violet: { body: violetBodySvg, ring: violetRingSvg, core: violetCoreSvg },
   amber: { body: amberBodySvg, ring: amberRingSvg, core: amberCoreSvg },

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-manta-ring-title">
+  <title id="player-manta-ring-title">Manta Veil — aletas de respaldo</title>
+  <path id="player-manta-ring-left" d="M-3-2-28-18Q-19-3-13 2L-6 18-7 5Z" fill="#bcccd0"/>
+  <path id="player-manta-ring-right" d="M3-2 28-18Q19-3 13 2L6 18 7 5Z" fill="#bcccd0"/>
+  <path id="player-manta-ring-leading" d="M-3-2-28-18M3-2 28-18" fill="none" stroke="#ffffff" stroke-width="0.8"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-manta-master-title">
+<title id="player-manta-master-title">Manta Veil — respaldo vectorial completo</title>
+<path id="player-manta-ring-left" d="M-3-2-28-18Q-19-3-13 2L-6 18-7 5Z" fill="#bcccd0"/>
+  <path id="player-manta-ring-right" d="M3-2 28-18Q19-3 13 2L6 18 7 5Z" fill="#bcccd0"/>
+  <path id="player-manta-ring-leading" d="M-3-2-28-18M3-2 28-18" fill="none" stroke="#ffffff" stroke-width="0.8"/>
+<path id="player-manta-body-shell" d="M0-26C-4-20-7-12-7 0L-4 14 0 23 4 14 7 0C7-12 4-20 0-26Z" fill="#343d48"/>
+  <path id="player-manta-body-armor" d="M0-25-5-10-4 9 0 17 4 9 5-10Z" fill="#bfc6cb"/>
+  <path id="player-manta-body-bevel" d="M0-25-5-10-4 9-2 5-2-10Z" fill="#ffffff"/>
+  <path id="player-manta-body-return" d="M0-25 5-10 4 9 2 5 2-10Z" fill="#737f88"/>
+  <path id="player-manta-body-well" d="M0-16-3-8-2 5 0 9 2 5 3-8Z" fill="#101820"/>
+  <path id="player-manta-body-mounts" d="M-7-4-12 0-10 5-5 3ZM7-4 12 0 10 5 5 3Z" fill="#76818b"/>
+<path id="player-manta-core-depth" d="M0-14-2-7-1 5 0 7 1 5 2-7Z" fill="#448f9c"/>
+  <path id="player-manta-core-light" d="M0-13-0.8-6 0 4 0.8-6Z" fill="#ffffff"/>
+  <path id="player-manta-core-gills" d="M-4 6-2 9M4 6 2 9M-3 10-1 12M3 10 1 12" fill="none" stroke="#ffffff" stroke-width="0.7"/>
+</svg>

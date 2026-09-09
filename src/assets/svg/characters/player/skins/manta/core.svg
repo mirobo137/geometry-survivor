@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="player-manta-core-title">
+  <title id="player-manta-core-title">Manta Veil — reactor longitudinal</title>
+  <path id="player-manta-core-depth" d="M0-14-2-7-1 5 0 7 1 5 2-7Z" fill="#448f9c"/>
+  <path id="player-manta-core-light" d="M0-13-0.8-6 0 4 0.8-6Z" fill="#ffffff"/>
+  <path id="player-manta-core-gills" d="M-4 6-2 9M4 6 2 9M-3 10-1 12M3 10 1 12" fill="none" stroke="#ffffff" stroke-width="0.7"/>
+</svg>

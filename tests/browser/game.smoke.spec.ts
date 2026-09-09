@@ -3,6 +3,50 @@ import { registerHomeChecks } from './home.checks';
 
 registerHomeChecks();
 
+test('equipa Manta híbrida gratis, conserva selección y carga una sola textura', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  const textures: string[] = [];
+  page.on('response', response => {
+    if (response.url().includes('manta-wing-') && response.ok()) textures.push(response.url());
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  expect(textures).toHaveLength(0);
+  await page.locator('#start-skins').click();
+  await page.locator('.skin-card[data-skin="manta"] button').click();
+  await expect(page.locator('#start-skin-selected-name')).toHaveText('Manta Veil');
+  await expect.poll(() => page.locator('#start-skin-preview img').evaluateAll(images =>
+    images.length === 2 && images.every(image => (image as HTMLImageElement).naturalWidth === 256)
+  )).toBe(true);
+  await page.locator('#start-skin-preview').screenshot({ path: testInfo.outputPath('manta-preview.png') });
+  expect(new Set(textures).size).toBe(1);
+  await page.locator('#start-skins-back').click();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('manta-mobile.png') });
+  const save = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(save.skins.selected).toBe('manta');
+  expect(save.wallet.nova).toBe(0);
+  expect(failures).toEqual([]);
+});
+
+for (const quality of ['low', 'high']) {
+  test(`Manta conserva identidad y carga diferida en partida ${quality}`, async ({ page }, testInfo) => {
+    const failures = captureRuntimeFailures(page);
+    const imageReady = page.waitForResponse(response => response.url().includes('manta-wing-') && response.ok());
+    await page.goto(`/?skin=manta&quality=${quality}&boss=1`);
+    await imageReady;
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#debug-panel')).toContainText('boss: intro');
+    await page.locator('#pause-toggle').click();
+    await expect(page.locator('#pause-overlay')).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`manta-${quality}-paused.png`) });
+    expect(failures).toEqual([]);
+  });
+}
+
 const RESIZE_MATRIX = [
   { width: 640, height: 360 },
   { width: 836, height: 470 },
@@ -95,7 +139,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-skin-preview svg')).toBeVisible();
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(6);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(7);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/);

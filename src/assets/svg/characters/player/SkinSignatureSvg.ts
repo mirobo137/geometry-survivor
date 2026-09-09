@@ -8,6 +8,10 @@ import type { PlayerSkinId } from '../../../../content/visual/VisualTokens';
 export const createPlayerSkinSignatureSvg = (skin: PlayerSkinId): string => {
   const signature = getPlayerSkinDefinition(skin).signature;
   const markup = {
+    manta: `<g id="player-signature-manta" fill="none" stroke="#ffffff" stroke-linecap="round">
+      <path d="M-2 15Q-9 23-6 35M2 15Q9 23 6 35" stroke-width="1.6"/>
+      <path d="M-2 15Q-4 24-6 35M2 15Q4 24 6 35" stroke-width="0.6" opacity=".6"/>
+    </g>`,
     aurora: `
       <g id="player-signature-aurora" class="skin-art-orbit" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
         <path d="M0-31 5-25 0-22-5-25z" stroke-width="1.8"/>

@@ -2,6 +2,7 @@ import { getPlayerSkinDefinition } from '../../content/visual/SkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/characters/player/PlayerHullSvg';
 import { createPlayerSkinSignatureSvg } from '../../assets/svg/characters/player/SkinSignatureSvg';
+import { createMantaPreview } from './MantaPreview';
 
 export interface PlayerSkinPreviewOptions {
   readonly animated?: boolean;
@@ -9,6 +10,7 @@ export interface PlayerSkinPreviewOptions {
 
 /** Same source pieces and multiplicative palette as Pixi; cannon loadout is independent. */
 export const createPlayerSkinPreviewSvg = (skin: PlayerSkinId, options: PlayerSkinPreviewOptions = {}): string => {
+  if (skin === 'manta') return createMantaPreview(options.animated === true);
   const definition = getPlayerSkinDefinition(skin);
   const colors = definition.palette;
   const hull = PLAYER_HULL_SVG[skin];

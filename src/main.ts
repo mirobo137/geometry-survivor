@@ -11,6 +11,7 @@ import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens
 import { isCannonSkinId, type CannonSkinId } from './content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from './content/visual/BackgroundDefinitions';
 import { LocalPlatform } from './platform/local/LocalPlatform';
+import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -89,7 +90,7 @@ const bootstrap = async (): Promise<void> => {
   const stressMode = searchParams.get('stress') === '1';
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
-  const playerSkin: PlayerSkinId | undefined = requestedSkin === 'violet' || requestedSkin === 'cyan' || requestedSkin === 'amber' || requestedSkin === 'emerald' || requestedSkin === 'obsidian' || requestedSkin === 'nova'
+  const playerSkin: PlayerSkinId | undefined = isPlayerSkinId(requestedSkin)
     ? requestedSkin
     : undefined;
   const requestedCannon = searchParams.get('cannon');

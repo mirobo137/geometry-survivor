@@ -3,6 +3,16 @@ import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/characters/player/PlayerHullSvg';
 
 describe('SkinPreviewSvg', () => {
+  it('shares the PNG between two fins and only animates the selected hybrid preview', () => {
+    const card = createPlayerSkinPreviewSvg('manta');
+    const selected = createPlayerSkinPreviewSvg('manta', { animated: true });
+    const sources = [...card.matchAll(/<img src="([^"]+)"/g)].map(match => match[1]);
+    expect(sources).toHaveLength(2);
+    expect(new Set(sources).size).toBe(1);
+    expect(card).toContain('is-static');
+    expect(selected).toContain('is-animated');
+    expect(card).not.toMatch(/<image|<script/i);
+  });
   it('keeps a bounded, vector-only preview for each skin', () => {
     for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'] as const) {
       const svg = createPlayerSkinPreviewSvg(skin);

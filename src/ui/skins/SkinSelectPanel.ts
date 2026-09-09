@@ -22,7 +22,7 @@ interface SkinCardEntry {
   readonly action: HTMLElement;
 }
 
-/** DOM-only locker: cards stay accessible HTML, while previews remain SVG. */
+/** DOM-only locker: accessible cards and shared SVG/hybrid presentation. */
 export class SkinSelectPanel {
   private readonly cards: HTMLElement;
   private readonly preview: HTMLElement;
@@ -136,7 +136,10 @@ export class SkinSelectPanel {
       entry.button.setAttribute('aria-label', unlocked
         ? `${selected ? 'Equipada: ' : 'Equipar: '}${skin.name}`
         : `Adquirir ${skin.name} por ${formatNova(skin.priceNova)} NOVA`);
-      if (selected || unlocked) {
+      if (!unlocked && skin.priceNova === 0) {
+        entry.action.textContent = 'PROBAR GRATIS';
+        entry.button.setAttribute('aria-label', `Probar gratis: ${skin.name}`);
+      } else if (selected || unlocked) {
         entry.action.textContent = selected ? 'EQUIPADA' : 'EQUIPAR';
       } else {
         const amount = this.wallet.nova >= skin.priceNova

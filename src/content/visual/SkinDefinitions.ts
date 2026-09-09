@@ -6,7 +6,7 @@ import {
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export type SkinAcquisition = 'default' | 'nova';
-export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar' | 'supernova';
+export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar' | 'supernova' | 'manta';
 
 export interface PlayerSkinDefinition {
   readonly id: PlayerSkinId;
@@ -97,11 +97,23 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     palette: PLAYER_SKINS.nova,
     acquisition: 'nova',
     signature: 'supernova'
+  },
+  {
+    id: 'manta',
+    name: 'Manta Veil',
+    subtitle: 'Porcelana de las mareas',
+    description: 'Aletas nacaradas que planean alrededor de una quilla de luz. Prueba híbrida gratuita.',
+    rarity: 'NUEVA · HÍBRIDA',
+    tier: 'epic',
+    priceNova: 0,
+    palette: PLAYER_SKINS.manta,
+    acquisition: 'nova',
+    signature: 'manta'
   }
 ] as const;
 
 export const isPlayerSkinId = (value: unknown): value is PlayerSkinId => (
-  value === 'cyan' || value === 'violet' || value === 'amber' || value === 'emerald' || value === 'obsidian' || value === 'nova'
+  typeof value === 'string' && Object.prototype.hasOwnProperty.call(PLAYER_SKINS, value)
 );
 
 export const getPlayerSkinDefinition = (id: PlayerSkinId): PlayerSkinDefinition => (

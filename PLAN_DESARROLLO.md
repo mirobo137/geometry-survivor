@@ -503,6 +503,22 @@ No añadir fases narrativas, cinemática larga ni proyectiles nuevos si los sist
 
 SVG es el master editable, no la representación obligatoria en runtime.
 
+### Extensión autorizada: arte híbrido — 09-09-2026
+
+PNG transparentes generados por IA pueden ser fuente de producción cuando
+aporten material o volumen. No exigir un SVG artificial como fuente de un
+bitmap; conservar SVG para las piezas geométricas editables. El procedimiento
+neutral para Luna/Codex/Grok, costes, generación, carga y pruebas vive en
+[Arte híbrido](docs/design/ARTE_HIBRIDO.md). PNG no garantiza menor coste o mayor
+nitidez que SVG rasterizado. La identidad se valida por silueta y movimiento.
+
+Primer consumidor: séptima skin `manta` / **Manta Veil**, con quilla, reactor y
+cola SVG, y dos aletas animadas que comparten un PNG RGBA 256×256 de 43,207
+bytes. Se autoriza su uso en Low/Medium/High: son piezas fundamentales. La
+prueba es gratuita y seleccionable en el locker; no modifica daño, física ni
+el cosmético de cañones. Contrato y prompt: [Manta README](src/assets/skins/manta/README.md).
+Pendiente aprobación visual humana; no cierra las puertas EX ni VIS previas.
+
 | Caso | Representación inicial |
 |---|---|
 | cientos de enemigos/proyectiles repetidos | textura + Sprite |

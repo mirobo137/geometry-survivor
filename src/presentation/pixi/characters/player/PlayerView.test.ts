@@ -3,6 +3,7 @@ import { Texture } from 'pixi.js';
 import { PlayerView } from './PlayerView';
 
 const skinTextures = {
+  manta: Texture.WHITE,
   cyan: Texture.WHITE,
   violet: Texture.WHITE,
   amber: Texture.WHITE,

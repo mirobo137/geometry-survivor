@@ -67,6 +67,11 @@ describe('PlayerView', () => {
     expect(view.skinId).toBe('amber');
     view.setCannonSkin('rainbow');
     expect(view.cannonSkinId).toBe('rainbow');
+    view.setCannonSkin('bloom');
+    view.render(state(320, 400, 80), 0.5);
+    const bloomWeapons = view.root.children[4] as { children: { visible: boolean }[] };
+    expect(bloomWeapons.children).toHaveLength(3);
+    expect(bloomWeapons.children[2].visible).toBe(true);
     view.playDamage(20, 0.4);
     view.render(state(320, 400, 80), 0.45);
     const flash = view.root.children[8] as { alpha: number };

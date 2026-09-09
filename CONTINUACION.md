@@ -1,5 +1,18 @@
 # Geometry Survivor — estado y continuación
 
+## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
+
+- El reporte móvil indicó que el segundo cañón y el círculo rosado no se leían.
+  Se añadió una guía visual persistente con dos sockets rosados pulsantes en el
+  contenedor de armas, en los slots reales `(-27,-11)` y `(27,-11)`. Sigue la
+  rotación del apuntado, respeta pausa y no añade daño, proyectiles ni bocas de
+  simulación.
+- Los sockets usan una sola `Graphics` reutilizada; el flash temporal conserva
+  los orígenes emitidos por la simulación. El SVG derecho continúa siendo un
+  reflejo del izquierdo dentro del frame común, con textura cacheada.
+- Typecheck y pruebas específicas pasaron: 14/14. Debe repetirse el smoke
+  completo y el build de Pages antes de considerar esta corrección publicada.
+
 ## Revisión Bloomwake — cañón nacarado, 09-09-2026
 
 - Se rediseñaron los dos emisores y su master: montura lateral, dos pétalos

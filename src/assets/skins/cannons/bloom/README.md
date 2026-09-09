@@ -7,6 +7,9 @@
 - **Fallback:** si el PNG no decodifica, la receta `bloom` usa la misma estela procedural y el SVG del proyectil sigue siendo visible.
 - **Fuente:** imagen generada con el prompt de estela floral translúcida definido en `docs/design/ARTE_HIBRIDO.md`; se eliminó el fondo blanco y se redujo a 128 px.
 - **Validación:** comprobar alpha, request único en High, cero request inicial y cero request en Low; inspeccionar menú y partida en fondo oscuro.
+- **Socket visual:** Pixi dibuja dos aros rosados persistentes en `(-27,-11)` y
+  `(27,-11)` dentro del contenedor de armas. Es una guía de lectura con pulso
+  suave; el destello de disparo continúa siendo temporal y usa el origen real.
 
 ## Revisión del cañón: guía reproducible para Luna y otros agentes
 
@@ -41,6 +44,10 @@ equivale a una aprobación humana de tres prototipos visuales.
 - Retroceso, apuntado, pausa y muerte usan el compositor existente. Low mantiene
   el cañón completo; Medium/High permiten la estela PNG. El fallo de carga en
   estos presets conserva ribbon procedural. No aumentar pools ni resolución.
+- Los dos sockets rosados se actualizan en una `Graphics` persistente, como
+  parte del contenedor de armas, para que sigan la rotación y no desaparezcan
+  cuando Manta u otra pieza del casco cambie de orden. No son colisión, muzzle
+  adicional ni un tercer sprite.
 
 Para continuar: modificar primero masas/solapes, revisar la galería
 `docs/visual/fleet-reference.html` en 32/64/128 px, oscuro/claro/gris/silueta,

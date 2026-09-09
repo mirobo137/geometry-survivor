@@ -13,6 +13,8 @@ import {
 import type { PlayerTextureSet } from './PlayerVisualAssets';
 import { MantaWingView } from './MantaWingView';
 
+const BLOOM_SOCKET_X = [-27, 27] as const;
+
 /**
  * Modular player presentation. Every piece shares the SVG frame and is
  * animated with transforms; no gameplay rule or collision is changed here.
@@ -26,6 +28,7 @@ export class PlayerView {
   private readonly weapons = new Container();
   private readonly weaponLeft: Sprite;
   private readonly weaponRight: Sprite;
+  private readonly cannonSocketFx: Graphics;
   private readonly body: Sprite;
   private readonly core: Sprite;
   private readonly accent: Sprite;
@@ -70,7 +73,8 @@ export class PlayerView {
     this.ring = new Sprite(textures.ring[skin]);
     this.weaponLeft = new Sprite(textures.weapons[cannonSkin].left);
     this.weaponRight = new Sprite(textures.weapons[cannonSkin].right);
-    this.weapons.addChild(this.weaponLeft, this.weaponRight);
+    this.cannonSocketFx = new Graphics();
+    this.weapons.addChild(this.weaponLeft, this.weaponRight, this.cannonSocketFx);
     this.body = new Sprite(textures.body[skin]);
     this.core = new Sprite(textures.core[skin]);
     this.accent = new Sprite(textures.accent);
@@ -235,6 +239,7 @@ export class PlayerView {
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
     this.renderGuardFx(guardProgress, shieldChargeProgress, animationSeconds);
     this.renderMovementTrail(animationSeconds);
+    this.renderCannonSocketFx(animationSeconds, shotPulse);
     this.renderShotFlash(shotPulse, state);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
   }
@@ -305,6 +310,8 @@ export class PlayerView {
     this.shotFlash.visible = false;
     this.shotFlash.position.set(0, 0);
     this.shotFlash.rotation = 0;
+    this.cannonSocketFx.clear();
+    this.cannonSocketFx.visible = false;
   }
 
   /**
@@ -385,6 +392,30 @@ export class PlayerView {
       alpha,
       (this.shotMuzzleMask & 2) !== 0
     );
+  }
+
+  /** Bloomwake's two muzzle sockets stay readable even when the transient shot flash is over. */
+  private renderCannonSocketFx(animationSeconds: number, shotPulse: number): void {
+    this.cannonSocketFx.clear();
+    if (this.cannonSkin !== 'bloom') {
+      this.cannonSocketFx.visible = false;
+      return;
+    }
+    const idlePulse = 0.5 + Math.sin(animationSeconds * 4.8) * 0.5;
+    const pulse = Math.max(shotPulse, 0.34 + idlePulse * 0.26);
+    const radius = 3.1 + pulse * 1.15;
+    const alpha = 0.42 + pulse * 0.4;
+    this.cannonSocketFx.visible = true;
+    for (const x of BLOOM_SOCKET_X) {
+      this.cannonSocketFx
+        .beginPath()
+        .circle(x, -11, radius)
+        .stroke({ color: 0xff8fd8, width: 1.15 + pulse * 0.7, alpha });
+      this.cannonSocketFx
+        .beginPath()
+        .circle(x, -11, 1.15 + pulse * 0.72)
+        .fill({ color: 0xfff7ec, alpha: 0.45 + pulse * 0.45 });
+    }
   }
 
   private renderMovementTrail(animationSeconds: number): void {

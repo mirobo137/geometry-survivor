@@ -1,6 +1,43 @@
 # Geometry Survivor — estado y continuación
 
-## Encargo más reciente — 09-09-2026: primera partícula PNG
+## Encargo más reciente — 09-09-2026: Manta Veil, séptima skin híbrida
+
+- Implementación guardada en `fccc6fd` antes de retomar la validación. No
+  rehacerla ni sustituir las seis skins anteriores. Id `manta`, séptima tarjeta,
+  disponible con **PROBAR GRATIS** (0 NOVA) para aprobación visual del usuario.
+- Inicio → Skins → Manta Veil → PROBAR GRATIS → Volver → Jugar. No hace falta
+  escribir parámetros. Atajo opcional: `?skin=manta` y `&quality=low|high`.
+- Identidad: quilla estrecha SVG, reactor longitudinal, cola bifurcada y dos
+  aletas nacaradas que flexionan, usando una sola imagen PNG generada con la
+  herramienta integrada. PNG RGBA 256×256 / 43,207 bytes, alpha cero en esquina.
+  Imagen base de 256 KiB teóricos, compartida por dos sprites. No es VRAM medida.
+- `MantaAssets.ts` comparte URL, dimensiones y pivotes con DOM/Pixi. La partida
+  carga el PNG al equipar; el catálogo puede solicitarlo al acercarse la tarjeta
+  al viewport. Sólo la preview seleccionada anima, respeta reduced-motion; la
+  partida conserva las aletas en todos los presets. Fallback SVG si falla carga.
+- `MantaWingView` usa transforms, dos sprites persistentes y caché por aplicación.
+  Muerte/revive reutilizan piezas. Cañones, radio y estadísticas no cambian.
+- Guía neutral para Luna/Codex/Grok: `docs/design/ARTE_HIBRIDO.md`, enlazada desde
+  AGENTS.md y §8 del plan. Ficha y prompt completo en `src/assets/skins/manta/README.md`.
+  No exigir SVG como fuente ficticia de una imagen generada. No asumir que PNG
+  sea más barato/nítido: comparar descarga, memoria, coste por frame y legibilidad.
+- Lámina de flota ampliada a 18 assets / 54 muestras; exploración de tres masas
+  en `docs/visual/manta-silhouettes.html`. Inspección de menú y partida 390×844
+  realizada. Los detalles del nacarado se aprecian más en el menú; en combate
+  predomina la silueta. Pendiente aprobación visual y perfil de móvil físico.
+- Las puertas EX/VIS previas siguen en su estado anterior. No cerrar todo el
+  plan de juice por esta skin, ni confundir test sin errores con juicio artístico.
+- Cierre automático: `npm run build:local` correcto (typecheck + 244 tests / 72
+  archivos); builds Vite Poki y CrazyGames correctos; Playwright completo **19/19
+  en 2.1 min**, salida 0 usando preview independiente en 4173. Incluye Manta
+  gratuita/persistencia/carga PNG y pausa/resize en Low/High. Galería **18 assets
+  / 54 muestras** validada con `node docs/visual/capture-reference.mjs`.
+- Capturas inspeccionadas: preview, partida 390×844 y siluetas comparadas con las
+  otras seis skins. El bundle principal sigue avisando por >500 kB minificados
+  (640.74 kB / 176.88 kB gzip); no es error de build. PNG se publica separado.
+  No se midieron FPS/VRAM de móvil físico ni se confirmó el acabado humano.
+
+## Encargo anterior — 09-09-2026: primera partícula PNG
 
 - Se añadió `src/assets/fx/projectile-smoke-puff.png`, un sprite RGBA de 128×128
   y 7.1 KiB, generado con una textura de humo blanca y fondo realmente

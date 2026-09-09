@@ -51,6 +51,9 @@ export const registerHomeChecks = (): void => {
       await page.locator(`#start-${section}-back`).click();
       await expect.poll(activeSurfaces).toHaveLength(5);
     }
+    // Motion was asserted above. Freeze it while exercising every responsive
+    // button so CI never waits for a moving target during scroll/click.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
       await page.setViewportSize({ width: width!, height: height! });
       const buttons = page.locator('.start-actions button');

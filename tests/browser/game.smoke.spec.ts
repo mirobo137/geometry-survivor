@@ -67,6 +67,9 @@ const openGame = async (page: Page): Promise<string[]> => {
 
 test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
+  // The animation contract is covered by home.checks. Keep this long
+  // interaction flow deterministic on the shared CI runner.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => {
     localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 20000 } }));
   });

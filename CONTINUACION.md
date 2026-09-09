@@ -18,6 +18,11 @@
   animadas. No reactivar la estrategia anterior basándose sólo en tests CSS.
   Hipótesis: repintados de capas grandes; falta traza del móvil afectado.
   Skins/meta, menú oculto y reduced-motion detienen estos adornos.
+- El smoke de GitHub detectó una carrera al hacer clic en Configuración con
+  animación activa. La prueba ahora valida movimiento primero y usa
+  `reduced-motion` durante la secuencia larga de clics; no cambia la UI de
+  producción. Repetición local: presentación desktop y carga desktop/móvil
+  dieron `ok`; el runner Windows puede quedarse esperando al cerrar Vite.
 - Validación del refuerzo: build local (incluye typecheck y suite unitaria)
   y builds Vite Poki/CrazyGames correctos; 4 pruebas browser pertinentes
   pasadas con salida 0 usando servidor independiente. Cubren movimiento real,

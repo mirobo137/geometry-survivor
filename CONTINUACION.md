@@ -14,9 +14,11 @@
 - Contrato y prompt en `src/assets/skins/cannons/bloom/README.md`; reglas
   generales en `docs/design/ARTE_HIBRIDO.md`. La galería de flota pasa a 19
   assets / 57 muestras.
-- Validación pendiente al cerrar esta sesión: suite Playwright y builds de
-  local/Poki/CrazyGames; inspección visual manual del disparo en Android sigue
-  siendo necesaria.
+- Validación: unitarias 245/245, browser desktop 16/16 y browser móvil 3/3.
+  Los builds local/Poki/CrazyGames pasaron; un deploy inicial falló porque
+  `mobile.smoke.spec.ts` esperaba 6 cañones, se corrigió a 7 en `919f7e2` y se
+  publicó. La inspección visual manual del disparo en Android sigue siendo
+  necesaria.
 
 ## Encargo más reciente — 09-09-2026: Manta Veil, séptima skin híbrida
 

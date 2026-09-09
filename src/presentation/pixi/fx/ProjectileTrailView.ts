@@ -95,11 +95,11 @@ export class ProjectileTrailView {
             sprite.position.set((x + endX) * 0.5, (y + endY) * 0.5);
             // A tiny deterministic rotation keeps pooled puffs from looking stamped.
             sprite.rotation = (index * 1.37 + band * 0.73) % (Math.PI * 2);
-            const size = 13 + (band % 2) * 3;
+            const size = 24 + (band % 2) * 4;
             sprite.width = size;
             sprite.height = size;
-            sprite.tint = 0xe8d8d1;
-            sprite.alpha = alpha * (0.42 + band * 0.08);
+            sprite.tint = 0xffd6b8;
+            sprite.alpha = alpha * (0.72 + band * 0.08);
           } else {
             sprite.texture = this.ribbonTextures[band];
             sprite.anchor.set(0, 0.5);

@@ -68,7 +68,7 @@ describe('ProjectileTrailView', () => {
     expect(sprites).toHaveLength(4);
     expect(sprites.every(sprite => sprite.texture === smokeTexture)).toBe(true);
     expect(sprites.every(sprite => sprite.anchor.x === 0.5 && sprite.anchor.y === 0.5)).toBe(true);
-    expect(sprites.every(sprite => sprite.width >= 13 && sprite.height >= 13)).toBe(true);
+    expect(sprites.every(sprite => sprite.width >= 24 && sprite.height >= 24)).toBe(true);
     expect(view.root.children).toHaveLength(256);
     view.root.destroy({ children: true });
   });

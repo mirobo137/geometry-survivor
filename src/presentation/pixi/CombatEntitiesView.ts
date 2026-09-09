@@ -159,6 +159,7 @@ export class CombatEntitiesView {
   private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
   private readonly quality: FxQuality;
   private smokeTexture?: Texture;
+  private smokeTextureLoading = false;
   private cannonSkin: CannonSkinId;
   private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
@@ -173,10 +174,8 @@ export class CombatEntitiesView {
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
     // Keep the normal menu/game boot free of the bitmap request. Medium/High
     // load it only for the smoke cosmetic and reuse it across the pool.
-    this.smokeTexture = quality !== 'low' && cannonSkin === 'smoke' && typeof window !== 'undefined'
-      ? Texture.from(smokeParticleUrl)
-      : undefined;
-    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin, this.smokeTexture);
+    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
+    if (cannonSkin === 'smoke') this.loadSmokeTexture();
     this.enemyTextures = createEnemyTextures(renderer);
     this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
     this.enemyLayer.addChild(this.boss.root);
@@ -226,13 +225,28 @@ export class CombatEntitiesView {
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
     this.projectileTrails.setCannonSkin(cannonSkin);
-    if (cannonSkin === 'smoke' && !this.smokeTexture && this.quality !== 'low' && typeof window !== 'undefined') {
-      this.smokeTexture = Texture.from(smokeParticleUrl);
-      this.projectileTrails.setSmokeTexture(this.smokeTexture);
-    }
+    if (cannonSkin === 'smoke') this.loadSmokeTexture();
     const texture = this.projectileTextures[cannonSkin];
     for (const sprite of this.projectileSprites) sprite.texture = texture;
     for (const glow of this.projectileGlows) glow.texture = texture;
+  }
+
+  /** Pixi v8 accepts a decoded image in Texture.from, not a URL string. */
+  private loadSmokeTexture(): void {
+    if (this.smokeTexture || this.smokeTextureLoading || this.quality === 'low' || typeof window === 'undefined') return;
+    this.smokeTextureLoading = true;
+    const image = new Image();
+    image.decoding = 'async';
+    image.addEventListener('load', () => {
+      this.smokeTexture = Texture.from(image);
+      this.smokeTextureLoading = false;
+      this.projectileTrails.setSmokeTexture(this.smokeTexture);
+    }, { once: true });
+    image.addEventListener('error', () => {
+      // Keep the existing procedural ribbon as a cosmetic-only fallback.
+      this.smokeTextureLoading = false;
+    }, { once: true });
+    image.src = smokeParticleUrl;
   }
 
   /** Bounded presentation count used by the local baseline profiler. */

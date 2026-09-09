@@ -6,8 +6,9 @@ does not affect projectile physics, damage, collision or the other cannon
 packages. The source generation prompt requested a white stylized puff with
 genuine transparency; the published file has an sRGBA channel and is 7.1 KiB.
 
-The asset is requested lazily only when the smoke package is selected in
-Medium/High; a normal menu boot does not download it. The SVG masters remain
+The asset is requested lazily through a native `Image` only when the smoke
+package is selected in Medium/High; PixiJS receives that decoded image through
+`Texture.from(image)`. A normal menu boot does not download it. The SVG masters remain
 the source of truth for characters, UI and authored
 cosmetic geometry. This bitmap is an intentional runtime exception for a soft
 particle where a transparent texture is cheaper than rebuilding a cloud from

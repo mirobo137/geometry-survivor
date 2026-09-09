@@ -7,10 +7,11 @@
   transparente. `identify` confirma `srgba` y alpha 0 en la esquina.
 - El paquete cosmético `smoke` usa ahora esa textura en su estela: cuatro puffs
   por proyectil, con tamaño, rotación, posición y alpha deterministas. La
-  textura se carga de forma perezosa al seleccionar ese paquete, se reutiliza
-  en el pool existente y no crea sprites ni texturas durante el loop. Si el
-  runtime no dispone de la textura (tests Node), la estela conserva el ribbon
-  procedural anterior.
+  textura se carga de forma perezosa como `Image` al seleccionar ese paquete,
+  se reutiliza en el pool existente y no crea sprites ni texturas durante el
+  loop. `Texture.from(URL)` no descarga URLs en PixiJS 8; se pasa la imagen ya
+  cargada a `Texture.from(image)`. Si el runtime no dispone de la textura
+  (tests Node), la estela conserva el ribbon procedural anterior.
 - Low mantiene el presupuesto de trail en cero; Medium/High reutilizan el
   mismo recurso acotado. La prueba no toca daño, colisión, trayectoria ni
   simulación. El contrato y la razón de esta excepción a SVG están en

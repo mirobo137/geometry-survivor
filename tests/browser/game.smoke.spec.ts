@@ -25,6 +25,10 @@ const RESIZE_MATRIX = [
 for (const quality of ['low', 'high']) {
   test(`carga el arte de las seis familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);
+    const smokeAssetResponses: string[] = [];
+    page.on('response', (response) => {
+      if (response.url().includes('projectile-smoke-puff-') && response.ok()) smokeAssetResponses.push(response.url());
+    });
     const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'];
     const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
     const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix'];
@@ -35,6 +39,8 @@ for (const quality of ['low', 'high']) {
       await expect(page.locator('#debug-panel')).toContainText('boss: intro');
       await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`art-${quality}-${skins[index]}.png`) });
     }
+    if (quality === 'high') expect(smokeAssetResponses).toHaveLength(1);
+    else expect(smokeAssetResponses).toHaveLength(0);
     expect(failures).toEqual([]);
   });
 }

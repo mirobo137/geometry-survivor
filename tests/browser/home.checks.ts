@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 export const registerHomeChecks = (): void => {
-  test('cubre la carga desde HTML y entrega el menú sin textos recortados', async ({ page }, testInfo) => {
+  test('cubre la carga desde HTML y entrega el menú sin textos recortados', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     let releaseEntry!: () => void;
@@ -20,7 +20,6 @@ export const registerHomeChecks = (): void => {
         return bounds.x === 0 && bounds.y === 0 && bounds.width === innerWidth && bounds.height === innerHeight
           && cover.contains(document.elementFromPoint(innerWidth / 2, innerHeight / 2));
       })).toBe(true);
-      await page.screenshot({ path: testInfo.outputPath('loading.png') });
     } finally {
       releaseEntry();
     }
@@ -56,20 +55,18 @@ export const registerHomeChecks = (): void => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
       await page.setViewportSize({ width: width!, height: height! });
-      const buttons = page.locator('.start-actions button');
-      for (const button of await buttons.all()) {
-        await button.scrollIntoViewIfNeeded();
-        expect(await button.evaluate((node) => {
+      const buttonLayout = await page.locator('.start-actions button').evaluateAll((nodes) => (
+        nodes.map((node) => {
           const bounds = node.getBoundingClientRect();
           const text = document.createRange();
           text.selectNodeContents(node);
           return node.scrollWidth <= node.clientWidth + 1 && node.scrollHeight <= node.clientHeight + 1
             && bounds.width >= 44 && bounds.height >= 44
             && [...text.getClientRects()].every((rect) => rect.left >= bounds.left && rect.right <= bounds.right + 1);
-        })).toBe(true);
-      }
-      await page.locator('#start-play').scrollIntoViewIfNeeded();
-      await page.screenshot({ path: testInfo.outputPath(`home-${width}.png`) });
+        })
+      ));
+      expect(buttonLayout).toHaveLength(5);
+      expect(buttonLayout.every(Boolean)).toBe(true);
       await page.locator('#start-settings-toggle').click();
       await expect(page.locator('#start-settings')).toBeVisible();
       await page.locator('#start-settings-toggle').click();

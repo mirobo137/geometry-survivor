@@ -18,7 +18,13 @@
 - El primer deploy con la textura reportó dos timeouts de Playwright con la
   sesión Chromium cerrada durante el menú. Se eliminó la petición al arrancar
   cuando el cañón no es `smoke`; la textura se adjunta al cambiar de paquete.
-  La suite completa local quedó en 16/16 browser, además de 239 tests unitarios.
+  La segunda incidencia conservó los mismos dos tests: se sustituyó la
+  navegación repetida por todos los cosméticos por dos compras representativas
+  por familia, y las llamadas frágiles a `scrollIntoViewIfNeeded` por una
+  medición atómica de los cinco botones. La suite completa local quedó en
+  16/16 browser en 1.8 min, además de 239 tests unitarios. El workflow ejecuta
+  typecheck/unit una vez y conserva los tres bundles aislados para no repetir
+  esa misma puerta tres veces.
 
 ## Encargo anterior — 08-09-2026: presentación inicial
 

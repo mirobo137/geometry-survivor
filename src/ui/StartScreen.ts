@@ -1,6 +1,6 @@
 import type { AudioSettings } from '../audio/AudioService';
-import heroSceneSvg from '../assets/svg/ui/start/hero-scene.svg?raw';
-import startMarkSvg from '../assets/svg/ui/start/mark.svg?raw';
+import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
+import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
 import type { BackgroundSaveData, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
@@ -277,22 +277,27 @@ export class StartScreen {
   private mountMark(): void {
     const host = this.root.querySelector<HTMLElement>('#start-mark');
     if (!host || host.firstElementChild) return;
-    host.insertAdjacentHTML('afterbegin', startMarkSvg);
-    const svg = host.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('aria-hidden', 'true');
-      svg.setAttribute('focusable', 'false');
-    }
+    const mark = new Image();
+    mark.src = startMarkUrl;
+    mark.alt = '';
+    mark.className = 'home-mark-image';
+    host.append(mark);
   }
 
   private mountScene(): void {
     const host = this.root.querySelector<HTMLElement>('#start-scene');
     if (!host || host.firstElementChild) return;
-    host.insertAdjacentHTML('afterbegin', heroSceneSvg);
-    const svg = host.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('aria-hidden', 'true');
-      svg.setAttribute('focusable', 'false');
+    // A static SVG image has no animated descendant paths in the page's DOM.
+    // Small independent lights carry motion without repainting the scene.
+    const scene = new Image();
+    scene.src = heroSceneUrl;
+    scene.alt = '';
+    scene.className = 'home-scene-image';
+    host.append(scene);
+    for (let index = 0; index < 4; index += 1) {
+      const light = document.createElement('span');
+      light.className = 'home-ambient-light';
+      host.append(light);
     }
   }
 

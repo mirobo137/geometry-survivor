@@ -27,13 +27,30 @@ export const registerHomeChecks = (): void => {
     await expect(page.locator('#boot-status')).toBeHidden();
     await expect(page.locator('#start-screen')).toBeVisible();
     await expect(page.locator('#game-hud')).toBeHidden();
-    expect(await page.evaluate(() => {
-      const mark = document.querySelector<SVGElement>('#start-mark svg');
-      const orbit = document.querySelector<SVGElement>('.start-scene .start-hero-orbit-outer');
-      if (!mark || !orbit) return false;
-      return getComputedStyle(mark).animationName !== 'none'
-        && getComputedStyle(orbit).animationName !== 'none';
-    })).toBe(true);
+    const mark = page.locator('.home-mark-image');
+    await expect.poll(() => page.locator('.home-scene-image').evaluate((node) =>
+      (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
+    await expect.poll(() => mark.evaluate((node) =>
+      (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
+    const initialTransform = await mark.evaluate((node) => getComputedStyle(node).transform);
+    await expect.poll(() => mark.evaluate((node) => getComputedStyle(node).transform)).not.toBe(initialTransform);
+    const activeSurfaces = () => page.locator('#start-screen').evaluate((screen) =>
+      screen.getAnimations({ subtree: true }).filter((animation) => animation.playState === 'running').map((animation) => {
+        const target = (animation.effect as KeyframeEffect).target as Element;
+        const bounds = target.getBoundingClientRect();
+        return { small: bounds.width < 210 && bounds.height < 210,
+          decorative: target.matches('.home-mark-image, .home-ambient-light') };
+      }));
+    expect(await activeSurfaces()).toEqual(Array.from({ length: 5 }, () => ({ small: true, decorative: true })));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(activeSurfaces).toEqual([]);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    for (const section of ['skins', 'meta']) {
+      await page.locator(`#start-${section}`).click();
+      expect(await page.locator('.home-ambient-light').first().evaluate((node) => node.getAnimations().length)).toBe(0);
+      await page.locator(`#start-${section}-back`).click();
+      await expect.poll(activeSurfaces).toHaveLength(5);
+    }
     for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
       await page.setViewportSize({ width: width!, height: height! });
       const buttons = page.locator('.start-actions button');

@@ -74,8 +74,8 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeVisible();
   await expect.poll(async () => page.locator('#debug-panel').textContent()).toContain('paused: menu');
-  await expect(page.locator('#start-scene svg')).toBeVisible();
-  await expect(page.locator('#start-mark svg')).toBeVisible();
+  await expect(page.locator('#start-scene img')).toBeVisible();
+  await expect(page.locator('#start-mark img')).toBeVisible();
   await expect(page.locator('#start-play')).toBeVisible();
   await expect(page.locator('#start-level')).toHaveAttribute('disabled', '');
   await expect(page.locator('#start-skins')).toBeEnabled();

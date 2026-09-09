@@ -1655,10 +1655,15 @@ y los límites anti-parpadeo existentes. Contratos y consumidores actuales:
 La aprobación artística móvil sigue siendo humana. El registro siguiente
 describe la entrega original, no el catálogo vigente de funciones.
 
-La revisión posterior reactivó un movimiento sutil sólo en la vista principal:
-la marca gira en 28 s y la escena usa dash/opacity con ciclos de 12–58 s. Las
-vistas de skins y Laboratorio mantienen sus adornos congelados para conservar
-el scroll móvil estable; reduced-motion los desactiva.
+La reactivación de dash/opacity en la escena grande (`5bc8268`) reintrodujo
+parpadeo según prueba humana. Esa estrategia queda sustituida: `StartScreen`
+usa los masters como imágenes SVG estáticas y anima únicamente la imagen
+pequeña del emblema (36 s) y cuatro luces HTML de 10 px (8 px de recorrido).
+Fondo, gradientes grandes y marco RGB permanecen estáticos. Se retira animación
+al abrir skins/meta, ocultar el menú o activar reduced-motion. El contrato
+canónico es el README de assets indicado arriba; mantener sus límites hasta
+validar un cambio en el móvil afectado. Pruebas automáticas de composición y
+transiciones no equivalen a demostrar ausencia de parpadeo en hardware real.
 
 La aplicacion ahora abre en un menu de presentacion antes de iniciar la
 simulacion. `GameState` usa la fase `menu`, por lo que no avanzan tiempo,

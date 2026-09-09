@@ -11,11 +11,21 @@
   bloquea temporalmente el entry JS y comprueba cobertura, relevo al menú,
   textos en 320/390/640/1280 px, ajustes y entrada al juego.
 - No cambia balance, saves, arsenal ni las tareas EX pendientes abajo.
-- La pantalla principal conserva ahora movimiento sutil en móvil: marca lenta,
-  órbitas, rayos, barridos, fragmentos y núcleo mediante dash/opacity con
-  ciclos largos. Skins y Laboratorio siguen estáticos para proteger scroll;
-  `prefers-reduced-motion` congela todos los adornos.
-- Validación: typecheck, 237 tests unitarios y builds local/Poki/CrazyGames
+- El usuario reportó regresión de parpadeo tras `5bc8268`. Se reemplaza la
+  escena SVG inline animada por el mismo master como imagen estática. Marca
+  como imagen con giro 36 s y cuatro luces CSS pequeñas con movimiento 8 px.
+  Fondo, gradientes y marco RGB estáticos; sólo cinco superficies pequeñas
+  animadas. No reactivar la estrategia anterior basándose sólo en tests CSS.
+  Hipótesis: repintados de capas grandes; falta traza del móvil afectado.
+  Skins/meta, menú oculto y reduced-motion detienen estos adornos.
+- Validación del refuerzo: build local (incluye typecheck y suite unitaria)
+  y builds Vite Poki/CrazyGames correctos; 4 pruebas browser pertinentes
+  pasadas con salida 0 usando servidor independiente. Cubren movimiento real,
+  sólo cinco superficies animadas pequeñas, reduced-motion, retorno de
+  skins/meta, scroll del locker y botones en varios tamaños. Captura 390 px
+  revisada. El parpadeo específico de la GPU del usuario sigue pendiente de
+  confirmación manual; no declararlo eliminado sólo por estas pruebas.
+- Validación anterior de la presentación: typecheck, 237 tests unitarios y builds local/Poki/CrazyGames
   correctos. Los 16 casos browser dieron `ok`; hubo bloqueo al cerrar el
   servidor de Playwright en Windows y se interrumpió ese proceso. Repetición
   de los 2 casos de inicio con servidor independiente: `2 passed`, exit 0.

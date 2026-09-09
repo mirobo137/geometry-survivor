@@ -1,4 +1,4 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Sprite, Texture } from 'pixi.js';
 import { FX_QUALITY, PROJECTILE_TRAIL_TOKENS, type FxQuality } from '../../../content/visual/VisualTokens';
 import { getCannonSkinDefinition, type CannonSkinId } from '../../../content/visual/CannonSkinDefinitions';
 import type { ProjectileRenderState } from '../../../simulation/combat/CombatRenderState';
@@ -12,15 +12,24 @@ export class ProjectileTrailView {
   public readonly root = new Container();
   private readonly segments: Sprite[];
   private readonly previousActive: boolean[];
+  private readonly ribbonTextures: readonly Texture[];
+  private readonly smokeTexture?: Texture;
   private definition;
   private activeSegments = 0;
   private visibleSegments = 0;
 
-  public constructor(capacity: number, private readonly quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
+  public constructor(
+    capacity: number,
+    private readonly quality: FxQuality = 'medium',
+    cannonSkin: CannonSkinId = 'basic',
+    smokeTexture?: Texture
+  ) {
     this.definition = getCannonSkinDefinition(cannonSkin);
+    this.smokeTexture = smokeTexture;
     this.previousActive = Array.from({ length: Math.max(0, Math.floor(capacity)) }, () => false);
     const limit = FX_QUALITY[quality].projectileTrailLimit;
     const textures = limit > 0 ? createProjectileTrailTextures() : [];
+    this.ribbonTextures = textures;
     const source = textures[0]?.source;
     this.segments = Array.from({ length: limit * 4 }, (_, index) => {
       const sprite = new Sprite(textures[index % 4]);
@@ -73,15 +82,31 @@ export class ProjectileTrailView {
           const endX = state.x - state.vx * behind + normalX * offset;
           const endY = state.y - state.vy * behind + normalY * offset;
           const sprite = this.segments[this.activeSegments * 4 + band];
-          sprite.position.set(x, y);
-          sprite.rotation = Math.atan2(endY - y, endX - x);
-          sprite.width = Math.max(0.01, Math.hypot(endX - x, endY - y));
-          sprite.height = recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : 8;
-          sprite.tint = recipe === 'rainbow' ? SPECTRUM[band]
-            : recipe === 'lattice' && band % 2 === 0 ? 0xd3e8ff
-              : recipe === 'helix' && band % 2 === 0 ? this.definition.accent
-                : this.definition.projectileAccent;
-          sprite.alpha = alpha;
+          const smoke = recipe === 'smoke' && this.smokeTexture;
+          if (smoke) {
+            sprite.texture = smoke;
+            sprite.anchor.set(0.5, 0.5);
+            sprite.position.set((x + endX) * 0.5, (y + endY) * 0.5);
+            // A tiny deterministic rotation keeps pooled puffs from looking stamped.
+            sprite.rotation = (index * 1.37 + band * 0.73) % (Math.PI * 2);
+            const size = 13 + (band % 2) * 3;
+            sprite.width = size;
+            sprite.height = size;
+            sprite.tint = 0xe8d8d1;
+            sprite.alpha = alpha * (0.42 + band * 0.08);
+          } else {
+            sprite.texture = this.ribbonTextures[band];
+            sprite.anchor.set(0, 0.5);
+            sprite.position.set(x, y);
+            sprite.rotation = Math.atan2(endY - y, endX - x);
+            sprite.width = Math.max(0.01, Math.hypot(endX - x, endY - y));
+            sprite.height = recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : 8;
+            sprite.tint = recipe === 'rainbow' ? SPECTRUM[band]
+              : recipe === 'lattice' && band % 2 === 0 ? 0xd3e8ff
+                : recipe === 'helix' && band % 2 === 0 ? this.definition.accent
+                  : this.definition.projectileAccent;
+            sprite.alpha = alpha;
+          }
           sprite.visible = seconds > 0;
           x = endX;
           y = endY;

@@ -1,6 +1,21 @@
 # Geometry Survivor — estado y continuación
 
-## Encargo más reciente — 08-09-2026: presentación inicial
+## Encargo más reciente — 09-09-2026: primera partícula PNG
+
+- Se añadió `src/assets/fx/projectile-smoke-puff.png`, un sprite RGBA de 128×128
+  y 7.1 KiB, generado con una textura de humo blanca y fondo realmente
+  transparente. `identify` confirma `srgba` y alpha 0 en la esquina.
+- El paquete cosmético `smoke` usa ahora esa textura en su estela: cuatro puffs
+  por proyectil, con tamaño, rotación, posición y alpha deterministas. La
+  textura se carga una vez y se reutiliza en el pool existente; no se crean
+  sprites ni texturas durante el loop. Si el runtime no dispone de la textura
+  (tests Node), la estela conserva el ribbon procedural anterior.
+- Low mantiene el presupuesto de trail en cero; Medium/High reutilizan el
+  mismo recurso acotado. La prueba no toca daño, colisión, trayectoria ni
+  simulación. El contrato y la razón de esta excepción a SVG están en
+  `src/assets/fx/README.md`.
+
+## Encargo anterior — 08-09-2026: presentación inicial
 
 - Se sustituyó el aviso flotante de carga por cobertura HTML opaca de viewport
   completo, visible incluso antes de ejecutar JS. Reutiliza `mark.svg`.

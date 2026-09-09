@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Texture } from 'pixi.js';
 import type { ProjectileRenderState } from '../../../simulation/combat/CombatRenderState';
 import { ProjectileTrailView } from './ProjectileTrailView';
 
@@ -49,6 +50,27 @@ describe('ProjectileTrailView', () => {
     expect(view.activeSegmentCount).toBe(1);
     expect(view.root.children.filter(child => child.visible)).toHaveLength(4);
     expect((view.root.children[0] as { tint: number }).tint).toBe(0x8de8ff);
+  });
+
+  it('uses one supplied bitmap texture for the smoke recipe without growing the pool', () => {
+    const smokeTexture = Texture.WHITE;
+    const view = new ProjectileTrailView(1, 'medium', 'smoke', smokeTexture);
+    view.render([projectile(true, 320)]);
+    view.render([projectile(true, 327)]);
+    const sprites = view.root.children.slice(0, 4) as unknown as Array<{
+      texture: Texture;
+      anchor: { x: number; y: number };
+      width: number;
+      height: number;
+    }>;
+    expect(view.activeSegmentCount).toBe(1);
+    expect(view.root.children.filter(child => child.visible)).toHaveLength(4);
+    expect(sprites).toHaveLength(4);
+    expect(sprites.every(sprite => sprite.texture === smokeTexture)).toBe(true);
+    expect(sprites.every(sprite => sprite.anchor.x === 0.5 && sprite.anchor.y === 0.5)).toBe(true);
+    expect(sprites.every(sprite => sprite.width >= 13 && sprite.height >= 13)).toBe(true);
+    expect(view.root.children).toHaveLength(256);
+    view.root.destroy({ children: true });
   });
 
   it('caps a young tail at the muzzle and reuses its sprites when changing recipes', () => {

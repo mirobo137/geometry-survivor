@@ -1,5 +1,5 @@
-import { Container, Sprite } from 'pixi.js';
-import type { Renderer, Texture } from 'pixi.js';
+import { Container, Sprite, Texture } from 'pixi.js';
+import type { Renderer } from 'pixi.js';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { FX_QUALITY, type FxQuality } from '../../content/visual/VisualTokens';
@@ -41,6 +41,7 @@ import { ProjectileTrailView } from './fx/ProjectileTrailView';
 import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/ProjectileMotionVisual';
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
+import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -167,7 +168,13 @@ export class CombatEntitiesView {
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
-    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
+    // Keep Low free of the bitmap request; Medium/High receive one cached
+    // texture and reuse it across every pooled smoke puff. Unit tests stay
+    // DOM-free and exercise the branch by injecting a texture directly.
+    const smokeTexture = quality !== 'low' && typeof window !== 'undefined'
+      ? Texture.from(smokeParticleUrl)
+      : undefined;
+    this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin, smokeTexture);
     this.enemyTextures = createEnemyTextures(renderer);
     this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
     this.enemyLayer.addChild(this.boss.root);

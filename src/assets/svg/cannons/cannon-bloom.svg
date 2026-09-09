@@ -1,11 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cannon-bloom-title cannon-bloom-desc">
-  <title id="cannon-bloom-title">Bloomwake emitters</title><desc id="cannon-bloom-desc">Paired crystal petal emitters with luminous muzzles.</desc>
-  <path d="M-5-29 4-25 11-10 6 1-2-2-8-17Z" fill="#1c3152" stroke="#ffb8e6" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M5-29-4-25-11-10-6 1 2-2 8-17Z" fill="#1c3152" stroke="#ffb8e6" stroke-width="2" stroke-linejoin="round"/>
-  <path d="m-1-24 7 3 5 11-6 5-5-3Z" fill="#ff8fd8" stroke="#fff1fb" stroke-width="1.2"/>
-  <path d="m1-24-7 3-5 11 6 5 5-3Z" fill="#ff8fd8" stroke="#fff1fb" stroke-width="1.2"/>
-  <path d="m-4-15 8-3 4 4-7 4Z" fill="#9fffe8"/><path d="m4-15-8-3-4 4 7 4Z" fill="#9fffe8"/>
-  <path d="M-10-11-3-5M-8-4-2-2" fill="none" stroke="#ffcf72"/><path d="M10-11 3-5M8-4 2-2" fill="none" stroke="#ffcf72"/>
-  <circle cx="-27" cy="-11" r="3.2" fill="#fff" stroke="#9fffe8" stroke-width="1.4"/>
-  <circle cx="27" cy="-11" r="3.2" fill="#fff" stroke="#9fffe8" stroke-width="1.4"/>
+  <title id="cannon-bloom-title">Bloomwake · emisor nacarado</title>
+  <desc id="cannon-bloom-desc">Pétalos envolventes conectan la montura con una recámara oscura y boca de energía.</desc>
+  <g id="cannon-bloom-left" stroke-linejoin="round">
+    <path id="cannon-bloom-left-mount" d="M-7-5-14-8-22-3-19 7-10 8-6 3Z" fill="#192e42" stroke="#59777e" stroke-width=".8"/>
+    <path id="cannon-bloom-left-shell" d="M-11 5Q-23 10-28 0L-31-9Q-31-15-27-18Q-22-18-19-11L-12-7Z" fill="#92bfb7" stroke="#203b49" stroke-width="1"/>
+    <path id="cannon-bloom-left-upper-petal" d="M-12-7Q-14-19-23-23L-29-20-28-15Q-22-12-20-4Z" fill="#eddcdd" stroke="#856d86" stroke-width=".8"/>
+    <path id="cannon-bloom-left-pearl-plane" d="M-14-9Q-17-19-23-23L-29-20-26-18Q-21-18-19-10Z" fill="#fff3e7"/>
+    <path id="cannon-bloom-left-lower-petal" d="M-12 4Q-23 12-29 1L-31-7-27-9Q-24 0-18-1Z" fill="#80d4c5" stroke="#345b71" stroke-width=".8"/>
+    <path id="cannon-bloom-left-lower-return" d="M-12 4Q-23 12-29 1L-27 0Q-23 6-16 2Z" fill="#467788"/>
+    <path id="cannon-bloom-left-chamber" d="M-14-5-23-13-28-11-25-4-18 1Z" fill="#14293c" stroke="#e6b887" stroke-width=".9"/>
+    <path id="cannon-bloom-left-channel" d="M-17-2-24-9-27-11" fill="none" stroke="#a1ffee" stroke-width="1.8" stroke-linecap="round"/>
+    <circle id="cannon-bloom-left-collar" cx="-27" cy="-11" r="4" fill="#19243b" stroke="#e9cba8" stroke-width="1"/>
+    <circle id="cannon-bloom-left-muzzle" cx="-27" cy="-11" r="2.2" fill="#9cffee"/>
+    <circle id="cannon-bloom-left-muzzle-core" cx="-27" cy="-11" r=".85" fill="#fff7ec"/>
+  </g>
+  <g id="cannon-bloom-right" stroke-linejoin="round">
+    <path id="cannon-bloom-right-mount" transform="scale(-1 1)" d="M-7-5-14-8-22-3-19 7-10 8-6 3Z" fill="#192e42" stroke="#59777e" stroke-width=".8"/>
+    <path id="cannon-bloom-right-shell" transform="scale(-1 1)" d="M-11 5Q-23 10-28 0L-31-9Q-31-15-27-18Q-22-18-19-11L-12-7Z" fill="#92bfb7" stroke="#203b49" stroke-width="1"/>
+    <path id="cannon-bloom-right-upper-petal" transform="scale(-1 1)" d="M-12-7Q-14-19-23-23L-29-20-28-15Q-22-12-20-4Z" fill="#eddcdd" stroke="#856d86" stroke-width=".8"/>
+    <path id="cannon-bloom-right-pearl-plane" transform="scale(-1 1)" d="M-14-9Q-17-19-23-23L-29-20-26-18Q-21-18-19-10Z" fill="#fff3e7"/>
+    <path id="cannon-bloom-right-lower-petal" transform="scale(-1 1)" d="M-12 4Q-23 12-29 1L-31-7-27-9Q-24 0-18-1Z" fill="#80d4c5" stroke="#345b71" stroke-width=".8"/>
+    <path id="cannon-bloom-right-lower-return" transform="scale(-1 1)" d="M-12 4Q-23 12-29 1L-27 0Q-23 6-16 2Z" fill="#467788"/>
+    <path id="cannon-bloom-right-chamber" transform="scale(-1 1)" d="M-14-5-23-13-28-11-25-4-18 1Z" fill="#14293c" stroke="#e6b887" stroke-width=".9"/>
+    <path id="cannon-bloom-right-channel" transform="scale(-1 1)" d="M-17-2-24-9-27-11" fill="none" stroke="#a1ffee" stroke-width="1.8" stroke-linecap="round"/>
+    <circle id="cannon-bloom-right-collar" cx="27" cy="-11" r="4" fill="#19243b" stroke="#e9cba8" stroke-width="1"/>
+    <circle id="cannon-bloom-right-muzzle" cx="27" cy="-11" r="2.2" fill="#9cffee"/>
+    <circle id="cannon-bloom-right-muzzle-core" cx="27" cy="-11" r=".85" fill="#fff7ec"/>
+  </g>
 </svg>

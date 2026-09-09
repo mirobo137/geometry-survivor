@@ -1,5 +1,23 @@
 # Geometry Survivor — estado y continuación
 
+## Revisión Bloomwake — cañón nacarado, 09-09-2026
+
+- Se rediseñaron los dos emisores y su master: montura lateral, dos pétalos
+  envolventes, recámara oscura, canal menta y boca integrada en `(±27,-11)`.
+  Antes la masa estaba cerca del centro y el círculo de salida quedaba separado.
+- 11 primitivas por lado / 22 master; mismos dos sprites y frame 64×64.
+  Conserva proyectil y PNG de estela existentes, selección, precio y retroceso.
+  Low tiene cero estelas (la nota anterior sobre ribbon en Low era incorrecta).
+- Guía para Luna y otros agentes en `src/assets/skins/cannons/bloom/README.md`,
+  enlazada desde `docs/design/ARTE_HIBRIDO.md`: masas, capas, reflejo, materiales,
+  slots, costes y procedimiento para futuras revisiones.
+- Comprobado: build local con 245 tests; bundles Poki/CrazyGames; Playwright
+  completo 19/19, salida 0 (2.1 min), incluido locker móvil. Galería 19 assets /
+  57 muestras validada; inspección de captura oscura y partida Manta/Bloomwake.
+  Sigue el aviso preexistente de chunk >500 kB. No se midió rendimiento físico.
+- Probar sin URL: Inicio → Skins → Cañones → Bloomwake → equipar → Jugar.
+  Pendiente valoración visual del usuario; no tratar el rediseño como aprobado.
+
 ## Encargo más reciente — 09-09-2026: Bloomwake, séptimo cañón híbrido
 
 - Añadido el paquete cosmético `bloom` / **Bloomwake** al stock: cañones

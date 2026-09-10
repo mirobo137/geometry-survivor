@@ -61,6 +61,7 @@ export class StartScreen {
   private readonly playButton: HTMLButtonElement;
   private readonly settingsToggle: HTMLButtonElement;
   private readonly settingsPanel: HTMLElement;
+  private readonly panel: HTMLElement;
   private readonly musicInput: HTMLInputElement;
   private readonly sfxInput: HTMLInputElement;
   private readonly mutedInput: HTMLInputElement;
@@ -133,6 +134,7 @@ export class StartScreen {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
     const settingsToggle = root.querySelector<HTMLButtonElement>('#start-settings-toggle');
     const settingsPanel = root.querySelector<HTMLElement>('#start-settings');
+    const panel = root.querySelector<HTMLElement>('.start-screen-panel');
     const musicInput = root.querySelector<HTMLInputElement>('#start-music');
     const sfxInput = root.querySelector<HTMLInputElement>('#start-sfx');
     const mutedInput = root.querySelector<HTMLInputElement>('#start-muted');
@@ -158,13 +160,14 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !settingsPanel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (!playButton || !settingsToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
     this.playButton = playButton;
     this.settingsToggle = settingsToggle;
     this.settingsPanel = settingsPanel;
+    this.panel = panel;
     this.musicInput = musicInput;
     this.sfxInput = sfxInput;
     this.mutedInput = mutedInput;
@@ -327,6 +330,7 @@ export class StartScreen {
     this.mainView.hidden = false;
     this.root.classList.remove('is-skins-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-skins-open');
+    this.panel.scrollTop = 0;
     this.cosmeticTarget = null;
     this.cosmeticRequestPending = false;
     this.cosmeticRequestToken += 1;
@@ -355,6 +359,7 @@ export class StartScreen {
     this.mainView.hidden = false;
     this.root.classList.remove('is-meta-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-meta-open');
+    this.panel.scrollTop = 0;
   }
 
   private selectSkinTab(tab: 'player' | 'cannon' | 'background'): void {
@@ -534,6 +539,15 @@ export class StartScreen {
   private setSettingsExpanded(expanded: boolean): void {
     this.settingsPanel.hidden = !expanded;
     this.settingsToggle.setAttribute('aria-expanded', String(expanded));
+    if (expanded) {
+      // The main panel is a bounded scroll surface. Returning from the locker
+      // or meta view can leave its scroll offset near the bottom; ensure the
+      // complete settings group, especially the SFX slider, is reachable
+      // after the grid recalculates its height.
+      requestAnimationFrame(() => {
+        if (!this.settingsPanel.hidden) this.sfxInput.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
+    }
   }
 
   private setSettings(settings: AudioSettings): void {

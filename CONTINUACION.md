@@ -2451,3 +2451,21 @@ RGBA8 base de 768×768 equivale a 2.25 MiB y no se actualiza por frame. Sigue
 pendiente la aprobación visual y el perfil en móvil físico: hay que comprobar
 contraste en una run real, lectura de láseres y coste en el dispositivo. Esta
 entrega no modifica simulación, daño, arena, balance ni puertas EX.
+
+## 85. Corrección de smoke — configuración del menú — 10-09-2026
+
+El smoke de GitHub Actions podía agotar sus 60 segundos al editar
+`#start-sfx` después de recorrer Skins y Meta. No era un valor inválido ni un
+fallo de audio: `.start-screen-panel` es una superficie con scroll y el
+cambio de vista podía conservar un offset o recalcular la rejilla mientras el
+segundo slider aún no era interactuable.
+
+`StartScreen` ahora devuelve el panel al scroll superior al cerrar Skins/Meta
+y, al abrir Configuración, desplaza el slider SFX a una zona interactuable en
+el siguiente frame. El smoke declara además explícitamente ese contrato con
+`scrollIntoViewIfNeeded()` y `toBeEditable()` antes de editar ambos sliders.
+
+Validado: typecheck; 75 archivos/253 tests; el caso específico 1/1; y smoke
+completo 20/20 en 2.3 minutos. No se modifican los valores de audio, la
+persistencia ni la simulación. El warning conocido del bundle principal mayor
+de 500 kB permanece sin relación con esta corrección.

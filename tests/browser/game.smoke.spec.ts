@@ -199,6 +199,8 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(collapsedPanelHeight).toBeLessThan(expandedPanelHeight - 40);
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
+  await page.locator('#start-sfx').scrollIntoViewIfNeeded();
+  await expect(page.locator('#start-sfx')).toBeEditable();
   await page.locator('#start-music').fill('45');
   await page.locator('#start-sfx').fill('65');
   await expect(page.locator('#start-music-value')).toHaveText('45%');

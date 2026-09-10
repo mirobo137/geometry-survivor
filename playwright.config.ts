@@ -15,7 +15,11 @@ export default defineConfig({
     : 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    trace: 'retain-on-failure',
+    // Recording every SVG-rich DOM snapshot penalizes the shared CI runner.
+    // Keep full diagnostics on retry, including retries that eventually pass.
+    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
     screenshot: 'only-on-failure'
   },
   projects: [

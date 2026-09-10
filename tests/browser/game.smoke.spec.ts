@@ -119,10 +119,10 @@ const openGame = async (page: Page): Promise<string[]> => {
   return failures;
 };
 
-test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
+const openFundedMenu = async (page: Page): Promise<string[]> => {
   const failures = captureRuntimeFailures(page);
-  // The animation contract is covered by home.checks. Keep this long
-  // interaction flow deterministic on the shared CI runner.
+  // The animation contract is covered by home.checks. Each focused menu
+  // scenario gets isolated storage and its own test timeout budget.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => {
     localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 20000 } }));
@@ -136,6 +136,11 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-play')).toBeVisible();
   await expect(page.locator('#start-level')).toHaveAttribute('disabled', '');
   await expect(page.locator('#start-skins')).toBeEnabled();
+  return failures;
+};
+
+test('compra y equipa skins desde el menu y conserva la seleccion', async ({ page }) => {
+  const failures = await openFundedMenu(page);
 
   await page.locator('#start-skins').click();
   await expect(page.locator('#start-main-view')).toBeHidden();
@@ -153,6 +158,15 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('.skin-card[data-skin="nova"] button').click();
   await expect(page.locator('.skin-card[data-skin="nova"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-skin-selected-name')).toHaveText('Nova Warden');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'violet', 'nova'] });
+  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(failures).toEqual([]);
+});
+
+test('compra y equipa canones desde el menu y conserva la seleccion', async ({ page }) => {
+  const failures = await openFundedMenu(page);
+  await page.locator('#start-skins').click();
   await page.locator('#start-cannon-skins-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
@@ -166,6 +180,15 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('.cannon-card[data-cannon="helix"] button').click();
   await expect(page.locator('.cannon-card[data-cannon="helix"]')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-cannon-selected-name')).toHaveText('Helix Lance');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(saved.cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'curve', 'helix'] });
+  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(failures).toEqual([]);
+});
+
+test('compra y equipa fondos desde el menu y conserva la seleccion', async ({ page }) => {
+  const failures = await openFundedMenu(page);
+  await page.locator('#start-skins').click();
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
@@ -181,6 +204,14 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('#start-skins-back').click();
   await expect(page.locator('#start-skins-view')).toBeHidden();
   await expect(page.locator('#start-main-view')).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(saved.backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'crystal-field'] });
+  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(failures).toEqual([]);
+});
+
+test('compra una mejora permanente y vuelve al menu', async ({ page }) => {
+  const failures = await openFundedMenu(page);
 
   await page.locator('#start-meta').click();
   await expect(page.locator('#start-meta-view')).toBeVisible();
@@ -189,6 +220,19 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('.meta-upgrade-card[data-upgrade="weapon_damage"] .meta-upgrade-level')).toHaveText('NIVEL 1/5');
   await page.locator('#start-meta-back').click();
   await expect(page.locator('#start-meta-view')).toBeHidden();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(saved.metaUpgrades.levels.weapon_damage).toBe(1);
+  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(failures).toEqual([]);
+});
+
+test('presenta el menu inicial y conserva la configuracion antes de jugar', async ({ page }) => {
+  const failures = await openFundedMenu(page);
+  // Keep the return-to-settings regression without repeating all purchases.
+  await page.locator('#start-skins').click();
+  await page.locator('#start-skins-back').click();
+  await page.locator('#start-meta').click();
+  await page.locator('#start-meta-back').click();
 
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
@@ -199,8 +243,6 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(collapsedPanelHeight).toBeLessThan(expandedPanelHeight - 40);
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
-  await page.locator('#start-sfx').scrollIntoViewIfNeeded();
-  await expect(page.locator('#start-sfx')).toBeEditable();
   await page.locator('#start-music').fill('45');
   await page.locator('#start-sfx').fill('65');
   await expect(page.locator('#start-music-value')).toHaveText('45%');
@@ -212,9 +254,6 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
   expect(saved).not.toBeNull();
   expect(JSON.parse(saved ?? '{}').settings).toMatchObject({ musicVolume: 0.45, sfxVolume: 0.65 });
-  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'violet', 'nova'] });
-  expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'curve', 'helix'] });
-  expect(JSON.parse(saved ?? '{}').backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'crystal-field'] });
   expect(failures).toEqual([]);
 });
 

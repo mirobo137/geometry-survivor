@@ -539,15 +539,6 @@ export class StartScreen {
   private setSettingsExpanded(expanded: boolean): void {
     this.settingsPanel.hidden = !expanded;
     this.settingsToggle.setAttribute('aria-expanded', String(expanded));
-    if (expanded) {
-      // The main panel is a bounded scroll surface. Returning from the locker
-      // or meta view can leave its scroll offset near the bottom; ensure the
-      // complete settings group, especially the SFX slider, is reachable
-      // after the grid recalculates its height.
-      requestAnimationFrame(() => {
-        if (!this.settingsPanel.hidden) this.sfxInput.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      });
-    }
   }
 
   private setSettings(settings: AudioSettings): void {

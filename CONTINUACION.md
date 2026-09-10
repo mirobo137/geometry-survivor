@@ -1,6 +1,6 @@
 # Geometry Survivor — estado y continuación
 
-> **Último handoff operativo (10-09-2026):** segundo fondo gratuito **Flor del Ocaso**, sección 84 y `docs/design/FONDOS_PREMIUM.md`. Nacre sigue disponible; arena vigente: Aster Loom, sección 82. La nueva entrega espera aprobación artística del usuario.
+> **Último handoff operativo (10-09-2026):** estabilización de CI, sección 86 y `docs/CI_DEPLOY.md`. La explicación de scroll en §85 quedó sin confirmar y su parche no resolvió CI. Fondos: Flor del Ocaso (§84) y Nacre; arena: Aster Loom (§82).
 
 ## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
 
@@ -2454,6 +2454,9 @@ entrega no modifica simulación, daño, arena, balance ni puertas EX.
 
 ## 85. Corrección de smoke — configuración del menú — 10-09-2026
 
+> Rectificación: el reporte posterior de Actions volvió a fallar. La hipótesis
+> de scroll expuesta abajo no fue demostrada por las pruebas locales; ver §86.
+
 El smoke de GitHub Actions podía agotar sus 60 segundos al editar
 `#start-sfx` después de recorrer Skins y Meta. No era un valor inválido ni un
 fallo de audio: `.start-screen-panel` es una superficie con scroll y el
@@ -2469,3 +2472,25 @@ Validado: typecheck; 75 archivos/253 tests; el caso específico 1/1; y smoke
 completo 20/20 en 2.3 minutos. No se modifican los valores de audio, la
 persistencia ni la simulación. El warning conocido del bundle principal mayor
 de 500 kB permanece sin relación con esta corrección.
+
+## 86. Estabilización de CI tras nuevo timeout — 10-09-2026
+
+El nuevo reporte muestra 19/20 casos correctos y timeout global de 60 s en
+el mismo recorrido, ahora esperando `scrollIntoViewIfNeeded`. §85 no demostró
+la causa: el pase local anterior tampoco demostraba que el parche funcionara
+en Ubuntu. Se retira el scroll asíncrono a SFX y la espera añadida al test.
+
+El recorrido monolítico se separó en cinco casos: skins, cañones, fondos,
+laboratorio y audio. Conservan las verificaciones de selección/save y añaden
+débito de cartera; audio mantiene el retorno desde Skins/Meta y jugar. Son
+24 casos browser, con el mismo límite de 60 s por caso y sin omitir puertas.
+CI usa `on-first-retry` para evitar grabar todas las trazas de DOM SVG;
+acciones limitadas a 15 s y navegación a 30 s. El workflow conserva reportes
+y trazas siete días incluso si un reintento pasa, con límites de job explícitos.
+
+Guía operativa: `docs/CI_DEPLOY.md`. Validado en Windows: tres builds,
+typecheck, 75 archivos/253 tests y `CI=true npx playwright test --reporter=line`:
+24/24 correctos, cero reintentos, 2.0 minutos, preview nuevo. Esta cifra no
+se compara directamente con los 9.2 minutos de Ubuntu: son entornos distintos.
+Falta ejecutar el commit en Actions y revisar duración/flaky en el reporte.
+No se hizo commit, push ni deploy. Continúa el warning conocido de 500 kB.

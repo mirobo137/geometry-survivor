@@ -119,13 +119,14 @@ export class BackgroundSelectPanel {
       const unlocked = this.state.unlocked.includes(background.id);
       const selected = this.state.selected === background.id;
       entry.card.classList.toggle('is-selected', selected);
-      entry.card.classList.toggle('is-locked', !unlocked);
+      const free = background.priceNova === 0;
+      entry.card.classList.toggle('is-locked', !unlocked && !free);
       entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
         ? `${selected ? 'Equipado: ' : 'Equipar: '}${background.name}`
-        : `Adquirir ${background.name} por ${formatNova(background.priceNova)} NOVA`);
-      if (selected || unlocked) {
-        entry.action.textContent = selected ? 'EQUIPADO' : 'EQUIPAR';
+        : free ? `Equipar gratis: ${background.name}` : `Adquirir ${background.name} por ${formatNova(background.priceNova)} NOVA`);
+      if (selected || unlocked || free) {
+        entry.action.textContent = selected ? 'EQUIPADO' : free && !unlocked ? 'GRATIS · EQUIPAR' : 'EQUIPAR';
       } else {
         const amount = this.wallet.nova >= background.priceNova
           ? formatNova(background.priceNova)

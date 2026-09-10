@@ -1,5 +1,7 @@
 # Geometry Survivor — estado y continuación
 
+> **Último handoff operativo (10-09-2026):** segundo fondo gratuito **Flor del Ocaso**, sección 84 y `docs/design/FONDOS_PREMIUM.md`. Nacre sigue disponible; arena vigente: Aster Loom, sección 82. La nueva entrega espera aprobación artística del usuario.
+
 ## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
 
 - El reporte móvil indicó que el segundo cañón y el círculo rosado no se leían.
@@ -2318,3 +2320,134 @@ de las diez runs y completar los metadatos/duracion de la evidencia de stress.
 DEC-05 (reroll con NOVA) continua pendiente de validacion y no se implementa.
 El siguiente paso de plan es cerrar esas evidencias de EX-03; despues podra
 abrirse EX-04/EX-05 para el primer incremento de arsenal, sin tocar aun EX-02c.
+
+## 81. ARENA-VISUAL - identidad premium adaptable - 09-09-2026
+
+Se transformo la zona de movimiento de un circulo semitransparente plano a una
+composicion de sistema: campo profundo, dos contornos internos, riel oscuro de
+contraste, riel azul de armadura, filo claro, segmentos de energia, ocho nodos
+perimetrales y un nucleo central detras del player. La resonancia conserva el
+lenguaje del borde y el shockwave ahora reutiliza los puntos de la frontera
+activa en vez de dibujar siempre un circulo.
+
+La implementacion es presentation-only en `ArenaView`. `ArenaModel`,
+`ArenaBoundary`, `PlayerModel` y `LaserHazard` siguen siendo la autoridad de
+forma, radio, clamp, alcance y dano. No se activaron triangulo, rectangulo,
+rombo ni otras formas jugables; el renderer deriva sus capas de
+`getArenaBoundaryPoints`, asi que puede acompanar nuevas formas cuando exista
+su contrato de gameplay.
+
+La guia neutral para Luna esta en `docs/design/ARENA_FX_PREMIUM.md` y queda
+enlazada desde `docs/design/ACTOS_Y_META.md`, `docs/design/EFECTOS_PREMIUM.md` y
+`docs/PLAN_EJECUCION.md`. Incluye receta de materiales, regla de subpaths
+independientes de PixiJS 8, pausa/reduced-motion, limites Low, procedimiento
+para agregar futuras fronteras convexas y checklist de validacion.
+
+Validacion: typecheck; build local; 73 archivos y 246 pruebas unitarias; smoke
+browser completo 19/19, con desktop 16/16 y mobile 3/3. La evidencia confirma
+runtime, resize, pausa, boss y portrait sin errores; la presencia premium y el
+contraste sostenido en Android fisico quedan pendientes de aprobacion humana.
+Sigue vigente el warning conocido del bundle mayor de 500 kB. El siguiente paso
+del plan no cambia: cerrar el reporte numerico `?baseline=1` de EX-03 y sus
+metadatos. EX-02c, nuevas formas de gameplay y Overdrive no se abren por esta
+entrega.
+
+## 82. ARENA-VISUAL — Aster Loom, segunda dirección artística — 09-09-2026
+
+El usuario pidió superar el acabado de la sección 81. La receta vigente es
+Aster Loom: bastidor de 24 placas separadas, 12 anclajes facetados, cavidades
+con luz mint, marcas latón y seis pulsos que recorren la frontera real.
+El campo deja ver el fondo cosmético y concentra su sombreado junto al borde;
+una roseta tenue ocupa el centro. La forma sigue siendo círculo/hexágono y
+la simulación conserva el control de radio, morph, clamp y láser.
+
+`ArenaFrameArt.ts` contiene materiales y geometría; `ArenaView.ts` coordina
+animación. Son 15 Graphics persistentes en todas las calidades, sin filtros,
+texturas ni dependencias nuevas. Riel de 144 puntos; geometría estable
+cacheada. Aviso y resonancia reutilizan paths; la onda se dispara una vez por
+expansión. Pausa detiene pulsos; reduced motion conserva señal y elimina
+desplazamiento decorativo.
+
+Luna debe leer `docs/design/ARENA_FX_PREMIUM.md`, ahora reescrito con la receta
+vigente. La referencia real está en `/docs/visual/arena-reference.html` con
+Vite activo. `node docs/visual/capture-arena.mjs` regenera capturas en
+`test-results/arena-reference/` y mide CPU del renderer aislado.
+
+Validación de esta revisión: build local, typecheck, 248 tests en 73 archivos;
+cinco smoke seleccionados de arte Low/High, resize, boss y touch correctos.
+Capturas desktop, portrait, fondo claro, transformación y boss Low revisadas,
+sin errores de página. CPU orientativa headless: p95 0.10 ms estable y 1.60 ms
+en morph; excluye GPU y juego completo. No acredita FPS en Android físico.
+Bundle principal 651.50 kB (180.13 kB gzip); sigue el warning de 500 kB.
+Poki/CrazyGames no se recompilaron en esta segunda revisión.
+
+Pendiente: aprobación visual del usuario y prueba de coste en móvil durante
+morph y expansión. La revisión no cierra EX-03 ni altera el orden del plan.
+
+## 83. Fondo premium gratuito — Órbita de Nacre — 09-09-2026
+
+Solicitud: un fondo nuevo sorprendente, legible y ligero; elegir PNG/SVG tras
+leer la guía híbrida y dejar una receta reproducible para Luna.
+
+Se eligió SVG editable para planeta anillado, polvo nacarado y luna distante.
+El navegador rasteriza una vez a 768×768; Pixi muestra un Sprite inmóvil en
+todas las calidades. La fuente de 5,503 bytes (1.70 kB gzip) se comparte con
+tarjeta y preview CSS. Imagen base RGBA8: 2.25 MiB, más overhead/canvas; no es
+una medición de memoria GPU ni FPS. Se ocultan las capas ambientales de otros
+fondos mientras Nacre está seleccionado y se omite su actualización.
+
+Probar: Skins → Fondos → Órbita de Nacre → GRATIS · EQUIPAR. No necesita NOVA
+ni anuncio, no cambia el fondo equipado hasta seleccionarlo. Se guarda el
+nuevo ID nacre-orbit mediante el schema existente sin migración adicional.
+
+Código: NacreBackgroundView y BackgroundView, SVG en assets/svg/backgrounds.
+Guía: docs/design/FONDOS_PREMIUM.md; ficha junto al asset. La guía híbrida y la
+referencia de familias enlazan la nueva receta. Para el siguiente fondo elegir
+masa/silueta propia y medio según material, conservar espacio de lectura,
+medir textura/overdraw y compartir fuente entre preview y runtime.
+
+Referencia real: /docs/visual/background-reference.html con Vite.
+Capturas: node docs/visual/capture-background.mjs. Genera locker gratuito,
+composición landscape/portrait y boss Low/High; oculta sólo el panel debug en
+capturas artísticas de combate. Se inspeccionaron sin errores de página/HTTP.
+
+Validado: typecheck; 74 archivos/251 tests; smoke completo 20/20; builds local,
+Poki y CrazyGames. Pruebas de carga tardía/fallida/destrucción, reutilización,
+cartera cero y persistencia. Bundle local principal 653.38 kB, 180.84 kB gzip;
+continúa el warning conocido de 500 kB. Falta aprobación visual y perfil en
+móvil físico; no trasladar los resultados anteriores del S25 a este fondo.
+La entrega no altera las puertas EX ni el balance.
+
+## 84. Segundo fondo premium gratuito — Flor del Ocaso — 10-09-2026
+
+Solicitud: probar con Luna la guía de Astra mediante otro fondo premium,
+gratuito, diferente y de bajo coste.
+
+Se creó **Vesper Bloom / Flor del Ocaso**: una flor astral facetada y
+asimétrica en la periferia superior derecha. Sus seis pétalos combinan planos
+violeta apagados, biseles nacarados, núcleo rosado localizado y trazos teal
+tenues. El centro queda oscuro y libre para player, enemigos, arena y láseres.
+Se descartaron una catedral de obeliscos y un eclipse circular por acercarse
+demasiado a Crystal Field y Nacre.
+
+El SVG `src/assets/svg/backgrounds/vesper-bloom.svg` se comparte con la tarjeta
+CSS y `VesperBackgroundView`. El cargador común está en
+`StaticSvgBackgroundView.ts`: una rasterización a 768×768, una textura
+cacheada, un Sprite estático y sin actualización en el ticker. Low, Medium y
+High conservan la misma identidad. El precio es cero; no cobra NOVA ni abre
+anuncio. ID: `vesper-bloom`.
+
+La guía de construcción para Luna está en `docs/design/FONDOS_PREMIUM.md` y
+la ficha junto al asset en `src/assets/svg/backgrounds/README.md`. La galería
+real `/docs/visual/background-reference.html` muestra Nacre y Vesper en
+landscape, portrait y con Aster Loom. El script `node
+docs/visual/capture-background.mjs` verifica referencia, locker, selección y
+combate.
+
+Validado: typecheck; 75 archivos/253 tests; smoke completo 20/20; builds local,
+Poki y CrazyGames; y captura de referencia sin errores de página/HTTP. El SVG
+fuente mide 5.143 bytes; en build produce 5.14 kB, 1.69 kB gzip; la textura
+RGBA8 base de 768×768 equivale a 2.25 MiB y no se actualiza por frame. Sigue
+pendiente la aprobación visual y el perfil en móvil físico: hay que comprobar
+contraste en una run real, lectura de láseres y coste en el dispositivo. Esta
+entrega no modifica simulación, daño, arena, balance ni puertas EX.

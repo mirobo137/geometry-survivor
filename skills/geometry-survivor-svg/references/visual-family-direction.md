@@ -145,6 +145,11 @@ una mejora SVG no autoriza tocar su daño ni volver homing un disparo cosmético
 
 ## Fondos: composición primero, partículas después
 
+Para nuevas familias, aplicar [Fondos premium](../../../../docs/design/FONDOS_PREMIUM.md).
+Órbita de Nacre y Flor del Ocaso establecen fuentes SVG compartidas con el
+locker, rasterizadas una vez a 768×768, y láminas estáticas con centro de baja
+interferencia. Reutilizar `StaticSvgBackgroundView` al crear otra familia.
+
 Consumidor real: `BackgroundView.ts`; colores y IDs: `BackgroundDefinitions.ts`.
 No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
 
@@ -166,8 +171,8 @@ No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
   actualización de movimiento. Medium: 24 estrellas/10 partículas; High: 34/18.
 - La variación de tema cambia colocación y motivos, no sólo un color. Reutilizar
   sprites al cambiar tema y resize; no crear nuevos recursos por frame.
-- Arena mantiene borde y prioridad; opacidad decorativa actual 0.84 para dejar
-  pasar parte del ambiente. No reducirla más sin comprobar todos los telegraphs.
+- Arena mantiene borde y prioridad. Aster Loom usa un campo más transparente;
+  consultar ARENA_FX_PREMIUM.md y verificar todos los telegraphs sobre el fondo.
 - La tarjeta CSS del menú es indicativa de tema, NO una captura exacta. La lámina
   de desarrollo usa el compositor real para aprobación y comparación Low/High.
 

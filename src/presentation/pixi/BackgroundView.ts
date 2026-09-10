@@ -9,6 +9,8 @@ import {
 } from '../../content/visual/BackgroundDefinitions';
 import type { FxQuality } from '../../content/visual/VisualTokens';
 import { createTexture } from './TextureFactory';
+import { NacreBackgroundView } from './NacreBackgroundView';
+import { VesperBackgroundView } from './VesperBackgroundView';
 
 const STAR_POINTS = [
   [0.08, 0.16, 1.2], [0.17, 0.74, 1.6], [0.25, 0.29, 0.9], [0.32, 0.86, 1.3],
@@ -83,6 +85,8 @@ const PATTERN_BEHAVIOR: Readonly<Record<BackgroundPattern, AmbientBehavior>> = {
   crystal: 'rotate'
 };
 
+const isStaticSvgBackground = (id: BackgroundId): boolean => id === 'nacre-orbit' || id === 'vesper-bloom';
+
 /**
  * Atmospheric background with animated layers. The static base is redrawn only
  * on theme/viewport changes. Stars twinkle, nebulae breathe and ambient
@@ -94,6 +98,8 @@ export class BackgroundView {
   private readonly starLayer = new Container();
   private readonly nebulaLayer = new Container();
   private readonly ambientLayer = new Container();
+  private readonly nacre = new NacreBackgroundView();
+  private readonly vesper = new VesperBackgroundView();
   private readonly quality: FxQuality;
   private readonly renderer: Renderer;
   private width = LOGICAL_WIDTH;
@@ -113,6 +119,8 @@ export class BackgroundView {
     this.quality = quality;
     this.root.eventMode = 'none';
     this.root.addChild(this.staticArt, this.nebulaLayer, this.starLayer, this.ambientLayer);
+    this.root.addChild(this.nacre.root);
+    this.root.addChild(this.vesper.root);
     this.ensureTextures();
     this.setBackground(backgroundId);
   }
@@ -131,7 +139,7 @@ export class BackgroundView {
   }
 
   public setBackground(backgroundId: BackgroundId): void {
-    if (this._backgroundId === backgroundId && this.stars.length > 0) return;
+    if (this._backgroundId === backgroundId && (this.stars.length > 0 || isStaticSvgBackground(backgroundId))) return;
     this._backgroundId = backgroundId;
     this.rebuild();
   }
@@ -145,7 +153,7 @@ export class BackgroundView {
   /** Advances all animated layers. Call every frame with presentation delta. */
   public update(deltaSeconds: number, animationSeconds: number): void {
     // Low retains the composition, but no ambient motion or twinkle work.
-    if (this.quality === 'low') return;
+    if (this.quality === 'low' || isStaticSvgBackground(this._backgroundId)) return;
     const delta = Math.min(Math.max(deltaSeconds, 0), 0.1);
 
     // Parallax offset based on player position
@@ -196,6 +204,13 @@ export class BackgroundView {
   private rebuild(): void {
     const definition = getBackgroundDefinition(this._backgroundId);
     this.renderStaticBase(definition);
+    const isNacre = this._backgroundId === 'nacre-orbit';
+    const isVesper = this._backgroundId === 'vesper-bloom';
+    const isStaticSvg = isNacre || isVesper;
+    this.nacre.render(isNacre, this.width, this.height);
+    this.vesper.render(isVesper, this.width, this.height);
+    this.nebulaLayer.visible = this.starLayer.visible = this.ambientLayer.visible = !isStaticSvg;
+    if (isStaticSvg) return;
     this.rebuildStars(definition);
     this.rebuildNebulae(definition);
     this.rebuildAmbientParticles(definition);

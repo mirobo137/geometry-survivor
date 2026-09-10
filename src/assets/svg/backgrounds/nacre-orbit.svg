@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="nacre-title nacre-desc">
+  <title id="nacre-title">Órbita de Nacre</title>
+  <desc id="nacre-desc">Planeta de penumbra con anillos de polvo nacarado, una luna distante y un vacío central reservado al combate.</desc>
+  <defs>
+    <radialGradient id="nacre-space" cx="24%" cy="22%" r="83%">
+      <stop stop-color="#162936"/><stop offset=".44" stop-color="#0b1424"/><stop offset="1" stop-color="#070b17"/>
+    </radialGradient>
+    <radialGradient id="nacre-haze" cx="32%" cy="27%" r="65%">
+      <stop stop-color="#46646b" stop-opacity=".22"/><stop offset=".52" stop-color="#28394f" stop-opacity=".08"/><stop offset="1" stop-color="#080e1c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nacre-globe" cx="27%" cy="20%" r="80%">
+      <stop stop-color="#354c53"/><stop offset=".28" stop-color="#273b45"/><stop offset=".62" stop-color="#15232f"/><stop offset=".84" stop-color="#0a1320"/><stop offset="1" stop-color="#080f1b"/>
+    </radialGradient>
+    <linearGradient id="nacre-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#385159" stop-opacity=".18"/><stop offset=".3" stop-color="#78897e" stop-opacity=".65"/><stop offset=".6" stop-color="#425e65" stop-opacity=".38"/><stop offset="1" stop-color="#26384b" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="nacre-limb" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8eaaa1" stop-opacity=".65"/><stop offset=".4" stop-color="#496b71" stop-opacity=".3"/><stop offset="1" stop-color="#172935" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="nacre-moon" cx="77%" cy="76%" r="80%">
+      <stop stop-color="#354152"/><stop offset=".48" stop-color="#202d3e"/><stop offset=".77" stop-color="#101928"/><stop offset="1" stop-color="#090f1c"/>
+    </radialGradient>
+    <radialGradient id="nacre-quiet">
+      <stop stop-color="#070c17" stop-opacity=".32"/><stop offset=".56" stop-color="#070c17" stop-opacity=".22"/><stop offset="1" stop-color="#070c17" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#nacre-space)" d="M0 0H768V768H0Z"/>
+  <ellipse cx="220" cy="194" rx="360" ry="300" fill="url(#nacre-haze)"/>
+  <g fill="none" stroke="#3b5064" opacity=".12">
+    <path d="M-60 465C38 228 159 138 416 52S698-17 838-88" stroke-width="22"/>
+    <path d="M-66 464C59 214 179 130 431 42S709-20 833-93" stroke-width="7"/>
+    <path d="M548 848C516 715 627 579 825 514" stroke-width="32"/>
+  </g>
+  <g transform="rotate(-28 214 210)" fill="none" stroke="url(#nacre-ring)">
+    <ellipse cx="214" cy="210" rx="223" ry="53" stroke-width="13" opacity=".45"/>
+    <ellipse cx="214" cy="210" rx="214" ry="49" stroke-width="2"/>
+    <ellipse cx="214" cy="210" rx="202" ry="44" stroke-width="6" opacity=".5"/>
+    <ellipse cx="214" cy="210" rx="190" ry="39" stroke-width="1.4"/>
+    <ellipse cx="214" cy="210" rx="178" ry="34" stroke-width="3" opacity=".35"/>
+  </g>
+  <circle cx="214" cy="210" r="131" fill="url(#nacre-globe)"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M88 176A131 131 0 0 1 253 85" stroke="url(#nacre-limb)" stroke-width="3"/>
+    <path d="M94 157C120 183 188 168 244 186S310 224 340 213" stroke="#526b6e" stroke-width="11" opacity=".065"/>
+    <path d="M109 134C155 163 185 139 220 157S266 173 305 161" stroke="#65817e" stroke-width="3" opacity=".08"/>
+    <path d="M85 201C117 185 152 222 197 212S265 222 293 242" stroke="#65777b" stroke-width="7" opacity=".06"/>
+    <path d="M104 235C143 216 162 254 204 249S256 274 290 272" stroke="#557076" stroke-width="5" opacity=".06"/>
+    <path d="M121 286C158 270 182 302 220 300" stroke="#405663" stroke-width="6" opacity=".08"/>
+  </g>
+  <g transform="rotate(-28 214 210)" fill="none" stroke="url(#nacre-ring)">
+    <path d="M-9 210A223 53 0 0 0 437 210" stroke-width="13" opacity=".45"/>
+    <path d="M0 210A214 49 0 0 0 428 210" stroke-width="2"/>
+    <path d="M12 210A202 44 0 0 0 416 210" stroke-width="6" opacity=".5"/>
+    <path d="M24 210A190 39 0 0 0 404 210" stroke-width="1.4"/>
+    <path d="M36 210A178 34 0 0 0 392 210" stroke-width="3" opacity=".35"/>
+  </g>
+  <g opacity=".65">
+    <circle cx="644" cy="630" r="89" fill="url(#nacre-moon)"/>
+    <path d="M730 650A89 89 0 0 1 658 718" fill="none" stroke="#627584" stroke-width="1.3" opacity=".35"/>
+    <path d="M679 670l13-7 10 8-5 10-12 2zM650 695l10-4 7 7-9 8zM698 631l10-8 9 10-4 12-11-1z" fill="#111b2a" opacity=".65"/>
+    <path d="M608 754L574 735 558 718M713 539l20 13 29 5" fill="none" stroke="#293a50" stroke-width="2"/>
+  </g>
+  <g fill="#5a7281" opacity=".3">
+    <path d="M87 569l-11 8 6 7 12-4zM123 616l-7 11 12 4 3-10zM528 91l-9 5 6 9 10-4zM571 124l-5 5 4 7 9-4z"/>
+  </g>
+  <g fill="#87959d" opacity=".27">
+    <circle cx="72" cy="71" r=".8"/><circle cx="407" cy="85" r="1"/><circle cx="497" cy="176" r=".7"/>
+    <circle cx="675" cy="98" r="1.1"/><circle cx="581" cy="299" r=".65"/><circle cx="698" cy="402" r=".8"/>
+    <circle cx="70" cy="403" r="1"/><circle cx="134" cy="492" r=".7"/><circle cx="37" cy="646" r="1.1"/>
+    <circle cx="198" cy="709" r=".8"/><circle cx="362" cy="656" r=".65"/><circle cx="445" cy="745" r="1"/>
+    <circle cx="731" cy="311" r=".6"/><circle cx="438" cy="25" r=".8"/><circle cx="549" cy="491" r=".7"/>
+    <circle cx="286" cy="420" r=".5"/><circle cx="469" cy="398" r=".5"/>
+  </g>
+  <ellipse cx="389" cy="398" rx="264" ry="276" fill="url(#nacre-quiet)"/>
+</svg>

@@ -28,6 +28,14 @@ class MemoryStorage implements StorageAdapter {
 }
 
 describe('LocalSaveStore', () => {
+  it('round-trips the free Nacre background without changing wallet or other unlocks', () => {
+    const store = new LocalSaveStore(new MemoryStorage());
+    const defaults = createDefaultSaveData();
+    store.save({ ...defaults, backgrounds: { selected: 'nacre-orbit', unlocked: ['deep-space', 'nacre-orbit'] } });
+    expect(store.load().backgrounds.selected).toBe('nacre-orbit');
+    expect(store.load().wallet.nova).toBe(0);
+    expect(store.load().skins).toEqual(defaults.skins);
+  });
   it('returns safe defaults and round-trips a bounded versioned payload', () => {
     const storage = new MemoryStorage();
     const store = new LocalSaveStore(storage);

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { BACKGROUND_DEFINITIONS, getBackgroundDefinition, isBackgroundId } from './BackgroundDefinitions';
 
 describe('BackgroundDefinitions', () => {
-  it('keeps four bounded, presentation-only atmosphere presets', () => {
-    expect(BACKGROUND_DEFINITIONS).toHaveLength(4);
-    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(4);
+  it('keeps five bounded, presentation-only atmosphere presets', () => {
+    expect(BACKGROUND_DEFINITIONS).toHaveLength(6);
+    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(6);
     for (const definition of BACKGROUND_DEFINITIONS) {
       expect(definition.name.length).toBeGreaterThan(0);
       expect(definition.tokens.pattern).toMatch(/^(constellation|nebula|solar|crystal)$/);
@@ -13,5 +13,7 @@ describe('BackgroundDefinitions', () => {
     expect(getBackgroundDefinition('deep-space').id).toBe('deep-space');
     expect(isBackgroundId('crystal-field')).toBe(true);
     expect(isBackgroundId('unknown')).toBe(false);
+    expect(getBackgroundDefinition('nacre-orbit').priceNova).toBe(0);
+    expect(getBackgroundDefinition('vesper-bloom').priceNova).toBe(0);
   });
 });

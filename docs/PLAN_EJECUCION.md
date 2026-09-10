@@ -49,6 +49,8 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK, EX-02c pendiente diferida |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
+| ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |
+| BACKGROUND-ATMOSPHERE | — | Nacre + Vesper: fondos premium gratuitos, fuentes compartidas y texturas estáticas | AUTOMÁTICO OK; aprobación humana pendiente |
 | ACT-I-LASER-VISUAL | — | detonación premium por capas y barrido legible | AUTOMÁTICO OK; prueba humana pendiente |
 | ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
 | BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
@@ -304,6 +306,32 @@ rectángulo u otras formas por inferencia.
 
 El prototipo no implementa `ActDefinition`, save, selección de actos ni
 Overdrive, y no reemplaza las puertas EX-03–EX-06.
+
+### ARENA-VISUAL — identidad premium de la zona de movimiento
+
+Fondos complementarios entregados: **Órbita de Nacre** y **Flor del Ocaso**,
+gratuitos en el locker.
+Guía de construcción en [FONDOS_PREMIUM.md](design/FONDOS_PREMIUM.md).
+SVG rasterizado una vez; una lámina estática y centro de bajo contraste.
+Validación de la familia de fondos: 253 tests, 20 smoke y los tres builds
+correctos; aprobación visual y perfil en teléfono físico pendientes. Vesper
+Bloom añade un segundo fondo gratuito: 5.143 bytes de SVG fuente, 5.14 kB en
+build y 1.69 kB gzip; su textura RGBA8 de 768×768 se rasteriza una vez y no
+consume trabajo por frame.
+
+La segunda revisión **Aster Loom** sustituye el acabado inicial: 24 placas,
+12 anclajes facetados, ranuras luminosas, seis pulsos que siguen el borde,
+campo translúcido y roseta central discreta. `ArenaFrameArt` construye materiales;
+`ArenaView` coordina fases y animación. Todo consulta `ArenaBoundary`, con riel
+de 144 puntos y cache de geometría estable. La ficha y guía para futuras figuras están en
+[`ARENA_FX_PREMIUM.md`](design/ARENA_FX_PREMIUM.md).
+
+**Evidencia de esta revisión (09-09-2026):** 73 archivos y 248 pruebas unitarias,
+typecheck y build local; cinco smoke seleccionados de arte Low/High, resize,
+boss y touch. Capturas de renderer real en desktop/portrait, fondo claro,
+transformación y boss Low inspeccionadas, sin errores runtime. La aprobación del
+acabado visual en Android/desktop sigue siendo humana; no confundir la
+validación técnica con aprobación artística.
 
 ### ACT-I-LASER-VISUAL — detonación premium por capas
 

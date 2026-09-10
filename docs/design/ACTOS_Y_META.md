@@ -92,11 +92,16 @@ identidad propia y no reducirse a un rombo plano recoloreado.
 
 La implementación está deliberadamente acotada a `ArenaShape`,
 `ArenaBoundary`, `ArenaModel`, `PlayerModel`, `LaserHazard` y sus vistas. El
-render usa una polilínea de 36 puntos y redibuja sólo cuando cambia el estado
+render usa una polilínea de 144 puntos y redibuja sólo cuando cambia el estado
 geométrico; no crea SVG, partículas ni objetos por enemigo o por frame. El
 boss conserva por ahora sus patrones existentes, de modo que este slice mide
 la diferenciación de la arena y la presión de los láseres sin mezclar todavía
 un rediseño completo de encuentro.
+
+La identidad visual premium de la arena está documentada en
+[ARENA_FX_PREMIUM.md](ARENA_FX_PREMIUM.md). La receta usa el mismo perímetro
+para campo, rieles, nodos, resonancia y shockwave; queda preparada para nuevas
+formas sin activar gameplay futuro desde el renderer.
 
 Este prototipo no crea aún `ActDefinition`, save nuevo, selección de actos,
 otros polígonos ni Overdrive. La validación automática está cubierta; la

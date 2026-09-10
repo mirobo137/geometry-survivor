@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="vesper-title vesper-desc">
+  <title id="vesper-title">Flor del Ocaso</title>
+  <desc id="vesper-desc">Una flor astral asimétrica de pétalos oscuros y luz violeta en la periferia, con el centro despejado para el combate.</desc>
+  <defs>
+    <radialGradient id="vesper-space" cx="76%" cy="18%" r="92%">
+      <stop stop-color="#24213b"/><stop offset=".35" stop-color="#11192b"/><stop offset="1" stop-color="#070b17"/>
+    </radialGradient>
+    <radialGradient id="vesper-halo" cx="70%" cy="20%" r="64%">
+      <stop stop-color="#6d527b" stop-opacity=".16"/><stop offset=".48" stop-color="#35435d" stop-opacity=".055"/><stop offset="1" stop-color="#080d1c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vesper-petal-a" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#151a30"/><stop offset=".46" stop-color="#302b4d"/><stop offset=".74" stop-color="#65516f"/><stop offset="1" stop-color="#22263e"/>
+    </linearGradient>
+    <linearGradient id="vesper-petal-b" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0d1427"/><stop offset=".43" stop-color="#242a48"/><stop offset=".75" stop-color="#4e536d"/><stop offset="1" stop-color="#171d35"/>
+    </linearGradient>
+    <linearGradient id="vesper-edge" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#4d9b9e" stop-opacity=".12"/><stop offset=".52" stop-color="#a18ab0" stop-opacity=".52"/><stop offset="1" stop-color="#d6c1cf" stop-opacity=".16"/>
+    </linearGradient>
+    <radialGradient id="vesper-core" cx="35%" cy="30%" r="72%">
+      <stop stop-color="#f1d2c1" stop-opacity=".75"/><stop offset=".18" stop-color="#c58aad" stop-opacity=".68"/><stop offset=".52" stop-color="#604f83" stop-opacity=".28"/><stop offset="1" stop-color="#1a203d" stop-opacity=".04"/>
+    </radialGradient>
+    <radialGradient id="vesper-quiet">
+      <stop stop-color="#060b16" stop-opacity=".36"/><stop offset=".56" stop-color="#060b16" stop-opacity=".19"/><stop offset="1" stop-color="#060b16" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#vesper-space)" d="M0 0H768V768H0Z"/>
+  <ellipse cx="548" cy="160" rx="330" ry="300" fill="url(#vesper-halo)"/>
+  <g transform="translate(579 156)">
+    <path d="M-12 16C-119-16-206-93-232-216c89 16 190 91 245 197z" fill="url(#vesper-petal-a)" opacity=".82"/>
+    <path d="M2 13C-24-97-3-211 57-292c57 84 48 209-31 302z" fill="url(#vesper-petal-b)" opacity=".92"/>
+    <path d="M9 19C88-54 188-88 303-66c-42 77-169 127-287 107z" fill="url(#vesper-petal-a)" opacity=".86"/>
+    <path d="M12 29C121 19 217 61 286 151c-95 28-208-13-293-101z" fill="url(#vesper-petal-b)" opacity=".84"/>
+    <path d="M-5 31C50 118 57 216 0 314c-74-66-85-185-42-298z" fill="url(#vesper-petal-a)" opacity=".76"/>
+    <path d="M-18 21C-118 81-199 98-292 62c47-70 161-94 275-63z" fill="url(#vesper-petal-b)" opacity=".68"/>
+    <g fill="none" stroke="url(#vesper-edge)" stroke-linecap="round">
+      <path d="M-7 11C-105-23-180-90-215-185" stroke-width="3"/>
+      <path d="M2 9C-19-90 5-192 52-267" stroke-width="2.4"/>
+      <path d="M16 19C105-47 196-70 276-58" stroke-width="2.7"/>
+      <path d="M15 29C116 28 210 70 265 139" stroke-width="2"/>
+      <path d="M-3 38C38 125 38 217 1 288" stroke-width="2.3"/>
+      <path d="M-24 22C-119 72-202 78-269 54" stroke-width="1.8"/>
+    </g>
+    <g fill="none" stroke="#c8a9c1" opacity=".17" stroke-linecap="round">
+      <path d="M-12 14L-188-145" stroke-width="1"/><path d="M4 11L38-238" stroke-width="1"/>
+      <path d="M19 21L235-45" stroke-width="1"/><path d="M18 34L235 118" stroke-width="1"/>
+      <path d="M-3 39L1 254" stroke-width="1"/><path d="M-28 22L-238 51" stroke-width="1"/>
+    </g>
+    <circle r="66" fill="#090f20" opacity=".78"/>
+    <circle r="47" fill="url(#vesper-core)" opacity=".56"/>
+    <circle r="24" fill="#13182f" opacity=".86"/>
+    <path d="M-11 0C-5-15 12-18 20-5c-2 15-11 26-25 25C-14 13-17 7-11 0z" fill="#e4bdcb" opacity=".55"/>
+    <circle cx="0" cy="1" r="5" fill="#f2e4d4" opacity=".78"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <path d="M388 44C500 10 646 30 817 155" stroke="#8b79a1" stroke-width="2" opacity=".12"/>
+    <path d="M403 70C520 34 653 58 797 164" stroke="#79aaa5" stroke-width="1" opacity=".11"/>
+    <path d="M-30 656C56 596 131 579 224 607" stroke="#536b83" stroke-width="26" opacity=".05"/>
+  </g>
+  <g fill="#9b8aac" opacity=".3">
+    <path d="M91 112l8-18 14 8-5 18zM154 184l12-12 12 9-6 14zM94 641l-8-13 12-8 10 10zM184 687l6-16 13 4-3 14z"/>
+    <path d="M692 390l-10-11 11-9 12 8-4 13zM625 472l8-11 11 6-2 13zM735 566l-8-12 11-8 9 10z"/>
+  </g>
+  <g fill="#c6b4c6" opacity=".25">
+    <circle cx="58" cy="272" r=".8"/><circle cx="156" cy="366" r=".7"/><circle cx="244" cy="82" r=".8"/>
+    <circle cx="342" cy="143" r=".6"/><circle cx="447" cy="440" r=".75"/><circle cx="654" cy="694" r=".9"/>
+    <circle cx="720" cy="274" r=".65"/><circle cx="505" cy="722" r=".7"/><circle cx="34" cy="505" r=".8"/>
+  </g>
+  <ellipse cx="384" cy="394" rx="270" ry="284" fill="url(#vesper-quiet)"/>
+</svg>

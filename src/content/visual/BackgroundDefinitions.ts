@@ -1,4 +1,4 @@
-export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field';
+export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom';
 export type BackgroundPattern = 'constellation' | 'nebula' | 'solar' | 'crystal';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -24,6 +24,28 @@ export interface BackgroundDefinition {
 
 /** Presentation-only themes. They never alter arena, enemies, damage or difficulty. */
 export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
+  {
+    id: 'nacre-orbit',
+    name: 'Órbita de Nacre',
+    subtitle: 'Silencio entre mundos',
+    description: 'Un gigante anillado en penumbra y una luna distante. Gratis para probar.',
+    rarity: 'PREMIUM · GRATIS',
+    tier: 'epic',
+    priceNova: 0,
+    acquisition: 'nova',
+    tokens: { base: 0x080e1c, glow: 0x243745, accent: 0x718b90, secondary: 0x899188, pattern: 'constellation' }
+  },
+  {
+    id: 'vesper-bloom',
+    name: 'Flor del Ocaso',
+    subtitle: 'Materia que despierta',
+    description: 'Una flor astral facetada en la periferia. Gratis para probar.',
+    rarity: 'PREMIUM · GRATIS',
+    tier: 'epic',
+    priceNova: 0,
+    acquisition: 'nova',
+    tokens: { base: 0x080b17, glow: 0x3d315a, accent: 0x9b8aac, secondary: 0x79aaa5, pattern: 'crystal' }
+  },
   {
     id: 'deep-space',
     name: 'Vacío profundo',
@@ -71,9 +93,9 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
 ] as const;
 
 export const isBackgroundId = (value: unknown): value is BackgroundId => (
-  value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field'
+  value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field' || value === 'nacre-orbit' || value === 'vesper-bloom'
 );
 
 export const getBackgroundDefinition = (id: BackgroundId): BackgroundDefinition => (
-  BACKGROUND_DEFINITIONS.find((definition) => definition.id === id) ?? BACKGROUND_DEFINITIONS[0]
+  BACKGROUND_DEFINITIONS.find((definition) => definition.id === id) ?? BACKGROUND_DEFINITIONS.find((definition) => definition.id === 'deep-space')!
 );

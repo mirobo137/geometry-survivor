@@ -1342,6 +1342,36 @@ body {
   background-size: auto, auto, auto, auto;
 }
 
+[data-background="nacre-orbit"] {
+  --background-accent: #9db7b3;
+  --background-line: rgba(135, 163, 163, 0.4);
+  background-image: url('./assets/svg/backgrounds/nacre-orbit.svg');
+  background-size: cover;
+  background-position: center;
+}
+
+[data-background="vesper-bloom"] {
+  --background-accent: #c6b4c6;
+  --background-line: rgba(155, 138, 172, 0.42);
+  background-image: url('./assets/svg/backgrounds/vesper-bloom.svg');
+  background-size: cover;
+  background-position: center;
+}
+
+.background-preview[data-background="nacre-orbit"]::before,
+.background-preview[data-background="nacre-orbit"]::after,
+.background-card-art[data-background="nacre-orbit"]::before,
+.background-card-art[data-background="nacre-orbit"]::after {
+  content: none;
+}
+
+.background-preview[data-background="vesper-bloom"]::before,
+.background-preview[data-background="vesper-bloom"]::after,
+.background-card-art[data-background="vesper-bloom"]::before,
+.background-card-art[data-background="vesper-bloom"]::after {
+  content: none;
+}
+
 .background-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

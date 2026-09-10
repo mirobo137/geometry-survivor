@@ -5,6 +5,10 @@ Referencia implementada: **Solar Rail**, el láser de arena de
 de rendering y mobile-performance. Para assets vectoriales, aplicar además
 la guía SVG; un efecto procedural no necesita convertirse en SVG.
 
+La receta equivalente para la frontera y el espacio habitable vive en
+[ARENA_FX_PREMIUM.md](ARENA_FX_PREMIUM.md); no reutilizar Solar Rail como
+decoración de arena ni convertir la frontera en un hazard falso.
+
 Esta entrega reemplaza el láser anterior por solicitud del usuario. No está
 aprobada visualmente por él todavía. La aprobación de skins y cañones no se
 extiende automáticamente a nuevos efectos.

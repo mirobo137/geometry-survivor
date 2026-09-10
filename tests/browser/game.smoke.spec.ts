@@ -170,7 +170,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
   await expect(page.locator('#start-background-preview')).toBeVisible();
-  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(4);
+  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(6);
   await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-locked/);
   await page.locator('.background-card[data-background="ion-storm"] button').click();
   await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-selected/);
@@ -213,6 +213,39 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'violet', 'nova'] });
   expect(JSON.parse(saved ?? '{}').cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'curve', 'helix'] });
   expect(JSON.parse(saved ?? '{}').backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'crystal-field'] });
+  expect(failures).toEqual([]);
+});
+
+test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al recargar', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/');
+  await page.locator('#start-skins').click();
+  await page.locator('#start-backgrounds-tab').click();
+  const card = page.locator('.background-card[data-background="nacre-orbit"]');
+  await expect(card).not.toHaveClass(/is-locked/);
+  await expect(card).toContainText('GRATIS');
+  await card.locator('button').click();
+  await expect(card).toHaveClass(/is-selected/);
+  await page.reload();
+  await page.locator('#start-skins').click();
+  await page.locator('#start-backgrounds-tab').click();
+  await expect(page.locator('#start-background-preview')).toHaveAttribute('data-background', 'nacre-orbit');
+  const vesper = page.locator('.background-card[data-background="vesper-bloom"]');
+  await expect(vesper).not.toHaveClass(/is-locked/);
+  await expect(vesper).toContainText('GRATIS');
+  await vesper.locator('button').click();
+  await expect(vesper).toHaveClass(/is-selected/);
+  await page.reload();
+  await page.locator('#start-skins').click();
+  await page.locator('#start-backgrounds-tab').click();
+  await expect(page.locator('#start-background-preview')).toHaveAttribute('data-background', 'vesper-bloom');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(saved.wallet.nova).toBe(0);
+  expect(saved.backgrounds.selected).toBe('vesper-bloom');
+  expect(saved.backgrounds.unlocked).toEqual(['deep-space', 'nacre-orbit', 'vesper-bloom']);
+  await page.locator('#start-skins-back').click();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
   expect(failures).toEqual([]);
 });
 

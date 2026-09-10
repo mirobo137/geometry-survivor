@@ -104,7 +104,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
-  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(4);
+  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(6);
   const backgroundScrollMetrics = await page.locator('#start-background-cards').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

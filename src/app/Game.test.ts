@@ -453,4 +453,18 @@ describe('Game', () => {
     expect(runtime.baseline.records).toHaveLength(2);
     expect(save).toHaveBeenCalledTimes(2);
   });
+
+  it('applies a direct-entry calibration once at run start', () => {
+    const game = new Game({ ...createOptions(), calibrationId: 'orbit' });
+    const runtime = game as unknown as {
+      activateRun: (unlockAudio: boolean) => void;
+      upgradeApplier: { getStacks: (upgradeId: 'orbit_blade' | 'orbit_reach' | 'reinforced_core') => number };
+    };
+
+    runtime.activateRun(false);
+
+    expect(runtime.upgradeApplier.getStacks('orbit_blade')).toBe(1);
+    expect(runtime.upgradeApplier.getStacks('orbit_reach')).toBe(1);
+    expect(runtime.upgradeApplier.getStacks('reinforced_core')).toBe(1);
+  });
 });

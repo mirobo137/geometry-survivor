@@ -73,6 +73,11 @@ usa progreso de simulación: no `Date.now()` ni `performance.now()`.
 - Cada trazo independiente comienza con `beginPath()` y `moveTo()`.
   Los polígonos se cierran explícitamente. Nunca heredar el punto del trazo
   anterior: es la regla que evita diagonales hacia el origen.
+- Si una capa hija rota por dirección de disparo mientras el padre rota por
+  movimiento, convertir el ancla mundial usando la **rotación mundial efectiva
+  de la capa hija**, no sólo la del padre. De otro modo el origen se rota dos
+  veces y el flash puede quedar detrás del proyectil. Probar casco y disparo
+  en direcciones distintas, incluidos ambos cañones.
 - No generalizar un motor de FX para un solo consumidor. Usar las vistas y
   la calidad existentes; presentación no decide cadencias ni daño.
 

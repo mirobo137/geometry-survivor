@@ -13,6 +13,7 @@ import { isBackgroundId, type BackgroundId } from './content/visual/BackgroundDe
 import { LocalPlatform } from './platform/local/LocalPlatform';
 import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
+import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -88,7 +89,8 @@ const bootstrap = async (): Promise<void> => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const spike = searchParams.get('spike');
-  const stressMode = searchParams.get('stress') === '1';
+  const orbiterDrill = searchParams.get('orbiter') === '1';
+  const stressMode = searchParams.get('stress') === '1' && !orbiterDrill;
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
   const playerSkin: PlayerSkinId | undefined = isPlayerSkinId(requestedSkin)
@@ -103,11 +105,18 @@ const bootstrap = async (): Promise<void> => {
     ? requestedQuality
     : 'medium';
   const profileMode = searchParams.get('profile') === '1';
-  const baselineMode = searchParams.get('baseline') === '1';
   const requestedHazardCadence = searchParams.get('hazards');
   const hazardCadenceMode: HazardCadenceMode = isHazardCadenceMode(requestedHazardCadence)
     ? requestedHazardCadence
-    : 'authored';
+    : 'chaos';
+  const requestedCalibration = searchParams.get('calibration');
+  const calibrationId: CalibrationId | undefined = isCalibrationId(requestedCalibration)
+    ? requestedCalibration
+    : undefined;
+  const baselineMode = searchParams.get('baseline') === '1'
+    && hazardCadenceMode === 'chaos'
+    && calibrationId === undefined
+    && !orbiterDrill;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -146,6 +155,7 @@ const bootstrap = async (): Promise<void> => {
       baseline: baselineElement ?? undefined
     },
     stressMode,
+    orbiterDrill,
     playerSkin,
     cannonSkin,
     background,
@@ -153,9 +163,10 @@ const bootstrap = async (): Promise<void> => {
     profileMode,
     baselineMode,
     hazardCadenceMode,
+    calibrationId,
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !bossDebugMode,
+    startOnMenu: !bossDebugMode && !orbiterDrill,
     platform: new LocalPlatform()
   });
   await game.start();

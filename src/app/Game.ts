@@ -35,6 +35,7 @@ import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
+import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -84,6 +85,10 @@ export interface GameOptions {
   readonly profileMode?: boolean;
   readonly baselineMode?: boolean;
   readonly hazardCadenceMode?: HazardCadenceMode;
+  /** Developer/direct-entry calibration; no menu or save state yet. */
+  readonly calibrationId?: CalibrationId;
+  /** Isolated Angular family drill, intentionally outside the normal Act I run. */
+  readonly orbiterDrill?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -94,6 +99,7 @@ export class Game {
   private readonly pauseButton: HTMLButtonElement | null;
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
+  private readonly orbiterDrill: boolean;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -116,6 +122,7 @@ export class Game {
   private readonly debug: DebugPanel;
   private readonly profiler: FrameProfiler;
   private readonly baselineMode: boolean;
+  private readonly calibrationId: CalibrationId | null;
   private readonly baseline: BaselineRunRecorder;
   private readonly baselinePanel: BaselinePanel | null;
   private readonly hud: GameHud;
@@ -146,6 +153,7 @@ export class Game {
   private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
   private baselinePanelSeconds = 0;
+  private calibrationApplied = false;
 
   private readonly queueResize = (): void => {
     if (this.resizeQueued || this.stopped) return;
@@ -309,6 +317,7 @@ export class Game {
     this.pauseButton = options.elements.pauseButton ?? null;
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
+    this.orbiterDrill = options.orbiterDrill === true;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -317,6 +326,7 @@ export class Game {
     this.background = options.background ?? saved.backgrounds.selected;
     this.fxQuality = options.fxQuality ?? 'medium';
     this.baselineMode = options.baselineMode === true;
+    this.calibrationId = options.calibrationId ?? null;
     this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
@@ -331,7 +341,8 @@ export class Game {
       initialElapsedSeconds: this.initialElapsedSeconds,
       permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
       actDirector: this.actDirector,
-      hazardCadenceMode: options.hazardCadenceMode
+      hazardCadenceMode: options.hazardCadenceMode,
+      orbiterDrill: this.orbiterDrill
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -514,7 +525,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : 'normal',
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : 'normal',
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -525,6 +536,13 @@ export class Game {
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
       pulse: `${this.combat.renderState.radialPulse.phase} | ${this.combat.renderState.radialPulse.direction} | ${this.combat.renderState.radialPulse.radius.toFixed(1)}`,
+      calibration: this.calibrationId ?? 'none',
+      orbiter: this.combat.isOrbiterDrill
+        ? (() => {
+          const state = this.combat.enemies.states.find((enemy) => enemy.active && enemy.kind === 'orbiter');
+          return state ? `${state.orbiterPhase} | sector ${state.orbiterSector + 1}/8` : 'respawning';
+        })()
+        : 'off',
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active
         ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
@@ -633,6 +651,7 @@ export class Game {
 
   private activateRun(unlockAudio: boolean): void {
     this.baseline.beginRun(this.fxQuality);
+    this.applyCalibration();
     this.input.attach();
     this.hudElement.hidden = false;
     if (unlockAudio) void this.audio.unlock();
@@ -902,6 +921,17 @@ export class Game {
     this.lifecycle.onGameStart();
   }
 
+  private applyCalibration(): void {
+    if (this.calibrationApplied || this.calibrationId === null) return;
+    const definition = getCalibrationDefinition(this.calibrationId);
+    for (const upgradeId of definition.starterUpgrades) {
+      if (!this.upgradeApplier.apply(upgradeId)) {
+        throw new Error(`No se pudo aplicar Calibration ${definition.id}: ${upgradeId}`);
+      }
+    }
+    this.calibrationApplied = true;
+  }
+
   private returnToMenuState(): void {
     this.clearRunPresentation();
     this.baseline.cancelRun();
@@ -924,6 +954,7 @@ export class Game {
     this.combat.reset();
     this.progression.reset();
     this.upgradeApplier.reset();
+    this.calibrationApplied = false;
     this.view.resetPresentation();
     this.lifecyclePaused = false;
     this.accumulator = 0;

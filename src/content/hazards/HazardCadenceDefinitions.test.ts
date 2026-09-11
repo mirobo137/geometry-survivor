@@ -6,8 +6,11 @@ import {
 } from './HazardCadenceDefinitions';
 
 describe('hazard cadence profiles', () => {
-  it('keeps the authored cadence unchanged by default', () => {
-    expect(getHazardCadenceProfile()).toEqual(HAZARD_CADENCE_PROFILES.authored);
+  it('uses chaos as the principal cadence by default', () => {
+    expect(getHazardCadenceProfile()).toEqual(HAZARD_CADENCE_PROFILES.chaos);
+  });
+
+  it('keeps the calm authored cadence available as a historical control', () => {
     expect(HAZARD_CADENCE_PROFILES.authored).toEqual({
       laserIntervalMultiplier: 1,
       radialPulseIntervalMultiplier: 1

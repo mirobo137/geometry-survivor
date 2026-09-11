@@ -59,8 +59,8 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
-| EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, siguiente EX-06d; aceptación humana del pulso y cierre del acto pendiente |
-| EX-07 | 7 | Acto II Angular y Calibration | pendiente, depende de EX-06 |
+| EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, EX-06d con validación reducida aprobada; ocho runs extendidas pendientes |
+| EX-07 | 7 | Acto II Angular y Calibration | EN CURSO; EX-07a contrato/entrada directa AUTOMÁTICO OK; Orbiter drill automático OK, roster Angular abierto; selector/gating y consumidor Angular real pendientes |
 | EX-08 | 7/9 | niveles/evoluciones, una ruta por entrega | acompaña el acto que consume cada ruta |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | pendiente, después de EX-09 |
@@ -532,12 +532,56 @@ Siguiente ID: **EX-06d**, validación humana del acto completo. Antes de cerrar
 EX-06 falta validar comprensión del pulso, salida segura, presión y lectura en
 desktop/móvil.
 
-**Experimento de cadencia asociado a EX-06d:** para explorar presión sin
-contaminar el baseline existe `?hazards=chaos&debug=1&quality=high`. Es un
-perfil opt-in que reduce a un tercio los intervalos de láser y pulso, pero no
-modifica daño, vida, telegraph, recuperación, spawn, refugios ni boss. Las diez
-runs formales permanecen en authored; la ficha de observación separada es
+**Decisión de cadencia asociada a EX-06d:** el usuario probó y aprobó `chaos`
+como perfil principal; el juego lo selecciona por defecto y
+`?hazards=chaos&debug=1&quality=high` lo hace explícito. Reduce a un tercio los
+intervalos de láser y pulso, pero no modifica daño, vida, telegraph,
+recuperación, spawn, refugios ni boss. Las diez runs formales deben usar ahora
+este perfil en un baseline nuevo; `?hazards=authored` conserva el control
+histórico y no registra baseline. La ficha es
 [`docs/balance/EX-06d-hazard-cadence-experiment.md`](balance/EX-06d-hazard-cadence-experiment.md).
+
+**Decisión operativa — 11-09-2026:** las dos runs compartidas por el usuario
+se aceptan como evidencia reducida de estabilidad y cierre del Acto I: ambas
+fueron victorias con boss derrotado, calidad High, 59.97 FPS, 11–12 enemigos,
+20 proyectiles y 45–47 FX. No se presentan como una validación estadística de
+diez runs ni como aislamiento perfecto de la cadencia Chaos. Las ocho runs
+restantes quedan **PENDIENTES** por decisión de producto y no bloquean el
+trabajo estructural de EX-07a; no se modifica daño, vida ni spawn para
+compensar esta reducción de muestra.
+
+### EX-07a — contrato de Calibration
+
+Se inicia la subtarea con tres plantillas authored y deterministas:
+`projectile`, `orbit` y `chain`. Cada una declara su secuencia inicial de
+mejoras, máximo de tres armas activas, recompensa NOVA igual a cero,
+preservación de build para Expedition y reinicio de build para Quick Act. El
+contrato vive en `src/content/run/CalibrationDefinitions.ts` y sus invariantes
+en `CalibrationDefinitions.test.ts`.
+
+La entrada directa del consumidor quedó conectada mediante
+`?calibration=projectile|orbit|chain` y se aplica una sola vez al comenzar la
+run; `?debug=1` muestra la plantilla activa. La presentación de selección y el
+gating de desbloqueos esperan al primer consumidor Angular real: mostrarlos en
+el menú actual concedería una build de Acto II dentro del Acto I y contaminaría
+su balance validado. Todavía no se crean actos Angular vacíos, save de actos ni
+balance.
+
+### EX-07b — ficha Orbiter antes de código
+
+La primera familia Angular queda especificada en
+[`docs/design/EX-07b-orbiter.md`](design/EX-07b-orbiter.md). Orbiter reserva un
+arco de dos sectores, anuncia por 0.70 s sentido y recorrido, sólo hace daño
+por contacto durante su commit y libera una abertura mínima de 90°. Su cap es
+seis activos y un commit simultáneo mientras la lección inicial se valida.
+
+La primera implementación vive en `?orbiter=1&debug=1`: un drill aislado sin
+oleadas, boss, hazards radiales ni autofire, para leer el arco antes de que
+exista una composición Angular completa. Comportamiento puro, cuatro piezas
+SVG cacheadas, master completo Low y riel cacheado por secuencia están
+automáticos OK. No cierra EX-07b ni la familia de enemigos: falta validación
+humana, consumidor Angular real, Charger y Splitter; pueden añadirse más
+familias después de comprobar la composición.
 
 ### EX-07 — Acto II Angular, sin producir todo a la vez
 

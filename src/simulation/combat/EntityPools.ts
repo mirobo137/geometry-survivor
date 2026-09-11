@@ -1,4 +1,4 @@
-import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { EnemyKind, OrbiterDirection, OrbiterPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 
 export type BoomerangPhase = 'outbound' | 'returning';
@@ -15,7 +15,18 @@ export interface EnemyState {
   health: number;
   maxHealth: number;
   contactDamage: number;
+  /** Contact is intentionally disabled while an Orbiter announces or recovers. */
+  contactEnabled: boolean;
   orbitHitCooldown: number;
+  orbiterPhase: OrbiterPhase;
+  orbiterDirection: OrbiterDirection;
+  orbiterSector: number;
+  orbiterProgress: number;
+  orbiterBandRadius: number;
+  orbiterStartAngle: number;
+  orbiterTimer: number;
+  /** Changes only when a new telegraph is authored; views use it to cache paths. */
+  orbiterSequence: number;
   /** Increments whenever a pooled slot is acquired, including recycled slots. */
   generation: number;
 }
@@ -62,7 +73,16 @@ const createEnemyState = (): EnemyState => ({
   health: 0,
   maxHealth: 0,
   contactDamage: 0,
+  contactEnabled: true,
   orbitHitCooldown: 0,
+  orbiterPhase: 'inactive',
+  orbiterDirection: 1,
+  orbiterSector: -1,
+  orbiterProgress: 0,
+  orbiterBandRadius: 0,
+  orbiterStartAngle: 0,
+  orbiterTimer: 0,
+  orbiterSequence: 0,
   generation: 0
 });
 

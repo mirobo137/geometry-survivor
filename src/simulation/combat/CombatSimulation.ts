@@ -32,6 +32,8 @@ export interface CombatSimulationOptions {
   readonly actDirector?: RadialActDirector;
   /** Explicit development-only cadence profile; authored is the default. */
   readonly hazardCadenceMode?: HazardCadenceMode;
+  /** Isolated first-family scenario; never changes the normal Radial run. */
+  readonly orbiterDrill?: boolean;
 }
 
 export type CombatEvent =
@@ -82,6 +84,7 @@ export class CombatSimulation {
   private spawnAccumulator = 0;
   private experienceMultiplier = 1;
   private readonly stressMode: boolean;
+  private readonly orbiterDrill: boolean;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
@@ -128,7 +131,8 @@ export class CombatSimulation {
       shot: this.weaponSystem.lastShot
     };
     this.stressMode = options.stress === true;
-    this.hazardCadenceMode = options.hazardCadenceMode ?? 'authored';
+    this.orbiterDrill = options.orbiterDrill === true;
+    this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
@@ -153,6 +157,10 @@ export class CombatSimulation {
 
   public get currentOrbitRadius(): number {
     return this.weaponSystem.currentOrbitRadius;
+  }
+
+  public get isOrbiterDrill(): boolean {
+    return this.orbiterDrill;
   }
 
   public get currentOrbitDamage(): number {
@@ -268,7 +276,7 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
-    if (this.laser.update(
+    if (!this.orbiterDrill && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -278,7 +286,7 @@ export class CombatSimulation {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
-    if (this.radialPulse.update(
+    if (!this.orbiterDrill && this.radialPulse.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -294,17 +302,23 @@ export class CombatSimulation {
       });
     }
 
-    const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
-    const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
-    while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
-      this.spawnAccumulator -= spawnInterval;
-      this.enemySystem.spawn(this.stats.elapsedSeconds, arenaRadius);
-    }
-    if (this.enemies.activeCount >= normalEnemyCapacity) {
-      this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval);
+    if (this.orbiterDrill) {
+      if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'orbiter')) {
+        this.enemySystem.spawnOrbiterDrill(arenaRadius);
+      }
+    } else {
+      const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
+      const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
+      while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
+        this.spawnAccumulator -= spawnInterval;
+        this.enemySystem.spawn(this.stats.elapsedSeconds, arenaRadius);
+      }
+      if (this.enemies.activeCount >= normalEnemyCapacity) {
+        this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval);
+      }
     }
 
-    if (!this.stressMode) {
+    if (!this.stressMode && !this.orbiterDrill) {
       const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
       if (bossDamage > 0) {
         this.stats.damageTaken += bossDamage;
@@ -312,13 +326,15 @@ export class CombatSimulation {
       }
     }
 
-    const contactDamage = this.enemySystem.update(dt, player);
+    const contactDamage = this.enemySystem.update(dt, player, arenaRadius);
     if (contactDamage !== null) {
       this.stats.damageTaken += contactDamage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage, source: 'contact' });
     }
     this.enemySystem.rebuildGrid();
-    this.weaponSystem.update(dt, player);
+    // The drill teaches a route, not build damage. Leaving autofire active
+    // would remove the 32-HP teaching target before its first telegraph.
+    if (!this.orbiterDrill) this.weaponSystem.update(dt, player);
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
     this.maintainStressProjectiles(player);
@@ -352,12 +368,12 @@ export class CombatSimulation {
   }
 
   private maintainStressEnemies(arenaRadius: number): void {
-    if (!this.stressMode) return;
+    if (!this.stressMode || this.orbiterDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
-    if (!this.stressMode) return;
+    if (!this.stressMode || this.orbiterDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }
 

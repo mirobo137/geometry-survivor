@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-orbiter-master-title enemy-orbiter-master-desc">
+  <title id="enemy-orbiter-master-title">Orbiter — master</title>
+  <desc id="enemy-orbiter-master-desc">Centinela angular de herradura segmentada, proa hacia arriba y núcleo direccional. Pieza master.</desc>
+  <path id="enemy-orbiter-rear-chassis" d="M-13 7H13L17 17 10 27H-10L-17 17Z" fill="#151b35"/>
+  <path id="enemy-orbiter-rear-left-thruster" d="M-12 15H-5L-7 28H-13Z" fill="#33446f"/>
+  <path id="enemy-orbiter-rear-right-thruster" d="M5 15H12L13 28H7Z" fill="#33446f"/>
+  <path id="enemy-orbiter-wing-frame" d="M-13-14-26-10-30 2-26 17-16 21-12 13-17 5-18-5ZM13-14 26-10 30 2 26 17 16 21 12 13 17 5 18-5Z" fill="#151b35" stroke="#9cadd8" stroke-width="1.15" stroke-linejoin="round"/>
+  <path id="enemy-orbiter-wing-plates" d="M-16-11-23-8-26 2-22 12-17 14-15 9-20 3-20-5ZM16-11 23-8 26 2 22 12 17 14 15 9 20 3 20-5Z" fill="#4c5d93"/>
+  <path id="enemy-orbiter-wing-bevels" d="M-16-11-23-8-26 2-23-2-20-6-16-7ZM16-11 23-8 26 2 23-2 20-6 16-7Z" fill="#b8c8ff"/>
+  <path id="enemy-orbiter-wing-shadows" d="M-26 2-22 12-17 14-18 9-22 4-23-2ZM26 2 22 12 17 14 18 9 22 4 23-2Z" fill="#27345c"/>
+  <path id="enemy-orbiter-wing-chevrons" d="M-25 5-21 8-24 10-28 7ZM25 5 21 8 24 10 28 7Z" fill="#f5d98a"/>
+  <path id="enemy-orbiter-hull-keel" d="M-12-23H12L18-15 15-4 12 17 6 23H-6L-12 17-15-4-18-15Z" fill="#202b4e" stroke="#9cadd8" stroke-width="1.15" stroke-linejoin="round"/>
+  <path id="enemy-orbiter-hull-face" d="M-10-20H10L14-14 10-7H-10L-14-14Z" fill="#5e70aa"/>
+  <path id="enemy-orbiter-hull-leading-bevel" d="M-10-20H10L14-14 9-16H-9L-14-14Z" fill="#d2ddff"/>
+  <path id="enemy-orbiter-hull-return" d="M-14-14-9-16V-10H9V-16L14-14 10-7H-10Z" fill="#364773"/>
+  <path id="enemy-orbiter-core-well" d="M-8-9H8L12-4V7L7 12H-7L-12 7V-4Z" fill="#090d1e"/>
+  <path id="enemy-orbiter-core-mount" d="M-6-6H6L9-2V5L5 9H-5L-9 5V-2Z" fill="#38547f"/>
+  <path id="enemy-orbiter-core-face" d="M-4-4H4L6-1V3L3 6H-3L-6 3V-1Z" fill="#65e6ff"/>
+  <path id="enemy-orbiter-core-slit" d="M-1-3H1V4H-1Z" fill="#efffff"/>
+</svg>

@@ -1,6 +1,6 @@
 import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { RadialPulseState } from '../hazards/RadialPulseHazard';
-import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { EnemyKind, OrbiterDirection, OrbiterPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 
@@ -65,6 +65,14 @@ export interface EnemyRenderState {
   readonly radius: number;
   readonly health: number;
   readonly maxHealth: number;
+  /** Present only for the Angular family; views never infer it from position. */
+  readonly orbiterPhase?: OrbiterPhase;
+  readonly orbiterDirection?: OrbiterDirection;
+  readonly orbiterSector?: number;
+  readonly orbiterProgress?: number;
+  readonly orbiterBandRadius?: number;
+  readonly orbiterStartAngle?: number;
+  readonly orbiterSequence?: number;
 }
 
 /** Projectile view contract; velocity is included for the sprite orientation. */

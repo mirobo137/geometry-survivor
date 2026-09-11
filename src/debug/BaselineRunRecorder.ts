@@ -1,6 +1,6 @@
 import type { FxQuality } from '../content/visual/VisualTokens';
 
-export const BASELINE_STORAGE_KEY = 'geometry-survivor:baseline-v1';
+export const BASELINE_STORAGE_KEY = 'geometry-survivor:baseline-v2';
 export const BASELINE_TARGET_RUNS = 10;
 const BASELINE_SCHEMA_VERSION = 1;
 

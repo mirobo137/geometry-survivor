@@ -38,4 +38,11 @@ describe('EnemySystem', () => {
     const cooldownResults = Array.from({ length: 30 }, () => system.update(1 / 60, player.state));
     expect(cooldownResults).toContain(enemy.contactDamage);
   });
+
+  it('keeps the Orbiter drill family under its authored cap', () => {
+    const pool = new EnemyPool(8);
+    const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    for (let index = 0; index < 8; index += 1) system.spawnOrbiterDrill(ARENA_RADIUS);
+    expect(pool.states.filter((enemy) => enemy.active && enemy.kind === 'orbiter')).toHaveLength(6);
+  });
 });

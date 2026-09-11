@@ -20,6 +20,11 @@ import eliteRearSvg from './elite/elite-rear.svg?raw';
 import eliteWingsSvg from './elite/elite-wings.svg?raw';
 import eliteHullSvg from './elite/elite-hull.svg?raw';
 import eliteCockpitSvg from './elite/elite-cockpit.svg?raw';
+import orbiterSvg from './orbiter/orbiter.svg?raw';
+import orbiterRearSvg from './orbiter/orbiter-rear.svg?raw';
+import orbiterWingsSvg from './orbiter/orbiter-wings.svg?raw';
+import orbiterHullSvg from './orbiter/orbiter-hull.svg?raw';
+import orbiterCockpitSvg from './orbiter/orbiter-cockpit.svg?raw';
 
 describe('enemy SVG masters', () => {
   it('keeps the top-down turtle within the character contract', () => {
@@ -48,7 +53,8 @@ describe('enemy SVG masters', () => {
       ['enemy-chaser-', chaserSvg, [chaserRearSvg, chaserWingsSvg, chaserHullSvg, chaserCockpitSvg]],
       ['enemy-fast-', fastSvg, [fastRearSvg, fastWingsSvg, fastHullSvg, fastCockpitSvg]],
       ['enemy-tank-', tankSvg, [tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg]],
-      ['enemy-elite-', eliteSvg, [eliteRearSvg, eliteWingsSvg, eliteHullSvg, eliteCockpitSvg]]
+      ['enemy-elite-', eliteSvg, [eliteRearSvg, eliteWingsSvg, eliteHullSvg, eliteCockpitSvg]],
+      ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]]
     ] as const;
     for (const [prefix, svg, parts] of families) {
       expect(svg).toContain('viewBox="-32 -32 64 64"');

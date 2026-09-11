@@ -2,6 +2,28 @@ import { describe, expect, it } from 'vitest';
 import { Texture } from 'pixi.js';
 import { PlayerView } from './PlayerView';
 
+interface GraphicsInstruction {
+  readonly action: string;
+  readonly data: {
+    readonly path?: {
+      readonly instructions: readonly {
+        readonly action: string;
+        readonly data: { readonly x: number; readonly y: number };
+      }[];
+    };
+  };
+}
+
+const firstShotFlashMove = (view: PlayerView): readonly [number, number] => {
+  const flash = (view as unknown as {
+    shotFlash: { context: { instructions: readonly GraphicsInstruction[] } };
+  }).shotFlash;
+  const stroke = flash.context.instructions.find((instruction) => instruction.action === 'stroke');
+  const move = stroke?.data.path?.instructions.find((instruction) => instruction.action === 'moveTo');
+  if (!move) throw new Error('Expected a muzzle flash moveTo path');
+  return move.data as unknown as readonly [number, number];
+};
+
 const skinTextures = {
   manta: Texture.WHITE,
   cyan: Texture.WHITE,
@@ -130,5 +152,30 @@ describe('PlayerView', () => {
     view.reset();
     view.render(state(300, 400), 0);
     expect(weapons.rotation).toBeCloseTo(0);
+  });
+
+  it('anchors the muzzle flash to the shot even when hull facing differs', () => {
+    const view = new PlayerView(textures);
+    view.render(state(300, 400), 0);
+    // Movement turns the hull right; the next shot still aims upward.
+    view.render(state(320, 400), 0.1);
+    expect(view.root.rotation).toBeCloseTo(Math.PI / 2);
+    view.playShot(0.1, {
+      sequence: 1,
+      directionX: 0,
+      directionY: -1,
+      muzzleMask: 1,
+      leftOriginX: 293,
+      leftOriginY: 389,
+      rightOriginX: 0,
+      rightOriginY: 0
+    });
+
+    view.render(state(320, 400), 0.13);
+
+    // The world flash rotation is zero in this setup, so the local path must
+    // preserve the muzzle vector (-27, -11), rather than rotate it again by
+    // the hull's 90-degree movement facing.
+    expect(firstShotFlashMove(view)).toEqual([-29, -11]);
   });
 });

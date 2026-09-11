@@ -2142,6 +2142,22 @@ como trabajo documental y de contratos. Esta decisión no salta las puertas de
 EX-03, EX-04 y EX-05 para implementar los actos; sólo evita que una
 recalibración prematura bloquee el diseño de la campaña y de Overdrive.
 
+### Decisión de cadencia de hazards Acto I — 11-09-2026
+
+La cadencia **chaos** queda promovida como perfil principal del Acto I:
+reduce a un tercio los intervalos entre ataques de láser y pulsos radiales,
+manteniendo intactos el daño, la vida de enemigos, la densidad de spawn, el
+telegraph, la recuperación, los refugios y la regla de primer disparo. El
+perfil `authored` se conserva únicamente como control histórico explícito para
+comparaciones; no es la experiencia por defecto ni debe usarse para la línea
+base formal.
+
+La decisión fue probada y aprobada por el usuario en el modo Chaos. EX-06d no
+queda cerrado por esa aprobación: se debe reiniciar el registro de diez runs
+con la cadencia principal y validar legibilidad, salidas seguras, presión y
+rendimiento en desktop y móvil. El recorder usa la clave `baseline-v2` para no
+mezclar los dos registros históricos con el nuevo baseline.
+
 ## 16.2 Estructura de modos y actos
 
 | Modo | Entrada | Duración objetivo | Conserva build | Resultado |
@@ -2665,6 +2681,23 @@ resultado. Las pruebas de `GameState` y `Game` cubren la transición, la
 presentación de Radial y la ausencia de continuación ficticia. La siguiente
 subtarea es **EX-06d**: validación humana de la run completa, incluido pulso,
 resultado e intermisión en desktop y móvil.
+
+### 22.1f Decisión operativa sobre EX-06d — 11-09-2026
+
+Las dos runs compartidas por el usuario quedan aceptadas como validación
+reducida de estabilidad y cierre del Acto I: ambas terminaron en victoria con
+boss derrotado, calidad High, 59.97 FPS, 11–12 enemigos, 20 proyectiles y
+45–47 FX. La muestra no se presenta como una validación estadística completa
+ni como aislamiento perfecto de Chaos.
+
+Las ocho runs restantes de EX-06d quedan **PENDIENTES** por decisión de
+producto. Esta deuda de validación humana no bloquea el trabajo estructural de
+EX-07a, pues no se detectaron fallos funcionales ni de save y el usuario
+solicitó continuar. No se modifica por ello el daño, la vida, el spawn ni el
+balance diferido de EX-02c. El contrato authored de Calibration y su consumidor
+de entrada directa ya están implementados; la siguiente subtarea es conectar
+la selección visual y el gating de desbloqueos sin convertir Angular en un
+acto vacío.
 
 ### 22.1a Prototipo autorizado del Acto I
 

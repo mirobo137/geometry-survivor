@@ -370,10 +370,15 @@ export class PlayerView {
     const color = getCannonSkinDefinition(this.cannonSkin).accent;
     const alpha = pulse * 0.9;
     this.shotFlash.visible = true;
+    // The flash geometry lives inside a child that is rotated independently
+    // from the hull. Transform each muzzle from world space into that child's
+    // effective world rotation; using only root.rotation double-rotates the
+    // origin whenever movement facing and firing direction differ.
+    const flashWorldRotation = Math.atan2(this.shotDirectionY, this.shotDirectionX) + Math.PI / 2;
     const inverseRoot = -this.root.rotation;
-    this.shotFlash.rotation = Math.atan2(this.shotDirectionY, this.shotDirectionX)
-      + Math.PI / 2
-      + inverseRoot;
+    this.shotFlash.rotation = flashWorldRotation + inverseRoot;
+    const localCos = Math.cos(-flashWorldRotation);
+    const localSin = Math.sin(-flashWorldRotation);
     this.renderMuzzleFlash(
       this.shotLeftOriginX,
       this.shotLeftOriginY,
@@ -381,6 +386,8 @@ export class PlayerView {
       color,
       pulse,
       alpha,
+      localCos,
+      localSin,
       (this.shotMuzzleMask & 1) !== 0
     );
     this.renderMuzzleFlash(
@@ -390,6 +397,8 @@ export class PlayerView {
       color,
       pulse,
       alpha,
+      localCos,
+      localSin,
       (this.shotMuzzleMask & 2) !== 0
     );
   }
@@ -449,15 +458,15 @@ export class PlayerView {
     color: number,
     pulse: number,
     alpha: number,
+    localCos: number,
+    localSin: number,
     visible: boolean
   ): void {
     if (!visible) return;
     const relativeX = originX - state.x;
     const relativeY = originY - state.y;
-    const cos = Math.cos(-this.root.rotation);
-    const sin = Math.sin(-this.root.rotation);
-    const localX = relativeX * cos - relativeY * sin;
-    const localY = relativeX * sin + relativeY * cos;
+    const localX = relativeX * localCos - relativeY * localSin;
+    const localY = relativeX * localSin + relativeY * localCos;
     const length = 10 + pulse * 12;
     this.shotFlash
       .beginPath()

@@ -1,24 +1,72 @@
 # Geometry Survivor — estado y continuación
 
-## Experimento de cadencia Acto I — 10-09-2026
+## Decisión de cadencia Acto I — 11-09-2026
+
+- El usuario probó `chaos` y aprobó que se convierta en la cadencia principal:
+  los intervalos de rayos y pulsos quedan reducidos a un tercio sin modificar
+  daño, vida, spawn, telegraph, recuperación, refugios ni boss.
+- El primer disparo y el arbitraje se conservan. El perfil `authored` queda
+  disponible únicamente como control histórico mediante `?hazards=authored`.
+- El baseline anterior de dos runs pertenecía al ritmo authored y no se mezcla
+  con la nueva línea base. Se actualizó el storage a v2; las diez runs de EX-06d
+  deben comenzar de nuevo con `?baseline=1` en el perfil principal.
+- EX-06d sigue EN CURSO: la aprobación de ritmo no sustituye las diez runs ni
+  la validación de legibilidad, evasión, móvil y cierre del acto.
+- Las dos runs compartidas quedan aceptadas como validación reducida de
+  estabilidad/cierre: victorias con boss derrotado, High, 59.97 FPS, 11–12
+  enemigos, 20 proyectiles y 45–47 FX. Las ocho restantes quedan PENDIENTES
+  por decisión de producto y no bloquean EX-07a; no se presentan como muestra
+  estadística de diez runs ni como aislamiento perfecto de Chaos.
+- EX-07a ya tiene consumidor directo mediante
+  `?calibration=projectile|orbit|chain`: aplica la plantilla una sola vez al
+  iniciar la run y `?debug=1` la muestra. La selección visual y el gating se
+  difieren hasta que exista el consumidor real de Acto II: mostrarlos ahora
+  concedería una build superior a Acto I y contaminaría su balance. No se crea
+  todavía un Acto II vacío, save nuevo o balance.
+- EX-07b ya tiene ficha y primera implementación de la familia Angular Orbiter en
+  [`docs/design/EX-07b-orbiter.md`](docs/design/EX-07b-orbiter.md). Orbiter
+  compromete un arco anunciado de 90°, conserva dos sectores libres, sólo daña
+  durante el recorrido y tiene cap de seis / un commit simultáneo. Probar con
+  `?orbiter=1&debug=1&quality=high` (repetir Low y móvil): es un drill aislado
+  sin oleadas, hazards, boss ni autofire, por lo que no contamina Acto I.
+  Automático OK; falta validación humana y consumidor Angular real. La lista de
+  enemigos **permanece abierta**: Charger, Splitter y posibles familias tras
+  validar composición siguen pendientes; Pulse Ring, hazard y boss no entran
+  aún en este incremento.
+- Se corrigió el destello rosa de salida del cañón: `PlayerView` convertía el
+  origen sólo con la rotación del casco y lo rotaba una segunda vez cuando el
+  tiro apuntaba a otra dirección. Ahora usa la rotación mundial efectiva del
+  flash. La regresión cubre casco hacia la derecha con tiro hacia arriba;
+  gameplay, daño y estela de proyectil no cambian.
+
+## Guía reutilizable para otros proyectos — 11-09-2026
+
+- Se recopiló en [`docs/GUIA_PORTABLE_GAMEDEV_PREMIUM.md`](docs/GUIA_PORTABLE_GAMEDEV_PREMIUM.md)
+  lo transferible del proyecto: separación de capas, loop determinista,
+  responsive móvil, elección SVG/PNG/Graphics, regla de subpaths de PixiJS,
+  recetas de FX premium, telegraphs, arena, fondos, UI, audio, meta, anuncios,
+  guardado, plataformas y validación.
+- El documento distingue principios generales de ejemplos propios de Geometry
+  Survivor. Puede copiarse al proyecto nuevo y adaptarse sin arrastrar nombres,
+  siluetas, valores de daño ni presupuestos que no hayan sido medidos allí.
+
+## Validación y promoción de cadencia Acto I — 11-09-2026
 
 - Las runs #1 y #2 del baseline actual son victorias a 59.97 FPS, con 11–12
   enemigos, 20 proyectiles y 45–47 FX. Confirman estabilidad y baja variación
   del escenario, pero no sustituyen la puerta humana de diez runs: esa puerta
   mide también comprensión, comodidad, plataforma y resultado, no sólo FPS.
-- No se reinicia ni contamina el baseline por este experimento. Las runs formales
-  continúan con `?baseline=1` y perfil authored; el ajuste visual Pulse Crest
-  tampoco las invalidó.
-- Para probar más tensión sin cambiar daño, vida, spawn ni recompensas existe el
-  modo explícito `?hazards=chaos&debug=1&quality=high`. Reduce a un tercio los
-  intervalos de rayos y pulsos; el panel debug muestra `hazards: chaos`. La
-  ventana inicial y el arbitraje permanecen intactos, así que la frecuencia real
-  puede quedar por debajo de tres veces.
-- Esta modalidad es exploratoria y no es el nuevo balance del acto. Ficha y
-  checklist: `docs/balance/EX-06d-hazard-cadence-experiment.md`. Hacer 2–3 runs
-  separadas y registrar legibilidad, tiempo de respuesta, bolsillos seguros,
-  sensación de ruido, dispositivo y resultado. No mezclar sus datos con los
-  diez registros baseline.
+- No se mezclan los dos registros authored con el nuevo baseline. Las diez runs
+  formales deben continuar con `?baseline=1` usando el perfil principal chaos;
+  el storage v2 las separa del control histórico.
+- El usuario probó `?hazards=chaos&debug=1&quality=high` y aprobó su ritmo para el
+  acto. Reduce a un tercio los intervalos de rayos y pulsos; la ventana inicial
+  y el arbitraje permanecen intactos, así que la frecuencia real puede quedar
+  por debajo de tres veces.
+- Ficha y checklist: `docs/balance/EX-06d-hazard-cadence-experiment.md`. La
+  aprobación de ritmo no cierra EX-06d: todavía deben registrarse legibilidad,
+  tiempo de respuesta, bolsillos seguros, dispositivo y resultado en las diez
+  runs nuevas.
 
 > **Último handoff operativo (10-09-2026):** EX-03 está cerrado con las diez runs, economía/rewarded, controles, stress PC y validación cualitativa S25+. EX-05 Búmeran queda aprobado para este hito por validación humana bajo movimiento, otras armas y presión; EX-05e se difiere como auditoría no bloqueante. EX-06a/b/c están automáticos OK: Radial tiene pulso con evasión real y una intermisión segura al vencer al boss. El siguiente ID es EX-06d, validación humana completa del acto. EX-02c (balance global de daño/vida) continúa pendiente. La estabilización de CI está en sección 86 y `docs/CI_DEPLOY.md`; fondos: Flor del Ocaso (§84), Nacre; arena: Aster Loom (§82).
 

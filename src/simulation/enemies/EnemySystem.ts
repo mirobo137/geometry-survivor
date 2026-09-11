@@ -1,9 +1,10 @@
-import { ENEMY_DEFINITIONS, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import { ENEMY_DEFINITIONS, ORBITER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { RadialActDirector } from '../acts/RadialActDirector';
+import { OrbiterBehavior } from './OrbiterBehavior';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -18,6 +19,7 @@ export { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
 export class EnemySystem {
   private contactCooldown = 0;
   private spawnIndex = 0;
+  private readonly orbiterBehavior = new OrbiterBehavior();
 
   public constructor(
     public readonly pool: EnemyPool,
@@ -47,6 +49,17 @@ export class EnemySystem {
     return state;
   }
 
+  /** Development-only consumer: keeps the first Angular family isolated. */
+  public spawnOrbiterDrill(arenaRadius: number): EnemyState | null {
+    if (this.countActiveOrbiters() >= ORBITER_DEFINITION.activeCap) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex;
+    this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, 'orbiter');
+    return state;
+  }
+
   public initializeStress(arenaRadius: number): void {
     for (let index = 0; index < this.pool.capacity; index += 1) {
       const state = this.pool.acquire();
@@ -67,7 +80,7 @@ export class EnemySystem {
   }
 
   /** Updates movement and returns the first contact damage, if any. */
-  public update(dtSeconds: number, player: PlayerState): number | null {
+  public update(dtSeconds: number, player: PlayerState, arenaRadius = 270): number | null {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (dt === 0) {
       for (const enemy of this.pool.states) {
@@ -81,10 +94,19 @@ export class EnemySystem {
     this.contactCooldown = Math.max(0, this.contactCooldown - dt);
     let contactDamage: number | null = null;
 
+    let orbiterCommits = 0;
+    for (const enemy of this.pool.states) {
+      if (enemy.active && enemy.kind === 'orbiter' && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
+    }
     for (const enemy of this.pool.states) {
       if (!enemy.active) continue;
       enemy.orbitHitCooldown = Math.max(0, enemy.orbitHitCooldown - dt);
       if (enemy.kind === 'boss') continue;
+      if (enemy.kind === 'orbiter') {
+        const wasCommit = enemy.orbiterPhase === 'commit';
+        this.orbiterBehavior.update(enemy, dt, player, arenaRadius, wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap);
+        if (!wasCommit && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
+      } else {
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
       const distance = Math.hypot(dx, dy);
@@ -98,9 +120,11 @@ export class EnemySystem {
         enemy.vx = 0;
         enemy.vy = 0;
       }
+      }
       if (
         contactDamage === null
         && this.contactCooldown <= 0
+        && enemy.contactEnabled
         && Math.hypot(player.x - enemy.x, player.y - enemy.y) <= player.radius + enemy.radius
       ) {
         this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
@@ -180,7 +204,17 @@ export class EnemySystem {
     state.maxHealth = definition.maxHealth;
     state.health = definition.maxHealth;
     state.contactDamage = definition.contactDamage;
+    state.contactEnabled = kind !== 'orbiter';
     state.orbitHitCooldown = 0;
+    state.orbiterPhase = 'inactive';
+    state.orbiterDirection = 1;
+    state.orbiterSector = -1;
+    state.orbiterProgress = 0;
+    state.orbiterBandRadius = 0;
+    state.orbiterStartAngle = 0;
+    state.orbiterTimer = 0;
+    state.orbiterSequence = 0;
+    if (kind === 'orbiter') this.orbiterBehavior.configure(state, index, arenaRadius);
   }
 
   private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
@@ -199,6 +233,19 @@ export class EnemySystem {
     state.maxHealth = definition.maxHealth;
     state.health = definition.maxHealth;
     state.contactDamage = definition.contactDamage;
+    state.contactEnabled = false;
     state.orbitHitCooldown = 0;
+    state.orbiterPhase = 'inactive';
+    state.orbiterDirection = 1;
+    state.orbiterSector = -1;
+    state.orbiterProgress = 0;
+    state.orbiterBandRadius = 0;
+    state.orbiterStartAngle = 0;
+    state.orbiterTimer = 0;
+    state.orbiterSequence = 0;
+  }
+
+  private countActiveOrbiters(): number {
+    return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'orbiter' ? 1 : 0), 0);
   }
 }

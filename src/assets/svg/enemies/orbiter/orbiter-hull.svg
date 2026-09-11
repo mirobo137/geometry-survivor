@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-orbiter-hull-title enemy-orbiter-hull-desc">
+  <title id="enemy-orbiter-hull-title">Orbiter — hull</title>
+  <desc id="enemy-orbiter-hull-desc">Casco de herradura incompleta con proa dirigida hacia arriba. Pieza hull.</desc>
+  <path id="enemy-orbiter-hull-keel" d="M-12-23H12L18-15 15-4 12 17 6 23H-6L-12 17-15-4-18-15Z" fill="#202b4e" stroke="#9cadd8" stroke-width="1.15" stroke-linejoin="round"/>
+  <path id="enemy-orbiter-hull-face" d="M-10-20H10L14-14 10-7H-10L-14-14Z" fill="#5e70aa"/>
+  <path id="enemy-orbiter-hull-leading-bevel" d="M-10-20H10L14-14 9-16H-9L-14-14Z" fill="#d2ddff"/>
+  <path id="enemy-orbiter-hull-return" d="M-14-14-9-16V-10H9V-16L14-14 10-7H-10Z" fill="#364773"/>
+</svg>

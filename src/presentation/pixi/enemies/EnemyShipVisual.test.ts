@@ -7,7 +7,8 @@ const textures: EnemyShipTextureMap = {
   chaser: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE },
   fast: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE },
   tank: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE },
-  elite: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE }
+  elite: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE },
+  orbiter: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE }
 };
 
 const state = (kind: EnemyRenderState['kind'], vx = 80, vy = 0): EnemyRenderState => ({
@@ -62,6 +63,13 @@ describe('EnemyShipVisual', () => {
     const view = new EnemyShipVisual(textures, 0, 'low');
     view.render(state('tank'), 0.5, 1);
     expect(view.root.children.map((child) => child.visible)).toEqual([false, false, true, false, false]);
+  });
+
+  it('opens Orbiter gate pieces from simulation phase without rebuilding textures', () => {
+    const view = new EnemyShipVisual(textures, 0, 'high');
+    view.render({ ...state('orbiter'), orbiterPhase: 'telegraph', orbiterDirection: 1, orbiterProgress: 0.5 }, 0.5);
+    expect(view.currentKind).toBe('orbiter');
+    expect(view.root.children[1].position.x).toBeGreaterThan(0);
   });
 
   it('uses flattened Tank in Low and restores the hull when changing family', () => {

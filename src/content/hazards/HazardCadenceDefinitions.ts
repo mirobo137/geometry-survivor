@@ -1,10 +1,10 @@
 /**
  * Cadence-only experiments for hazard pressure.
  *
- * The authored profile is the production contract. Chaos is an explicit,
- * reversible development profile: it changes only the time between casts;
- * damage, telegraph, attack, recovery, geometry and enemy strength remain
- * authored. It must never be selected implicitly by a normal run.
+ * Chaos is now the principal Act I profile selected by normal runs. The
+ * authored profile remains as a calm historical control for comparison; both
+ * profiles change only the time between casts. Damage, telegraph, attack,
+ * recovery, geometry and enemy strength remain authored in either profile.
  */
 export type HazardCadenceMode = 'authored' | 'chaos';
 
@@ -29,5 +29,5 @@ export const isHazardCadenceMode = (value: string | null | undefined): value is 
 );
 
 export const getHazardCadenceProfile = (
-  mode: HazardCadenceMode = 'authored'
+  mode: HazardCadenceMode = 'chaos'
 ): HazardCadenceProfile => HAZARD_CADENCE_PROFILES[mode];

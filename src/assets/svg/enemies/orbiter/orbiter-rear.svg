@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-orbiter-rear-title enemy-orbiter-rear-desc">
+  <title id="enemy-orbiter-rear-title">Orbiter — rear</title>
+  <desc id="enemy-orbiter-rear-desc">Centinela angular con abrazadera segmentada y núcleo direccional. Pieza trasera.</desc>
+  <path id="enemy-orbiter-rear-chassis" d="M-13 7H13L17 17 10 27H-10L-17 17Z" fill="#151b35"/>
+  <path id="enemy-orbiter-rear-left-thruster" d="M-12 15H-5L-7 28H-13Z" fill="#33446f"/>
+  <path id="enemy-orbiter-rear-right-thruster" d="M5 15H12L13 28H7Z" fill="#33446f"/>
+</svg>

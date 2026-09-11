@@ -1,4 +1,22 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'boss';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'boss';
+
+export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
+export type OrbiterDirection = -1 | 1;
+
+export interface OrbiterDefinition {
+  readonly sectorCount: 8;
+  readonly reservedArcRadians: number;
+  readonly minimumFreeArcRadians: number;
+  readonly bandInset: number;
+  readonly maximumBandRadius: number;
+  readonly approachSpeed: number;
+  readonly telegraphSeconds: number;
+  readonly commitSeconds: number;
+  readonly recoverySeconds: number;
+  readonly commitAngularSpeed: number;
+  readonly activeCap: number;
+  readonly commitCap: number;
+}
 
 export interface EnemyDefinition {
   readonly kind: EnemyKind;
@@ -52,6 +70,16 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     spawnCost: 5,
     color: 0xff5fd2
   },
+  orbiter: {
+    kind: 'orbiter',
+    radius: 17,
+    speed: 94,
+    maxHealth: 32,
+    contactDamage: 9,
+    experience: 3,
+    spawnCost: 2,
+    color: 0x65e6ff
+  },
   boss: {
     kind: 'boss',
     radius: 48,
@@ -62,4 +90,23 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     spawnCost: 0,
     color: 0xff6cf2
   }
+};
+
+/**
+ * First authored Angular family. Values are deliberately isolated from the
+ * final damage/health pass (EX-02c) and shared by the pure behavior tests.
+ */
+export const ORBITER_DEFINITION: OrbiterDefinition = {
+  sectorCount: 8,
+  reservedArcRadians: Math.PI / 2,
+  minimumFreeArcRadians: Math.PI / 2,
+  bandInset: 76,
+  maximumBandRadius: 176,
+  approachSpeed: 94,
+  telegraphSeconds: 0.7,
+  commitSeconds: 0.95,
+  recoverySeconds: 0.6,
+  commitAngularSpeed: 1.65,
+  activeCap: 6,
+  commitCap: 1
 };

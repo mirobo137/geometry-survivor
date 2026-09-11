@@ -15,6 +15,11 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
+  it('uses the promoted chaos cadence by default and keeps authored as an explicit control', () => {
+    expect(new CombatSimulation().hazardCadenceMode).toBe('chaos');
+    expect(new CombatSimulation({ hazardCadenceMode: 'authored' }).hazardCadenceMode).toBe('authored');
+  });
+
   it('applies permanent weapon bonuses to damage events and weapon intervals', () => {
     const combat = new CombatSimulation({
       permanentBonuses: getPermanentCombatBonuses({ weapon_damage: 2, weapon_cadence: 1 })
@@ -158,6 +163,19 @@ describe('CombatSimulation', () => {
     expect(combat.projectiles.activeCount).toBe(PROJECTILE_POOL_CAPACITY);
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'fast')).toBe(true);
     expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'tank')).toBe(true);
+  });
+
+  it('runs the isolated Orbiter drill without normal waves, boss or radial hazards', () => {
+    const combat = new CombatSimulation({ orbiterDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 1 / 30);
+    expect(combat.isOrbiterDrill).toBe(true);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'orbiter')).toHaveLength(1);
+    expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind !== 'orbiter')).toBe(false);
+    expect(combat.boss.state.active).toBe(false);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+    expect(combat.projectiles.activeCount).toBe(0);
   });
 
   it('moves and damages with an orbit blade after it is unlocked', () => {

@@ -31,6 +31,11 @@ import eliteRearSvg from '../../assets/svg/enemies/elite/elite-rear.svg?raw';
 import eliteWingsSvg from '../../assets/svg/enemies/elite/elite-wings.svg?raw';
 import eliteHullSvg from '../../assets/svg/enemies/elite/elite-hull.svg?raw';
 import eliteCockpitSvg from '../../assets/svg/enemies/elite/elite-cockpit.svg?raw';
+import orbiterSvg from '../../assets/svg/enemies/orbiter/orbiter.svg?raw';
+import orbiterRearSvg from '../../assets/svg/enemies/orbiter/orbiter-rear.svg?raw';
+import orbiterWingsSvg from '../../assets/svg/enemies/orbiter/orbiter-wings.svg?raw';
+import orbiterHullSvg from '../../assets/svg/enemies/orbiter/orbiter-hull.svg?raw';
+import orbiterCockpitSvg from '../../assets/svg/enemies/orbiter/orbiter-cockpit.svg?raw';
 import { EnemyDefeatFxView } from './enemies/EnemyDefeatFxView';
 import { EnemyShipVisual, type EnemyShipTextureMap } from './enemies/EnemyShipVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
@@ -39,6 +44,7 @@ import { DamageNumberView } from './fx/DamageNumberView';
 import { HealthBarView } from './entities/HealthBarView';
 import { ProjectileTrailView } from './fx/ProjectileTrailView';
 import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/ProjectileMotionVisual';
+import { OrbiterTelegraphView } from './OrbiterTelegraphView';
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
@@ -92,6 +98,13 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
       wings: createSvgTexture(renderer, eliteWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, eliteHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, eliteCockpitSvg, ENEMY_TEXTURE_FRAME)
+    },
+    orbiter: {
+      flat: createSvgTexture(renderer, orbiterSvg, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, orbiterRearSvg, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, orbiterWingsSvg, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, orbiterHullSvg, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, orbiterCockpitSvg, ENEMY_TEXTURE_FRAME)
     }
   },
   boss: {
@@ -154,6 +167,7 @@ export class CombatEntitiesView {
   private readonly projectileGlows: Sprite[] = [];
   private readonly enemyImpactFx: EnemyImpactFxView;
   private readonly enemyDefeatFx: EnemyDefeatFxView;
+  private readonly orbiterTelegraphs: OrbiterTelegraphView;
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
@@ -184,10 +198,12 @@ export class CombatEntitiesView {
     this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
     this.enemyLayer.addChild(this.boss.root);
     this.enemyDefeatFx = new EnemyDefeatFxView(this.enemyTextures.ships, quality);
+    this.orbiterTelegraphs = new OrbiterTelegraphView(quality);
     this.root.addChild(
       this.projectileLayer,
       this.projectileTrails.root,
       this.enemyLayer,
+      this.orbiterTelegraphs.root,
       this.enemyDefeatFx.root,
       this.healthBars.root,
       this.enemyImpactFx.root,
@@ -282,6 +298,7 @@ export class CombatEntitiesView {
   public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
     this.boss.beginFrame();
     this.projectileTrails.render(combat.projectiles);
+    this.orbiterTelegraphs.render(combat.enemies);
     const trailKind = getCannonSkinDefinition(this.cannonSkin).trail;
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       const state = combat.enemies[index];
@@ -354,6 +371,7 @@ export class CombatEntitiesView {
     this.boss.reset();
     this.enemyImpactFx.clear();
     this.enemyDefeatFx.clear();
+    this.orbiterTelegraphs.reset();
     this.damageNumbers.clear();
     this.healthBars.clear();
     this.projectileTrails.clear();

@@ -310,6 +310,7 @@ describe('CombatSimulation', () => {
     expect(combat.activeOrbitBlades).toBe(0);
     expect(combat.hasChainLightning).toBe(false);
     expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
     expect(combat.boss.state.phase).toBe('inactive');
     expect(combat.boss.state.active).toBe(false);
   });

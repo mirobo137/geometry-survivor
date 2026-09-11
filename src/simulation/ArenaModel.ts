@@ -7,8 +7,9 @@ import {
   ARENA_RESONANCE_DURATION_SECONDS,
   ARENA_SECOND_EXPANSION_START_SECONDS
 } from '../config/constants';
-import { ACT_I_ARENA_SHAPE_CHANGES } from '../content/run/ArenaShapeDefinitions';
+import type { ArenaShapeChangeDefinition } from '../content/run/ArenaShapeDefinitions';
 import type { ArenaBoundary, ArenaShape } from './ArenaBoundary';
+import { RadialActDirector } from './acts/RadialActDirector';
 
 export type ArenaShapePhase = 'stable' | 'telegraph' | 'morph';
 
@@ -31,6 +32,12 @@ const clamp01 = (value: number): number => Math.min(Math.max(value, 0), 1);
  * but it never decides when the playable boundary changes.
  */
 export class ArenaModel {
+  private readonly actDirector: RadialActDirector;
+
+  public constructor(actDirector: RadialActDirector = new RadialActDirector()) {
+    this.actDirector = actDirector;
+  }
+
   public state: ArenaState = {
     elapsedSeconds: 0,
     radius: ARENA_RADIUS,
@@ -66,7 +73,7 @@ export class ArenaModel {
       this.expansionResonance(elapsedSeconds, ARENA_EXPANSION_START_SECONDS),
       this.expansionResonance(elapsedSeconds, ARENA_SECOND_EXPANSION_START_SECONDS)
     );
-    const shapeFrame = getShapeFrame(elapsedSeconds);
+    const shapeFrame = getShapeFrame(elapsedSeconds, this.actDirector.arenaShapeChanges);
 
     this.state = {
       elapsedSeconds,
@@ -113,11 +120,14 @@ interface ArenaShapeFrame {
   readonly shapeIndex: number;
 }
 
-const getShapeFrame = (elapsedSeconds: number): ArenaShapeFrame => {
+const getShapeFrame = (
+  elapsedSeconds: number,
+  shapeChanges: readonly ArenaShapeChangeDefinition[]
+): ArenaShapeFrame => {
   let stableShape: ArenaShape = 'circle';
   let shapeIndex = 0;
-  for (let index = 0; index < ACT_I_ARENA_SHAPE_CHANGES.length; index += 1) {
-    const change = ACT_I_ARENA_SHAPE_CHANGES[index];
+  for (let index = 0; index < shapeChanges.length; index += 1) {
+    const change = shapeChanges[index];
     const telegraphEnd = change.startSeconds + change.telegraphSeconds;
     const morphEnd = telegraphEnd + change.morphSeconds;
     if (elapsedSeconds < change.startSeconds) break;

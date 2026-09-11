@@ -21,6 +21,20 @@ describe('UpgradeApplier', () => {
     expect(combat.hasTwinEmitters).toBe(true);
   });
 
+  it('unlocks Vector Boomerang and enforces the three-weapon cap', () => {
+    const player = new PlayerModel();
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(player, combat);
+
+    expect(applier.apply('vector_boomerang')).toBe(true);
+    expect(combat.hasVectorBoomerang).toBe(true);
+    expect(applier.getPreview('vector_boomerang')).toBeNull();
+
+    expect(applier.apply('orbit_blade')).toBe(true);
+    expect(applier.canApply('chain_lightning')).toBe(false);
+    expect(applier.apply('chain_lightning')).toBe(false);
+  });
+
   it('filters prerequisites and stops finite upgrades at their authored limits', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
 

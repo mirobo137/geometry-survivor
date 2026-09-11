@@ -1,4 +1,4 @@
-export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory';
+export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory' | 'act-intermission';
 
 export class GameState {
   public phase: GamePhase;
@@ -12,7 +12,7 @@ export class GameState {
   }
 
   public get isTerminal(): boolean {
-    return this.phase === 'game-over' || this.phase === 'victory';
+    return this.phase === 'game-over' || this.phase === 'victory' || this.phase === 'act-intermission';
   }
 
   public startRun(): boolean {
@@ -57,6 +57,17 @@ export class GameState {
     return true;
   }
 
+  /**
+   * A boss victory becomes a paused handoff between acts. It deliberately
+   * carries no build, reward, or campaign rules; those remain in the
+   * coordinator/content that owns them.
+   */
+  public enterActIntermission(): boolean {
+    if (this.phase !== 'victory') return false;
+    this.phase = 'act-intermission';
+    return true;
+  }
+
   /** Returns a death terminal run to gameplay; victories cannot be revived. */
   public reviveRun(): boolean {
     if (this.phase !== 'game-over') return false;
@@ -84,6 +95,13 @@ export class GameState {
   /** Abandons the current run and returns to the start menu from manual pause. */
   public returnToMenuFromPause(): boolean {
     if (this.phase !== 'paused') return false;
+    this.phase = 'menu';
+    return true;
+  }
+
+  /** Leaves a completed act safely when there is no playable next act yet. */
+  public returnToMenuFromIntermission(): boolean {
+    if (this.phase !== 'act-intermission') return false;
     this.phase = 'menu';
     return true;
   }

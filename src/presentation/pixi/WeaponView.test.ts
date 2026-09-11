@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { Texture } from 'pixi.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Graphics, Texture } from 'pixi.js';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { WeaponView } from './WeaponView';
 
@@ -8,6 +8,14 @@ const fakeRenderer = {
 } as unknown as ConstructorParameters<typeof WeaponView>[0];
 
 describe('WeaponView', () => {
+  beforeEach(() => {
+    vi.spyOn(Graphics.prototype, 'svg').mockImplementation(function (this: Graphics) {
+      return this;
+    });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
   it('mantiene Prism Aegis en capas cacheadas y conserva la identidad en Low', () => {
     const view = new WeaponView(fakeRenderer, undefined, 'low');
     const combat = {
@@ -78,5 +86,46 @@ describe('WeaponView', () => {
     expect(view.root.children[1].visible).toBe(true); // layered beam remains readable.
     expect(view.root.children[2].children[0].visible).toBe(true); // target relay remains visible.
     expect(view.root.children[3].visible).toBe(false); // moving pulse is optional in Low.
+  });
+
+  it('renders a bounded Vector Boomerang in outbound and return phases', () => {
+    const view = new WeaponView(fakeRenderer, undefined, 'medium');
+    const combat = {
+      orbitBlades: Array.from({ length: WEAPON_DEFINITIONS.orbit.maxBlades }, () => ({
+        active: false, x: 0, y: 0, radius: 10, angle: 0
+      })),
+      chainSegments: [],
+      boomerangs: Array.from({ length: 8 }, (_, index) => ({
+        active: index === 0,
+        x: 320,
+        y: 240,
+        vx: index === 0 ? 360 : 0,
+        vy: 0,
+        radius: WEAPON_DEFINITIONS.vectorBoomerang.radius,
+        damage: WEAPON_DEFINITIONS.vectorBoomerang.damage,
+        ageSeconds: 0.4,
+        lifetimeSeconds: 1.8,
+        phase: (index === 0 ? 'outbound' : 'returning') as 'outbound' | 'returning',
+        directionX: 1,
+        directionY: 0,
+        distanceTravelled: 120,
+        slotIndex: index
+      }))
+    };
+
+    view.render(combat);
+    const layer = view.root.children[4];
+    const root = layer.children[0];
+    expect(root.visible).toBe(true);
+    expect(root.children).toHaveLength(5);
+    expect(root.children[0].visible).toBe(true);
+
+    combat.boomerangs[0].phase = 'returning';
+    combat.boomerangs[0].vx = -430;
+    view.render(combat);
+    expect(root.visible).toBe(true);
+    expect(root.rotation).toBeCloseTo(Math.PI);
+    view.reset();
+    expect(root.visible).toBe(false);
   });
 });

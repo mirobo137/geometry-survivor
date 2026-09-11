@@ -6,7 +6,7 @@ import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import pauseActionIcons from './assets/svg/ui/pause-icons.svg?raw';
 import pausePanelFrame from './assets/svg/ui/pause-panel-frame.svg?raw';
 import settingsIcon from './assets/svg/ui/settings.svg?raw';
-import { BOSS_DEFINITION } from './content/bosses/BossDefinition';
+import { RADIAL_ACT_DIRECTOR } from './simulation/acts/RadialActDirector';
 import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens';
 import { isCannonSkinId, type CannonSkinId } from './content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from './content/visual/BackgroundDefinitions';
@@ -147,7 +147,7 @@ const bootstrap = async (): Promise<void> => {
     fxQuality,
     profileMode,
     baselineMode,
-    initialElapsedSeconds: bossDebugMode ? BOSS_DEFINITION.startSeconds : undefined,
+    initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode,
     platform: new LocalPlatform()

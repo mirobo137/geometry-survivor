@@ -5,6 +5,7 @@ export type UpgradeId =
   | 'reinforced_core'
   | 'orbit_blade'
   | 'chain_lightning'
+  | 'vector_boomerang'
   | 'rapid_projectiles'
   | 'resonant_core'
   | 'regenerative_reactor'
@@ -31,6 +32,7 @@ export type UpgradeEffect =
   | { readonly type: 'maxHealth'; readonly amount: number }
   | { readonly type: 'orbitBlade' }
   | { readonly type: 'chainLightning' }
+  | { readonly type: 'vectorBoomerang' }
   | { readonly type: 'projectileCooldown'; readonly amount: number }
   | { readonly type: 'experienceGain'; readonly amount: number }
   | { readonly type: 'healthRecovery'; readonly amount: number }
@@ -79,6 +81,13 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Cadena eléctrica',
     description: 'Desbloquea un rayo que salta hasta 3 enemigos',
     effect: { type: 'chainLightning' },
+    maxStacks: 1
+  },
+  {
+    id: 'vector_boomerang',
+    title: 'Búmeran vectorial',
+    description: 'Lanza una hoja que golpea al salir y al regresar hacia ti',
+    effect: { type: 'vectorBoomerang' },
     maxStacks: 1
   },
   {

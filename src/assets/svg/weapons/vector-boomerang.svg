@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-24 -24 48 48" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="vector-boomerang-title vector-boomerang-desc">
+  <title id="vector-boomerang-title">Búmeran vectorial</title>
+  <desc id="vector-boomerang-desc">Hoja angular orientada hacia +X, con núcleo claro y dos brazos que sugieren salida y retorno.</desc>
+  <path id="vector-boomerang-aura" d="M-19-12-1-9 17-3 21 0 17 3-1 9-19 12-9 2 7 0-9-2Z" fill="#8de8ff" opacity=".18"/>
+  <path id="vector-boomerang-shell" d="M-17-10 1-8 17 0 1 8-17 10-7 2 9 0-7-2Z" fill="#101d34" stroke="#8de8ff" stroke-width="1.6" stroke-linejoin="round"/>
+  <path id="vector-boomerang-left-plane" d="M-14-8 1-6 9 0-7-2Z" fill="#75e6ff" opacity=".9"/>
+  <path id="vector-boomerang-right-plane" d="M-14 8 1 6 9 0-7 2Z" fill="#d2a8ff" opacity=".86"/>
+  <path id="vector-boomerang-core" d="M-4-3 8 0-4 3-9 0Z" fill="#fff4cf"/>
+  <path id="vector-boomerang-edge" d="M-17-10-7-2M-17 10-7 2M9 0 17 0" fill="none" stroke="#f4ffff" stroke-width="1" stroke-linecap="round" opacity=".9"/>
+</svg>

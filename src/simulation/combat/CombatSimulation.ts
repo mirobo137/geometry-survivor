@@ -5,17 +5,18 @@ import {
   LOGICAL_WIDTH
 } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
-import { EnemyPool, type EnemyState, type ProjectilePool } from './EntityPools';
+import { EnemyPool, type BoomerangState, type EnemyState, type ProjectilePool } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
-import { getSpawnIntervalSeconds } from '../../content/run/DifficultyDefinitions';
 import { LaserHazard } from '../hazards/LaserHazard';
+import { RadialPulseHazard } from '../hazards/RadialPulseHazard';
 import type { CombatRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
 import { BossSystem } from '../bosses/BossSystem';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
+import { RadialActDirector } from '../acts/RadialActDirector';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -24,6 +25,7 @@ export interface CombatSimulationOptions {
   /** Optional simulation clock offset used by deterministic development scenarios. */
   readonly initialElapsedSeconds?: number;
   readonly permanentBonuses?: PermanentCombatBonuses;
+  readonly actDirector?: RadialActDirector;
 }
 
 export type CombatEvent =
@@ -38,7 +40,7 @@ export type CombatEvent =
   | {
     readonly type: 'playerDamaged';
     readonly amount: number;
-    readonly source: 'contact' | 'laser' | 'boss';
+    readonly source: 'contact' | 'laser' | 'radial-pulse' | 'boss';
   };
 
 export interface CombatStats {
@@ -58,13 +60,17 @@ export class CombatSimulation {
     shotsFired: 0,
     damageTaken: 0
   };
-  private readonly enemySystem = new EnemySystem(this.enemies, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
-  public readonly boss = new BossSystem(this.enemySystem);
+  private readonly actDirector: RadialActDirector;
+  private readonly enemySystem: EnemySystem;
+  public readonly boss: BossSystem;
   private readonly weaponSystem: CombatWeaponSystem;
   public readonly projectiles: ProjectilePool;
-  public readonly laser = new LaserHazard();
+  public readonly boomerangs: CombatWeaponSystem['boomerangs'];
+  public readonly laser: LaserHazard;
+  public readonly radialPulse: RadialPulseHazard;
   public readonly orbitBlades: CombatWeaponSystem['orbitBlades'];
   public readonly chainSegments: CombatWeaponSystem['chainSegments'];
+  public readonly boomerangStates: readonly BoomerangState[];
   public readonly renderState: CombatRenderState;
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
@@ -74,20 +80,33 @@ export class CombatSimulation {
   private stressInitialized = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
+    this.actDirector = options.actDirector ?? new RadialActDirector();
+    this.enemySystem = new EnemySystem(
+      this.enemies,
+      new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
+      this.actDirector
+    );
+    this.boss = new BossSystem(this.enemySystem, this.actDirector.bossDefinition);
+    this.laser = new LaserHazard(LASER_DEFINITION, this.actDirector);
+    this.radialPulse = new RadialPulseHazard(this.actDirector.radialPulseDefinition);
     this.weaponSystem = new CombatWeaponSystem(
       this.enemySystem,
       (enemy) => this.defeatEnemy(enemy),
       options.permanentBonuses
     );
     this.projectiles = this.weaponSystem.projectiles;
+    this.boomerangs = this.weaponSystem.boomerangs;
     this.orbitBlades = this.weaponSystem.orbitBlades;
     this.chainSegments = this.weaponSystem.chainSegments;
+    this.boomerangStates = this.weaponSystem.boomerangStates;
     this.renderState = {
       enemies: this.enemies.states,
       projectiles: this.projectiles.states,
       orbitBlades: this.orbitBlades,
       chainSegments: this.chainSegments,
+      boomerangs: this.boomerangStates,
       laser: this.laser.state,
+      radialPulse: this.radialPulse.state,
       boss: this.boss.state,
       shot: this.weaponSystem.lastShot
     };
@@ -183,6 +202,14 @@ export class CombatSimulation {
     return this.weaponSystem.hasChainLightning;
   }
 
+  public unlockVectorBoomerang(): boolean {
+    return this.weaponSystem.unlockVectorBoomerang();
+  }
+
+  public get hasVectorBoomerang(): boolean {
+    return this.weaponSystem.hasVectorBoomerang;
+  }
+
   public get activeOrbitBlades(): number {
     return this.weaponSystem.activeOrbitBlades;
   }
@@ -193,6 +220,10 @@ export class CombatSimulation {
 
   public increaseChainDamage(amount: number): void {
     this.weaponSystem.increaseChainDamage(amount);
+  }
+
+  public increaseBoomerangDamage(amount: number): void {
+    this.weaponSystem.increaseBoomerangDamage(amount);
   }
 
   public increaseExperienceGain(amount: number): void {
@@ -219,12 +250,33 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
-    if (this.laser.update(dt, this.stats.elapsedSeconds, player, arenaBoundary)) {
+    if (this.laser.update(
+      dt,
+      this.stats.elapsedSeconds,
+      player,
+      arenaBoundary,
+      this.radialPulse.state.phase === 'idle'
+    )) {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
+    if (this.radialPulse.update(
+      dt,
+      this.stats.elapsedSeconds,
+      player,
+      arenaBoundary,
+      this.laser.state.phase === 'idle',
+      this.boss.state.active
+    )) {
+      this.stats.damageTaken += this.actDirector.radialPulseDefinition.damage;
+      this.pendingEvents.push({
+        type: 'playerDamaged',
+        amount: this.actDirector.radialPulseDefinition.damage,
+        source: 'radial-pulse'
+      });
+    }
 
-    const spawnInterval = getSpawnIntervalSeconds(this.stats.elapsedSeconds);
+    const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
     const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
     while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
       this.spawnAccumulator -= spawnInterval;
@@ -263,6 +315,7 @@ export class CombatSimulation {
     this.boss.reset();
     this.weaponSystem.reset();
     this.laser.reset();
+    this.radialPulse.reset();
     this.stats.elapsedSeconds = this.initialElapsedSeconds;
     this.stats.kills = 0;
     this.stats.experience = 0;

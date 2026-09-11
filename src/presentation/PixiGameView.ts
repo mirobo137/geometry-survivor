@@ -12,6 +12,7 @@ import { BackgroundView } from './pixi/BackgroundView';
 import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
+import { RadialPulseView } from './pixi/RadialPulseView';
 import { ImpactFxView } from './pixi/fx/ImpactFxView';
 import { ScreenFxView } from './pixi/fx/ScreenFxView';
 import { TerminalFxView } from './pixi/fx/TerminalFxView';
@@ -32,6 +33,7 @@ export class PixiGameView {
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
   private readonly hazardView: HazardView;
+  private readonly radialPulseView: RadialPulseView;
   private readonly playerView: PlayerView;
   private readonly impactFxView: ImpactFxView;
   private readonly terminalFxView: TerminalFxView;
@@ -50,6 +52,7 @@ export class PixiGameView {
   ) {
     this.backgroundView = new BackgroundView(renderer, background, quality);
     this.hazardView = new HazardView(quality);
+    this.radialPulseView = new RadialPulseView(quality);
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
@@ -63,6 +66,7 @@ export class PixiGameView {
       this.entitiesView.root,
       this.weaponView.root,
       this.hazardView.root,
+      this.radialPulseView.root,
       this.bossView.root,
       this.playerView.root,
       this.impactFxView.root,
@@ -102,6 +106,10 @@ export class PixiGameView {
 
   public renderLaser(state: CombatRenderState['laser'], arena: ArenaBoundaryInput): void {
     this.hazardView.renderLaser(state, arena);
+  }
+
+  public renderRadialPulse(state: CombatRenderState['radialPulse']): void {
+    this.radialPulseView.render(state);
   }
 
   public renderBoss(state: CombatRenderState['boss'], arenaRadius: number): void {
@@ -189,6 +197,7 @@ export class PixiGameView {
     this.entitiesView.reset();
     this.arenaView.reset();
     this.hazardView.reset();
+    this.radialPulseView.reset();
     this.weaponView.reset();
     this.screenFxView.reset();
     this.lastArenaRadius = -1;

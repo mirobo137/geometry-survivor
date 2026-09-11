@@ -4,8 +4,9 @@ Fecha de decisión: 05-09-2026.
 
 Este documento fija la dirección de producto que acompaña a
 `PLAN_DESARROLLO.md` §16. Define el contrato de experiencia de los actos y el
-modo infinito; el prototipo espacial del Acto I ya está implementado, pero la
-campaña completa, sus transiciones y Overdrive siguen siendo entregas futuras.
+modo infinito; el prototipo espacial del Acto I y su contrato `ActDefinition`
+ya están implementados, pero la campaña completa, sus transiciones y Overdrive
+siguen siendo entregas futuras.
 
 ## Decisión principal
 
@@ -103,11 +104,78 @@ La identidad visual premium de la arena está documentada en
 para campo, rieles, nodos, resonancia y shockwave; queda preparada para nuevas
 formas sin activar gameplay futuro desde el renderer.
 
-Este prototipo no crea aún `ActDefinition`, save nuevo, selección de actos,
-otros polígonos ni Overdrive. La validación automática está cubierta; la
-pregunta de si el cambio produce la diversión y diferenciación esperadas
-requiere una prueba humana en desktop y móvil antes de convertirlo en el
-contrato final del Acto I.
+El prototipo no crea save nuevo, selección de actos, otros polígonos ni
+Overdrive. EX-06a ya compone este timeline en `ActDefinition` con un único
+consumidor Radial; la validación de equivalencia evita alterar la run antes de
+añadir la regla nueva. La pregunta de si el pulso produce la diversión y
+diferenciación esperadas requiere todavía una prueba humana cuando se abra
+EX-06b.
+
+## EX-06a — contrato Radial sin cambio de gameplay
+
+`src/content/run/ActDefinitions.ts` expone únicamente el acto que tiene un
+consumidor real: `radial`. Su definición compone las fases de spawn, perfiles de
+enemigos, calendario círculo↔hexágono y `Core Sentinel` existentes; no inventa
+una recompensa fija ni actos vacíos para poblar el menú. El inicio del boss se
+mantiene en 260 s y la duración del contrato se interpreta como la apertura de
+la ventana del boss: el final real sigue siendo derrotarlo.
+
+`RadialActDirector` es el único lector de `ActDefinition`. Arena, enemigos,
+lásers y combate reciben sus consultas tipadas a través de ese director, de
+modo que una futura regla radial no tenga que copiar umbrales en cada sistema.
+La prueba seeded compara cadencias y mezcla de enemigos con las funciones
+anteriores en 128 muestras, además de comprobar los hitos exactos. Esta unidad
+no añade el pulso radial, cambios de balance, save ni selección de actos.
+
+## EX-06b — pulso radial con respuesta posible
+
+El Acto I incorpora una única regla extra: una onda anular alterna entre viajar
+del bolsillo interior al exterior y del exterior al interior. Se programa al segundo 92, después
+cada 52 segundos y no puede iniciar después del segundo 250; el Core Sentinel
+abre a los 260 segundos. Cada cast sigue `telegraph (1.1 s) → active (1.6 s) →
+recovery (0.6 s)`. El telegraph muestra anillo discontinuo, dirección y
+marcadores, pero no daña. Durante `active` la banda se mueve entre dos
+bolsillos no dañinos: un refugio interior de 72 u y otro exterior calculado
+dejando espacio para el cuerpo del player. Aplica como máximo un impacto;
+`recovery` sólo desvanece el residuo.
+
+El jugador conserva una respuesta espacial: puede leer la dirección y entrar
+al bolsillo interior o exterior antes de que llegue la banda. El pulso no
+rellena de color una zona segura, porque el campo libre debe seguir
+mostrando player, enemigos y láseres. El radio de la banda se comprueba con
+colisión barrida entre ticks para no saltar la onda a velocidades válidas.
+
+Laser y pulso se arbitran en la simulación: un hazard ya iniciado nunca se
+interrumpe y el otro no inicia mientras su fase no sea `idle`. Una espera que
+supere el deadline se descarta; el pulso tampoco inicia con el boss activo.
+Así la regla añade expectativa sin convertir la combinación en daño inevitable.
+
+El contrato de contenido está en `RadialPulseDefinition`, la simulación en
+`RadialPulseHazard` y la representación premium de bajo coste en
+`RadialPulseView`. El daño 16 es provisional y no adelanta EX-02c. La ficha y
+la evidencia están en `docs/balance/EX-06b-radial-pulse.md`; falta validación
+humana de lectura, comodidad y diversión en desktop/móvil.
+
+## EX-06c — resultado e intermisión del Acto I
+
+Al derrotar al Core Sentinel, el resultado definitivo de la run conserva la
+misma liquidación de NOVA idempotente que usa el resto del juego: no se añade
+un bonus fijo ni una segunda transacción sin una pasada explícita de economía.
+Tras el breve cierre visual, el lifecycle cambia de `victory` a
+`act-intermission` y el resumen declara **Acto I · Radial superado**.
+
+El único contenido jugable sigue siendo Radial. Por ello la intermisión ofrece
+`Repetir Acto I` y `Volver al menú`, nunca un botón `Continuar` desactivado ni
+una promesa de Acto II. Volver al menú invalida callbacks rewarded pendientes
+antes de limpiar la presentación; repetir comienza una run nueva y no conserva
+build. No se persiste una expedition, un desbloqueo de acto o un snapshot de
+run: esos datos sólo se añadirán en EX-07 cuando Angular tenga consumidor real.
+
+Esta frontera es deliberada: el estado conoce la transición de lifecycle, Game
+coordina el resultado y la economía, y la UI sólo recibe etiquetas y acciones
+válidas. Cuando exista Expedition, `act-intermission` podrá recibir
+`Continuar` con una build conservada; esta primera versión no adelanta esa
+regla.
 
 ## Bucle meta
 
@@ -231,8 +299,8 @@ La decisión de diseño no salta las puertas técnicas:
 1. dejar EX-02c **PENDIENTE** hasta la pasada final de vida, daño y meta;
 2. terminar la evidencia local de EX-03 y conservar la extracción EX-04;
 3. implementar Boomerang en EX-05 para cerrar la frontera del arsenal;
-4. cerrar el prototipo y luego implementar Acto I/`ActDefinition` y su
-   transición en EX-06;
+4. cerrar el prototipo y consolidar Acto I/`ActDefinition` en EX-06; EX-06a
+   ya formalizó el contrato sin cambiar su gameplay y EX-06b añadirá la regla;
 5. implementar Angular, Calibration y su boss en EX-07;
 6. integrar Fracture y la victoria de Expedition en EX-10;
 7. abrir Overdrive en EX-11, con tabla de ciclos, caps, memoria y recompensa

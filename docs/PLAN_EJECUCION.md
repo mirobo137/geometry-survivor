@@ -55,10 +55,10 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
 | BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
 | CHAIN-VISUAL | — | Arc Relay: cadena angular con transferencia legible | AUTOMÁTICO OK; prueba humana pendiente |
-| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | EX-03a OK; control móvil relativo implementado y validado; baseline numérico y metadatos finales de stress pendientes |
+| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
-| EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | pendiente, depende de EX-01 a EX-04 |
-| EX-06 | 6 | Acto I Radial y contrato de actos | pendiente, depende de EX-05 |
+| EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
+| EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, siguiente EX-06d; aceptación humana del pulso y cierre del acto pendiente |
 | EX-07 | 7 | Acto II Angular y Calibration | pendiente, depende de EX-06 |
 | EX-08 | 7/9 | niveles/evoluciones, una ruta por entrega | acompaña el acto que consume cada ruta |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
@@ -304,8 +304,10 @@ control y rendimiento en desktop y móvil. El resultado humano decidirá si el
 slice se conserva como regla del Acto I; no se deben agregar aún triángulo,
 rectángulo u otras formas por inferencia.
 
-El prototipo no implementa `ActDefinition`, save, selección de actos ni
-Overdrive, y no reemplaza las puertas EX-03–EX-06.
+En el momento de este prototipo no implementaba `ActDefinition`, save,
+selección de actos ni Overdrive. EX-06a ya añadió el contrato y el director
+Radial; save, selección de actos, pulso nuevo y Overdrive siguen fuera de
+alcance y las puertas EX-03–EX-06 continúan vigentes.
 
 ### ARENA-VISUAL — identidad premium de la zona de movimiento
 
@@ -313,7 +315,7 @@ Fondos complementarios entregados: **Órbita de Nacre** y **Flor del Ocaso**,
 gratuitos en el locker.
 Guía de construcción en [FONDOS_PREMIUM.md](design/FONDOS_PREMIUM.md).
 SVG rasterizado una vez; una lámina estática y centro de bajo contraste.
-Validación de la familia de fondos: 253 tests, 20 smoke y los tres builds
+Validación de la familia de fondos: 253 tests, 24 smoke y los tres builds
 correctos; aprobación visual y perfil en teléfono físico pendientes. Vesper
 Bloom añade un segundo fondo gratuito: 5.143 bytes de SVG fuente, 5.14 kB en
 build y 1.69 kB gzip; su textura RGBA8 de 768×768 se rasteriza una vez y no
@@ -401,13 +403,14 @@ progreso, daño inevitable ni stutter perceptible; controles, amenazas y cartas
 se entienden y builds distintas cambian el recorrido. La condición pendiente es
 una segunda opción de desplazamiento móvil porque dedos gruesos pueden cubrir al
 player. Samsung S25+ y PC fueron probados; faltan modelo/navegador/commit exactos,
-el texto del reporte `?baseline=1` y los datos comparables de
+y los datos comparables de
 `?stress=1&profile=1` en Low/Medium/High. Ver
 [`docs/balance/EX-03b-human-observations.md`](balance/EX-03b-human-observations.md)
 y [`docs/performance/EX-03c-stress-pending.md`](performance/EX-03c-stress-pending.md).
 El stress ya fue capturado en PC media para Low, Medium y High con `250/250`
-enemigos y `300/300` proyectiles; las tres calidades quedaron alrededor de 60
-FPS. El usuario también confirma una ejecución positiva en Samsung S25+; queda
+enemigos y `300/300` proyectiles; la matriz complementaria más reciente
+(`profile=off`) muestra 59.99–60.00 FPS en las tres calidades. El usuario
+también confirma una ejecución positiva en Samsung S25+; queda
 como evidencia móvil cualitativa porque no hay captura ni métricas numéricas del
 panel. Duración y navegador exactos siguen pendientes.
 
@@ -417,9 +420,9 @@ modalidad persistente en inicio y pausa: el gesto conserva un origen invisible,
 usa su desplazamiento para calcular dirección y no requiere mantener el dedo
 encima del player. `InputManager.test.ts`, smoke mobile Pixel 5 (2/2) y smoke
 desktop (12/12) cubren la ruta; `auto`/`touch` conservan el comportamiento
-anterior y `keyboard` sigue disponible. EX-03 continúa abierto únicamente por
-el reporte numérico `?baseline=1`, duración/navegador del stress y los metadatos
-faltantes; no se debe marcar cerrado ni abrir Boomerang antes de esa evidencia.
+anterior y `keyboard` sigue disponible. EX-03 queda cerrado con la confirmación
+del usuario sobre Chrome/Edge en PC, Chrome en Samsung S25+, economía/rewarded,
+build correcta, sesión de 5 minutos y la anomalía FPS como error de reporte.
 
 ### EX-04 — Conservar lo ya extraído
 
@@ -432,6 +435,13 @@ ni un ECS antes de tener su consumidor.
 ## 4. Arsenal y actos: ejecución por incrementos
 
 ### EX-05 — Vector Boomerang, primero una pieza base
+
+La ficha numerica y el contrato de esta entrega estan en
+[`docs/balance/EX-05-vector-boomerang.md`](balance/EX-05-vector-boomerang.md).
+La base del codigo, los tests y la validacion humana del Bumeran quedan
+aprobados para este hito. Por decision del producto, EX-05e (comparacion de
+ticks y stress de combinaciones) se difiere y no bloquea EX-06; se conserva como
+auditoria tecnica futura, no como evidencia ya ejecutada.
 
 **Entrada:** EX-01–04 cerrados. Skills gameplay + rendering + mobile-performance
 + validation; SVG para crear el asset, architecture para extender contratos.
@@ -457,9 +467,10 @@ en `src/presentation/pixi/`; cartas por `UpgradeDefinitions`/`UpgradeApplier`.
    cuarta. Si hay tres equipadas, no ofrecer una cuarta adquisición; upgrades
    de las equipadas siguen válidos. No expulsar un arma automáticamente. Si el
    catálogo queda corto, resolver el fallback de cartas sin opciones inválidas.
-5. **EX-05e, prueba:** casos seeded de blanco único/horda dispersa/densa, player
+5. **EX-05e, auditoría futura:** casos seeded de blanco único/horda dispersa/densa, player
    quieto/en movimiento y rendimiento de combinaciones de tres armas. Comparar
    igual número de ticks bajo render 30/60/144 Hz. Una run móvil y una PC.
+   Esta auditoría queda diferida y no bloquea la apertura de EX-06.
 
 **Aceptación:** mover al player cambia útilmente la alineación de regreso;
 colisión y visual coinciden; no hay tercer hit por fase, bloqueos ni crecimiento
@@ -474,6 +485,9 @@ Twin Comet y Singularity Return son entregas separadas bajo EX-08.
 1. **EX-06a:** introducir `ActDefinition` con un único consumidor Radial que
    reproduce exactamente tiempos, spawns y boss actuales. Test de equivalencia
    por semilla antes de añadir la nueva regla. No crear actos vacíos en el menú.
+   La implementación vive en `src/content/run/ActDefinitions.ts` y
+   `src/simulation/acts/RadialActDirector.ts`; la equivalencia automática queda
+   cubierta antes de abrir EX-06b.
 2. **EX-06b:** especificar/probar un pulso radial conforme a DEC-02: una amenaza
    nueva, respuesta posible y arbitraje con Laser/boss. Usar fases explícitas y
    evitar ataques superpuestos que cierren toda salida. No añadir enemigos aquí.
@@ -485,6 +499,37 @@ Twin Comet y Singularity Return son entregas separadas bajo EX-08.
    explícita, comparando con baseline; no recortar el reloj incidentalmente.
 
 **Salida:** acto corto que enseña distancia/centro/borde y tiene victoria clara.
+
+### Registro EX-06b — pulso radial
+
+EX-06b está implementado y automático OK. `RadialPulseHazard` añade una onda
+anular con `telegraph → active → recovery`, alternancia outward/inward,
+colisión barrida y un impacto máximo por cast. `LaserHazard` acepta el arbitraje
+de inicio para evitar solapamientos; el boss y el deadline de Acto I bloquean
+nuevos pulsos. La vista reutiliza cinco `Graphics` y conserva telegraph en Low.
+La ficha completa está en `docs/balance/EX-06b-radial-pulse.md`.
+
+### Resultado EX-06c — intermisión segura del Acto I
+
+La victoria del Core Sentinel pasa de `victory` a `act-intermission` cuando
+abre el resumen. La transición detiene simulación, conserva la liquidación
+terminal única ya existente y presenta explícitamente **Acto I · Radial
+superado**. El jugador sólo puede `Repetir Acto I` o `Volver al menú`; no se
+declara un Acto II desbloqueado, no se muestra `Continuar` y no existe save de
+expedición parcial. El doble de NOVA sigue siendo la oferta final ya acotada,
+no una segunda recompensa de acto.
+
+La salida a menú invalida callbacks rewarded tardíos antes de limpiar la
+presentación, sin volver a liquidar la recompensa. `GameState` contiene sólo
+la transición de lifecycle; Game sigue siendo dueño de economía, save y
+coordinación. Las pruebas de estado y Game cubren intermisión, las dos salidas
+seguras, la recompensa de victoria idempotente y la ausencia de continuación.
+La evidencia y el guion humano están en
+[`docs/balance/EX-06c-act-intermission.md`](balance/EX-06c-act-intermission.md).
+
+Siguiente ID: **EX-06d**, validación humana del acto completo. Antes de cerrar
+EX-06 falta validar comprensión del pulso, salida segura, presión y lectura en
+desktop/móvil.
 
 ### EX-07 — Acto II Angular, sin producir todo a la vez
 

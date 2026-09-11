@@ -80,6 +80,20 @@ describe('GameState', () => {
     expect(state.reviveRun()).toBe(false);
   });
 
+  it('turns a boss victory into an explicit intermission with only safe exits', () => {
+    const state = new GameState();
+
+    expect(state.enterActIntermission()).toBe(false);
+    expect(state.winRun()).toBe(true);
+    expect(state.enterActIntermission()).toBe(true);
+    expect(state.phase).toBe('act-intermission');
+    expect(state.isSimulationRunning).toBe(false);
+    expect(state.isTerminal).toBe(true);
+    expect(state.resume()).toBe(false);
+    expect(state.returnToMenuFromIntermission()).toBe(true);
+    expect(state.phase).toBe('menu');
+  });
+
   it('allows returning to the menu from manual pause only', () => {
     const state = new GameState();
 

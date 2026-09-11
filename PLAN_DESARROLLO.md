@@ -1020,7 +1020,7 @@ Evidencia aportada por el usuario, separada de las mediciones automatizadas:
 - [x] Las decisiones de build tienen impacto real para llegar al boss y derrotarlo.
 - [x] El balance inicial se percibe adecuado para el primer nivel.
 - [x] Las mecánicas principales y los diseños provisionales cumplen su función actual.
-- [ ] Registrar diez runs internas con causa de final, softlocks y daño inevitable.
+- [x] Registrar diez runs internas con causa de final, softlocks y daño inevitable.
 - [ ] Registrar dispositivo, navegador, preset de calidad y FPS aproximado.
 - [x] Validar context loss automáticamente y cubrir el fallback de storage bloqueado con tests unitarios.
 - [x] Validar el spike de Web Audio; reproduce sonido tras interacción del usuario y se documenta su volumen bajo de prueba.
@@ -2106,8 +2106,9 @@ El orden obligatorio es:
    proyectiles/FX y frame p95 por calidad.
 4. **Extraer comportamientos de armas.** La cuarta arma activa la extracción
    justificada de `CombatWeaponSystem`; no se amplía el archivo monolítico.
-5. **Añadir Vector Boomerang.** Es la prueba de la nueva arquitectura y debe
-   pasar balance, determinismo y stress antes de continuar.
+5. **Añadir Vector Boomerang.** Es la prueba de la nueva arquitectura; su base
+   automática y humana queda aprobada antes de continuar. La auditoría EX-05e
+   de ticks/stress se conserva como comprobación técnica no bloqueante.
 6. **Consolidar Acto I Radial.** Reutilizar arena, Laser y boss actuales, con
    una regla radial adicional legible y una victoria parcial.
 7. **Construir Acto II Angular.** Añadir Calibration, una familia de enemigos,
@@ -2190,6 +2191,11 @@ interface ActDefinition {
   nextActId?: string;
 }
 ```
+
+Este es el contrato de campaña previsto; el catálogo ejecutable sólo expone
+`radial` mientras Angular y Fracture no tengan consumidor real. EX-06a añade
+los datos authored específicos y el director Radial sin crear entradas vacías
+en el menú ni migrar el save antes de EX-06c.
 
 `GameState` podrá añadir `actIntermission` y `adBreak`; no contendrá reglas de
 boss, armas o economía. El save almacenará desbloqueos y mejores resultados,
@@ -2579,9 +2585,79 @@ unificó la semántica del bonus por arma sin tocar porcentajes. Por decisión d
 usuario, **EX-02c queda PENDIENTE** y se retomará en la pasada final de vida de
 enemigos, daño general y meta. La siguiente acción documental es consolidar el
 contrato de actos y meta en
-[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md); la siguiente EX
-de evidencia sigue siendo **EX-03**. No se rehace la extracción de armas ni se
-expone Boomerang en cartas antes de cerrar sus puertas.
+[`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md). EX-03 queda
+cerrado con la evidencia de diez runs, rewarded/economía, controles móviles,
+stress PC y validación cualitativa del Samsung S25+. No se rehace la extracción
+de armas; EX-05 queda aprobado por decisión de producto tras validar el
+Búmeran en movimiento, con otras armas activas y bajo presión. EX-05e se
+conserva como auditoría no bloqueante y la siguiente EX habilitada es EX-06.
+
+### 22.1b Estado de preparación de EX-05 — 10-09-2026
+
+La implementación local de Vector Boomerang quedó preparada para validación
+automática en el workspace: comportamiento aislado, pool, scheduler, snapshot
+de render, carta y límite de tres armas. EX-03 queda cerrado con la evidencia
+de diez runs, rewarded/economía, controles móviles, stress PC y validación
+cualitativa del Samsung S25+. La prueba humana de ida/retorno del Búmeran,
+movimiento, otras armas activas y presión también fue confirmada por el usuario.
+Por decisión de producto, EX-05 queda **APROBADO/CERRADO para este hito**; la
+comparación de ticks y rendimiento EX-05e se difiere como auditoría técnica no
+bloqueante. La ficha técnica está en
+`docs/balance/EX-05-vector-boomerang.md`.
+
+### 22.1c Estado de EX-06a — contrato Radial sin cambio de gameplay
+
+EX-06a queda implementado y automático OK con `ActDefinition` y un único
+consumidor Radial.
+`RadialActDirector` compone las fases de spawn, perfiles de enemigos,
+calendario de formas, presión de láser y definición del boss que ya usaba el
+vertical slice. `ArenaModel`, `EnemySystem`, `LaserHazard` y
+`CombatSimulation` consultan ese director, por lo que no se duplican
+umbrales ni se habilitan actos vacíos en el menú.
+
+La equivalencia seeded compara las cadencias y la mezcla de enemigos heredadas
+en 128 muestras, además de los hitos exactos y el contrato del boss. No se
+añade aún el pulso radial de EX-06b, nuevos polígonos, save de actos,
+selección, Overdrive ni balance EX-02c. La siguiente subtarea es **EX-06b**,
+después de la prueba humana del slice de arena ya existente.
+
+### 22.1d Estado de EX-06b — pulso radial
+
+EX-06b queda implementado y **AUTOMÁTICO OK; espera de validación humana**.
+`RadialPulseDefinition` fija el primer pulso en 92 s, intervalos de 52 s,
+deadline 250 s y la secuencia `telegraph → active → recovery`. La onda alterna
+outward/inward, captura el radio de la arena al comenzar y usa colisión barrida
+para aplicar un único daño provisional de 16 por cast. No se añaden enemigos ni
+se toca EX-02c.
+
+`CombatSimulation` publica el snapshot `radialPulse`; el láser y el pulso se
+arbitran sin cancelar ataques ya iniciados. El boss bloquea nuevos pulsos y el
+deadline evita que una espera se cuele en la entrada del Core Sentinel. La
+representación `RadialPulseView` reutiliza cinco `Graphics`, conserva el
+telegraph en Low y deja libre la zona segura para no tapar la lectura.
+
+La evidencia automática son los tests del hazard y la vista, más la regresión
+de láser, simulación y contrato de Acto I. La ficha está en
+`docs/balance/EX-06b-radial-pulse.md`. Siguiente ID exacto: **EX-06c**. Antes de
+cerrar EX-06b/EX-06d falta validar que la dirección se entiende, que existe una
+salida cómoda con enemigos y que la presión se siente diferenciadora en
+desktop/móvil; el balance final permanece en EX-02c.
+
+### 22.1e Estado de EX-06c — resultado seguro del Acto I
+
+EX-06c queda implementado y **AUTOMÁTICO OK**. Al liquidar la victoria del
+Core Sentinel, `GameState` entra en `act-intermission` al abrir el resultado.
+La UI nombra el **Acto I · Radial**, confirma que la NOVA se acreditó una sola
+vez y sólo permite repetir el acto o volver al menú. No muestra `Continuar`, no
+desbloquea Acto II antes de tener consumidor real y no persiste una Expedition
+parcial.
+
+La liquidación y el doble de NOVA reutilizan los contratos idempotentes de
+EX-01; salir al menú invalida callbacks rewarded tardíos antes de limpiar el
+resultado. Las pruebas de `GameState` y `Game` cubren la transición, la
+presentación de Radial y la ausencia de continuación ficticia. La siguiente
+subtarea es **EX-06d**: validación humana de la run completa, incluido pulso,
+resultado e intermisión en desktop y móvil.
 
 ### 22.1a Prototipo autorizado del Acto I
 
@@ -2606,10 +2682,11 @@ barrido sólo al entrar en `active` y mantiene la detonación hasta completar el
 recorrido. En la primera intervención hexagonal el intervalo baja a 14 s y en
 la segunda a 10.5 s, con barridos más frecuentes, amplios y rápidos.
 
-La entrega está limitada a la validación de la idea: no crea todavía
+La entrega estaba limitada a la validación de la idea: no creaba todavía
 `ActDefinition`, selección de actos, persistencia, nuevos polígonos, balance
-final ni Overdrive. Por tanto no cierra EX-06 ni mueve la siguiente puerta
-técnica, que continúa siendo **EX-03**. La aceptación de diversión,
+final ni Overdrive. EX-06a ya añadió el contrato sin cambiar gameplay; esta
+sección histórica no debe interpretarse como el estado actual. EX-06 sigue
+abierto y la aceptación de diversión,
 legibilidad y ausencia de frustración queda pendiente de prueba humana en
 desktop y móvil.
 

@@ -1,6 +1,6 @@
 # Geometry Survivor — estado y continuación
 
-> **Último handoff operativo (10-09-2026):** estabilización de CI, sección 86 y `docs/CI_DEPLOY.md`. La explicación de scroll en §85 quedó sin confirmar y su parche no resolvió CI. Fondos: Flor del Ocaso (§84) y Nacre; arena: Aster Loom (§82).
+> **Último handoff operativo (10-09-2026):** EX-03 está cerrado con las diez runs, economía/rewarded, controles, stress PC y validación cualitativa S25+. EX-05 Búmeran queda aprobado para este hito por validación humana bajo movimiento, otras armas y presión; EX-05e se difiere como auditoría no bloqueante. EX-06a/b/c están automáticos OK: Radial tiene pulso con evasión real y una intermisión segura al vencer al boss. El siguiente ID es EX-06d, validación humana completa del acto. EX-02c (balance global de daño/vida) continúa pendiente. La estabilización de CI está en sección 86 y `docs/CI_DEPLOY.md`; fondos: Flor del Ocaso (§84), Nacre; arena: Aster Loom (§82).
 
 ## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
 
@@ -2494,3 +2494,207 @@ typecheck, 75 archivos/253 tests y `CI=true npx playwright test --reporter=line`
 se compara directamente con los 9.2 minutos de Ubuntu: son entornos distintos.
 Falta ejecutar el commit en Actions y revisar duración/flaky en el reporte.
 No se hizo commit, push ni deploy. Continúa el warning conocido de 500 kB.
+
+## 87. Reporte numérico de las diez runs recibido — 10-09-2026
+
+Se rectifica el estado de EX-03: las diez runs no faltaban como ejecución. Ya
+estaban registradas cualitativamente en §§76–80 y el usuario acaba de entregar
+el texto numérico completo del panel `?baseline=1`. Queda registrado en
+`docs/balance/EX-03b-baseline-report-2026-09-10.md` y enlazado desde
+`docs/balance/EX-03b-human-observations.md`.
+
+Resumen de la muestra: 10/10 runs, 8 victorias, 2 game-over, 8 llegadas al
+boss, primera subida en 00:09, boss en 04:20, tiempo medio de las victorias
+04:25.5, máximo observado de 23 enemigos, 20 proyectiles y 52 FX. La
+distribución de calidad fue medium 4, low 1 y high 5.
+
+La línea `Run en curso: si` no es una undécima run que deba contarse: es el
+estado activo al momento de copiar el panel. No se requiere repetir la
+muestra.
+
+La puerta EX-03 queda avanzada pero no se declara cerrada todavía por dos
+motivos de trazabilidad: el texto no trae commit, modelo/build, sistema
+operativo, navegador/versión ni dispositivo exacto; además, las runs #6–#9
+dicen `FPS medio 16.67` junto a `frame medio 16.67 ms`, inconsistencia que no
+permite interpretar esos cuatro FPS como una caída real. El siguiente paso es
+completar esos metadatos y confirmar el origen de esas filas, no volver a jugar
+diez runs.
+
+## 88. Matriz de stress PC en las tres calidades recibida — 10-09-2026
+
+El usuario entregó tres capturas nuevas del modo `?stress=1` en un PC con RTX
+4060 Ti, Ryzen 7 y 32 GB de RAM. Las tres mantienen landscape, lógico
+`1280x720`, viewport `1302x890`, escala `1.02`, DPR `1.00`, `250/250` enemigos
+y `300/300` proyectiles.
+
+| Calidad | FPS mostrado | profile | p95/frame máximo/long frames/heap |
+| --- | ---: | --- | --- |
+| Low | 59.99 | off | n/a |
+| Medium | 60.00 | off | n/a |
+| High | 60.00 | off | n/a |
+
+La lectura válida es que el escenario sostiene aproximadamente 60 FPS en las
+tres calidades en ese PC. Como `profile` estaba apagado, estas capturas no
+aportan p95, frame máximo, long frames ni heap; no se inventan esos valores.
+Orbit estaba en `0/6`, Chain locked y el boss inactive, así que la evidencia
+prueba la carga declarada de enemigos/proyectiles, pero no una saturación con
+las armas o todos los FX activos.
+
+El registro completo está en
+`docs/performance/EX-03c-stress-pending.md`. Para cerrar EX-03 todavía faltan
+duración exacta, navegador/sistema operativo y confirmar la anomalía de FPS de
+las runs baseline #6–#9. No hace falta repetir las diez runs; para p95 sólo
+sería necesario repetir una matriz comparable con `profile=1` si se desea ese
+nivel adicional de rigor.
+
+## 89. EX-05 — Vector Boomerang base en curso — 10-09-2026
+
+Se implementó el primer consumidor posterior a la extracción de behaviors:
+`BoomerangBehavior`, `BoomerangPool`, scheduling opcional, snapshot de render,
+integración con `CombatSimulation`, carta `vector_boomerang` y enforcement de
+máximo tres armas. La ficha numérica/DEC-01 queda en
+`docs/balance/EX-05-vector-boomerang.md`.
+
+La pieza sale hacia el target más cercano, recorre 250 unidades y regresa
+apuntando por tick al player. Usa colisión barrida contra la spatial grid y dos
+ledgers por slot basados en `EnemyState.generation`: un enemigo recibe como
+máximo un impacto en salida y otro en retorno, incluso si se recicla el slot.
+Pool lleno, ausencia de target, player muerto, captura, TTL y reset tienen
+salidas finitas. El borde no crea una regla de daño nueva: la pieza siempre
+intenta volver y el TTL libera el slot.
+
+El asset `src/assets/svg/weapons/vector-boomerang.svg` conserva un frame
+explícito de 48x48 orientado a +X. `WeaponView` rasteriza el SVG una sola vez y
+reutiliza ocho roots con trail, aura, wake, cuerpo y núcleo; la dirección usa
+la velocidad real, y la fase de retorno cambia a una lectura violeta. Low
+mantiene una señal corta, sin crear objetos durante el render.
+
+Validación actual: `npm run typecheck` correcto; batería enfocada de 5 archivos
+y 20 tests correcta. El primer intento de Vitest fue bloqueado por permisos al
+resolver la configuración desde OneDrive; con permisos ampliados pasó. Los
+tests Pixi requieren mock de `Graphics.svg` porque la suite unitaria usa
+entorno Node y no debe introducir una dependencia DOM solo por esta vista.
+
+EX-03 queda cerrado por la confirmación humana del usuario. En ese momento EX-05
+seguía pendiente de la validación humana; la decisión posterior del usuario y
+su cierre están registrados en §§90–91. La suite de entonces quedó en 77
+archivos/261 tests; typecheck, builds local/Poki/CrazyGames y smoke browser
+24/24 pasaron. El warning conocido del chunk principal mayor de 500 kB
+permanece visible. No se hizo commit, push ni deploy.
+
+## 90. Cierre de EX-03 — 10-09-2026
+
+El usuario confirmó que las pruebas de baseline/stress se realizaron en PC con
+Chrome y Edge, y en Samsung S25+ usando Chrome. Compras, revive, reroll y
+duplicar NOVA funcionan correctamente; la build quedó correcta; la última
+sesión duró 5 minutos. La lectura de 16 FPS fue errónea: revisando las métricas,
+la caída real máxima observada fue de 56 FPS.
+
+Con esta evidencia, EX-03 queda **CERRADO**. El sistema operativo, versiones
+exactas de navegador y métricas numéricas del S25+ quedan como metadatos
+opcionales; no se inventan valores de p95 móvil ni se modifica el balance
+pendiente de EX-02c. EX-05 también queda aprobado para este hito por decisión
+de producto: la validación humana del Búmeran cubrió movimiento, otras armas
+activas y presión. EX-05e se difiere como auditoría no bloqueante.
+
+## 91. EX-06a — contrato Radial implementado — 10-09-2026
+
+El usuario aprobó el Búmeran por lo pronto y pidió continuar sin abrir todavía
+la pasada de balance de daño/vida de enemigos. Se implementó la primera unidad
+de EX-06: `ActDefinition` compone únicamente los datos authored del Acto I y
+`RadialActDirector` es su único consumidor. El director conserva exactamente
+las cadencias de spawn, la mezcla determinista de enemigos, el calendario de
+formas, la presión del láser y el contrato del Core Sentinel.
+
+`ArenaModel`, `EnemySystem`, `LaserHazard` y `CombatSimulation` consultan el
+director; no se añadieron actos vacíos, selección, save, nuevos polígonos ni el
+pulso radial. La prueba seeded usa 128 muestras para comparar cadencia y mezcla
+contra las funciones previas, además de los hitos de transición y boss.
+
+Validado tras el cambio: typecheck, batería enfocada de 36 tests, suite completa
+de 79 archivos/265 tests, builds `local`/`poki`/`crazygames` y smoke browser
+desktop/móvil 24/24 en 2.8 minutos. El warning conocido del chunk principal
+mayor de 500 kB permanece visible.
+No se hizo commit, push ni deploy. El siguiente ID de trabajo es **EX-06b**:
+especificar y probar el pulso radial, después de la validación humana del slice
+de arena existente. EX-02c y EX-05e siguen pendientes/diferidos respectivamente.
+
+## 92. EX-06b — pulso radial implementado — 10-09-2026
+
+Se implementó la siguiente unidad del plan: el Acto I ahora tiene una onda
+anular que alterna entre recorrido outward (bolsillo interior → bolsillo
+exterior) e inward (exterior → interior). Su contrato authored está en `RadialPulseDefinition`: primer aviso a
+92 s, intervalo de 52 s, último inicio a 250 s, telegraph de 1.1 s, ataque de
+1.6 s, recovery de 0.6 s, ancho 28, bolsillo interior de 54 u y daño provisional
+16. El radio exterior se calcula dejando espacio para el cuerpo del player. El deadline queda
+antes del boss a 260 s y el valor de daño no cierra ni modifica EX-02c.
+
+`RadialPulseHazard` conserva las fases explícitas, captura el radio al iniciar,
+aplica como máximo un impacto por cast y usa cruce barrido entre radios para no
+saltar la banda entre ticks. `CombatSimulation` publica el snapshot y registra
+`radial-pulse` como fuente de baseline. El láser no inicia durante un pulso y
+el pulso no inicia durante un láser; un ataque ya comenzado nunca se cancela y
+el boss/deadline descartan nuevas ondas.
+
+`RadialPulseView` representa telegraph, dirección, banda activa y residuo con
+cinco `Graphics` reutilizados. Low mantiene la información crítica y sólo
+reduce marcadores decorativos; no se pinta una zona segura opaca.
+
+Validado: typecheck; batería enfocada de 5 archivos / 30 tests; suite completa
+de 81 archivos / 272 tests; builds `local`, `poki` y `crazygames`; y smoke
+browser desktop/móvil 24/24 en 2.7 minutos. El warning conocido del chunk
+principal mayor de 500 kB permanece visible. Falta la validación humana en
+desktop/móvil de lectura, salida segura y diversión. No se hizo commit, push ni
+deploy. En ese momento, el siguiente ID era **EX-06c**: resultado de acto,
+recompensa única e intermisión. EX-02c sigue pendiente y EX-05e diferido.
+
+## 93. Corrección EX-06b — evasión real del pulso — 10-09-2026
+
+La prueba jugable detectó que la primera versión no tenía una evasión real:
+la banda viajaba desde el radio 0 hasta fuera del borde, así que cualquier
+posición legal del player terminaba siendo cruzada. No era falta de velocidad
+ni de lectura, sino una trayectoria que cubría todo el espacio jugable.
+
+La corrección deja dos bolsillos seguros explícitos. El centro conserva un
+radio interior de 72 u y la banda termina antes del borde, calculando el radio
+exterior con espacio para el cuerpo del player, el ancho del pulso y un margen.
+El jugador puede refugiarse en cualquiera de los dos bolsillos durante el
+telegraph; un jugador en la franja media sigue teniendo que decidir y moverse.
+El cálculo usa la menor distancia de la frontera actual, por lo que el bolsillo
+exterior también es válido contra el lado plano del hexágono. La vista muestra
+los bolsillos como guías finas, sin zonas opacas que tapen el combate.
+
+Validado: typecheck; tests específicos de hazard/vista 15/15; suite completa
+81 archivos / 274 tests; build `local`, `poki` y `crazygames`; smoke browser
+desktop/móvil 24/24 en 2.7 minutos. El warning conocido del chunk principal
+mayor de 500 kB permanece visible. Falta la comprobación humana final en una
+run real para confirmar que la señal y los dos refugios se sienten naturales.
+La siguiente tarea prevista tras esta corrección era **EX-06c**; su resultado
+está registrado en la sección 94. EX-02c sigue pendiente y EX-05e diferido.
+
+## 94. EX-06c — resultado del Acto I e intermisión segura — 10-09-2026
+
+- La victoria del Core Sentinel liquida su NOVA con el contrato idempotente ya
+  existente y, al abrir el resumen, pasa de `victory` a `act-intermission`.
+  La fase sólo detiene y encauza lifecycle: no contiene reglas de build,
+  economía ni campaña.
+- El resumen nombra **Acto I · Radial superado**, explica que la recompensa se
+  acreditó una sola vez y ofrece solamente **Repetir Acto I** y **Volver al
+  menú**. No existe botón `Continuar`, desbloqueo ficticio de Acto II, bonus
+  fijo adicional ni save de Expedición parcial. El doble de NOVA continúa
+  siendo la única oferta rewarded terminal ya autorizada.
+- Volver al menú invalida primero callbacks rewarded tardíos y después limpia
+  la presentación; repetir crea una run nueva. Así ninguna acción puede cobrar
+  de nuevo el resultado ni restaurar una build inexistente entre actos.
+- Validado: pruebas enfocadas `GameState` + `Game`, **19/19**; typecheck;
+  suite completa **81 archivos / 276 pruebas**; builds `local`, `poki` y
+  `crazygames`; y smoke browser desktop/móvil **24/24 en 2.8 minutos**. El
+  runner sólo emitió el aviso de consola `NO_COLOR`/`FORCE_COLOR`; Vite confirmó
+  el warning conocido del chunk principal: 675.77 kB minificado / 186.27 kB
+  gzip local (675.73 kB / 186.23 kB Poki/CrazyGames). Sigue como trabajo de
+  presupuesto separado. La ficha de contrato y guion humano está en
+  `docs/balance/EX-06c-act-intermission.md`.
+- Siguiente ID exacto: **EX-06d**, validación humana de **diez runs** del acto
+  actualizado con pulso, boss, resultado e intermisión; incluir una victoria
+  en desktop y otra en móvil si ambas plataformas están disponibles. EX-02c
+  sigue pendiente; EX-05e continúa diferido.

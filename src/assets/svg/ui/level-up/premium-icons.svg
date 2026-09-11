@@ -36,6 +36,13 @@
     <path d="m9 27 6 6-6 6-6-6Zm28-21 6 6-6 6-6-6Zm2 26 6 6-6 6-6-6Z" fill="#14293b" stroke="currentColor" stroke-width="2"/>
     <path d="m9 29 4 4H5Zm28-21 4 4h-8Zm2 26 4 4h-8Z" fill="#eef8ff"/>
   </symbol>
+  <symbol id="ui-upgrade-icon-boomerang" viewBox="0 0 48 48">
+    <path d="m7 13 17 5 17-5-8 11 8 11-17-5-17 5 8-11Z" fill="#14283a" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="m11 14 13 4v12l-13 4 6-10Z" fill="currentColor"/>
+    <path d="m37 14-13 4v12l13 4-6-10Z" fill="#d1e2ec" opacity=".78"/>
+    <path d="m24 18 7 6-7 6-7-6Z" fill="#eef8ff"/>
+    <path d="M4 8h8M36 40h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
   <symbol id="ui-upgrade-icon-armor" viewBox="0 0 48 48">
     <path d="m24 4 17 7-2 20-15 13L9 31 7 11Z" fill="#203347" stroke="currentColor" stroke-width="2"/>
     <path d="m24 4 17 7-7 5-10-4-10 4-7-5Z" fill="#d1e2ec"/>

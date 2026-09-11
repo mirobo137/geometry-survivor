@@ -1,8 +1,8 @@
 import { LASER_DEFINITION, type LaserDefinition } from '../../content/hazards/LaserDefinition';
-import { getActIArenaLaserPressure } from '../../content/run/ArenaShapeDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { asArenaBoundary, getArenaRadiusAtAngle, type ArenaBoundaryInput } from '../ArenaBoundary';
+import { RadialActDirector } from '../acts/RadialActDirector';
 
 export type LaserPhase = 'idle' | 'telegraph' | 'active' | 'recovery';
 
@@ -31,7 +31,10 @@ export class LaserHazard {
   private strikeSweepAngle = 0;
   private strikeSweepAttackSeconds = 0;
 
-  public constructor(private readonly definition: LaserDefinition = LASER_DEFINITION) {
+  public constructor(
+    private readonly definition: LaserDefinition = LASER_DEFINITION,
+    private readonly actDirector: RadialActDirector = new RadialActDirector()
+  ) {
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
     this.state = {
       phase: 'idle',
@@ -47,7 +50,8 @@ export class LaserHazard {
     dtSeconds: number,
     elapsedSeconds: number,
     player: PlayerState,
-    arena: ArenaBoundaryInput
+    arena: ArenaBoundaryInput,
+    allowStart = true
   ): boolean {
     let remaining = Math.max(0, dtSeconds);
     let damagedPlayer = false;
@@ -55,6 +59,7 @@ export class LaserHazard {
     while (remaining > EPSILON) {
       if (this.phase === 'idle') {
         if (elapsedSeconds + EPSILON < this.nextTriggerSeconds) break;
+        if (!allowStart) break;
         this.startStrike(arena);
       }
 
@@ -110,7 +115,7 @@ export class LaserHazard {
     const boundary = asArenaBoundary(arena);
     const shape = boundary.shape ?? boundary.shapeTo;
     const shapeIndex = boundary.shapeIndex ?? 0;
-    const pressure = getActIArenaLaserPressure(shape, shapeIndex);
+    const pressure = this.actDirector.getLaserPressure(shape, shapeIndex);
     const shouldSweep = this.strikeIndex % pressure.sweepEveryStrikes === 0;
     this.phase = 'telegraph';
     this.phaseTimer = 0;

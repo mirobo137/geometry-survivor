@@ -36,6 +36,17 @@ export interface ChainLightningWeaponDefinition {
   readonly segmentLifetimeSeconds: number;
 }
 
+export interface BoomerangWeaponDefinition {
+  readonly damage: number;
+  readonly speed: number;
+  readonly returnSpeed: number;
+  readonly radius: number;
+  readonly outboundDistance: number;
+  readonly lifetimeSeconds: number;
+  readonly cooldownSeconds: number;
+  readonly maxActive: number;
+}
+
 export const WEAPON_DEFINITIONS = {
   projectile: {
     damage: 14,
@@ -58,5 +69,15 @@ export const WEAPON_DEFINITIONS = {
     maxTargets: 3,
     jumpRadius: 180,
     segmentLifetimeSeconds: 0.14
-  } satisfies ChainLightningWeaponDefinition
+  } satisfies ChainLightningWeaponDefinition,
+  vectorBoomerang: {
+    damage: 13,
+    speed: 360,
+    returnSpeed: 430,
+    radius: 11,
+    outboundDistance: 250,
+    lifetimeSeconds: 2.2,
+    cooldownSeconds: 1.25,
+    maxActive: 3
+  } satisfies BoomerangWeaponDefinition
 } as const;

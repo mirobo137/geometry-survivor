@@ -33,6 +33,7 @@ import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
+import { RadialActDirector } from '../simulation/acts/RadialActDirector';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -103,7 +104,8 @@ export class Game {
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
   private readonly viewport = new ViewportTransform();
-  private readonly arena = new ArenaModel();
+  private readonly actDirector = new RadialActDirector();
+  private readonly arena = new ArenaModel(this.actDirector);
   private readonly player = new PlayerModel();
   private readonly combat: CombatSimulation;
   private readonly progression = new LevelProgression();
@@ -242,6 +244,16 @@ export class Game {
     this.returnToMenuState();
   };
 
+  private readonly onActIntermissionReturnToMenu = (): void => {
+    if (this.contextLost || !this.startScreen) return;
+    if (!this.gameState.returnToMenuFromIntermission()) return;
+    // Invalidate a late rewarded callback from the completed act before its
+    // presentation is cleared. The reward itself was already settled once.
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
+    this.returnToMenuState();
+  };
+
   private readonly onWebglContextLost = (event: Event): void => {
     event.preventDefault();
     if (this.stopped || this.lifecyclePaused || !this.gameState.isSimulationRunning) return;
@@ -315,7 +327,8 @@ export class Game {
     this.combat = new CombatSimulation({
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds,
-      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels)
+      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
+      actDirector: this.actDirector
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -442,6 +455,7 @@ export class Game {
     this.view.updatePresentationFx(presentationDelta, this.presentationTime);
     this.view.renderArena(this.arena.state);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state);
+    this.view.renderRadialPulse(this.combat.renderState.radialPulse);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.syncShotFeedback();
@@ -506,6 +520,7 @@ export class Game {
       level: this.progression.state.level,
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
+      pulse: `${this.combat.renderState.radialPulse.phase} | ${this.combat.renderState.radialPulse.direction} | ${this.combat.renderState.radialPulse.radius.toFixed(1)}`,
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active
         ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
@@ -761,6 +776,9 @@ export class Game {
       && this.rewardedOffers.canOffer('double-nova')
       && await this.rewardedAds.isAvailable('double-nova');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
+    const isActVictory = summary.outcome === 'victory';
+    if (isActVictory && this.gameState.phase === 'victory') this.gameState.enterActIntermission();
+    if (isActVictory && this.gameState.phase !== 'act-intermission') return;
     this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
       this.restartRun();
     }, {
@@ -768,7 +786,12 @@ export class Game {
       onDoubleNova: canDoubleNova ? () => { void this.requestDoubleNova(terminalToken); } : undefined,
       reviveAvailable: canRevive,
       onRevive: canRevive ? () => { void this.requestRevive(terminalToken); } : undefined
-    });
+    }, isActVictory ? {
+      actName: 'Acto I · Radial',
+      message: 'El Acto I termina aquí por ahora. La recompensa ya fue acreditada una sola vez.',
+      restartLabel: 'Repetir Acto I',
+      onReturnToMenu: this.startScreen ? this.onActIntermissionReturnToMenu : undefined
+    } : undefined);
   }
 
   private async requestRevive(terminalToken: number): Promise<void> {

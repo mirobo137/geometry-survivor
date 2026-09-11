@@ -303,6 +303,30 @@ describe('Game', () => {
     expect(saved.wallet.nova).toBe(33);
   });
 
+  it('opens a completed Act I intermission without offering an unavailable continuation', async () => {
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      openGameOverSummary: (...args: unknown[]) => Promise<void>;
+      pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+      terminalTotalNova: number;
+      gameState: { phase: string };
+    };
+
+    runtime.finishRun.call(game, 'victory');
+    const pending = runtime.pendingTerminalRun;
+    if (!pending) throw new Error('Expected a settled victory');
+    await runtime.openGameOverSummary.call(game, pending.summary, pending.best, pending.novaReward, runtime.terminalTotalNova, pending.token);
+
+    expect(runtime.gameState.phase).toBe('act-intermission');
+    const intermission = mocks.gameOverOpen.mock.calls.at(-1)?.[6];
+    expect(intermission).toMatchObject({
+      actName: 'Acto I · Radial',
+      restartLabel: 'Repetir Acto I'
+    });
+    expect(JSON.stringify(intermission)).not.toContain('Continuar');
+  });
+
   it('rejects a stale revive callback after a victory', async () => {
     const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
     const game = new Game(createOptions({

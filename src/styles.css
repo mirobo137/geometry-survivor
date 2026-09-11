@@ -2329,10 +2329,21 @@ body {
   margin: 0;
 }
 
-#game-over p {
+#game-over-kicker {
   color: #ff92a3;
   font: 700 0.8rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.18em;
+}
+
+#game-over-act-message {
+  color: #b8ffd9;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+#game-over-act-message[hidden],
+#game-over-menu[hidden] {
+  display: none;
 }
 
 #game-over h1 {
@@ -2388,15 +2399,25 @@ body {
   opacity: 0.64;
 }
 
-#game-over-restart {
+#game-over-restart,
+#game-over-menu {
   min-height: 3rem;
   padding: 0.7rem 1rem;
-  color: #07101f;
-  background: #75e6ff;
   border: 0;
   border-radius: 0.45rem;
   font: inherit;
   touch-action: manipulation;
+}
+
+#game-over-restart {
+  color: #07101f;
+  background: #75e6ff;
+}
+
+#game-over-menu {
+  color: #d8e7ff;
+  background: rgba(106, 139, 193, 0.24);
+  border: 1px solid rgba(160, 190, 238, 0.42);
 }
 
 @media (max-width: 34rem) {

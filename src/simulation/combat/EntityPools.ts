@@ -1,6 +1,8 @@
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 
+export type BoomerangPhase = 'outbound' | 'returning';
+
 export interface EnemyState {
   active: boolean;
   kind: EnemyKind;
@@ -14,6 +16,8 @@ export interface EnemyState {
   maxHealth: number;
   contactDamage: number;
   orbitHitCooldown: number;
+  /** Increments whenever a pooled slot is acquired, including recycled slots. */
+  generation: number;
 }
 
 export interface ProjectileState {
@@ -29,6 +33,23 @@ export interface ProjectileState {
   muzzle: ProjectileMuzzle;
 }
 
+export interface BoomerangState {
+  active: boolean;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  ageSeconds: number;
+  lifetimeSeconds: number;
+  phase: BoomerangPhase;
+  directionX: number;
+  directionY: number;
+  distanceTravelled: number;
+  slotIndex: number;
+}
+
 const createEnemyState = (): EnemyState => ({
   active: false,
   kind: 'chaser',
@@ -41,7 +62,8 @@ const createEnemyState = (): EnemyState => ({
   health: 0,
   maxHealth: 0,
   contactDamage: 0,
-  orbitHitCooldown: 0
+  orbitHitCooldown: 0,
+  generation: 0
 });
 
 const createProjectileState = (): ProjectileState => ({
@@ -55,6 +77,23 @@ const createProjectileState = (): ProjectileState => ({
   ageSeconds: 0,
   lifetimeSeconds: 0,
   muzzle: 0
+});
+
+const createBoomerangState = (slotIndex: number): BoomerangState => ({
+  active: false,
+  x: 0,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  radius: 0,
+  damage: 0,
+  ageSeconds: 0,
+  lifetimeSeconds: 0,
+  phase: 'outbound',
+  directionX: 1,
+  directionY: 0,
+  distanceTravelled: 0,
+  slotIndex
 });
 
 export class EnemyPool {
@@ -72,6 +111,7 @@ export class EnemyPool {
       const state = this.states[index];
       if (state.active) continue;
       state.active = true;
+      state.generation = state.generation >= 2_000_000_000 ? 1 : state.generation + 1;
       this.cursor = (index + 1) % this.capacity;
       this.activeCount += 1;
       return state;
@@ -115,6 +155,41 @@ export class ProjectilePool {
   }
 
   public release(state: ProjectileState): void {
+    if (!state.active) return;
+    state.active = false;
+    this.activeCount -= 1;
+  }
+
+  public reset(): void {
+    for (const state of this.states) state.active = false;
+    this.activeCount = 0;
+    this.cursor = 0;
+  }
+}
+
+export class BoomerangPool {
+  public readonly states: BoomerangState[];
+  public activeCount = 0;
+  private cursor = 0;
+
+  public constructor(public readonly capacity: number) {
+    this.states = Array.from({ length: capacity }, (_, index) => createBoomerangState(index));
+  }
+
+  public acquire(): BoomerangState | null {
+    for (let offset = 0; offset < this.capacity; offset += 1) {
+      const index = (this.cursor + offset) % this.capacity;
+      const state = this.states[index];
+      if (state.active) continue;
+      state.active = true;
+      this.cursor = (index + 1) % this.capacity;
+      this.activeCount += 1;
+      return state;
+    }
+    return null;
+  }
+
+  public release(state: BoomerangState): void {
     if (!state.active) return;
     state.active = false;
     this.activeCount -= 1;

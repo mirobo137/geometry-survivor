@@ -31,4 +31,20 @@ describe('WeaponScheduler', () => {
     expect(fireProjectile).toHaveBeenCalledTimes(1);
     expect(fireChain).toHaveBeenCalledTimes(1);
   });
+
+  it('schedules the optional boomerang without accumulating while locked', () => {
+    const fireBoomerang = vi.fn();
+    const scheduler = new WeaponScheduler({
+      fireProjectile: vi.fn(),
+      fireChain: vi.fn(),
+      fireBoomerang
+    });
+
+    scheduler.update(0.5, 10, false, 10, player, false, false, 0.25);
+    expect(fireBoomerang).toHaveBeenCalledTimes(0);
+    for (let index = 0; index < 5; index += 1) {
+      scheduler.update(0.1, 10, false, 10, player, false, true, 0.25);
+    }
+    expect(fireBoomerang).toHaveBeenCalledTimes(2);
+  });
 });

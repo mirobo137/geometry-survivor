@@ -1,6 +1,10 @@
 import type { LaserHazardState } from '../hazards/LaserHazard';
+import type { RadialPulseState } from '../hazards/RadialPulseHazard';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
+import type { BoomerangState as PooledBoomerangState } from './EntityPools';
+
+export type { BoomerangPhase } from './EntityPools';
 
 export type BossPhase =
   | 'inactive'
@@ -43,6 +47,8 @@ export interface ChainSegmentState {
   y2: number;
   lifeSeconds: number;
 }
+
+export type BoomerangState = PooledBoomerangState;
 
 /**
  * Presentation only sees the fields needed to draw an enemy. Keeping these
@@ -88,6 +94,7 @@ export interface ShotRenderState {
 
 export type OrbitBladeRenderState = Readonly<OrbitBladeState>;
 export type ChainSegmentRenderState = Readonly<ChainSegmentState>;
+export type BoomerangRenderState = Readonly<BoomerangState>;
 
 /** Stable, read-only view contract used by presentation without exposing the coordinator class. */
 export interface CombatRenderState {
@@ -95,7 +102,9 @@ export interface CombatRenderState {
   readonly projectiles: readonly ProjectileRenderState[];
   readonly orbitBlades: readonly OrbitBladeRenderState[];
   readonly chainSegments: readonly ChainSegmentRenderState[];
+  readonly boomerangs: readonly BoomerangRenderState[];
   readonly laser: Readonly<LaserHazardState>;
+  readonly radialPulse: Readonly<RadialPulseState>;
   readonly boss: Readonly<BossRenderState>;
   readonly shot: Readonly<ShotRenderState>;
 }

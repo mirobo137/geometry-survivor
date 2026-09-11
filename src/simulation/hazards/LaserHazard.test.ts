@@ -18,6 +18,16 @@ describe('LaserHazard', () => {
     expect(hazard.state.progress).toBeCloseTo(1 / 60 / LASER_DEFINITION.telegraphSeconds);
   });
 
+  it('defers a scheduled strike while the radial hazard owns the timeline', () => {
+    const hazard = new LaserHazard({ ...LASER_DEFINITION, firstTriggerSeconds: 0 });
+    const player = new PlayerModel();
+
+    expect(hazard.update(1 / 60, 0, player.state, ARENA_RADIUS, false)).toBe(false);
+    expect(hazard.state.phase).toBe('idle');
+    hazard.update(1 / 60, 1 / 60, player.state, ARENA_RADIUS, true);
+    expect(hazard.state.phase).toBe('telegraph');
+  });
+
   it('damages a player in the line once and allows a perpendicular escape', () => {
     const hazard = new LaserHazard();
     const player = new PlayerModel();

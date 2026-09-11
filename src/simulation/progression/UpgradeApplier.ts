@@ -8,6 +8,9 @@ import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
 import type { UpgradePreview } from './UpgradePreview';
 
+const MAX_ACTIVE_WEAPONS = 3;
+const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang'];
+
 /** Applies authored upgrade effects at the composition boundary. */
 export class UpgradeApplier {
   private readonly stacks = new Map<UpgradeId, number>();
@@ -113,6 +116,8 @@ export class UpgradeApplier {
       case 'orbitBlade':
       case 'chainLightning':
         return null;
+      case 'vectorBoomerang':
+        return null;
     }
   }
 
@@ -121,6 +126,7 @@ export class UpgradeApplier {
     if (!definition) return false;
     const currentStacks = this.getStacks(definition.id);
     if (definition.maxStacks !== undefined && currentStacks >= definition.maxStacks) return false;
+    if (isWeaponUnlock(definition) && currentStacks === 0 && this.activeWeaponCount() >= MAX_ACTIVE_WEAPONS) return false;
     return definition.requires?.every((requiredId) => this.getStacks(requiredId) > 0) ?? true;
   }
 
@@ -147,6 +153,9 @@ export class UpgradeApplier {
         break;
       case 'chainLightning':
         applied = this.combat.unlockChainLightning();
+        break;
+      case 'vectorBoomerang':
+        applied = this.combat.unlockVectorBoomerang();
         break;
       case 'projectileCooldown':
         this.combat.decreaseProjectileCooldown(definition.effect.amount);
@@ -186,4 +195,14 @@ export class UpgradeApplier {
       ? UPGRADE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
       : upgrade;
   }
+
+  private activeWeaponCount(): number {
+    return 1 + ADDITIONAL_WEAPON_IDS.filter((id) => this.getStacks(id) > 0).length;
+  }
 }
+
+const isWeaponUnlock = (definition: UpgradeDefinition): boolean => (
+  definition.effect.type === 'orbitBlade'
+  || definition.effect.type === 'chainLightning'
+  || definition.effect.type === 'vectorBoomerang'
+);

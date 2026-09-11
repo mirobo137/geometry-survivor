@@ -5,7 +5,7 @@ export const BASELINE_TARGET_RUNS = 10;
 const BASELINE_SCHEMA_VERSION = 1;
 
 export type BaselineOutcome = 'game-over' | 'victory';
-export type BaselineDamageSource = 'contact' | 'laser' | 'boss';
+export type BaselineDamageSource = 'contact' | 'laser' | 'radial-pulse' | 'boss';
 
 export interface BaselineObservation {
   readonly enemies: number;
@@ -105,7 +105,7 @@ const isOutcome = (value: unknown): value is BaselineOutcome => (
 );
 
 const isCause = (value: unknown): value is BaselineRunRecord['cause'] => (
-  value === 'contact' || value === 'laser' || value === 'boss'
+  value === 'contact' || value === 'laser' || value === 'radial-pulse' || value === 'boss'
     || value === 'boss-defeated' || value === 'unknown'
 );
 

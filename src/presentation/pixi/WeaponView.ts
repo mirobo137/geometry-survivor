@@ -4,6 +4,9 @@ import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { FxQuality } from '../../content/visual/VisualTokens';
 import type { CombatRenderState } from '../../simulation/combat/CombatRenderState';
 import { createTexture } from './TextureFactory';
+import { createSvgTexture } from './SvgTextureFactory';
+import vectorBoomerangSvg from '../../assets/svg/weapons/vector-boomerang.svg?raw';
+import { BOOMERANG_POOL_CAPACITY } from '../../config/constants';
 
 const PRISM_INK = 0x0d1025;
 const PRISM_ARMOR = 0x51456f;
@@ -26,6 +29,18 @@ interface OrbitBladeVisual {
   readonly accent: Sprite;
   readonly core: Sprite;
 }
+
+interface BoomerangVisual {
+  readonly root: Container;
+  readonly trail: Graphics;
+  readonly aura: Sprite;
+  readonly wake: Sprite;
+  readonly body: Sprite;
+  readonly core: Sprite;
+}
+
+type WeaponRenderInput = Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>
+  & Partial<Pick<CombatRenderState, 'boomerangs'>>;
 
 const polygon = (graphics: Graphics, points: readonly [number, number][], color: number, alpha = 1): void => {
   graphics.beginPath().moveTo(points[0][0], points[0][1]);
@@ -84,7 +99,9 @@ export class WeaponView {
   private readonly chainLayer = new Graphics();
   private readonly chainImpactLayer = new Container();
   private readonly chainPulseLayer = new Container();
+  private readonly boomerangLayer = new Container();
   private readonly orbitVisuals: OrbitBladeVisual[] = [];
+  private readonly boomerangVisuals: BoomerangVisual[] = [];
   private readonly chainImpactSprites: Sprite[] = [];
   private readonly chainPulseSprites: Sprite[] = [];
   private readonly previousChainActive: boolean[];
@@ -95,7 +112,7 @@ export class WeaponView {
     private readonly quality: FxQuality = 'medium'
   ) {
     this.previousChainActive = Array.from({ length: WEAPON_DEFINITIONS.chainLightning.maxTargets }, () => false);
-    this.root.addChild(this.orbitLayer, this.chainLayer, this.chainImpactLayer, this.chainPulseLayer);
+    this.root.addChild(this.orbitLayer, this.chainLayer, this.chainImpactLayer, this.chainPulseLayer, this.boomerangLayer);
     const textures = createOrbitTextures(renderer);
     for (let index = 0; index < WEAPON_DEFINITIONS.orbit.maxBlades; index += 1) {
       const root = new Container();
@@ -135,9 +152,46 @@ export class WeaponView {
       this.chainPulseSprites.push(pulse);
       this.chainPulseLayer.addChild(pulse);
     }
+
+    const boomerangBodyTexture = createSvgTexture(renderer, vectorBoomerangSvg, {
+      x: -24,
+      y: -24,
+      width: 48,
+      height: 48
+    });
+    const boomerangAuraTexture = createTexture(renderer, (graphics) => {
+      graphics.beginPath().arc(0, 0, 17, -2.55, -1.45).stroke({ color: 0x75e6ff, width: 1.5, alpha: 0.52 });
+      graphics.beginPath().arc(0, 0, 17, 0.6, 1.7).stroke({ color: 0xd2a8ff, width: 1.5, alpha: 0.48 });
+      graphics.beginPath().moveTo(-12, -8).lineTo(-7, -11).lineTo(-9, -5).closePath().fill({ color: 0xffd978, alpha: 0.72 });
+    });
+    const boomerangWakeTexture = createTexture(renderer, (graphics) => {
+      graphics.beginPath().moveTo(-19, -3).lineTo(-7, 0).lineTo(-19, 3).closePath().fill({ color: 0x75e6ff, alpha: 0.52 });
+      graphics.beginPath().moveTo(-16, -7).lineTo(-5, -1).lineTo(-16, -4).closePath().fill({ color: 0xffd978, alpha: 0.44 });
+    });
+    const boomerangCoreTexture = createTexture(renderer, (graphics) => {
+      graphics.beginPath().regularPoly(0, 0, 4.2, 4, Math.PI / 4)
+        .fill({ color: 0xfff4cf, alpha: 1 })
+        .stroke({ color: 0xffffff, width: 1, alpha: 0.9 });
+    });
+    for (let index = 0; index < BOOMERANG_POOL_CAPACITY; index += 1) {
+      const root = new Container();
+      const trail = new Graphics();
+      const aura = new Sprite(boomerangAuraTexture);
+      const wake = new Sprite(boomerangWakeTexture);
+      const body = new Sprite(boomerangBodyTexture);
+      const core = new Sprite(boomerangCoreTexture);
+      aura.anchor.set(0.5);
+      wake.anchor.set(0.5);
+      body.anchor.set(0.5);
+      core.anchor.set(0.5);
+      root.addChild(trail, aura, wake, body, core);
+      root.visible = false;
+      this.boomerangVisuals.push({ root, trail, aura, wake, body, core });
+      this.boomerangLayer.addChild(root);
+    }
   }
 
-  public render(combat: Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>): void {
+  public render(combat: WeaponRenderInput): void {
     for (let index = 0; index < this.orbitVisuals.length; index += 1) {
       const state = combat.orbitBlades[index];
       const visual = this.orbitVisuals[index];
@@ -154,6 +208,51 @@ export class WeaponView {
       visual.core.rotation = state.angle * 1.8;
       const pulse = 1 + Math.sin(state.angle * 3 + index * 0.9) * 0.07;
       visual.core.scale.set(pulse);
+    }
+
+    const boomerangs = combat.boomerangs ?? [];
+    for (let index = 0; index < this.boomerangVisuals.length; index += 1) {
+      const visual = this.boomerangVisuals[index];
+      const state = boomerangs[index];
+      visual.root.visible = state?.active === true;
+      if (!state?.active) {
+        visual.trail.clear();
+        continue;
+      }
+      const speed = Math.hypot(state.vx, state.vy);
+      const directionX = speed > 0.5 ? state.vx / speed : state.directionX;
+      const directionY = speed > 0.5 ? state.vy / speed : state.directionY;
+      const angle = Math.atan2(directionY, directionX);
+      const returning = state.phase === 'returning';
+      const pulse = 1 + Math.sin(state.ageSeconds * (returning ? 26 : 20) + index * 0.8) * 0.06;
+      const baseScale = state.radius / WEAPON_DEFINITIONS.vectorBoomerang.radius;
+      const trailLength = this.quality === 'high' ? 38 : this.quality === 'medium' ? 29 : 20;
+      const trailWidth = this.quality === 'high' ? 5.5 : this.quality === 'medium' ? 4.5 : 3.2;
+      visual.root.position.set(state.x, state.y);
+      visual.root.rotation = angle;
+      visual.trail.clear();
+      visual.trail.beginPath()
+        .moveTo(-trailLength, 0)
+        .lineTo(-trailLength * 0.32, trailWidth)
+        .lineTo(0, 0)
+        .lineTo(-trailLength * 0.32, -trailWidth)
+        .closePath()
+        .fill({ color: returning ? 0xd2a8ff : 0x75e6ff, alpha: this.quality === 'low' ? 0.34 : 0.5 });
+      visual.trail.beginPath()
+        .moveTo(-trailLength * 0.82, 0)
+        .lineTo(-trailLength * 0.18, 0)
+        .stroke({ color: 0xfff4cf, width: this.quality === 'high' ? 1.5 : 1, alpha: returning ? 0.72 : 0.58 });
+      visual.aura.rotation = returning ? -state.ageSeconds * 2.6 : state.ageSeconds * 2.1;
+      visual.aura.scale.set(baseScale * (returning ? 1.15 : 1));
+      visual.aura.alpha = this.quality === 'high' ? (returning ? 0.92 : 0.74) : this.quality === 'medium' ? 0.62 : 0.42;
+      visual.wake.visible = this.quality !== 'low';
+      visual.wake.position.set(returning ? -3 : 0, 0);
+      visual.wake.scale.set(baseScale * (returning ? 1.12 : 0.92), baseScale);
+      visual.wake.alpha = this.quality === 'high' ? 0.82 : 0.58;
+      visual.body.scale.set(baseScale * 0.58 * pulse);
+      visual.body.alpha = 1;
+      visual.core.scale.set(baseScale * (returning ? 1.05 : 0.9) * pulse);
+      visual.core.alpha = returning ? 1 : 0.88;
     }
 
     let hasActiveChain = false;
@@ -219,6 +318,14 @@ export class WeaponView {
       visual.root.visible = false;
       visual.root.scale.set(1);
       visual.core.scale.set(1);
+    }
+    for (const visual of this.boomerangVisuals) {
+      visual.root.visible = false;
+      visual.trail.clear();
+      visual.aura.alpha = 1;
+      visual.wake.alpha = 1;
+      visual.body.alpha = 1;
+      visual.core.alpha = 1;
     }
     for (let index = 0; index < this.previousChainActive.length; index += 1) {
       this.previousChainActive[index] = false;

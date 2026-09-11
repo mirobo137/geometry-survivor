@@ -5,6 +5,7 @@ import novaSvg from '../assets/svg/ui/nova.svg?raw';
 export type RestartHandler = () => void;
 export type DoubleNovaHandler = () => void;
 export type ReviveHandler = () => void;
+export type ReturnToMenuHandler = () => void;
 
 export interface GameOverBestValues {
   readonly timeSeconds: number;
@@ -18,6 +19,14 @@ export interface GameOverRewardedOptions {
   readonly onRevive?: ReviveHandler;
 }
 
+/** Presentation-only details for a boss-clear intermission. */
+export interface ActIntermissionOptions {
+  readonly actName: string;
+  readonly message: string;
+  readonly restartLabel: string;
+  readonly onReturnToMenu?: ReturnToMenuHandler;
+}
+
 const formatTime = (seconds: number): string => {
   const wholeSeconds = Math.max(0, Math.floor(seconds));
   const minutes = Math.floor(wholeSeconds / 60).toString().padStart(2, '0');
@@ -27,7 +36,9 @@ const formatTime = (seconds: number): string => {
 
 export class GameOverOverlay {
   private readonly root: HTMLElement;
+  private readonly kicker: HTMLElement;
   private readonly title: HTMLElement;
+  private readonly actMessage: HTMLElement;
   private readonly time: HTMLElement;
   private readonly kills: HTMLElement;
   private readonly experience: HTMLElement;
@@ -35,6 +46,7 @@ export class GameOverOverlay {
   private readonly best: HTMLElement;
   private readonly nova: HTMLElement;
   private readonly restartButton: HTMLButtonElement;
+  private readonly menuButton: HTMLButtonElement;
   private readonly rewardedSection: HTMLElement;
   private readonly rewardedMessage: HTMLElement;
   private readonly doubleNovaButton: HTMLButtonElement;
@@ -42,11 +54,14 @@ export class GameOverOverlay {
   private readonly reviveMessage: HTMLElement;
   private readonly reviveButton: HTMLButtonElement;
   private restartHandler: RestartHandler | null = null;
+  private menuHandler: ReturnToMenuHandler | null = null;
   private doubleNovaHandler: DoubleNovaHandler | null = null;
   private reviveHandler: ReviveHandler | null = null;
 
   public constructor(root: HTMLElement) {
+    const kicker = root.querySelector<HTMLElement>('#game-over-kicker');
     const title = root.querySelector<HTMLElement>('#game-over-title');
+    const actMessage = root.querySelector<HTMLElement>('#game-over-act-message');
     const time = root.querySelector<HTMLElement>('#game-over-time');
     const kills = root.querySelector<HTMLElement>('#game-over-kills');
     const experience = root.querySelector<HTMLElement>('#game-over-experience');
@@ -54,19 +69,22 @@ export class GameOverOverlay {
     const best = root.querySelector<HTMLElement>('#game-over-best');
     const nova = root.querySelector<HTMLElement>('#game-over-nova');
     const restartButton = root.querySelector<HTMLButtonElement>('#game-over-restart');
+    const menuButton = root.querySelector<HTMLButtonElement>('#game-over-menu');
     const rewardedSection = root.querySelector<HTMLElement>('#game-over-rewarded');
     const rewardedMessage = root.querySelector<HTMLElement>('#game-over-rewarded-message');
     const doubleNovaButton = root.querySelector<HTMLButtonElement>('#game-over-double-nova');
     const reviveSection = root.querySelector<HTMLElement>('#game-over-revive');
     const reviveMessage = root.querySelector<HTMLElement>('#game-over-revive-message');
     const reviveButton = root.querySelector<HTMLButtonElement>('#game-over-revive-button');
-    if (!title || !time || !kills || !experience || !score || !best || !nova || !restartButton
+    if (!kicker || !title || !actMessage || !time || !kills || !experience || !score || !best || !nova || !restartButton || !menuButton
       || !rewardedSection || !rewardedMessage || !doubleNovaButton
       || !reviveSection || !reviveMessage || !reviveButton) {
       throw new Error('Faltan elementos del resumen de partida');
     }
     this.root = root;
+    this.kicker = kicker;
     this.title = title;
+    this.actMessage = actMessage;
     this.time = time;
     this.kills = kills;
     this.experience = experience;
@@ -74,6 +92,7 @@ export class GameOverOverlay {
     this.best = best;
     this.nova = nova;
     this.restartButton = restartButton;
+    this.menuButton = menuButton;
     this.rewardedSection = rewardedSection;
     this.rewardedMessage = rewardedMessage;
     this.doubleNovaButton = doubleNovaButton;
@@ -81,6 +100,7 @@ export class GameOverOverlay {
     this.reviveMessage = reviveMessage;
     this.reviveButton = reviveButton;
     this.restartButton.addEventListener('click', () => this.restartHandler?.());
+    this.menuButton.addEventListener('click', () => this.menuHandler?.());
     this.doubleNovaButton.addEventListener('click', () => this.doubleNovaHandler?.());
     this.reviveButton.addEventListener('click', () => this.reviveHandler?.());
   }
@@ -91,9 +111,16 @@ export class GameOverOverlay {
     novaReward: number,
     totalNova: number,
     restartHandler: RestartHandler,
-    rewarded: GameOverRewardedOptions = {}
+    rewarded: GameOverRewardedOptions = {},
+    intermission?: ActIntermissionOptions
   ): void {
-    this.title.textContent = summary.outcome === 'victory' ? 'Victoria' : 'Fin de la partida';
+    const isIntermission = summary.outcome === 'victory' && intermission !== undefined;
+    this.kicker.textContent = isIntermission ? 'ACTO COMPLETADO' : 'RUN COMPLETE';
+    this.title.textContent = isIntermission
+      ? `${intermission.actName} superado`
+      : summary.outcome === 'victory' ? 'Victoria' : 'Fin de la partida';
+    this.actMessage.textContent = isIntermission ? intermission.message : '';
+    this.actMessage.hidden = !isIntermission;
     this.time.textContent = `Tiempo ${formatTime(summary.elapsedSeconds)}`;
     this.kills.textContent = `Bajas ${summary.kills}`;
     this.experience.textContent = `Experiencia ${summary.experience}`;
@@ -101,6 +128,7 @@ export class GameOverOverlay {
     this.best.textContent = `Mejor ${formatTime(best.timeSeconds)} · ${best.score} puntos`;
     this.renderNova(novaReward, totalNova);
     this.restartHandler = restartHandler;
+    this.menuHandler = intermission?.onReturnToMenu ?? null;
     this.doubleNovaHandler = rewarded.onDoubleNova ?? null;
     this.reviveHandler = summary.outcome === 'game-over' ? rewarded.onRevive ?? null : null;
     const canDouble = rewarded.doubleNovaAvailable === true && this.doubleNovaHandler !== null;
@@ -115,6 +143,8 @@ export class GameOverOverlay {
     this.reviveButton.hidden = !canRevive;
     this.reviveButton.disabled = !canRevive;
     this.reviveButton.textContent = 'Ver anuncio · revivir';
+    this.restartButton.textContent = intermission?.restartLabel ?? 'Jugar de nuevo';
+    this.menuButton.hidden = this.menuHandler === null;
     this.root.hidden = false;
     this.restartButton.focus({ preventScroll: true });
   }
@@ -177,6 +207,7 @@ export class GameOverOverlay {
   public close(): void {
     this.root.hidden = true;
     this.restartHandler = null;
+    this.menuHandler = null;
     this.doubleNovaHandler = null;
     this.reviveHandler = null;
   }

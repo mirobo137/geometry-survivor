@@ -3,7 +3,7 @@ import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
-import { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
+import { RadialActDirector } from '../acts/RadialActDirector';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -11,8 +11,8 @@ const SPAWN_ANGLE_STEP = 2.399963229728653;
 const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
 
 // Kept as a compatibility export for simulation consumers and existing tools.
-// The authored timeline itself lives in content/run/EnemySpawnDefinitions.ts.
-export { selectEnemyKind };
+// New runtime code uses RadialActDirector so the act owns its timeline.
+export { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
 
 /** Owns enemy lifecycle, movement and broad-phase queries for a combat run. */
 export class EnemySystem {
@@ -21,7 +21,8 @@ export class EnemySystem {
 
   public constructor(
     public readonly pool: EnemyPool,
-    private readonly grid: SpatialGrid
+    private readonly grid: SpatialGrid,
+    private readonly actDirector: RadialActDirector = new RadialActDirector()
   ) {}
 
   public get states(): readonly EnemyState[] {
@@ -34,7 +35,7 @@ export class EnemySystem {
 
     const index = this.spawnIndex;
     this.spawnIndex += 1;
-    this.configureEnemy(state, arenaRadius, index, selectEnemyKind(elapsedSeconds, index));
+    this.configureEnemy(state, arenaRadius, index, this.actDirector.selectEnemyKind(elapsedSeconds, index));
     return state;
   }
 

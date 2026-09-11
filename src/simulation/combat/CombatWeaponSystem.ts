@@ -1,8 +1,8 @@
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
-import { PROJECTILE_POOL_CAPACITY } from '../../config/constants';
+import { BOOMERANG_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
-import { ProjectilePool, type EnemyState } from './EntityPools';
-import type { ChainSegmentState, OrbitBladeState, ShotRenderState } from './CombatRenderState';
+import { BoomerangPool, ProjectilePool, type EnemyState } from './EntityPools';
+import type { BoomerangRenderState, ChainSegmentState, OrbitBladeState, ShotRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
@@ -10,31 +10,38 @@ import { WeaponScheduler } from './WeaponScheduler';
 import { ProjectileBehavior } from './ProjectileBehavior';
 import { OrbitBehavior } from './OrbitBehavior';
 import { ChainBehavior } from './ChainBehavior';
+import { BoomerangBehavior } from './BoomerangBehavior';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
+const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
 
 export interface CombatWeaponUpdateOptions {
   readonly projectileEnabled?: boolean;
   readonly orbitEnabled?: boolean;
   readonly chainEnabled?: boolean;
+  readonly boomerangEnabled?: boolean;
 }
 
 /** Runs authored weapon behavior against the enemy query surface. */
 export class CombatWeaponSystem {
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
+  public readonly boomerangs = new BoomerangPool(BOOMERANG_POOL_CAPACITY);
   public readonly orbitBlades: readonly OrbitBladeState[];
   public readonly chainSegments: readonly ChainSegmentState[];
+  public readonly boomerangStates: readonly BoomerangRenderState[];
   private readonly projectileBehavior: ProjectileBehavior;
   private readonly orbitBehavior: OrbitBehavior;
   private readonly chainBehavior: ChainBehavior;
+  private readonly boomerangBehavior: BoomerangBehavior;
   private readonly scheduler: WeaponScheduler;
   private projectileDamage = PROJECTILE_DEFINITION.damage;
   private projectileSpeed = PROJECTILE_DEFINITION.speed;
   private projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
   private chainCooldown = CHAIN_DEFINITION.cooldownSeconds;
+  private boomerangCooldown = BOOMERANG_DEFINITION.cooldownSeconds;
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
@@ -70,12 +77,20 @@ export class CombatWeaponSystem {
       rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
       onEnemyDefeated: this.onEnemyDefeated
     });
+    this.boomerangBehavior = new BoomerangBehavior({
+      enemies: this.enemies,
+      boomerangs: this.boomerangs,
+      rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
+      onEnemyDefeated: this.onEnemyDefeated
+    });
     this.orbitBlades = this.orbitBehavior.blades;
     this.chainSegments = this.chainBehavior.segments;
+    this.boomerangStates = this.boomerangs.states;
     this.lastShot = this.projectileBehavior.lastShot;
     this.scheduler = new WeaponScheduler({
       fireProjectile: (player) => this.projectileBehavior.fire(player),
-      fireChain: (player) => this.chainBehavior.fire(player)
+      fireChain: (player) => this.chainBehavior.fire(player),
+      fireBoomerang: (player) => this.boomerangBehavior.fire(player)
     });
     this.stressScenario = new StressCombatScenario(
       this.projectiles,
@@ -132,6 +147,14 @@ export class CombatWeaponSystem {
     return this.chainCooldown;
   }
 
+  public get currentBoomerangDamage(): number {
+    return this.boomerangBehavior.currentDamage;
+  }
+
+  public get currentBoomerangCooldown(): number {
+    return this.boomerangCooldown;
+  }
+
   public get currentCriticalChance(): number {
     return this.criticalChance;
   }
@@ -146,11 +169,13 @@ export class CombatWeaponSystem {
     this.projectileBehavior.reset();
     this.orbitBehavior.reset();
     this.chainBehavior.reset();
+    this.boomerangBehavior.reset();
     this.stressScenario.reset();
     this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.weaponDamageMultiplier;
     this.projectileSpeed = PROJECTILE_DEFINITION.speed;
     this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier;
+    this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.criticalChance = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
@@ -161,11 +186,13 @@ export class CombatWeaponSystem {
     this.projectileDamage = PROJECTILE_DEFINITION.damage * permanentBonuses.weaponDamageMultiplier;
     this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
+    this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
     this.orbitBehavior.setPermanentBonuses(
       permanentBonuses.weaponDamageMultiplier,
       permanentBonuses.weaponCadenceMultiplier
     );
     this.chainBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
+    this.boomerangBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -198,6 +225,14 @@ export class CombatWeaponSystem {
     return this.chainBehavior.isUnlocked;
   }
 
+  public unlockVectorBoomerang(): boolean {
+    return this.boomerangBehavior.unlock();
+  }
+
+  public get hasVectorBoomerang(): boolean {
+    return this.boomerangBehavior.isUnlocked;
+  }
+
   public get activeOrbitBlades(): number {
     return this.orbitBehavior.activeBladeCount;
   }
@@ -208,6 +243,10 @@ export class CombatWeaponSystem {
 
   public increaseChainDamage(amount: number): void {
     this.chainBehavior.increaseDamage(amount);
+  }
+
+  public increaseBoomerangDamage(amount: number): void {
+    this.boomerangBehavior.increaseDamage(amount);
   }
 
   public increaseCriticalChance(amount: number): void {
@@ -223,6 +262,7 @@ export class CombatWeaponSystem {
     if (dt === 0) return;
 
     this.chainBehavior.updateSegments(dt);
+    this.boomerangBehavior.update(dt, player);
     if (options.orbitEnabled ?? true) this.orbitBehavior.update(dt, player);
     this.scheduler.update(
       dt,
@@ -230,7 +270,9 @@ export class CombatWeaponSystem {
       options.chainEnabled ?? this.chainBehavior.isUnlocked,
       this.chainCooldown,
       player,
-      options.projectileEnabled ?? true
+      options.projectileEnabled ?? true,
+      options.boomerangEnabled ?? this.boomerangBehavior.isUnlocked,
+      this.boomerangCooldown
     );
     this.projectileBehavior.update(dt);
   }

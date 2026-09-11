@@ -55,6 +55,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
 | BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
 | CHAIN-VISUAL | — | Arc Relay: cadena angular con transferencia legible | AUTOMÁTICO OK; prueba humana pendiente |
+| DAMAGE-FX-VISUAL | — | Hull Fracture y Breach Petals: impacto de enemigo y daño al player con silueta material, lectura Low/High y pools acotados | AUTOMÁTICO OK; aprobación visual humana pendiente |
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
@@ -530,6 +531,13 @@ La evidencia y el guion humano están en
 Siguiente ID: **EX-06d**, validación humana del acto completo. Antes de cerrar
 EX-06 falta validar comprensión del pulso, salida segura, presión y lectura en
 desktop/móvil.
+
+**Experimento de cadencia asociado a EX-06d:** para explorar presión sin
+contaminar el baseline existe `?hazards=chaos&debug=1&quality=high`. Es un
+perfil opt-in que reduce a un tercio los intervalos de láser y pulso, pero no
+modifica daño, vida, telegraph, recuperación, spawn, refugios ni boss. Las diez
+runs formales permanecen en authored; la ficha de observación separada es
+[`docs/balance/EX-06d-hazard-cadence-experiment.md`](balance/EX-06d-hazard-cadence-experiment.md).
 
 ### EX-07 — Acto II Angular, sin producir todo a la vez
 

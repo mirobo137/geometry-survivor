@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RadialPulseState } from '../../simulation/hazards/RadialPulseHazard';
+import { Graphics } from 'pixi.js';
 import { RadialPulseView } from './RadialPulseView';
 
 const createState = (phase: RadialPulseState['phase'], progress = 0.5): RadialPulseState => ({
@@ -44,6 +45,30 @@ describe('RadialPulseView', () => {
     expect(view.root.children).toEqual(children);
     view.reset();
     expect(view.root.visible).toBe(false);
+    view.root.destroy({ children: true });
+  });
+
+  it('builds the material package once per sequence while active travel only transforms it', () => {
+    const view = new RadialPulseView('high');
+    const clear = vi.spyOn(Graphics.prototype, 'clear');
+    const telegraph = createState('telegraph', 0.2);
+    view.render(telegraph);
+    const buildClearCount = clear.mock.calls.length;
+
+    for (let index = 0; index < 30; index += 1) {
+      view.render({
+        ...telegraph,
+        phase: 'active',
+        radius: 72 + index * 5,
+        progress: index / 30,
+        travelProgress: index / 30
+      });
+    }
+    expect(clear.mock.calls.length).toBe(buildClearCount);
+
+    view.render({ ...telegraph, sequence: 2, radius: 72 });
+    expect(clear.mock.calls.length).toBeGreaterThan(buildClearCount);
+    clear.mockRestore();
     view.root.destroy({ children: true });
   });
 });

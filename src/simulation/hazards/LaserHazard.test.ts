@@ -191,4 +191,43 @@ describe('LaserHazard', () => {
     expect(repeatedInterval).toBeCloseTo(10.5, 1);
     expect(repeatedInterval).toBeLessThan(firstInterval);
   });
+
+  it('can scale cadence without changing the authored strike phases', () => {
+    const definition = {
+      ...LASER_DEFINITION,
+      firstTriggerSeconds: 0,
+      telegraphSeconds: 0.1,
+      attackSeconds: 0.05,
+      recoverySeconds: 0.1
+    };
+    const player = new PlayerModel();
+    const circle = {
+      radius: ARENA_RADIUS,
+      shapeFrom: 'circle' as const,
+      shapeTo: 'circle' as const,
+      morphProgress: 0,
+      shape: 'circle' as const,
+      shapeIndex: 0
+    };
+
+    const measureSecondStrike = (hazard: LaserHazard): number => {
+      let previousPhase = hazard.state.phase;
+      let elapsed = 0;
+      for (let step = 0; step < 600; step += 1) {
+        hazard.update(0.05, elapsed, player.state, circle);
+        if (hazard.state.phase === 'telegraph' && previousPhase === 'idle') {
+          if (elapsed > 0) return elapsed;
+        }
+        previousPhase = hazard.state.phase;
+        elapsed += 0.05;
+      }
+      return Number.POSITIVE_INFINITY;
+    };
+
+    const authored = measureSecondStrike(new LaserHazard(definition));
+    const chaos = measureSecondStrike(new LaserHazard(definition, undefined, 1 / 3));
+
+    expect(authored).toBeCloseTo(18, 1);
+    expect(chaos).toBeCloseTo(6, 1);
+  });
 });

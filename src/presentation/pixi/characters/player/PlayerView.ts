@@ -197,7 +197,7 @@ export class PlayerView {
     const damageProgress = damageAge >= 0
       ? Math.min(1, damageAge / PLAYER_VISUAL_TOKENS.damageFlashSeconds)
       : 1;
-    const damagePulse = damageProgress < 1 ? Math.sin(damageProgress * Math.PI) * this.damageStrength : 0;
+    const damagePulse = damageProgress < 1 ? (1 - damageProgress) ** 2 * this.damageStrength : 0;
     const guardAge = animationSeconds - this.guardAtSeconds;
     const guardProgress = guardAge >= 0 ? Math.min(1, guardAge / 0.42) : 1;
     const shotAge = animationSeconds - this.shotAtSeconds;

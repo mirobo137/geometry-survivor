@@ -12,20 +12,19 @@ describe('EnemyImpactFxView', () => {
     const view = new EnemyImpactFxView(fakeRenderer, 'low');
     view.playHit(320, 240, 18, 'chaser');
     expect(view.isActive).toBe(true);
-    expect(view.activeRingCount).toBe(1);
-    // 3 dust + 1 white impact flash = 4 particles at low quality
-    expect(view.activeParticleCount).toBe(4);
+    expect(view.activeBurstCount).toBe(1);
+    // Low keeps the layered contact fracture and two tapered chips.
+    expect(view.activeParticleCount).toBe(2);
     const particleRoot = (view as unknown as { particles: { root: { children: ContainerChild[] } } }).particles.root;
     const dust = particleRoot.children.filter((child) => child.visible) as unknown as Array<{ x: number; y: number }>;
-    expect(dust).toHaveLength(4);
+    expect(dust).toHaveLength(2);
 
     view.update(0.1);
     expect(view.isActive).toBe(true);
-    // Dust particles move outward; the stationary impact flash stays near origin.
-    const movedDust = dust.filter((p) => Math.hypot(p.x - 320, p.y - 240) > 20);
-    expect(movedDust.length).toBeGreaterThanOrEqual(3);
+    const movedDust = dust.filter((p) => Math.hypot(p.x - 320, p.y - 240) > 6.3);
+    expect(movedDust.length).toBe(2);
     view.playDefeat(320, 240, 'tank');
-    expect(view.activeRingCount).toBe(2);
+    expect(view.activeBurstCount).toBe(3);
     expect(view.activeParticleCount).toBeGreaterThan(1);
 
     view.update(0.1);
@@ -34,7 +33,7 @@ describe('EnemyImpactFxView', () => {
     view.update(0.1);
     expect(view.isActive).toBe(false);
     view.clear();
-    expect(view.activeRingCount).toBe(0);
+    expect(view.activeBurstCount).toBe(0);
     expect(view.activeParticleCount).toBe(0);
   });
 });

@@ -1,6 +1,81 @@
 # Geometry Survivor — estado y continuación
 
+## Experimento de cadencia Acto I — 10-09-2026
+
+- Las runs #1 y #2 del baseline actual son victorias a 59.97 FPS, con 11–12
+  enemigos, 20 proyectiles y 45–47 FX. Confirman estabilidad y baja variación
+  del escenario, pero no sustituyen la puerta humana de diez runs: esa puerta
+  mide también comprensión, comodidad, plataforma y resultado, no sólo FPS.
+- No se reinicia ni contamina el baseline por este experimento. Las runs formales
+  continúan con `?baseline=1` y perfil authored; el ajuste visual Pulse Crest
+  tampoco las invalidó.
+- Para probar más tensión sin cambiar daño, vida, spawn ni recompensas existe el
+  modo explícito `?hazards=chaos&debug=1&quality=high`. Reduce a un tercio los
+  intervalos de rayos y pulsos; el panel debug muestra `hazards: chaos`. La
+  ventana inicial y el arbitraje permanecen intactos, así que la frecuencia real
+  puede quedar por debajo de tres veces.
+- Esta modalidad es exploratoria y no es el nuevo balance del acto. Ficha y
+  checklist: `docs/balance/EX-06d-hazard-cadence-experiment.md`. Hacer 2–3 runs
+  separadas y registrar legibilidad, tiempo de respuesta, bolsillos seguros,
+  sensación de ruido, dispositivo y resultado. No mezclar sus datos con los
+  diez registros baseline.
+
 > **Último handoff operativo (10-09-2026):** EX-03 está cerrado con las diez runs, economía/rewarded, controles, stress PC y validación cualitativa S25+. EX-05 Búmeran queda aprobado para este hito por validación humana bajo movimiento, otras armas y presión; EX-05e se difiere como auditoría no bloqueante. EX-06a/b/c están automáticos OK: Radial tiene pulso con evasión real y una intermisión segura al vencer al boss. El siguiente ID es EX-06d, validación humana completa del acto. EX-02c (balance global de daño/vida) continúa pendiente. La estabilización de CI está en sección 86 y `docs/CI_DEPLOY.md`; fondos: Flor del Ocaso (§84), Nacre; arena: Aster Loom (§82).
+
+## Revisión de onda radial premium — 10-09-2026
+
+- Desvío visual solicitado durante la validación de EX-06d. Pulse Crest
+  reemplaza la onda activa plana por una banda con carcasa tinta, armadura,
+  manto cromático, núcleo caliente, filo direccional y dientes geométricos.
+  Outward e inward se distinguen por orientación y material, no sólo por color.
+- Telegraph conserva su lectura previa; recovery apaga inmediatamente el cuerpo
+  dañino y deja únicamente un riel segmentado. No cambia radio, ancho, daño,
+  refugios, tiempos, arbitraje ni balance.
+- La vista conserva la jerarquía de cinco grupos de primer nivel y construye
+  los paths una vez por `state.sequence`; durante el viaje sólo usa escala,
+  rotación ornamental, alpha y visibilidad. Low mantiene el peligro completo.
+- Guía para Luna y futuras iteraciones: `docs/design/RADIAL_PULSE_FX_PREMIUM.md`,
+  enlazada desde `EFECTOS_PREMIUM.md`, EX-06b y el plan. Referencia real y
+  captura reproducible en `docs/visual/radial-pulse-reference.html` y
+  `capture-radial-pulse.mjs`.
+- Validado automáticamente: `npm run typecheck` y `npm test -- --run` pasan con
+  82 archivos / 279 pruebas; `npm run build:local`, `npm run build:poki` y
+  `npm run build:crazygames` generan correctamente sus targets (chunk local
+  681.60 kB / 187.88 kB gzip; warning de tamaño conocido). La galería real se
+  capturó en desktop, portrait y animación sin errores de página; la prueba de
+  `RadialPulseView` confirma que el viaje no reconstruye paths por frame.
+- Regresión browser dirigida: 5/5 correcta (Manta Low/High, pausa/resize,
+  boss shortcut y control touch en portrait).
+- Pendiente: aprobación visual humana en combate y móvil físico. La onda no se
+  declara cerrada por tests verdes; debe comprobarse dentro de una run con
+  enemigos y lásers.
+- Esta iteración es exclusivamente de presentación: no invalida el reporte de
+  runs ni exige repetir diez partidas para el efecto. EX-06d conserva sus diez
+  runs como puerta formal para cerrar el acto completo.
+
+## Revisión de impactos premium — 10-09-2026
+
+- Desvío visual solicitado antes de continuar EX-06d. Hull Fracture reemplaza
+  el anillo de hit enemigo por una lente de material fracturado, núcleo marfil
+  inmediato y astillas afiladas. También se emite en bajas de un solo golpe.
+- Breach Petals reemplaza el anillo de daño del player por cuatro placas coral
+  con bisel y centro libre. El flash del casco responde desde el primer frame.
+  No altera daño, invulnerabilidad, escudo, movimiento ni balance.
+- `DamageBloomView` comparte el lifecycle de ambos consumidores: tres contextos
+  por pool, 8/12/16 impactos enemigos y uno del player; transforms/alpha sin
+  reconstruir geometría de contacto. Reduced motion mantiene señal estática.
+- Guía para futuras iteraciones: `docs/design/DAMAGE_FX_PREMIUM.md`, enlazada
+  desde `EFECTOS_PREMIUM.md` y el plan. Referencia real y captura reproducible
+  en `docs/visual/damage-reference.html` y `capture-damage.mjs`.
+- Validado: build local con typecheck y 82 archivos / 278 pruebas; cinco smoke
+  browser dirigidos (Low/High, pausa/resize, boss y control móvil), correctos.
+  Seis paneles Pixi capturados e inspeccionados en desktop/portrait y fondos
+  claros/oscuros; animación sin errores de runtime. Chunk local 681.60 kB /
+  187.88 kB gzip; conserva el warning de tamaño conocido.
+- Pendiente: aprobación visual humana en combate y stress en móvil físico.
+  Se validaron los tres builds Vite (`local`, `poki` y `crazygames`), pero no se
+  repitieron workflows reales de portal ni toda la suite browser en este cambio
+  exclusivamente visual. El siguiente paso de meta sigue siendo EX-06d.
 
 ## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
 

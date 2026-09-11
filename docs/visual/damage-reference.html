@@ -1,0 +1,19 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Impactos · Hull fracture / Breach petals</title>
+<style>body{margin:24px;background:#090d19;color:#dce7f4;font:15px system-ui}h1{font-size:24px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}article{border:1px solid #34435a;border-radius:10px;overflow:hidden}h2{font-size:14px;margin:12px}canvas{width:100%;display:block}button{padding:12px;background:#28415d;color:white;border:1px solid #91a8c1;margin:12px 0}</style>
+<h1>Impactos · Hull fracture / Breach petals</h1><p>Clases reales de partida. Contacto, apertura y disipación; Low conserva material y silueta.</p><button id="play">Animar / congelar</button><div class="grid"></div>
+<script type="module">
+import { Application } from 'pixi.js';
+import { EnemyImpactFxView } from '../../src/presentation/pixi/fx/EnemyImpactFxView.ts';
+import { ImpactFxView } from '../../src/presentation/pixi/fx/ImpactFxView.ts';
+let playing=false;document.querySelector('#play').onclick=()=>playing=!playing;
+for(const [kind,quality,light] of [['enemy','low',false],['enemy','high',false],['enemy','high',true],['player','low',false],['player','high',false],['player','high',true]]){
+ const article=document.createElement('article');article.innerHTML=`<h2>${kind} · ${quality} · ${light?'claro':'oscuro'}</h2>`;document.querySelector('.grid').append(article);
+ const app=new Application();await app.init({width:480,height:180,background:light?0xc7d2dc:0x101a30,preference:'webgl',antialias:true});article.append(app.canvas);
+ const views=[0,.05,.12].map((age,i)=>{
+  const v=kind==='enemy'?new EnemyImpactFxView(app.renderer,quality):new ImpactFxView(app.renderer,quality);app.stage.addChild(v.root);
+  const fire=()=>{v.clear();kind==='enemy'?v.playHit(80+i*160,90,24,'tank'):v.playPlayerDamage(80+i*160,90,16);};
+  fire();for(let t=0;t<age;t+=.01)v.update(Math.min(.01,age-t));return {v,fire};
+ });let elapsed=0;app.ticker.add(t=>{if(!playing)return;const dt=t.deltaMS/1000;elapsed+=dt;if(elapsed>1){elapsed=0;views.forEach(x=>x.fire());}views.forEach(x=>x.v.update(dt));});
+}document.body.dataset.ready='true';
+</script></html>

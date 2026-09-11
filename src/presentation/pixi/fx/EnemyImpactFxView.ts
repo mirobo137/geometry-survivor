@@ -4,11 +4,11 @@ import { ENEMY_DEFINITIONS, type EnemyKind } from '../../../content/enemies/Enem
 import { FX_QUALITY, type FxQuality } from '../../../content/visual/VisualTokens';
 import { createTexture } from '../TextureFactory';
 import { FxPool } from './FxPool';
+import { DamageBloomView } from './DamageBloomView';
 
 const FULL_CIRCLE = Math.PI * 2;
-const HIT_RING_SECONDS = 0.16;
 const DEATH_RING_SECONDS = 0.34;
-const DUST_COLOR = 0xd8d2c4;
+const DUST_COLOR = 0xffd29b;
 
 interface ParticleRecipe {
   readonly minSpeed: number;
@@ -51,6 +51,7 @@ export class EnemyImpactFxView {
   private readonly rings = new Graphics();
   private readonly ringSlots: RingSlot[];
   private readonly particles: FxPool;
+  private readonly hits: DamageBloomView;
   private readonly dustTexture: Texture;
   private readonly quality: FxQuality;
   private readonly reducedMotion: boolean;
@@ -61,24 +62,24 @@ export class EnemyImpactFxView {
       && typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const tokens = FX_QUALITY[quality];
+    this.hits = new DamageBloomView('enemy', quality === 'low' ? 8 : quality === 'medium' ? 12 : 16);
     this.ringSlots = Array.from({ length: Math.max(8, Math.floor(tokens.poolCapacity / 8)) }, createRingSlot);
     const particleTexture = createTexture(renderer, (graphics) => {
       graphics.regularPoly(0, 0, 4, 4, Math.PI / 4).fill({ color: 0xffffff });
     });
     this.dustTexture = createTexture(renderer, (graphics) => {
-      // At portrait mobile scale, a 3 px source with a 0.42 transform became
-      // less than two CSS pixels. Keep this source deliberately legible while
-      // retaining a single cached texture and the existing bounded pool.
-      graphics.circle(0, 0, 6).fill({ color: 0xffffff, alpha: 0.9 });
+      // A tapered hot chip, rasterized once. Velocity aligns its long axis.
+      graphics.poly([-8, 0, 2, -1.8, 7, 0, 2, 1.8]).fill({ color: 0xffdeb0 });
+      graphics.poly([-3, 0, 2, -.6, 6, 0, 2, .6]).fill({ color: 0xffffff });
     });
     this.particles = new FxPool(particleTexture, Math.max(24, Math.floor(tokens.poolCapacity * 0.55)));
     this.root.eventMode = 'none';
     this.root.visible = false;
-    this.root.addChild(this.rings, this.particles.root);
+    this.root.addChild(this.rings, this.particles.root, this.hits.root);
   }
 
-  public get activeRingCount(): number {
-    return this.ringSlots.reduce((count, ring) => count + (ring.active ? 1 : 0), 0);
+  public get activeBurstCount(): number {
+    return this.hits.activeCount + this.ringSlots.reduce((count, ring) => count + (ring.active ? 1 : 0), 0);
   }
 
   public get activeParticleCount(): number {
@@ -90,33 +91,20 @@ export class EnemyImpactFxView {
   }
 
   /** Starts a short response after an enemy health value decreased. */
-  public playHit(x: number, y: number, radius: number, kind: EnemyKind): void {
-    const color = ENEMY_DEFINITIONS[kind].color;
-    this.spawnRing(x, y, radius * 0.85, radius * 1.4, HIT_RING_SECONDS, color, 2);
+  public playHit(x: number, y: number, radius: number, _kind: EnemyKind): void {
+    this.hits.play(x, y, radius * 1.35);
     this.root.visible = true;
-
-    // Bright impact flash at the hit point — a single white particle that
-    // expands and fades quickly, giving every hit a visible "pop".
-    this.particles.spawn(
-      x, y, 0xffffff,
-      0.1,   // lifeSeconds
-      0, 0,  // no velocity
-      0.99,  // drag
-      Math.max(1.2, radius / 10),
-      this.dustTexture,
-      0.85
-    );
 
     if (this.reducedMotion) return;
 
-    const count = this.quality === 'high' ? 5 : this.quality === 'medium' ? 4 : 3;
+    const count = this.quality === 'high' ? 4 : this.quality === 'medium' ? 3 : 2;
     this.spawnParticles(x, y, DUST_COLOR, count, {
       minSpeed: 102,
       maxSpeed: 152,
-      lifeSeconds: 0.35,
+      lifeSeconds: 0.22,
       drag: 0.97,
-      scale: Math.max(0.9, radius / 20),
-      spawnRadius: Math.max(22, radius * 1.2),
+      scale: Math.max(0.9, radius / 24),
+      spawnRadius: radius * .35,
       texture: this.dustTexture,
       alpha: 0.88
     });
@@ -126,6 +114,7 @@ export class EnemyImpactFxView {
   public playDefeat(x: number, y: number, kind: EnemyKind): void {
     const definition = ENEMY_DEFINITIONS[kind];
     const radius = definition.radius;
+    this.hits.play(x, y, radius * 1.35);
     this.spawnRing(x, y, radius * 0.58, radius * 1.85, DEATH_RING_SECONDS, definition.color, 3);
     this.root.visible = true;
     if (this.reducedMotion) return;
@@ -145,6 +134,7 @@ export class EnemyImpactFxView {
     const delta = Math.min(Math.max(deltaSeconds, 0), 0.1);
     if (delta <= 0) return;
     this.particles.update(delta);
+    this.hits.update(delta);
     this.rings.clear();
     let hasActiveRing = false;
     for (const ring of this.ringSlots) {
@@ -163,12 +153,13 @@ export class EnemyImpactFxView {
         .circle(ring.x, ring.y, radius)
         .stroke({ color: ring.color, width: ring.width, alpha });
     }
-    this.root.visible = hasActiveRing || this.particles.activeCount > 0;
+    this.root.visible = hasActiveRing || this.hits.activeCount > 0 || this.particles.activeCount > 0;
   }
 
   public clear(): void {
     for (const ring of this.ringSlots) ring.active = false;
     this.particles.clear();
+    this.hits.clear();
     this.rings.clear();
     this.root.visible = false;
   }

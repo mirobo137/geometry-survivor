@@ -273,7 +273,7 @@ export class CombatEntitiesView {
   /** Bounded presentation count used by the local baseline profiler. */
   public get activeFxCount(): number {
     return this.enemyImpactFx.activeParticleCount
-      + this.enemyImpactFx.activeRingCount
+      + this.enemyImpactFx.activeBurstCount
       + this.enemyDefeatFx.activeCount
       + this.damageNumbers.activeCount
       + this.projectileTrails.activeSegmentCount;

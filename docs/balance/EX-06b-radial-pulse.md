@@ -51,8 +51,10 @@ con enemigos, player y láseres.
 
 La implementación vive en `RadialPulseHazard`, su definición está en
 `RadialPulseDefinition`, y la vista en `RadialPulseView`. La vista reutiliza
-cinco `Graphics`, conserva la señal completa en Low y sólo reduce marcadores
-decorativos en calidad baja. La presentación no decide radio, daño ni fase.
+una jerarquía acotada de 10 `Graphics` y 2 `Container`, conserva la señal
+completa en Low y sólo reduce marcadores decorativos en calidad baja. La receta
+visual está en `docs/design/RADIAL_PULSE_FX_PREMIUM.md`. La presentación no
+decide radio, daño ni fase.
 
 ## Evidencia automática
 

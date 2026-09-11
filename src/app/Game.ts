@@ -34,6 +34,7 @@ import { createRunSummary, type RunOutcome } from './RunSummary';
 import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
+import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -82,6 +83,7 @@ export interface GameOptions {
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
   readonly baselineMode?: boolean;
+  readonly hazardCadenceMode?: HazardCadenceMode;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -328,7 +330,8 @@ export class Game {
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds,
       permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
-      actDirector: this.actDirector
+      actDirector: this.actDirector,
+      hazardCadenceMode: options.hazardCadenceMode
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -512,6 +515,7 @@ export class Game {
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
       mode: this.combat.isStressMode ? 'stress' : 'normal',
+      hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
       orbit: `${this.combat.activeOrbitBlades}/${this.combat.orbitBlades.length}`,

@@ -12,6 +12,7 @@ import { isCannonSkinId, type CannonSkinId } from './content/visual/CannonSkinDe
 import { isBackgroundId, type BackgroundId } from './content/visual/BackgroundDefinitions';
 import { LocalPlatform } from './platform/local/LocalPlatform';
 import { isPlayerSkinId } from './content/visual/SkinDefinitions';
+import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -103,6 +104,10 @@ const bootstrap = async (): Promise<void> => {
     : 'medium';
   const profileMode = searchParams.get('profile') === '1';
   const baselineMode = searchParams.get('baseline') === '1';
+  const requestedHazardCadence = searchParams.get('hazards');
+  const hazardCadenceMode: HazardCadenceMode = isHazardCadenceMode(requestedHazardCadence)
+    ? requestedHazardCadence
+    : 'authored';
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -147,6 +152,7 @@ const bootstrap = async (): Promise<void> => {
     fxQuality,
     profileMode,
     baselineMode,
+    hazardCadenceMode,
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode,

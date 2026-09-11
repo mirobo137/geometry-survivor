@@ -1,5 +1,9 @@
 # Dirección de efectos premium
 
+Para golpes a enemigos y daño recibido por el player, seguir
+[DAMAGE_FX_PREMIUM.md](DAMAGE_FX_PREMIUM.md): Hull Fracture y Breach Petals,
+contacto inmediato, material, apertura y disipación con geometría reutilizada.
+
 Referencia implementada: **Solar Rail**, el láser de arena de
 `src/presentation/pixi/HazardView.ts`. Aplicar junto a las skills canónicas
 de rendering y mobile-performance. Para assets vectoriales, aplicar además
@@ -117,3 +121,8 @@ Para la cadena de rayos leer también
 [CHAIN_FX_PREMIUM.md](CHAIN_FX_PREMIUM.md): define Arc Relay, sus quiebres
 deterministas, el pulso direccional, el módulo de impacto y la degradación
 Low/Medium/High sin tocar `ChainBehavior`.
+
+Para el hazard anular leer también
+[RADIAL_PULSE_FX_PREMIUM.md](RADIAL_PULSE_FX_PREMIUM.md): define Pulse Crest,
+la banda activa con dirección geométrica, su disipación y el presupuesto de
+paths cacheados sin tocar `RadialPulseHazard`.

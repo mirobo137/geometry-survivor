@@ -17,6 +17,10 @@ import { BossSystem } from '../bosses/BossSystem';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
 import { RadialActDirector } from '../acts/RadialActDirector';
+import {
+  getHazardCadenceProfile,
+  type HazardCadenceMode
+} from '../../content/hazards/HazardCadenceDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -26,6 +30,8 @@ export interface CombatSimulationOptions {
   readonly initialElapsedSeconds?: number;
   readonly permanentBonuses?: PermanentCombatBonuses;
   readonly actDirector?: RadialActDirector;
+  /** Explicit development-only cadence profile; authored is the default. */
+  readonly hazardCadenceMode?: HazardCadenceMode;
 }
 
 export type CombatEvent =
@@ -76,19 +82,30 @@ export class CombatSimulation {
   private spawnAccumulator = 0;
   private experienceMultiplier = 1;
   private readonly stressMode: boolean;
+  public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.actDirector = options.actDirector ?? new RadialActDirector();
+    const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
+    const radialPulseDefinition = {
+      ...this.actDirector.radialPulseDefinition,
+      intervalSeconds: this.actDirector.radialPulseDefinition.intervalSeconds
+        * hazardCadence.radialPulseIntervalMultiplier
+    };
     this.enemySystem = new EnemySystem(
       this.enemies,
       new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
       this.actDirector
     );
     this.boss = new BossSystem(this.enemySystem, this.actDirector.bossDefinition);
-    this.laser = new LaserHazard(LASER_DEFINITION, this.actDirector);
-    this.radialPulse = new RadialPulseHazard(this.actDirector.radialPulseDefinition);
+    this.laser = new LaserHazard(
+      LASER_DEFINITION,
+      this.actDirector,
+      hazardCadence.laserIntervalMultiplier
+    );
+    this.radialPulse = new RadialPulseHazard(radialPulseDefinition);
     this.weaponSystem = new CombatWeaponSystem(
       this.enemySystem,
       (enemy) => this.defeatEnemy(enemy),
@@ -111,6 +128,7 @@ export class CombatSimulation {
       shot: this.weaponSystem.lastShot
     };
     this.stressMode = options.stress === true;
+    this.hazardCadenceMode = options.hazardCadenceMode ?? 'authored';
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;

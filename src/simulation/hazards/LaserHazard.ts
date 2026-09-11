@@ -18,6 +18,7 @@ export interface LaserHazardState {
 const FULL_LINE = Math.PI;
 const ANGLE_STEP = 0.9162978572970231;
 const EPSILON = 0.000001;
+const MIN_INTERVAL_SECONDS = 0.25;
 
 export class LaserHazard {
   public readonly state: LaserHazardState;
@@ -26,16 +27,22 @@ export class LaserHazard {
   private nextTriggerSeconds: number;
   private strikeIndex = 0;
   private hitApplied = false;
-  private strikeIntervalSeconds = LASER_DEFINITION.intervalSeconds;
+  private strikeIntervalSeconds: number;
   private strikeStartAngle = 0;
   private strikeSweepAngle = 0;
   private strikeSweepAttackSeconds = 0;
+  private readonly intervalMultiplier: number;
 
   public constructor(
     private readonly definition: LaserDefinition = LASER_DEFINITION,
-    private readonly actDirector: RadialActDirector = new RadialActDirector()
+    private readonly actDirector: RadialActDirector = new RadialActDirector(),
+    intervalMultiplier = 1
   ) {
+    this.intervalMultiplier = Number.isFinite(intervalMultiplier)
+      ? Math.max(0.1, intervalMultiplier)
+      : 1;
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
+    this.strikeIntervalSeconds = this.scaleInterval(definition.intervalSeconds);
     this.state = {
       phase: 'idle',
       angle: 0,
@@ -99,7 +106,7 @@ export class LaserHazard {
     this.nextTriggerSeconds = this.definition.firstTriggerSeconds;
     this.strikeIndex = 0;
     this.hitApplied = false;
-    this.strikeIntervalSeconds = this.definition.intervalSeconds;
+    this.strikeIntervalSeconds = this.scaleInterval(this.definition.intervalSeconds);
     this.strikeStartAngle = 0;
     this.strikeSweepAngle = 0;
     this.strikeSweepAttackSeconds = 0;
@@ -120,12 +127,16 @@ export class LaserHazard {
     this.phase = 'telegraph';
     this.phaseTimer = 0;
     this.hitApplied = false;
-    this.strikeIntervalSeconds = pressure.intervalSeconds;
+    this.strikeIntervalSeconds = this.scaleInterval(pressure.intervalSeconds);
     this.strikeStartAngle = (this.strikeIndex * ANGLE_STEP) % FULL_LINE;
     this.strikeSweepAngle = shouldSweep ? pressure.sweepAngleRadians : 0;
     this.strikeSweepAttackSeconds = pressure.sweepAttackSeconds;
     this.state.angle = this.strikeStartAngle;
     this.strikeIndex += 1;
+  }
+
+  private scaleInterval(intervalSeconds: number): number {
+    return Math.max(MIN_INTERVAL_SECONDS, intervalSeconds * this.intervalMultiplier);
   }
 
   private phaseDuration(): number {

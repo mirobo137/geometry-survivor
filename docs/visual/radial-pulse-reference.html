@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulse Ring - radial pulse</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 24px; background: #070c18; color: #eef6f5; font: 15px system-ui, sans-serif; }
+  h1 { margin: 0; letter-spacing: .12em; font-size: 27px; }
+  p { max-width: 850px; color: #aebdc1; line-height: 1.55; }
+  button { padding: 10px 18px; border: 1px solid #526d72; border-radius: 5px; background: #1b343e; color: #d7fff0; cursor: pointer; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; margin-top: 22px; }
+  article { overflow: hidden; border: 1px solid #293b4c; border-radius: 8px; background: #0d1624; }
+  article.light { background: #99a9ae; }
+  h2 { margin: 0; padding: 14px 18px 10px; color: #c5d4d3; font-size: 14px; font-weight: 500; }
+  canvas { display: block; width: 100%; height: auto; }
+</style>
+<h1>PULSE RING</h1>
+<p>La onda activa es una banda anular material: carcasa de contencion, cuerpo de energia, filo caliente y dientes que indican el sentido. Los paneles usan <code>RadialPulseView</code> real; no es una imitacion CSS.</p>
+<button id="play">Animar / congelar</button>
+<div class="grid"></div>
+<script type="module">
+  import { Application } from 'pixi.js';
+  import { RadialPulseView } from '../../src/presentation/pixi/RadialPulseView.ts';
+
+  const cases = [
+    ['01 / Active outward - High', 'high', 'active', 'outward', 0.34, false],
+    ['02 / Active inward - High', 'high', 'active', 'inward', 0.68, false],
+    ['03 / Telegraph - High', 'high', 'telegraph', 'outward', 0.62, false],
+    ['04 / Recovery - Medium', 'medium', 'recovery', 'inward', 0.34, false],
+    ['05 / Active outward - Low', 'low', 'active', 'outward', 0.48, false],
+    ['06 / Active inward - fondo claro', 'high', 'active', 'inward', 0.52, true]
+  ];
+  const views = [];
+  let playing = false;
+
+  document.querySelector('#play').onclick = () => { playing = !playing; };
+
+  for (const [label, quality, phase, direction, progress, light] of cases) {
+    const article = document.createElement('article');
+    if (light) article.classList.add('light');
+    article.innerHTML = `<h2>${label}</h2>`;
+    document.querySelector('.grid').append(article);
+    const app = new Application();
+    await app.init({ width: 1280, height: 720, background: light ? 0x99a9ae : 0x090f1d, antialias: true, resolution: 1 });
+    article.append(app.canvas);
+    const view = new RadialPulseView(quality);
+    app.stage.addChild(view.root);
+    const data = {
+      phase,
+      direction,
+      radius: direction === 'outward' ? 72 + 173 * progress : 245 - 173 * progress,
+      startRadius: direction === 'outward' ? 72 : 245,
+      endRadius: direction === 'outward' ? 245 : 72,
+      progress,
+      travelProgress: phase === 'telegraph' ? 0 : phase === 'recovery' ? 1 : progress,
+      width: 28,
+      sequence: 1
+    };
+    view.render(data);
+    views.push({ app, view, data, clock: progress });
+  }
+
+  let last = performance.now();
+  const tick = (now) => {
+    const delta = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (playing) {
+      for (const item of views) {
+        if (item.data.phase !== 'active') continue;
+        item.clock = (item.clock + delta * 0.42) % 1;
+        const outward = item.data.direction === 'outward';
+        item.data.travelProgress = item.clock;
+        item.data.progress = item.clock;
+        item.data.radius = outward ? 72 + 173 * item.clock : 245 - 173 * item.clock;
+        item.view.render(item.data);
+      }
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  document.body.dataset.ready = 'true';
+</script>
+</html>

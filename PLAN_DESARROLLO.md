@@ -1159,6 +1159,11 @@ stress sin perder telegraphs ni feedback del player.
 
 #### Player
 
+Revisión visual autorizada 10-09-2026: los impactos de player/enemigos siguen
+[DAMAGE_FX_PREMIUM.md](docs/design/DAMAGE_FX_PREMIUM.md). Breach Petals sustituye
+el anillo de daño del player; Hull Fracture sustituye el anillo de hit enemigo.
+Las recetas históricas de abajo conservan sus reglas de gameplay y caps.
+
 - Idle: respiración del core de 0.8–1.5 % y rotación/energía ambiental muy
   sutil; no debe parecer que se está moviendo sin input.
 - Movimiento: inclinación de 2–4° y una estela corta sólo en Medium/High.
@@ -2633,8 +2638,10 @@ se toca EX-02c.
 `CombatSimulation` publica el snapshot `radialPulse`; el láser y el pulso se
 arbitran sin cancelar ataques ya iniciados. El boss bloquea nuevos pulsos y el
 deadline evita que una espera se cuele en la entrada del Core Sentinel. La
-representación `RadialPulseView` reutiliza cinco `Graphics`, conserva el
-telegraph en Low y deja libre la zona segura para no tapar la lectura.
+representación `RadialPulseView` reutiliza una jerarquía acotada de 10
+`Graphics` y 2 `Container`, conserva el telegraph en Low y deja libre la zona
+segura para no tapar la lectura. Su receta material vive en
+`docs/design/RADIAL_PULSE_FX_PREMIUM.md`.
 
 La evidencia automática son los tests del hazard y la vista, más la regresión
 de láser, simulación y contrato de Acto I. La ficha está en

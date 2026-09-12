@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-splitter-wings-title enemy-splitter-wings-desc">
+  <title id="enemy-splitter-wings-title">Splitter fracture wings</title>
+  <desc id="enemy-splitter-wings-desc">Two offset angular plates that read as a vessel ready to separate.</desc>
+  <path id="enemy-splitter-wings-frame" d="M-12-15-25-12-30 1-25 17-14 21-9 12-16 5-17-5ZM12-15 25-12 30 1 25 17 14 21 9 12 16 5 17-5Z" fill="#141c35" stroke="#9ca8e7" stroke-width="1.1" stroke-linejoin="round"/>
+  <path id="enemy-splitter-wings-plates" d="M-15-11-23-9-26 1-22 12-16 15-13 9-19 3-19-5ZM15-11 23-9 26 1 22 12 16 15 13 9 19 3 19-5Z" fill="#5862a6"/>
+  <path id="enemy-splitter-wings-bevels" d="M-15-11-23-9-26 1-22-3-19-8-15-8ZM15-11 23-9 26 1 22-3 19-8 15-8Z" fill="#e4ddff"/>
+  <path id="enemy-splitter-wings-return" d="M-26 1-22 12-16 15-18 9-22 4-22-3ZM26 1 22 12 16 15 18 9 22 4 22-3Z" fill="#303b73"/>
+  <path id="enemy-splitter-wings-fracture-lanes" d="M-24-1-19 1-22 5-25 4ZM24-1 19 1 22 5 25 4Z" fill="#dd82ff"/>
+  <path id="enemy-splitter-wings-vents" d="M-25 7-20 9-18 12-23 10ZM25 7 20 9 18 12 23 10Z" fill="#101727"/>
+  <path id="enemy-splitter-wings-tips" d="M-26 13-21 15-18 19-24 17ZM26 13 21 15 18 19 24 17Z" fill="#7b89cc"/>
+</svg>

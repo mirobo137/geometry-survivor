@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-splitter-cockpit-title enemy-splitter-cockpit-desc">
+  <title id="enemy-splitter-cockpit-title">Splitter fracture core</title>
+  <desc id="enemy-splitter-cockpit-desc">A recessed dual-lobed reactor with a luminous split.</desc>
+  <path id="enemy-splitter-cockpit-well" d="M-8-10H8L12-4 9 9 0 15-9 9-12-4Z" fill="#080d1c"/>
+  <path id="enemy-splitter-cockpit-mount" d="M-6-7H6L8-2 6 7 0 11-6 7-8-2Z" fill="#4a3e74"/>
+  <path id="enemy-splitter-cockpit-glass" d="M-4-5H-1L1-2V5L-3 7-5 3ZM4-5H1L-1-2V5L3 7 5 3Z" fill="#d678ff"/>
+  <path id="enemy-splitter-cockpit-facet" d="M0-7 2-3V5L0 8-2 5V-3Z" fill="#fff0ff"/>
+</svg>

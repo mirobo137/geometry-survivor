@@ -83,3 +83,62 @@ drills Low sin errores de ejecución. Incluyen materiales en fondo claro y
 oscuro; no constituyen benchmark. Durante captura headless y compilación
 simultánea el HUD indicó aproximadamente 24 FPS; no se extrapola a juego
 interactivo ni a Android. Persiste el warning previo de chunk mayor de 500 kB.
+
+## Splitter: fractura acotada
+
+El tercer verbo angular es **separarse**, no girar ni embestir. La masa elegida
+es un diamante facetado con una costura vertical, dos placas laterales
+desacoplables y un nucleo dual. Tank aporta los planos y retornos; Orbiter
+aporta la idea de placas moviles, pero la silueta no copia su herradura; Charger
+aporta la proa funcional, pero Splitter no usa una aguja frontal.
+
+La fuente tiene 23 primitivas: rear 4, wings 7, hull 8, cockpit 4. El master es
+la concatenacion exacta de esas piezas, usa el mismo frame centrado y mantiene
+la forma en Low. Durante la vida normal las alas respiran en sentidos opuestos;
+al morir, el FX pooled separa las piezas del padre y la simulacion crea dos
+hijos laterales. Un hijo se escala por transform y no crea otra textura.
+
+La regla de gameplay es una sola fractura: profundidad 0 crea dos hijos de
+profundidad 1; los hijos no se dividen. El cap de familia y el pool global se
+comprueban antes de cada slot. El drill mantiene autofire porque la mecanica
+necesita una muerte real para poder inspeccionarse: `?splitter=1&debug=1`.
+La señal visual es la transicion padre -> dos fragmentos, no un rayo ni un
+telegraph de alcance. El daño sigue siendo solo contacto del casco.
+
+## Hoja sectorial del hazard Angular
+
+EX-07d anade una cuarta receta visual de la familia: una hoja sectorial no es
+un rayo lineal ensanchado ni un anillo recoloreado. Durante `telegraph` muestra
+solo el contorno discontinuo del sector comprometido, marcas cortas y
+chevrones que declaran el sentido. Durante `active` usa una cuña fisica con
+base tinta, manto metalico, cuerpo coral, nucleo marfil y dos bordes; rota el
+contenedor segun el snapshot. En `recovery` deja fragmentos discontinuos, sin
+cuerpo solido.
+
+Revision de telegraph premium: la camara de calibracion es apenas
+translucida; sus rieles radiales usan segmentos con base metalica y nucleo
+ambar, remates fisicos en los dos extremos, un emisor de origen y chevrones
+tangenciales que declaran el sentido. La lectura es de sector comprometido,
+no de una linea de alcance continua. Low conserva camara, rieles, extremos,
+direccion, hoja y respuesta; High solo suma chevrones y detalle. Cada arco,
+linea y sector empieza su propio `beginPath()`.
+
+La hoja recorre un arco limitado y deja una ruta amplia fuera de su angulo.
+No se pinta una cuña de "zona segura": la seguridad se deduce de la ausencia
+real de geometria y de la colision. El renderer no decide daño ni longitud; no
+se anaden lineas, flechas macizas, filtros ni particulas para aparentar
+premium. `AngularSweepView` construye geometria por secuencia/radio y anima
+solo transform, alpha y visibilidad.
+
+Orbital Warden usa el mismo lenguaje material con una familia propia: su riel
+rota mientras daña, fija una embestida, recorre un arco curvo, lanza dos
+réplicas destructibles y desplaza el corredor del anillo. Su silueta modular y
+la de sus copias viven en assets separados; la vista cambia de familia por
+`bossId` y no aplica un recolor silencioso. La receta detallada queda en
+[`ACTO_II_BOSS_FAMILY_PREMIUM.md`](ACTO_II_BOSS_FAMILY_PREMIUM.md).
+
+Lamina: /docs/visual/angular-reference.html. Capturas reproducibles:
+`node docs/visual/capture-angular.mjs` con Vite en 5173. Incluye referencias
+Tank/Elite, exploracion, siluetas, paneles Pixi de las tres familias y los tres
+drills Low, mas la hoja Angular en sus tres estados. URLs: `?charger=1&debug=1`,
+`?orbiter=1&debug=1`, `?splitter=1&debug=1` y `?angular=1&debug=1`.

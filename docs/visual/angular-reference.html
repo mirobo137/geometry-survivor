@@ -9,9 +9,18 @@ article{background:#142234;padding:12px;border:1px solid #304353;border-radius:8
 canvas{display:block;max-width:100%;height:auto}
 .ships{display:flex;gap:24px;flex-wrap:wrap}.ships img{object-fit:contain}
 .light{background:#d9e1e2}.black img{filter:brightness(0)}
+.angular-showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.angular-showcase article{grid-column:1/-1;background:#101d30;padding:12px;border:1px solid #304353;border-radius:8px}
+.angular-showcase h3{margin:0 0 6px;font-size:16px}.angular-showcase p{margin:0 0 10px;font-size:13px}
+.angular-showcase canvas{width:100%;height:auto;display:block}
+.angular-labels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+.angular-label{color:#a9bccc;margin:0!important}
+@media (max-width:600px){.angular-labels{grid-template-columns:1fr;gap:6px}}
 </style>
 <h1>Angular · material, preparación y movimiento</h1>
-<p>Comparación de fuentes y compositor Pixi de producción. Charger: ariete cerámico con estabilizadores; Orbiter: casco conservado y ruta discontinua. El aviso corto no mide alcance.</p>
+<p>Comparación de fuentes y compositor Pixi de producción. Charger: ariete
+cerámico con estabilizadores; Orbiter: casco conservado y ruta discontinua;
+Splitter: casco partido y núcleo dual. Los avisos cortos no miden alcance.</p>
 <button id="play">Animar / congelar</button>
 <h2>Exploración de masa · 32 px y 96 px</h2>
 <p>A: aguja (se confunde con Fast). B: martillo ancho (se confunde con Tank). C: ariete central con estabilizadores retrasados (elegida).</p>
@@ -19,16 +28,22 @@ canvas{display:block;max-width:100%;height:auto}
 <h2>Comparación de flota · 32 / 64 / 96 px</h2><div id="fleet" class="ships"></div>
 <h2>Color claro y silueta</h2><div id="silhouettes" class="ships light black"></div>
 <h2>Renderer real · High / Low / fondo claro</h2><div class="grid"></div>
+<h2>Hazard Angular · aviso, hoja activa y residuo</h2>
+<p>La lámina usa el mismo <code>AngularSweepView</code> que la partida. El aviso
+compromete un sector con riel segmentado y dirección; la hoja activa muestra la
+superficie dañina real; la recuperación sólo deja residuos discontinuos.</p>
+<div id="angular-showcase" class="angular-showcase"></div>
 <script type="module">
-import { Application } from 'pixi.js';
+import { Application, Graphics } from 'pixi.js';
+import { AngularSweepView } from '../../src/presentation/pixi/AngularSweepView.ts';
 import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
 import { EnemyShipVisual } from '../../src/presentation/pixi/enemies/EnemyShipVisual.ts';
 import { OrbiterTelegraphView } from '../../src/presentation/pixi/OrbiterTelegraphView.ts';
 import { ChargerTelegraphView } from '../../src/presentation/pixi/ChargerTelegraphView.ts';
 const sources=import.meta.glob('../../src/assets/svg/enemies/*/*.svg',{query:'?raw',import:'default',eager:true});
 const frame={x:-32,y:-32,width:64,height:64};
-const kinds=['chaser','fast','tank','elite','orbiter','charger'];
-for(const kind of ['tank','elite','orbiter','charger']){
+const kinds=['chaser','fast','tank','elite','orbiter','charger','splitter'];
+for(const kind of ['tank','elite','orbiter','charger','splitter']){
  const item=document.createElement('div');item.textContent=kind;
  for(const size of [32,64,96]){
   const img=document.createElement('img');img.src='../../src/assets/svg/enemies/'+kind+'/'+kind+'.svg';img.width=size;img.height=size;item.append(img);
@@ -41,27 +56,57 @@ for(const d of candidates)for(const size of [32,96]){
  const node=document.createElement('span');node.innerHTML='<svg width="'+size+'" height="'+size+'" viewBox="-32 -32 64 64"><path d="'+d+'" fill="#101724"/></svg>';document.querySelector('#candidates').append(node);
 }
 let playing=false;document.querySelector('#play').onclick=()=>playing=!playing;
-for(const [kind,quality,light] of [['charger','high',false],['orbiter','high',false],['charger','low',false],['orbiter','low',false],['charger','high',true],['orbiter','high',true]]){
+for(const [kind,quality,light] of [['charger','high',false],['orbiter','high',false],['splitter','high',false],['charger','low',false],['orbiter','low',false],['splitter','low',false],['charger','high',true],['orbiter','high',true],['splitter','high',true]]){
  const article=document.createElement('article');article.innerHTML='<h3>'+kind+' · '+quality+(light?' · claro':'')+'</h3>';document.querySelector('.grid').append(article);
  const app=new Application();await app.init({width:450,height:230,background:light?0xd9e1e2:0x142234,antialias:true,resolution:1});article.append(app.canvas);
  const textures={};for(const k of kinds){textures[k]={};for(const part of ['flat','rear','wings','hull','cockpit'])textures[k][part]=createSvgTexture(app.renderer,sources['../../src/assets/svg/enemies/'+k+'/'+k+(part==='flat'?'':'-'+part)+'.svg'],frame);}
  const ship=new EnemyShipVisual(textures,0,quality);
- const view=kind==='charger'?new ChargerTelegraphView(quality):new OrbiterTelegraphView(quality);
+ const view=kind==='charger'?new ChargerTelegraphView(quality):kind==='orbiter'?new OrbiterTelegraphView(quality):null;
  const state={active:true,kind,x:90,y:115,vx:0,vy:0,radius:19,health:38,maxHealth:38,
  chargerPhase:'telegraph',chargerProgress:0.75,chargerAimX:650,chargerAimY:115,chargerSequence:1,
  orbiterPhase:'telegraph',orbiterProgress:0.75,orbiterSequence:1,orbiterStartAngle:-1.7,orbiterDirection:1,orbiterBandRadius:115};
- app.stage.addChild(view.root,ship.root);
+ if(view)app.stage.addChild(view.root);
+ app.stage.addChild(ship.root);
  if(kind==='orbiter')view.root.position.set(190,180);
  let age=0;
  const render=(p,attack=false)=>{
   state.chargerPhase=attack?'charge':'telegraph';state.orbiterPhase=attack?'commit':'telegraph';
   state.chargerProgress=state.orbiterProgress=p;
   if(kind==='orbiter'){const a=-1.7+(attack?p*Math.PI/2:0);state.x=190+115*Math.cos(a);state.y=180+115*Math.sin(a);state.vx=-Math.sin(a)*100;state.vy=Math.cos(a)*100;}
-  else {state.x=attack?90+p*180:90;state.vx=attack?100:0;}
-  view.render([state]);ship.render(state,age);ship.root.position.set(state.x,state.y);
+  else if(kind==='charger'){state.x=attack?90+p*180:90;state.vx=attack?100:0;}
+  else {state.x=225;state.y=115;state.vx=attack?18:0;state.vy=0;state.splitterDepth=attack?1:0;}
+  if(view)view.render([state]);ship.render(state,age);ship.root.position.set(state.x,state.y);
  };
  render(0.75);
- app.ticker.add(t=>{if(playing){age+=t.deltaMS/1000;const cycle=age%3;render(cycle<1.5?cycle/1.5:(cycle-1.5)/1.5,cycle>=1.5);}});
+  app.ticker.add(t=>{if(playing){age+=t.deltaMS/1000;const cycle=age%3;render(cycle<1.5?cycle/1.5:(cycle-1.5)/1.5,cycle>=1.5);}});
+}
+const angularShowcase=document.querySelector('#angular-showcase');
+const angularApp=new Application();
+await angularApp.init({width:960,height:300,background:0x0b1423,antialias:true,resolution:1});
+const angularArticle=document.createElement('article');
+angularArticle.innerHTML='<h3>Composición de producción · High / Low</h3><p>La geometría se construye una vez y el estado sólo cambia visibilidad, alpha y transform.</p>';
+angularShowcase.append(angularArticle);
+angularArticle.append(angularApp.canvas);
+const angularLabels=document.createElement('div');
+angularLabels.className='angular-labels';
+angularArticle.append(angularLabels);
+const angularRadius=112;
+const angularStates=[
+ {phase:'telegraph',label:'Telegraph / sector comprometido',note:'riel segmentado + origen + sentido'},
+ {phase:'active',label:'Active / hoja de inducción',note:'tres láminas dentro del sector dañino'},
+ {phase:'recovery',label:'Recovery / residuo',note:'la superficie desaparece; queda el rastro'}
+];
+for(const [index,preview] of angularStates.entries()){
+ const centerX=160+index*320,centerY=150;
+ const panel=new Graphics().circle(centerX,centerY,angularRadius).stroke({color:0x315064,width:1,alpha:0.9});
+ angularApp.stage.addChild(panel);
+ const view=new AngularSweepView(index===0?'high':index===1?'high':'low');
+ view.root.position.set(centerX,centerY);
+ angularApp.stage.addChild(view.root);
+ view.render({phase:preview.phase,angle:-0.7,startAngle:-0.7,progress:index===0?0.76:index===1?0.46:0.32,travelProgress:index===1?0.46:index===2?1:0,dangerHalfAngle:0.25,travelRadians:0.92,arenaRadius:angularRadius,sequence:index+1},angularRadius);
+ const label=document.createElement('p');
+ label.className='angular-label';label.innerHTML='<strong>'+preview.label+'</strong><br>'+preview.note;
+ angularLabels.append(label);
 }
 document.body.dataset.ready='true';
 </script></html>

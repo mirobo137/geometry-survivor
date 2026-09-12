@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-orbital-warden-wings-title">
+  <title id="enemy-orbital-warden-wings-title">Orbital Warden: articulated three-arm astrolabe</title>
+  <path id="enemy-orbital-warden-wings-0-scythe" d="M-9 -18L-21 -29L-17 -46L1 -54L20 -42L24 -21L16 -27L10 -40L0 -43L-7 -36L-6 -26Z" fill="#627987"/>
+  <path id="enemy-orbital-warden-wings-0-bevel" d="M-21 -29L-17 -46L1 -54L20 -42L10 -44L0 -49L-13 -42L-17 -29Z" fill="#d4e3d9"/>
+  <path id="enemy-orbital-warden-wings-0-return" d="M0 -43L10 -40L16 -27L24 -21L17 -21L6 -34L-3 -34Z" fill="#25384b"/>
+  <path id="enemy-orbital-warden-wings-0-capacitor" d="M-15 -37L-11 -42L0 -47L9 -43L0 -42L-9 -37Z" fill="#dfac70"/>
+  <path id="enemy-orbital-warden-wings-1-scythe" d="M20.09 1.21L35.61 -3.69L48.34 8.28L46.27 27.87L26.37 38.32L6.19 31.28L15.38 27.36L29.64 28.66L37.24 21.5L34.68 11.94L25.52 7.8Z" fill="#405868"/>
+  <path id="enemy-orbital-warden-wings-1-bevel" d="M35.61 -3.69L48.34 8.28L46.27 27.87L26.37 38.32L33.11 30.66L42.44 24.5L42.87 9.74L33.61 -0.22Z" fill="#d4e3d9"/>
+  <path id="enemy-orbital-warden-wings-1-return" d="M37.24 21.5L29.64 28.66L15.38 27.36L6.19 31.28L9.69 25.22L26.44 22.2L30.94 14.4Z" fill="#25384b"/>
+  <path id="enemy-orbital-warden-wings-1-capacitor" d="M39.54 5.51L41.87 11.47L40.7 23.5L32.74 29.29L36.37 21L36.54 10.71Z" fill="#dfac70"/>
+  <path id="enemy-orbital-warden-wings-2-scythe" d="M-11.09 16.79L-14.61 32.69L-31.34 37.72L-47.27 26.13L-46.37 3.68L-30.19 -10.28L-31.38 -0.36L-39.64 11.34L-37.24 21.5L-27.68 24.06L-19.52 18.2Z" fill="#627987"/>
+  <path id="enemy-orbital-warden-wings-2-bevel" d="M-14.61 32.69L-31.34 37.72L-47.27 26.13L-46.37 3.68L-43.11 13.34L-42.44 24.5L-29.87 32.26L-16.61 29.22Z" fill="#d4e3d9"/>
+  <path id="enemy-orbital-warden-wings-2-return" d="M-37.24 21.5L-39.64 11.34L-31.38 -0.36L-30.19 -10.28L-26.69 -4.22L-32.44 11.8L-27.94 19.6Z" fill="#25384b"/>
+  <path id="enemy-orbital-warden-wings-2-capacitor" d="M-24.54 31.49L-30.87 30.53L-40.7 23.5L-41.74 13.71L-36.37 21L-27.54 26.29Z" fill="#dfac70"/>
+</svg>

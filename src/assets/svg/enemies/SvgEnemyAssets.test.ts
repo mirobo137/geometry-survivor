@@ -30,6 +30,16 @@ import chargerRearSvg from './charger/charger-rear.svg?raw';
 import chargerWingsSvg from './charger/charger-wings.svg?raw';
 import chargerHullSvg from './charger/charger-hull.svg?raw';
 import chargerCockpitSvg from './charger/charger-cockpit.svg?raw';
+import splitterSvg from './splitter/splitter.svg?raw';
+import splitterRearSvg from './splitter/splitter-rear.svg?raw';
+import splitterWingsSvg from './splitter/splitter-wings.svg?raw';
+import splitterHullSvg from './splitter/splitter-hull.svg?raw';
+import splitterCockpitSvg from './splitter/splitter-cockpit.svg?raw';
+import replicaSvg from './warden-replica/warden-replica.svg?raw';
+import replicaRearSvg from './warden-replica/warden-replica-rear.svg?raw';
+import replicaWingsSvg from './warden-replica/warden-replica-wings.svg?raw';
+import replicaHullSvg from './warden-replica/warden-replica-hull.svg?raw';
+import replicaCockpitSvg from './warden-replica/warden-replica-cockpit.svg?raw';
 
 describe('enemy SVG masters', () => {
   it('keeps the top-down turtle within the character contract', () => {
@@ -60,7 +70,9 @@ describe('enemy SVG masters', () => {
       ['enemy-tank-', tankSvg, [tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg]],
       ['enemy-elite-', eliteSvg, [eliteRearSvg, eliteWingsSvg, eliteHullSvg, eliteCockpitSvg]],
       ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]],
-      ['enemy-charger-', chargerSvg, [chargerRearSvg, chargerWingsSvg, chargerHullSvg, chargerCockpitSvg]]
+      ['enemy-charger-', chargerSvg, [chargerRearSvg, chargerWingsSvg, chargerHullSvg, chargerCockpitSvg]],
+      ['enemy-splitter-', splitterSvg, [splitterRearSvg, splitterWingsSvg, splitterHullSvg, splitterCockpitSvg]],
+      ['enemy-warden-replica-', replicaSvg, [replicaRearSvg, replicaWingsSvg, replicaHullSvg, replicaCockpitSvg]]
     ] as const;
     for (const [prefix, svg, parts] of families) {
       expect(svg).toContain('viewBox="-32 -32 64 64"');
@@ -86,6 +98,19 @@ describe('enemy SVG masters', () => {
           expect(svg).toContain(`d="${pathData}"`);
         }
       }
+    }
+  });
+
+  it('keeps the Warden replica geometry inside its shared 64px texture frame', () => {
+    for (const svg of [replicaSvg, replicaRearSvg, replicaWingsSvg, replicaHullSvg, replicaCockpitSvg]) {
+      // Pixi's Graphics.svg parser walks <g> but does not apply its transform.
+      expect(svg).not.toMatch(/<g\s+transform=/);
+      const values = [...svg.matchAll(/\sd="([^"]+)"/g)].flatMap(([, pathData]) =>
+        [...pathData.matchAll(/-?(?:\d+\.\d+|\d+|\.\d+)/g)].map(([value]) => Number(value))
+      );
+      expect(values.length).toBeGreaterThan(0);
+      expect(Math.min(...values)).toBeGreaterThanOrEqual(-32);
+      expect(Math.max(...values)).toBeLessThanOrEqual(32);
     }
   });
 });

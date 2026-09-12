@@ -235,9 +235,13 @@ progreso.
 
 Introduce sectores y decisiones de alineación. La primera familia nueva se
 implementa antes que las siguientes: Orbiter, Charger y Splitter no se entregan
-en un solo cambio. Pulse Ring y el hazard angular deben dejar una salida
-legible; el boss no recibe empuje ni una combinación que cierre todos los
-sectores. Calibration ofrece una plantilla de entrada, no una build arbitraria.
+en un solo cambio. Pulse Ring ya tiene una base aislada con una abertura que
+rota durante el daño; el hazard angular ya tiene una hoja con recorrido acotado
+y Orbital Warden una familia de riel, embestida fija, arco curvo, réplicas
+destructibles y corredor móvil. Ambos siguen aislados hasta que exista la
+composición de campaña y la validación humana. Calibration ofrece una plantilla
+de entrada, no una build arbitraria. Ninguno de estos prototipos habilita aún
+la selección o el gating de campaña.
 
 ### Acto III — Fracture
 

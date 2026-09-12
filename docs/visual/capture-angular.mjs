@@ -13,12 +13,15 @@ try {
   await page.screenshot({path:'test-results/angular-reference/desktop.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
   await page.screenshot({path:'test-results/angular-reference/portrait.png',fullPage:true});
-  for (const kind of ['charger','orbiter']) {
+  for (const kind of ['charger','orbiter','splitter','angular']) {
     await page.setViewportSize({width:1280,height:720});
     await page.goto(base + '/?' + kind + '=1&debug=1&quality=low');
-    await page.waitForFunction(k => document.querySelector('#debug-panel')?.textContent?.includes(k + ': telegraph'),kind,{timeout:20000});
+    await page.waitForFunction(k => document.querySelector('#debug-panel')?.textContent?.includes(k + ':'),kind,{timeout:20000});
+    if (kind === 'splitter') {
+      await page.waitForFunction(() => document.querySelector('#debug-panel')?.textContent?.includes('depth 1'), null, {timeout:20000});
+    }
     await page.screenshot({path:'test-results/angular-reference/'+kind+'-low.png'});
   }
   assert.deepEqual(errors,[]);
-  console.log('Six production panels, portrait and both Low drills captured without runtime errors.');
+  console.log('Production panels, portrait and four Low drills captured without runtime errors.');
 } finally { await browser.close(); }

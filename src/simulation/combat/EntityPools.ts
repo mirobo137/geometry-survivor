@@ -35,6 +35,10 @@ export interface EnemyState {
   chargerEndY: number;
   chargerTimer: number;
   chargerSequence: number;
+  /** Splitter lineage; depth 0 may fracture once, depth 1 never fractures. */
+  splitterDepth: number;
+  /** True only for the Warden's destructible miniature copies. */
+  wardenReplica: boolean;
   /** Increments whenever a pooled slot is acquired, including recycled slots. */
   generation: number;
 }
@@ -93,6 +97,8 @@ const createEnemyState = (): EnemyState => ({
   orbiterSequence: 0,
   chargerPhase: 'inactive', chargerProgress: 0, chargerAimX: 0, chargerAimY: 0,
   chargerEndX: 0, chargerEndY: 0, chargerTimer: 0, chargerSequence: 0,
+  splitterDepth: 0,
+  wardenReplica: false,
   generation: 0
 });
 
@@ -156,7 +162,10 @@ export class EnemyPool {
   }
 
   public reset(): void {
-    for (const state of this.states) state.active = false;
+    for (const state of this.states) {
+      state.active = false;
+      state.wardenReplica = false;
+    }
     this.activeCount = 0;
     this.cursor = 0;
   }

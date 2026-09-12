@@ -1,11 +1,266 @@
 # Geometry Survivor — estado y continuación
 
+## Mejora de previsualización Angular — 12-09-2026
+
+La previsualización y el `telegraph` real del hazard Angular fueron refinados:
+la advertencia ya no depende de dos líneas radiales continuas. Usa una cámara
+de calibración muy tenue, rieles segmentados con capas metal/ámbar, remates en
+los extremos, emisor de origen y chevrones tangenciales de dirección. La
+geometría sigue siendo la misma del sector comprometido; no se modificaron
+daño, colisión, duración ni ruta. `docs/visual/angular-reference.html` ahora
+muestra los estados reales `telegraph`, `active` y `recovery`, y el capturador
+incluye el drill `?angular=1&debug=1`.
+
+Validación confirmada: typecheck correcto, 90 archivos y 325 tests verdes,
+build local correcto, smoke del drill Angular 1/1 y captura desktop/móvil de la
+lámina y del drill sin errores de runtime. Falta la aprobación visual humana en
+la partida y la revisión física de rendimiento en móvil.
+
+## Movimiento del boss y Charge comprometido — 12-09-2026
+
+Orbital Warden ya no se queda estático entre ataques: `BossSystem` le da una
+deriva orbital lenta, determinista y sin homing durante `intro`, `sweep`, `ring`
+y `recovery`. La deriva se inicia con el radio real de spawn y, después de
+Charge/Curve, continúa desde el endpoint real; no vuelve a la órbita anterior
+ni genera un salto visual. Durante `charge`/`curve` (telegraph y active) y
+`replicas` el movimiento ambiental queda bloqueado para que el aviso coincida
+con la acción.
+
+La embestida queda comprometida al comenzar su aviso: `chargeAimX/Y` se captura
+una sola vez y la transición a `charge-active` no se cancela aunque el jugador
+ya esté sobre la ruta. Se añadieron regresiones para movimiento ambiental,
+continuidad del endpoint y Charge en trayectoria. Core Sentinel conserva su
+comportamiento de Acto I. No se tocaron daño, vida, spawn, cadencia ni EX-02c.
+
+Pendiente de esta entrega: ejecutar validación automática final y revisar en
+`?warden=1&debug=1&quality=low|medium|high` que el movimiento se sienta
+intencional, que el aviso permanezca legible y que la embestida cruce al jugador
+sin cancelarse. Después continúa EX-07e; la aprobación humana de EX-07d sigue
+pendiente.
+
+## Corrección de réplicas del Warden — 12-09-2026
+
+La implementación de Astra sí estaba integrada, pero las réplicas pequeñas
+tenían un defecto de asset: declaraban `viewBox="-32 -32 64 64"` mientras sus
+paths aún usaban las coordenadas del boss grande (`aprox. -54..48`). Al crear
+las texturas con el frame común de 64 px, Pixi recortaba brazos y casco; por eso
+nacían incompletas/cortadas en partida.
+
+Se corrigieron las cinco fuentes en
+`src/assets/svg/enemies/warden-replica/` reduciendo explícitamente cada
+coordenada de sus paths al 55%. El intento anterior con
+`<g transform="scale(0.55)">` no surtía efecto en Pixi: su parser
+`Graphics.svg()` recorre el grupo, pero no aplica su `transform`. El ancla, el
+frame, la escala runtime `0.72`, la colisión y la lógica de spawn no cambiaron.
+El master sigue siendo la concatenación exacta de `rear → wings → hull → cockpit`.
+
+Validación confirmada después del arreglo:
+
+- prueba dirigida: 12/12 tests;
+- build local: typecheck, 90 archivos y 325 tests, Vite correcto;
+- captura actualizada de la lámina desktop/móvil en
+  `test-results/warden-reference/`, con ambas copias completas visibles;
+- regresión nueva en `SvgEnemyAssets.test.ts` comprueba que ningún valor de
+  path de las cinco fuentes salga de `[-32, 32]`.
+
+Pendiente para Luna: comprobarlo todavía en una run real en Low/Medium/High y
+en móvil, especialmente mientras las copias reciben daño y al morir. No cerrar
+EX-07d sólo por estas pruebas visuales; falta tu aprobación en partida. El
+posible salto de orientación al morir del boss principal sigue siendo un tema
+separado y documentado abajo.
+
+## Corrección de posición de réplicas — 12-09-2026
+
+La captura del juego real reveló un segundo caso independiente: el Warden podía
+estar cerca del borde y el offset fijo de 80 unidades colocaba una réplica fuera
+del radio útil. La textura ya cabía en su frame, pero la entidad se dibujaba
+fuera de la arena y por eso parecía cortada. `BossSystem` ahora proyecta cada
+punto de aparición al radio `arenaRadius - 30`; conserva el ángulo y la
+separación tanto como sea posible, y no modifica daño, colisión ni spawn count.
+
+La regresión correspondiente fuerza un apuntado hacia el borde y comprueba
+ambas posiciones. Luna debe volver a revisar el primer frame de
+`replicas-active` en partida; si aún hay una pieza separada, distinguirla del
+efecto de lanzamiento o de muerte antes de tocar la escala del SVG.
+
+## Revisión Warden y angular — 12-09-2026 (vigente)
+
+El usuario rechazó la primera ciudadela y los efectos planos. Warden ahora
+es un astrolabio de tres brazos con huso central, 24 paths y copias de la misma
+silueta. Charge/Curve conservan su endpoint durante recovery; Charge termina
+dentro de la arena y Curve nace desde el radio real, corrigiendo el teletransporte
+a la órbita anterior. WardenAttackView anima geometría preconstruida: plumas
+de aviso, estelas laminadas afiladas y cámaras de lanzamiento con mordazas.
+El angular usa tres láminas curvas, emisor y campo tenue que comunica todo el
+sector dañino, sin escalarlo durante active.
+
+Guía vigente: [ACTO_II_BOSS_FAMILY_PREMIUM.md](docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
+Lámina: /docs/visual/warden-reference.html; captura con capture-warden.mjs.
+Probar ?warden=1&debug=1 y ?angular=1&debug=1 en las tres calidades.
+La aprobación artística anterior no se extiende a esta revisión. EX-07d sigue
+pendiente de validación humana; EX-07e campaña sigue después; EX-02c diferido.
+
+### Relevo de sesión para Luna — qué falta exactamente
+
+La implementación de esta revisión está escrita; no rehacerla desde cero ni
+tomar las descripciones históricas de abajo como la receta visual vigente.
+Leer primero la guía ACTO_II_BOSS_FAMILY_PREMIUM enlazada arriba e inspeccionar
+el diff de Git, conservando los cambios existentes del usuario.
+
+Evidencia recogida en esta sesión:
+
+- Un build local completo pasó con 90 archivos y 323 tests; incluye las nuevas
+  regresiones de posición al terminar Charge/Curve. Después de los últimos
+  retoques también pasó typecheck.
+- Se ejecutaron capturas desktop/móvil de la lámina y se inspeccionaron sus
+  imágenes. Esto NO equivale a validación de rendimiento ni de juego móvil.
+- Se lanzó otro build final, pero su resultado no quedó recuperable al cerrar
+  la sesión. No presentarlo como una segunda ejecución confirmada.
+- No se ejecutó un smoke de navegador nuevo para esta revisión.
+
+Pendientes, en orden:
+
+1. Ejecutar `npm run build:local` y después los smoke dirigidos:
+   `npx playwright test --reporter=line --grep "familia de ataques premium|drill Angular"`.
+   Comprobar que el filtro encuentre los tests; si cambiaron sus títulos,
+   localizar los equivalentes en tests/browser antes de ejecutar.
+2. Revisar `BossShipVisual.playDefeat`: actualmente reinicia root.rotation a
+   cero y podría producir un salto de orientación al morir. Conservar la
+   orientación durante defeat si se confirma; resetearla en reset.
+3. Recapturar `node docs/visual/capture-warden.mjs`: después de la última
+   captura se corrigió el origen del aviso curvo y se añadieron copias pequeñas
+   a la lámina. Las capturas anteriores no muestran esos últimos ajustes.
+4. Probar en partida `?warden=1&debug=1` y `?angular=1&debug=1`: endpoint sin
+   retorno, continuidad del arco, dos réplicas destructibles y sus cámaras,
+   correspondencia daño/sector angular, pausa/reinicio y cambio de boss.
+   Revisar Low/Medium/High en PC y móvil; medir rendimiento y pedir aprobación
+   visual al usuario. Revisar también reduced-motion en los FX nuevos.
+5. Sincronizar, si procede, las descripciones antiguas de ANGULAR_ART_PREMIUM,
+   BOSS_FX_PREMIUM, la ficha EX-07d y el README del Warden con la guía vigente:
+   la nueva familia tiene 24 paths, no los 22 de la primera entrega. Conservar
+   el historial de mediciones como histórico, no como prueba de esta revisión.
+
+Archivos clave: BossSystem.ts, WardenAttackView.ts, BossView.ts,
+AngularSweepView.ts, BossShipVisual.ts, los SVG orbital-warden y warden-replica,
+y docs/visual/warden-reference.html. WardenAttackView preconstruye 43/51/59
+Graphics por calidad; esto es un presupuesto de objetos, NO una medición FPS.
+Los patrones antiguos sweep/ring de BossView aún reconstruyen geometría acotada;
+no afirmar que todo el renderer del boss sea estático.
+
+El servidor de desarrollo se inició en http://127.0.0.1:5173/; comprobar que
+siga vivo antes de usarlo. No asumir que sobrevive al cambio de sesión.
+No cerrar EX-07d como aprobado ni empezar EX-07e por inferencia: completar esta
+validación y retomar la puerta vigente. Balance EX-02c continúa diferido.
+
+## Actualización EX-07d — Orbital Warden, familia de patrones — 12-09-2026
+
+Se amplió el boss del Acto II sin alterar Core Sentinel ni cerrar el balance
+diferido de EX-02c. El ciclo authored de Orbital Warden ahora es
+`sweep → charge → curve → replicas → ring`: reutiliza el riel angular, fija una
+embestida tipo Charger, recorre un arco tipo Orbiter y lanza dos réplicas
+miniatura destructibles tipo Splitter, además del anillo con corredor móvil.
+
+Charge, Curve y Replicas mantienen el origen bloqueado durante su aviso para
+que el telegraph coincida con la acción real. Charge y Curve desplazan al boss
+y hacen daño desde `BossSystem`; Replicas consumen el pool global, pueden morir
+con las armas existentes, no se duplican y usan el FX de muerte desacoplado.
+El boss tiene una familia SVG propia y cacheada en
+`src/assets/svg/enemies/boss/orbital-warden*.svg`; las copias viven en
+`src/assets/svg/enemies/warden-replica/`. Los avisos premium viven en
+`BossView`: riel segmentado, nariz direccional, arco limitado, rieles curvos y
+marcadores rombo/crosshair sin líneas de alcance falsas.
+
+La guía neutral para Luna y futuras iteraciones es
+[`docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md`](docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md);
+la ficha de balance es [`docs/balance/EX-07d-angular-warden.md`](docs/balance/EX-07d-angular-warden.md).
+La validación automática dirigida final queda en 49/49 pruebas verdes; la puerta
+completa posterior queda en 90 archivos y 321 pruebas verdes con typecheck y
+build Vite correctos. Falta la prueba humana en desktop/móvil y
+Low/Medium/High del ciclo completo, seguida de la composición real de Acto II.
+Después de esa puerta, el siguiente bloque sigue siendo EX-07e: campaña,
+selector/gating, transición I→II, recompensa y runs. No tocar aún vida/daño
+final ni spawn de EX-02c.
+
+## EX-07d — hazard angular y Orbital Warden — 12-09-2026
+
+Se implementó el siguiente bloque habilitado del plan como consumidor aislado.
+`AngularSweepHazard` compromete un sector durante `telegraph`, alterna el
+sentido y rota una hoja de daño por un arco limitado durante `active`; aplica
+un solo hit por cast y deja salida lateral. `AngularSweepView` conserva la
+señal en Low/Medium/High con base tinta, manto metálico, cuerpo coral, núcleo
+marfil, bordes y chevrones, sin falsos refugios, filtros ni paths reconstruidos
+por frame.
+
+`BossDefinition` distingue `core-sentinel` y `orbital-warden`. Orbital Warden
+reutiliza la interfaz y el ensamblaje cacheado del boss, pero el riel gira en
+`sweep-active`, el corredor seguro se desplaza en `ring-active` y la vista lo
+identifica por nombre. Core Sentinel conserva su órbita authored y sus hazards
+sin rotación: el Acto I no cambió.
+
+Drills reproducibles:
+`?angular=1&debug=1&quality=low|medium|high` y
+`?warden=1&debug=1&quality=low|medium|high`. El primero muestra sólo hazard y
+player; el segundo sólo boss y hazard, sin oleadas, economía, menú ni save.
+Typecheck, 12 tests específicos, build development y 2 smoke browser dirigidos
+pasaron. Las capturas headless Low fueron inspeccionadas; no son benchmark.
+La ficha es [`docs/balance/EX-07d-angular-warden.md`](docs/balance/EX-07d-angular-warden.md).
+
+Estado: **AUTOMÁTICO OK; validación humana pendiente** en desktop/móvil,
+Low/High, lectura del sector, tiempo de reacción, solapamiento con el boss y
+composición Angular real. El siguiente ID es **EX-07e**: conectar composición
+de campaña, selector/gating, transición I→II, recompensa y runs. EX-02c sigue
+diferido; no tocar vida, daño ni spawn final.
+
+## EX-07c — Pulse Ring angular base — 12-09-2026
+
+Se incorporó la base del hazard Angular como drill aislado. `PulseRingHazard`
+usa `telegraph → active → recovery`, alterna el recorrido radial y muestra una
+abertura sectorial que gira mientras la banda activa hace daño. El cast aplica
+como máximo un hit; si el jugador queda atrapado, el empuje radial es limitado
+y pasa por el mismo clamp de arena. La geometría reutiliza `RadialPulseView`
+pero omite físicamente la abertura: no se pinta una falsa superficie segura.
+
+Se puede probar con `?pulse=1&debug=1&quality=low|medium|high`. El drill no
+crea enemigos, boss, XP, NOVA ni selección de actos. La ficha completa vive en
+[`docs/balance/EX-07c-pulse-ring.md`](docs/balance/EX-07c-pulse-ring.md).
+
+Validación automática específica: hazard puro, integración de
+`CombatSimulation` y regresión de `RadialPulseView`, 28 tests verdes. Falta
+validación humana en desktop/móvil de comprensión, tiempo de reacción,
+seguimiento de la abertura, empuje y legibilidad Low/High. El siguiente ID es
+**EX-07d**: hazard Angular y Orbital Warden; el selector/gating permanece
+después de completar el consumidor de campaña y no se crea un Acto II vacío.
+
+## EX-07b — Splitter angular premium — 11-09-2026
+
+Se incorporó el tercer prototipo Angular como una entrega aislada. Splitter es
+una nave de fractura, distinta del arco del Orbiter y del ariete del Charger:
+su casco diamante tiene una costura luminosa, placas gemelas y núcleo dual.
+El paquete SVG vive en `src/assets/svg/enemies/splitter/` con master Low y
+cuatro piezas cacheadas; su ficha está en
+[`docs/design/EX-07b-splitter.md`](docs/design/EX-07b-splitter.md).
+
+La muerte de un padre de profundidad 0 crea dos hijos laterales de profundidad
+1. Los hijos no se dividen. `EnemySystem` comprueba el cap de familia y cada
+slot del pool antes de adquirirlo, por lo que la fractura no puede superar la
+capacidad global. El drill `?splitter=1&debug=1&quality=high` conserva autofire
+para que la transición pueda probarse sin esperar al Acto II; no cambia las
+oleadas de Acto I ni el balance final de vida/daño.
+
+Integración pendiente de aprobación humana: comparar 32/64/96 px, silueta y
+partida en Low/High, verificar que la separación se entiende bajo presión y
+probar en móvil. EX-07b sigue abierto hasta validar la composición Angular real;
+el siguiente paso técnico es EX-07d, no selector/gating prematuro ni alterar el
+balance diferido de EX-02c.
+
 ## Revisión visual Angular — 11-09-2026
 
 Charger reconstruido con proa cerámica centrada, estabilizadores titanio y
-reactor ámbar; Orbiter conserva su nave. Aviso Charger: aletas cortas de energía
+reactor ámbar; Orbiter conserva su nave; Splitter añade casco fracturado,
+placas gemelas y núcleo dual. Aviso Charger: aletas cortas de energía
 convergentes, sin alcance completo; Orbiter: plumas curvas discontinuas que
-se apagan al pasar. Guía vigente:
+se apagan al pasar; Splitter comunica la separación mediante dos hijos
+laterales, sin línea de alcance. Guía vigente:
 [ANGULAR_ART_PREMIUM.md](docs/design/ANGULAR_ART_PREMIUM.md).
 Comparador de producción: /docs/visual/angular-reference.html.
 Pendiente aprobación humana de esta revisión; no cerrar EX-07b por tests verdes.
@@ -33,17 +288,14 @@ Pendiente aprobación humana de esta revisión; no cerrar EX-07b por tests verde
   difieren hasta que exista el consumidor real de Acto II: mostrarlos ahora
   concedería una build superior a Acto I y contaminaría su balance. No se crea
   todavía un Acto II vacío, save nuevo o balance.
-- EX-07b ya tiene ficha y primera implementación de la familia Angular Orbiter en
-  [`docs/design/EX-07b-orbiter.md`](docs/design/EX-07b-orbiter.md). Orbiter
-  compromete un arco anunciado de 90°, conserva dos sectores libres y su casco
-  hace daño de contacto durante todo el ciclo (el riel sólo comunica la ruta);
-  tiene cap de seis / un commit simultáneo. Probar con
-  `?orbiter=1&debug=1&quality=high` (repetir Low y móvil): es un drill aislado
-  sin oleadas, hazards, boss ni autofire, por lo que no contamina Acto I.
-  Automático OK; falta validación humana y consumidor Angular real. La lista de
-  enemigos **permanece abierta**: Charger, Splitter y posibles familias tras
-  validar composición siguen pendientes; Pulse Ring, hazard y boss no entran
-  aún en este incremento.
+- EX-07b ya tiene ficha e implementación aislada de Orbiter, Charger y Splitter.
+  Orbiter compromete un arco anunciado de 90°; Charger fija una embestida; y
+  Splitter crea dos hijos laterales sólo al morir el padre. Sus drills no
+  contaminan Acto I: Orbiter/Charger mantienen el objetivo para leer la ruta y
+  Splitter conserva autofire para demostrar la fractura. Automático OK; falta
+  validación humana y consumidor Angular real. Pulse Ring ya tiene una base
+  aislada en EX-07c; el hazard Angular y Orbital Warden no entran aún en este
+  incremento.
 - Charger es el segundo prototipo Angular aislado: fija una línea de embestida
   durante su telegraph y no corrige después. Probar con
   `?charger=1&debug=1&quality=high`; la ficha y pendientes viven en

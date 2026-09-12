@@ -91,6 +91,14 @@ export interface GameOptions {
   readonly orbiterDrill?: boolean;
   /** Isolated Angular Charger drill. */
   readonly chargerDrill?: boolean;
+  /** Isolated Angular Splitter drill; keeps the authored weapon enabled. */
+  readonly splitterDrill?: boolean;
+  /** Isolated EX-07c Pulse Ring drill; never starts from the home menu. */
+  readonly pulseRingDrill?: boolean;
+  /** Isolated EX-07d sector-hazard drill; never starts from the home menu. */
+  readonly angularSweepDrill?: boolean;
+  /** Isolated EX-07d Orbital Warden drill; never starts from the home menu. */
+  readonly wardenDrill?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -103,6 +111,10 @@ export class Game {
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
   private readonly chargerDrill: boolean;
+  private readonly splitterDrill: boolean;
+  private readonly pulseRingDrill: boolean;
+  private readonly angularSweepDrill: boolean;
+  private readonly wardenDrill: boolean;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -322,6 +334,15 @@ export class Game {
     this.stressMode = options.stressMode;
     this.orbiterDrill = options.orbiterDrill === true;
     this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
+    this.splitterDrill = options.splitterDrill === true && !this.orbiterDrill && !this.chargerDrill;
+    this.pulseRingDrill = options.pulseRingDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill;
+    this.angularSweepDrill = options.angularSweepDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.pulseRingDrill;
+    this.wardenDrill = options.wardenDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.pulseRingDrill && !this.angularSweepDrill;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -347,7 +368,11 @@ export class Game {
       actDirector: this.actDirector,
       hazardCadenceMode: options.hazardCadenceMode,
       orbiterDrill: this.orbiterDrill,
-      chargerDrill: this.chargerDrill
+      chargerDrill: this.chargerDrill,
+      splitterDrill: this.splitterDrill,
+      pulseRingDrill: this.pulseRingDrill,
+      angularSweepDrill: this.angularSweepDrill,
+      wardenDrill: this.wardenDrill
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -474,7 +499,10 @@ export class Game {
     this.view.updatePresentationFx(presentationDelta, this.presentationTime);
     this.view.renderArena(this.arena.state);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state);
-    this.view.renderRadialPulse(this.combat.renderState.radialPulse);
+    this.view.renderRadialPulse(this.pulseRingDrill
+      ? this.combat.renderState.pulseRing
+      : this.combat.renderState.radialPulse);
+    this.view.renderAngularSweep(this.combat.renderState.angularSweep, this.arena.state);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.syncShotFeedback();
@@ -530,7 +558,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : 'normal',
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : 'normal',
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -540,7 +568,7 @@ export class Game {
       level: this.progression.state.level,
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
-      pulse: `${this.combat.renderState.radialPulse.phase} | ${this.combat.renderState.radialPulse.direction} | ${this.combat.renderState.radialPulse.radius.toFixed(1)}`,
+      pulse: `${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
       calibration: this.calibrationId ?? 'none',
       orbiter: this.combat.isOrbiterDrill
         ? (() => {
@@ -551,9 +579,18 @@ export class Game {
       charger: this.combat.isChargerDrill
         ? (() => { const state = this.combat.enemies.states.find((enemy) => enemy.active && enemy.kind === 'charger'); return state ? state.chargerPhase : 'respawning'; })()
         : 'off',
+      splitter: this.combat.isSplitterDrill
+        ? (() => {
+          const states = this.combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'splitter');
+          return states.length > 0 ? `${states.length} active | depth ${Math.max(...states.map((state) => state.splitterDepth))}` : 'respawning';
+        })()
+        : 'off',
+      angular: this.combat.isAngularSweepDrill || this.combat.isWardenDrill
+        ? `${this.combat.renderState.angularSweep.phase} | ${this.combat.renderState.angularSweep.angle.toFixed(2)} rad`
+        : 'off',
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active
-        ? `${this.combat.renderState.boss.phase} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
+        ? `${this.combat.renderState.boss.phase} | ${this.combat.renderState.boss.pattern} | ${Math.ceil(this.combat.renderState.boss.health)}/${this.combat.renderState.boss.maxHealth}`
         : 'inactive',
       player: `${this.player.state.x.toFixed(1)}, ${this.player.state.y.toFixed(1)}`,
       baseline: this.baselineMode ? `${this.baseline.records.length}/10` : 'off'

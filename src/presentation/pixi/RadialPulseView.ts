@@ -37,6 +37,8 @@ export class RadialPulseView {
   private readonly reducedMotion: boolean;
   private renderedSequence = -1;
   private activeBaseRadius = 1;
+  private baseSafeGapAngle = 0;
+  private hasSafeGap = false;
 
   public constructor(quality: FxQuality = 'medium') {
     this.markerCount = quality === 'low' ? 4 : quality === 'high' ? 8 : 6;
@@ -85,6 +87,8 @@ export class RadialPulseView {
     this.markers.scale.set(1);
     this.markers.rotation = 0;
     this.renderedSequence = -1;
+    this.baseSafeGapAngle = 0;
+    this.hasSafeGap = false;
     this.clearGeometry();
   }
 
@@ -122,6 +126,11 @@ export class RadialPulseView {
     drawRing(this.core, Math.max(5, guideRadius * 0.08), WARNING_CORE, 2.4, 0.9);
     drawRing(this.core, Math.max(2, guideRadius * 0.035), INK, 3, 0.9);
     drawDirectionalMarkers(this.telegraphMarkers, guideRadius, state.direction, this.markerCount, WARNING_CORE, 0.9);
+    if (state.safeGapAngle !== undefined && (state.safeGapHalfAngle ?? 0) > 0) {
+      const gapHalfAngle = state.safeGapHalfAngle ?? 0;
+      drawArc(this.track, guideRadius + 9, state.safeGapAngle - gapHalfAngle, state.safeGapAngle + gapHalfAngle, WARNING_CORE, 4, 0.96);
+      drawGapEdges(this.telegraphMarkers, guideRadius, 8, state.safeGapAngle, gapHalfAngle, WARNING_CORE);
+    }
   }
 
   private buildActiveGeometry(state: Readonly<RadialPulseState>): void {
@@ -129,23 +138,43 @@ export class RadialPulseView {
     const bodyRadius = Math.max(18, Math.max(state.startRadius, state.endRadius));
     const width = Math.max(8, state.width);
     this.activeBaseRadius = bodyRadius;
+    this.hasSafeGap = state.safeGapAngle !== undefined && (state.safeGapHalfAngle ?? 0) > 0;
+    this.baseSafeGapAngle = state.safeGapAngle ?? 0;
+    const gapHalfAngle = state.safeGapHalfAngle ?? 0;
 
     // Dark containment keeps the hazard legible over ships and bright backgrounds.
-    drawAnnularBand(this.activeShell, bodyRadius, width + 18, INK, 0.95);
-    drawAnnularBand(this.activeShell, bodyRadius, width + 11, ARMOR, 0.98);
-    drawAnnularBand(this.activeMantle, bodyRadius, width + 6, state.direction === 'inward' ? INWARD : OUTWARD, 0.68);
-    drawAnnularBand(this.activeBody, bodyRadius, width, state.direction === 'inward' ? INWARD : OUTWARD, 0.9);
-    drawRing(this.activeCore, bodyRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.8, 0.98);
+    const drawBand = (graphics: Graphics, bandWidth: number, color: number, alpha: number): void => {
+      if (this.hasSafeGap) drawAnnularBandWithGap(graphics, bodyRadius, bandWidth, color, alpha, this.baseSafeGapAngle, gapHalfAngle);
+      else drawAnnularBand(graphics, bodyRadius, bandWidth, color, alpha);
+    };
+    drawBand(this.activeShell, width + 18, INK, 0.95);
+    drawBand(this.activeShell, width + 11, ARMOR, 0.98);
+    drawBand(this.activeMantle, width + 6, state.direction === 'inward' ? INWARD : OUTWARD, 0.68);
+    drawBand(this.activeBody, width, state.direction === 'inward' ? INWARD : OUTWARD, 0.9);
+    if (this.hasSafeGap) {
+      drawRingWithGap(this.activeCore, bodyRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.8, 0.98, this.baseSafeGapAngle, gapHalfAngle);
+    } else {
+      drawRing(this.activeCore, bodyRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.8, 0.98);
+    }
 
     // The leading and trailing lips give the full ring a readable material edge.
     const leadingRadius = bodyRadius + direction * width * 0.44;
     const trailingRadius = bodyRadius - direction * width * 0.44;
-    drawRing(this.activeCrests, leadingRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.4, 0.96);
-    drawRing(this.activeCrests, trailingRadius, state.direction === 'inward' ? INWARD : OUTWARD, 1.4, 0.7);
-    drawSegmentedEnergy(this.activeCrests, bodyRadius, width, state.direction, this.markerCount);
-    drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, INK, 0.96, 38, 14, 12);
-    drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 0.98, 30, 10, 8);
-    drawCrestFacets(this.activeCrests, bodyRadius, width, state.direction, this.markerCount);
+    if (this.hasSafeGap) {
+      drawRingWithGap(this.activeCrests, leadingRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.4, 0.96, this.baseSafeGapAngle, gapHalfAngle);
+      drawRingWithGap(this.activeCrests, trailingRadius, state.direction === 'inward' ? INWARD : OUTWARD, 1.4, 0.7, this.baseSafeGapAngle, gapHalfAngle);
+      drawGapEdges(this.activeCrests, bodyRadius, width, this.baseSafeGapAngle, gapHalfAngle, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT);
+      drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, INK, 0.96, 38, 14, 12, this.baseSafeGapAngle, gapHalfAngle);
+      drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 0.98, 30, 10, 8, this.baseSafeGapAngle, gapHalfAngle);
+      drawCrestFacets(this.activeCrests, bodyRadius, width, state.direction, this.markerCount, this.baseSafeGapAngle, gapHalfAngle);
+    } else {
+      drawRing(this.activeCrests, leadingRadius, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 2.4, 0.96);
+      drawRing(this.activeCrests, trailingRadius, state.direction === 'inward' ? INWARD : OUTWARD, 1.4, 0.7);
+      drawSegmentedEnergy(this.activeCrests, bodyRadius, width, state.direction, this.markerCount);
+      drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, INK, 0.96, 38, 14, 12);
+      drawDirectionalMarkers(this.activeMarkers, bodyRadius, state.direction, this.markerCount, state.direction === 'inward' ? INWARD_HOT : OUTWARD_HOT, 0.98, 30, 10, 8);
+      drawCrestFacets(this.activeCrests, bodyRadius, width, state.direction, this.markerCount);
+    }
   }
 
   private buildRecoveryGeometry(state: Readonly<RadialPulseState>): void {
@@ -172,6 +201,10 @@ export class RadialPulseView {
     const direction = state.direction === 'outward' ? 1 : -1;
     this.band.scale.set(scale);
     this.band.rotation = this.reducedMotion ? 0 : direction * progress * 0.18;
+    if (this.hasSafeGap) {
+      const gapRotation = normalizeAngle(state.safeGapAngle ?? this.baseSafeGapAngle) - this.baseSafeGapAngle;
+      this.band.rotation += this.reducedMotion ? 0 : gapRotation;
+    }
     this.band.alpha = 0.9 + Math.sin(progress * Math.PI) * 0.1;
     this.activeMarkers.scale.set(scale);
     this.activeMarkers.rotation = this.band.rotation;
@@ -190,6 +223,20 @@ const drawRing = (graphics: Graphics, radius: number, color: number, width: numb
   graphics.beginPath().circle(0, 0, Math.max(0.5, radius)).stroke({ color, width, alpha });
 };
 
+const drawRingWithGap = (
+  graphics: Graphics,
+  radius: number,
+  color: number,
+  width: number,
+  alpha: number,
+  gapAngle: number,
+  gapHalfAngle: number
+): void => {
+  const start = gapAngle + gapHalfAngle;
+  const end = gapAngle - gapHalfAngle + FULL_CIRCLE;
+  graphics.beginPath().arc(0, 0, Math.max(0.5, radius), start, end).stroke({ color, width, alpha });
+};
+
 const drawAnnularBand = (graphics: Graphics, radius: number, width: number, color: number, alpha: number): void => {
   const segments = 72;
   const outer = Math.max(1, radius + width * 0.5);
@@ -204,6 +251,35 @@ const drawAnnularBand = (graphics: Graphics, radius: number, width: number, colo
   }
   for (let index = segments; index >= 0; index -= 1) {
     const angle = (index / segments) * FULL_CIRCLE;
+    graphics.lineTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+  }
+  graphics.closePath().fill({ color, alpha });
+};
+
+const drawAnnularBandWithGap = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  color: number,
+  alpha: number,
+  gapAngle: number,
+  gapHalfAngle: number
+): void => {
+  const segments = 72;
+  const outer = Math.max(1, radius + width * 0.5);
+  const inner = Math.max(0.5, radius - width * 0.5);
+  const start = gapAngle + gapHalfAngle;
+  const span = FULL_CIRCLE - gapHalfAngle * 2;
+  graphics.beginPath();
+  for (let index = 0; index <= segments; index += 1) {
+    const angle = start + (index / segments) * span;
+    const x = Math.cos(angle) * outer;
+    const y = Math.sin(angle) * outer;
+    if (index === 0) graphics.moveTo(x, y);
+    else graphics.lineTo(x, y);
+  }
+  for (let index = segments; index >= 0; index -= 1) {
+    const angle = start + (index / segments) * span;
     graphics.lineTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
   }
   graphics.closePath().fill({ color, alpha });
@@ -233,11 +309,14 @@ const drawDirectionalMarkers = (
   alpha: number,
   tipDistance = 13,
   shoulderDistance = 4,
-  halfTangent = 5
+  halfTangent = 5,
+  skipAngle?: number,
+  skipHalfAngle = 0
 ): void => {
   const sign = direction === 'outward' ? 1 : -1;
   for (let index = 0; index < count; index += 1) {
     const angle = (index / count) * FULL_CIRCLE - Math.PI / 2;
+    if (skipAngle !== undefined && isWithinAngle(angle, skipAngle, skipHalfAngle)) continue;
     const tipRadius = Math.max(12, radius) + sign * tipDistance;
     const shoulderRadius = Math.max(12, radius) + sign * shoulderDistance;
     const tipX = Math.cos(angle) * tipRadius;
@@ -260,13 +339,16 @@ const drawCrestFacets = (
   radius: number,
   width: number,
   direction: RadialPulseState['direction'],
-  count: number
+  count: number,
+  skipAngle?: number,
+  skipHalfAngle = 0
 ): void => {
   const sign = direction === 'outward' ? 1 : -1;
   const accent = direction === 'outward' ? OUTWARD_HOT : INWARD_HOT;
   const body = direction === 'outward' ? OUTWARD : INWARD;
   for (let index = 0; index < count; index += 1) {
     const angle = (index / count) * FULL_CIRCLE + Math.PI / count;
+    if (skipAngle !== undefined && isWithinAngle(angle, skipAngle, skipHalfAngle)) continue;
     const tangent = Math.max(8, width * 0.42);
     const inner = radius + sign * width * 0.14;
     const outer = radius + sign * width * 0.9;
@@ -295,6 +377,40 @@ const drawCrestFacets = (
       .closePath()
       .fill({ color: accent, alpha: 0.92 });
   }
+};
+
+const drawGapEdges = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  gapAngle: number,
+  gapHalfAngle: number,
+  color: number
+): void => {
+  for (const angle of [gapAngle - gapHalfAngle, gapAngle + gapHalfAngle]) {
+    const inner = Math.max(2, radius - width * 0.58);
+    const outer = radius + width * 0.58;
+    const innerX = Math.cos(angle) * inner;
+    const innerY = Math.sin(angle) * inner;
+    const outerX = Math.cos(angle) * outer;
+    const outerY = Math.sin(angle) * outer;
+    graphics.beginPath().moveTo(innerX, innerY).lineTo(outerX, outerY).stroke({ color, width: 3.2, alpha: 0.96 });
+    graphics.beginPath().circle(outerX, outerY, 4.5).fill({ color, alpha: 0.98 });
+  }
+};
+
+const isWithinAngle = (angle: number, center: number, halfWidth: number): boolean => {
+  let delta = (angle - center) % FULL_CIRCLE;
+  if (delta > Math.PI) delta -= FULL_CIRCLE;
+  if (delta < -Math.PI) delta += FULL_CIRCLE;
+  return Math.abs(delta) <= halfWidth;
+};
+
+const normalizeAngle = (angle: number): number => {
+  let normalized = angle % FULL_CIRCLE;
+  if (normalized <= -Math.PI) normalized += FULL_CIRCLE;
+  if (normalized > Math.PI) normalized -= FULL_CIRCLE;
+  return normalized;
 };
 
 const drawSegmentedEnergy = (

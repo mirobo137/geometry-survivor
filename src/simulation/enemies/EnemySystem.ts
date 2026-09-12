@@ -1,4 +1,4 @@
-import { CHARGER_DEFINITION, ENEMY_DEFINITIONS, ORBITER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import { CHARGER_DEFINITION, ENEMY_DEFINITIONS, ORBITER_DEFINITION, SPLITTER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
@@ -70,6 +70,73 @@ export class EnemySystem {
     const index = this.spawnIndex; this.spawnIndex += 1;
     this.configureEnemy(state, arenaRadius, index, 'charger');
     return state;
+  }
+
+  /** Development-only consumer for the bounded fracture family. */
+  public spawnSplitterDrill(arenaRadius: number): EnemyState | null {
+    if (this.countActiveSplitters() >= SPLITTER_DEFINITION.activeCap) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex;
+    this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, 'splitter', 0);
+    return state;
+  }
+
+  /**
+   * Replaces one defeated parent with at most two children. The pool and the
+   * family cap are checked before every acquire, so this cannot inflate the
+   * active entity budget.
+   */
+  public spawnSplitterChildren(
+    x: number,
+    y: number,
+    parentDepth: number,
+    arenaRadius: number
+  ): number {
+    if (parentDepth >= SPLITTER_DEFINITION.maxDepth) return 0;
+    const remainingFamilySlots = Math.max(0, SPLITTER_DEFINITION.activeCap - this.countActiveSplitters());
+    const childCount = Math.min(SPLITTER_DEFINITION.splitCount, remainingFamilySlots);
+    if (childCount === 0) return 0;
+    const radialAngle = Math.atan2(y - ARENA_CENTER.y, x - ARENA_CENTER.x);
+    const baseAngle = Number.isFinite(radialAngle) ? radialAngle + Math.PI / 2 : this.spawnIndex * SPAWN_ANGLE_STEP;
+    let spawned = 0;
+    for (let index = 0; index < childCount; index += 1) {
+      const state = this.pool.acquire();
+      if (!state) break;
+      const spawnIndex = this.spawnIndex;
+      this.spawnIndex += 1;
+      this.configureEnemy(state, arenaRadius, spawnIndex, 'splitter', parentDepth + 1);
+      const side = index === 0 ? -1 : 1;
+      state.x = x + Math.cos(baseAngle) * SPLITTER_DEFINITION.splitOffset * side;
+      state.y = y + Math.sin(baseAngle) * SPLITTER_DEFINITION.splitOffset * side;
+      state.vx = 0;
+      state.vy = 0;
+      spawned += 1;
+    }
+    return spawned;
+  }
+
+  /** Launches the Warden's two destructible miniatures without growing a new pool. */
+  public spawnWardenReplicas(
+    leftX: number,
+    leftY: number,
+    rightX: number,
+    rightY: number,
+    arenaRadius: number
+  ): number {
+    let spawned = 0;
+    const left = this.spawnWardenReplica(leftX, leftY, arenaRadius);
+    if (left) spawned += 1;
+    const right = this.spawnWardenReplica(rightX, rightY, arenaRadius);
+    if (right) spawned += 1;
+    return spawned;
+  }
+
+  public clearWardenReplicas(): void {
+    for (const state of this.pool.states) {
+      if (state.active && state.kind === 'warden-replica') this.pool.release(state);
+    }
   }
 
   public initializeStress(arenaRadius: number): void {
@@ -208,7 +275,7 @@ export class EnemySystem {
     this.spawnIndex = 0;
   }
 
-  private configureEnemy(state: EnemyState, arenaRadius: number, index: number, kind: EnemyKind): void {
+  private configureEnemy(state: EnemyState, arenaRadius: number, index: number, kind: EnemyKind, splitterDepth = 0): void {
     const definition = ENEMY_DEFINITIONS[kind];
     const angle = index * SPAWN_ANGLE_STEP;
     const distance = Math.max(arenaRadius + SPAWN_RADIUS_PADDING + (index % 4) * 24, 380);
@@ -217,11 +284,12 @@ export class EnemySystem {
     state.y = ARENA_CENTER.y + Math.sin(angle) * distance;
     state.vx = 0;
     state.vy = 0;
-    state.radius = definition.radius;
-    state.speed = definition.speed;
-    state.maxHealth = definition.maxHealth;
-    state.health = definition.maxHealth;
-    state.contactDamage = definition.contactDamage;
+    const isSplitterChild = kind === 'splitter' && splitterDepth > 0;
+    state.radius = definition.radius * (isSplitterChild ? SPLITTER_DEFINITION.childRadiusScale : 1);
+    state.speed = definition.speed * (isSplitterChild ? SPLITTER_DEFINITION.childSpeedScale : 1);
+    state.maxHealth = definition.maxHealth * (isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1);
+    state.health = state.maxHealth;
+    state.contactDamage = definition.contactDamage * (isSplitterChild ? SPLITTER_DEFINITION.childContactDamageScale : 1);
     state.contactEnabled = kind !== 'orbiter';
     state.orbitHitCooldown = 0;
     state.orbiterPhase = 'inactive';
@@ -234,6 +302,8 @@ export class EnemySystem {
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
     state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
+    state.splitterDepth = kind === 'splitter' ? splitterDepth : 0;
+    state.wardenReplica = kind === 'warden-replica';
     if (kind === 'orbiter') this.orbiterBehavior.configure(state, index, arenaRadius);
     if (kind === 'charger') this.chargerBehavior.configure(state);
   }
@@ -266,6 +336,21 @@ export class EnemySystem {
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
     state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
+    state.splitterDepth = 0;
+    state.wardenReplica = false;
+  }
+
+  private spawnWardenReplica(x: number, y: number, arenaRadius: number): EnemyState | null {
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex;
+    this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, 'warden-replica');
+    state.x = x;
+    state.y = y;
+    state.vx = 0;
+    state.vy = 0;
+    return state;
   }
 
   private countActiveOrbiters(): number {
@@ -274,5 +359,9 @@ export class EnemySystem {
 
   private countActiveChargers(): number {
     return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'charger' ? 1 : 0), 0);
+  }
+
+  private countActiveSplitters(): number {
+    return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'splitter' ? 1 : 0), 0);
   }
 }

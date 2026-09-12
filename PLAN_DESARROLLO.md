@@ -2695,9 +2695,105 @@ producto. Esta deuda de validación humana no bloquea el trabajo estructural de
 EX-07a, pues no se detectaron fallos funcionales ni de save y el usuario
 solicitó continuar. No se modifica por ello el daño, la vida, el spawn ni el
 balance diferido de EX-02c. El contrato authored de Calibration y su consumidor
-de entrada directa ya están implementados; la siguiente subtarea es conectar
-la selección visual y el gating de desbloqueos sin convertir Angular en un
-acto vacío.
+de entrada directa ya están implementados.
+
+### 22.1g Estado de EX-07c — Pulse Ring base — 12-09-2026
+
+EX-07c queda implementado y **AUTOMÁTICO OK; validación humana pendiente**.
+`PulseRingHazard` es un módulo puro para el primer hazard Angular: alterna una
+banda outward/inward, anuncia una abertura sectorial, la rota durante `active`
+y aplica como máximo un impacto por cast. Cuando la banda alcanza al jugador,
+el empuje radial es limitado y se vuelve a aplicar el clamp de
+`ArenaBoundary`; no existe teletransporte ni daño inevitable desde el
+telegraph.
+
+El drill `?pulse=1&debug=1&quality=low|medium|high` está integrado en
+`CombatSimulation` y expone `pulseRing` como snapshot separado del pulso
+radial. `RadialPulseView` reutiliza la receta premium pero omite físicamente el
+sector seguro y marca sus bordes. El drill no crea enemigos, boss, XP, NOVA ni
+selección de actos, por lo que no contamina EX-06d ni habilita aún el menú
+Angular. El comportamiento, la prueba reproducible y la puerta humana viven
+en `docs/balance/EX-07c-pulse-ring.md`.
+
+La suite específica del hazard, integración y vista pasó 28 tests; el
+typecheck también pasó. La siguiente subtarea habilitada es **EX-07d**:
+hazard Angular y Orbital Warden. Sólo después de ese consumidor se conectarán
+selector, gating, recompensa y transición I→II; no se crea un acto vacío.
+
+### 22.1h Estado de EX-07d — hazard angular y Orbital Warden — 12-09-2026
+
+#### Movimiento ambiental y Charge comprometido — 12-09-2026
+
+Orbital Warden incorpora movimiento ambiental suave y determinista durante los
+estados desbloqueados (`intro`, `sweep`, `ring` y `recovery`). Se ancla a la
+posición real de spawn o al endpoint de Charge/Curve, por lo que añade presencia
+sin reintroducir el teletransporte a la órbita anterior. Charge, Curve y
+Replicas siguen bloqueados durante su aviso; una Charge comprometida se ejecuta
+aunque el jugador ya se encuentre en su trayectoria. Se añadieron regresiones
+de movimiento, continuidad y compromiso de Charge en `BossSystem.test.ts`.
+Este incremento no modifica daño, vida, spawn, cadencia ni el balance diferido
+de EX-02c; EX-07d continúa **AUTOMÁTICO OK; validación humana pendiente**.
+
+#### Incremento de familia Orbital Warden — 12-09-2026
+
+Revisión posterior solicitada por el usuario: sustituir la ciudadela por un
+astrolabio de tres brazos, renovar recorridos/duplicación/angular y conservar
+el punto final de cada ataque. Implementado con estelas cacheadas y cámara de
+lanzamiento. La receta vigente, presupuestos y regresiones se documentan en
+`docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md`; los párrafos siguientes describen
+la primera entrega. Pendiente aprobación humana de esta nueva revisión.
+
+El boss aislado del Acto II ahora compone el ciclo authored
+`sweep → charge → curve → replicas → ring`. `charge` reutiliza la lectura de
+Charger con origen fijado durante el aviso; `curve` reutiliza la trayectoria
+acotada de Orbiter y alterna el sentido; `replicas` lanza exactamente dos
+miniaturas destructibles del Warden, sin división, usando el pool global como
+la familia Splitter. Charge y Curve desplazan al boss durante `active` y
+resuelven el daño en `BossSystem`; Replicas sólo crea la amenaza de las copias
+y su colisión de contacto. La configuración numérica es provisional y no
+adelanta EX-02c.
+
+La presentación ya no reutiliza sólo la silueta anterior: Orbital Warden tiene
+SVG modular propio, las réplicas tienen una familia miniatura propia y
+`BossView` ofrece telegraphs premium por verbo (riel segmentado y nariz,
+arco limitado con rieles, marcadores rombo/crosshair). La guía neutral para
+construir otra variante es
+[`docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md`](docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
+
+La validación dirigida inicial quedó en 46/46 pruebas verdes; la puerta
+completa posterior queda en 90 archivos y 321 pruebas verdes, con typecheck y
+build Vite correctos. Se mantiene
+**AUTOMÁTICO OK; validación humana pendiente** para Low/Medium/High en
+desktop/móvil: lectura, origen estable del aviso, evasión, daño de Charge/Curve
+y destrucción de las dos réplicas. Después de esa puerta, EX-07e continúa con
+composición de campaña, selector/gating, transición I→II y recompensa. No se
+cierra todavía el balance de vida/daño de EX-02c.
+
+EX-07d queda implementado y **AUTOMÁTICO OK; validación humana pendiente**.
+`AngularSweepHazard` separa `telegraph → active → recovery`, compromete un
+sector, alterna el sentido y recorre como máximo un arco authored. La colisión
+usa la hoja angular actual, permite salir antes del daño y aplica como máximo un
+hit por cast. `AngularSweepView` conserva la receta premium en una geometría
+sectorial acotada, sin rellenar falsos refugios ni reconstruir paths por frame.
+
+`BossDefinition` distingue `core-sentinel` y `orbital-warden`. El segundo
+reutiliza el `BossSystem` y `BossShipVisual` cacheados, pero su riel gira durante
+`sweep-active`, su corredor seguro se desplaza durante `ring-active` y la vista
+lo identifica como `ORBITAL WARDEN`. Core Sentinel conserva su órbita authored y
+sus hazards sin rotación, por lo que no cambia el Acto I.
+
+Los drills directos son `?angular=1&debug=1&quality=low|medium|high` y
+`?warden=1&debug=1&quality=low|medium|high`. El primero no crea enemigos; el
+segundo crea sólo el boss y el hazard angular, sin oleadas, economía, menú ni
+save de campaña. La ficha vive en
+`docs/balance/EX-07d-angular-warden.md`.
+
+La implementación pasa typecheck, 12 tests específicos de hazard/boss/vista,
+build development y 2 smoke browser dirigidos en Chromium desktop. La
+inspección visual de capturas headless confirma lectura de Low, pero no es una
+medición de FPS ni reemplaza la prueba física. La siguiente subtarea habilitada
+es **EX-07e**: composición Angular real, selector/gating, transición I→II,
+recompensa y validación de runs; no se adelanta el balance diferido de EX-02c.
 
 ### 22.1a Prototipo autorizado del Acto I
 

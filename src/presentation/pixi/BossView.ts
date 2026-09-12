@@ -2,17 +2,20 @@ import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { ARENA_CENTER } from '../../config/constants';
 import type { BossRenderState } from '../../simulation/combat/CombatRenderState';
 import { BOSS_VISUAL_COLORS } from './BossVisualTokens';
+import { WardenAttackView } from './WardenAttackView';
+import type { FxQuality } from '../../content/visual/VisualTokens';
 
 const FULL_CIRCLE = Math.PI * 2;
 const HEALTH_BAR_WIDTH = 120;
 const HEALTH_BAR_HEIGHT = 7;
-type Pattern = 'sweep' | 'ring' | null;
+type Pattern = 'sweep' | 'ring' | 'charge' | 'curve' | 'replicas' | null;
 type StrokeStyle = Readonly<{ color: number; width: number; alpha: number }>;
 
 /**
  * Renders boss identity and telegraphs without owning damage or collision.
  * The boss attacks use the Solar Rail language, but keep their own geometry:
- * the sweep is a command rail and the ring is a moving safe corridor.
+ * the sweep is a command rail, Charge is a directional commit, Curve is a
+ * bounded orbit and Ring is a moving safe corridor.
  */
 export class BossView {
   public readonly root = new Container();
@@ -22,8 +25,10 @@ export class BossView {
   private readonly health = new Graphics();
   private readonly label: Text;
   private lastPattern: Pattern = null;
+  private readonly warden: WardenAttackView;
 
-  public constructor() {
+  public constructor(quality: FxQuality = 'medium') {
+    this.warden = new WardenAttackView(quality);
     this.label = new Text({
       text: 'BOSS',
       style: new TextStyle({
@@ -35,7 +40,7 @@ export class BossView {
       })
     });
     this.label.anchor.set(0.5, 1);
-    this.root.addChild(this.attack, this.detail, this.safeGuide, this.health, this.label);
+    this.root.addChild(this.attack, this.detail, this.safeGuide, this.warden.root, this.health, this.label);
     this.root.visible = false;
   }
 
@@ -52,13 +57,21 @@ export class BossView {
     this.safeGuide.clear();
     this.health.clear();
     this.safeGuide.visible = false;
+    this.label.text = state.bossId === 'orbital-warden' ? 'ORBITAL WARDEN' : 'BOSS';
     this.label.position.set(state.x, state.y - state.radius - 28);
     this.label.alpha = state.phase === 'intro' ? 0.45 + state.progress * 0.55 : 1;
     this.renderHealth(state);
+    this.warden.render(state);
 
     if (state.phase === 'sweep-telegraph' || state.phase === 'sweep-active') {
       this.lastPattern = 'sweep';
       this.renderSweep(state, arenaRadius, state.phase === 'sweep-active');
+    } else if (state.phase === 'charge-telegraph' || state.phase === 'charge-active') {
+      this.lastPattern = 'charge';
+    } else if (state.phase === 'curve-telegraph' || state.phase === 'curve-active') {
+      this.lastPattern = 'curve';
+    } else if (state.phase === 'replicas-telegraph' || state.phase === 'replicas-active') {
+      this.lastPattern = 'replicas';
     } else if (state.phase === 'ring-telegraph' || state.phase === 'ring-active') {
       this.lastPattern = 'ring';
       this.renderRing(state, state.phase === 'ring-active');
@@ -169,6 +182,7 @@ export class BossView {
       );
     }
   }
+
 
   private renderRing(state: Readonly<BossRenderState>, active: boolean): void {
     const start = state.safeGapAngle - state.safeGapHalfAngle;

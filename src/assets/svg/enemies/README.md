@@ -30,6 +30,11 @@ de construir otra nave. No copiar la silueta del Tank a todos los roles.
 | `fast/fast.svg` | Fast / perseguidor veloz | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
 | `tank/tank.svg` | Tank / resistente | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
 | `elite/elite.svg` | Elite / amenaza prioritaria | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
+| `orbiter/orbiter.svg` | Orbiter / arco angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
+| `charger/charger.svg` | Charger / ariete angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
+| `splitter/splitter.svg` | Splitter / nave de fractura angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
+| `boss/orbital-warden.svg` | Orbital Warden / boss angular | `-56 -56 112 112` | `(0, 0)` | 4 texturas + flat Low | 1 |
+| `warden-replica/warden-replica.svg` | replica destructible del Warden | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | 2 |
 
 Todas las naves estan orientadas hacia `-Y` y se rotan como contenedor segun el
 vector de movimiento. Sus colores son explicitos porque Pixi no consume CSS
@@ -43,6 +48,13 @@ cabina mediante `position`, `rotation`, `scale` y `alpha`, sin reconstruir XML.
 La rasterizacion pasa explicitamente el frame `(-32, -32, 64, 64)`; depender de
 los limites visibles de cada pieza cambiaria su centro y destruiria la
 composicion.
+
+La replica del Warden conserva las coordenadas de la familia grande reducidas
+explicitamente al 55% en cada `d`. Esto es obligatorio: el parser
+`Graphics.svg()` de Pixi recorre un `<g>` pero no aplica su atributo `transform`;
+ademas, los paths originales llegan hasta aproximadamente `-54..48`, fuera del
+frame de 64 px, y Pixi los recortaria al generar la textura. No reemplazarlo
+por offsets por pieza ni ampliar el frame sin revisar la escala de la entidad.
 
 ## Ficha de revision reutilizable
 

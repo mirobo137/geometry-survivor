@@ -1,4 +1,4 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'boss';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'warden-replica' | 'boss';
 
 export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
 export type OrbiterDirection = -1 | 1;
@@ -28,6 +28,17 @@ export interface ChargerDefinition {
   readonly exitDistance: number;
   readonly activeCap: number;
   readonly chargeCap: number;
+}
+
+export interface SplitterDefinition {
+  readonly splitCount: 2;
+  readonly maxDepth: 1;
+  readonly activeCap: number;
+  readonly splitOffset: number;
+  readonly childRadiusScale: number;
+  readonly childSpeedScale: number;
+  readonly childHealthScale: number;
+  readonly childContactDamageScale: number;
 }
 
 export interface EnemyDefinition {
@@ -96,6 +107,14 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'charger', radius: 19, speed: 108, maxHealth: 38, contactDamage: 11,
     experience: 3, spawnCost: 2, color: 0xffb45b
   },
+  splitter: {
+    kind: 'splitter', radius: 21, speed: 62, maxHealth: 46, contactDamage: 12,
+    experience: 4, spawnCost: 3, color: 0xd27cff
+  },
+  'warden-replica': {
+    kind: 'warden-replica', radius: 15, speed: 86, maxHealth: 30, contactDamage: 8,
+    experience: 2, spawnCost: 1, color: 0x78e4ff
+  },
   boss: {
     kind: 'boss',
     radius: 48,
@@ -132,4 +151,16 @@ export const CHARGER_DEFINITION: ChargerDefinition = {
   approachInset: 30, approachSpeed: 108, telegraphSeconds: 0.72,
   chargeSeconds: 0.86, recoverySeconds: 0.52, exitDistance: 76,
   activeCap: 5, chargeCap: 1
+};
+
+/** Third Angular family: one controlled fracture, never an unbounded swarm. */
+export const SPLITTER_DEFINITION: SplitterDefinition = {
+  splitCount: 2,
+  maxDepth: 1,
+  activeCap: 8,
+  splitOffset: 20,
+  childRadiusScale: 0.72,
+  childSpeedScale: 1.2,
+  childHealthScale: 0.52,
+  childContactDamageScale: 0.7
 };

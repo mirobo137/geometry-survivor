@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-warden-replica-rear-title">
+  <title id="enemy-warden-replica-rear-title">Orbital Warden: articulated three-arm astrolabe</title>
+  <path id="enemy-warden-replica-rear-yoke" d="M0 -22L6.05 -6.6L21.45 13.2L12.1 19.25L0 7.15L-12.1 19.25L-21.45 13.2L-6.05 -6.6Z" fill="#101b2b"/>
+  <path id="enemy-warden-replica-rear-port" d="M-3.85 -3.85L-19.25 11.55L-15.4 15.4L-1.1 4.4Z" fill="#3d5362"/>
+  <path id="enemy-warden-replica-rear-starboard" d="M3.85 -3.85L19.25 11.55L15.4 15.4L1.1 4.4Z" fill="#26384c"/>
+</svg>

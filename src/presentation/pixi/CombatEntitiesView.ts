@@ -1,6 +1,7 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import type { BossId } from '../../content/bosses/BossDefinition';
 import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { FX_QUALITY, type FxQuality } from '../../content/visual/VisualTokens';
 import { getCannonSkinDefinition, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
@@ -41,6 +42,21 @@ import chargerRearSvg from '../../assets/svg/enemies/charger/charger-rear.svg?ra
 import chargerWingsSvg from '../../assets/svg/enemies/charger/charger-wings.svg?raw';
 import chargerHullSvg from '../../assets/svg/enemies/charger/charger-hull.svg?raw';
 import chargerCockpitSvg from '../../assets/svg/enemies/charger/charger-cockpit.svg?raw';
+import splitterSvg from '../../assets/svg/enemies/splitter/splitter.svg?raw';
+import splitterRearSvg from '../../assets/svg/enemies/splitter/splitter-rear.svg?raw';
+import splitterWingsSvg from '../../assets/svg/enemies/splitter/splitter-wings.svg?raw';
+import splitterHullSvg from '../../assets/svg/enemies/splitter/splitter-hull.svg?raw';
+import splitterCockpitSvg from '../../assets/svg/enemies/splitter/splitter-cockpit.svg?raw';
+import wardenReplicaSvg from '../../assets/svg/enemies/warden-replica/warden-replica.svg?raw';
+import wardenReplicaRearSvg from '../../assets/svg/enemies/warden-replica/warden-replica-rear.svg?raw';
+import wardenReplicaWingsSvg from '../../assets/svg/enemies/warden-replica/warden-replica-wings.svg?raw';
+import wardenReplicaHullSvg from '../../assets/svg/enemies/warden-replica/warden-replica-hull.svg?raw';
+import wardenReplicaCockpitSvg from '../../assets/svg/enemies/warden-replica/warden-replica-cockpit.svg?raw';
+import orbitalWardenSvg from '../../assets/svg/enemies/boss/orbital-warden.svg?raw';
+import orbitalWardenRearSvg from '../../assets/svg/enemies/boss/orbital-warden-rear.svg?raw';
+import orbitalWardenWingsSvg from '../../assets/svg/enemies/boss/orbital-warden-wings.svg?raw';
+import orbitalWardenHullSvg from '../../assets/svg/enemies/boss/orbital-warden-hull.svg?raw';
+import orbitalWardenCockpitSvg from '../../assets/svg/enemies/boss/orbital-warden-cockpit.svg?raw';
 import { EnemyDefeatFxView } from './enemies/EnemyDefeatFxView';
 import { EnemyShipVisual, type EnemyShipTextureMap } from './enemies/EnemyShipVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
@@ -72,7 +88,7 @@ const PROJECTILE_TEXTURE_FRAME: SvgTextureFrame = {
 
 interface EnemyTextureSet {
   readonly ships: EnemyShipTextureMap;
-  readonly boss: BossShipTextures;
+  readonly boss: Readonly<Record<BossId, BossShipTextures>>;
 }
 
 const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
@@ -118,13 +134,35 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
       wings: createSvgTexture(renderer, chargerWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, chargerHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, chargerCockpitSvg, ENEMY_TEXTURE_FRAME)
+    },
+    splitter: {
+      flat: createSvgTexture(renderer, splitterSvg, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, splitterRearSvg, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, splitterWingsSvg, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, splitterHullSvg, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, splitterCockpitSvg, ENEMY_TEXTURE_FRAME)
+    },
+    'warden-replica': {
+      flat: createSvgTexture(renderer, wardenReplicaSvg, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, wardenReplicaRearSvg, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, wardenReplicaWingsSvg, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, wardenReplicaHullSvg, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, wardenReplicaCockpitSvg, ENEMY_TEXTURE_FRAME)
     }
   },
   boss: {
-    flat: createSvgTexture(renderer, bossSvg, { x: -56, y: -56, width: 112, height: 112 }),
-    parts: [bossRearSvg, bossWingsSvg, bossHullSvg, bossCockpitSvg].map(svg =>
-      createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
-    ) as [Texture, Texture, Texture, Texture]
+    'core-sentinel': {
+      flat: createSvgTexture(renderer, bossSvg, { x: -56, y: -56, width: 112, height: 112 }),
+      parts: [bossRearSvg, bossWingsSvg, bossHullSvg, bossCockpitSvg].map(svg =>
+        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
+      ) as [Texture, Texture, Texture, Texture]
+    },
+    'orbital-warden': {
+      flat: createSvgTexture(renderer, orbitalWardenSvg, { x: -56, y: -56, width: 112, height: 112 }),
+      parts: [orbitalWardenRearSvg, orbitalWardenWingsSvg, orbitalWardenHullSvg, orbitalWardenCockpitSvg].map(svg =>
+        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
+      ) as [Texture, Texture, Texture, Texture]
+    }
   }
 });
 
@@ -311,7 +349,12 @@ export class CombatEntitiesView {
       + this.projectileTrails.activeSegmentCount;
   }
 
-  public render(combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>, animationSeconds = 0): void {
+  public render(
+    combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>,
+    animationSeconds = 0,
+    bossId: BossId = 'core-sentinel'
+  ): void {
+    this.boss.setBossId(bossId);
     this.boss.beginFrame();
     this.projectileTrails.render(combat.projectiles);
     this.orbiterTelegraphs.render(combat.enemies);

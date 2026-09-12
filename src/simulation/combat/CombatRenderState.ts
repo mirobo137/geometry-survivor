@@ -1,8 +1,11 @@
 import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { RadialPulseState } from '../hazards/RadialPulseHazard';
+import type { PulseRingState } from '../hazards/PulseRingHazard';
+import type { AngularSweepState } from '../hazards/AngularSweepHazard';
 import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
+import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 
 export type { BoomerangPhase } from './EntityPools';
 
@@ -11,12 +14,19 @@ export type BossPhase =
   | 'intro'
   | 'sweep-telegraph'
   | 'sweep-active'
+  | 'charge-telegraph'
+  | 'charge-active'
+  | 'curve-telegraph'
+  | 'curve-active'
+  | 'replicas-telegraph'
+  | 'replicas-active'
   | 'ring-telegraph'
   | 'ring-active'
   | 'recovery'
   | 'defeated';
 
 export interface BossRenderState {
+  bossId: BossId;
   active: boolean;
   x: number;
   y: number;
@@ -25,10 +35,25 @@ export interface BossRenderState {
   maxHealth: number;
   phase: BossPhase;
   progress: number;
+  pattern: BossPattern;
   sweepAngle: number;
   ringRadius: number;
   safeGapAngle: number;
   safeGapHalfAngle: number;
+  chargeStartX: number;
+  chargeStartY: number;
+  chargeAimX: number;
+  chargeAimY: number;
+  curveRadius: number;
+  curveStartAngle: number;
+  curveAngle: number;
+  curveTravelRadians: number;
+  curveDirection: -1 | 1;
+  replicaSequence: number;
+  replicaLeftX: number;
+  replicaLeftY: number;
+  replicaRightX: number;
+  replicaRightY: number;
 }
 
 export interface OrbitBladeState {
@@ -78,6 +103,10 @@ export interface EnemyRenderState {
   readonly chargerAimX?: number;
   readonly chargerAimY?: number;
   readonly chargerSequence?: number;
+  /** Splitter lineage used only to scale/animate children after a fracture. */
+  readonly splitterDepth?: number;
+  /** Warden copies use the common enemy renderer with a distinct asset family. */
+  readonly wardenReplica?: boolean;
 }
 
 /** Projectile view contract; velocity is included for the sprite orientation. */
@@ -118,6 +147,8 @@ export interface CombatRenderState {
   readonly boomerangs: readonly BoomerangRenderState[];
   readonly laser: Readonly<LaserHazardState>;
   readonly radialPulse: Readonly<RadialPulseState>;
+  readonly pulseRing: Readonly<PulseRingState>;
+  readonly angularSweep: Readonly<AngularSweepState>;
   readonly boss: Readonly<BossRenderState>;
   readonly shot: Readonly<ShotRenderState>;
 }

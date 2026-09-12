@@ -8,10 +8,11 @@ El láser de arena y los ataques del boss no comparten vista:
 - `BossView` dibuja `BossRenderState` y conservaba su propia línea simple y
   su circunferencia completa.
 
-Compartir dirección visual no implica compartir contrato. El boss tiene dos
-patrones distintos: una línea de barrido y un anillo expansivo con hueco
-seguro. Por eso se actualiza `BossView` con la misma jerarquía de materiales,
-pero no se fuerza el estado del boss dentro de `HazardView`.
+Compartir dirección visual no implica compartir contrato. La base del boss tiene
+una línea de barrido y un anillo expansivo con hueco seguro; Orbital Warden
+agrega Charge, Curve y Replicas con geometría propia. Por eso `BossView`
+mantiene una ruta separada de `HazardView` y cada verbo consume su propio
+snapshot visual.
 
 ## El hueco seguro sí debe pintarse
 
@@ -71,3 +72,19 @@ color: debe verse la interrupción del aro, sus brackets y la cuña tenue. Tambi
 comprobar Low/High, pausa, resize y que el player siga visible. Tests y capturas
 no sustituyen una prueba humana del encuentro ni una medición de FPS en un
 teléfono físico.
+
+## Extensión Orbital Warden
+
+La extensión y su contrato de construcción viven en
+[`ACTO_II_BOSS_FAMILY_PREMIUM.md`](ACTO_II_BOSS_FAMILY_PREMIUM.md). En resumen:
+
+- Charge usa segmentos discontinuos y una nariz direccional; su origen queda
+  fijo durante el aviso y el rastro activo aparece detrás del boss.
+- Curve usa un arco corto con rieles y una nariz tangencial; el sentido se
+  comunica con la orientación de la nariz y nunca se dibuja un círculo completo.
+- Replicas usa dos marcadores rombo/crosshair, sin líneas de alcance falsas;
+  después aparecen dos naves pequeñas que usan el pool y reciben daño real.
+
+La misma disciplina se conserva: simulación pura, `telegraph → active →
+recovery`, subpaths independientes, geometría cacheada por secuencia/radio y
+Low con la información esencial intacta.

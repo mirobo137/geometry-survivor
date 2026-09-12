@@ -76,6 +76,14 @@ const MOTION_PROFILES: Readonly<Record<EnemyShipKind, EnemyShipMotionProfile>> =
   charger: {
     cycleSeconds: 3.6, bobAmplitude: 0.42, wingSway: 1.9, wingRotation: 0.11,
     cockpitSway: 0.3, cockpitLift: 0.7, hullPulse: 0.016
+  },
+  splitter: {
+    cycleSeconds: 2.9, bobAmplitude: 0.7, wingSway: 1.45, wingRotation: 0.085,
+    cockpitSway: 0.5, cockpitLift: 0.8, hullPulse: 0.017
+  },
+  'warden-replica': {
+    cycleSeconds: 2.4, bobAmplitude: 0.48, wingSway: 1.1, wingRotation: 0.08,
+    cockpitSway: 0.32, cockpitLift: 0.55, hullPulse: 0.014
   }
 };
 
@@ -139,6 +147,10 @@ export class EnemyShipVisual {
     }
     this.root.rotation = this.facing;
     this.root.alpha = Math.max(0.55, state.health / state.maxHealth);
+    const splitterChild = this.kind === 'splitter' && (state.splitterDepth ?? 0) > 0;
+    this.root.scale.set(
+      this.kind === 'warden-replica' ? 0.72 : splitterChild ? 0.74 : 1
+    );
 
     const movement = clamp01(speed / 126);
     const phase = animationSeconds * profile.cycleSeconds + this.phaseSeed;
@@ -184,6 +196,19 @@ export class EnemyShipVisual {
       this.hull.rotation = 0;
       this.hull.scale.set(1 + pulse * 0.3, 1 + charging * 0.035);
       this.cockpit.scale.set(1 + warning * 0.08 + charging * 0.04);
+    }
+    if (this.kind === 'splitter') {
+      const depth = state.splitterDepth ?? 0;
+      const fracture = Math.sin(phase * 1.45 + 0.3) * (0.7 + depth * 0.3);
+      this.wings.position.x += fracture * 0.9;
+      this.wings.rotation += fracture * 0.018;
+      this.rear.position.x -= fracture * 0.22;
+      this.hull.scale.set(1 + pulse * 0.55, 1 - pulse * 0.35);
+      this.cockpit.scale.set(1 + Math.abs(fracture) * 0.012);
+      if (depth > 0) {
+        this.wings.alpha = 0.9;
+        this.rear.alpha = 0.75;
+      }
     }
     this.hitFlash.position.set(0, bob * 0.18);
     this.hitFlash.rotation = this.hull.rotation;

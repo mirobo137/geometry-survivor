@@ -1,6 +1,7 @@
 import { Container, Sprite } from 'pixi.js';
 import type { Texture } from 'pixi.js';
 import type { FxQuality } from '../../../content/visual/VisualTokens';
+import type { BossId } from '../../../content/bosses/BossDefinition';
 import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderState';
 
 export interface BossShipTextures {
@@ -8,20 +9,44 @@ export interface BossShipTextures {
   readonly parts: readonly [Texture, Texture, Texture, Texture];
 }
 
+export type BossShipTextureMap = Readonly<Record<BossId, BossShipTextures>>;
+
 /** One boss assembly, outside the 250-enemy pool. Never owns attack timing. */
 export class BossShipVisual {
   public readonly root = new Container();
   private readonly pieces: Sprite[];
   private defeatAge = -1;
+  private bossId: BossId = 'core-sentinel';
+  private readonly textures: BossShipTextureMap;
 
-  public constructor(textures: BossShipTextures, private readonly quality: FxQuality) {
-    this.pieces = (quality === 'low' ? [textures.flat] : textures.parts).map((texture) => {
+  public constructor(
+    textures: BossShipTextureMap | BossShipTextures,
+    private readonly quality: FxQuality
+  ) {
+    this.textures = 'core-sentinel' in textures
+      ? textures
+      : { 'core-sentinel': textures, 'orbital-warden': textures };
+    const initial = this.textures[this.bossId];
+    this.pieces = (quality === 'low' ? [initial.flat] : initial.parts).map((texture) => {
       const sprite = new Sprite(texture);
       sprite.anchor.set(0.5);
       this.root.addChild(sprite);
       return sprite;
     });
     this.root.visible = false;
+  }
+
+  public setBossId(bossId: BossId): void {
+    if (this.bossId === bossId) return;
+    this.bossId = bossId;
+    const textures = this.textures[bossId];
+    if (this.quality === 'low') {
+      this.pieces[0].texture = textures.flat;
+      return;
+    }
+    for (let index = 0; index < this.pieces.length; index += 1) {
+      this.pieces[index].texture = textures.parts[index];
+    }
   }
 
   public beginFrame(): void {
@@ -34,11 +59,15 @@ export class BossShipVisual {
     this.root.position.set(state.x, state.y);
     this.root.alpha = Math.max(0.7, state.health / state.maxHealth);
     this.root.scale.set(1 + hitPulse * 0.025);
+    if (this.bossId === 'orbital-warden' && Math.hypot(state.vx,state.vy)>1) {
+      this.root.rotation = Math.atan2(state.vy,state.vx)+Math.PI/2;
+    }
     if (this.quality === 'low') return;
     // Heavy machinery: minute axial shifts, not an organic flapping motion.
     this.pieces[0].position.y = Math.sin(seconds * 1.8) * 0.45;
     this.pieces[1].scale.x = 1 + Math.sin(seconds * 1.2) * 0.009;
     this.pieces[3].scale.set(1 + Math.sin(seconds * 2.1) * 0.012);
+    this.pieces[1].rotation = this.bossId === 'orbital-warden' ? Math.sin(seconds*1.2)*0.055 : 0;
   }
 
   public playDefeat(x: number, y: number): void {
@@ -46,6 +75,7 @@ export class BossShipVisual {
     this.root.position.set(x, y);
     this.root.visible = true;
     this.root.scale.set(1);
+    this.root.rotation = 0;
   }
 
   public update(deltaSeconds: number): void {
@@ -67,6 +97,8 @@ export class BossShipVisual {
   }
 
   public reset(): void {
+    this.setBossId('core-sentinel');
+    this.root.rotation = 0;
     this.defeatAge = -1;
     this.root.visible = false;
     this.root.alpha = 1;

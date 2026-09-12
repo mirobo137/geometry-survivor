@@ -58,4 +58,22 @@ describe('EnemySystem', () => {
     expect(orbiter.orbiterPhase).toBe('approach');
     expect(system.update(1 / 60, player.state, ARENA_RADIUS)).toBe(orbiter.contactDamage);
   });
+
+  it('splits one parent into two lateral children and stops at depth one', () => {
+    const pool = new EnemyPool(8);
+    const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const parent = system.spawnSplitterDrill(ARENA_RADIUS);
+    if (!parent) throw new Error('No se pudo preparar el Splitter');
+    parent.x = 640;
+    parent.y = 360;
+    const parentDepth = parent.splitterDepth;
+    pool.release(parent);
+
+    expect(system.spawnSplitterChildren(640, 360, parentDepth, ARENA_RADIUS)).toBe(2);
+    const children = pool.states.filter((enemy) => enemy.active && enemy.kind === 'splitter');
+    expect(children).toHaveLength(2);
+    expect(children.every((enemy) => enemy.splitterDepth === 1)).toBe(true);
+    expect(Math.hypot(children[0].x - children[1].x, children[0].y - children[1].y)).toBeGreaterThan(0);
+    expect(system.spawnSplitterChildren(children[0].x, children[0].y, children[0].splitterDepth, ARENA_RADIUS)).toBe(0);
+  });
 });

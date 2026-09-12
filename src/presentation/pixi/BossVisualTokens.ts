@@ -7,5 +7,9 @@ export const BOSS_VISUAL_COLORS = {
   activeCore: 0xfff1a8,
   warningCore: 0xfff7cf,
   safe: 0x75e6ff,
-  safeTelegraph: 0xb8ffd9
+  safeTelegraph: 0xb8ffd9,
+  warden: 0x7be9ef,
+  charge: 0xffb45b,
+  curve: 0xc58cff,
+  replica: 0x8fe9f0
 } as const;

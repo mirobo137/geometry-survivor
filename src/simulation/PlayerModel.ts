@@ -62,6 +62,11 @@ export class PlayerModel {
     this.state.y = clamped.y;
   }
 
+  /** Applies a bounded hazard displacement while preserving the arena clamp. */
+  public applyHazardPush(dx: number, dy: number, arena: ArenaBoundaryInput = ARENA_RADIUS): void {
+    applyHazardPush(this.state, dx, dy, arena);
+  }
+
   public takeDamage(amount: number): boolean {
     return this.resolveDamage(amount).outcome === 'damaged';
   }
@@ -212,3 +217,18 @@ export class PlayerModel {
   }
 
 }
+
+/** State-level counterpart used by combat systems that intentionally receive a snapshot. */
+export const applyHazardPush = (
+  state: PlayerState,
+  dx: number,
+  dy: number,
+  arena: ArenaBoundaryInput = ARENA_RADIUS
+): void => {
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+  state.x += dx;
+  state.y += dy;
+  const clamped = clampPointToArena(state.x, state.y, state.radius, arena);
+  state.x = clamped.x;
+  state.y = clamped.y;
+};

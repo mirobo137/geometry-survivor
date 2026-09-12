@@ -178,6 +178,69 @@ describe('CombatSimulation', () => {
     expect(combat.projectiles.activeCount).toBe(0);
   });
 
+  it('runs the isolated Splitter drill and bounds fracture depth', () => {
+    const combat = new CombatSimulation({ splitterDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 12);
+
+    expect(combat.isSplitterDrill).toBe(true);
+    expect(combat.isOrbiterDrill).toBe(false);
+    expect(combat.isChargerDrill).toBe(false);
+    expect(combat.boss.state.active).toBe(false);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+    expect(combat.stats.shotsFired).toBeGreaterThan(0);
+    expect(combat.stats.kills).toBeGreaterThanOrEqual(3);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'splitter')
+      .every((enemy) => enemy.splitterDepth <= 1)).toBe(true);
+  });
+
+  it('runs the isolated Pulse Ring drill with a visible opening and bounded push', () => {
+    const combat = new CombatSimulation({ pulseRingDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 1);
+
+    expect(combat.isPulseRingDrill).toBe(true);
+    expect(combat.isOrbiterDrill).toBe(false);
+    expect(combat.isChargerDrill).toBe(false);
+    expect(combat.isSplitterDrill).toBe(false);
+    expect(combat.pulseRing.state.sequence).toBe(1);
+    expect(combat.pulseRing.state.safeGapHalfAngle).toBeGreaterThan(0);
+    expect(combat.radialPulse.state.phase).toBe('idle');
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.enemies.activeCount).toBe(0);
+  });
+
+  it('runs the isolated Angular sweep drill without normal hazards or waves', () => {
+    const combat = new CombatSimulation({ angularSweepDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 1);
+
+    expect(combat.isAngularSweepDrill).toBe(true);
+    expect(combat.isWardenDrill).toBe(false);
+    expect(combat.angularSweep.state.sequence).toBe(1);
+    expect(combat.angularSweep.state.phase).toBe('active');
+    expect(combat.boss.state.active).toBe(false);
+    expect(combat.enemies.activeCount).toBe(0);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+  });
+
+  it('runs Orbital Warden with a rotating boss pattern and the Angular hazard', () => {
+    const combat = new CombatSimulation({ wardenDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 1);
+
+    expect(combat.isWardenDrill).toBe(true);
+    expect(combat.boss.state.active).toBe(true);
+    expect(combat.boss.state.bossId).toBe('orbital-warden');
+    expect(combat.angularSweep.state.sequence).toBe(1);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'boss')).toHaveLength(1);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind !== 'boss')).toHaveLength(0);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+  });
+
   it('moves and damages with an orbit blade after it is unlocked', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

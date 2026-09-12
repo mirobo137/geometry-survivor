@@ -13,6 +13,7 @@ import { BossView } from './pixi/BossView';
 import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { RadialPulseView } from './pixi/RadialPulseView';
+import { AngularSweepView } from './pixi/AngularSweepView';
 import { ImpactFxView } from './pixi/fx/ImpactFxView';
 import { ScreenFxView } from './pixi/fx/ScreenFxView';
 import { TerminalFxView } from './pixi/fx/TerminalFxView';
@@ -29,11 +30,12 @@ export class PixiGameView {
   private readonly backgroundView: BackgroundView;
   private readonly world = new Container();
   private readonly arenaView = new ArenaView();
-  private readonly bossView = new BossView();
+  private readonly bossView: BossView;
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
   private readonly hazardView: HazardView;
   private readonly radialPulseView: RadialPulseView;
+  private readonly angularSweepView: AngularSweepView;
   private readonly playerView: PlayerView;
   private readonly impactFxView: ImpactFxView;
   private readonly terminalFxView: TerminalFxView;
@@ -53,6 +55,8 @@ export class PixiGameView {
     this.backgroundView = new BackgroundView(renderer, background, quality);
     this.hazardView = new HazardView(quality);
     this.radialPulseView = new RadialPulseView(quality);
+    this.angularSweepView = new AngularSweepView(quality);
+    this.bossView = new BossView(quality);
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
@@ -67,6 +71,7 @@ export class PixiGameView {
       this.weaponView.root,
       this.hazardView.root,
       this.radialPulseView.root,
+      this.angularSweepView.root,
       this.bossView.root,
       this.playerView.root,
       this.impactFxView.root,
@@ -95,7 +100,7 @@ export class PixiGameView {
   }
 
   public renderCombat(combat: CombatRenderState, animationSeconds = 0): void {
-    this.entitiesView.render(combat, animationSeconds);
+    this.entitiesView.render(combat, animationSeconds, combat.boss.bossId);
     this.weaponView.render(combat);
   }
 
@@ -110,6 +115,13 @@ export class PixiGameView {
 
   public renderRadialPulse(state: CombatRenderState['radialPulse']): void {
     this.radialPulseView.render(state);
+  }
+
+  public renderAngularSweep(
+    state: CombatRenderState['angularSweep'],
+    arena: ArenaBoundaryInput
+  ): void {
+    this.angularSweepView.render(state, arena);
   }
 
   public renderBoss(state: CombatRenderState['boss'], arenaRadius: number): void {
@@ -198,6 +210,7 @@ export class PixiGameView {
     this.arenaView.reset();
     this.hazardView.reset();
     this.radialPulseView.reset();
+    this.angularSweepView.reset();
     this.weaponView.reset();
     this.screenFxView.reset();
     this.lastArenaRadius = -1;

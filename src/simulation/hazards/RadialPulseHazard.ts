@@ -15,6 +15,9 @@ export interface RadialPulseState {
   progress: number;
   travelProgress: number;
   width: number;
+  /** Optional opening used by the Act II Pulse Ring consumer. */
+  readonly safeGapAngle?: number;
+  readonly safeGapHalfAngle?: number;
   sequence: number;
 }
 

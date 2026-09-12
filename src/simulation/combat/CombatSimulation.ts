@@ -4,16 +4,21 @@ import {
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH
 } from '../../config/constants';
-import type { PlayerState } from '../PlayerModel';
+import { applyHazardPush, type PlayerState } from '../PlayerModel';
 import { EnemyPool, type BoomerangState, type EnemyState, type ProjectilePool } from './EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
 import { LaserHazard } from '../hazards/LaserHazard';
 import { RadialPulseHazard } from '../hazards/RadialPulseHazard';
+import { PulseRingHazard } from '../hazards/PulseRingHazard';
+import { PULSE_RING_DRILL_DEFINITION } from '../../content/hazards/PulseRingDefinition';
+import { ANGULAR_SWEEP_DEFINITION, ANGULAR_SWEEP_DRILL_DEFINITION } from '../../content/hazards/AngularSweepDefinition';
+import { AngularSweepHazard } from '../hazards/AngularSweepHazard';
 import type { CombatRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
 import { BossSystem } from '../bosses/BossSystem';
+import { ORBITAL_WARDEN_DEFINITION } from '../../content/bosses/BossDefinition';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
 import { RadialActDirector } from '../acts/RadialActDirector';
@@ -36,6 +41,14 @@ export interface CombatSimulationOptions {
   readonly orbiterDrill?: boolean;
   /** Isolated second-family scenario; never changes the normal Radial run. */
   readonly chargerDrill?: boolean;
+  /** Isolated third-family scenario; the weapon is enabled to demonstrate fracture. */
+  readonly splitterDrill?: boolean;
+  /** Isolated EX-07c hazard scenario; not a campaign act. */
+  readonly pulseRingDrill?: boolean;
+  /** Isolated EX-07d sector hazard scenario; not a campaign act. */
+  readonly angularSweepDrill?: boolean;
+  /** Isolated EX-07d boss scenario; not a campaign act. */
+  readonly wardenDrill?: boolean;
 }
 
 export type CombatEvent =
@@ -50,7 +63,7 @@ export type CombatEvent =
   | {
     readonly type: 'playerDamaged';
     readonly amount: number;
-    readonly source: 'contact' | 'laser' | 'radial-pulse' | 'boss';
+    readonly source: 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss';
   };
 
 export interface CombatStats {
@@ -78,6 +91,8 @@ export class CombatSimulation {
   public readonly boomerangs: CombatWeaponSystem['boomerangs'];
   public readonly laser: LaserHazard;
   public readonly radialPulse: RadialPulseHazard;
+  public readonly pulseRing: PulseRingHazard;
+  public readonly angularSweep: AngularSweepHazard;
   public readonly orbitBlades: CombatWeaponSystem['orbitBlades'];
   public readonly chainSegments: CombatWeaponSystem['chainSegments'];
   public readonly boomerangStates: readonly BoomerangState[];
@@ -88,12 +103,30 @@ export class CombatSimulation {
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
   private readonly chargerDrill: boolean;
+  private readonly splitterDrill: boolean;
+  private readonly pulseRingDrill: boolean;
+  private readonly angularSweepDrill: boolean;
+  private readonly wardenDrill: boolean;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
+  private currentArenaRadius = 270;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.actDirector = options.actDirector ?? new RadialActDirector();
+    this.stressMode = options.stress === true;
+    this.orbiterDrill = options.orbiterDrill === true;
+    this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
+    this.splitterDrill = options.splitterDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.stressMode;
+    this.pulseRingDrill = options.pulseRingDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill && !this.stressMode;
+    this.angularSweepDrill = options.angularSweepDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.pulseRingDrill && !this.stressMode;
+    this.wardenDrill = options.wardenDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.pulseRingDrill && !this.angularSweepDrill && !this.stressMode;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
     const radialPulseDefinition = {
       ...this.actDirector.radialPulseDefinition,
@@ -105,13 +138,24 @@ export class CombatSimulation {
       new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
       this.actDirector
     );
-    this.boss = new BossSystem(this.enemySystem, this.actDirector.bossDefinition);
+    this.boss = new BossSystem(
+      this.enemySystem,
+      this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition
+    );
     this.laser = new LaserHazard(
       LASER_DEFINITION,
       this.actDirector,
       hazardCadence.laserIntervalMultiplier
     );
     this.radialPulse = new RadialPulseHazard(radialPulseDefinition);
+    this.pulseRing = new PulseRingHazard(
+      this.pulseRingDrill ? PULSE_RING_DRILL_DEFINITION : undefined
+    );
+    this.angularSweep = new AngularSweepHazard(
+      this.angularSweepDrill || this.wardenDrill
+        ? ANGULAR_SWEEP_DRILL_DEFINITION
+        : ANGULAR_SWEEP_DEFINITION
+    );
     this.weaponSystem = new CombatWeaponSystem(
       this.enemySystem,
       (enemy) => this.defeatEnemy(enemy),
@@ -130,12 +174,11 @@ export class CombatSimulation {
       boomerangs: this.boomerangStates,
       laser: this.laser.state,
       radialPulse: this.radialPulse.state,
+      pulseRing: this.pulseRing.state,
+      angularSweep: this.angularSweep.state,
       boss: this.boss.state,
       shot: this.weaponSystem.lastShot
     };
-    this.stressMode = options.stress === true;
-    this.orbiterDrill = options.orbiterDrill === true;
-    this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
     this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -168,6 +211,14 @@ export class CombatSimulation {
   }
 
   public get isChargerDrill(): boolean { return this.chargerDrill; }
+
+  public get isSplitterDrill(): boolean { return this.splitterDrill; }
+
+  public get isPulseRingDrill(): boolean { return this.pulseRingDrill; }
+
+  public get isAngularSweepDrill(): boolean { return this.angularSweepDrill; }
+
+  public get isWardenDrill(): boolean { return this.wardenDrill; }
 
   public get currentOrbitDamage(): number {
     return this.weaponSystem.currentOrbitDamage;
@@ -275,6 +326,7 @@ export class CombatSimulation {
     if (dt === 0) return;
     const arenaBoundary = asArenaBoundary(arena);
     const arenaRadius = arenaBoundary.radius;
+    this.currentArenaRadius = arenaRadius;
 
     if (this.stressMode && !this.stressInitialized) {
       this.initializeStress(player, arenaRadius);
@@ -282,7 +334,9 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
-    if (!this.orbiterDrill && !this.chargerDrill && this.laser.update(
+    const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill;
+    if (!isolatedAngularDrill && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -292,7 +346,7 @@ export class CombatSimulation {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
-    if (!this.orbiterDrill && !this.chargerDrill && this.radialPulse.update(
+    if (!isolatedAngularDrill && this.radialPulse.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -308,12 +362,57 @@ export class CombatSimulation {
       });
     }
 
+    if (this.pulseRingDrill) {
+      const pulse = this.pulseRing.update(
+        dt,
+        this.stats.elapsedSeconds,
+        player,
+        arenaBoundary,
+        true,
+        false
+      );
+      if (pulse.pushX !== 0 || pulse.pushY !== 0) applyHazardPush(player, pulse.pushX, pulse.pushY, arenaBoundary);
+      if (pulse.damaged) {
+        this.stats.damageTaken += PULSE_RING_DRILL_DEFINITION.damage;
+        this.pendingEvents.push({
+          type: 'playerDamaged',
+          amount: PULSE_RING_DRILL_DEFINITION.damage,
+          source: 'pulse-ring'
+        });
+      }
+    }
+
+    if (this.angularSweepDrill || this.wardenDrill) {
+      const sector = this.angularSweep.update(
+        dt,
+        this.stats.elapsedSeconds,
+        player,
+        arenaBoundary,
+        !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
+      );
+      if (sector.damaged) {
+        this.stats.damageTaken += ANGULAR_SWEEP_DRILL_DEFINITION.damage;
+        this.pendingEvents.push({
+          type: 'playerDamaged',
+          amount: ANGULAR_SWEEP_DRILL_DEFINITION.damage,
+          source: 'angular-sweep'
+        });
+      }
+    }
+
     if (this.orbiterDrill) {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'orbiter')) {
         this.enemySystem.spawnOrbiterDrill(arenaRadius);
       }
     } else if (this.chargerDrill) {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'charger')) this.enemySystem.spawnChargerDrill(arenaRadius);
+    } else if (this.splitterDrill) {
+      if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'splitter')) this.enemySystem.spawnSplitterDrill(arenaRadius);
+    } else if (this.pulseRingDrill) {
+      // The EX-07c drill isolates the hazard so its opening and push can be
+      // read without enemy silhouettes hiding the answer.
+    } else if (this.angularSweepDrill || this.wardenDrill) {
+      // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
       const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
       const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
@@ -326,7 +425,7 @@ export class CombatSimulation {
       }
     }
 
-    if (!this.stressMode && !this.orbiterDrill && !this.chargerDrill) {
+    if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill)) {
       const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
       if (bossDamage > 0) {
         this.stats.damageTaken += bossDamage;
@@ -340,9 +439,12 @@ export class CombatSimulation {
       this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage, source: 'contact' });
     }
     this.enemySystem.rebuildGrid();
-    // The drill teaches a route, not build damage. Leaving autofire active
-    // would remove the 32-HP teaching target before its first telegraph.
-    if (!this.orbiterDrill && !this.chargerDrill) this.weaponSystem.update(dt, player);
+    // Orbiter/Charger teach a route and keep their authored target alive.
+    // Splitter and Warden deliberately keep autofire: their lessons are the
+    // bounded fracture and destructible copies, respectively.
+    if (!this.orbiterDrill && !this.chargerDrill && !this.angularSweepDrill) {
+      this.weaponSystem.update(dt, player);
+    }
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
     this.maintainStressProjectiles(player);
@@ -358,6 +460,8 @@ export class CombatSimulation {
     this.weaponSystem.reset();
     this.laser.reset();
     this.radialPulse.reset();
+    this.pulseRing.reset();
+    this.angularSweep.reset();
     this.stats.elapsedSeconds = this.initialElapsedSeconds;
     this.stats.kills = 0;
     this.stats.experience = 0;
@@ -376,12 +480,14 @@ export class CombatSimulation {
   }
 
   private maintainStressEnemies(arenaRadius: number): void {
-    if (!this.stressMode || this.orbiterDrill || this.chargerDrill) return;
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
-    if (!this.stressMode || this.orbiterDrill || this.chargerDrill) return;
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }
 
@@ -389,6 +495,7 @@ export class CombatSimulation {
     const x = enemy.x;
     const y = enemy.y;
     const kind = enemy.kind;
+    const splitterDepth = enemy.splitterDepth;
     const experience = ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
     this.enemies.release(enemy);
     this.stats.kills += 1;
@@ -397,6 +504,9 @@ export class CombatSimulation {
       this.boss.markDefeated();
       this.pendingEvents.push({ type: 'bossDefeated' });
       return;
+    }
+    if (kind === 'splitter') {
+      this.enemySystem.spawnSplitterChildren(x, y, splitterDepth, this.currentArenaRadius);
     }
     this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience });
   }

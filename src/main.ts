@@ -91,7 +91,15 @@ const bootstrap = async (): Promise<void> => {
   const spike = searchParams.get('spike');
   const orbiterDrill = searchParams.get('orbiter') === '1';
   const chargerDrill = searchParams.get('charger') === '1' && !orbiterDrill;
-  const stressMode = searchParams.get('stress') === '1' && !orbiterDrill && !chargerDrill;
+  const splitterDrill = searchParams.get('splitter') === '1' && !orbiterDrill && !chargerDrill;
+  const pulseRingDrill = searchParams.get('pulse') === '1' && !orbiterDrill && !chargerDrill && !splitterDrill;
+  const angularSweepDrill = searchParams.get('angular') === '1'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill;
+  const wardenDrill = searchParams.get('warden') === '1'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill && !angularSweepDrill;
+  const stressMode = searchParams.get('stress') === '1'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill
+    && !angularSweepDrill && !wardenDrill;
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
   const playerSkin: PlayerSkinId | undefined = isPlayerSkinId(requestedSkin)
@@ -117,7 +125,7 @@ const bootstrap = async (): Promise<void> => {
   const baselineMode = searchParams.get('baseline') === '1'
     && hazardCadenceMode === 'chaos'
     && calibrationId === undefined
-    && !orbiterDrill && !chargerDrill;
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -158,6 +166,10 @@ const bootstrap = async (): Promise<void> => {
     stressMode,
     orbiterDrill,
     chargerDrill,
+    splitterDrill,
+    pulseRingDrill,
+    angularSweepDrill,
+    wardenDrill,
     playerSkin,
     cannonSkin,
     background,
@@ -168,7 +180,8 @@ const bootstrap = async (): Promise<void> => {
     calibrationId,
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill,
+    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill
+      && !pulseRingDrill && !angularSweepDrill && !wardenDrill,
     platform: new LocalPlatform()
   });
   await game.start();

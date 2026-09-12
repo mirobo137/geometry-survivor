@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warden — astrolabio y estelas</title>
+<style>body{margin:0;padding:24px;background:#090f1b;color:#e8ebdf;font:15px system-ui}h1{font-size:24px}p{max-width:850px;color:#a9bccc}.fleet{display:flex;gap:28px;flex-wrap:wrap}.fleet figure{margin:0;text-align:center}.fleet svg{width:112px;height:112px}.sizes svg{width:48px;height:48px}.candidates path{fill:#d0d9de}.stage{max-width:1040px}canvas{width:100%;height:auto;display:block}button{padding:12px;background:#2d4655;color:white;border:1px solid #86b7ba;margin:16px 0}</style>
+<h1>Orbital Warden / astrolabio de tres brazos</h1>
+<p>Comparación de masas: ciudadela (proximidad al boss I), aguja (proximidad a Fast), astrolabio segmentado (elegido por su giro y tres brazos). Bajo cada aviso, el renderer de producción muestra el material real. Las estelas son residuos; el daño de movimiento pertenece al casco.</p>
+<div class="fleet candidates"><svg viewBox="-56 -56 112 112"><path d="M-42-25 -22-47 22-47 42-25 42 28 20 47H-20L-42 28Z"/></svg><svg viewBox="-56 -56 112 112"><path d="M0-54 17-8 32 34 8 21 0 52 -8 21 -32 34 -17-8Z"/></svg><span id="silhouette"></span></div>
+<div class="fleet" id="fleet"></div><div class="sizes" id="sizes"></div>
+<button id="play">Animar / congelar</button><div class="stage"></div>
+<script type="module">
+import {Application,Container,Graphics,Text} from 'pixi.js';
+import {BossView} from '../../src/presentation/pixi/BossView.ts';
+import {BossShipVisual} from '../../src/presentation/pixi/enemies/BossShipVisual.ts';
+import {createSvgTexture} from '../../src/presentation/pixi/SvgTextureFactory.ts';
+import {AngularSweepView} from '../../src/presentation/pixi/AngularSweepView.ts';
+import master from '../../src/assets/svg/enemies/boss/orbital-warden.svg?raw';
+import original from '../../src/assets/svg/enemies/boss/boss.svg?raw';
+import rear from '../../src/assets/svg/enemies/boss/orbital-warden-rear.svg?raw';
+import wings from '../../src/assets/svg/enemies/boss/orbital-warden-wings.svg?raw';
+import hull from '../../src/assets/svg/enemies/boss/orbital-warden-hull.svg?raw';
+import core from '../../src/assets/svg/enemies/boss/orbital-warden-cockpit.svg?raw';
+document.querySelector('#silhouette').innerHTML=master.replaceAll(/fill="[^"]+"/g,'fill="#d0d9de"');
+document.querySelector('#fleet').innerHTML='<figure>'+original+'<figcaption>Core Sentinel</figcaption></figure><figure>'+master+'<figcaption>Warden / triskelion</figcaption></figure>';
+document.querySelector('#sizes').innerHTML=[32,48,64,96].map(n=>master.replace('<svg','<svg style="width:'+n+'px;height:'+n+'px"')).join('');
+const app=new Application(); await app.init({width:1040,height:960,resolution:1,antialias:true,background:0x0c1424});
+document.querySelector('.stage').append(app.canvas);
+const frame={x:-56,y:-56,width:112,height:112};
+const textures={flat:createSvgTexture(app.renderer,master,frame),parts:[rear,wings,hull,core].map(svg=>createSvgTexture(app.renderer,svg,frame))};
+let playing=false;document.querySelector('#play').onclick=()=>playing=!playing;
+const renders=[];
+for(const [index,[pattern,phase,label]] of [
+ ['charge','charge-telegraph','Charge / aviso corto'],['charge','charge-active','Charge / estela afilada'],
+ ['curve','curve-telegraph','Curve / plumas direccionales'],['curve','curve-active','Curve / estela tangencial'],
+ ['replicas','replicas-active','Replicas / cámaras de lanzamiento'],['sweep','sweep-active','Angular / inducción sectorial']
+].entries()){
+ const col=index%2,row=Math.floor(index/2),ox=col*520,oy=row*320;
+ const light=index===3;
+ app.stage.addChild(new Graphics().rect(ox,oy,520,320).fill(light?0xbac7cb:0x0c1424));
+ const title=new Text({text:label,style:{fontFamily:'Arial',fontSize:15,fill:light?0x172e40:0xd7e2df}});title.position.set(ox+16,oy+12);app.stage.addChild(title);
+ const stage=new Container();stage.scale.set(0.66);stage.position.set(ox+260-640*.66,oy+175-360*.66);app.stage.addChild(stage);
+ stage.addChild(new Graphics().circle(640,360,200).stroke({color:light?0x577887:0x274655,width:1}));
+ const view=new BossView(index%2?'high':'low');stage.addChild(view.root);
+ const ship=new BossShipVisual(textures,index%2?'high':'low');ship.setBossId('orbital-warden');stage.addChild(ship.root);
+ const copies=pattern==='replicas'?[new BossShipVisual(textures,'low'),new BossShipVisual(textures,'low')]:[];
+ for(const copy of copies)stage.addChild(copy.root);
+ const angular=new AngularSweepView('high');stage.addChild(angular.root);
+ let age=pattern==='replicas'?0.22:0.62;
+ const render=()=>{
+ const angle=-1.2+age*1.72;
+ const s={bossId:'orbital-warden',active:true,x:pattern==='charge'?(phase.endsWith('active')?470+age*320:470):640+Math.cos(angle)*155,y:pattern==='charge'?360:360+Math.sin(angle)*155,radius:48,health:100,maxHealth:100,phase,progress:age,pattern,sweepAngle:0.4,ringRadius:140,safeGapAngle:0.3,safeGapHalfAngle:0.6,chargeStartX:470,chargeStartY:360,chargeAimX:790,chargeAimY:360,curveRadius:155,curveStartAngle:-1.2,curveAngle:angle,curveTravelRadians:1.72,curveDirection:1,replicaSequence:1,replicaLeftX:575,replicaLeftY:345,replicaRightX:705,replicaRightY:345};
+ if(pattern==='curve'&&phase.endsWith('telegraph')){s.x=640+Math.cos(-1.2)*155;s.y=360+Math.sin(-1.2)*155;}
+ if(pattern==='replicas'){s.x=640;s.y=410;s.replicaLeftY=330;s.replicaRightY=330;}
+ if(index===5){view.root.visible=false;ship.root.visible=false;angular.render({phase:'active',angle:-0.55,progress:age,startAngle:-1.2,travelProgress:age,dangerHalfAngle:.22,travelRadians:.92,arenaRadius:200,sequence:1},200);}
+ else{view.render(s,200);ship.render({...s,kind:'boss',vx:0,vy:0},age);
+ for(let i=0;i<copies.length;i++){copies[i].render({...s,kind:'boss',x:i===0?s.replicaLeftX:s.replicaRightX,y:s.replicaLeftY,vx:0,vy:0},age);copies[i].root.scale.set(.4);}}
+ };render();renders.push(dt=>{age=(age+dt*.35)%1;render();});
+}
+app.ticker.add(t=>{if(playing) for(const render of renders)render(t.deltaMS/1000);});
+document.body.dataset.ready='true';
+</script></html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-splitter-rear-title enemy-splitter-rear-desc">
+  <title id="enemy-splitter-rear-title">Splitter rear modules</title>
+  <desc id="enemy-splitter-rear-desc">Twin rear engines and a dark fracture spine.</desc>
+  <path id="enemy-splitter-rear-chassis" d="M-11 7H11L16 18 9 28H-9L-16 18Z" fill="#111a2c"/>
+  <path id="enemy-splitter-rear-left-engine" d="M-14 11H-6L-8 27-13 30-17 24Z" fill="#394866"/>
+  <path id="enemy-splitter-rear-right-engine" d="M6 11H14L17 24 13 30 8 27Z" fill="#394866"/>
+  <path id="enemy-splitter-rear-exhausts" d="M-13 23H-8L-9 29-13 27ZM8 23H13L13 27 9 29Z" fill="#b76dff"/>
+</svg>

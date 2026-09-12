@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Texture } from 'pixi.js';
+import { Sprite, Texture } from 'pixi.js';
 import { BossShipVisual, type BossShipTextures } from './BossShipVisual';
 import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderState';
 
@@ -40,5 +40,24 @@ describe('BossShipVisual', () => {
     view.playDefeat(300, 200);
     view.update(1.2);
     expect(view.root.visible).toBe(false);
+  });
+
+  it('switches the cached assembly when the boss identity changes', () => {
+    const wardenTextures: BossShipTextures = {
+      flat: Texture.WHITE,
+      parts: [Texture.EMPTY, Texture.EMPTY, Texture.EMPTY, Texture.EMPTY]
+    };
+    const view = new BossShipVisual({
+      'core-sentinel': textures,
+      'orbital-warden': wardenTextures
+    }, 'high');
+
+    view.render(state, 0);
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.WHITE);
+    view.setBossId('orbital-warden');
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
+    expect((view.root.children[3] as Sprite).texture).toBe(Texture.EMPTY);
+    view.reset();
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.WHITE);
   });
 });

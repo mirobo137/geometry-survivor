@@ -12,7 +12,9 @@ enemies/
 ```
 
 `EnemyShipVisual` usa cuatro texturas por familia (`rear`, `wings`, `hull` y
-`cockpit`) y aplica transforms locales al contrato `EnemyRenderState`. En
+`cockpit`) y aplica transforms locales al contrato `EnemyRenderState`. Splitter
+usa `splitterDepth` para escalar sus hijos por transform, no para crear otra
+textura. En
 calidad Low queda activo el casco, que conserva la entidad real y su silueta,
 pero se omiten piezas decorativas, flash y animacion secundaria.
 

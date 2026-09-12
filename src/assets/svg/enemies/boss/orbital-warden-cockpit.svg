@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-56 -56 112 112" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-orbital-warden-cockpit-title">
+  <title id="enemy-orbital-warden-cockpit-title">Orbital Warden: articulated three-arm astrolabe</title>
+  <path id="enemy-orbital-warden-cockpit-well" d="M0 -23L9 -9L7 14L0 24L-7 14L-9 -9Z" fill="#080f20"/>
+  <path id="enemy-orbital-warden-cockpit-crystal" d="M0 -18L5 -6L4 10L0 17L-4 10L-5 -6Z" fill="#57cbd4"/>
+  <path id="enemy-orbital-warden-cockpit-lit" d="M0 -18L5 -6L0 1L-5 -6Z" fill="#f3f5d6"/>
+  <path id="enemy-orbital-warden-cockpit-shadow" d="M0 1L4 10L0 17Z" fill="#258196"/>
+</svg>

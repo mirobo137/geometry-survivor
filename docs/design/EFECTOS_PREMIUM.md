@@ -121,10 +121,15 @@ reinicio son estables?, ¿el coste está acotado? Si falla una respuesta, correg
 esa causa. No compensarla con capas nuevas. FPS móvil y diversión sólo se
 cierran con evidencia de juego real, no con capturas del navegador emulado.
 
-Para los dos patrones del boss, leer también
+Para la familia de patrones del boss, leer también
 [BOSS_FX_PREMIUM.md](BOSS_FX_PREMIUM.md): explica por qué `BossView` tiene una
 ruta propia, cuándo debe mostrarse el hueco seguro y cómo construir el
 corredor sin convertirlo en una superficie opaca.
+
+Para Orbital Warden y sus patrones heredados de Charger, Orbiter y Splitter,
+leer además [`ACTO_II_BOSS_FAMILY_PREMIUM.md`](ACTO_II_BOSS_FAMILY_PREMIUM.md):
+define la silueta modular, los telegraphs de Charge/Curve/Replicas y el contrato
+de rendimiento para futuras variantes.
 
 Para la cadena de rayos leer también
 [CHAIN_FX_PREMIUM.md](CHAIN_FX_PREMIUM.md): define Arc Relay, sus quiebres
@@ -135,3 +140,13 @@ Para el hazard anular leer también
 [RADIAL_PULSE_FX_PREMIUM.md](RADIAL_PULSE_FX_PREMIUM.md): define Pulse Crest,
 la banda activa con dirección geométrica, su disipación y el presupuesto de
 paths cacheados sin tocar `RadialPulseHazard`.
+
+Para el primer hazard Angular leer también
+[`EX-07c-pulse-ring.md`](../balance/EX-07c-pulse-ring.md): define la abertura
+sectorial móvil, la colisión de radio barrido, el hit único, el empuje limitado
+y cómo reutilizar la receta visual sin pintar una falsa zona segura.
+
+Para la hoja sectorial y el patrón móvil del boss leer también
+[`EX-07d-angular-warden.md`](../balance/EX-07d-angular-warden.md): el aviso
+compromete sector y sentido, el cuerpo activo rota por transform y la vista no
+convierte la zona segura en una superficie pintada.

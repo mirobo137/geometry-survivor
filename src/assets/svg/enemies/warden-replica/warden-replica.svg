@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-warden-replica-title">
+  <title id="enemy-warden-replica-title">Orbital Warden: articulated three-arm astrolabe</title>
+  <path id="enemy-warden-replica-rear-yoke" d="M0 -22L6.05 -6.6L21.45 13.2L12.1 19.25L0 7.15L-12.1 19.25L-21.45 13.2L-6.05 -6.6Z" fill="#101b2b"/>
+  <path id="enemy-warden-replica-rear-port" d="M-3.85 -3.85L-19.25 11.55L-15.4 15.4L-1.1 4.4Z" fill="#3d5362"/>
+  <path id="enemy-warden-replica-rear-starboard" d="M3.85 -3.85L19.25 11.55L15.4 15.4L1.1 4.4Z" fill="#26384c"/>
+  <path id="enemy-warden-replica-wings0-scythe" d="M-4.95 -9.9L-11.55 -15.95L-9.35 -25.3L0.55 -29.7L11 -23.1L13.2 -11.55L8.8 -14.85L5.5 -22L0 -23.65L-3.85 -19.8L-3.3 -14.3Z" fill="#627987"/>
+  <path id="enemy-warden-replica-wings0-bevel" d="M-11.55 -15.95L-9.35 -25.3L0.55 -29.7L11 -23.1L5.5 -24.2L0 -26.95L-7.15 -23.1L-9.35 -15.95Z" fill="#d4e3d9"/>
+  <path id="enemy-warden-replica-wings0-return" d="M0 -23.65L5.5 -22L8.8 -14.85L13.2 -11.55L9.35 -11.55L3.3 -18.7L-1.65 -18.7Z" fill="#25384b"/>
+  <path id="enemy-warden-replica-wings0-capacitor" d="M-8.25 -20.35L-6.05 -23.1L0 -25.85L4.95 -23.65L0 -23.1L-4.95 -20.35Z" fill="#dfac70"/>
+  <path id="enemy-warden-replica-wings-0.55-scythe" d="M11.0495 0.6655L19.5855 -2.0295L26.587 4.554L25.4485 15.3285L14.5035 21.076L3.4045 17.204L8.459 15.048L16.302 15.763L20.482 11.825L19.074 6.567L14.036 4.29Z" fill="#405868"/>
+  <path id="enemy-warden-replica-wings-0.55-bevel" d="M19.5855 -2.0295L26.587 4.554L25.4485 15.3285L14.5035 21.076L18.2105 16.863L23.342 13.475L23.5785 5.357L18.4855 -0.121Z" fill="#d4e3d9"/>
+  <path id="enemy-warden-replica-wings-0.55-return" d="M20.482 11.825L16.302 15.763L8.459 15.048L3.4045 17.204L5.3295 13.871L14.542 12.21L17.017 7.92Z" fill="#25384b"/>
+  <path id="enemy-warden-replica-wings-0.55-capacitor" d="M21.747 3.0305L23.0285 6.3085L22.385 12.925L18.007 16.1095L20.0035 11.55L20.097 5.8905Z" fill="#dfac70"/>
+  <path id="enemy-warden-replica-wings-1.1-scythe" d="M-6.0995 9.2345L-8.0355 17.9795L-17.237 20.746L-25.9985 14.3715L-25.5035 2.024L-16.6045 -5.654L-17.259 -0.198L-21.802 6.237L-20.482 11.825L-15.224 13.233L-10.736 10.01Z" fill="#627987"/>
+  <path id="enemy-warden-replica-wings-1.1-bevel" d="M-8.0355 17.9795L-17.237 20.746L-25.9985 14.3715L-25.5035 2.024L-23.7105 7.337L-23.342 13.475L-16.4285 17.743L-9.1355 16.071Z" fill="#d4e3d9"/>
+  <path id="enemy-warden-replica-wings-1.1-return" d="M-20.482 11.825L-21.802 6.237L-17.259 -0.198L-16.6045 -5.654L-14.6795 -2.321L-17.842 6.49L-15.367 10.78Z" fill="#25384b"/>
+  <path id="enemy-warden-replica-wings-1.1-capacitor" d="M-13.497 17.3195L-16.9785 16.7915L-22.385 12.925L-22.957 7.5405L-20.0035 11.55L-15.147 14.4595Z" fill="#dfac70"/>
+  <path id="enemy-warden-replica-hull-spindle" d="M0 -20.9L7.7 -9.35L6.6 10.45L0 20.35L-6.6 10.45L-7.7 -9.35Z" fill="#162435"/>
+  <path id="enemy-warden-replica-hull-port" d="M0 -20.9L-7.7 -9.35L-6.6 10.45L0 20.35L-2.75 7.15L-2.75 -7.15Z" fill="#8caaac"/>
+  <path id="enemy-warden-replica-hull-starboard" d="M0 -20.9L7.7 -9.35L6.6 10.45L0 20.35L2.75 7.15L2.75 -7.15Z" fill="#506c7b"/>
+  <path id="enemy-warden-replica-hull-crown" d="M0 -20.9L7.7 -9.35L5.5 -8.8L0 -15.95L-5.5 -8.8L-7.7 -9.35Z" fill="#e5e9d9"/>
+  <path id="enemy-warden-replica-hull-keel" d="M0 20.35L-6.6 10.45L-4.4 9.9L0 14.85L4.4 9.9L6.6 10.45Z" fill="#c39560"/>
+  <path id="enemy-warden-replica-cockpit-well" d="M0 -12.65L4.95 -4.95L3.85 7.7L0 13.2L-3.85 7.7L-4.95 -4.95Z" fill="#080f20"/>
+  <path id="enemy-warden-replica-cockpit-crystal" d="M0 -9.9L2.75 -3.3L2.2 5.5L0 9.35L-2.2 5.5L-2.75 -3.3Z" fill="#57cbd4"/>
+  <path id="enemy-warden-replica-cockpit-lit" d="M0 -9.9L2.75 -3.3L0 0.55L-2.75 -3.3Z" fill="#f3f5d6"/>
+  <path id="enemy-warden-replica-cockpit-shadow" d="M0 0.55L2.2 5.5L0 9.35Z" fill="#258196"/>
+</svg>

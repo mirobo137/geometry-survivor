@@ -494,6 +494,45 @@ test('permite probar el boss desde el atajo de desarrollo', async ({ page }) => 
   expect(failures).toEqual([]);
 });
 
+test('carga el drill del Pulse Ring y expone la abertura durante el ataque', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?pulse=1&debug=1&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: pulse-ring-drill');
+  await expect.poll(() => page.locator('#debug-panel').textContent()).toContain('pulse: active');
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('pulse-ring-low.png') });
+  expect(failures).toEqual([]);
+});
+
+test('carga el drill Angular y mantiene el sector activo acotado', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?angular=1&debug=1&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: angular-sweep-drill');
+  await expect.poll(() => page.locator('#debug-panel').textContent()).toContain('angular: active');
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('angular-sweep-low.png') });
+  expect(failures).toEqual([]);
+});
+
+test('recorre la familia de ataques premium de Orbital Warden', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?warden=1&debug=1&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: warden-drill');
+  await expect.poll(() => page.locator('#debug-panel').textContent()).toContain('boss:');
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 15_000 })
+    .toMatch(/boss: charge-/);
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 15_000 })
+    .toMatch(/boss: curve-/);
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 15_000 })
+    .toMatch(/boss: replicas-/);
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('orbital-warden-low.png') });
+  expect(failures).toEqual([]);
+});
+
 test('pausa y reanuda tras perder y recuperar el contexto WebGL', async ({ page }) => {
   const failures = await openGame(page);
   const contextState = await page.evaluate(() => {

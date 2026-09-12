@@ -119,7 +119,7 @@ export class EnemyImpactFxView {
     this.root.visible = true;
     if (this.reducedMotion) return;
 
-    const baseCount = kind === 'elite' ? 5 : kind === 'tank' ? 4 : 3;
+    const baseCount = kind === 'elite' ? 5 : kind === 'tank' ? 4 : kind === 'splitter' ? 4 : 3;
     const count = Math.min(FX_QUALITY[this.quality].particleCount, baseCount);
     this.spawnParticles(x, y, definition.color, count, {
       minSpeed: 58,

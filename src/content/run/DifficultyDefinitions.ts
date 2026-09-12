@@ -12,6 +12,15 @@ export const DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
   { startSeconds: 300, spawnIntervalSeconds: 0.28 }
 ];
 
+/** Authored pressure curve for the first real Angular act consumer. */
+export const ACT_II_DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
+  { startSeconds: 0, spawnIntervalSeconds: 0.9 },
+  { startSeconds: 55, spawnIntervalSeconds: 0.74 },
+  { startSeconds: 110, spawnIntervalSeconds: 0.6 },
+  { startSeconds: 165, spawnIntervalSeconds: 0.48 },
+  { startSeconds: 220, spawnIntervalSeconds: 0.38 }
+];
+
 export const getSpawnIntervalSeconds = (elapsedSeconds: number): number => {
   const elapsed = Math.max(0, elapsedSeconds);
   for (let index = DIFFICULTY_PHASES.length - 1; index >= 0; index -= 1) {

@@ -21,6 +21,14 @@ const HEXAGON_SIDES = 6;
 const HEXAGON_SECTOR = FULL_CIRCLE / HEXAGON_SIDES;
 const HALF_HEXAGON_SECTOR = HEXAGON_SECTOR / 2;
 const HEXAGON_APOTHEM_FACTOR = Math.cos(Math.PI / HEXAGON_SIDES);
+const SQUARE_SIDES = 4;
+const SQUARE_SECTOR = FULL_CIRCLE / SQUARE_SIDES;
+const HALF_SQUARE_SECTOR = SQUARE_SECTOR / 2;
+const SQUARE_APOTHEM_FACTOR = Math.cos(Math.PI / SQUARE_SIDES);
+// Keep the Act II square's closest wall at the same distance as the hexagon's
+// closest wall. This preserves a known escape margin while its corners open
+// a new diagonal route instead of making the transformation a hidden squeeze.
+const SQUARE_CIRCUMRADIUS_FACTOR = HEXAGON_APOTHEM_FACTOR / SQUARE_APOTHEM_FACTOR;
 
 export const asArenaBoundary = (input: ArenaBoundaryInput): ArenaBoundary => (
   typeof input === 'number'
@@ -85,6 +93,19 @@ const getShapeRadius = (radius: number, shape: ArenaShape, angle: number): numbe
   if (shape === 'circle') return safeRadius;
   // A regular hexagon with vertices at 0, 60, ... degrees. This keeps its
   // vertices on the authored radius while exposing meaningful flat sides.
-  const sideNormalOffset = ((angle - Math.PI / HEXAGON_SIDES + HALF_HEXAGON_SECTOR) % HEXAGON_SECTOR + HEXAGON_SECTOR) % HEXAGON_SECTOR - HALF_HEXAGON_SECTOR;
-  return safeRadius * HEXAGON_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
+  if (shape === 'hexagon') {
+    const sideNormalOffset = getSideNormalOffset(angle, HEXAGON_SECTOR, Math.PI / HEXAGON_SIDES, HALF_HEXAGON_SECTOR);
+    return safeRadius * HEXAGON_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
+  }
+  // Axis-aligned square: it reads as a square (not a diamond) while keeping
+  // its minimum clearance compatible with the opening hexagon.
+  const sideNormalOffset = getSideNormalOffset(angle, SQUARE_SECTOR, 0, HALF_SQUARE_SECTOR);
+  return safeRadius * SQUARE_CIRCUMRADIUS_FACTOR * SQUARE_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
 };
+
+const getSideNormalOffset = (
+  angle: number,
+  sector: number,
+  firstSideNormal: number,
+  halfSector: number
+): number => ((angle - firstSideNormal + halfSector) % sector + sector) % sector - halfSector;

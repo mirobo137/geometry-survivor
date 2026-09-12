@@ -43,6 +43,8 @@ export interface CombatSimulationOptions {
   readonly chargerDrill?: boolean;
   /** Isolated third-family scenario; the weapon is enabled to demonstrate fracture. */
   readonly splitterDrill?: boolean;
+  /** Isolated fourth-family scenario; demonstrates the rotating three-spoke cast. */
+  readonly prismWeaverDrill?: boolean;
   /** Isolated EX-07c hazard scenario; not a campaign act. */
   readonly pulseRingDrill?: boolean;
   /** Isolated EX-07d sector hazard scenario; not a campaign act. */
@@ -104,6 +106,7 @@ export class CombatSimulation {
   private readonly orbiterDrill: boolean;
   private readonly chargerDrill: boolean;
   private readonly splitterDrill: boolean;
+  private readonly prismWeaverDrill: boolean;
   private readonly pulseRingDrill: boolean;
   private readonly angularSweepDrill: boolean;
   private readonly wardenDrill: boolean;
@@ -119,15 +122,18 @@ export class CombatSimulation {
     this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
     this.splitterDrill = options.splitterDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.stressMode;
-    this.pulseRingDrill = options.pulseRingDrill === true
+    this.prismWeaverDrill = options.prismWeaverDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill && !this.stressMode;
+    this.pulseRingDrill = options.pulseRingDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill && !this.prismWeaverDrill && !this.stressMode;
     this.angularSweepDrill = options.angularSweepDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
-      && !this.pulseRingDrill && !this.stressMode;
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.stressMode;
     this.wardenDrill = options.wardenDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
-      && !this.pulseRingDrill && !this.angularSweepDrill && !this.stressMode;
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill && !this.stressMode;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
+    const isAngularAct = this.actDirector.definition.id === 'angular';
     const radialPulseDefinition = {
       ...this.actDirector.radialPulseDefinition,
       intervalSeconds: this.actDirector.radialPulseDefinition.intervalSeconds
@@ -149,12 +155,14 @@ export class CombatSimulation {
     );
     this.radialPulse = new RadialPulseHazard(radialPulseDefinition);
     this.pulseRing = new PulseRingHazard(
-      this.pulseRingDrill ? PULSE_RING_DRILL_DEFINITION : undefined
+      this.pulseRingDrill
+        ? PULSE_RING_DRILL_DEFINITION
+        : isAngularAct ? this.actDirector.pulseRingDefinition : undefined
     );
     this.angularSweep = new AngularSweepHazard(
       this.angularSweepDrill || this.wardenDrill
         ? ANGULAR_SWEEP_DRILL_DEFINITION
-        : ANGULAR_SWEEP_DEFINITION
+        : isAngularAct ? this.actDirector.angularSweepDefinition : ANGULAR_SWEEP_DEFINITION
     );
     this.weaponSystem = new CombatWeaponSystem(
       this.enemySystem,
@@ -214,11 +222,21 @@ export class CombatSimulation {
 
   public get isSplitterDrill(): boolean { return this.splitterDrill; }
 
+  public get isPrismWeaverDrill(): boolean { return this.prismWeaverDrill; }
+
   public get isPulseRingDrill(): boolean { return this.pulseRingDrill; }
 
   public get isAngularSweepDrill(): boolean { return this.angularSweepDrill; }
 
   public get isWardenDrill(): boolean { return this.wardenDrill; }
+
+  public get isAngularAct(): boolean {
+    return this.actDirector.definition.id === 'angular';
+  }
+
+  public get actId(): 'radial' | 'angular' {
+    return this.actDirector.definition.id;
+  }
 
   public get currentOrbitDamage(): number {
     return this.weaponSystem.currentOrbitDamage;
@@ -334,9 +352,10 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
+    const angularAct = this.isAngularAct;
     const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill;
-    if (!isolatedAngularDrill && this.laser.update(
+    if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -346,7 +365,7 @@ export class CombatSimulation {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
-    if (!isolatedAngularDrill && this.radialPulse.update(
+    if (!isolatedAngularDrill && !angularAct && this.radialPulse.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -362,18 +381,18 @@ export class CombatSimulation {
       });
     }
 
-    if (this.pulseRingDrill) {
+    if (this.pulseRingDrill || angularAct) {
       const pulse = this.pulseRing.update(
         dt,
         this.stats.elapsedSeconds,
         player,
         arenaBoundary,
-        true,
-        false
+        !this.boss.state.active,
+        this.boss.state.active
       );
       if (pulse.pushX !== 0 || pulse.pushY !== 0) applyHazardPush(player, pulse.pushX, pulse.pushY, arenaBoundary);
       if (pulse.damaged) {
-        this.stats.damageTaken += PULSE_RING_DRILL_DEFINITION.damage;
+        this.stats.damageTaken += this.actDirector.pulseRingDefinition.damage;
         this.pendingEvents.push({
           type: 'playerDamaged',
           amount: PULSE_RING_DRILL_DEFINITION.damage,
@@ -382,16 +401,18 @@ export class CombatSimulation {
       }
     }
 
-    if (this.angularSweepDrill || this.wardenDrill) {
+    if (this.angularSweepDrill || this.wardenDrill || angularAct) {
       const sector = this.angularSweep.update(
         dt,
         this.stats.elapsedSeconds,
         player,
         arenaBoundary,
-        !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
+        angularAct
+          ? !this.boss.state.active
+          : !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
       );
       if (sector.damaged) {
-        this.stats.damageTaken += ANGULAR_SWEEP_DRILL_DEFINITION.damage;
+        this.stats.damageTaken += this.actDirector.angularSweepDefinition.damage;
         this.pendingEvents.push({
           type: 'playerDamaged',
           amount: ANGULAR_SWEEP_DRILL_DEFINITION.damage,
@@ -408,6 +429,10 @@ export class CombatSimulation {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'charger')) this.enemySystem.spawnChargerDrill(arenaRadius);
     } else if (this.splitterDrill) {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'splitter')) this.enemySystem.spawnSplitterDrill(arenaRadius);
+    } else if (this.prismWeaverDrill) {
+      if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'prism-weaver')) {
+        this.enemySystem.spawnPrismWeaverDrill(arenaRadius);
+      }
     } else if (this.pulseRingDrill) {
       // The EX-07c drill isolates the hazard so its opening and push can be
       // read without enemy silhouettes hiding the answer.
@@ -439,10 +464,10 @@ export class CombatSimulation {
       this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage, source: 'contact' });
     }
     this.enemySystem.rebuildGrid();
-    // Orbiter/Charger teach a route and keep their authored target alive.
-    // Splitter and Warden deliberately keep autofire: their lessons are the
-    // bounded fracture and destructible copies, respectively.
-    if (!this.orbiterDrill && !this.chargerDrill && !this.angularSweepDrill) {
+    // Orbiter/Charger/Prism teach a committed route and keep their authored
+    // target alive. Splitter and Warden deliberately keep autofire: their
+    // lessons are the bounded fracture and destructible copies, respectively.
+    if (!this.orbiterDrill && !this.chargerDrill && !this.prismWeaverDrill && !this.angularSweepDrill) {
       this.weaponSystem.update(dt, player);
     }
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
@@ -480,13 +505,13 @@ export class CombatSimulation {
   }
 
   private maintainStressEnemies(arenaRadius: number): void {
-    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
-    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }

@@ -3,6 +3,7 @@ import { Graphics } from 'pixi.js';
 import { ARENA_CENTER } from '../../config/constants';
 import { getArenaRadiusAtAngle } from '../../simulation/ArenaBoundary';
 import { ArenaModel } from '../../simulation/ArenaModel';
+import { AngularActDirector } from '../../simulation/acts/AngularActDirector';
 import { ArenaView } from './ArenaView';
 
 describe('ArenaView', () => {
@@ -40,6 +41,49 @@ describe('ArenaView', () => {
       view.root.destroy({ children: true });
     } finally { vi.unstubAllGlobals(); }
   });
+
+  it('keeps square perimeter lights steady instead of producing a periodic flash', () => {
+    const view = new ArenaView();
+    const segments = view.root.children[4];
+    const initialAlpha = segments.alpha;
+
+    for (let index = 0; index < 180; index += 1) view.update(1 / 60);
+
+    expect(initialAlpha).toBe(0.86);
+    expect(segments.alpha).toBe(initialAlpha);
+
+    view.reset();
+    expect(segments.alpha).toBe(0.86);
+    view.root.destroy({ children: true });
+  });
+
+  it('keeps perimeter alpha steady while both expansion effects occur inside square windows', () => {
+    const model = new ArenaModel(new AngularActDirector());
+    const view = new ArenaView();
+    const segments = view.root.children[4];
+    const shockwave = view.root.children[8];
+
+    model.update(60.01);
+    view.render(model.state);
+    expect(model.state.shape).toBe('square');
+    expect(model.state.expansionIndex).toBe(1);
+    expect(model.state.resonance).toBeGreaterThan(0);
+    expect(segments.alpha).toBe(0.86);
+    expect(shockwave.visible).toBe(true);
+
+    model.update(120);
+    view.render(model.state);
+    expect(model.state.elapsedSeconds).toBeCloseTo(180.01);
+    expect(model.state.shape).toBe('square');
+    expect(model.state.expansionIndex).toBe(2);
+    expect(model.state.resonance).toBeGreaterThan(0);
+    expect(segments.alpha).toBe(0.86);
+    expect(shockwave.visible).toBe(true);
+
+    view.reset();
+    view.root.destroy({ children: true });
+  });
+
   it('shows a geometric target during the Act I telegraph and hides it when stable', () => {
     const model = new ArenaModel();
     const view = new ArenaView();

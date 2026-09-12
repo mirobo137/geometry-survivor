@@ -47,6 +47,11 @@ import splitterRearSvg from '../../assets/svg/enemies/splitter/splitter-rear.svg
 import splitterWingsSvg from '../../assets/svg/enemies/splitter/splitter-wings.svg?raw';
 import splitterHullSvg from '../../assets/svg/enemies/splitter/splitter-hull.svg?raw';
 import splitterCockpitSvg from '../../assets/svg/enemies/splitter/splitter-cockpit.svg?raw';
+import prismWeaverSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver.svg?raw';
+import prismWeaverRearSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-rear.svg?raw';
+import prismWeaverWingsSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-wings.svg?raw';
+import prismWeaverHullSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-hull.svg?raw';
+import prismWeaverCockpitSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-cockpit.svg?raw';
 import wardenReplicaSvg from '../../assets/svg/enemies/warden-replica/warden-replica.svg?raw';
 import wardenReplicaRearSvg from '../../assets/svg/enemies/warden-replica/warden-replica-rear.svg?raw';
 import wardenReplicaWingsSvg from '../../assets/svg/enemies/warden-replica/warden-replica-wings.svg?raw';
@@ -67,6 +72,7 @@ import { ProjectileTrailView } from './fx/ProjectileTrailView';
 import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/ProjectileMotionVisual';
 import { OrbiterTelegraphView } from './OrbiterTelegraphView';
 import { ChargerTelegraphView } from './ChargerTelegraphView';
+import { PrismWeaverTelegraphView } from './PrismWeaverTelegraphView';
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
@@ -141,6 +147,13 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
       wings: createSvgTexture(renderer, splitterWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, splitterHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, splitterCockpitSvg, ENEMY_TEXTURE_FRAME)
+    },
+    'prism-weaver': {
+      flat: createSvgTexture(renderer, prismWeaverSvg, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, prismWeaverRearSvg, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, prismWeaverWingsSvg, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, prismWeaverHullSvg, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, prismWeaverCockpitSvg, ENEMY_TEXTURE_FRAME)
     },
     'warden-replica': {
       flat: createSvgTexture(renderer, wardenReplicaSvg, ENEMY_TEXTURE_FRAME),
@@ -220,6 +233,7 @@ export class CombatEntitiesView {
   private readonly enemyDefeatFx: EnemyDefeatFxView;
   private readonly orbiterTelegraphs: OrbiterTelegraphView;
   private readonly chargerTelegraphs: ChargerTelegraphView;
+  private readonly prismWeaverTelegraphs: PrismWeaverTelegraphView;
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
@@ -252,12 +266,14 @@ export class CombatEntitiesView {
     this.enemyDefeatFx = new EnemyDefeatFxView(this.enemyTextures.ships, quality);
     this.orbiterTelegraphs = new OrbiterTelegraphView(quality);
     this.chargerTelegraphs = new ChargerTelegraphView(quality);
+    this.prismWeaverTelegraphs = new PrismWeaverTelegraphView(quality);
     this.root.addChild(
       this.projectileLayer,
       this.projectileTrails.root,
       this.enemyLayer,
       this.orbiterTelegraphs.root,
       this.chargerTelegraphs.root,
+      this.prismWeaverTelegraphs.root,
       this.enemyDefeatFx.root,
       this.healthBars.root,
       this.enemyImpactFx.root,
@@ -359,6 +375,7 @@ export class CombatEntitiesView {
     this.projectileTrails.render(combat.projectiles);
     this.orbiterTelegraphs.render(combat.enemies);
     this.chargerTelegraphs.render(combat.enemies);
+    this.prismWeaverTelegraphs.render(combat.enemies, animationSeconds);
     const trailKind = getCannonSkinDefinition(this.cannonSkin).trail;
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       const state = combat.enemies[index];
@@ -433,6 +450,7 @@ export class CombatEntitiesView {
     this.enemyDefeatFx.clear();
     this.orbiterTelegraphs.reset();
     this.chargerTelegraphs.reset();
+    this.prismWeaverTelegraphs.reset();
     this.damageNumbers.clear();
     this.healthBars.clear();
     this.projectileTrails.clear();

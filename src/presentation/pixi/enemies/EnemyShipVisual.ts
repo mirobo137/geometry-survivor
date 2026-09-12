@@ -81,6 +81,10 @@ const MOTION_PROFILES: Readonly<Record<EnemyShipKind, EnemyShipMotionProfile>> =
     cycleSeconds: 2.9, bobAmplitude: 0.7, wingSway: 1.45, wingRotation: 0.085,
     cockpitSway: 0.5, cockpitLift: 0.8, hullPulse: 0.017
   },
+  'prism-weaver': {
+    cycleSeconds: 4.8, bobAmplitude: 0.5, wingSway: 1.05, wingRotation: 0.07,
+    cockpitSway: 0.32, cockpitLift: 0.58, hullPulse: 0.013
+  },
   'warden-replica': {
     cycleSeconds: 2.4, bobAmplitude: 0.48, wingSway: 1.1, wingRotation: 0.08,
     cockpitSway: 0.32, cockpitLift: 0.55, hullPulse: 0.014
@@ -209,6 +213,18 @@ export class EnemyShipVisual {
         this.wings.alpha = 0.9;
         this.rear.alpha = 0.75;
       }
+    }
+    if (this.kind === 'prism-weaver') {
+      const prismPhase = state.prismWeaverPhase ?? 'inactive';
+      const telegraph = prismPhase === 'telegraph' ? Math.sin((state.prismWeaverProgress ?? 0) * Math.PI) : 0;
+      const active = prismPhase === 'active' ? 1 : 0;
+      const weave = Math.sin(phase * 0.72 + 0.4);
+      this.wings.position.x += weave * 0.8 + telegraph * 1.2;
+      this.wings.rotation += weave * 0.022 + active * 0.035;
+      this.wings.scale.set(1 + telegraph * 0.035, 1 - telegraph * 0.02);
+      this.rear.position.y += active * 0.7;
+      this.hull.scale.set(1 + pulse * 0.45 + active * 0.018, 1 - pulse * 0.3);
+      this.cockpit.scale.set(1 + telegraph * 0.08 + active * 0.035);
     }
     this.hitFlash.position.set(0, bob * 0.18);
     this.hitFlash.rotation = this.hull.rotation;

@@ -1,8 +1,9 @@
 # EX-07d — hazard angular y Orbital Warden
 
-**Estado:** automático OK; validación humana pendiente. El consumidor de campaña,
-selector/gating, recompensa y transición I→II siguen reservados para EX-07e.
-Los valores numéricos son authored de prueba y no cierran EX-02c.
+**Estado:** **APROBADO como parte del Acto II integrado — 12-09-2026**. El
+consumidor de campaña, selector/gating, recompensa y transición I→II quedaron
+conectados en EX-07e. Esta ficha conserva el alcance aislado; los valores
+numéricos son authored de prueba y no cierran EX-02c.
 
 ## Intención
 
@@ -104,13 +105,9 @@ guía completa para futuras iteraciones está en
 - Capturas reales inspeccionadas en `test-results/` para hoja angular y Warden
   Low. La captura headless no es benchmark de FPS.
 
-## Puerta humana pendiente
+## Puerta humana cerrada en el Acto II
 
-Probar ambos drills en desktop y móvil, Low/High: entender el sector sin texto
-externo, reaccionar antes de `active`, distinguir Charge/Curve/Replicas, seguir
-el movimiento sin que el origen cambie durante el aviso, destruir las dos
-réplicas y verificar que sus colisiones sean reales. También comprobar que el
-boss y sus avisos no ocultan al player ni convierten un rastro decorativo en
-hitbox. Después probar una composición Angular real con Orbiter, Charger,
-Splitter, Pulse Ring y Warden antes de habilitar EX-07e. No modificar todavía
-vida, daño, spawn ni las ocho runs pendientes de EX-06d.
+La aprobación de la run Angular completa cierra lectura, evasión y composición
+de Angular Sweep y Orbital Warden, incluidos Charge, Curve y réplicas. El
+ajuste futuro de vida, daño, resistencia y spawn permanece en EX-02c y no debe
+reinterpretarse como una reapertura visual del boss.

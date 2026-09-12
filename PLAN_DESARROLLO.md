@@ -2160,18 +2160,20 @@ mezclar los dos registros históricos con el nuevo baseline.
 
 ## 16.2 Estructura de modos y actos
 
-| Modo | Entrada | Duración objetivo | Conserva build | Resultado |
+| Flujo | Entrada | Duración objetivo | Conserva build entre actos | Resultado |
 | --- | --- | ---: | --- | --- |
-| Quick Act | acto desbloqueado + Calibration | 4–5 min | no viene de otro acto | recompensa y victoria del acto |
-| Expedition | Acto I | 12–15 min total | sí, entre actos | boss final y recompensa total |
-| Overdrive | después del Acto III | abierto | sí | ciclos infinitos opcionales |
+| Campaña principal | Acto I → intermisión → calibración → Acto II → Acto III | 12–15 min total cuando existan los tres actos | no; cada acto empieza con una plantilla authored | victoria clara de campaña |
+| Repetición de acto | acto desbloqueado + una de 3 calibraciones | 4–5 min | no | recompensa y victoria del acto |
+| Overdrive | después del Acto III | abierto | usa la calibración/build de entrada | ciclos infinitos opcionales |
 
 Al derrotar un boss se detiene gameplay, se cobra la recompensa del acto una
-sola vez y aparece una intermisión con `Continuar` y `Terminar`. Terminar una
-expedición después de un acto no se considera derrota. La victoria del Acto I
-desbloquea el Acto II; la del II desbloquea el III; completar el Acto III dentro
-de `Expedition` desbloquea Overdrive. `Quick Act` permite repetir el Acto III
-cuando está desbloqueado, pero no sustituye la finalización de la Expedition.
+sola vez y aparece una intermisión. Tras el Acto I, `Continuar` se expresa como
+tres calibraciones authored (`Projectile`, `Orbit`, `Chain`), no como una
+elección entre modos. El acto siguiente empieza desde nivel y build limpia
+según la plantilla seleccionada; la build del acto anterior no se arrastra.
+Terminar entre actos es una salida exitosa, no una derrota. La victoria del Acto
+I desbloquea el Acto II y la del II desbloqueará el III; completar el Acto III
+desbloqueará Overdrive.
 
 Un inicio directo en Acto II o III no entrega una build arbitraria ni obliga a
 elegir muchas cartas. `Calibration` ofrece una sola de tres plantillas
@@ -2181,7 +2183,7 @@ entrega NOVA adicional ni salta desbloqueos de armas.
 | Acto | Regla espacial | Familias que enseña | Hazard | Boss |
 | --- | --- | --- | --- | --- |
 | I — Radial | centro, borde, anillos y distancia | Chaser, Fast, Tank, Elite | Laser y pulso radial | Core Sentinel |
-| II — Angular | sectores, rotación y alineación | Orbiter, Charger, Splitter | barrido/sector angular | Orbital Warden |
+| II — Angular | sectores, rotación y alineación | Orbiter, Charger, Splitter, Prism Weaver | barrido/sector angular | Orbital Warden |
 | III — Fracture | cuerdas, corredores y conexiones | Boundary Runner, Linker, Swarm | barreras temporales | Fracture Engine |
 
 Toda reconfiguración peligrosa separa `telegraph`, `attack` y `recovery`. Una
@@ -2189,8 +2191,7 @@ barrera de Fracture nunca aparece debajo del jugador, siempre conserva al
 menos un corredor de cuatro diámetros del player y se previsualiza durante un
 mínimo inicial de 0.8 s. Estos valores son configurables y se ajustan jugando.
 
-La relación entre desbloqueos, `Quick Act`, `Expedition`, recompensa única y
-Overdrive está fijada en
+La relación entre desbloqueos, calibraciones, recompensa única y Overdrive está fijada en
 [`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md). Ese documento es
 la ficha de producto; la implementación seguirá las EX correspondientes y no
 creará campos de save o ciclos infinitos sin consumidor real.
@@ -2699,7 +2700,8 @@ de entrada directa ya están implementados.
 
 ### 22.1g Estado de EX-07c — Pulse Ring base — 12-09-2026
 
-EX-07c queda implementado y **AUTOMÁTICO OK; validación humana pendiente**.
+En esta etapa EX-07c quedó **AUTOMÁTICO OK; validación humana pendiente**; la
+aprobación integrada posterior se registra en §22.1i.
 `PulseRingHazard` es un módulo puro para el primer hazard Angular: alterna una
 banda outward/inward, anuncia una abertura sectorial, la rota durante `active`
 y aplica como máximo un impacto por cast. Cuando la banda alcanza al jugador,
@@ -2732,7 +2734,8 @@ Replicas siguen bloqueados durante su aviso; una Charge comprometida se ejecuta
 aunque el jugador ya se encuentre en su trayectoria. Se añadieron regresiones
 de movimiento, continuidad y compromiso de Charge en `BossSystem.test.ts`.
 Este incremento no modifica daño, vida, spawn, cadencia ni el balance diferido
-de EX-02c; EX-07d continúa **AUTOMÁTICO OK; validación humana pendiente**.
+de EX-02c; en esta etapa EX-07d continuaba **AUTOMÁTICO OK; validación humana
+pendiente**. §22.1i registra el cierre posterior.
 
 #### Incremento de familia Orbital Warden — 12-09-2026
 
@@ -2762,14 +2765,16 @@ construir otra variante es
 
 La validación dirigida inicial quedó en 46/46 pruebas verdes; la puerta
 completa posterior queda en 90 archivos y 321 pruebas verdes, con typecheck y
-build Vite correctos. Se mantiene
+build Vite correctos. En esta etapa se mantenía
 **AUTOMÁTICO OK; validación humana pendiente** para Low/Medium/High en
 desktop/móvil: lectura, origen estable del aviso, evasión, daño de Charge/Curve
-y destrucción de las dos réplicas. Después de esa puerta, EX-07e continúa con
-composición de campaña, selector/gating, transición I→II y recompensa. No se
-cierra todavía el balance de vida/daño de EX-02c.
+y destrucción de las dos réplicas. EX-07e ya conectó la composición de campaña,
+selector/gating, transición I→II y reinicio authored de build; su ficha reproducible
+es `docs/balance/EX-07e-angular-campaign.md`. No se cierra todavía el balance
+de vida/daño de EX-02c.
 
-EX-07d queda implementado y **AUTOMÁTICO OK; validación humana pendiente**.
+En esta etapa EX-07d quedó **AUTOMÁTICO OK; validación humana pendiente**; el
+estado vigente aprobado está en §22.1i.
 `AngularSweepHazard` separa `telegraph → active → recovery`, compromete un
 sector, alterna el sentido y recorre como máximo un arco authored. La colisión
 usa la hoja angular actual, permite salir antes del daño y aplica como máximo un
@@ -2791,9 +2796,26 @@ save de campaña. La ficha vive en
 La implementación pasa typecheck, 12 tests específicos de hazard/boss/vista,
 build development y 2 smoke browser dirigidos en Chromium desktop. La
 inspección visual de capturas headless confirma lectura de Low, pero no es una
-medición de FPS ni reemplaza la prueba física. La siguiente subtarea habilitada
-es **EX-07e**: composición Angular real, selector/gating, transición I→II,
-recompensa y validación de runs; no se adelanta el balance diferido de EX-02c.
+medición de FPS. La validación humana posterior de la composición completa
+cierra EX-07d y EX-07e; el detalle vigente está en §22.1i. No se adelanta el
+balance diferido de EX-02c ni el Acto III.
+
+### 22.1i Cierre del Acto II Angular — 12-09-2026
+
+Por aprobación explícita del usuario, EX-07 queda **APROBADO/CERRADO en
+composición, identidad espacial y game feel**. Se aceptan las tres
+calibraciones de entrada, cuatro familias enemigas, Pulse Ring, Angular Sweep,
+la arena cambiante y Orbital Warden como base del acto. EX-02c conserva de
+forma explícita la calibración final de daño, vida, resistencia y spawn.
+
+Permanece `VIS-A2-01`, un destello visual menor del cuadrado que no afecta la
+frontera ni la jugabilidad. La investigación local correlaciona las ventanas
+cuadradas de `40–80 s` y `160–200 s` con las expansiones globales de `60 s` y
+`180 s`: se superponen el redibujado del crecimiento (`1.25 s`), resonancia
+(`2.8 s`) y onda (`0.58 s`). La opacidad periódica del marco ya está eliminada
+y cubierta por test. Esta deuda no bloquea EX-08; una iteración futura debe
+medir una separación del FX y geometría estable, sin filtros ni cambios de
+gameplay.
 
 ### 22.1a Prototipo autorizado del Acto I
 

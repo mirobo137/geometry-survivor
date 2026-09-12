@@ -4,7 +4,7 @@ import {
   type UpgradeId
 } from '../upgrades/UpgradeDefinitions';
 
-/** Entry templates for Quick Act. They are content, not a second progression system. */
+/** Authored entry templates used when a player enters Act II. */
 export type CalibrationId = 'projectile' | 'orbit' | 'chain';
 
 export interface CalibrationDefinition {
@@ -16,25 +16,20 @@ export interface CalibrationDefinition {
   readonly initialStacks: Readonly<Partial<Record<UpgradeId, number>>>;
   readonly maxActiveWeapons: 3;
   readonly novaReward: 0;
-  /** Expedition enters with its current build; Quick Act starts from this template. */
-  readonly preservesExpeditionBuild: true;
-  readonly resetsQuickActBuild: true;
 }
 
 const calibration = (
-  definition: Omit<CalibrationDefinition, 'maxActiveWeapons' | 'novaReward' | 'preservesExpeditionBuild' | 'resetsQuickActBuild'>
+  definition: Omit<CalibrationDefinition, 'maxActiveWeapons' | 'novaReward'>
 ): CalibrationDefinition => ({
   ...definition,
   maxActiveWeapons: 3,
-  novaReward: 0,
-  preservesExpeditionBuild: true,
-  resetsQuickActBuild: true
+  novaReward: 0
 });
 
 /**
  * Three authored entry builds. Each template has one weapon branch and two
- * supporting upgrades, so direct entry is deterministic without granting a
- * fabricated economy bonus or a fourth active weapon.
+ * supporting upgrades, so entry is deterministic without granting a fabricated
+ * economy bonus or a fourth active weapon.
  */
 export const CALIBRATION_DEFINITIONS: readonly CalibrationDefinition[] = [
   calibration({

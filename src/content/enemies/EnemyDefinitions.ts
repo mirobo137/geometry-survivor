@@ -1,8 +1,9 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'warden-replica' | 'boss';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica' | 'boss';
 
 export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
 export type OrbiterDirection = -1 | 1;
 export type ChargerPhase = 'inactive' | 'approach' | 'telegraph' | 'charge' | 'recovery';
+export type PrismWeaverPhase = 'inactive' | 'approach' | 'telegraph' | 'active' | 'recovery';
 
 export interface OrbiterDefinition {
   readonly sectorCount: 8;
@@ -39,6 +40,21 @@ export interface SplitterDefinition {
   readonly childSpeedScale: number;
   readonly childHealthScale: number;
   readonly childContactDamageScale: number;
+}
+
+export interface PrismWeaverDefinition {
+  readonly spokeCount: 3;
+  readonly anchorCount: 6;
+  readonly innerRadius: number;
+  readonly maximumRadius: number;
+  readonly approachSpeed: number;
+  readonly telegraphSeconds: number;
+  readonly activeSeconds: number;
+  readonly recoverySeconds: number;
+  readonly travelRadians: number;
+  readonly dangerHalfAngle: number;
+  readonly attackDamage: number;
+  readonly activeCap: number;
 }
 
 export interface EnemyDefinition {
@@ -111,6 +127,10 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'splitter', radius: 21, speed: 62, maxHealth: 46, contactDamage: 12,
     experience: 4, spawnCost: 3, color: 0xd27cff
   },
+  'prism-weaver': {
+    kind: 'prism-weaver', radius: 20, speed: 44, maxHealth: 52, contactDamage: 8,
+    experience: 5, spawnCost: 3, color: 0x76e5d2
+  },
   'warden-replica': {
     kind: 'warden-replica', radius: 15, speed: 86, maxHealth: 30, contactDamage: 8,
     experience: 2, spawnCost: 1, color: 0x78e4ff
@@ -163,4 +183,24 @@ export const SPLITTER_DEFINITION: SplitterDefinition = {
   childSpeedScale: 1.2,
   childHealthScale: 0.52,
   childContactDamageScale: 0.7
+};
+
+/**
+ * Fourth Angular family: a slow support ship that rotates three dangerous
+ * spokes as a single authored prism. These are provisional Act II values;
+ * EX-02c owns the final health/damage calibration pass.
+ */
+export const PRISM_WEAVER_DEFINITION: PrismWeaverDefinition = {
+  spokeCount: 3,
+  anchorCount: 6,
+  innerRadius: 28,
+  maximumRadius: 226,
+  approachSpeed: 44,
+  telegraphSeconds: 0.82,
+  activeSeconds: 1.25,
+  recoverySeconds: 0.62,
+  travelRadians: Math.PI / 3.1,
+  dangerHalfAngle: 0.11,
+  attackDamage: 16,
+  activeCap: 3
 };

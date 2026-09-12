@@ -108,7 +108,7 @@ export class EnemyDefeatFxView {
   }
 
   private applyPose(slot: EnemyDefeatSlot, progress: number, kind: EnemyShipKind): void {
-    const spread = kind === 'tank' ? 0.78 : kind === 'fast' ? 1.15 : kind === 'elite' ? 1.05 : kind === 'splitter' ? 1.18 : 1;
+    const spread = kind === 'tank' ? 0.78 : kind === 'fast' ? 1.15 : kind === 'elite' ? 1.05 : kind === 'splitter' ? 1.18 : kind === 'prism-weaver' ? 1.08 : 1;
     const distance = progress * 24 * spread;
     const [rear, wings, hull, cockpit] = slot.parts;
     rear.position.set(-distance * 0.55, distance * 0.62);

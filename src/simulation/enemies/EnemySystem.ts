@@ -1,4 +1,11 @@
-import { CHARGER_DEFINITION, ENEMY_DEFINITIONS, ORBITER_DEFINITION, SPLITTER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import {
+  CHARGER_DEFINITION,
+  ENEMY_DEFINITIONS,
+  ORBITER_DEFINITION,
+  PRISM_WEAVER_DEFINITION,
+  SPLITTER_DEFINITION,
+  type EnemyKind
+} from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
@@ -6,6 +13,7 @@ import { SpatialGrid } from '../spatial/SpatialGrid';
 import { RadialActDirector } from '../acts/RadialActDirector';
 import { OrbiterBehavior } from './OrbiterBehavior';
 import { ChargerBehavior } from './ChargerBehavior';
+import { PrismWeaverBehavior } from './PrismWeaverBehavior';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -22,6 +30,7 @@ export class EnemySystem {
   private spawnIndex = 0;
   private readonly orbiterBehavior = new OrbiterBehavior();
   private readonly chargerBehavior = new ChargerBehavior();
+  private readonly prismWeaverBehavior = new PrismWeaverBehavior();
 
   public constructor(
     public readonly pool: EnemyPool,
@@ -39,7 +48,12 @@ export class EnemySystem {
 
     const index = this.spawnIndex;
     this.spawnIndex += 1;
-    this.configureEnemy(state, arenaRadius, index, this.actDirector.selectEnemyKind(elapsedSeconds, index));
+    const kind = this.actDirector.selectEnemyKind(elapsedSeconds, index);
+    if (kind === 'prism-weaver' && this.countActivePrismWeavers() >= PRISM_WEAVER_DEFINITION.activeCap) {
+      this.pool.release(state);
+      return null;
+    }
+    this.configureEnemy(state, arenaRadius, index, kind);
     return state;
   }
 
@@ -80,6 +94,17 @@ export class EnemySystem {
     const index = this.spawnIndex;
     this.spawnIndex += 1;
     this.configureEnemy(state, arenaRadius, index, 'splitter', 0);
+    return state;
+  }
+
+  /** Development-only consumer for the late Angular control family. */
+  public spawnPrismWeaverDrill(arenaRadius: number): EnemyState | null {
+    if (this.countActivePrismWeavers() >= PRISM_WEAVER_DEFINITION.activeCap) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex;
+    this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, 'prism-weaver');
     return state;
   }
 
@@ -191,6 +216,12 @@ export class EnemySystem {
         const wasCharge = enemy.chargerPhase === 'charge';
         this.chargerBehavior.update(enemy, dt, player, arenaRadius, wasCharge || chargerCharges < CHARGER_DEFINITION.chargeCap);
         if (!wasCharge && enemy.chargerPhase === 'charge') chargerCharges += 1;
+      } else if (enemy.kind === 'prism-weaver') {
+        const prismResult = this.prismWeaverBehavior.update(enemy, dt, arenaRadius, player);
+        if (prismResult.damaged && contactDamage === null && this.contactCooldown <= 0) {
+          this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
+          contactDamage = PRISM_WEAVER_DEFINITION.attackDamage;
+        }
       } else {
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
@@ -302,10 +333,14 @@ export class EnemySystem {
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
     state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
+    state.prismWeaverPhase = 'inactive'; state.prismWeaverProgress = 0; state.prismWeaverAngle = 0;
+    state.prismWeaverStartAngle = 0; state.prismWeaverDirection = 1; state.prismWeaverRadius = 0;
+    state.prismWeaverTimer = 0; state.prismWeaverSequence = 0; state.prismWeaverHitApplied = false;
     state.splitterDepth = kind === 'splitter' ? splitterDepth : 0;
     state.wardenReplica = kind === 'warden-replica';
     if (kind === 'orbiter') this.orbiterBehavior.configure(state, index, arenaRadius);
     if (kind === 'charger') this.chargerBehavior.configure(state);
+    if (kind === 'prism-weaver') this.prismWeaverBehavior.configure(state, index, arenaRadius);
   }
 
   private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
@@ -336,6 +371,9 @@ export class EnemySystem {
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
     state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
+    state.prismWeaverPhase = 'inactive'; state.prismWeaverProgress = 0; state.prismWeaverAngle = 0;
+    state.prismWeaverStartAngle = 0; state.prismWeaverDirection = 1; state.prismWeaverRadius = 0;
+    state.prismWeaverTimer = 0; state.prismWeaverSequence = 0; state.prismWeaverHitApplied = false;
     state.splitterDepth = 0;
     state.wardenReplica = false;
   }
@@ -363,5 +401,9 @@ export class EnemySystem {
 
   private countActiveSplitters(): number {
     return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'splitter' ? 1 : 0), 0);
+  }
+
+  private countActivePrismWeavers(): number {
+    return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'prism-weaver' ? 1 : 0), 0);
   }
 }

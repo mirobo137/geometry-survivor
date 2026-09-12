@@ -94,6 +94,16 @@ describe('GameState', () => {
     expect(state.phase).toBe('menu');
   });
 
+  it('continues from an intermission without reopening a new menu run', () => {
+    const state = new GameState();
+
+    expect(state.winRun()).toBe(true);
+    expect(state.enterActIntermission()).toBe(true);
+    expect(state.continueToNextAct()).toBe(true);
+    expect(state.phase).toBe('playing');
+    expect(state.continueToNextAct()).toBe(false);
+  });
+
   it('allows returning to the menu from manual pause only', () => {
     const state = new GameState();
 

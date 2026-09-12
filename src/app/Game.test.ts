@@ -303,16 +303,31 @@ describe('Game', () => {
     expect(saved.wallet.nova).toBe(33);
   });
 
-  it('opens a completed Act I intermission without offering an unavailable continuation', async () => {
-    const game = new Game(createOptions());
+  it('unlocks Angular and starts it from a selected authored calibration', async () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const game = new Game(createOptions({
+      saveStore: {
+        load: () => saved,
+        save,
+        clear: vi.fn()
+      }
+    }));
     const runtime = game as unknown as {
       finishRun: (outcome: 'victory') => void;
       openGameOverSummary: (...args: unknown[]) => Promise<void>;
       pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
       terminalTotalNova: number;
       gameState: { phase: string };
+      upgradeApplier: { apply: (upgradeId: 'twin_emitters') => boolean; snapshot: () => readonly string[] };
+      combat: { actId: string; hasTwinEmitters: boolean };
+      actId: string;
     };
 
+    expect(runtime.upgradeApplier.apply('twin_emitters')).toBe(true);
     runtime.finishRun.call(game, 'victory');
     const pending = runtime.pendingTerminalRun;
     if (!pending) throw new Error('Expected a settled victory');
@@ -324,7 +339,14 @@ describe('Game', () => {
       actName: 'Acto I · Radial',
       restartLabel: 'Repetir Acto I'
     });
-    expect(JSON.stringify(intermission)).not.toContain('Continuar');
+    expect(intermission.templates).toHaveLength(3);
+    expect(saved.unlockedActs).toEqual(['radial', 'angular']);
+    intermission.onSelectTemplate('orbit');
+    expect(runtime.gameState.phase).toBe('playing');
+    expect(runtime.actId).toBe('angular');
+    expect(runtime.combat.actId).toBe('angular');
+    expect(runtime.combat.hasTwinEmitters).toBe(false);
+    expect(runtime.upgradeApplier.snapshot()).toEqual(['orbit_blade', 'orbit_reach', 'reinforced_core']);
   });
 
   it('rejects a stale revive callback after a victory', async () => {

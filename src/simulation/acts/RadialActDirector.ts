@@ -7,6 +7,8 @@ import type { ArenaLaserPressure, ArenaShape, ArenaShapeChangeDefinition } from 
 import { getActIArenaLaserPressure } from '../../content/run/ArenaShapeDefinitions';
 import type { BossDefinition } from '../../content/bosses/BossDefinition';
 import type { RadialPulseDefinition } from '../../content/hazards/RadialPulseDefinition';
+import type { PulseRingDefinition } from '../../content/hazards/PulseRingDefinition';
+import type { AngularSweepDefinition } from '../../content/hazards/AngularSweepDefinition';
 
 /**
  * The single simulation-facing consumer of ActDefinition for Act I.
@@ -28,8 +30,20 @@ export class RadialActDirector {
     return this.definition.radialPulse;
   }
 
+  public get pulseRingDefinition(): PulseRingDefinition {
+    return this.definition.pulseRing;
+  }
+
+  public get angularSweepDefinition(): AngularSweepDefinition {
+    return this.definition.angularSweep;
+  }
+
   public get arenaShapeChanges(): readonly ArenaShapeChangeDefinition[] {
     return this.definition.arenaShapeChanges;
+  }
+
+  public get initialArenaShape(): ArenaShape {
+    return this.definition.initialArenaShape;
   }
 
   public getSpawnIntervalSeconds(elapsedSeconds: number): number {
@@ -54,6 +68,9 @@ export class RadialActDirector {
     }
     if (profile.eliteKind && profile.eliteEvery && spawnIndex % profile.eliteEvery === 0) {
       return profile.eliteKind;
+    }
+    if (profile.supportKind && profile.supportEvery && spawnIndex > 0 && spawnIndex % profile.supportEvery === 0) {
+      return profile.supportKind;
     }
     if (profile.overrideKind && profile.overrideEvery && spawnIndex % profile.overrideEvery === 0) {
       return profile.overrideKind;

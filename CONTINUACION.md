@@ -1,5 +1,88 @@
 # Geometry Survivor — estado y continuación
 
+## EX-07 — Acto II Angular APROBADO — 12-09-2026
+
+El usuario aprobó explícitamente el Acto II en composición, identidad espacial
+y game feel. EX-07e queda **APROBADO/CERRADO** con sus tres calibraciones de
+entrada, Orbiter, Charger, Splitter, Prism Weaver, Pulse Ring, Angular Sweep,
+arena cambiante y Orbital Warden. El balance final de daño, vida, resistencia,
+spawn y porcentajes continúa separado en EX-02c.
+
+La arena cambia cada 40 s: 40 s hacia cuadrado, 80 s hacia círculo, 120 s hacia
+hexágono, 160 s hacia cuadrado y 200 s hacia hexágono. El cierre pre-boss
+empieza a los 248.05 s y termina a los 250 s hacia círculo, dejando 10 s
+estables antes del Warden a los 260 s. Cada cambio tiene aviso de 1.20 s y
+morph de 0.75 s.
+
+Hallazgo `VIS-A2-01`: el destello ligero residual del cuadrado no viene del
+antiguo pulso de opacidad, ya eliminado y cubierto por test. Las ventanas
+cuadradas (`40–80 s` y `160–200 s`) contienen exactamente las expansiones
+globales de `60 s` y `180 s`; en esos momentos coinciden crecimiento/redibujado
+de frontera durante `1.25 s`, resonancia de `2.8 s` y onda de `0.58 s`. Los
+lados planos hacen más visible la suma de capas transparentes. No cambia
+frontera, colisión, daño ni rendimiento observado, así que se acepta como deuda
+visual menor no bloqueante.
+
+La recomendación oficial de PixiJS 8 es evitar reconstruir `Graphics` cada
+frame, usar `clear()` con moderación y considerar que las transparencias se
+mezclan por primitiva. Una iteración futura puede desacoplar el FX de expansión
+del marco estable o medir `GraphicsContext`; no debe ocultarlo con filtros ni
+retirar feedback. Fuente:
+https://pixijs.com/8.x/guides/components/scene-objects/graphics#performance-best-practices
+
+Validación automática vigente: **20/20** pruebas dirigidas; typecheck, **92
+archivos / 346 tests**, build local y smoke de gating Angular pasaron. Persiste
+únicamente el warning conocido del chunk principal mayor de 500 kB. El
+siguiente bloque habilitado es EX-08; EX-02c permanece diferido y Acto III
+continúa en EX-10.
+
+## EX-07e — Acto II conectado a campaña — 12-09-2026
+
+Esta sección conserva el detalle de implementación; su estado pendiente quedó
+reemplazado por la aprobación registrada arriba. El Acto II (`angular`) consume
+Orbiter, Charger, Splitter, Prism
+Weaver, Pulse Ring, Angular Sweep y Orbital Warden a los 260 s; Acto I conserva
+su composición radial y no se tocó el balance final de EX-02c.
+
+La experiencia pública queda en un solo flujo: se empieza en Acto I y, al
+vencer su boss, la intermisión ofrece tres calibraciones authored para entrar
+al Acto II desde cero (`Projectile`, `Orbit` o `Chain`). No se hereda la build
+del Acto I y se reinicia la progresión de nivel; la recompensa de NOVA del acto
+ya liquidado sigue siendo idempotente. El selector de actos que permanece en el
+menú sólo sirve para repetir actos ya desbloqueados con esas mismas tres
+calibraciones; no hay elección visible entre `Quick Act` y `Expedition`.
+El save esquema 6 añade únicamente `unlockedActs` y migra saves anteriores de
+forma segura.
+
+Validación automática de esa entrega: 92 archivos y 339 tests verdes,
+typecheck, build local y smoke browser dirigido del Prism Weaver en Chromium
+Low/High. Las capturas confirman que el abanico visible nace de la nave cerca
+del borde. La aprobación humana posterior cierra EX-07d/EX-07e; las runs
+cuantitativas restantes alimentarán EX-02c, que queda para el final.
+
+La integracion de campana quedo comprobada ademas en la simulacion real:
+`AngularActDirector` selecciona el Prism Weaver desde la fase tardia de 165 s,
+antes del boss de 260 s, respetando su `activeCap`. No es necesario activar
+`?prism=1` para que aparezca; ese parametro solo aisla el drill visual.
+La prueba dirigida del director, spawn profile y simulacion Angular queda en
+35 tests verdes.
+
+Corrección vigente Prism Weaver: el ataque de tres radios se emite desde
+`state.x/state.y`, tanto en la colisión como en el telegraph Pixi. El centro de
+la arena sólo elige los puntos de aproximación; nunca vuelve a ser el origen
+visual o de daño. La segunda pasada premium fija su identidad de **telar
+astral**: el asset de 21 primitivas tiene contra-peso, tres brazos abiertos con
+vacíos, huso de planos e iris prismático; el cast usa canal profundo, manto,
+rieles, trama diagonal cacheada, filamentos segmentados, core afilado, collar
+mecánico, terminales estratificados y doble ritmo de pulsos (Medium/High).
+Low conserva el canal y la silueta honesta pero omite trama, filamentos,
+cometa y edge decorativos. Toda la geometría se cachea por
+cast/radio. La regresión está en
+`PrismWeaverBehavior.test.ts` y `PrismWeaverTelegraphView.test.ts`.
+
+La validación posterior aprobó la composición y la lectura del Prism Weaver.
+El próximo bloque operativo es EX-08; Acto III permanece en EX-10.
+
 ## Mejora de previsualización Angular — 12-09-2026
 
 La previsualización y el `telegraph` real del hazard Angular fueron refinados:
@@ -205,11 +288,10 @@ Typecheck, 12 tests específicos, build development y 2 smoke browser dirigidos
 pasaron. Las capturas headless Low fueron inspeccionadas; no son benchmark.
 La ficha es [`docs/balance/EX-07d-angular-warden.md`](docs/balance/EX-07d-angular-warden.md).
 
-Estado: **AUTOMÁTICO OK; validación humana pendiente** en desktop/móvil,
-Low/High, lectura del sector, tiempo de reacción, solapamiento con el boss y
-composición Angular real. El siguiente ID es **EX-07e**: conectar composición
-de campaña, selector/gating, transición I→II, recompensa y runs. EX-02c sigue
-diferido; no tocar vida, daño ni spawn final.
+Estado histórico de esa entrega: **AUTOMÁTICO OK; validación humana
+pendiente**. La aprobación integrada actual del Acto II está al inicio de este
+archivo y sustituye esa puerta. EX-02c sigue diferido; no tocar vida, daño ni
+spawn final.
 
 ## EX-07c — Pulse Ring angular base — 12-09-2026
 

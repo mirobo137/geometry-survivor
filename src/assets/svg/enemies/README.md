@@ -33,6 +33,7 @@ de construir otra nave. No copiar la silueta del Tank a todos los roles.
 | `orbiter/orbiter.svg` | Orbiter / arco angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
 | `charger/charger.svg` | Charger / ariete angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
 | `splitter/splitter.svg` | Splitter / nave de fractura angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
+| `prism-weaver/prism-weaver.svg` | Prism Weaver / controlador de tres radios | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | cap authored 3 |
 | `boss/orbital-warden.svg` | Orbital Warden / boss angular | `-56 -56 112 112` | `(0, 0)` | 4 texturas + flat Low | 1 |
 | `warden-replica/warden-replica.svg` | replica destructible del Warden | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | 2 |
 
@@ -41,6 +42,12 @@ vector de movimiento. Sus colores son explicitos porque Pixi no consume CSS
 externo; el contorno y la silueta mantienen la lectura sobre la arena oscura.
 La tortuga se conserva como referencia de composicion y contrato, pero el
 `chaser` activo usa la nave scout para respetar la tematica espacial.
+
+Prism Weaver es la referencia para enemigos de control espacial: su nave usa
+tres capas funcionales (motores, placas de celosia y nucleo prisma) y el
+telegraph fuera del SVG dibuja tres sectores separados. El SVG no contiene el
+alcance del peligro ni decide colisiones; esa lectura pertenece a
+`PrismWeaverTelegraphView` y `PrismWeaverBehavior`.
 
 Cada master de nave se divide en cuatro piezas alineadas al mismo viewBox y se
 convierte en texturas una sola vez. El runtime anima motores, alas, casco y

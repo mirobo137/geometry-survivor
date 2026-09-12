@@ -1,11 +1,14 @@
 import type { RunSummary } from '../app/RunSummary';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
+import { isCalibrationId, type CalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
 
 export type RestartHandler = () => void;
 export type DoubleNovaHandler = () => void;
 export type ReviveHandler = () => void;
 export type ReturnToMenuHandler = () => void;
+export type ContinueHandler = () => void;
+export type CalibrationSelectHandler = (id: CalibrationId) => void;
 
 export interface GameOverBestValues {
   readonly timeSeconds: number;
@@ -24,6 +27,10 @@ export interface ActIntermissionOptions {
   readonly actName: string;
   readonly message: string;
   readonly restartLabel: string;
+  readonly continueLabel?: string;
+  readonly onContinue?: ContinueHandler;
+  readonly templates?: readonly CalibrationDefinition[];
+  readonly onSelectTemplate?: CalibrationSelectHandler;
   readonly onReturnToMenu?: ReturnToMenuHandler;
 }
 
@@ -46,6 +53,9 @@ export class GameOverOverlay {
   private readonly best: HTMLElement;
   private readonly nova: HTMLElement;
   private readonly restartButton: HTMLButtonElement;
+  private readonly continueButton: HTMLButtonElement;
+  private readonly templateSection: HTMLElement;
+  private readonly templateButtons: readonly HTMLButtonElement[];
   private readonly menuButton: HTMLButtonElement;
   private readonly rewardedSection: HTMLElement;
   private readonly rewardedMessage: HTMLElement;
@@ -54,6 +64,8 @@ export class GameOverOverlay {
   private readonly reviveMessage: HTMLElement;
   private readonly reviveButton: HTMLButtonElement;
   private restartHandler: RestartHandler | null = null;
+  private continueHandler: ContinueHandler | null = null;
+  private templateHandler: CalibrationSelectHandler | null = null;
   private menuHandler: ReturnToMenuHandler | null = null;
   private doubleNovaHandler: DoubleNovaHandler | null = null;
   private reviveHandler: ReviveHandler | null = null;
@@ -69,6 +81,9 @@ export class GameOverOverlay {
     const best = root.querySelector<HTMLElement>('#game-over-best');
     const nova = root.querySelector<HTMLElement>('#game-over-nova');
     const restartButton = root.querySelector<HTMLButtonElement>('#game-over-restart');
+    const continueButton = root.querySelector<HTMLButtonElement>('#game-over-continue');
+    const templateSection = root.querySelector<HTMLElement>('#game-over-entry');
+    const templateButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-game-over-calibration]'));
     const menuButton = root.querySelector<HTMLButtonElement>('#game-over-menu');
     const rewardedSection = root.querySelector<HTMLElement>('#game-over-rewarded');
     const rewardedMessage = root.querySelector<HTMLElement>('#game-over-rewarded-message');
@@ -76,7 +91,7 @@ export class GameOverOverlay {
     const reviveSection = root.querySelector<HTMLElement>('#game-over-revive');
     const reviveMessage = root.querySelector<HTMLElement>('#game-over-revive-message');
     const reviveButton = root.querySelector<HTMLButtonElement>('#game-over-revive-button');
-    if (!kicker || !title || !actMessage || !time || !kills || !experience || !score || !best || !nova || !restartButton || !menuButton
+    if (!kicker || !title || !actMessage || !time || !kills || !experience || !score || !best || !nova || !restartButton || !continueButton || !templateSection || templateButtons.length === 0 || !menuButton
       || !rewardedSection || !rewardedMessage || !doubleNovaButton
       || !reviveSection || !reviveMessage || !reviveButton) {
       throw new Error('Faltan elementos del resumen de partida');
@@ -92,6 +107,9 @@ export class GameOverOverlay {
     this.best = best;
     this.nova = nova;
     this.restartButton = restartButton;
+    this.continueButton = continueButton;
+    this.templateSection = templateSection;
+    this.templateButtons = templateButtons;
     this.menuButton = menuButton;
     this.rewardedSection = rewardedSection;
     this.rewardedMessage = rewardedMessage;
@@ -100,6 +118,13 @@ export class GameOverOverlay {
     this.reviveMessage = reviveMessage;
     this.reviveButton = reviveButton;
     this.restartButton.addEventListener('click', () => this.restartHandler?.());
+    this.continueButton.addEventListener('click', () => this.continueHandler?.());
+    for (const button of this.templateButtons) {
+      button.addEventListener('click', () => {
+        const id = button.dataset.gameOverCalibration;
+        if (isCalibrationId(id)) this.templateHandler?.(id);
+      });
+    }
     this.menuButton.addEventListener('click', () => this.menuHandler?.());
     this.doubleNovaButton.addEventListener('click', () => this.doubleNovaHandler?.());
     this.reviveButton.addEventListener('click', () => this.reviveHandler?.());
@@ -128,6 +153,8 @@ export class GameOverOverlay {
     this.best.textContent = `Mejor ${formatTime(best.timeSeconds)} · ${best.score} puntos`;
     this.renderNova(novaReward, totalNova);
     this.restartHandler = restartHandler;
+    this.continueHandler = intermission?.onContinue ?? null;
+    this.templateHandler = intermission?.onSelectTemplate ?? null;
     this.menuHandler = intermission?.onReturnToMenu ?? null;
     this.doubleNovaHandler = rewarded.onDoubleNova ?? null;
     this.reviveHandler = summary.outcome === 'game-over' ? rewarded.onRevive ?? null : null;
@@ -144,9 +171,22 @@ export class GameOverOverlay {
     this.reviveButton.disabled = !canRevive;
     this.reviveButton.textContent = 'Ver anuncio · revivir';
     this.restartButton.textContent = intermission?.restartLabel ?? 'Jugar de nuevo';
+    const canContinue = isIntermission && this.continueHandler !== null && intermission?.continueLabel !== undefined;
+    const templates = isIntermission ? intermission?.templates ?? [] : [];
+    const hasTemplates = templates.length > 0 && this.templateHandler !== null;
+    this.templateSection.hidden = !hasTemplates;
+    for (const button of this.templateButtons) {
+      const id = button.dataset.gameOverCalibration;
+      button.hidden = !hasTemplates || !isCalibrationId(id) || !templates.some((template) => template.id === id);
+      button.disabled = button.hidden;
+    }
+    this.continueButton.hidden = !canContinue || hasTemplates;
+    this.continueButton.disabled = !canContinue || hasTemplates;
+    this.continueButton.textContent = intermission?.continueLabel ?? 'Continuar';
     this.menuButton.hidden = this.menuHandler === null;
     this.root.hidden = false;
-    this.restartButton.focus({ preventScroll: true });
+    if (hasTemplates) this.templateButtons.find((button) => !button.hidden)?.focus({ preventScroll: true });
+    else (canContinue ? this.continueButton : this.restartButton).focus({ preventScroll: true });
   }
 
   public updateNova(novaReward: number, totalNova: number): void {
@@ -207,6 +247,8 @@ export class GameOverOverlay {
   public close(): void {
     this.root.hidden = true;
     this.restartHandler = null;
+    this.continueHandler = null;
+    this.templateHandler = null;
     this.menuHandler = null;
     this.doubleNovaHandler = null;
     this.reviveHandler = null;

@@ -1,4 +1,4 @@
-export type ArenaShape = 'circle' | 'hexagon';
+export type ArenaShape = 'circle' | 'hexagon' | 'square';
 
 export interface ArenaShapeChangeDefinition {
   readonly startSeconds: number;
@@ -28,6 +28,25 @@ export const ACT_I_ARENA_SHAPE_CHANGES: readonly ArenaShapeChangeDefinition[] = 
   { startSeconds: 132, telegraphSeconds: 1.4, morphSeconds: 0.85, from: 'circle', to: 'hexagon' },
   { startSeconds: 210, telegraphSeconds: 1.4, morphSeconds: 0.85, from: 'hexagon', to: 'circle' },
   { startSeconds: 288, telegraphSeconds: 1.6, morphSeconds: 1.05, from: 'circle', to: 'hexagon' }
+] as const;
+
+/**
+ * Act II starts inside the familiar hexagon, cycles through authored square,
+ * circle and hexagon states every ~40 seconds, then settles on the circle
+ * before Orbital Warden arrives.
+ * The square shares the hexagon's minimum side clearance (see ArenaBoundary),
+ * so the transition asks for a new route rather than silently removing the
+ * player's only escape space. Hazard cadence and damage are deliberately not
+ * part of this schedule.
+ */
+export const ACT_II_ARENA_SHAPE_CHANGES: readonly ArenaShapeChangeDefinition[] = [
+  { startSeconds: 40, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'hexagon', to: 'square' },
+  { startSeconds: 80, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'square', to: 'circle' },
+  { startSeconds: 120, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'circle', to: 'hexagon' },
+  { startSeconds: 160, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'hexagon', to: 'square' },
+  { startSeconds: 200, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'square', to: 'hexagon' },
+  // 248.05 + 1.20 + 0.75 = 250: keep ten seconds of stable circle before the boss.
+  { startSeconds: 248.05, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'hexagon', to: 'circle' }
 ] as const;
 
 const CIRCLE_LASER_PRESSURE: ArenaLaserPressure = {

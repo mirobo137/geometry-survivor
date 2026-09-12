@@ -10,7 +10,7 @@ import { isBackgroundId, type BackgroundId } from '../../content/visual/Backgrou
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import { PERMANENT_UPGRADE_DEFINITIONS, type PermanentUpgradeId } from '../../content/meta/PermanentUpgradeDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 5 as const;
+export const SAVE_SCHEMA_VERSION = 6 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -51,6 +51,8 @@ export interface MetaUpgradeSaveData {
   readonly levels: Readonly<Partial<Record<PermanentUpgradeId, number>>>;
 }
 
+export type CampaignActId = 'radial' | 'angular';
+
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
   readonly settings: SaveSettings;
@@ -61,6 +63,8 @@ export interface SaveData {
   readonly backgrounds: BackgroundSaveData;
   readonly wallet: WalletSaveData;
   readonly metaUpgrades: MetaUpgradeSaveData;
+  /** Acts with a real consumer that the player may start directly for validation. */
+  readonly unlockedActs: readonly CampaignActId[];
 }
 
 export interface StorageAdapter {
@@ -111,7 +115,8 @@ export const createDefaultSaveData = (): SaveData => ({
   },
   metaUpgrades: {
     levels: {}
-  }
+  },
+  unlockedActs: ['radial']
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -136,6 +141,10 @@ const readNonNegativeInt = (value: unknown, fallback: number, max: number): numb
   Math.min(max, Math.max(0, Math.floor(finiteOr(value, fallback))))
 );
 
+const isCampaignActId = (value: unknown): value is CampaignActId => (
+  value === 'radial' || value === 'angular'
+);
+
 /** Migrates unknown/legacy payloads into the current bounded schema. */
 export const migrateSaveData = (value: unknown): SaveData => {
   const defaults = createDefaultSaveData();
@@ -151,6 +160,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawBackgrounds = isRecord(value.backgrounds) ? value.backgrounds : {};
   const rawWallet = isRecord(value.wallet) ? value.wallet : {};
   const rawMetaUpgrades = isRecord(value.metaUpgrades) ? value.metaUpgrades : {};
+  const rawUnlockedActs = Array.isArray(value.unlockedActs) ? value.unlockedActs : [];
   const rawMetaLevels = isRecord(rawMetaUpgrades.levels) ? rawMetaUpgrades.levels : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
@@ -158,6 +168,10 @@ export const migrateSaveData = (value: unknown): SaveData => {
     ? rawSkins.unlocked.filter(isPlayerSkinId)
     : [];
   const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', ...unlocked]));
+  const normalizedUnlockedActs = Array.from(new Set<CampaignActId>([
+    'radial',
+    ...rawUnlockedActs.filter(isCampaignActId)
+  ]));
   const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'cyan';
   const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'cyan';
   const cannonUnlocked = Array.isArray(rawCannonSkins.unlocked)
@@ -209,7 +223,8 @@ export const migrateSaveData = (value: unknown): SaveData => {
     },
     metaUpgrades: {
       levels: metaLevels
-    }
+    },
+    unlockedActs: normalizedUnlockedActs
   };
 };
 

@@ -18,6 +18,12 @@ textura. En
 calidad Low queda activo el casco, que conserva la entidad real y su silueta,
 pero se omiten piezas decorativas, flash y animacion secundaria.
 
+Prism Weaver sigue el mismo ensamblaje y añade un telegraph pooled independiente
+en `PrismWeaverTelegraphView`: tres radios facetados comparten un solo root que
+rota durante `active`. La geometria se construye al cambiar el cast o el radio,
+no por frame. Low conserva base, core y nodos esenciales; Medium/High agregan
+la capa de borde sin filtros ni texturas nuevas.
+
 `CombatEntitiesView` coordina el pool; las vistas por enemigo solo aplican
 texturas, capas y transforms al contrato `EnemyRenderState`.
 

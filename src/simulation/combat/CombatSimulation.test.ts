@@ -6,6 +6,7 @@ import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { getPermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
+import { AngularActDirector } from '../acts/AngularActDirector';
 
 const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: number): void => {
   const steps = Math.ceil(seconds * 60);
@@ -314,6 +315,39 @@ describe('CombatSimulation', () => {
     expect(combat.boss.state.active).toBe(true);
     expect(combat.boss.state.maxHealth).toBe(ENEMY_DEFINITIONS.boss.maxHealth);
     expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'boss')).toHaveLength(1);
+  });
+
+  it('runs the real Angular composition and opens Orbital Warden at its act threshold', () => {
+    const combat = new CombatSimulation({ actDirector: new AngularActDirector() });
+    const player = new PlayerModel();
+
+    runSeconds(combat, player, 50);
+
+    expect(combat.actId).toBe('angular');
+    expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'orbiter')).toBe(true);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.renderState.pulseRing.sequence).toBeGreaterThan(0);
+
+    runSeconds(combat, player, 210);
+
+    expect(combat.boss.state.bossId).toBe('orbital-warden');
+    expect(combat.boss.state.active).toBe(true);
+    expect(combat.enemies.states.some((enemy) => enemy.active && enemy.kind === 'charger' || enemy.active && enemy.kind === 'splitter' || enemy.active && enemy.kind === 'orbiter')).toBe(true);
+  });
+
+  it('routes Prism Weaver through the real Angular campaign before its boss', () => {
+    const combat = new CombatSimulation({ actDirector: new AngularActDirector() });
+    const player = new PlayerModel();
+
+    // The support cadence is indexed by the real spawn count, so allow the
+    // first authored multiple-of-seven spawn after the 165 s phase boundary.
+    runSeconds(combat, player, 170);
+
+    expect(combat.actId).toBe('angular');
+    expect(combat.boss.state.active).toBe(false);
+    expect(combat.enemies.states.some((enemy) => (
+      enemy.active && enemy.kind === 'prism-weaver'
+    ))).toBe(true);
   });
 
   it('can start at the authored boss threshold for a deterministic development scenario', () => {

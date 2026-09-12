@@ -1,6 +1,7 @@
 # EX-07c — Pulse Ring base
 
-Estado: **AUTOMÁTICO OK; validación humana pendiente**.
+Estado: **APROBADO como parte del Acto II integrado — 12-09-2026**. Sus valores
+de daño continúan provisionales hasta EX-02c.
 
 Pulse Ring es el primer hazard de la familia Angular. No es una segunda onda
 radial disfrazada: el jugador debe leer una banda que atraviesa la arena y una
@@ -42,14 +43,11 @@ que la recuperación deja sólo residuo y que no hay enemigos ni disparos.
 
 ## Puerta humana
 
-Validar en desktop y móvil: comprensión del sector seguro sin instrucciones
-externas, tiempo de reacción, posibilidad real de seguir la abertura, claridad
-del empuje, lectura en Low/High y ausencia de solapamiento visual con player o
-fondo. Hasta esa revisión, no promover el hazard al menú ni a un Acto II
-seleccionable.
+Cerrada mediante la validación de la composición completa del Acto II: sector
+seguro comprensible, abertura seguible, empuje legible y ausencia de daño
+inevitable reportado. La aprobación no congela el valor numérico del daño.
 
 ## Siguiente trabajo
 
-El siguiente bloque habilitado es el hazard angular de EX-07d y el contrato de
-Orbital Warden. Después se podrá construir la composición Angular y recién
-entonces conectar selección, gating, recompensa y transición I→II de EX-07e.
+El hazard ya está integrado en EX-07e. El siguiente bloque del plan es EX-08;
+su calibración numérica final permanece agrupada en EX-02c.

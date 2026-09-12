@@ -1,4 +1,4 @@
-import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase } from '../../content/enemies/EnemyDefinitions';
+import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 
 export type BoomerangPhase = 'outbound' | 'returning';
@@ -35,6 +35,15 @@ export interface EnemyState {
   chargerEndY: number;
   chargerTimer: number;
   chargerSequence: number;
+  prismWeaverPhase: PrismWeaverPhase;
+  prismWeaverProgress: number;
+  prismWeaverAngle: number;
+  prismWeaverStartAngle: number;
+  prismWeaverDirection: OrbiterDirection;
+  prismWeaverRadius: number;
+  prismWeaverTimer: number;
+  prismWeaverSequence: number;
+  prismWeaverHitApplied: boolean;
   /** Splitter lineage; depth 0 may fracture once, depth 1 never fractures. */
   splitterDepth: number;
   /** True only for the Warden's destructible miniature copies. */
@@ -97,6 +106,9 @@ const createEnemyState = (): EnemyState => ({
   orbiterSequence: 0,
   chargerPhase: 'inactive', chargerProgress: 0, chargerAimX: 0, chargerAimY: 0,
   chargerEndX: 0, chargerEndY: 0, chargerTimer: 0, chargerSequence: 0,
+  prismWeaverPhase: 'inactive', prismWeaverProgress: 0, prismWeaverAngle: 0,
+  prismWeaverStartAngle: 0, prismWeaverDirection: 1, prismWeaverRadius: 0,
+  prismWeaverTimer: 0, prismWeaverSequence: 0, prismWeaverHitApplied: false,
   splitterDepth: 0,
   wardenReplica: false,
   generation: 0

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-prism-weaver-hull-title enemy-prism-weaver-hull-desc">
+  <title id="enemy-prism-weaver-hull-title">Prism Weaver spindle hull</title>
+  <desc id="enemy-prism-weaver-hull-desc">A narrow faceted spindle with a forward prism crown and recessed side planes.</desc>
+  <path id="enemy-prism-weaver-hull-chassis" d="M0-31 13-16 15 1 9 20 0 27-9 20-15 1-13-16Z" fill="#0b1727"/>
+  <path id="enemy-prism-weaver-hull-left-armor" d="M-2-26-10-15-12 0-6 15 0 21-2 5-6-4-4-15Z" fill="#24516a"/>
+  <path id="enemy-prism-weaver-hull-right-armor" d="M2-26 10-15 12 0 6 15 0 21 2 5 6-4 4-15Z" fill="#3f7978"/>
+  <path id="enemy-prism-weaver-hull-prism-crown" d="M0-31 13-16 7-18 0-26-7-18-13-16Z" fill="#eef1d3"/>
+  <path id="enemy-prism-weaver-hull-recesses" d="M-10-10-7-6-8 4-5 11-8 14-12 0ZM10-10 7-6 8 4 5 11 8 14 12 0Z" fill="#07111f"/>
+  <path id="enemy-prism-weaver-hull-energy-seams" d="M-4-16-2-10-3 1-1 8-4 6-6-4ZM4-16 2-10 3 1 1 8 4 6 6-4Z" fill="#79d8ca"/>
+  <path id="enemy-prism-weaver-hull-return-keel" d="M-9 20-5 16 0 22 5 16 9 20 0 27Z" fill="#1b3446"/>
+</svg>

@@ -51,7 +51,8 @@ describe('LocalSaveStore', () => {
       cannonSkins: defaults.cannonSkins,
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
-      metaUpgrades: { levels: { weapon_damage: 2 } }
+      metaUpgrades: { levels: { weapon_damage: 2 } },
+      unlockedActs: ['radial']
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
@@ -63,7 +64,8 @@ describe('LocalSaveStore', () => {
       cannonSkins: defaults.cannonSkins,
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
-      metaUpgrades: { levels: { weapon_damage: 2 } }
+      metaUpgrades: { levels: { weapon_damage: 2 } },
+      unlockedActs: ['radial']
     });
   });
 
@@ -88,7 +90,8 @@ describe('LocalSaveStore', () => {
       cannonSkins: { selected: 'basic', unlocked: ['basic'] },
       backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
       wallet: { nova: 0 },
-      metaUpgrades: { levels: {} }
+      metaUpgrades: { levels: {} },
+      unlockedActs: ['radial']
     });
   });
 
@@ -101,6 +104,17 @@ describe('LocalSaveStore', () => {
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { controlScheme: 'unknown' }
     }).settings.controlScheme).toBe('auto');
+  });
+
+  it('migrates campaign unlocks with Radial always available and no unknown acts', () => {
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      unlockedActs: ['angular', 'angular', 'unknown', 'radial']
+    }).unlockedActs).toEqual(['radial', 'angular']);
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      unlockedActs: ['unknown']
+    }).unlockedActs).toEqual(['radial']);
   });
 
   it('normalizes skin ownership and never equips a locked or unknown skin', () => {

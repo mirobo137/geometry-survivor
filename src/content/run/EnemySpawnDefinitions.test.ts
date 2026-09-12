@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMY_SPAWN_PROFILES, selectEnemyKind } from './EnemySpawnDefinitions';
+import { ACT_II_ENEMY_SPAWN_PROFILES, ENEMY_SPAWN_PROFILES, selectEnemyKind } from './EnemySpawnDefinitions';
 
 describe('EnemySpawnDefinitions', () => {
   it('mantiene perfiles ordenados y una fase base', () => {
@@ -22,5 +22,11 @@ describe('EnemySpawnDefinitions', () => {
   it('trata tiempos no finitos como el inicio de la run', () => {
     expect(selectEnemyKind(Number.NaN, 0)).toBe('chaser');
     expect(selectEnemyKind(Number.POSITIVE_INFINITY, 0)).toBe('chaser');
+  });
+
+  it('reserva el Prism Weaver para la capa tardia del Acto II', () => {
+    const lateProfile = ACT_II_ENEMY_SPAWN_PROFILES.at(-1);
+    expect(lateProfile?.supportKind).toBe('prism-weaver');
+    expect(lateProfile?.supportEvery).toBe(7);
   });
 });

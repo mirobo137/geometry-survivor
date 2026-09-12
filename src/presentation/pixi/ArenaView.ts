@@ -94,6 +94,10 @@ export class ArenaView {
     ]) {
       graphics.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
     }
+    // A whole-frame opacity pulse reads as a flash on flat-sided shapes,
+    // especially the square. Keep the perimeter lights steady; motion remains
+    // in the couriers and core transforms instead of changing edge legibility.
+    this.arenaSegments.alpha = 0.86;
     this.shockwave.visible = false;
     for (const courier of this.couriers) {
       courier.beginPath().moveTo(-19, 0).lineTo(-3, -2.8).lineTo(4, 0)
@@ -140,7 +144,6 @@ export class ArenaView {
     if (delta > 0 && !this.reducedMotion) this.visualSeconds += delta;
 
     const pulse = this.reducedMotion ? 0.5 : 0.5 + Math.sin(this.visualSeconds * 2.2) * 0.18;
-    this.arenaSegments.alpha = 0.74 + pulse * 0.26;
     this.arenaCore.scale.set(0.96 + pulse * 0.08);
     this.arenaCore.rotation = this.reducedMotion ? 0 : Math.sin(this.visualSeconds * 0.25) * 0.035;
     this.positionCouriers();
@@ -171,6 +174,7 @@ export class ArenaView {
     this.arenaMounts.clear();
     this.arenaRails.clear();
     this.arenaSegments.clear();
+    this.arenaSegments.alpha = 0.86;
     this.arenaFrame.clear();
     this.arenaCore.clear();
     this.arenaCore.scale.set(1);

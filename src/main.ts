@@ -14,6 +14,7 @@ import { LocalPlatform } from './platform/local/LocalPlatform';
 import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
+import type { ActId } from './content/run/ActDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -92,13 +93,17 @@ const bootstrap = async (): Promise<void> => {
   const orbiterDrill = searchParams.get('orbiter') === '1';
   const chargerDrill = searchParams.get('charger') === '1' && !orbiterDrill;
   const splitterDrill = searchParams.get('splitter') === '1' && !orbiterDrill && !chargerDrill;
-  const pulseRingDrill = searchParams.get('pulse') === '1' && !orbiterDrill && !chargerDrill && !splitterDrill;
+  const prismWeaverDrill = searchParams.get('prism') === '1'
+    && !orbiterDrill && !chargerDrill && !splitterDrill;
+  const pulseRingDrill = searchParams.get('pulse') === '1'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill;
   const angularSweepDrill = searchParams.get('angular') === '1'
-    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill;
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill;
   const wardenDrill = searchParams.get('warden') === '1'
-    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill && !angularSweepDrill;
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    && !pulseRingDrill && !angularSweepDrill;
   const stressMode = searchParams.get('stress') === '1'
-    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill
     && !angularSweepDrill && !wardenDrill;
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
@@ -122,10 +127,13 @@ const bootstrap = async (): Promise<void> => {
   const calibrationId: CalibrationId | undefined = isCalibrationId(requestedCalibration)
     ? requestedCalibration
     : undefined;
+  const requestedAct = searchParams.get('act');
+  const actId: ActId = requestedAct === 'angular' ? 'angular' : 'radial';
   const baselineMode = searchParams.get('baseline') === '1'
     && hazardCadenceMode === 'chaos'
     && calibrationId === undefined
-    && !orbiterDrill && !chargerDrill && !splitterDrill && !pulseRingDrill;
+    && actId === 'radial'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -167,6 +175,7 @@ const bootstrap = async (): Promise<void> => {
     orbiterDrill,
     chargerDrill,
     splitterDrill,
+    prismWeaverDrill,
     pulseRingDrill,
     angularSweepDrill,
     wardenDrill,
@@ -178,9 +187,10 @@ const bootstrap = async (): Promise<void> => {
     baselineMode,
     hazardCadenceMode,
     calibrationId,
+    actId,
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill
+    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill,
     platform: new LocalPlatform()
   });

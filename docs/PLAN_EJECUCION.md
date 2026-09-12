@@ -60,7 +60,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
 | EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, EX-06d con validación reducida aprobada; ocho runs extendidas pendientes |
-| EX-07 | 7 | Acto II Angular y Calibration | EN CURSO; EX-07a, EX-07c y EX-07d automáticos OK; Orbiter, Charger y Splitter drills automáticos OK; validación humana, selector/gating y consumidor de campaña pendientes |
+| EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante y EX-02c conserva el balance final pendiente |
 | EX-08 | 7/9 | niveles/evoluciones, una ruta por entrega | acompaña el acto que consume cada ruta |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | pendiente, después de EX-09 |
@@ -639,7 +639,8 @@ Revisión vigente: astrolabio de tres brazos, estelas laminadas y cámaras de
 lanzamiento; angular de láminas curvas. Charge/Curve conservan el endpoint.
 La receta actual sustituye los rombos/riel básicos descritos abajo:
 [ACTO_II_BOSS_FAMILY_PREMIUM.md](design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
-Pendiente aprobación humana; EX-07e continúa tras validar EX-07d.
+Esta nota histórica queda reemplazada por la aprobación integrada de EX-07e
+en §22.1i.
 
 Orbital Warden queda ampliado, todavía como consumidor aislado y sin cerrar la
 puerta humana. Su orden authored es `sweep → charge → curve → replicas → ring`.
@@ -659,11 +660,12 @@ renderer sólo consume el snapshot. La guía de construcción y mantenimiento es
 La validación dirigida nueva quedó inicialmente en 8 archivos y 46 pruebas
 verdes; la puerta completa posterior queda en 90 archivos y 321 pruebas
 verdes, con typecheck y build Vite correctos. Sigue
-pendiente la comprobación humana del ciclo en desktop/móvil y Low/Medium/High,
-incluyendo legibilidad, evasión, daño real de Charge/Curve y destrucción de las
-dos réplicas. EX-07e permanece como siguiente bloque después de esa puerta.
+en ese punto quedaba pendiente la comprobación humana del ciclo en
+desktop/móvil y Low/Medium/High. La aprobación integrada posterior de EX-07e
+cierra esa puerta; el balance numérico se conserva en EX-02c.
 
-EX-07d queda implementado y **AUTOMÁTICO OK; validación humana pendiente**.
+EX-07d quedó implementado y **AUTOMÁTICO OK** en esta etapa; su puerta humana
+se cerró después mediante la aprobación del Acto II completo en EX-07e.
 `AngularSweepHazard` separa `telegraph → active → recovery`, compromete un
 sector, alterna el sentido y recorre como máximo un arco authored. La colisión
 usa la hoja angular actual, permite salir antes del daño y aplica como máximo un
@@ -685,9 +687,63 @@ save de campaña. La ficha completa y la puerta humana viven en
 La implementación pasa typecheck, 12 tests específicos de hazard/boss/vista,
 build development y 2 smoke browser dirigidos en Chromium desktop. La
 inspección visual de capturas headless confirma lectura de Low, pero no es una
-medición de FPS ni reemplaza la prueba física. El siguiente ID es **EX-07e**:
-composición Angular real, selector/gating, transición I→II, recompensa y
-validación de runs; no se adelanta el balance diferido de EX-02c.
+medición de FPS. La aprobación humana integrada se registra en §22.1i.
+
+### 22.1i Estado de EX-07e — composición de campaña Angular — 12-09-2026
+
+EX-07e queda **APROBADO/CERRADO por validación humana — 12-09-2026**. El Acto II ya tiene
+un consumidor real mediante `ANGULAR_ACT_DEFINITION` y `AngularActDirector`:
+Orbiter, Charger, Splitter y Prism Weaver entran por perfiles authored; Pulse
+Ring y Angular Sweep funcionan durante la run normal; Orbital Warden aparece a
+los 260 s. Acto I conserva su composición radial y el balance final de EX-02c
+no se modifica.
+
+La experiencia pública se simplificó a un solo flujo. La campaña comienza en
+Radial; tras derrotar al boss, la intermisión ofrece tres calibraciones authored
+(`projectile`, `orbit`, `chain`) para iniciar Angular desde cero. No se hereda
+la build ni el nivel del Acto I. El selector de actos desbloqueados se conserva
+como acceso de repetición/prueba y usa las mismas calibraciones; ya no expone
+`Quick Act` ni `Expedition` como decisiones separadas. El guardado pasa a schema
+6 y sólo añade `unlockedActs`.
+
+El ataque de Prism Weaver se emite desde el cuerpo: simulación y telegraph usan
+`state.x/state.y`; el centro de arena sólo calcula sus anclas de aproximación.
+La ficha reproducible y sus exclusiones están en
+[`docs/balance/EX-07e-angular-campaign.md`](balance/EX-07e-angular-campaign.md),
+y el contrato específico del enemigo en
+[`docs/balance/EX-07f-prism-weaver.md`](balance/EX-07f-prism-weaver.md).
+
+La puerta automática cubre definición, spawn, boss, migración, selector,
+calibraciones y el anclaje visual/lógico del Prism Weaver. La aprobación del
+usuario confirma la composición, identidad espacial y game feel del acto. Las
+runs comparables adicionales se trasladan como evidencia para EX-02c, que
+mantiene pendiente la calibración final de daño, vida, resistencia y spawn.
+El siguiente bloque habilitado es EX-08; Acto III continúa en EX-10.
+
+#### Extensión de arena Angular — hexágono → cuadrado → círculo
+
+La composición de EX-07e incluye cinco intervenciones authored cada 40 s y un
+cierre pre-boss, sin abrir una segunda familia de hazards ni una recalibración
+de balance. Angular empieza en hexágono; a los 40, 80, 120, 160 y 200 s rota
+entre cuadrado, círculo, hexágono, cuadrado y hexágono. A los 248.05 s avisa y
+transforma a círculo en 0.75 s después del telegraph de 1.20 s; queda estable a
+los 250 s, diez segundos antes de que el Warden entre a los 260 s.
+
+`ActDefinition.initialArenaShape`, `ArenaModel` y `ArenaBoundary` son el
+contrato único. El cuadrado alineado a los ejes conserva el despeje mínimo del
+hexágono y abre esquinas diagonales; clamp, telegraphs y render consultan la
+misma frontera interpolada. No modificar por esta tarea timers, daño, HP,
+spawn, fases o rutas de Pulse Ring, Angular Sweep, familias enemigas o Warden.
+La puerta agrega pruebas unitarias de forma/calendario y una prueba humana en
+los lados, vértices y ambos morphs, en Low/Medium/High y touch.
+
+`VIS-A2-01` registra un destello leve no bloqueante durante el cuadrado. No es
+el antiguo pulso de opacidad: las ventanas cuadradas (`40–80 s` y `160–200 s`)
+contienen las expansiones de arena de `60 s` y `180 s`, que combinan redibujado
+de frontera durante `1.25 s`, resonancia de `2.8 s` y onda de `0.58 s`. No
+cambia colisión ni gameplay. La ruta futura es desacoplar la geometría estable
+del FX de expansión o medir `GraphicsContext`; no usar filtros ni retirar el
+feedback de expansión para esconderlo.
 
 ### EX-08 — Niveles y evoluciones, ficha reutilizable por arma
 

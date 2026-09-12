@@ -14,6 +14,7 @@ const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_light
 /** Applies authored upgrade effects at the composition boundary. */
 export class UpgradeApplier {
   private readonly stacks = new Map<UpgradeId, number>();
+  private readonly acquisitionOrder: UpgradeId[] = [];
 
   public constructor(
     private readonly player: PlayerModel,
@@ -36,6 +37,12 @@ export class UpgradeApplier {
 
   public reset(): void {
     this.stacks.clear();
+    this.acquisitionOrder.length = 0;
+  }
+
+  /** Ordered snapshot kept for diagnostics; Act II entry intentionally does not consume it. */
+  public snapshot(): readonly UpgradeId[] {
+    return [...this.acquisitionOrder];
   }
 
   public getPreview(upgrade: UpgradeDefinition | UpgradeId): UpgradePreview | null {
@@ -187,6 +194,7 @@ export class UpgradeApplier {
     }
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
+    this.acquisitionOrder.push(upgradeId);
     return true;
   }
 

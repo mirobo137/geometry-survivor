@@ -11,6 +11,9 @@ export interface EnemySpawnProfile {
   readonly alternateEvery?: number;
   readonly overrideKind?: EnemyKind;
   readonly overrideEvery?: number;
+  /** Rare authored support/control family, evaluated before the mix below. */
+  readonly supportKind?: EnemyKind;
+  readonly supportEvery?: number;
   readonly eliteKind?: EnemyKind;
   readonly eliteEvery?: number;
 }
@@ -43,6 +46,39 @@ export const ENEMY_SPAWN_PROFILES: readonly EnemySpawnProfile[] = [
   }
 ] as const;
 
+/**
+ * Act II teaches the four Angular enemy verbs in authored layers. The order is
+ * deterministic so a run can be compared without turning the director into
+ * a difficulty scaler. Final health/damage tuning remains EX-02c.
+ */
+export const ACT_II_ENEMY_SPAWN_PROFILES: readonly EnemySpawnProfile[] = [
+  { startSeconds: 0, defaultKind: 'orbiter' },
+  {
+    startSeconds: 42,
+    defaultKind: 'orbiter',
+    alternateKind: 'charger',
+    alternateEvery: 3
+  },
+  {
+    startSeconds: 105,
+    defaultKind: 'orbiter',
+    alternateKind: 'charger',
+    alternateEvery: 2,
+    overrideKind: 'splitter',
+    overrideEvery: 5
+  },
+  {
+    startSeconds: 165,
+    defaultKind: 'charger',
+    alternateKind: 'orbiter',
+    alternateEvery: 2,
+    overrideKind: 'splitter',
+    overrideEvery: 4,
+    supportKind: 'prism-weaver',
+    supportEvery: 7
+  }
+] as const;
+
 const getProfile = (elapsedSeconds: number): EnemySpawnProfile => {
   const elapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
   for (let index = ENEMY_SPAWN_PROFILES.length - 1; index >= 0; index -= 1) {
@@ -57,6 +93,9 @@ export const selectEnemyKind = (elapsedSeconds: number, spawnIndex: number): Ene
   const profile = getProfile(elapsedSeconds);
   if (profile.eliteKind && profile.eliteEvery && spawnIndex % profile.eliteEvery === 0) {
     return profile.eliteKind;
+  }
+  if (profile.supportKind && profile.supportEvery && spawnIndex > 0 && spawnIndex % profile.supportEvery === 0) {
+    return profile.supportKind;
   }
   if (profile.overrideKind && profile.overrideEvery && spawnIndex % profile.overrideEvery === 0) {
     return profile.overrideKind;

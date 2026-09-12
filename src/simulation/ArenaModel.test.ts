@@ -9,6 +9,7 @@ import {
 } from '../config/constants';
 import { getArenaRadiusAtAngle } from './ArenaBoundary';
 import { ArenaModel } from './ArenaModel';
+import { AngularActDirector } from './acts/AngularActDirector';
 
 describe('ArenaModel', () => {
   it('keeps the opening arena stable while the player learns the space', () => {
@@ -135,5 +136,57 @@ describe('ArenaModel', () => {
       shapePhase: 'stable',
       shapeIndex: 0
     });
+  });
+
+  it('runs the authored 40-second Act II shape cadence and settles on circle ten seconds before the boss', () => {
+    const arena = new ArenaModel(new AngularActDirector());
+    expect(arena.state.shape).toBe('hexagon');
+
+    arena.update(40);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('hexagon');
+    expect(arena.state.shapeTo).toBe('square');
+
+    arena.update(1.95);
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('square');
+
+    arena.update(38.05);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('square');
+    expect(arena.state.shapeTo).toBe('circle');
+
+    arena.update(40);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('circle');
+    expect(arena.state.shapeTo).toBe('hexagon');
+
+    arena.update(40);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('hexagon');
+    expect(arena.state.shapeTo).toBe('square');
+
+    arena.update(40);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('square');
+    expect(arena.state.shapeTo).toBe('hexagon');
+
+    arena.update(48.05);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.shapeFrom).toBe('hexagon');
+    expect(arena.state.shapeTo).toBe('circle');
+
+    arena.update(1.95);
+    expect(arena.state.elapsedSeconds).toBeCloseTo(250);
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('circle');
+
+    arena.update(10);
+    expect(arena.state.elapsedSeconds).toBe(260);
+    expect(arena.state.shapePhase).toBe('stable');
+    expect(arena.state.shape).toBe('circle');
+
+    arena.reset();
+    expect(arena.state.shape).toBe('hexagon');
   });
 });

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-prism-weaver-rear-title enemy-prism-weaver-rear-desc">
+  <title id="enemy-prism-weaver-rear-title">Prism Weaver counterweight</title>
+  <desc id="enemy-prism-weaver-rear-desc">Aft spine, counter-rotating registers and teal exhaust vanes.</desc>
+  <path id="enemy-prism-weaver-rear-spine" d="M-7 4H7L11 16 7 26 0 31-7 26-11 16Z" fill="#081321"/>
+  <path id="enemy-prism-weaver-rear-left-register" d="M-13 9-6 8-9 25-15 29-19 23Z" fill="#29475b"/>
+  <path id="enemy-prism-weaver-rear-right-register" d="M13 9 6 8 9 25 15 29 19 23Z" fill="#29475b"/>
+  <path id="enemy-prism-weaver-rear-register-bevels" d="M-13 9-6 8-8 13-14 16-17 14ZM13 9 6 8 8 13 14 16 17 14Z" fill="#78c9bd"/>
+  <path id="enemy-prism-weaver-rear-exhaust-vanes" d="M-15 22-9 20-11 28-16 27ZM15 22 9 20 11 28 16 27ZM-3 26 0 24 3 26 0 30Z" fill="#e2b96d"/>
+</svg>

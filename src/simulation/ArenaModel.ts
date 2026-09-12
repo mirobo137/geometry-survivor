@@ -33,25 +33,12 @@ const clamp01 = (value: number): number => Math.min(Math.max(value, 0), 1);
  */
 export class ArenaModel {
   private readonly actDirector: RadialActDirector;
+  public state: ArenaState;
 
   public constructor(actDirector: RadialActDirector = new RadialActDirector()) {
     this.actDirector = actDirector;
+    this.state = createInitialArenaState(this.actDirector.initialArenaShape);
   }
-
-  public state: ArenaState = {
-    elapsedSeconds: 0,
-    radius: ARENA_RADIUS,
-    expansionProgress: 0,
-    expansionIndex: 0,
-    resonance: 0,
-    shape: 'circle',
-    shapeFrom: 'circle',
-    shapeTo: 'circle',
-    morphProgress: 0,
-    shapeTelegraphProgress: 0,
-    shapePhase: 'stable',
-    shapeIndex: 0
-  };
 
   public update(dtSeconds: number): void {
     const elapsedSeconds = this.state.elapsedSeconds + Math.max(0, dtSeconds);
@@ -73,7 +60,11 @@ export class ArenaModel {
       this.expansionResonance(elapsedSeconds, ARENA_EXPANSION_START_SECONDS),
       this.expansionResonance(elapsedSeconds, ARENA_SECOND_EXPANSION_START_SECONDS)
     );
-    const shapeFrame = getShapeFrame(elapsedSeconds, this.actDirector.arenaShapeChanges);
+    const shapeFrame = getShapeFrame(
+      elapsedSeconds,
+      this.actDirector.initialArenaShape,
+      this.actDirector.arenaShapeChanges
+    );
 
     this.state = {
       elapsedSeconds,
@@ -86,20 +77,7 @@ export class ArenaModel {
   }
 
   public reset(): void {
-    this.state = {
-      elapsedSeconds: 0,
-      radius: ARENA_RADIUS,
-      expansionProgress: 0,
-      expansionIndex: 0,
-      resonance: 0,
-      shape: 'circle',
-      shapeFrom: 'circle',
-      shapeTo: 'circle',
-      morphProgress: 0,
-      shapeTelegraphProgress: 0,
-      shapePhase: 'stable',
-      shapeIndex: 0
-    };
+    this.state = createInitialArenaState(this.actDirector.initialArenaShape);
   }
 
   private expansionResonance(elapsedSeconds: number, startSeconds: number): number {
@@ -122,9 +100,10 @@ interface ArenaShapeFrame {
 
 const getShapeFrame = (
   elapsedSeconds: number,
+  initialShape: ArenaShape,
   shapeChanges: readonly ArenaShapeChangeDefinition[]
 ): ArenaShapeFrame => {
-  let stableShape: ArenaShape = 'circle';
+  let stableShape = initialShape;
   let shapeIndex = 0;
   for (let index = 0; index < shapeChanges.length; index += 1) {
     const change = shapeChanges[index];
@@ -166,3 +145,18 @@ const getShapeFrame = (
     shapeIndex
   };
 };
+
+const createInitialArenaState = (shape: ArenaShape): ArenaState => ({
+  elapsedSeconds: 0,
+  radius: ARENA_RADIUS,
+  expansionProgress: 0,
+  expansionIndex: 0,
+  resonance: 0,
+  shape,
+  shapeFrom: shape,
+  shapeTo: shape,
+  morphProgress: 0,
+  shapeTelegraphProgress: 0,
+  shapePhase: 'stable',
+  shapeIndex: 0
+});

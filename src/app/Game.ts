@@ -8,7 +8,7 @@ import { InputManager } from '../input/InputManager';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
-import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -33,9 +33,12 @@ import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
+import { AngularActDirector } from '../simulation/acts/AngularActDirector';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
+import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
+import { CALIBRATION_DEFINITIONS } from '../content/run/CalibrationDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -87,12 +90,16 @@ export interface GameOptions {
   readonly hazardCadenceMode?: HazardCadenceMode;
   /** Developer/direct-entry calibration; no menu or save state yet. */
   readonly calibrationId?: CalibrationId;
+  /** Initial campaign act; the home selector can change this before play. */
+  readonly actId?: ActId;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
   readonly orbiterDrill?: boolean;
   /** Isolated Angular Charger drill. */
   readonly chargerDrill?: boolean;
   /** Isolated Angular Splitter drill; keeps the authored weapon enabled. */
   readonly splitterDrill?: boolean;
+  /** Isolated Angular Prism Weaver drill. */
+  readonly prismWeaverDrill?: boolean;
   /** Isolated EX-07c Pulse Ring drill; never starts from the home menu. */
   readonly pulseRingDrill?: boolean;
   /** Isolated EX-07d sector-hazard drill; never starts from the home menu. */
@@ -112,6 +119,7 @@ export class Game {
   private readonly orbiterDrill: boolean;
   private readonly chargerDrill: boolean;
   private readonly splitterDrill: boolean;
+  private readonly prismWeaverDrill: boolean;
   private readonly pulseRingDrill: boolean;
   private readonly angularSweepDrill: boolean;
   private readonly wardenDrill: boolean;
@@ -127,17 +135,18 @@ export class Game {
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
   private readonly viewport = new ViewportTransform();
-  private readonly actDirector = new RadialActDirector();
-  private readonly arena = new ArenaModel(this.actDirector);
   private readonly player = new PlayerModel();
-  private readonly combat: CombatSimulation;
+  private actId: ActId;
+  private actDirector!: RadialActDirector;
+  private arena!: ArenaModel;
+  private combat!: CombatSimulation;
   private readonly progression = new LevelProgression();
   private readonly gameState: GameState;
   private readonly view: PixiGameView;
   private readonly debug: DebugPanel;
   private readonly profiler: FrameProfiler;
   private readonly baselineMode: boolean;
-  private readonly calibrationId: CalibrationId | null;
+  private calibrationId: CalibrationId | null;
   private readonly baseline: BaselineRunRecorder;
   private readonly baselinePanel: BaselinePanel | null;
   private readonly hud: GameHud;
@@ -146,7 +155,8 @@ export class Game {
   private readonly gameOver: GameOverOverlay;
   private readonly startScreen: StartScreen | null;
   private readonly input: InputManager;
-  private readonly upgradeApplier: UpgradeApplier;
+  private upgradeApplier!: UpgradeApplier;
+  private readonly hazardCadenceMode: HazardCadenceMode;
   private readonly resizeObserver: ResizeObserver | null;
   private resizeQueued = false;
   private accumulator = 0;
@@ -189,14 +199,28 @@ export class Game {
     this.view.handleLevelUpInteraction(interaction.kind, interaction.index);
   };
 
-  private readonly onStartPlay = (): void => {
+  private readonly onStartPlay = (calibrationId?: CalibrationId): void => {
+    if (this.actId === 'angular' && calibrationId === undefined) return;
     if (this.stopped || !this.gameState.startRun()) return;
+    if (calibrationId !== undefined) {
+      this.calibrationId = calibrationId;
+      this.calibrationApplied = false;
+    }
     this.startScreenRequestToken += 1;
     this.rewardedOffers.reset();
     const saved = this.saveStore.load();
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
     this.activateRun(true);
+  };
+
+  private readonly onStartActChange = (actId: ActId): void => {
+    if (this.stopped || this.gameState.phase !== 'menu' || !this.isActUnlocked(actId)) return;
+    this.actId = actId;
+    this.calibrationId = null;
+    this.calibrationApplied = false;
+    this.configureActRuntime(this.saveStore.load());
+    this.arena.update(this.initialElapsedSeconds);
   };
 
   private readonly onPauseButton = (): void => {
@@ -279,6 +303,28 @@ export class Game {
     this.returnToMenuState();
   };
 
+  private readonly onActIntermissionContinue = (calibrationId: CalibrationId): void => {
+    if (this.contextLost || this.gameState.phase !== 'act-intermission') return;
+    if (this.actId !== 'radial' || !this.isActUnlocked('angular')) return;
+
+    const saved = this.saveStore.load();
+    this.gameOver.close();
+    this.view.resetPresentation();
+    this.clearTerminalSummaryTimer();
+    this.pendingTerminalRun = null;
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
+    this.actId = 'angular';
+    this.calibrationId = calibrationId;
+    this.calibrationApplied = false;
+    if (!this.gameState.continueToNextAct()) return;
+    this.configureActRuntime(saved);
+    this.player.reset();
+    this.progression.reset();
+    this.arena.update(0);
+    this.activateRun(false);
+  };
+
   private readonly onWebglContextLost = (event: Event): void => {
     event.preventDefault();
     if (this.stopped || this.lifecyclePaused || !this.gameState.isSimulationRunning) return;
@@ -335,14 +381,16 @@ export class Game {
     this.orbiterDrill = options.orbiterDrill === true;
     this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
     this.splitterDrill = options.splitterDrill === true && !this.orbiterDrill && !this.chargerDrill;
-    this.pulseRingDrill = options.pulseRingDrill === true
+    this.prismWeaverDrill = options.prismWeaverDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill;
+    this.pulseRingDrill = options.pulseRingDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill && !this.prismWeaverDrill;
     this.angularSweepDrill = options.angularSweepDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
-      && !this.pulseRingDrill;
+      && !this.prismWeaverDrill && !this.pulseRingDrill;
     this.wardenDrill = options.wardenDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
-      && !this.pulseRingDrill && !this.angularSweepDrill;
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -354,6 +402,11 @@ export class Game {
     this.calibrationId = options.calibrationId ?? null;
     this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
+    const requestedAct = options.actId ?? 'radial';
+    this.actId = requestedAct === 'radial' || saved.unlockedActs.includes(requestedAct)
+      ? requestedAct
+      : 'radial';
+    this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
@@ -361,19 +414,7 @@ export class Game {
     this.rewardedAds = new RewardedAdController(options.platform.ads);
     this.audio = options.platform.audio;
     this.audio.configure(saved.settings);
-    this.combat = new CombatSimulation({
-      stress: this.stressMode,
-      initialElapsedSeconds: this.initialElapsedSeconds,
-      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
-      actDirector: this.actDirector,
-      hazardCadenceMode: options.hazardCadenceMode,
-      orbiterDrill: this.orbiterDrill,
-      chargerDrill: this.chargerDrill,
-      splitterDrill: this.splitterDrill,
-      pulseRingDrill: this.pulseRingDrill,
-      angularSweepDrill: this.angularSweepDrill,
-      wardenDrill: this.wardenDrill
-    });
+    this.configureActRuntime(saved);
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
     this.baseline = new BaselineRunRecorder(this.baselineMode);
@@ -388,8 +429,29 @@ export class Game {
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
       void this.audio.unlock();
     }, saved.settings.controlScheme);
-    this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.queueResize);
+  }
+
+  private configureActRuntime(saved: ReturnType<SaveStore['load']>): void {
+    this.actDirector = this.actId === 'angular'
+      ? new AngularActDirector()
+      : new RadialActDirector();
+    this.arena = new ArenaModel(this.actDirector);
+    this.combat = new CombatSimulation({
+      stress: this.stressMode,
+      initialElapsedSeconds: this.initialElapsedSeconds,
+      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
+      actDirector: this.actDirector,
+      hazardCadenceMode: this.hazardCadenceMode,
+      orbiterDrill: this.orbiterDrill,
+      chargerDrill: this.chargerDrill,
+      splitterDrill: this.splitterDrill,
+      prismWeaverDrill: this.prismWeaverDrill,
+      pulseRingDrill: this.pulseRingDrill,
+      angularSweepDrill: this.angularSweepDrill,
+      wardenDrill: this.wardenDrill
+    });
+    this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
   }
 
   public async start(): Promise<void> {
@@ -499,7 +561,7 @@ export class Game {
     this.view.updatePresentationFx(presentationDelta, this.presentationTime);
     this.view.renderArena(this.arena.state);
     this.view.renderLaser(this.combat.renderState.laser, this.arena.state);
-    this.view.renderRadialPulse(this.pulseRingDrill
+    this.view.renderRadialPulse(this.pulseRingDrill || this.combat.isAngularAct
       ? this.combat.renderState.pulseRing
       : this.combat.renderState.radialPulse);
     this.view.renderAngularSweep(this.combat.renderState.angularSweep, this.arena.state);
@@ -558,7 +620,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : 'normal',
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -568,7 +630,7 @@ export class Game {
       level: this.progression.state.level,
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
-      pulse: `${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
+      pulse: `${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
       calibration: this.calibrationId ?? 'none',
       orbiter: this.combat.isOrbiterDrill
         ? (() => {
@@ -585,7 +647,13 @@ export class Game {
           return states.length > 0 ? `${states.length} active | depth ${Math.max(...states.map((state) => state.splitterDepth))}` : 'respawning';
         })()
         : 'off',
-      angular: this.combat.isAngularSweepDrill || this.combat.isWardenDrill
+      prism: this.combat.isPrismWeaverDrill || this.combat.isAngularAct
+        ? (() => {
+          const state = this.combat.enemies.states.find((enemy) => enemy.active && enemy.kind === 'prism-weaver');
+          return state ? `${state.prismWeaverPhase} | ${state.x.toFixed(1)}, ${state.y.toFixed(1)}` : 'respawning';
+        })()
+        : 'off',
+      angular: this.combat.isAngularSweepDrill || this.combat.isWardenDrill || this.combat.isAngularAct
         ? `${this.combat.renderState.angularSweep.phase} | ${this.combat.renderState.angularSweep.angle.toFixed(2)} rad`
         : 'off',
       resonance: this.arena.state.resonance,
@@ -755,7 +823,10 @@ export class Game {
       backgrounds: saved.backgrounds,
       wallet: saved.wallet,
       metaUpgrades: saved.metaUpgrades,
+      unlockedActs: saved.unlockedActs,
+      selectedAct: this.actId,
       onPlay: this.onStartPlay,
+      onActChange: this.onStartActChange,
       onSettingsChange: this.onStartSettingsChange,
       controlScheme: saved.settings.controlScheme,
       onControlSchemeChange: this.onStartControlSchemeChange,
@@ -813,7 +884,8 @@ export class Game {
 
     const saved = this.saveStore.load();
     const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + pending.novaReward) };
-    if (!this.saveStore.save({ ...saved, best: pending.best, wallet })) return false;
+    const unlockedActs = this.nextUnlockedActs(saved.unlockedActs, pending.summary.outcome);
+    if (!this.saveStore.save({ ...saved, best: pending.best, wallet, unlockedActs })) return false;
     this.baseline.finish({
       outcome: pending.summary.outcome,
       elapsedSeconds: pending.summary.elapsedSeconds,
@@ -824,6 +896,15 @@ export class Game {
     pending.settled = true;
     this.terminalTotalNova = wallet.nova;
     return true;
+  }
+
+  private nextUnlockedActs(unlockedActs: readonly CampaignActId[], outcome: RunOutcome): readonly CampaignActId[] {
+    if (outcome !== 'victory' || this.actId !== 'radial') return unlockedActs;
+    return unlockedActs.includes('angular') ? unlockedActs : [...unlockedActs, 'angular'];
+  }
+
+  private isActUnlocked(actId: ActId): boolean {
+    return this.saveStore.load().unlockedActs.includes(actId);
   }
 
   private async openGameOverSummary(
@@ -855,11 +936,20 @@ export class Game {
       reviveAvailable: canRevive,
       onRevive: canRevive ? () => { void this.requestRevive(terminalToken); } : undefined
     }, isActVictory ? {
-      actName: 'Acto I · Radial',
-      message: 'El Acto I termina aquí por ahora. La recompensa ya fue acreditada una sola vez.',
-      restartLabel: 'Repetir Acto I',
+      actName: this.actId === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial',
+      message: this.actId === 'angular'
+        ? 'El Acto II queda registrado. La recompensa ya fue acreditada una sola vez.'
+        : 'El Acto I queda registrado. Conserva tu build y entra al siguiente acto cuando estés listo.',
+      restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : 'Repetir Acto I',
+      templates: this.canContinueToAngular() ? CALIBRATION_DEFINITIONS : undefined,
+      onSelectTemplate: this.canContinueToAngular() ? this.onActIntermissionContinue : undefined,
       onReturnToMenu: this.startScreen ? this.onActIntermissionReturnToMenu : undefined
     } : undefined);
+  }
+
+  private canContinueToAngular(): boolean {
+    return this.actId === 'radial'
+      && this.isActUnlocked('angular');
   }
 
   private async requestRevive(terminalToken: number): Promise<void> {

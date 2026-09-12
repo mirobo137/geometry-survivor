@@ -35,7 +35,7 @@
             <button id="start-play" class="start-primary" type="button"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z" fill="currentColor"/><path d="M3 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>JUGAR</span><span class="home-play-arrow" aria-hidden="true">↗</span></button>
             <div class="start-menu-grid">
               <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>
-              <button id="start-level" class="start-secondary start-coming-soon" type="button" disabled aria-describedby="start-coming-soon-note" data-feature="level-select"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 6-8 6 8 6-12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="16" r="2" fill="currentColor"/><circle cx="21" cy="4" r="2" fill="currentColor"/></svg><span class="home-action-copy"><strong>Niveles</strong><small>PRÓXIMAMENTE</small></span></button>
+              <button id="start-level" class="start-secondary start-feature" type="button" aria-controls="start-act-view" data-feature="level-select"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 6-8 6 8 6-12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="16" r="2" fill="currentColor"/><circle cx="21" cy="4" r="2" fill="currentColor"/></svg><span class="home-action-copy"><strong>Actos</strong><small>SELECCIONAR</small></span></button>
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 17-9-4-9 4Z" fill="#17283b" stroke="currentColor" stroke-width="2"/><path d="m12 7 3 6h-6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Skins</strong><small>ABRIR</small></span></button>
               <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Mejoras</strong><small>LABORATORIO</small></span></button>
             </div>
@@ -66,6 +66,36 @@
           </div>
           <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
           </div>
+          <section id="start-act-view" class="start-act-view" hidden aria-labelledby="start-act-title">
+            <div class="act-header">
+              <button id="start-act-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
+              <div>
+                <p class="start-kicker">CAMPAÑA / RUTAS ESPACIALES</p>
+                <h2 id="start-act-title">Selecciona tu ruta</h2>
+                <p>Selecciona una ruta desbloqueada. Al entrar al Acto II elegirás una de tres calibraciones authored.</p>
+              </div>
+            </div>
+            <div class="act-options" role="group" aria-label="Actos disponibles">
+              <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></button>
+              <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></button>
+            </div>
+            <p id="start-act-status" class="act-status" role="status" aria-live="polite"></p>
+          </section>
+          <section id="start-entry-view" class="start-entry-view" hidden aria-labelledby="start-entry-title">
+            <div class="act-header">
+              <button id="start-entry-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
+              <div>
+                <p class="start-kicker">ACTO II / CALIBRACIÓN DE ENTRADA</p>
+                <h2 id="start-entry-title">Elige tu vector de entrada</h2>
+                <p>La build del Acto I no se arrastra. Cada opción abre el acto con una identidad clara y tres armas como máximo.</p>
+              </div>
+            </div>
+            <div class="entry-template-grid" role="group" aria-label="Tres calibraciones de entrada">
+              <button class="entry-template-button" type="button" data-start-calibration="projectile"><strong>VECTOR VOLLEY</strong><small>Emisores gemelos, precisión y ritmo.</small><span>PROJECTILE</span></button>
+              <button class="entry-template-button" type="button" data-start-calibration="orbit"><strong>ORBITAL GUARD</strong><small>Cuchilla orbital, alcance y blindaje.</small><span>ORBIT</span></button>
+              <button class="entry-template-button" type="button" data-start-calibration="chain"><strong>RESONANT LINK</strong><small>Cadena, sobrecarga y resonancia.</small><span>CHAIN</span></button>
+            </div>
+          </section>
           <section id="start-meta-view" class="start-meta-view" hidden aria-labelledby="start-meta-title">
             <div class="meta-header">
               <button id="start-meta-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
@@ -239,6 +269,17 @@
           <span id="game-over-revive-message" aria-live="polite"></span>
           <button id="game-over-revive-button" type="button">Ver anuncio · revivir</button>
         </div>
+        <section id="game-over-entry" hidden aria-labelledby="game-over-entry-title">
+          <p class="game-over-entry-kicker">PRÓXIMA RUTA / ACTO II</p>
+          <h2 id="game-over-entry-title">Elige una calibración de entrada</h2>
+          <p class="game-over-entry-copy">Tu build del Acto I se cierra aquí. Elige una de tres configuraciones authored para comenzar Angular.</p>
+          <div class="entry-template-grid" role="group" aria-label="Tres calibraciones para el Acto II">
+            <button class="entry-template-button" type="button" data-game-over-calibration="projectile"><strong>VECTOR VOLLEY</strong><small>Emisores gemelos, precisión y ritmo.</small><span>PROJECTILE</span></button>
+            <button class="entry-template-button" type="button" data-game-over-calibration="orbit"><strong>ORBITAL GUARD</strong><small>Cuchilla orbital, alcance y blindaje.</small><span>ORBIT</span></button>
+            <button class="entry-template-button" type="button" data-game-over-calibration="chain"><strong>RESONANT LINK</strong><small>Cadena, sobrecarga y resonancia.</small><span>CHAIN</span></button>
+          </div>
+        </section>
+        <button id="game-over-continue" type="button" hidden>Continuar al Acto II</button>
         <button id="game-over-restart" type="button">Jugar de nuevo</button>
         <button id="game-over-menu" type="button" hidden>Volver al menú</button>
       </section>

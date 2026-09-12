@@ -68,6 +68,13 @@ export class GameState {
     return true;
   }
 
+  /** Starts the next act from an intermission without treating it as a new run. */
+  public continueToNextAct(): boolean {
+    if (this.phase !== 'act-intermission') return false;
+    this.phase = 'playing';
+    return true;
+  }
+
   /** Returns a death terminal run to gameplay; victories cannot be revived. */
   public reviveRun(): boolean {
     if (this.phase !== 'game-over') return false;

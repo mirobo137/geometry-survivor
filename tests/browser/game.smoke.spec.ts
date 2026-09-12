@@ -134,7 +134,7 @@ const openFundedMenu = async (page: Page): Promise<string[]> => {
   await expect(page.locator('#start-scene img')).toBeVisible();
   await expect(page.locator('#start-mark img')).toBeVisible();
   await expect(page.locator('#start-play')).toBeVisible();
-  await expect(page.locator('#start-level')).toHaveAttribute('disabled', '');
+  await expect(page.locator('#start-level')).toBeEnabled();
   await expect(page.locator('#start-skins')).toBeEnabled();
   return failures;
 };
@@ -287,6 +287,31 @@ test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al reca
   await page.locator('#start-skins-back').click();
   await page.locator('#start-play').click();
   await expect(page.locator('#game-container canvas')).toBeVisible();
+  expect(failures).toEqual([]);
+});
+
+test('muestra el gating de actos y permite seleccionar Angular cuando esta desbloqueado', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 6,
+      unlockedActs: ['radial', 'angular']
+    }));
+  });
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-level').click();
+  await expect(page.locator('#start-act-view')).toBeVisible();
+  await expect(page.locator('#start-act-angular')).toBeEnabled();
+  await page.locator('#start-act-angular').click();
+  await expect(page.locator('#start-act-angular')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-act-status')).toContainText('Acto II');
+  await page.locator('#start-act-back').click();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-entry-view')).toBeVisible();
+  await page.locator('[data-start-calibration="projectile"]').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
 });
 
@@ -515,6 +540,20 @@ test('carga el drill Angular y mantiene el sector activo acotado', async ({ page
   await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('angular-sweep-low.png') });
   expect(failures).toEqual([]);
 });
+
+for (const quality of ['low', 'high']) {
+  test(`carga el drill Prism Weaver y mantiene su ataque anclado al enemigo ${quality}`, async ({ page }, testInfo) => {
+    const failures = captureRuntimeFailures(page);
+    await page.goto(`/?prism=1&debug=1&quality=${quality}`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    await expect(page.locator('#debug-panel')).toContainText('mode: prism-weaver-drill');
+    await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+      .toMatch(/prism: (telegraph|active)/);
+    await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`prism-weaver-${quality}.png`) });
+    expect(failures).toEqual([]);
+  });
+}
 
 test('recorre la familia de ataques premium de Orbital Warden', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);

@@ -9,6 +9,13 @@ const HEXAGON_BOUNDARY = {
   morphProgress: 0
 };
 
+const SQUARE_BOUNDARY = {
+  radius: ARENA_RADIUS,
+  shapeFrom: 'square' as const,
+  shapeTo: 'square' as const,
+  morphProgress: 0
+};
+
 describe('ArenaBoundary', () => {
   it('keeps circle geometry unchanged and exposes hexagon side depth', () => {
     expect(getArenaRadiusAtAngle(ARENA_RADIUS, 0)).toBe(ARENA_RADIUS);
@@ -41,5 +48,22 @@ describe('ArenaBoundary', () => {
     const circle = getArenaRadiusAtAngle(ARENA_RADIUS, Math.PI / 6);
     const hexagon = getArenaRadiusAtAngle(HEXAGON_BOUNDARY, Math.PI / 6);
     expect(getArenaRadiusAtAngle(transition, Math.PI / 6)).toBeCloseTo((circle + hexagon) / 2);
+  });
+
+  it('uses an axis-aligned square with the hexagon minimum clearance', () => {
+    expect(getArenaRadiusAtAngle(SQUARE_BOUNDARY, 0)).toBeCloseTo(
+      getArenaRadiusAtAngle(HEXAGON_BOUNDARY, Math.PI / 6)
+    );
+    expect(getArenaRadiusAtAngle(SQUARE_BOUNDARY, Math.PI / 4)).toBeGreaterThan(ARENA_RADIUS);
+
+    const clamped = clampPointToArena(
+      ARENA_CENTER.x + ARENA_RADIUS * 2,
+      ARENA_CENTER.y,
+      PLAYER_RADIUS,
+      SQUARE_BOUNDARY
+    );
+    expect(clamped.x - ARENA_CENTER.x).toBeCloseTo(
+      getArenaRadiusAtAngle(SQUARE_BOUNDARY, 0) - PLAYER_RADIUS
+    );
   });
 });

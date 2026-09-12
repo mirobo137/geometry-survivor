@@ -35,6 +35,11 @@ import splitterRearSvg from './splitter/splitter-rear.svg?raw';
 import splitterWingsSvg from './splitter/splitter-wings.svg?raw';
 import splitterHullSvg from './splitter/splitter-hull.svg?raw';
 import splitterCockpitSvg from './splitter/splitter-cockpit.svg?raw';
+import prismWeaverSvg from './prism-weaver/prism-weaver.svg?raw';
+import prismWeaverRearSvg from './prism-weaver/prism-weaver-rear.svg?raw';
+import prismWeaverWingsSvg from './prism-weaver/prism-weaver-wings.svg?raw';
+import prismWeaverHullSvg from './prism-weaver/prism-weaver-hull.svg?raw';
+import prismWeaverCockpitSvg from './prism-weaver/prism-weaver-cockpit.svg?raw';
 import replicaSvg from './warden-replica/warden-replica.svg?raw';
 import replicaRearSvg from './warden-replica/warden-replica-rear.svg?raw';
 import replicaWingsSvg from './warden-replica/warden-replica-wings.svg?raw';
@@ -72,6 +77,7 @@ describe('enemy SVG masters', () => {
       ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]],
       ['enemy-charger-', chargerSvg, [chargerRearSvg, chargerWingsSvg, chargerHullSvg, chargerCockpitSvg]],
       ['enemy-splitter-', splitterSvg, [splitterRearSvg, splitterWingsSvg, splitterHullSvg, splitterCockpitSvg]],
+      ['enemy-prism-weaver-', prismWeaverSvg, [prismWeaverRearSvg, prismWeaverWingsSvg, prismWeaverHullSvg, prismWeaverCockpitSvg]],
       ['enemy-warden-replica-', replicaSvg, [replicaRearSvg, replicaWingsSvg, replicaHullSvg, replicaCockpitSvg]]
     ] as const;
     for (const [prefix, svg, parts] of families) {

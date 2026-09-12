@@ -1,7 +1,7 @@
 import type { AudioSettings } from '../audio/AudioService';
 import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
 import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
-import type { BackgroundSaveData, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
+import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
@@ -14,6 +14,8 @@ import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
 import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
 import { MetaProgressionPanel } from './meta/MetaProgressionPanel';
+import type { ActId } from '../content/run/ActDefinitions';
+import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationDefinitions';
 
 export interface StartScreenBest {
   readonly timeSeconds: number;
@@ -35,7 +37,10 @@ export interface StartScreenOptions {
   readonly backgrounds: BackgroundSaveData;
   readonly wallet: WalletSaveData;
   readonly metaUpgrades: MetaUpgradeSaveData;
-  readonly onPlay: () => void;
+  readonly unlockedActs: readonly CampaignActId[];
+  readonly selectedAct: ActId;
+  readonly onPlay: (calibrationId?: CalibrationId) => void;
+  readonly onActChange: (actId: ActId) => void;
   readonly onSettingsChange: (settings: AudioSettings) => void;
   readonly controlScheme: ControlScheme;
   readonly onControlSchemeChange: (controlScheme: ControlScheme) => void;
@@ -60,6 +65,7 @@ export class StartScreen {
   private readonly root: HTMLElement;
   private readonly playButton: HTMLButtonElement;
   private readonly settingsToggle: HTMLButtonElement;
+  private readonly levelToggle: HTMLButtonElement;
   private readonly settingsPanel: HTMLElement;
   private readonly panel: HTMLElement;
   private readonly musicInput: HTMLInputElement;
@@ -71,6 +77,14 @@ export class StartScreen {
   private readonly bestTime: HTMLElement;
   private readonly bestScore: HTMLElement;
   private readonly mainView: HTMLElement;
+  private readonly actView: HTMLElement;
+  private readonly entryView: HTMLElement;
+  private readonly actBack: HTMLButtonElement;
+  private readonly entryBack: HTMLButtonElement;
+  private readonly radialActButton: HTMLButtonElement;
+  private readonly angularActButton: HTMLButtonElement;
+  private readonly entryButtons: readonly HTMLButtonElement[];
+  private readonly actStatus: HTMLElement;
   private readonly skinsToggle: HTMLButtonElement;
   private readonly skinsBack: HTMLButtonElement;
   private readonly skinsPanel: SkinSelectPanel;
@@ -92,7 +106,8 @@ export class StartScreen {
   private readonly cosmeticRewardedName: HTMLElement;
   private readonly cosmeticRewardedMessage: HTMLElement;
   private readonly cosmeticRewardedButton: HTMLButtonElement;
-  private playHandler: (() => void) | null = null;
+  private actChangeHandler: ((actId: ActId) => void) | null = null;
+  private playHandler: ((calibrationId?: CalibrationId) => void) | null = null;
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
   private controlSchemeHandler: ((controlScheme: ControlScheme) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
@@ -101,6 +116,8 @@ export class StartScreen {
   private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
   private metaUpgrades: MetaUpgradeSaveData = { levels: {} };
+  private unlockedActs: readonly CampaignActId[] = ['radial'];
+  private selectedAct: ActId = 'radial';
   private cosmeticUnlockAvailable = false;
   private cosmeticUnlockHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private cosmeticOfferConsumed = false;
@@ -133,6 +150,7 @@ export class StartScreen {
   public constructor(root: HTMLElement) {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
     const settingsToggle = root.querySelector<HTMLButtonElement>('#start-settings-toggle');
+    const levelToggle = root.querySelector<HTMLButtonElement>('#start-level');
     const settingsPanel = root.querySelector<HTMLElement>('#start-settings');
     const panel = root.querySelector<HTMLElement>('.start-screen-panel');
     const musicInput = root.querySelector<HTMLInputElement>('#start-music');
@@ -144,6 +162,14 @@ export class StartScreen {
     const bestTime = root.querySelector<HTMLElement>('#start-best-time');
     const bestScore = root.querySelector<HTMLElement>('#start-best-score');
     const mainView = root.querySelector<HTMLElement>('#start-main-view');
+    const actView = root.querySelector<HTMLElement>('#start-act-view');
+    const entryView = root.querySelector<HTMLElement>('#start-entry-view');
+    const actBack = root.querySelector<HTMLButtonElement>('#start-act-back');
+    const entryBack = root.querySelector<HTMLButtonElement>('#start-entry-back');
+    const radialActButton = root.querySelector<HTMLButtonElement>('#start-act-radial');
+    const angularActButton = root.querySelector<HTMLButtonElement>('#start-act-angular');
+    const entryButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-start-calibration]'));
+    const actStatus = root.querySelector<HTMLElement>('#start-act-status');
     const skinsToggle = root.querySelector<HTMLButtonElement>('#start-skins');
     const skinsBack = root.querySelector<HTMLButtonElement>('#start-skins-back');
     const skinsView = root.querySelector<HTMLElement>('#start-skins-view');
@@ -160,12 +186,13 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
     this.playButton = playButton;
     this.settingsToggle = settingsToggle;
+    this.levelToggle = levelToggle;
     this.settingsPanel = settingsPanel;
     this.panel = panel;
     this.musicInput = musicInput;
@@ -177,6 +204,14 @@ export class StartScreen {
     this.bestTime = bestTime;
     this.bestScore = bestScore;
     this.mainView = mainView;
+    this.actView = actView;
+    this.entryView = entryView;
+    this.actBack = actBack;
+    this.entryBack = entryBack;
+    this.radialActButton = radialActButton;
+    this.angularActButton = angularActButton;
+    this.entryButtons = entryButtons;
+    this.actStatus = actStatus;
     this.skinsToggle = skinsToggle;
     this.skinsBack = skinsBack;
     this.skinsView = skinsView;
@@ -208,8 +243,19 @@ export class StartScreen {
     this.metaView = metaView;
     this.mountScene();
     this.mountMark();
-    this.playButton.addEventListener('click', () => this.playHandler?.());
+    this.playButton.addEventListener('click', () => this.handlePlay());
     this.settingsToggle.addEventListener('click', () => this.toggleSettings());
+    this.levelToggle.addEventListener('click', () => this.openActSelector());
+    this.actBack.addEventListener('click', () => this.closeActSelector());
+    this.entryBack.addEventListener('click', () => this.closeEntrySelector());
+    this.radialActButton.addEventListener('click', () => this.selectAct('radial'));
+    this.angularActButton.addEventListener('click', () => this.selectAct('angular'));
+    for (const button of this.entryButtons) {
+      button.addEventListener('click', () => {
+        const id = button.dataset.startCalibration;
+        if (isCalibrationId(id)) this.selectEntryCalibration(id);
+      });
+    }
     this.skinsToggle.addEventListener('click', () => this.openSkins());
     this.skinsBack.addEventListener('click', () => this.closeSkins());
     this.playerSkinsTab.addEventListener('click', () => this.selectSkinTab('player'));
@@ -226,6 +272,7 @@ export class StartScreen {
 
   public open(options: StartScreenOptions): void {
     this.playHandler = options.onPlay;
+    this.actChangeHandler = options.onActChange;
     this.settingsHandler = options.onSettingsChange;
     this.controlSchemeHandler = options.onControlSchemeChange;
     this.skinStateHandler = options.onSkinStateChange;
@@ -238,6 +285,8 @@ export class StartScreen {
     this.backgroundState = options.backgrounds;
     this.wallet = options.wallet;
     this.metaUpgrades = options.metaUpgrades;
+    this.unlockedActs = options.unlockedActs;
+    this.selectedAct = options.selectedAct;
     this.cosmeticUnlockAvailable = options.cosmeticUnlockAvailable;
     this.cosmeticUnlockHandler = options.onCosmeticUnlock;
     this.cosmeticOfferConsumed = false;
@@ -252,6 +301,9 @@ export class StartScreen {
     this.setSettingsExpanded(false);
     this.closeSkins();
     this.closeMeta();
+    this.closeActSelector();
+    this.closeEntrySelector();
+    this.updateActSelector();
     this.root.hidden = false;
     this.playButton.focus({ preventScroll: true });
   }
@@ -259,6 +311,7 @@ export class StartScreen {
   public close(): void {
     this.root.hidden = true;
     this.playHandler = null;
+    this.actChangeHandler = null;
     this.settingsHandler = null;
     this.controlSchemeHandler = null;
     this.skinStateHandler = null;
@@ -275,6 +328,8 @@ export class StartScreen {
     this.setSettingsExpanded(false);
     this.closeSkins();
     this.closeMeta();
+    this.closeActSelector();
+    this.closeEntrySelector();
   }
 
   private mountMark(): void {
@@ -308,6 +363,79 @@ export class StartScreen {
     if (!this.skinsPanelIsClosed()) this.closeSkins();
     if (!this.metaView.hidden) this.closeMeta();
     this.setSettingsExpanded(this.settingsPanel.hidden);
+  }
+
+  private openActSelector(): void {
+    if (!this.skinsPanelIsClosed()) this.closeSkins();
+    if (!this.metaView.hidden) this.closeMeta();
+    this.setSettingsExpanded(false);
+    this.closeEntrySelector();
+    this.mainView.hidden = true;
+    this.actView.hidden = false;
+    this.root.classList.add('is-act-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-act-open');
+    this.updateActSelector();
+    this.radialActButton.focus({ preventScroll: true });
+  }
+
+  private closeActSelector(): void {
+    this.actView.hidden = true;
+    this.mainView.hidden = false;
+    this.root.classList.remove('is-act-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-act-open');
+  }
+
+  private openEntrySelector(): void {
+    if (!this.metaView.hidden) this.closeMeta();
+    if (!this.skinsPanelIsClosed()) this.closeSkins();
+    this.setSettingsExpanded(false);
+    this.mainView.hidden = true;
+    this.actView.hidden = true;
+    this.entryView.hidden = false;
+    this.root.classList.add('is-entry-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-entry-open');
+    this.entryButtons[0]?.focus({ preventScroll: true });
+  }
+
+  private closeEntrySelector(): void {
+    this.entryView.hidden = true;
+    this.mainView.hidden = false;
+    this.root.classList.remove('is-entry-mode');
+    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-entry-open');
+  }
+
+  private handlePlay(): void {
+    if (this.selectedAct === 'angular') {
+      this.openEntrySelector();
+      return;
+    }
+    this.playHandler?.();
+  }
+
+  private selectEntryCalibration(id: CalibrationId): void {
+    this.playHandler?.(id);
+  }
+
+  private selectAct(actId: ActId): void {
+    if (!this.unlockedActs.includes(actId)) return;
+    this.selectedAct = actId;
+    this.actChangeHandler?.(actId);
+    this.updateActSelector();
+  }
+
+  private updateActSelector(): void {
+    const angularUnlocked = this.unlockedActs.includes('angular');
+    this.radialActButton.classList.toggle('is-selected', this.selectedAct === 'radial');
+    this.angularActButton.classList.toggle('is-selected', this.selectedAct === 'angular');
+    this.radialActButton.setAttribute('aria-pressed', String(this.selectedAct === 'radial'));
+    this.angularActButton.setAttribute('aria-pressed', String(this.selectedAct === 'angular'));
+    this.angularActButton.disabled = !angularUnlocked;
+    this.angularActButton.setAttribute('aria-label', angularUnlocked ? 'Seleccionar Acto II Angular' : 'Acto II Angular bloqueado');
+    const actName = this.selectedAct === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial';
+    const nextStep = this.selectedAct === 'angular' && angularUnlocked
+      ? ' · al iniciar eliges 1 de 3 calibraciones'
+      : '';
+    this.actStatus.textContent = `${actName}${nextStep}${angularUnlocked ? '' : ' · Angular se desbloquea al vencer Acto I'}`;
   }
 
   private openSkins(): void {

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-prism-weaver-cockpit-title enemy-prism-weaver-cockpit-desc">
+  <title id="enemy-prism-weaver-cockpit-title">Prism Weaver focusing iris</title>
+  <desc id="enemy-prism-weaver-cockpit-desc">A recessed tri-prism iris from which the spatial loom is emitted.</desc>
+  <path id="enemy-prism-weaver-cockpit-well" d="M-9-11H9L13-4 9 10 0 16-9 10-13-4Z" fill="#050d18"/>
+  <path id="enemy-prism-weaver-cockpit-iris-mount" d="M-6-8H6L9-2 6 8 0 12-6 8-9-2Z" fill="#2a5060"/>
+  <path id="enemy-prism-weaver-cockpit-prism" d="M0-8 6-1 3 7 0 10-3 7-6-1Z" fill="#61dfd0"/>
+  <path id="enemy-prism-weaver-cockpit-focus-slit" d="M0-5 2-1 1 6 0 7-1 6-2-1Z" fill="#f5e5b4"/>
+</svg>

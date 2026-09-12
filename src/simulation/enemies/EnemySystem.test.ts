@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ARENA_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { PlayerModel } from '../PlayerModel';
+import { AngularActDirector } from '../acts/AngularActDirector';
 import { EnemyPool } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { EnemySystem, selectEnemyKind } from './EnemySystem';
@@ -75,5 +76,18 @@ describe('EnemySystem', () => {
     expect(children.every((enemy) => enemy.splitterDepth === 1)).toBe(true);
     expect(Math.hypot(children[0].x - children[1].x, children[0].y - children[1].y)).toBeGreaterThan(0);
     expect(system.spawnSplitterChildren(children[0].x, children[0].y, children[0].splitterDepth, ARENA_RADIUS)).toBe(0);
+  });
+
+  it('adds the Prism Weaver only as a bounded late Angular support family', () => {
+    const pool = new EnemyPool(8);
+    const system = new EnemySystem(
+      pool,
+      new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
+      new AngularActDirector()
+    );
+    for (let index = 0; index < 8; index += 1) system.spawn(165, ARENA_RADIUS);
+
+    expect(pool.states.filter((enemy) => enemy.active && enemy.kind === 'prism-weaver')).toHaveLength(1);
+    expect(pool.states.find((enemy) => enemy.kind === 'prism-weaver')?.prismWeaverPhase).toBe('approach');
   });
 });

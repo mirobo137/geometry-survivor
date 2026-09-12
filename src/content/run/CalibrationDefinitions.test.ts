@@ -30,11 +30,8 @@ describe('CalibrationDefinitions', () => {
     }
   });
 
-  it('keeps Quick Act reset and Expedition preservation explicit', () => {
-    for (const definition of CALIBRATION_DEFINITIONS) {
-      expect(definition.resetsQuickActBuild).toBe(true);
-      expect(definition.preservesExpeditionBuild).toBe(true);
-    }
+  it('keeps the entry branch explicit and deterministic', () => {
+    expect(CALIBRATION_DEFINITIONS.every((definition) => definition.starterUpgrades.length === 3)).toBe(true);
     expect(getCalibrationDefinition('chain').starterUpgrades).toContain('chain_lightning');
   });
 

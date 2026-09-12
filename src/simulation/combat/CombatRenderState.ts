@@ -2,7 +2,7 @@ import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { RadialPulseState } from '../hazards/RadialPulseHazard';
 import type { PulseRingState } from '../hazards/PulseRingHazard';
 import type { AngularSweepState } from '../hazards/AngularSweepHazard';
-import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase } from '../../content/enemies/EnemyDefinitions';
+import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
@@ -103,6 +103,12 @@ export interface EnemyRenderState {
   readonly chargerAimX?: number;
   readonly chargerAimY?: number;
   readonly chargerSequence?: number;
+  /** Three-spoke angular control cast used by the late Act II mix. */
+  readonly prismWeaverPhase?: PrismWeaverPhase;
+  readonly prismWeaverProgress?: number;
+  readonly prismWeaverAngle?: number;
+  readonly prismWeaverRadius?: number;
+  readonly prismWeaverSequence?: number;
   /** Splitter lineage used only to scale/animate children after a fracture. */
   readonly splitterDepth?: number;
   /** Warden copies use the common enemy renderer with a distinct asset family. */

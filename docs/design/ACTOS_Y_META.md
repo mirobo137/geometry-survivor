@@ -5,8 +5,19 @@ Fecha de decisión: 05-09-2026.
 Este documento fija la dirección de producto que acompaña a
 `PLAN_DESARROLLO.md` §16. Define el contrato de experiencia de los actos y el
 modo infinito; el prototipo espacial del Acto I y su contrato `ActDefinition`
-ya están implementados, pero la campaña completa, sus transiciones y Overdrive
-siguen siendo entregas futuras.
+ya están implementados. La composición de Acto II y su entrada por
+calibración ya tienen un consumidor real en EX-07e; Acto III y Overdrive siguen
+siendo entregas futuras.
+
+## Estado de implementación — 12-09-2026
+
+EX-07e conecta el Acto II Angular a la campaña: perfiles de Orbiter, Charger,
+Splitter y Prism Weaver, hazards Pulse Ring y Angular Sweep, Orbital Warden a
+los 260 s y tres calibraciones de entrada sin heredar la build. La experiencia
+ya no expone `Quick Act`/`Expedition` como modos separados. La implementación
+automática está aprobada; falta validación humana en PC/móvil, las tres
+calidades, runs comparables y la liquidación tras reload. Los números siguen
+provisionales y EX-02c permanece diferido.
 
 ## Decisión principal
 
@@ -14,8 +25,10 @@ Geometry Survivor tendrá tres actos cortos con identidad espacial propia y un
 modo infinito opcional posterior llamado **Overdrive**.
 
 - Los actos tienen una regla aprendible, un boss y una victoria clara.
-- `Expedition` enlaza Acto I → II → III conservando la build.
-- `Quick Act` permite repetir un acto desbloqueado sin heredar una run previa.
+- La campaña enlaza Acto I → II → III, pero cada acto posterior comienza con
+  una calibración authored nueva; no hereda la build del acto anterior.
+- El selector de actos desbloqueados sólo es un acceso de repetición/prueba y
+  ofrece las mismas tres calibraciones.
 - Overdrive comienza después de completar el Acto III dentro de `Expedition` y
   mezcla las reglas ya aprendidas en ciclos cada vez más exigentes.
 - Ningún modo obliga a jugar infinito para terminar la experiencia principal.
@@ -104,12 +117,11 @@ La identidad visual premium de la arena está documentada en
 para campo, rieles, nodos, resonancia y shockwave; queda preparada para nuevas
 formas sin activar gameplay futuro desde el renderer.
 
-El prototipo no crea save nuevo, selección de actos, otros polígonos ni
-Overdrive. EX-06a ya compone este timeline en `ActDefinition` con un único
-consumidor Radial; la validación de equivalencia evita alterar la run antes de
-añadir la regla nueva. La pregunta de si el pulso produce la diversión y
-diferenciación esperadas requiere todavía una prueba humana cuando se abra
-EX-06b.
+El prototipo histórico no creó save nuevo, selección de actos, otros polígonos
+ni Overdrive. EX-06a compuso ese timeline en `ActDefinition` con un único
+consumidor Radial; EX-07e es la entrega posterior que ya conecta la campaña
+Angular, su selector/gating y la transición I→II. La pregunta de si el pulso y
+la composición producen la diversión esperada conserva una puerta humana.
 
 ## EX-06a — contrato Radial sin cambio de gameplay
 
@@ -238,10 +250,63 @@ implementa antes que las siguientes: Orbiter, Charger y Splitter no se entregan
 en un solo cambio. Pulse Ring ya tiene una base aislada con una abertura que
 rota durante el daño; el hazard angular ya tiene una hoja con recorrido acotado
 y Orbital Warden una familia de riel, embestida fija, arco curvo, réplicas
-destructibles y corredor móvil. Ambos siguen aislados hasta que exista la
-composición de campaña y la validación humana. Calibration ofrece una plantilla
-de entrada, no una build arbitraria. Ninguno de estos prototipos habilita aún
-la selección o el gating de campaña.
+ destructibles y corredor móvil. EX-07e ya compone estos consumidores en una
+ run Angular real y habilita su selección sólo tras vencer Radial. Calibration
+ ofrece una plantilla de entrada, no una build arbitraria. La composición del
+ Acto II quedó aprobada por validación humana el 12-09-2026; el balance final de
+ daño, vida y resistencia permanece diferido a EX-02c.
+
+#### Arena Angular — calendario de espacio, no de balance
+
+El Acto II empieza en **hexágono**, transforma el borde a un **cuadrado
+alineado a los ejes**, pasa por **círculo** y **hexágono** varias veces, y
+termina en **círculo** diez segundos antes de la entrada del Orbital Warden.
+Es una secuencia authored y reproducible, no una selección aleatoria:
+
+| Tiempo | Estado | Lectura/propósito |
+| ---: | --- | --- |
+| 00:00–00:40 | hexágono estable | presenta lados planos y una ruta angular legible |
+| 00:40 | aviso 1.20 s + morph 0.75 s | hexágono → cuadrado; abre rutas diagonales |
+| 00:41.95–01:20 | cuadrado estable | obliga a reconsiderar alineación sin cambiar ataques |
+| 01:20 | aviso 1.20 s + morph 0.75 s | cuadrado → círculo; libera las esquinas |
+| 01:21.95–02:00 | círculo estable | devuelve una lectura radial antes de exigir otra ruta |
+| 02:00 | aviso 1.20 s + morph 0.75 s | círculo → hexágono; reintroduce lados y sectores |
+| 02:01.95–02:40 | hexágono estable | comprueba que el jugador ya domina la alineación |
+| 02:40 | aviso 1.20 s + morph 0.75 s | hexágono → cuadrado; mantiene el cambio de rutas |
+| 02:41.95–03:20 | cuadrado estable | exige leer de nuevo las esquinas abiertas |
+| 03:20 | aviso 1.20 s + morph 0.75 s | cuadrado → hexágono; devuelve la lectura angular |
+| 03:21.95–04:08.05 | hexágono estable | prepara la última transición sin sorpresa de daño |
+| 04:08.05 | aviso 1.20 s + morph 0.75 s | hexágono → círculo; cierre pre-boss |
+| 04:10–boss (04:20) | círculo estable | espacio predecible durante los 10 s previos y el Warden |
+
+La frontera interpolada es el único contrato: `ArenaBoundary` calcula el
+clamp, los extremos de los telegraphs y la geometría de Pixi desde la misma
+forma en cada tick. El cuadrado conserva el mismo despeje mínimo que el
+hexágono y abre sólo sus esquinas; el morph evita un salto instantáneo al
+jugador. No se altera cadencia, daño, HP, spawn, ruta ni fases de Pulse Ring,
+Angular Sweep, enemigos o boss. Por eso un hazard conserva su regla, pero su
+extremo visual y lógico sigue el borde real.
+
+Las cinco intervenciones de 40 s y el cierre pre-boss se colocan entre inicios
+authored de Pulse Ring y Angular Sweep: no se añade una pausa o excepción al
+sistema de hazards sólo para el morph, y ningún cast nuevo comienza durante los
+0.75 s de transformación.
+Un cast ya iniciado conserva su fase y sigue la frontera interpolada.
+
+El destello ligero que aún puede percibirse en el cuadrado queda registrado
+como `VIS-A2-01` y no bloquea el acto. Las dos ventanas cuadradas contienen
+exactamente las expansiones globales de 60 s y 180 s: durante ellas se combinan
+el redibujado del radio, la resonancia y la onda de expansión. La opacidad del
+marco es estable y la frontera lógica no parpadea. La investigación y la ruta
+de corrección opcional viven en
+[`EX-07e-angular-campaign.md`](../balance/EX-07e-angular-campaign.md#hallazgo-visual-no-bloqueante-destello-del-cuadrado).
+
+Al iterar nuevas formas, no añadirlas a esta secuencia por decoración. Primero
+definir forma inicial/final, margen mínimo, telegraph, duración de morph,
+ventana estable, respuesta segura y prueba de frontera; luego comprobar cerca
+de lados y vértices en Low/Medium/High y touch. El boss debe conservar una
+forma estable salvo que una mecánica específica diseñada y validada justifique
+lo contrario.
 
 ### Acto III — Fracture
 
@@ -251,23 +316,26 @@ al menos 0.8 s y mantener un corredor de cuatro diámetros del player. Resonant
 Aura conserva una banda interior segura y Fracture Engine combina reglas ya
 conocidas antes de introducir presión adicional.
 
-## Modos y transiciones
+## Flujo y transiciones
 
-1. **Quick Act:** el jugador selecciona un acto desbloqueado y una plantilla de
-   Calibration. Empieza sin estado de una run anterior, obtiene la recompensa
-   de ese acto y vuelve a menú/intermisión con una victoria explícita.
-2. **Expedition:** empieza en Radial, crea una build y pasa por los tres actos.
-   Cada boss abre una intermisión con `Continuar` y `Terminar`. Terminar entre
-   actos es una salida exitosa, no una derrota; continuar conserva armas,
-   evoluciones, cartas y recursos de la build.
-3. **Final de campaña:** derrotar a Fracture Engine concede la victoria de la
-   Expedition y desbloquea Overdrive una sola vez. El jugador puede terminar
-   ahí o continuar opcionalmente con la misma build.
-4. **Overdrive desde menú:** después de desbloquearlo, también puede iniciarse
-   como modo separado con una Calibration válida; no depende de restaurar una
-   Expedition incompleta.
+1. **Campaña principal:** comienza en Radial. Cada boss abre una intermisión
+   con `Continuar` y `Terminar`. Tras el Acto I, `Continuar` ofrece exactamente
+   tres calibraciones: Projectile, Orbit o Chain.
+2. **Entrada fresca al acto siguiente:** la calibración elegida aplica sólo sus
+   mejoras authored, reinicia el nivel y no importa cartas, armas ni stacks de
+   la run anterior. La intención es que el jugador tome decisiones nuevas
+   frente a la regla espacial del acto, sin que una build dominante trivialice
+   el contenido.
+3. **Repetición de acto:** un acto desbloqueado puede abrirse desde el selector
+   de actos para probarlo de forma aislada, usando las mismas tres
+   calibraciones. No es un modo de reglas distinto.
+4. **Final de campaña:** derrotar a Fracture Engine concede la victoria de la
+   campaña y desbloquea Overdrive una sola vez. El jugador puede terminar ahí o
+   continuar opcionalmente.
+5. **Overdrive:** después de desbloquearlo, puede iniciarse como continuación
+   infinita con sus ciclos authored; no depende de restaurar una run parcial.
 
-Una recarga no restaurará una Expedition a mitad de acto hasta que exista un
+Una recarga no restaurará un acto a mitad de partida hasta que exista un
 snapshot determinista de simulación, build, intermisión y recompensa. Antes de
 eso, se termina de forma segura y no se paga dos veces.
 
@@ -319,7 +387,7 @@ de save antes de tener un consumidor y pruebas de transición.
 - un jugador nuevo puede explicar la regla espacial del acto después de verla;
 - cada acto tiene una respuesta segura y ninguna combinación produce daño
   inevitable por falta de espacio;
-- Quick Act no hereda estado; Expedition conserva la build entre actos;
+- la calibración de entrada no hereda estado y las tres opciones son legibles;
 - una victoria/desbloqueo/recompensa es idempotente tras repetir callbacks o
   recargar;
 - Overdrive mantiene caps de entidades/FX y no degrada legibilidad móvil;

@@ -25,6 +25,11 @@ import orbiterRearSvg from './orbiter/orbiter-rear.svg?raw';
 import orbiterWingsSvg from './orbiter/orbiter-wings.svg?raw';
 import orbiterHullSvg from './orbiter/orbiter-hull.svg?raw';
 import orbiterCockpitSvg from './orbiter/orbiter-cockpit.svg?raw';
+import chargerSvg from './charger/charger.svg?raw';
+import chargerRearSvg from './charger/charger-rear.svg?raw';
+import chargerWingsSvg from './charger/charger-wings.svg?raw';
+import chargerHullSvg from './charger/charger-hull.svg?raw';
+import chargerCockpitSvg from './charger/charger-cockpit.svg?raw';
 
 describe('enemy SVG masters', () => {
   it('keeps the top-down turtle within the character contract', () => {
@@ -54,7 +59,8 @@ describe('enemy SVG masters', () => {
       ['enemy-fast-', fastSvg, [fastRearSvg, fastWingsSvg, fastHullSvg, fastCockpitSvg]],
       ['enemy-tank-', tankSvg, [tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg]],
       ['enemy-elite-', eliteSvg, [eliteRearSvg, eliteWingsSvg, eliteHullSvg, eliteCockpitSvg]],
-      ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]]
+      ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]],
+      ['enemy-charger-', chargerSvg, [chargerRearSvg, chargerWingsSvg, chargerHullSvg, chargerCockpitSvg]]
     ] as const;
     for (const [prefix, svg, parts] of families) {
       expect(svg).toContain('viewBox="-32 -32 64 64"');

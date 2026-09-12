@@ -72,6 +72,10 @@ const MOTION_PROFILES: Readonly<Record<EnemyShipKind, EnemyShipMotionProfile>> =
     cockpitSway: 0.42,
     cockpitLift: 0.62,
     hullPulse: 0.014
+  },
+  charger: {
+    cycleSeconds: 3.6, bobAmplitude: 0.42, wingSway: 1.9, wingRotation: 0.11,
+    cockpitSway: 0.3, cockpitLift: 0.7, hullPulse: 0.016
   }
 };
 
@@ -127,6 +131,12 @@ export class EnemyShipVisual {
     const profile = MOTION_PROFILES[this.kind];
     const speed = Math.hypot(state.vx, state.vy);
     if (speed > 0.5) this.facing = Math.atan2(state.vy, state.vx) + Math.PI / 2;
+    if (this.kind === 'charger' && state.chargerPhase === 'telegraph') {
+      this.facing = Math.atan2(
+        (state.chargerAimY ?? state.y) - state.y,
+        (state.chargerAimX ?? state.x) - state.x
+      ) + Math.PI / 2;
+    }
     this.root.rotation = this.facing;
     this.root.alpha = Math.max(0.55, state.health / state.maxHealth);
 
@@ -154,6 +164,7 @@ export class EnemyShipVisual {
       -bob * 0.32 - profile.cockpitLift * movement
     );
     this.cockpit.rotation = Math.sin(phase * 1.35) * profile.wingRotation * 0.5;
+    this.cockpit.scale.set(1);
     if (this.kind === 'orbiter') {
       const statePhase = state.orbiterPhase ?? 'inactive';
       const warning = statePhase === 'telegraph' ? Math.sin((state.orbiterProgress ?? 0) * Math.PI) : 0;
@@ -161,6 +172,18 @@ export class EnemyShipVisual {
       this.wings.position.x += (state.orbiterDirection ?? 1) * (warning * 1.8 + commit * 0.9);
       this.wings.rotation += (state.orbiterDirection ?? 1) * (warning * 0.09 + commit * 0.035);
       this.cockpit.scale.set(1 + warning * 0.05 + commit * 0.025);
+    }
+    if (this.kind === 'charger') {
+      const warning = state.chargerPhase === 'telegraph' ? Math.sin((state.chargerProgress ?? 0) * Math.PI) : 0;
+      const charging = state.chargerPhase === 'charge' ? 1 : 0;
+      this.wings.position.set(0, warning * 1.2);
+      this.wings.rotation = 0;
+      this.wings.scale.set(1 + warning * 0.045, 1);
+      this.rear.position.set(0, warning * 0.8 + charging * 0.5);
+      this.rear.rotation = 0;
+      this.hull.rotation = 0;
+      this.hull.scale.set(1 + pulse * 0.3, 1 + charging * 0.035);
+      this.cockpit.scale.set(1 + warning * 0.08 + charging * 0.04);
     }
     this.hitFlash.position.set(0, bob * 0.18);
     this.hitFlash.rotation = this.hull.rotation;

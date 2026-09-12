@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMY_DEFINITIONS, ORBITER_DEFINITION } from '../../content/enemies/EnemyDefinitions';
+import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER, ARENA_RADIUS } from '../../config/constants';
-import { PlayerModel } from '../PlayerModel';
 import { EnemyPool } from '../combat/EntityPools';
 import { OrbiterBehavior } from './OrbiterBehavior';
 
@@ -22,55 +21,56 @@ const prepare = (spawnIndex = 0) => {
 const stepUntil = (
   behavior: OrbiterBehavior,
   state: ReturnType<typeof prepare>['state'],
-  player: PlayerModel,
   predicate: () => boolean,
   dt = 1 / 60
 ) => {
   for (let index = 0; index < 600 && !predicate(); index += 1) {
-    behavior.update(state, dt, player.state, ARENA_RADIUS);
+    behavior.update(state, dt, ARENA_RADIUS);
   }
 };
 
 describe('OrbiterBehavior', () => {
-  it('announces a deterministic sector before it can damage and then follows a tangent', () => {
+  it('announces a deterministic sector while its hull stays dangerous and then follows a tangent', () => {
     const { state, behavior } = prepare(0);
-    const player = new PlayerModel();
-    stepUntil(behavior, state, player, () => state.orbiterPhase === 'telegraph');
+    stepUntil(behavior, state, () => state.orbiterPhase === 'telegraph');
     expect(state.orbiterSector).toBe(0);
     expect(state.orbiterDirection).toBe(1);
-    expect(state.contactEnabled).toBe(false);
+    expect(state.contactEnabled).toBe(true);
     const telegraphSequence = state.orbiterSequence;
 
-    stepUntil(behavior, state, player, () => state.orbiterPhase === 'commit');
+    stepUntil(behavior, state, () => state.orbiterPhase === 'commit');
     expect(state.orbiterSequence).toBe(telegraphSequence);
     expect(state.contactEnabled).toBe(true);
     const startX = state.x;
     const startY = state.y;
-    behavior.update(state, 0.2, player.state, ARENA_RADIUS);
+    behavior.update(state, 0.2, ARENA_RADIUS);
     expect(state.orbiterPhase).toBe('commit');
     expect(Math.hypot(state.x - ARENA_CENTER.x, state.y - ARENA_CENTER.y)).toBeCloseTo(state.orbiterBandRadius, 3);
     expect(Math.hypot(state.x - startX, state.y - startY)).toBeGreaterThan(1);
     expect(Math.abs(state.vy)).toBeGreaterThan(Math.abs(state.vx));
+    stepUntil(behavior, state, () => state.orbiterPhase === 'recovery');
+    expect(state.contactEnabled).toBe(true);
   });
 
-  it('cancels an announced lane occupied by the player without contact damage', () => {
+  it('keeps an announced route committed until it reaches commit', () => {
     const { state, behavior } = prepare(0);
-    const player = new PlayerModel();
-    stepUntil(behavior, state, player, () => state.orbiterPhase === 'telegraph');
-    const laneAngle = state.orbiterStartAngle + ORBITER_DEFINITION.reservedArcRadians * 0.5;
-    player.state.x = ARENA_CENTER.x + Math.cos(laneAngle) * state.orbiterBandRadius;
-    player.state.y = ARENA_CENTER.y + Math.sin(laneAngle) * state.orbiterBandRadius;
-    behavior.update(state, 1 / 60, player.state, ARENA_RADIUS);
-    expect(state.orbiterPhase).toBe('recovery');
-    expect(state.contactEnabled).toBe(false);
+    stepUntil(behavior, state, () => state.orbiterPhase === 'telegraph');
+    const committedSector = state.orbiterSector;
+    const committedDirection = state.orbiterDirection;
+    const committedAngle = state.orbiterStartAngle;
+    stepUntil(behavior, state, () => state.orbiterPhase === 'commit');
+    expect(state.orbiterPhase).toBe('commit');
+    expect(state.orbiterSector).toBe(committedSector);
+    expect(state.orbiterDirection).toBe(committedDirection);
+    expect(state.orbiterStartAngle).toBe(committedAngle);
+    expect(state.contactEnabled).toBe(true);
   });
 
   it('keeps the authored tangent route stable across render-rate-sized updates', () => {
     const sample = (dt: number) => {
       const { state, behavior } = prepare(1);
-      const player = new PlayerModel();
       for (let elapsed = 0; elapsed < 3.5; elapsed += dt) {
-        behavior.update(state, dt, player.state, ARENA_RADIUS);
+        behavior.update(state, dt, ARENA_RADIUS);
       }
       return { x: state.x, y: state.y, phase: state.orbiterPhase };
     };

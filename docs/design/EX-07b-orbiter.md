@@ -43,14 +43,15 @@ esa ruta; este primer consumidor debe poder leerse solo.
 
 | Fase | Duración/propuesta | Regla de simulación | Lectura para el jugador |
 | --- | ---: | --- | --- |
-| `approach` | hasta alcanzar la banda | Entra desde fuera y se dirige a su punto de preparación sin perseguir la posición actual del player. Sin daño de contacto. | Nave compacta que toma posición en el borde de un sector. |
-| `telegraph` | 0.70 s | Bloquea sector, sentido (`clockwise`/`counterclockwise`) y arco. No inflige contacto aunque se solape accidentalmente; si la ruta se volvió inválida, cancela hacia `recovery`. | Compuertas laterales abiertas + riel discontinuo de 90° + chevrons en el sentido de giro. |
-| `commit` | 0.95 s | Recorre el arco reservado con velocidad tangencial. Sólo aquí tiene daño de contacto. Mantiene radio de banda y no reorienta el arco según el player. | La nave gira por el riel anunciado; cruzar por el sector adyacente libre es la respuesta. |
-| `recovery` | 0.60 s | Sale radialmente de la banda, sin contacto, libera reserva y espera/cierra el ciclo. | Compuertas cierran y queda un residuo tenue no dañino. |
+| `approach` | hasta alcanzar la banda | Entra desde fuera y se dirige a su punto de preparación sin perseguir la posición actual del player. Su casco conserva daño de contacto normal. | Nave compacta que toma posición en el borde de un sector. |
+| `telegraph` | 0.70 s | Bloquea sector, sentido (`clockwise`/`counterclockwise`) y arco. La ruta queda comprometida: si el player entra después al riel futuro, no cancela ni se reposiciona. Su casco conserva daño de contacto normal. | Compuertas laterales abiertas + riel discontinuo de 90° + chevrons en el sentido de giro. |
+| `commit` | 0.95 s | Recorre el arco reservado con velocidad tangencial. Mantiene radio de banda y no reorienta el arco según el player; su casco conserva daño de contacto normal. | La nave gira por el riel anunciado; cruzar por el sector adyacente libre es la respuesta. |
+| `recovery` | 0.60 s | Sale radialmente de la banda, libera reserva y espera/cierra el ciclo; su casco conserva daño de contacto normal. | Compuertas cierran y queda un residuo tenue no dañino. |
 
 La transición es siempre `approach → telegraph → commit → recovery`. No hay
-ataque instantáneo, homing durante `commit`, giro de 180° inesperado ni daño en
-telegraph/recovery. Un Orbiter puede morir en cualquier fase; su reserva se
+ataque instantáneo, homing durante `commit` ni giro de 180° inesperado. El
+riel no inflige daño: únicamente el casco mantiene su daño de contacto normal
+en todas las fases. Un Orbiter puede morir en cualquier fase; su reserva se
 libera inmediatamente y nunca deja un sector lógico bloqueado.
 
 ### Geometría de la ruta y respuesta segura
@@ -59,9 +60,10 @@ libera inmediatamente y nunca deja un sector lógico bloqueado.
   centro, reducido sólo si hace falta respetar el radio de la nave, 16 u de
   margen y el borde real de un polígono. No debe inventar una zona atravesable
   dentro del hueco visual de la nave: la colisión continúa siendo circular.
-- Antes de mostrar el telegraph, el director comprueba que el player no esté
-  ya dentro del cuerpo inicial, del riel activo futuro ni del margen de
-  aparición. Si lo está, elige otro sector o pospone la reserva.
+- Antes de mostrar el telegraph, el futuro director evita crear un Orbiter
+  directamente sobre el player o fuera del margen de aparición. Una vez que
+  el telegraph aparece, el jugador puede entrar o salir del riel futuro: la
+  ruta ya anunciada no cambia ni se reposiciona.
 - Durante el telegraph, la respuesta válida es moverse hacia cualquiera de los
   dos sectores libres adyacentes al final del arco, idealmente por el lado
   interior de la banda. Intentar cortar el riel anunciado sí debe ser riesgoso
@@ -83,7 +85,7 @@ una base de test y no un cierre de vida, daño, experiencia o economía.
 | `kind` | `orbiter` | Nueva familia, no recolor de `elite`. |
 | `radius` | 17 u | Similar a Chaser pero con espacio para leer su orientación. |
 | `maxHealth` | 32 | Provisional; no se calibra hasta EX-02c. |
-| `contactDamage` | 9 | Provisional y sólo durante `commit`. |
+| `contactDamage` | 9 | Provisional; lo aplica el collider circular del casco en todas las fases. |
 | `experience` | 3 | Recompensa provisional por amenaza de ruta. |
 | `spawnCost` | 2 | Permite al director sustituir presión, no sumar masa sin límite. |
 | `approachSpeed` | 94 u/s | Debe llegar a la banda sin parecer Fast. |
@@ -117,6 +119,11 @@ Splitter decidirán después si comparten una abstracción real; no deben ser
 forzados a ella por adelantado.
 
 ## 5. Contrato visual premium
+
+El casco se conserva. El aviso tiene una revisión vigente en
+[ANGULAR_ART_PREMIUM.md](ANGULAR_ART_PREMIUM.md): ocho plumas curvas afinadas,
+sin riel sólido, puntos ni diamantes terminales. Esa receta sustituye la
+presentación inicial del riel en esta ficha; no cambia trayectoria ni daño.
 
 ### Ficha de asset
 
@@ -177,8 +184,8 @@ plana existente. No crear fragmentos, partículas o texturas por enemigo.
 1. Contenido: `orbiter` declara todos los valores, el cap no supera el pool y
    ningún otro tipo cambia sus números o conducta.
 2. Comportamiento puro, con semilla: sector/sentido deterministas; orden de
-   fases; ruta tangencial; telegraph/recovery sin contacto; liberación por
-   muerte/reset; cancelación segura si el player ocupa la ruta.
+   fases; ruta tangencial; casco con contacto en todo el ciclo; liberación por
+   muerte/reset; el commit se conserva si el player entra al riel anunciado.
 3. Seguridad: un commit deja un arco libre de 90°, se rechazan reservas que
    solapen o reduzcan ese arco, y nunca hay más de un commit inicial activo.
 4. Loop: mismo resultado relevante a 30/60/144 Hz bajo timestep fijo; sin

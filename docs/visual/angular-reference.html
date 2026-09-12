@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Angular — naves y avisos</title>
+<style>
+body{margin:24px;background:#0b1423;color:#dce7e9;font:15px system-ui}
+h1{font-size:25px}p{color:#95aab9;max-width:850px}button{padding:10px 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:16px}
+article{background:#142234;padding:12px;border:1px solid #304353;border-radius:8px}
+canvas{display:block;max-width:100%;height:auto}
+.ships{display:flex;gap:24px;flex-wrap:wrap}.ships img{object-fit:contain}
+.light{background:#d9e1e2}.black img{filter:brightness(0)}
+</style>
+<h1>Angular · material, preparación y movimiento</h1>
+<p>Comparación de fuentes y compositor Pixi de producción. Charger: ariete cerámico con estabilizadores; Orbiter: casco conservado y ruta discontinua. El aviso corto no mide alcance.</p>
+<button id="play">Animar / congelar</button>
+<h2>Exploración de masa · 32 px y 96 px</h2>
+<p>A: aguja (se confunde con Fast). B: martillo ancho (se confunde con Tank). C: ariete central con estabilizadores retrasados (elegida).</p>
+<div id="candidates" class="ships light"></div>
+<h2>Comparación de flota · 32 / 64 / 96 px</h2><div id="fleet" class="ships"></div>
+<h2>Color claro y silueta</h2><div id="silhouettes" class="ships light black"></div>
+<h2>Renderer real · High / Low / fondo claro</h2><div class="grid"></div>
+<script type="module">
+import { Application } from 'pixi.js';
+import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
+import { EnemyShipVisual } from '../../src/presentation/pixi/enemies/EnemyShipVisual.ts';
+import { OrbiterTelegraphView } from '../../src/presentation/pixi/OrbiterTelegraphView.ts';
+import { ChargerTelegraphView } from '../../src/presentation/pixi/ChargerTelegraphView.ts';
+const sources=import.meta.glob('../../src/assets/svg/enemies/*/*.svg',{query:'?raw',import:'default',eager:true});
+const frame={x:-32,y:-32,width:64,height:64};
+const kinds=['chaser','fast','tank','elite','orbiter','charger'];
+for(const kind of ['tank','elite','orbiter','charger']){
+ const item=document.createElement('div');item.textContent=kind;
+ for(const size of [32,64,96]){
+  const img=document.createElement('img');img.src='../../src/assets/svg/enemies/'+kind+'/'+kind+'.svg';img.width=size;img.height=size;item.append(img);
+ }
+ document.querySelector('#fleet').append(item);
+ document.querySelector('#silhouettes').append(item.cloneNode(true));
+}
+const candidates=['M0-30 10 5 23 20 5 15 0 28-5 15-23 20-10 5Z','M-26-20H26V-4L12 8 9 26H-9L-12 8-26-4Z','M0-30 12-18 14-16 23-11 28 8 22 20 14 12 14 26 9 30 5 27H-5L-9 30-14 26V12L-22 20-28 8-23-11-14-16-12-18Z'];
+for(const d of candidates)for(const size of [32,96]){
+ const node=document.createElement('span');node.innerHTML='<svg width="'+size+'" height="'+size+'" viewBox="-32 -32 64 64"><path d="'+d+'" fill="#101724"/></svg>';document.querySelector('#candidates').append(node);
+}
+let playing=false;document.querySelector('#play').onclick=()=>playing=!playing;
+for(const [kind,quality,light] of [['charger','high',false],['orbiter','high',false],['charger','low',false],['orbiter','low',false],['charger','high',true],['orbiter','high',true]]){
+ const article=document.createElement('article');article.innerHTML='<h3>'+kind+' · '+quality+(light?' · claro':'')+'</h3>';document.querySelector('.grid').append(article);
+ const app=new Application();await app.init({width:450,height:230,background:light?0xd9e1e2:0x142234,antialias:true,resolution:1});article.append(app.canvas);
+ const textures={};for(const k of kinds){textures[k]={};for(const part of ['flat','rear','wings','hull','cockpit'])textures[k][part]=createSvgTexture(app.renderer,sources['../../src/assets/svg/enemies/'+k+'/'+k+(part==='flat'?'':'-'+part)+'.svg'],frame);}
+ const ship=new EnemyShipVisual(textures,0,quality);
+ const view=kind==='charger'?new ChargerTelegraphView(quality):new OrbiterTelegraphView(quality);
+ const state={active:true,kind,x:90,y:115,vx:0,vy:0,radius:19,health:38,maxHealth:38,
+ chargerPhase:'telegraph',chargerProgress:0.75,chargerAimX:650,chargerAimY:115,chargerSequence:1,
+ orbiterPhase:'telegraph',orbiterProgress:0.75,orbiterSequence:1,orbiterStartAngle:-1.7,orbiterDirection:1,orbiterBandRadius:115};
+ app.stage.addChild(view.root,ship.root);
+ if(kind==='orbiter')view.root.position.set(190,180);
+ let age=0;
+ const render=(p,attack=false)=>{
+  state.chargerPhase=attack?'charge':'telegraph';state.orbiterPhase=attack?'commit':'telegraph';
+  state.chargerProgress=state.orbiterProgress=p;
+  if(kind==='orbiter'){const a=-1.7+(attack?p*Math.PI/2:0);state.x=190+115*Math.cos(a);state.y=180+115*Math.sin(a);state.vx=-Math.sin(a)*100;state.vy=Math.cos(a)*100;}
+  else {state.x=attack?90+p*180:90;state.vx=attack?100:0;}
+  view.render([state]);ship.render(state,age);ship.root.position.set(state.x,state.y);
+ };
+ render(0.75);
+ app.ticker.add(t=>{if(playing){age+=t.deltaMS/1000;const cycle=age%3;render(cycle<1.5?cycle/1.5:(cycle-1.5)/1.5,cycle>=1.5);}});
+}
+document.body.dataset.ready='true';
+</script></html>

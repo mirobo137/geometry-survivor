@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-charger-master-title enemy-charger-master-desc">
+  <title id="enemy-charger-master-title">Charger — master</title>
+  <desc id="enemy-charger-master-desc">Ariete de cerámica marfil, estabilizadores de titanio y reactor ámbar. Frente -Y.</desc>
+  <path id="enemy-charger-chassis" d="M-12-9H12L17 17 10 27H-10L-17 17Z" fill="#151d2c"/>
+  <path id="enemy-charger-engine-cases" d="M-13 8H-5V27L-9 30-14 26ZM5 8H13L14 26 9 30 5 27Z" fill="#3b4b5b"/>
+  <path id="enemy-charger-engine-faces" d="M-12 10H-8V24L-11 26ZM8 10H12L11 26 8 24Z" fill="#81949d"/>
+  <path id="enemy-charger-exhaust" d="M-12 24H-7V28H-11ZM7 24H12L11 28H7Z" fill="#ffb65b"/>
+  <path id="enemy-charger-cross-brace" d="M-23-5H23V6H-23Z" fill="#435967"/>
+  <path id="enemy-charger-outriggers" d="M-13-19-23-13-28 8-22 20-12 12ZM13-19 23-13 28 8 22 20 12 12Z" fill="#1a2735"/>
+  <path id="enemy-charger-outrigger-faces" d="M-14-16-21-11-24 7-20 13-14 8ZM14-16 21-11 24 7 20 13 14 8Z" fill="#71888c"/>
+  <path id="enemy-charger-outrigger-bevel" d="M-14-16-21-11-24 7-21 3-18-7-14-10ZM14-16 21-11 24 7 21 3 18-7 14-10Z" fill="#d9e3cc"/>
+  <path id="enemy-charger-outrigger-return" d="M-24 7-20 13-14 8-15 15-22 20-28 8ZM24 7 20 13 14 8 15 15 22 20 28 8Z" fill="#344653"/>
+  <path id="enemy-charger-vents" d="M-23 1-18-1V2L-24 4ZM23 1 18-1V2L24 4Z" fill="#101a27"/>
+  <path id="enemy-charger-service-marks" d="M-21-10-19-13-16-14-18-11ZM21-10 19-13 16-14 18-11Z" fill="#ffc678"/>
+  <path id="enemy-charger-keel" d="M0-30 12-18 14 8 8 22H-8L-14 8-12-18Z" fill="#1d2d3d"/>
+  <path id="enemy-charger-ram" d="M0-30 11-18 8-4 0 2-8-4-11-18Z" fill="#c8d2be"/>
+  <path id="enemy-charger-ram-bevel" d="M0-30 11-18 7-20 0-24-7-20-11-18Z" fill="#f6edcd"/>
+  <path id="enemy-charger-ram-shadow" d="M0-24 7-20 11-18 8-4 0 2 3-7Z" fill="#6c8286"/>
+  <path id="enemy-charger-spine" d="M-8 5H8L7 17 3 21H-3L-7 17Z" fill="#637a80"/>
+  <path id="enemy-charger-spine-bevel" d="M-8 5H-5V15L-1 20H3L3 21H-3L-7 17Z" fill="#b9cac0"/>
+  <path id="enemy-charger-ram-channel" d="M0-21 3-17 2-7 0-4-2-7-3-17Z" fill="#182c3d"/>
+  <path id="enemy-charger-ram-light" d="M0-17 1-15V-9L0-7-1-9V-15Z" fill="#ffdba0"/>
+  <path id="enemy-charger-reactor-well" d="M-5-2H5L9 3 7 10 0 14-7 10-9 3Z" fill="#091724"/>
+  <path id="enemy-charger-reactor-mount" d="M-4 0H4L6 4 4 9 0 11-4 9-6 4Z" fill="#99734b"/>
+  <path id="enemy-charger-reactor-glass" d="M-3 2H3L4 5 0 9-4 5Z" fill="#ffb961"/>
+  <path id="enemy-charger-reactor-facet" d="M-3 2H3L4 5 0 4-4 5Z" fill="#fff2c8"/>
+</svg>

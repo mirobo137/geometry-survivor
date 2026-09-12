@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-charger-hull-title enemy-charger-hull-desc">
+  <title id="enemy-charger-hull-title">Charger — hull</title>
+  <desc id="enemy-charger-hull-desc">Ariete de cerámica marfil, estabilizadores de titanio y reactor ámbar. Frente -Y.</desc>
+  <path id="enemy-charger-keel" d="M0-30 12-18 14 8 8 22H-8L-14 8-12-18Z" fill="#1d2d3d"/>
+  <path id="enemy-charger-ram" d="M0-30 11-18 8-4 0 2-8-4-11-18Z" fill="#c8d2be"/>
+  <path id="enemy-charger-ram-bevel" d="M0-30 11-18 7-20 0-24-7-20-11-18Z" fill="#f6edcd"/>
+  <path id="enemy-charger-ram-shadow" d="M0-24 7-20 11-18 8-4 0 2 3-7Z" fill="#6c8286"/>
+  <path id="enemy-charger-spine" d="M-8 5H8L7 17 3 21H-3L-7 17Z" fill="#637a80"/>
+  <path id="enemy-charger-spine-bevel" d="M-8 5H-5V15L-1 20H3L3 21H-3L-7 17Z" fill="#b9cac0"/>
+  <path id="enemy-charger-ram-channel" d="M0-21 3-17 2-7 0-4-2-7-3-17Z" fill="#182c3d"/>
+  <path id="enemy-charger-ram-light" d="M0-17 1-15V-9L0-7-1-9V-15Z" fill="#ffdba0"/>
+</svg>

@@ -1,5 +1,9 @@
 # Dirección de efectos premium
 
+Para avisos de enemigos Angular, usar [ANGULAR_ART_PREMIUM.md](ANGULAR_ART_PREMIUM.md):
+Charger comunica dirección corta; Orbiter comunica recorrido discontinuo.
+Incluye el compositor real, límites y criterios para evitar trazos planos.
+
 Para golpes a enemigos y daño recibido por el player, seguir
 [DAMAGE_FX_PREMIUM.md](DAMAGE_FX_PREMIUM.md): Hull Fracture y Breach Petals,
 contacto inmediato, material, apertura y disipación con geometría reutilizada.

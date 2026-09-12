@@ -571,8 +571,8 @@ balance.
 
 La primera familia Angular queda especificada en
 [`docs/design/EX-07b-orbiter.md`](design/EX-07b-orbiter.md). Orbiter reserva un
-arco de dos sectores, anuncia por 0.70 s sentido y recorrido, sólo hace daño
-por contacto durante su commit y libera una abertura mínima de 90°. Su cap es
+arco de dos sectores, anuncia por 0.70 s sentido y recorrido, hace daño
+por contacto con el casco en todo el ciclo y libera una abertura mínima de 90°. Su cap es
 seis activos y un commit simultáneo mientras la lección inicial se valida.
 
 La primera implementación vive en `?orbiter=1&debug=1`: un drill aislado sin

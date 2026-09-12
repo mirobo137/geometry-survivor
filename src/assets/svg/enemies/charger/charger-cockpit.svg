@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-charger-cockpit-title enemy-charger-cockpit-desc">
+  <title id="enemy-charger-cockpit-title">Charger — cockpit</title>
+  <desc id="enemy-charger-cockpit-desc">Ariete de cerámica marfil, estabilizadores de titanio y reactor ámbar. Frente -Y.</desc>
+  <path id="enemy-charger-reactor-well" d="M-5-2H5L9 3 7 10 0 14-7 10-9 3Z" fill="#091724"/>
+  <path id="enemy-charger-reactor-mount" d="M-4 0H4L6 4 4 9 0 11-4 9-6 4Z" fill="#99734b"/>
+  <path id="enemy-charger-reactor-glass" d="M-3 2H3L4 5 0 9-4 5Z" fill="#ffb961"/>
+  <path id="enemy-charger-reactor-facet" d="M-3 2H3L4 5 0 4-4 5Z" fill="#fff2c8"/>
+</svg>

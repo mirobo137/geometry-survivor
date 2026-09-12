@@ -3,18 +3,12 @@ import {
   type OrbiterDirection
 } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
-import type { PlayerState } from '../PlayerModel';
 import type { EnemyState } from '../combat/EntityPools';
 
 const FULL_CIRCLE = Math.PI * 2;
 const EPSILON = 0.001;
 
 const normalizeAngle = (angle: number): number => ((angle % FULL_CIRCLE) + FULL_CIRCLE) % FULL_CIRCLE;
-
-const shortestAngularDistance = (from: number, to: number): number => {
-  const delta = normalizeAngle(to - from);
-  return delta > Math.PI ? delta - FULL_CIRCLE : delta;
-};
 
 const moveToward = (state: EnemyState, targetX: number, targetY: number, speed: number, dt: number): boolean => {
   const dx = targetX - state.x;
@@ -52,17 +46,19 @@ export class OrbiterBehavior {
     state.orbiterStartAngle = this.getSectorStartAngle(sector);
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
-    state.contactEnabled = false;
+    // The route is a telegraph only. Its physical hull is dangerous through
+    // the whole cycle, so a player entering the future route cannot undo it.
+    state.contactEnabled = true;
   }
 
-  public update(state: EnemyState, dt: number, player: PlayerState, arenaRadius: number, allowCommit = true): void {
+  public update(state: EnemyState, dt: number, arenaRadius: number, allowCommit = true): void {
     state.orbiterBandRadius = this.getBandRadius(arenaRadius, state.radius);
     switch (state.orbiterPhase) {
       case 'approach':
         this.updateApproach(state, dt);
         break;
       case 'telegraph':
-        this.updateTelegraph(state, dt, player, allowCommit);
+        this.updateTelegraph(state, dt, allowCommit);
         break;
       case 'commit':
         this.updateCommit(state, dt);
@@ -77,7 +73,7 @@ export class OrbiterBehavior {
   }
 
   private updateApproach(state: EnemyState, dt: number): void {
-    state.contactEnabled = false;
+    state.contactEnabled = true;
     const target = this.getPoint(state.orbiterBandRadius, state.orbiterStartAngle);
     if (!moveToward(state, target.x, target.y, ORBITER_DEFINITION.approachSpeed, dt)) return;
     state.orbiterPhase = 'telegraph';
@@ -86,16 +82,10 @@ export class OrbiterBehavior {
     state.orbiterSequence += 1;
   }
 
-  private updateTelegraph(state: EnemyState, dt: number, player: PlayerState, allowCommit: boolean): void {
-    state.contactEnabled = false;
+  private updateTelegraph(state: EnemyState, dt: number, allowCommit: boolean): void {
+    state.contactEnabled = true;
     state.vx = 0;
     state.vy = 0;
-    if (this.playerOccupiesCommitLane(state, player)) {
-      state.orbiterPhase = 'recovery';
-      state.orbiterTimer = 0;
-      state.orbiterProgress = 0;
-      return;
-    }
     state.orbiterTimer += dt;
     state.orbiterProgress = Math.min(1, state.orbiterTimer / ORBITER_DEFINITION.telegraphSeconds);
     if (state.orbiterTimer < ORBITER_DEFINITION.telegraphSeconds) return;
@@ -125,11 +115,10 @@ export class OrbiterBehavior {
     state.orbiterPhase = 'recovery';
     state.orbiterTimer = 0;
     state.orbiterProgress = 0;
-    state.contactEnabled = false;
   }
 
   private updateRecovery(state: EnemyState, dt: number, arenaRadius: number): void {
-    state.contactEnabled = false;
+    state.contactEnabled = true;
     state.orbiterTimer += dt;
     const radialDistance = Math.hypot(state.x - ARENA_CENTER.x, state.y - ARENA_CENTER.y);
     const angle = radialDistance > EPSILON
@@ -164,16 +153,4 @@ export class OrbiterBehavior {
     };
   }
 
-  private playerOccupiesCommitLane(state: EnemyState, player: PlayerState): boolean {
-    const dx = player.x - ARENA_CENTER.x;
-    const dy = player.y - ARENA_CENTER.y;
-    const distance = Math.hypot(dx, dy);
-    const laneHalfWidth = player.radius + state.radius + 16;
-    if (Math.abs(distance - state.orbiterBandRadius) > laneHalfWidth) return false;
-    const playerAngle = Math.atan2(dy, dx);
-    const travelCenter = state.orbiterStartAngle
-      + state.orbiterDirection * ORBITER_DEFINITION.reservedArcRadians * 0.5;
-    return Math.abs(shortestAngularDistance(travelCenter, playerAngle))
-      <= ORBITER_DEFINITION.reservedArcRadians * 0.5 + 0.16;
-  }
 }

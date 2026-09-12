@@ -90,7 +90,8 @@ const bootstrap = async (): Promise<void> => {
   const searchParams = new URLSearchParams(window.location.search);
   const spike = searchParams.get('spike');
   const orbiterDrill = searchParams.get('orbiter') === '1';
-  const stressMode = searchParams.get('stress') === '1' && !orbiterDrill;
+  const chargerDrill = searchParams.get('charger') === '1' && !orbiterDrill;
+  const stressMode = searchParams.get('stress') === '1' && !orbiterDrill && !chargerDrill;
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
   const playerSkin: PlayerSkinId | undefined = isPlayerSkinId(requestedSkin)
@@ -116,7 +117,7 @@ const bootstrap = async (): Promise<void> => {
   const baselineMode = searchParams.get('baseline') === '1'
     && hazardCadenceMode === 'chaos'
     && calibrationId === undefined
-    && !orbiterDrill;
+    && !orbiterDrill && !chargerDrill;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -156,6 +157,7 @@ const bootstrap = async (): Promise<void> => {
     },
     stressMode,
     orbiterDrill,
+    chargerDrill,
     playerSkin,
     cannonSkin,
     background,
@@ -166,7 +168,7 @@ const bootstrap = async (): Promise<void> => {
     calibrationId,
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !bossDebugMode && !orbiterDrill,
+    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill,
     platform: new LocalPlatform()
   });
   await game.start();

@@ -89,6 +89,8 @@ export interface GameOptions {
   readonly calibrationId?: CalibrationId;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
   readonly orbiterDrill?: boolean;
+  /** Isolated Angular Charger drill. */
+  readonly chargerDrill?: boolean;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -100,6 +102,7 @@ export class Game {
   private readonly buildTarget: string;
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
+  private readonly chargerDrill: boolean;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -318,6 +321,7 @@ export class Game {
     this.buildTarget = options.buildTarget;
     this.stressMode = options.stressMode;
     this.orbiterDrill = options.orbiterDrill === true;
+    this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -342,7 +346,8 @@ export class Game {
       permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
       actDirector: this.actDirector,
       hazardCadenceMode: options.hazardCadenceMode,
-      orbiterDrill: this.orbiterDrill
+      orbiterDrill: this.orbiterDrill,
+      chargerDrill: this.chargerDrill
     });
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(options.elements.debug, this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled);
@@ -525,7 +530,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : 'normal',
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : 'normal',
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -542,6 +547,9 @@ export class Game {
           const state = this.combat.enemies.states.find((enemy) => enemy.active && enemy.kind === 'orbiter');
           return state ? `${state.orbiterPhase} | sector ${state.orbiterSector + 1}/8` : 'respawning';
         })()
+        : 'off',
+      charger: this.combat.isChargerDrill
+        ? (() => { const state = this.combat.enemies.states.find((enemy) => enemy.active && enemy.kind === 'charger'); return state ? state.chargerPhase : 'respawning'; })()
         : 'off',
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active

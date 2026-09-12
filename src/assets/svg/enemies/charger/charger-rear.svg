@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-charger-rear-title enemy-charger-rear-desc">
+  <title id="enemy-charger-rear-title">Charger — rear</title>
+  <desc id="enemy-charger-rear-desc">Ariete de cerámica marfil, estabilizadores de titanio y reactor ámbar. Frente -Y.</desc>
+  <path id="enemy-charger-chassis" d="M-12-9H12L17 17 10 27H-10L-17 17Z" fill="#151d2c"/>
+  <path id="enemy-charger-engine-cases" d="M-13 8H-5V27L-9 30-14 26ZM5 8H13L14 26 9 30 5 27Z" fill="#3b4b5b"/>
+  <path id="enemy-charger-engine-faces" d="M-12 10H-8V24L-11 26ZM8 10H12L11 26 8 24Z" fill="#81949d"/>
+  <path id="enemy-charger-exhaust" d="M-12 24H-7V28H-11ZM7 24H12L11 28H7Z" fill="#ffb65b"/>
+</svg>

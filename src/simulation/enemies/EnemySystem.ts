@@ -1,10 +1,11 @@
-import { ENEMY_DEFINITIONS, ORBITER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
+import { CHARGER_DEFINITION, ENEMY_DEFINITIONS, ORBITER_DEFINITION, type EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { EnemyPool, type EnemyState } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { RadialActDirector } from '../acts/RadialActDirector';
 import { OrbiterBehavior } from './OrbiterBehavior';
+import { ChargerBehavior } from './ChargerBehavior';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -20,6 +21,7 @@ export class EnemySystem {
   private contactCooldown = 0;
   private spawnIndex = 0;
   private readonly orbiterBehavior = new OrbiterBehavior();
+  private readonly chargerBehavior = new ChargerBehavior();
 
   public constructor(
     public readonly pool: EnemyPool,
@@ -60,6 +62,16 @@ export class EnemySystem {
     return state;
   }
 
+  /** Development-only consumer for the fixed-line Angular family. */
+  public spawnChargerDrill(arenaRadius: number): EnemyState | null {
+    if (this.countActiveChargers() >= CHARGER_DEFINITION.activeCap) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex; this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, 'charger');
+    return state;
+  }
+
   public initializeStress(arenaRadius: number): void {
     for (let index = 0; index < this.pool.capacity; index += 1) {
       const state = this.pool.acquire();
@@ -95,8 +107,10 @@ export class EnemySystem {
     let contactDamage: number | null = null;
 
     let orbiterCommits = 0;
+    let chargerCharges = 0;
     for (const enemy of this.pool.states) {
       if (enemy.active && enemy.kind === 'orbiter' && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
+      if (enemy.active && enemy.kind === 'charger' && enemy.chargerPhase === 'charge') chargerCharges += 1;
     }
     for (const enemy of this.pool.states) {
       if (!enemy.active) continue;
@@ -104,8 +118,12 @@ export class EnemySystem {
       if (enemy.kind === 'boss') continue;
       if (enemy.kind === 'orbiter') {
         const wasCommit = enemy.orbiterPhase === 'commit';
-        this.orbiterBehavior.update(enemy, dt, player, arenaRadius, wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap);
+        this.orbiterBehavior.update(enemy, dt, arenaRadius, wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap);
         if (!wasCommit && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
+      } else if (enemy.kind === 'charger') {
+        const wasCharge = enemy.chargerPhase === 'charge';
+        this.chargerBehavior.update(enemy, dt, player, arenaRadius, wasCharge || chargerCharges < CHARGER_DEFINITION.chargeCap);
+        if (!wasCharge && enemy.chargerPhase === 'charge') chargerCharges += 1;
       } else {
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
@@ -214,7 +232,10 @@ export class EnemySystem {
     state.orbiterStartAngle = 0;
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
+    state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
+    state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
     if (kind === 'orbiter') this.orbiterBehavior.configure(state, index, arenaRadius);
+    if (kind === 'charger') this.chargerBehavior.configure(state);
   }
 
   private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
@@ -243,9 +264,15 @@ export class EnemySystem {
     state.orbiterStartAngle = 0;
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
+    state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
+    state.chargerEndX = 0; state.chargerEndY = 0; state.chargerTimer = 0; state.chargerSequence = 0;
   }
 
   private countActiveOrbiters(): number {
     return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'orbiter' ? 1 : 0), 0);
+  }
+
+  private countActiveChargers(): number {
+    return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'charger' ? 1 : 0), 0);
   }
 }

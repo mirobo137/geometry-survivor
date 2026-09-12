@@ -1,5 +1,15 @@
 # Geometry Survivor — estado y continuación
 
+## Revisión visual Angular — 11-09-2026
+
+Charger reconstruido con proa cerámica centrada, estabilizadores titanio y
+reactor ámbar; Orbiter conserva su nave. Aviso Charger: aletas cortas de energía
+convergentes, sin alcance completo; Orbiter: plumas curvas discontinuas que
+se apagan al pasar. Guía vigente:
+[ANGULAR_ART_PREMIUM.md](docs/design/ANGULAR_ART_PREMIUM.md).
+Comparador de producción: /docs/visual/angular-reference.html.
+Pendiente aprobación humana de esta revisión; no cerrar EX-07b por tests verdes.
+
 ## Decisión de cadencia Acto I — 11-09-2026
 
 - El usuario probó `chaos` y aprobó que se convierta en la cadencia principal:
@@ -25,14 +35,19 @@
   todavía un Acto II vacío, save nuevo o balance.
 - EX-07b ya tiene ficha y primera implementación de la familia Angular Orbiter en
   [`docs/design/EX-07b-orbiter.md`](docs/design/EX-07b-orbiter.md). Orbiter
-  compromete un arco anunciado de 90°, conserva dos sectores libres, sólo daña
-  durante el recorrido y tiene cap de seis / un commit simultáneo. Probar con
+  compromete un arco anunciado de 90°, conserva dos sectores libres y su casco
+  hace daño de contacto durante todo el ciclo (el riel sólo comunica la ruta);
+  tiene cap de seis / un commit simultáneo. Probar con
   `?orbiter=1&debug=1&quality=high` (repetir Low y móvil): es un drill aislado
   sin oleadas, hazards, boss ni autofire, por lo que no contamina Acto I.
   Automático OK; falta validación humana y consumidor Angular real. La lista de
   enemigos **permanece abierta**: Charger, Splitter y posibles familias tras
   validar composición siguen pendientes; Pulse Ring, hazard y boss no entran
   aún en este incremento.
+- Charger es el segundo prototipo Angular aislado: fija una línea de embestida
+  durante su telegraph y no corrige después. Probar con
+  `?charger=1&debug=1&quality=high`; la ficha y pendientes viven en
+  [`docs/design/EX-07b-charger.md`](docs/design/EX-07b-charger.md).
 - Se corrigió el destello rosa de salida del cañón: `PlayerView` convertía el
   origen sólo con la rotación del casco y lo rotaba una segunda vez cuando el
   tiro apuntaba a otra dirección. Ahora usa la rotación mundial efectiva del

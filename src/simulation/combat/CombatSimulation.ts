@@ -34,6 +34,8 @@ export interface CombatSimulationOptions {
   readonly hazardCadenceMode?: HazardCadenceMode;
   /** Isolated first-family scenario; never changes the normal Radial run. */
   readonly orbiterDrill?: boolean;
+  /** Isolated second-family scenario; never changes the normal Radial run. */
+  readonly chargerDrill?: boolean;
 }
 
 export type CombatEvent =
@@ -85,6 +87,7 @@ export class CombatSimulation {
   private experienceMultiplier = 1;
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
+  private readonly chargerDrill: boolean;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
@@ -132,6 +135,7 @@ export class CombatSimulation {
     };
     this.stressMode = options.stress === true;
     this.orbiterDrill = options.orbiterDrill === true;
+    this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
     this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
     this.initialElapsedSeconds = Number.isFinite(options.initialElapsedSeconds)
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
@@ -162,6 +166,8 @@ export class CombatSimulation {
   public get isOrbiterDrill(): boolean {
     return this.orbiterDrill;
   }
+
+  public get isChargerDrill(): boolean { return this.chargerDrill; }
 
   public get currentOrbitDamage(): number {
     return this.weaponSystem.currentOrbitDamage;
@@ -276,7 +282,7 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
-    if (!this.orbiterDrill && this.laser.update(
+    if (!this.orbiterDrill && !this.chargerDrill && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -286,7 +292,7 @@ export class CombatSimulation {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
     }
-    if (!this.orbiterDrill && this.radialPulse.update(
+    if (!this.orbiterDrill && !this.chargerDrill && this.radialPulse.update(
       dt,
       this.stats.elapsedSeconds,
       player,
@@ -306,6 +312,8 @@ export class CombatSimulation {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'orbiter')) {
         this.enemySystem.spawnOrbiterDrill(arenaRadius);
       }
+    } else if (this.chargerDrill) {
+      if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'charger')) this.enemySystem.spawnChargerDrill(arenaRadius);
     } else {
       const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
       const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
@@ -318,7 +326,7 @@ export class CombatSimulation {
       }
     }
 
-    if (!this.stressMode && !this.orbiterDrill) {
+    if (!this.stressMode && !this.orbiterDrill && !this.chargerDrill) {
       const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
       if (bossDamage > 0) {
         this.stats.damageTaken += bossDamage;
@@ -334,7 +342,7 @@ export class CombatSimulation {
     this.enemySystem.rebuildGrid();
     // The drill teaches a route, not build damage. Leaving autofire active
     // would remove the 32-HP teaching target before its first telegraph.
-    if (!this.orbiterDrill) this.weaponSystem.update(dt, player);
+    if (!this.orbiterDrill && !this.chargerDrill) this.weaponSystem.update(dt, player);
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
     this.maintainStressProjectiles(player);
@@ -368,12 +376,12 @@ export class CombatSimulation {
   }
 
   private maintainStressEnemies(arenaRadius: number): void {
-    if (!this.stressMode || this.orbiterDrill) return;
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
-    if (!this.stressMode || this.orbiterDrill) return;
+    if (!this.stressMode || this.orbiterDrill || this.chargerDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }
 

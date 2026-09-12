@@ -45,4 +45,17 @@ describe('EnemySystem', () => {
     for (let index = 0; index < 8; index += 1) system.spawnOrbiterDrill(ARENA_RADIUS);
     expect(pool.states.filter((enemy) => enemy.active && enemy.kind === 'orbiter')).toHaveLength(6);
   });
+
+  it('applies normal hull contact damage while an Orbiter is announcing its route', () => {
+    const pool = new EnemyPool(1);
+    const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const orbiter = system.spawnOrbiterDrill(ARENA_RADIUS);
+    if (!orbiter) throw new Error('No se pudo preparar el Orbiter');
+    player.state.x = orbiter.x;
+    player.state.y = orbiter.y;
+
+    expect(orbiter.orbiterPhase).toBe('approach');
+    expect(system.update(1 / 60, player.state, ARENA_RADIUS)).toBe(orbiter.contactDamage);
+  });
 });

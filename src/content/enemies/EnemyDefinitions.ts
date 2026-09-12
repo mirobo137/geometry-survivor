@@ -1,7 +1,8 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'boss';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'boss';
 
 export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
 export type OrbiterDirection = -1 | 1;
+export type ChargerPhase = 'inactive' | 'approach' | 'telegraph' | 'charge' | 'recovery';
 
 export interface OrbiterDefinition {
   readonly sectorCount: 8;
@@ -16,6 +17,17 @@ export interface OrbiterDefinition {
   readonly commitAngularSpeed: number;
   readonly activeCap: number;
   readonly commitCap: number;
+}
+
+export interface ChargerDefinition {
+  readonly approachInset: number;
+  readonly approachSpeed: number;
+  readonly telegraphSeconds: number;
+  readonly chargeSeconds: number;
+  readonly recoverySeconds: number;
+  readonly exitDistance: number;
+  readonly activeCap: number;
+  readonly chargeCap: number;
 }
 
 export interface EnemyDefinition {
@@ -80,6 +92,10 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     spawnCost: 2,
     color: 0x65e6ff
   },
+  charger: {
+    kind: 'charger', radius: 19, speed: 108, maxHealth: 38, contactDamage: 11,
+    experience: 3, spawnCost: 2, color: 0xffb45b
+  },
   boss: {
     kind: 'boss',
     radius: 48,
@@ -109,4 +125,11 @@ export const ORBITER_DEFINITION: OrbiterDefinition = {
   commitAngularSpeed: 1.65,
   activeCap: 6,
   commitCap: 1
+};
+
+/** Second Angular family: fixes one straight crossing, never homes after warning. */
+export const CHARGER_DEFINITION: ChargerDefinition = {
+  approachInset: 30, approachSpeed: 108, telegraphSeconds: 0.72,
+  chargeSeconds: 0.86, recoverySeconds: 0.52, exitDistance: 76,
+  activeCap: 5, chargeCap: 1
 };

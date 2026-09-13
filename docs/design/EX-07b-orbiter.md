@@ -1,7 +1,8 @@
 # EX-07b — Orbiter: ficha de primera familia Angular
 
-**Estado:** primera implementación automática lista en drill aislado; pendiente
-consumidor Angular real y validación humana en desktop/móvil.
+**Estado:** refinamiento de comportamiento integrado y automático OK; la
+composición del Acto II ya fue aprobada, pero esta variante necesita una nueva
+validación humana en desktop/móvil antes de considerarse cerrada.
 
 **Alcance de esta ficha:** define exclusivamente la primera familia enemiga del
 Acto II. No autoriza añadir Charger, Splitter, Pulse Ring, hazard angular,
@@ -11,63 +12,64 @@ Los valores numéricos son provisionales hasta EX-02c.
 ## 1. Intención jugable
 
 El Orbiter enseña la idea que distingue Angular de Radial: una amenaza puede
-**comprometer un sector y recorrerlo**, en vez de limitarse a perseguir al
-player en línea recta. La decisión que debe provocar es:
+**seguir tu posición, fijar un foco local y recorrer una curva alrededor de él**,
+en vez de regalar un carril idéntico en el centro de la arena. La decisión que
+debe provocar es:
 
-> «Ya vi qué arco ocupará y hacia qué lado girará; cruzo por el sector
-> contiguo libre antes de que complete el recorrido».
+> «Me está cerrando el espacio; ya vi desde dónde comenzará y hacia qué lado
+> girará. Salgo de esa curva antes de que se comprometa».
 
 No debe ser un enemigo con más vida ni una pared que encierra al player. Su
-trabajo es convertir la orientación respecto al centro de la arena en una ruta
-legible. Charger y Splitter vendrán después precisamente para añadir presión a
-esa ruta; este primer consumidor debe poder leerse solo.
+trabajo es convertir la posición del jugador en una ruta local legible y evitar
+que acampar en una esquina vuelva inútil la amenaza. Charger y Splitter añaden
+presión a ese lenguaje; el Orbiter debe poder leerse solo.
 
 ## 2. Contrato de comportamiento
 
 ### Espacio y sectores
 
-- La referencia angular es el centro lógico de la arena, nunca el canvas ni la
-  posición instantánea del player. El comportamiento conserva por tanto el
-  mundo fijo de la simulación ante resize y aspect ratios distintos.
-- La arena se divide conceptualmente en **ocho sectores de 45°**. Es una regla
-  de simulación/director; el renderer sólo recibe el sector, el sentido y la
-  fase que deba mostrar.
-- Cada Orbiter reserva como máximo un arco de compromiso de **90°** (dos
-  sectores contiguos). Dos Orbiters no pueden reservar el mismo sector ni
-  arcos contiguos si con ello desaparece una abertura de 90°.
-- El director conserva siempre al menos dos sectores contiguos disponibles
-  para cruzar. Si no puede reservarlos, retrasa o descarta ese intento: no
-  cambia silenciosamente la ruta segura.
+- El centro lógico de la arena sólo sirve para mantener el mundo fijo, limitar
+  el punto de seguimiento y tirar el Orbiter hacia dentro cuando el jugador
+  está cerca de una pared. Nunca es el origen automático del ataque.
+- La configuración conserva **ocho sectores de 45°** como canal determinista
+  de variación. El sector y el sentido ya no describen un carril fijo del mapa:
+  sesgan el lado de aproximación y el foco local de cada nave.
+- Cada Orbiter compromete un arco de **90°** alrededor de un foco capturado
+  cerca del player. El `commitCap` inicial sigue siendo uno; por tanto la
+  composición no convierte la curva local en una cortina simultánea.
+- Las garantías de sectores libres pertenecen a hazards globales como Angular
+  Sweep. El telegraph del Orbiter anuncia su propia ruta y siempre deja al
+  jugador la respuesta de salir del arco o rodear el foco.
 
 ### Máquina de estados
 
 | Fase | Duración/propuesta | Regla de simulación | Lectura para el jugador |
 | --- | ---: | --- | --- |
-| `approach` | hasta alcanzar la banda | Entra desde fuera y se dirige a su punto de preparación sin perseguir la posición actual del player. Su casco conserva daño de contacto normal. | Nave compacta que toma posición en el borde de un sector. |
-| `telegraph` | 0.70 s | Bloquea sector, sentido (`clockwise`/`counterclockwise`) y arco. La ruta queda comprometida: si el player entra después al riel futuro, no cancela ni se reposiciona. Su casco conserva daño de contacto normal. | Compuertas laterales abiertas + riel discontinuo de 90° + chevrons en el sentido de giro. |
-| `commit` | 0.95 s | Recorre el arco reservado con velocidad tangencial. Mantiene radio de banda y no reorienta el arco según el player; su casco conserva daño de contacto normal. | La nave gira por el riel anunciado; cruzar por el sector adyacente libre es la respuesta. |
-| `recovery` | 0.60 s | Sale radialmente de la banda, libera reserva y espera/cierra el ciclo; su casco conserva daño de contacto normal. | Compuertas cierran y queda un residuo tenue no dañino. |
+| `approach` | hasta alcanzar la distancia de seguimiento | Entra desde fuera y actualiza un punto de seguimiento alrededor de la posición actual del player. Mantiene una distancia authored, un pequeño sesgo lateral y daño de contacto. | Nave que corrige su posición y se prepara cerca del jugador, no en el centro del mapa. |
+| `telegraph` | 0.70 s | Captura el foco local, radio, ángulo de inicio y sentido. La posición del player puede cambiar después, pero la ruta anunciada no se cancela ni se reposiciona. El casco conserva daño de contacto. | Compuertas laterales abiertas + arco discontinuo de 90° trasladado al foco + chevrons de giro. |
+| `commit` | 0.95 s | Recorre el arco capturado desde la posición exacta que tenía al terminar `approach`. No hace homing durante el movimiento; su casco conserva daño de contacto. | La nave dibuja una curva local; salir de ella antes del compromiso es la respuesta. |
+| `recovery` | 0.60 s | Se retira desde el endpoint real hacia fuera y vuelve a `approach`; no regresa al primer ancla ni salta al centro. Su casco conserva daño de contacto. | Compuertas cierran y el foco se disipa sin crear otro collider. |
 
 La transición es siempre `approach → telegraph → commit → recovery`. No hay
 ataque instantáneo, homing durante `commit` ni giro de 180° inesperado. El
 riel no inflige daño: únicamente el casco mantiene su daño de contacto normal
-en todas las fases. Un Orbiter puede morir en cualquier fase; su reserva se
-libera inmediatamente y nunca deja un sector lógico bloqueado.
+en todas las fases. Un Orbiter puede morir en cualquier fase; el pool lo libera
+sin dejar una ruta visual huérfana.
 
 ### Geometría de la ruta y respuesta segura
 
-- Banda de referencia inicial: radio de `min(arenaRadius - 76, 176)` desde el
-  centro, reducido sólo si hace falta respetar el radio de la nave, 16 u de
-  margen y el borde real de un polígono. No debe inventar una zona atravesable
-  dentro del hueco visual de la nave: la colisión continúa siendo circular.
-- Antes de mostrar el telegraph, el futuro director evita crear un Orbiter
-  directamente sobre el player o fuera del margen de aparición. Una vez que
-  el telegraph aparece, el jugador puede entrar o salir del riel futuro: la
-  ruta ya anunciada no cambia ni se reposiciona.
-- Durante el telegraph, la respuesta válida es moverse hacia cualquiera de los
-  dos sectores libres adyacentes al final del arco, idealmente por el lado
-  interior de la banda. Intentar cortar el riel anunciado sí debe ser riesgoso
-  durante `commit`, pero nunca es la única salida.
+- Durante `approach`, la nave busca un punto a `followDistance` del player con
+  `followLateralOffset` según su sentido. Si ese punto cae fuera del círculo,
+  usa un staging interior; no colapsa la distancia hasta aparecer dentro del
+  jugador. La colisión continúa siendo circular.
+- Al comenzar `telegraph`, `routeCenterX/Y`, `routeRadius` y el ángulo de
+  inicio quedan capturados. El centro se obtiene cerca del player, con un
+  pequeño desplazamiento hacia el interior y una variación determinista por
+  sector. El origen físico de la ruta es exactamente `state.x/state.y` en ese
+  instante.
+- Durante el telegraph, mover al player no cambia la ruta; esa estabilidad es
+  la señal de juego limpio. La respuesta válida es salir del arco anunciado,
+  rodear su extremo o usar el espacio interior, sin exigir una esquina fija.
 - El riel es una guía, no un segundo collider ni un laser. Sólo el círculo de
   colisión de la nave hace daño y el daño respeta el cooldown global de
   contacto existente.
@@ -89,10 +91,14 @@ una base de test y no un cierre de vida, daño, experiencia o economía.
 | `experience` | 3 | Recompensa provisional por amenaza de ruta. |
 | `spawnCost` | 2 | Permite al director sustituir presión, no sumar masa sin límite. |
 | `approachSpeed` | 94 u/s | Debe llegar a la banda sin parecer Fast. |
+| `followDistance` | 116 u | Mantiene una amenaza cercana sin pegarse al player durante la aproximación. |
+| `followLateralOffset` | 30 u | Descentra la aproximación y evita recorridos colineales idénticos. |
+| `attackFocusInset` | 28 u | Lleva el foco ligeramente hacia dentro cuando el player está junto al borde. |
+| `attackFocusLateralOffset` | 22 u | Desplaza de forma authored el foco entre Orbiters del mismo cast. |
 | `commitAngularSpeed` | 1.65 rad/s | Recorre 90° en ~0.95 s; debe salir de una definición, no de un literal en el loop. |
 | `activeCap` | 6 | Tope de familia; no amplía el pool global de 250 enemigos. |
 | `commitCap` | 1 | Mantiene la primera lección legible. |
-| `minimumFreeArc` | 90° | Dos sectores libres contiguos garantizados por el director. |
+| `minimumFreeArc` | 90° | Reserva documental para un futuro director multi-Orbiter; hoy la seguridad se limita por `commitCap = 1`. |
 
 El cap se aplica antes de adquirir un slot del pool. El stress existente sigue
 teniendo el tope global de 250: una futura variante de stress con Orbiters
@@ -106,11 +112,11 @@ sectores dentro de Pixi:
 | Área | Responsabilidad concreta |
 | --- | --- |
 | `src/content/enemies/EnemyDefinitions.ts` | Declarar `orbiter` y su configuración authored agrupada. No usar el color como fuente de comportamiento. |
-| `src/simulation/enemies/OrbiterBehavior.ts` | Máquina de estados pura, selección determinista de sector, reserva/liberación, ruta y velocidad. Debe ser testeable sin Pixi. |
-| `EntityPools` / snapshot de combate | Añadir sólo estado simulado necesario: fase, sector reservado, sentido, progreso y generación/reset seguro. El snapshot expone únicamente la lectura que necesita presentación. |
+| `src/simulation/enemies/OrbiterBehavior.ts` | Máquina de estados pura, seguimiento, captura determinista del foco, ruta y velocidad. Debe ser testeable sin Pixi. |
+| `EntityPools` / snapshot de combate | Añadir sólo estado simulado necesario: fase, sentido, progreso, ángulo, foco/radio capturados y generación/reset seguro. El snapshot expone únicamente la lectura que necesita presentación. |
 | `EnemySystem` | Delegar la actualización del Orbiter a la conducta anterior y mantener idéntico el camino de Chaser/Fast/Tank/Elite. No convertirlo en un manager de actos. |
 | Director Angular real | Decide cuándo intenta reservar y compone caps; no nace hasta que exista el primer consumidor jugable de Acto II. No se añade un menú o ActDefinition vacío. |
-| `EnemyShipVisual` / vista de telegraph | Anima texturas cacheadas y muestra fase/sentido; no calcula sectores, daño ni rutas. |
+| `EnemyShipVisual` / vista de telegraph | Anima texturas cacheadas y muestra fase/sentido; no calcula seguimiento, daño ni rutas. El telegraph sólo traslada la geometría recibida al foco capturado. |
 
 `EnemyBehavior` no se convierte todavía en una jerarquía genérica: hay un
 segundo tipo de movimiento realmente distinto y una responsabilidad coherente,
@@ -169,9 +175,10 @@ Paleta propuesta: chasis `#151B35`, placa `#4C5D93`, bisel `#B8C8FF`, cavidad
 `#090D1E`, energía `#65E6FF`. La dirección de giro usa chevrons claros y el
 ritmo de las compuertas; no depende únicamente del cian/ámbar. El riel de
 telegraph se dibuja con `Graphics` reutilizado, con subpaths independientes y
-una geometría por reserva; durante su vida sólo cambia alpha/transform. No se
-reconstruye cada frame, no tiene glow por entidad y nunca tapa player, hazards
-ni telegraphs de prioridad mayor.
+una geometría por reserva; durante su vida sólo cambia alpha/transform. El
+contenedor se traslada al foco local capturado: nunca se redibuja un círculo en
+`ARENA_CENTER`, no se reconstruye cada frame, no tiene glow por entidad y nunca
+tapa player, hazards ni telegraphs de prioridad mayor.
 
 La muerte reutiliza las cuatro piezas ya rasterizadas en `EnemyDefeatFxView`;
 las compuertas salen tangencialmente y el núcleo se apaga. Low usa la muerte
@@ -183,11 +190,12 @@ plana existente. No crear fragmentos, partículas o texturas por enemigo.
 
 1. Contenido: `orbiter` declara todos los valores, el cap no supera el pool y
    ningún otro tipo cambia sus números o conducta.
-2. Comportamiento puro, con semilla: sector/sentido deterministas; orden de
-   fases; ruta tangencial; casco con contacto en todo el ciclo; liberación por
-   muerte/reset; el commit se conserva si el player entra al riel anunciado.
-3. Seguridad: un commit deja un arco libre de 90°, se rechazan reservas que
-   solapen o reduzcan ese arco, y nunca hay más de un commit inicial activo.
+2. Comportamiento puro, con semilla: seguimiento, sector/sentido deterministas;
+   orden de fases; ruta local que empieza en la posición capturada; casco con
+   contacto en todo el ciclo; liberación por muerte/reset.
+3. Seguridad: el jugador no puede dejar al Orbiter sin objetivo por quedarse en
+   una esquina; el aviso deja tiempo y espacio para salir; el commit se conserva
+   si el player entra al riel anunciado y nunca hay más de un commit inicial.
 4. Loop: mismo resultado relevante a 30/60/144 Hz bajo timestep fijo; sin
    asignaciones masivas, sin consulta O(n²) ni recursos Pixi desde simulación.
 5. Render: las cuatro piezas usan frame compartido, Low conserva el master
@@ -200,9 +208,11 @@ plana existente. No crear fragmentos, partículas o texturas por enemigo.
 ### Humana
 
 - En desktop y móvil, sin mirar documentación: ¿se entiende antes de moverse
-  qué arco recorrerá y hacia qué lado?
-- ¿El jugador puede cruzar el sector libre con control touch sin que el
-  Orbiter aparezca bajo él o cambie de idea al último instante?
+  desde qué punto local partirá el arco y hacia qué lado?
+- ¿Si el player se queda en una esquina, el Orbiter se aproxima y genera una
+  amenaza local visible en vez de orbitar inútilmente el centro?
+- ¿El jugador puede salir del arco con control touch sin que el Orbiter cambie
+  de idea al último instante?
 - ¿La nave se reconoce como familia nueva a 32/48/64 px y Low conserva su
   identidad sin reducir la señal crítica?
 - ¿Una composición con amenazas existentes conserva lectura de player,
@@ -224,24 +234,24 @@ La responsabilidad quedó localizada así:
 
 - `OrbiterBehavior` ejecuta las fases puras; `EnemySystem` conserva el cap y
   sólo delega para `kind: 'orbiter'`.
-- El snapshot expone fase, sector, sentido, progreso, banda y secuencia. La
-  presentación compone las cuatro texturas cacheadas y `OrbiterTelegraphView`
-  dibuja el riel una vez por `sequence`, no por frame.
+- El snapshot expone fase, sector, sentido, progreso, foco/radio local y
+  secuencia. La presentación compone las cuatro texturas cacheadas y
+  `OrbiterTelegraphView` dibuja el riel una vez por `sequence`, trasladándolo
+  al foco sin reconstruirlo por frame. Su `root` queda en `(0, 0)` porque los
+  slots ya reciben coordenadas mundiales; el centro se aplica una sola vez.
 - Low conserva master completo y ruta; Medium/High conservan las cuatro piezas
   y apertura sutil de compuertas. La muerte reutiliza `EnemyDefeatFxView`.
 
-Comprobado automáticamente: typecheck, **85 archivos / 297 pruebas** y
-`npm run build:local`. La inspección local High mostró el telegraph, los
-chevrons y una única entidad a 60 FPS en `127.0.0.1`; no sustituye la prueba
-humana ni una medición móvil. El warning conocido del chunk principal mayor de
-500 kB permanece sin relación con Orbiter.
+Comprobado automáticamente en esta revisión: suite dirigida
+Orbiter/EnemySystem/telegraph `14/14`, typecheck, suite completa **92 archivos /
+349 pruebas** y `npm run build:local`. La inspección visual humana del drill y
+la run Angular queda pendiente en PC y móvil; no sustituye la medición móvil.
+El warning conocido del chunk principal mayor de 500 kB permanece sin relación
+con Orbiter.
 
 ## 8. Criterio de cierre de esta subtarea
 
-Orbiter queda listo como primer prototipo, pero **la lista de enemigos Angular
-no está cerrada**: Charger y Splitter continúan explícitamente pendientes y
-podrán ampliarse con más familias si la composición validada lo necesita. EX-07b
-no se cierra hasta que Orbiter tenga validación humana y viva dentro de un
-consumidor Angular real. Calibration conserva por ahora la entrada directa de
-depuración; su selector y gating aparecen al habilitar ese consumidor, para no
-entregar por error una build inicial superior dentro del Acto I ya validado.
+Orbiter queda integrado en el consumidor Angular real y la composición del acto
+ya fue aprobada. Este refinamiento reabre únicamente la validación humana de su
+lectura y evasión; no reabre el balance de EX-02c ni la aprobación del resto de
+familias. Charger, Splitter y Prism Weaver conservan sus contratos propios.

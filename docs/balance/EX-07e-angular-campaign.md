@@ -123,6 +123,34 @@ La geometría se construye una vez por secuencia/radio, usa capas base/core/edge
 nodos, y el pool está limitado a `activeCap = 3`. El cambio de anclaje no altera
 daño, vida, cadencia ni el balance diferido de EX-02c.
 
+## Orbiter: seguimiento y curva local
+
+Después de la aprobación de la composición se detectó una debilidad de
+gameplay: el Orbiter siempre llegaba a una banda fija y recorría un círculo
+centrado en la arena. Eso permitía quedarse en una esquina sin que el enemigo
+representara una amenaza significativa.
+
+La corrección mantiene la lectura de `telegraph → commit → recovery`, pero
+cambia el ancla:
+
+- en `approach`, cada nave sigue la posición actual del player desde un lado
+  estable, con `followDistance = 116` y un sesgo lateral de `30` unidades;
+- al entrar en `telegraph`, la simulación captura `routeCenterX/Y`,
+  `routeRadius`, ángulo y sentido. El centro queda cerca del player, con un
+  pequeño desplazamiento interior para conservar margen junto a la pared;
+- el primer punto de la curva coincide con la posición real de la nave y
+  `commit` recorre ese arco capturado sin homing;
+- `recovery` continúa desde el endpoint real y vuelve a seguir al player; no
+  salta al centro ni repite una única ruta global;
+- el riel sigue siendo visual. El daño continúa viniendo únicamente del
+  collider circular del casco y respeta el cooldown de contacto.
+
+La ruta mantiene `commitCap = 1` durante esta etapa para que la persecución no
+se convierta en una pila ilegible. El renderer recibe el foco capturado y
+traslada la geometría premium existente; no redibuja un anillo global. Este
+refinamiento no cambia daño, vida, spawn, cadencia ni EX-02c, pero requiere una
+nueva comprobación humana del drill y de una esquina del Acto II.
+
 ## Pruebas reproducibles
 
 - `?act=angular&debug=1&quality=low|medium|high`: menú con Angular si el save

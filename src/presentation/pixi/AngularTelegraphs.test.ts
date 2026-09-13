@@ -29,8 +29,13 @@ describe('Angular movement warnings', () => {
     const state = { ...base, kind: 'orbiter' as const,
       orbiterPhase: 'telegraph' as const, orbiterSequence: 1,
       orbiterBandRadius: 160, orbiterStartAngle: 6.1,
-      orbiterDirection: -1 as const, orbiterProgress: 0.6 };
+      orbiterDirection: -1 as const, orbiterProgress: 0.6,
+      orbiterRouteCenterX: 520, orbiterRouteCenterY: 290, orbiterRouteRadius: 160 };
     view.render([state]);
+    expect(view.root.position.x).toBe(0);
+    expect(view.root.position.y).toBe(0);
+    expect(view.root.children[0].position.x).toBe(520);
+    expect(view.root.children[0].position.y).toBe(290);
     const clear = vi.spyOn(Graphics.prototype, 'clear');
     view.render([state]);
     expect(clear).not.toHaveBeenCalled();

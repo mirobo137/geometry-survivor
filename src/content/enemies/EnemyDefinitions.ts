@@ -12,6 +12,14 @@ export interface OrbiterDefinition {
   readonly bandInset: number;
   readonly maximumBandRadius: number;
   readonly approachSpeed: number;
+  /** Distance the ship tries to keep while shadowing the player. */
+  readonly followDistance: number;
+  /** Small lateral bias that prevents every approach from becoming collinear. */
+  readonly followLateralOffset: number;
+  /** Pulls the captured attack focus slightly inside when the player is near a wall. */
+  readonly attackFocusInset: number;
+  /** Deterministic per-sector offset applied to the captured focus. */
+  readonly attackFocusLateralOffset: number;
   readonly telegraphSeconds: number;
   readonly commitSeconds: number;
   readonly recoverySeconds: number;
@@ -158,6 +166,10 @@ export const ORBITER_DEFINITION: OrbiterDefinition = {
   bandInset: 76,
   maximumBandRadius: 176,
   approachSpeed: 94,
+  followDistance: 116,
+  followLateralOffset: 30,
+  attackFocusInset: 28,
+  attackFocusLateralOffset: 22,
   telegraphSeconds: 0.7,
   commitSeconds: 0.95,
   recoverySeconds: 0.6,

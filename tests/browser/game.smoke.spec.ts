@@ -541,6 +541,18 @@ test('carga el drill Angular y mantiene el sector activo acotado', async ({ page
   expect(failures).toEqual([]);
 });
 
+test('carga el drill del Orbiter y muestra una ruta local durante el compromiso', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?orbiter=1&debug=1&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: orbiter-drill');
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+    .toMatch(/orbiter: (telegraph|commit)/);
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('orbiter-local-route-low.png') });
+  expect(failures).toEqual([]);
+});
+
 for (const quality of ['low', 'high']) {
   test(`carga el drill Prism Weaver y mantiene su ataque anclado al enemigo ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);

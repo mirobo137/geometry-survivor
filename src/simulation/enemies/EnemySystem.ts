@@ -210,7 +210,13 @@ export class EnemySystem {
       if (enemy.kind === 'boss') continue;
       if (enemy.kind === 'orbiter') {
         const wasCommit = enemy.orbiterPhase === 'commit';
-        this.orbiterBehavior.update(enemy, dt, arenaRadius, wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap);
+        this.orbiterBehavior.update(
+          enemy,
+          dt,
+          arenaRadius,
+          player,
+          wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap
+        );
         if (!wasCommit && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
       } else if (enemy.kind === 'charger') {
         const wasCharge = enemy.chargerPhase === 'charge';
@@ -329,6 +335,10 @@ export class EnemySystem {
     state.orbiterProgress = 0;
     state.orbiterBandRadius = 0;
     state.orbiterStartAngle = 0;
+    state.orbiterFollowAngle = 0;
+    state.orbiterRouteCenterX = 0;
+    state.orbiterRouteCenterY = 0;
+    state.orbiterRouteRadius = 0;
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;
@@ -367,6 +377,10 @@ export class EnemySystem {
     state.orbiterProgress = 0;
     state.orbiterBandRadius = 0;
     state.orbiterStartAngle = 0;
+    state.orbiterFollowAngle = 0;
+    state.orbiterRouteCenterX = 0;
+    state.orbiterRouteCenterY = 0;
+    state.orbiterRouteRadius = 0;
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
     state.chargerPhase = 'inactive'; state.chargerProgress = 0; state.chargerAimX = 0; state.chargerAimY = 0;

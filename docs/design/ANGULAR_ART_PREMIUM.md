@@ -1,7 +1,7 @@
 # Angular: ariete cerámico y señales de movimiento
 
-Revisión 11-09-2026. Charger y los dos avisos revisados; aprobación humana
-pendiente. El diseño del Orbiter se conserva por solicitud del usuario.
+Revisión 13-09-2026. Charger y los dos avisos permanecen revisados; la ruta
+local del Orbiter fue actualizada y queda pendiente de validación humana.
 
 ## Qué falló y cómo evitar repetirlo
 
@@ -51,6 +51,35 @@ La única superficie dañina de estos enemigos es el casco.
   del casco durante commit. No hay anillo sólido, nodos ni extremos como pickups.
   Seis slots, ocho Graphics por slot. Capas dibujadas dentro del mismo objeto.
 
+### Orbiter: telegraph local y lectura de persecución
+
+La ruta del Orbiter ya no debe dibujarse como un anillo centrado en la arena.
+La simulación captura `orbiterRouteCenterX/Y`, `orbiterRouteRadius` y el ángulo
+de inicio cuando termina la aproximación. El renderer traslada la geometría
+cacheada a ese foco; no recalcula el player, no busca `ARENA_CENTER` y no crea
+una segunda hitbox.
+
+Regla de coordenadas: `CombatEntitiesView` ya contiene el mundo en coordenadas
+lógicas, por lo que el `root` del telegraph debe permanecer en `(0, 0)` y cada
+slot debe recibir `routeCenterX/Y` una sola vez. Nunca combinar un `root`
+trasladado a `ARENA_CENTER` con slots que ya reciben coordenadas mundiales: esa
+doble transformación separa el riel del casco aunque la simulación sea correcta.
+
+La señal visual conserva ocho plumas curvas discontinuas, base tinta, núcleo
+cian y una barba oblicua de dirección, pero ahora funciona como una
+**abrazadera local**: el primer segmento nace junto a la nave y la secuencia
+de plumas rodea el foco capturado cerca del player. El espacio vacío del riel
+debe permanecer visible para que la curva no parezca una pared sólida. Durante
+`telegraph` las plumas se encienden hacia el sentido comprometido; durante
+`commit` se apagan detrás de la nave. El casco es lo único que hace daño.
+
+La geometría se reconstruye sólo cuando cambia identidad, secuencia, radio,
+ángulo o sentido. El centro local cambia mediante `position.set()` y no exige
+`clear()`; esto conserva el presupuesto de seis slots y ocho `Graphics` por
+slot. Si la ruta se modifica después de comenzar el aviso, la señal y la
+simulación dejan de ser confiables: la ruta debe permanecer congelada hasta
+`recovery`.
+
 Low/Medium/High conservan el mismo material y la misma señal. Geometría Charger
 construida una vez; Orbiter sólo reconstruye cuando cambia identidad, secuencia,
 radio, ángulo o sentido. Incluir identidad y geometría evita reutilizar un trazo
@@ -77,12 +106,11 @@ Las pruebas automáticas cubren límites del aviso, varias instancias, reset,
 reutilización de paths e identidad de ruta; SVG compara master y piezas.
 La aprobación visual y el perfil en móvil físico quedan para el usuario.
 
-Evidencia de esta revisión: typecheck, build local y 301 tests en 87 archivos
-correctos. Se inspeccionaron capturas del comparador desktop/portrait y ambos
-drills Low sin errores de ejecución. Incluyen materiales en fondo claro y
-oscuro; no constituyen benchmark. Durante captura headless y compilación
-simultánea el HUD indicó aproximadamente 24 FPS; no se extrapola a juego
-interactivo ni a Android. Persiste el warning previo de chunk mayor de 500 kB.
+Evidencia de esta revisión: suite dirigida Orbiter/EnemySystem/telegraph `14/14`,
+typecheck, build local y suite completa de `349` tests en `92` archivos
+correctos. Se conserva la inspección visual humana pendiente del drill y de la
+run Angular en PC y móvil; estos números no constituyen benchmark. Persiste el
+warning previo de chunk mayor de 500 kB.
 
 ## Splitter: fractura acotada
 

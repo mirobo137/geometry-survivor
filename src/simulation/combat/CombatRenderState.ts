@@ -97,6 +97,10 @@ export interface EnemyRenderState {
   readonly orbiterProgress?: number;
   readonly orbiterBandRadius?: number;
   readonly orbiterStartAngle?: number;
+  /** Local focus and radius captured when this Orbiter announces its route. */
+  readonly orbiterRouteCenterX?: number;
+  readonly orbiterRouteCenterY?: number;
+  readonly orbiterRouteRadius?: number;
   readonly orbiterSequence?: number;
   readonly chargerPhase?: ChargerPhase;
   readonly chargerProgress?: number;

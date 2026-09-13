@@ -24,6 +24,12 @@ export interface EnemyState {
   orbiterProgress: number;
   orbiterBandRadius: number;
   orbiterStartAngle: number;
+  /** Stable side of the player used by the follow phase until the next cast. */
+  orbiterFollowAngle: number;
+  /** Captured local focus for the current Orbiter route; never the arena origin by default. */
+  orbiterRouteCenterX: number;
+  orbiterRouteCenterY: number;
+  orbiterRouteRadius: number;
   orbiterTimer: number;
   /** Changes only when a new telegraph is authored; views use it to cache paths. */
   orbiterSequence: number;
@@ -102,6 +108,10 @@ const createEnemyState = (): EnemyState => ({
   orbiterProgress: 0,
   orbiterBandRadius: 0,
   orbiterStartAngle: 0,
+  orbiterFollowAngle: 0,
+  orbiterRouteCenterX: 0,
+  orbiterRouteCenterY: 0,
+  orbiterRouteRadius: 0,
   orbiterTimer: 0,
   orbiterSequence: 0,
   chargerPhase: 'inactive', chargerProgress: 0, chargerAimX: 0, chargerAimY: 0,

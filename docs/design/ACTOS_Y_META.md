@@ -251,10 +251,19 @@ en un solo cambio. Pulse Ring ya tiene una base aislada con una abertura que
 rota durante el daño; el hazard angular ya tiene una hoja con recorrido acotado
 y Orbital Warden una familia de riel, embestida fija, arco curvo, réplicas
  destructibles y corredor móvil. EX-07e ya compone estos consumidores en una
- run Angular real y habilita su selección sólo tras vencer Radial. Calibration
- ofrece una plantilla de entrada, no una build arbitraria. La composición del
- Acto II quedó aprobada por validación humana el 12-09-2026; el balance final de
- daño, vida y resistencia permanece diferido a EX-02c.
+run Angular real y habilita su selección sólo tras vencer Radial. Calibration
+ofrece una plantilla de entrada, no una build arbitraria. La composición del
+Acto II quedó aprobada por validación humana el 12-09-2026; el balance final de
+daño, vida y resistencia permanece diferido a EX-02c.
+
+El Orbiter tiene una regla adicional aprobada para la siguiente iteración:
+durante `approach` sigue la posición del player con una distancia de preparación;
+al iniciar `telegraph` captura un foco local cercano al player y comienza su
+arco desde la posición real de la nave. El `commit` no hace homing y conserva la
+ruta aunque el player se mueva. Así una esquina no funciona como refugio
+permanente y cada Orbiter puede presentar una curva distinta sin convertir el
+telegraph en daño invisible. La especificación técnica está en
+[`EX-07b-orbiter.md`](EX-07b-orbiter.md).
 
 #### Arena Angular — calendario de espacio, no de balance
 

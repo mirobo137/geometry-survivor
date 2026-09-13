@@ -745,6 +745,22 @@ cambia colisión ni gameplay. La ruta futura es desacoplar la geometría estable
 del FX de expansión o medir `GraphicsContext`; no usar filtros ni retirar el
 feedback de expansión para esconderlo.
 
+#### Refinamiento Orbiter — seguimiento y ruta local — 13-09-2026
+
+La prueba de campaña mostró que el Orbiter anterior siempre recorría un círculo
+centrado en la arena. El comportamiento vigente sigue al player durante
+`approach`, mantiene `followDistance` y un sesgo lateral authored, y captura al
+comenzar `telegraph` un foco local, radio, ángulo y sentido. `commit` empieza en
+la posición real de la nave y permanece comprometido aunque el player se mueva;
+`recovery` continúa desde el endpoint antes de volver a seguirlo. El telegraph
+recibe ese foco y traslada las plumas cacheadas, sin dibujar un anillo global.
+
+La entrega conserva el daño de contacto del casco, `commitCap = 1`, los pools y
+el balance provisional de EX-02c. Tests dirigidos y typecheck están verdes; la
+validación humana queda pendiente en el drill `?orbiter=1&debug=1` y en una run
+Angular, comprobando especialmente el comportamiento cuando el player se queda
+en una esquina y la salida touch durante el arco.
+
 ### EX-08 — Niveles y evoluciones, ficha reutilizable por arma
 
 Los nombres y porcentajes viven únicamente en §16.4–16.5 del plan. Una entrega

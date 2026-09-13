@@ -2817,6 +2817,34 @@ y cubierta por test. Esta deuda no bloquea EX-08; una iteración futura debe
 medir una separación del FX y geometría estable, sin filtros ni cambios de
 gameplay.
 
+### 22.1j Refinamiento del Orbiter: seguimiento y foco local — 13-09-2026
+
+La revisión de juego detectó que el Orbiter convergía siempre a un círculo
+centrado en `ARENA_CENTER`, lo que permitía al jugador acampar en una esquina.
+La corrección queda localizada en `OrbiterBehavior`, `EnemySystem`, el estado
+pooled y `OrbiterTelegraphView`:
+
+- durante `approach` cada nave sigue la posición del player desde un lado
+  determinista, con distancia y sesgo lateral authored;
+- al iniciar `telegraph` captura un foco cercano al player, radio, ángulo y
+  sentido. La ruta empieza exactamente en la posición actual del Orbiter;
+- durante `commit` recorre el arco local capturado sin homing, aunque el player
+  se mueva; `recovery` continúa desde el endpoint y vuelve al seguimiento;
+- la presentación traslada las ocho plumas cacheadas al foco local y deja de
+  dibujar un anillo global. El contenedor raíz permanece en `(0, 0)` para no
+  sumar una segunda traslación a las coordenadas mundiales del slot. El riel
+  sigue sin collider; el casco conserva el daño de contacto;
+- se mantiene `commitCap = 1` para que el cambio mejore la amenaza sin generar
+  una cortina ilegible ni adelantar el balance de EX-02c.
+
+La prueba pura cubre seguimiento, ruta fuera del centro, variación entre
+Orbiters, bloqueo durante telegraph, contacto y estabilidad a 30/60/144 Hz; la
+prueba de vista cubre el traslado del telegraph y su reutilización. El cambio
+es automático OK tras typecheck y pruebas dirigidas, pero requiere una nueva
+validación humana en `?orbiter=1&debug=1` y dentro de la campaña Angular. La
+aprobación general del Acto II se conserva; sólo se reabre la lectura/evasión
+específica del Orbiter. EX-02c sigue pendiente.
+
 ### 22.1a Prototipo autorizado del Acto I
 
 Para trabajo visual de hazards y futuros efectos, leer la dirección

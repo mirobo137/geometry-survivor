@@ -30,11 +30,42 @@ del marco estable o medir `GraphicsContext`; no debe ocultarlo con filtros ni
 retirar feedback. Fuente:
 https://pixijs.com/8.x/guides/components/scene-objects/graphics#performance-best-practices
 
-Validación automática vigente: **20/20** pruebas dirigidas; typecheck, **92
-archivos / 346 tests**, build local y smoke de gating Angular pasaron. Persiste
+Validación automática de la aprobación original: **20/20** pruebas dirigidas;
+typecheck, **92 archivos / 346 tests**, build local y smoke de gating Angular
+pasaron. Persiste
 únicamente el warning conocido del chunk principal mayor de 500 kB. El
 siguiente bloque habilitado es EX-08; EX-02c permanece diferido y Acto III
 continúa en EX-10.
+
+## Refinamiento Orbiter — seguimiento y foco local — 13-09-2026
+
+La revisión de la campaña detectó que el Orbiter convergía siempre al mismo
+círculo centrado y dejaba una esquina demasiado segura. Ya quedó corregido:
+
+- durante `approach`, cada nave sigue al player desde un lado estable,
+  manteniendo `followDistance = 116` y un sesgo lateral de `30` unidades;
+- al iniciar `telegraph`, captura un foco cercano al player, un radio, ángulo y
+  sentido. La curva comienza exactamente donde está la nave, no en el centro de
+  la arena;
+- durante `commit`, la nave recorre la ruta capturada sin homing, aunque el
+  player se mueva. `recovery` continúa desde el endpoint y vuelve a seguirlo;
+- el telegraph conserva las ocho plumas premium, pero ahora se traslada al foco
+  local mediante una única transform. El `root` queda en `(0, 0)` y el slot
+  recibe las coordenadas mundiales del foco; así se evita el desfase por doble
+  traslación. No crea un collider ni redibuja un anillo global;
+- se mantiene `commitCap = 1`, el daño de contacto del casco y todo el balance
+  provisional de EX-02c.
+
+La regresión cubre seguimiento, foco fuera del centro, variación entre Orbiters,
+compromiso durante telegraph, contacto, salida de un solapamiento y estabilidad
+a 30/60/144 Hz; la vista verifica el traslado y la reutilización de la
+geometría. Typecheck y 14 pruebas dirigidas están verdes; el smoke de Playwright
+del drill también pasa. Falta la
+validación humana final en
+`?orbiter=1&debug=1&quality=low|medium|high` y dentro de una run Angular,
+especialmente probando camping en esquina y salida táctil durante el arco.
+La aprobación general del Acto II se conserva; sólo esta lectura/evasión del
+Orbiter queda pendiente de retest. EX-02c sigue diferido.
 
 ## EX-07e — Acto II conectado a campaña — 12-09-2026
 

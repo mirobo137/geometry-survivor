@@ -3,6 +3,7 @@ import {
   type OrbiterDirection
 } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
+import type { PlayerState } from '../PlayerModel';
 import type { EnemyState } from '../combat/EntityPools';
 
 const FULL_CIRCLE = Math.PI * 2;
@@ -30,8 +31,10 @@ const moveToward = (state: EnemyState, targetX: number, targetY: number, speed: 
 };
 
 /**
- * Pure per-enemy Angular movement. A later Angular director chooses when to
- * create Orbiters; this class only executes an already-authored route.
+ * Pure per-enemy Angular movement. The Orbiter shadows the player during
+ * approach, then captures a local focus and commits a finite arc around it.
+ * The focus is authored from the simulation snapshot; it is never the arena
+ * center unless the player is actually there.
  */
 export class OrbiterBehavior {
   public configure(state: EnemyState, spawnIndex: number, arenaRadius: number): void {
@@ -44,6 +47,15 @@ export class OrbiterBehavior {
     state.orbiterProgress = 0;
     state.orbiterBandRadius = this.getBandRadius(arenaRadius, state.radius);
     state.orbiterStartAngle = this.getSectorStartAngle(sector);
+    const fromCenterX = state.x - ARENA_CENTER.x;
+    const fromCenterY = state.y - ARENA_CENTER.y;
+    const fromCenterDistance = Math.hypot(fromCenterX, fromCenterY);
+    state.orbiterFollowAngle = fromCenterDistance > EPSILON
+      ? Math.atan2(fromCenterY, fromCenterX)
+      : state.orbiterStartAngle;
+    state.orbiterRouteCenterX = ARENA_CENTER.x;
+    state.orbiterRouteCenterY = ARENA_CENTER.y;
+    state.orbiterRouteRadius = state.orbiterBandRadius;
     state.orbiterTimer = 0;
     state.orbiterSequence = 0;
     // The route is a telegraph only. Its physical hull is dangerous through
@@ -51,11 +63,16 @@ export class OrbiterBehavior {
     state.contactEnabled = true;
   }
 
-  public update(state: EnemyState, dt: number, arenaRadius: number, allowCommit = true): void {
-    state.orbiterBandRadius = this.getBandRadius(arenaRadius, state.radius);
+  public update(
+    state: EnemyState,
+    dt: number,
+    arenaRadius: number,
+    player: PlayerState,
+    allowCommit = true
+  ): void {
     switch (state.orbiterPhase) {
       case 'approach':
-        this.updateApproach(state, dt);
+        this.updateApproach(state, dt, arenaRadius, player);
         break;
       case 'telegraph':
         this.updateTelegraph(state, dt, allowCommit);
@@ -72,10 +89,10 @@ export class OrbiterBehavior {
     }
   }
 
-  private updateApproach(state: EnemyState, dt: number): void {
+  private updateApproach(state: EnemyState, dt: number, arenaRadius: number, player: PlayerState): void {
     state.contactEnabled = true;
-    const target = this.getPoint(state.orbiterBandRadius, state.orbiterStartAngle);
-    if (!moveToward(state, target.x, target.y, ORBITER_DEFINITION.approachSpeed, dt)) return;
+    if (!this.moveTowardFollowPosition(state, player, arenaRadius, dt)) return;
+    this.captureRoute(state, player, arenaRadius);
     state.orbiterPhase = 'telegraph';
     state.orbiterTimer = 0;
     state.orbiterProgress = 0;
@@ -106,11 +123,11 @@ export class OrbiterBehavior {
     state.orbiterProgress = Math.min(1, state.orbiterTimer / ORBITER_DEFINITION.commitSeconds);
     const angle = state.orbiterStartAngle
       + state.orbiterDirection * ORBITER_DEFINITION.commitAngularSpeed * state.orbiterTimer;
-    const point = this.getPoint(state.orbiterBandRadius, angle);
-    state.x = point.x;
-    state.y = point.y;
-    state.vx = -Math.sin(angle) * state.orbiterDirection * state.orbiterBandRadius * ORBITER_DEFINITION.commitAngularSpeed;
-    state.vy = Math.cos(angle) * state.orbiterDirection * state.orbiterBandRadius * ORBITER_DEFINITION.commitAngularSpeed;
+    const radius = state.orbiterRouteRadius;
+    state.x = state.orbiterRouteCenterX + Math.cos(angle) * radius;
+    state.y = state.orbiterRouteCenterY + Math.sin(angle) * radius;
+    state.vx = -Math.sin(angle) * state.orbiterDirection * radius * ORBITER_DEFINITION.commitAngularSpeed;
+    state.vy = Math.cos(angle) * state.orbiterDirection * radius * ORBITER_DEFINITION.commitAngularSpeed;
     if (state.orbiterTimer < ORBITER_DEFINITION.commitSeconds) return;
     state.orbiterPhase = 'recovery';
     state.orbiterTimer = 0;
@@ -124,12 +141,19 @@ export class OrbiterBehavior {
     const angle = radialDistance > EPSILON
       ? Math.atan2(state.y - ARENA_CENTER.y, state.x - ARENA_CENTER.x)
       : state.orbiterStartAngle;
-    const target = this.getPoint(Math.max(arenaRadius + 56, state.orbiterBandRadius + 42), angle);
-    moveToward(state, target.x, target.y, ORBITER_DEFINITION.approachSpeed, dt);
+    const exitRadius = Math.max(arenaRadius + 56, state.orbiterBandRadius + 42);
+    moveToward(
+      state,
+      ARENA_CENTER.x + Math.cos(angle) * exitRadius,
+      ARENA_CENTER.y + Math.sin(angle) * exitRadius,
+      ORBITER_DEFINITION.approachSpeed,
+      dt
+    );
     state.orbiterProgress = Math.min(1, state.orbiterTimer / ORBITER_DEFINITION.recoverySeconds);
     if (state.orbiterTimer < ORBITER_DEFINITION.recoverySeconds) return;
     state.orbiterSector = (state.orbiterSector + (state.orbiterDirection > 0 ? 3 : 5)) % ORBITER_DEFINITION.sectorCount;
     state.orbiterStartAngle = this.getSectorStartAngle(state.orbiterSector);
+    state.orbiterFollowAngle = angle;
     state.orbiterPhase = 'approach';
     state.orbiterTimer = 0;
     state.orbiterProgress = 0;
@@ -146,11 +170,108 @@ export class OrbiterBehavior {
     return normalizeAngle(sector * FULL_CIRCLE / ORBITER_DEFINITION.sectorCount);
   }
 
-  private getPoint(radius: number, angle: number): { readonly x: number; readonly y: number } {
-    return {
-      x: ARENA_CENTER.x + Math.cos(angle) * radius,
-      y: ARENA_CENTER.y + Math.sin(angle) * radius
-    };
+  private moveTowardFollowPosition(
+    state: EnemyState,
+    player: PlayerState,
+    arenaRadius: number,
+    dt: number
+  ): boolean {
+    // Keep one authored side for the entire approach. Recomputing this angle
+    // from the moving body would make the destination orbit around itself and
+    // the ship would never settle into the telegraph phase.
+    const radialX = Math.cos(state.orbiterFollowAngle);
+    const radialY = Math.sin(state.orbiterFollowAngle);
+    const tangentX = -radialY * state.orbiterDirection;
+    const tangentY = radialX * state.orbiterDirection;
+    let targetX = player.x
+      + radialX * ORBITER_DEFINITION.followDistance
+      + tangentX * ORBITER_DEFINITION.followLateralOffset;
+    let targetY = player.y
+      + radialY * ORBITER_DEFINITION.followDistance
+      + tangentY * ORBITER_DEFINITION.followLateralOffset;
+
+    const maxDistance = Math.max(0, arenaRadius - state.radius - 18);
+    const targetFromCenterX = targetX - ARENA_CENTER.x;
+    const targetFromCenterY = targetY - ARENA_CENTER.y;
+    const targetFromCenterDistance = Math.hypot(targetFromCenterX, targetFromCenterY);
+    if (targetFromCenterDistance > maxDistance && targetFromCenterDistance > EPSILON) {
+      const scale = maxDistance / targetFromCenterDistance;
+      targetX = ARENA_CENTER.x + targetFromCenterX * scale;
+      targetY = ARENA_CENTER.y + targetFromCenterY * scale;
+    }
+
+    // Near a wall the incoming side can be outside the arena. Move to an
+    // inward staging point instead of collapsing the follow distance to zero.
+    const targetDistanceFromPlayer = Math.hypot(targetX - player.x, targetY - player.y);
+    if (targetDistanceFromPlayer < ORBITER_DEFINITION.followDistance * 0.65) {
+      const inwardX = ARENA_CENTER.x - player.x;
+      const inwardY = ARENA_CENTER.y - player.y;
+      const inwardDistance = Math.hypot(inwardX, inwardY);
+      if (inwardDistance > EPSILON) {
+        const unitInwardX = inwardX / inwardDistance;
+        const unitInwardY = inwardY / inwardDistance;
+        targetX = player.x
+          + unitInwardX * ORBITER_DEFINITION.followDistance * 0.82
+          + (-unitInwardY * state.orbiterDirection) * ORBITER_DEFINITION.followLateralOffset * 0.5;
+        targetY = player.y
+          + unitInwardY * ORBITER_DEFINITION.followDistance * 0.82
+          + (unitInwardX * state.orbiterDirection) * ORBITER_DEFINITION.followLateralOffset * 0.5;
+        const fallbackFromCenterX = targetX - ARENA_CENTER.x;
+        const fallbackFromCenterY = targetY - ARENA_CENTER.y;
+        const fallbackDistance = Math.hypot(fallbackFromCenterX, fallbackFromCenterY);
+        if (fallbackDistance > maxDistance && fallbackDistance > EPSILON) {
+          const fallbackScale = maxDistance / fallbackDistance;
+          targetX = ARENA_CENTER.x + fallbackFromCenterX * fallbackScale;
+          targetY = ARENA_CENTER.y + fallbackFromCenterY * fallbackScale;
+        }
+      }
+    }
+    return moveToward(state, targetX, targetY, ORBITER_DEFINITION.approachSpeed, dt);
+  }
+
+  private captureRoute(state: EnemyState, player: PlayerState, arenaRadius: number): void {
+    const fromPlayerX = state.x - player.x;
+    const fromPlayerY = state.y - player.y;
+    const fromPlayerDistance = Math.hypot(fromPlayerX, fromPlayerY);
+    const radialX = fromPlayerDistance > EPSILON ? fromPlayerX / fromPlayerDistance : Math.cos(state.orbiterStartAngle);
+    const radialY = fromPlayerDistance > EPSILON ? fromPlayerY / fromPlayerDistance : Math.sin(state.orbiterStartAngle);
+    const inwardX = ARENA_CENTER.x - player.x;
+    const inwardY = ARENA_CENTER.y - player.y;
+    const inwardDistance = Math.hypot(inwardX, inwardY);
+    const unitInwardX = inwardDistance > EPSILON ? inwardX / inwardDistance : 0;
+    const unitInwardY = inwardDistance > EPSILON ? inwardY / inwardDistance : 0;
+    const tangentX = -radialY * state.orbiterDirection;
+    const tangentY = radialX * state.orbiterDirection;
+    const sectorBias = (state.orbiterSector % 3) - 1;
+    const focusInset = Math.min(ORBITER_DEFINITION.attackFocusInset, inwardDistance);
+    let focusX = player.x
+      + unitInwardX * focusInset
+      + tangentX * sectorBias * ORBITER_DEFINITION.attackFocusLateralOffset;
+    let focusY = player.y
+      + unitInwardY * focusInset
+      + tangentY * sectorBias * ORBITER_DEFINITION.attackFocusLateralOffset;
+
+    const maxFocusDistance = Math.max(0, arenaRadius - state.radius - 22);
+    const fromCenterX = focusX - ARENA_CENTER.x;
+    const fromCenterY = focusY - ARENA_CENTER.y;
+    const focusDistance = Math.hypot(fromCenterX, fromCenterY);
+    if (focusDistance > maxFocusDistance && focusDistance > EPSILON) {
+      const scale = maxFocusDistance / focusDistance;
+      focusX = ARENA_CENTER.x + fromCenterX * scale;
+      focusY = ARENA_CENTER.y + fromCenterY * scale;
+    }
+
+    const routeX = state.x - focusX;
+    const routeY = state.y - focusY;
+    const routeRadius = Math.hypot(routeX, routeY);
+    state.orbiterRouteCenterX = focusX;
+    state.orbiterRouteCenterY = focusY;
+    state.orbiterRouteRadius = routeRadius;
+    // Keep the old field as a diagnostic alias for existing debug consumers.
+    state.orbiterBandRadius = routeRadius;
+    state.orbiterStartAngle = routeRadius > EPSILON
+      ? Math.atan2(routeY, routeX)
+      : state.orbiterStartAngle;
   }
 
 }

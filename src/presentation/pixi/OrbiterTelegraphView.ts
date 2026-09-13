@@ -35,7 +35,10 @@ export class OrbiterTelegraphView {
 
   public constructor(_quality: FxQuality = 'medium') {
     this.root.eventMode = 'none';
-    this.root.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
+    // CombatEntitiesView already lives in world coordinates. Route centers
+    // are world-space values, so applying ARENA_CENTER here would double
+    // translate every local telegraph away from its Orbiter.
+    this.root.position.set(0, 0);
     for (const slot of this.slots) {
       slot.root.addChild(...slot.feathers);
       slot.root.visible = false;
@@ -51,9 +54,11 @@ export class OrbiterTelegraphView {
       if (phase !== 'telegraph' && phase !== 'commit') continue;
       const slot = this.slots[cursor++];
       if (!slot) break;
-      const radius = Math.max(1, state.orbiterBandRadius ?? 1);
+      const radius = Math.max(1, state.orbiterRouteRadius ?? state.orbiterBandRadius ?? 1);
       const angle = state.orbiterStartAngle ?? 0;
       const direction = state.orbiterDirection ?? 1;
+      const centerX = state.orbiterRouteCenterX ?? ARENA_CENTER.x;
+      const centerY = state.orbiterRouteCenterY ?? ARENA_CENTER.y;
       // Include identity and geometry: sequences repeat when pooled slots recycle.
       if (slot.state !== state || slot.sequence !== state.orbiterSequence
         || slot.radius !== radius || slot.angle !== angle || slot.direction !== direction) {
@@ -77,6 +82,8 @@ export class OrbiterTelegraphView {
         }
       }
       const p = Math.max(0, Math.min(1, state.orbiterProgress ?? 0));
+      slot.root.position.set(centerX, centerY);
+      slot.root.rotation = 0;
       slot.root.visible = true;
       for (let i = 0; i < SEGMENTS; i += 1) {
         const fraction = (i + 0.5) / SEGMENTS;

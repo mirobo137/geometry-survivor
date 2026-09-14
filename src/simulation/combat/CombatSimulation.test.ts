@@ -32,6 +32,8 @@ describe('CombatSimulation', () => {
     expect(combat.currentOrbitHitCooldown).toBeCloseTo(WEAPON_DEFINITIONS.orbit.hitCooldownSeconds * 0.97);
     expect(combat.currentChainDamage).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.damage * 1.1);
     expect(combat.currentChainCooldown).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.cooldownSeconds * 0.97);
+    expect(combat.currentMagneticChargeDamage).toBeCloseTo(WEAPON_DEFINITIONS.magneticCharge.damage * 1.1);
+    expect(combat.currentMagneticChargeCooldown).toBeCloseTo(WEAPON_DEFINITIONS.magneticCharge.cooldownSeconds * 0.97);
     combat.increaseProjectileDamage(4);
     combat.increaseChainDamage(4);
     combat.reset();
@@ -210,6 +212,73 @@ describe('CombatSimulation', () => {
     expect(combat.radialPulse.state.phase).toBe('idle');
     expect(combat.laser.state.phase).toBe('idle');
     expect(combat.enemies.activeCount).toBe(0);
+  });
+
+  it('runs the player-owned Pulse Ring drill with a real weapon cast', () => {
+    const combat = new CombatSimulation({ pulseRingWeaponDrill: true });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 2.2);
+
+    expect(combat.isPulseRingWeaponDrill).toBe(true);
+    expect(combat.hasPulseRing).toBe(true);
+    expect(combat.renderState.pulseRingWeapon.sequence).toBeGreaterThan(0);
+    expect(combat.renderState.pulseRingWeapon.originX).toBe(player.state.x);
+    expect(combat.enemies.activeCount).toBe(7);
+    expect(combat.projectiles.activeCount).toBe(0);
+    expect(combat.pulseRing.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+    expect(combat.laser.state.phase).toBe('idle');
+  });
+
+  it('runs the isolated Magnetic Charge drill with remote target and fixed targets', () => {
+    const combat = new CombatSimulation({ magneticChargeWeaponDrill: true });
+    const player = new PlayerModel();
+
+    runSeconds(combat, player, 1 / 30);
+
+    expect(combat.isMagneticChargeWeaponDrill).toBe(true);
+    expect(combat.isPulseRingWeaponDrill).toBe(false);
+    expect(combat.hasMagneticCharge).toBe(true);
+    expect(combat.renderState.magneticCharge.active).toBe(true);
+    expect(combat.renderState.magneticCharge.phase).not.toBe('idle');
+    expect(Math.hypot(
+      combat.renderState.magneticCharge.targetX - player.state.x,
+      combat.renderState.magneticCharge.targetY - player.state.y
+    )).toBeGreaterThan(120);
+    expect(combat.enemies.activeCount).toBe(8);
+    expect(combat.boss.state.active).toBe(false);
+    expect(combat.laser.state.phase).toBe('idle');
+    expect(combat.radialPulse.state.phase).toBe('idle');
+    expect(combat.pulseRing.state.phase).toBe('idle');
+    expect(combat.projectiles.activeCount).toBe(0);
+  });
+
+  it('fires Magnetic Charge in a normal run after the card unlocks it', () => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+
+    expect(combat.unlockMagneticCharge()).toBe(true);
+    runSeconds(combat, player, 1 / 60);
+
+    expect(combat.hasMagneticCharge).toBe(true);
+    expect(combat.renderState.magneticCharge.active).toBe(true);
+    expect(combat.renderState.magneticCharge.sequence).toBe(1);
+
+    runSeconds(combat, player, 8.5);
+    expect(combat.renderState.magneticCharge.sequence).toBeGreaterThan(1);
+  });
+
+  it('keeps the player-owned Pulse Ring drill unlocked after a run reset', () => {
+    const combat = new CombatSimulation({ pulseRingWeaponDrill: true });
+    const player = new PlayerModel();
+
+    runSeconds(combat, player, 2.2);
+    combat.reset();
+    runSeconds(combat, player, 2.2);
+
+    expect(combat.hasPulseRing).toBe(true);
+    expect(combat.renderState.pulseRingWeapon.sequence).toBeGreaterThan(0);
+    expect(combat.enemies.activeCount).toBe(7);
   });
 
   it('runs the isolated Angular sweep drill without normal hazards or waves', () => {

@@ -6,23 +6,35 @@ import type { BoomerangRenderState, ChainSegmentState, OrbitBladeState, ShotRend
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
+import type { ArenaBoundaryInput } from '../ArenaBoundary';
 import { WeaponScheduler } from './WeaponScheduler';
 import { ProjectileBehavior } from './ProjectileBehavior';
 import { OrbitBehavior } from './OrbitBehavior';
 import { ChainBehavior } from './ChainBehavior';
 import { BoomerangBehavior } from './BoomerangBehavior';
+import { PulseRingWeaponBehavior } from './PulseRingWeaponBehavior';
+import { MagneticChargeBehavior } from './MagneticChargeBehavior';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
+const PULSE_RING_DEFINITION = WEAPON_DEFINITIONS.pulseRing;
+const MAGNETIC_CHARGE_DEFINITION = WEAPON_DEFINITIONS.magneticCharge;
 
 export interface CombatWeaponUpdateOptions {
   readonly projectileEnabled?: boolean;
   readonly orbitEnabled?: boolean;
   readonly chainEnabled?: boolean;
   readonly boomerangEnabled?: boolean;
+  readonly pulseRingEnabled?: boolean;
+  readonly magneticChargeEnabled?: boolean;
+  readonly magneticChargeArena?: ArenaBoundaryInput;
+  /** Development-only cadence override for the isolated Pulse Ring drill. */
+  readonly pulseRingCooldownSeconds?: number;
+  /** Development-only cadence override for the isolated Magnetic Charge drill. */
+  readonly magneticChargeCooldownSeconds?: number;
 }
 
 /** Runs authored weapon behavior against the enemy query surface. */
@@ -32,16 +44,22 @@ export class CombatWeaponSystem {
   public readonly orbitBlades: readonly OrbitBladeState[];
   public readonly chainSegments: readonly ChainSegmentState[];
   public readonly boomerangStates: readonly BoomerangRenderState[];
+  public readonly pulseRingWeapon: PulseRingWeaponBehavior['state'];
+  public readonly magneticCharge: MagneticChargeBehavior['state'];
   private readonly projectileBehavior: ProjectileBehavior;
   private readonly orbitBehavior: OrbitBehavior;
   private readonly chainBehavior: ChainBehavior;
   private readonly boomerangBehavior: BoomerangBehavior;
+  private readonly pulseRingBehavior: PulseRingWeaponBehavior;
+  private readonly magneticChargeBehavior: MagneticChargeBehavior;
   private readonly scheduler: WeaponScheduler;
   private projectileDamage = PROJECTILE_DEFINITION.damage;
   private projectileSpeed = PROJECTILE_DEFINITION.speed;
   private projectileCooldown = PROJECTILE_DEFINITION.cooldownSeconds;
   private chainCooldown = CHAIN_DEFINITION.cooldownSeconds;
   private boomerangCooldown = BOOMERANG_DEFINITION.cooldownSeconds;
+  private pulseRingCooldown = PULSE_RING_DEFINITION.cooldownSeconds;
+  private magneticChargeCooldown = MAGNETIC_CHARGE_DEFINITION.cooldownSeconds;
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
@@ -83,14 +101,27 @@ export class CombatWeaponSystem {
       rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
       onEnemyDefeated: this.onEnemyDefeated
     });
+    this.pulseRingBehavior = new PulseRingWeaponBehavior({
+      enemies: this.enemies,
+      rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
+      onEnemyDefeated: this.onEnemyDefeated
+    });
+    this.magneticChargeBehavior = new MagneticChargeBehavior({
+      enemies: this.enemies,
+      rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
+      onEnemyDefeated: this.onEnemyDefeated
+    });
     this.orbitBlades = this.orbitBehavior.blades;
     this.chainSegments = this.chainBehavior.segments;
     this.boomerangStates = this.boomerangs.states;
+    this.pulseRingWeapon = this.pulseRingBehavior.state;
+    this.magneticCharge = this.magneticChargeBehavior.state;
     this.lastShot = this.projectileBehavior.lastShot;
     this.scheduler = new WeaponScheduler({
       fireProjectile: (player) => this.projectileBehavior.fire(player),
       fireChain: (player) => this.chainBehavior.fire(player),
-      fireBoomerang: (player) => this.boomerangBehavior.fire(player)
+      fireBoomerang: (player) => this.boomerangBehavior.fire(player),
+      firePulseRing: (player) => this.pulseRingBehavior.fire(player)
     });
     this.stressScenario = new StressCombatScenario(
       this.projectiles,
@@ -155,6 +186,22 @@ export class CombatWeaponSystem {
     return this.boomerangCooldown;
   }
 
+  public get currentPulseRingDamage(): number {
+    return this.pulseRingBehavior.currentDamage;
+  }
+
+  public get currentPulseRingCooldown(): number {
+    return this.pulseRingCooldown;
+  }
+
+  public get currentMagneticChargeDamage(): number {
+    return this.magneticChargeBehavior.currentDamage;
+  }
+
+  public get currentMagneticChargeCooldown(): number {
+    return this.magneticChargeBehavior.currentCooldown;
+  }
+
   public get currentCriticalChance(): number {
     return this.criticalChance;
   }
@@ -170,12 +217,16 @@ export class CombatWeaponSystem {
     this.orbitBehavior.reset();
     this.chainBehavior.reset();
     this.boomerangBehavior.reset();
+    this.pulseRingBehavior.reset();
+    this.magneticChargeBehavior.reset();
     this.stressScenario.reset();
     this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.weaponDamageMultiplier;
     this.projectileSpeed = PROJECTILE_DEFINITION.speed;
     this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier;
     this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.magneticChargeCooldown = Math.max(0.45, MAGNETIC_CHARGE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.criticalChance = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
@@ -187,12 +238,19 @@ export class CombatWeaponSystem {
     this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
     this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
+    this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
+    this.magneticChargeCooldown = Math.max(0.45, MAGNETIC_CHARGE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
     this.orbitBehavior.setPermanentBonuses(
       permanentBonuses.weaponDamageMultiplier,
       permanentBonuses.weaponCadenceMultiplier
     );
     this.chainBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
     this.boomerangBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
+    this.pulseRingBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
+    this.magneticChargeBehavior.setPermanentBonuses(
+      permanentBonuses.weaponDamageMultiplier,
+      permanentBonuses.weaponCadenceMultiplier
+    );
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -233,6 +291,30 @@ export class CombatWeaponSystem {
     return this.boomerangBehavior.isUnlocked;
   }
 
+  public unlockPulseRing(): boolean {
+    return this.pulseRingBehavior.unlock();
+  }
+
+  public get hasPulseRing(): boolean {
+    return this.pulseRingBehavior.isUnlocked;
+  }
+
+  public increasePulseRingDamage(amount: number): void {
+    this.pulseRingBehavior.increaseDamage(amount);
+  }
+
+  public unlockMagneticCharge(): boolean {
+    return this.magneticChargeBehavior.unlock();
+  }
+
+  public get hasMagneticCharge(): boolean {
+    return this.magneticChargeBehavior.isUnlocked;
+  }
+
+  public increaseMagneticChargeDamage(amount: number): void {
+    this.magneticChargeBehavior.increaseDamage(amount);
+  }
+
   public get activeOrbitBlades(): number {
     return this.orbitBehavior.activeBladeCount;
   }
@@ -263,6 +345,16 @@ export class CombatWeaponSystem {
 
     this.chainBehavior.updateSegments(dt);
     this.boomerangBehavior.update(dt, player);
+    this.pulseRingBehavior.update(dt);
+    if ((options.magneticChargeEnabled ?? this.magneticChargeBehavior.isUnlocked)
+      && options.magneticChargeArena !== undefined) {
+      this.magneticChargeBehavior.update(
+        dt,
+        player,
+        options.magneticChargeArena,
+        options.magneticChargeCooldownSeconds ?? this.magneticChargeCooldown
+      );
+    }
     if (options.orbitEnabled ?? true) this.orbitBehavior.update(dt, player);
     this.scheduler.update(
       dt,
@@ -272,7 +364,9 @@ export class CombatWeaponSystem {
       player,
       options.projectileEnabled ?? true,
       options.boomerangEnabled ?? this.boomerangBehavior.isUnlocked,
-      this.boomerangCooldown
+      this.boomerangCooldown,
+      options.pulseRingEnabled ?? this.pulseRingBehavior.isUnlocked,
+      options.pulseRingCooldownSeconds ?? this.pulseRingCooldown
     );
     this.projectileBehavior.update(dt);
   }

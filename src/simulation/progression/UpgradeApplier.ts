@@ -9,7 +9,7 @@ import { PlayerModel } from '../PlayerModel';
 import type { UpgradePreview } from './UpgradePreview';
 
 const MAX_ACTIVE_WEAPONS = 3;
-const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang'];
+const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'];
 
 /** Applies authored upgrade effects at the composition boundary. */
 export class UpgradeApplier {
@@ -23,6 +23,20 @@ export class UpgradeApplier {
 
   public getChoices(level: number): readonly UpgradeDefinition[] {
     return getLevelUpChoices(level, (upgrade) => this.canApply(upgrade));
+  }
+
+  /**
+   * Developer-entry helper: keeps the normal three-card layout while placing
+   * one valid card first. It does not bypass prerequisites or the weapon cap.
+   */
+  public getChoicesWithPriority(level: number, preferredUpgradeId: UpgradeId): readonly UpgradeDefinition[] {
+    const preferred = this.resolveDefinition(preferredUpgradeId);
+    if (!preferred || !this.canApply(preferred)) return this.getChoices(level);
+    const fallback = getLevelUpChoices(
+      level,
+      (upgrade) => upgrade.id !== preferredUpgradeId && this.canApply(upgrade)
+    );
+    return [preferred, ...fallback].slice(0, 3);
   }
 
   /** Returns the next deterministic cards, excluding the current offer. */
@@ -125,6 +139,10 @@ export class UpgradeApplier {
         return null;
       case 'vectorBoomerang':
         return null;
+      case 'pulseRing':
+        return null;
+      case 'magneticCharge':
+        return null;
     }
   }
 
@@ -163,6 +181,12 @@ export class UpgradeApplier {
         break;
       case 'vectorBoomerang':
         applied = this.combat.unlockVectorBoomerang();
+        break;
+      case 'pulseRing':
+        applied = this.combat.unlockPulseRing();
+        break;
+      case 'magneticCharge':
+        applied = this.combat.unlockMagneticCharge();
         break;
       case 'projectileCooldown':
         this.combat.decreaseProjectileCooldown(definition.effect.amount);
@@ -213,4 +237,6 @@ const isWeaponUnlock = (definition: UpgradeDefinition): boolean => (
   definition.effect.type === 'orbitBlade'
   || definition.effect.type === 'chainLightning'
   || definition.effect.type === 'vectorBoomerang'
+  || definition.effect.type === 'pulseRing'
+  || definition.effect.type === 'magneticCharge'
 );

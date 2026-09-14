@@ -2120,7 +2120,7 @@ El orden obligatorio es:
    Pulse Ring, hazard angular y boss propio.
 8. **Integrar SDKs por build.** Poki y CrazyGames sólo después de que el flujo
    rewarded local sea completamente seguro. Validar en Inspector/Preview.
-9. **Construir Acto III Fracture.** Añadir barreras temporales, Aura, boss
+9. **Construir Acto III Fracture.** Añadir barreras temporales, Magnetic Charge, boss
    final y evoluciones restantes.
 10. **Overdrive y producción.** Endless, analítica permitida, balance avanzado,
     promociones y contenido adicional quedan al final.
@@ -2235,7 +2235,7 @@ OrbitBehavior               órbita actual
 ChainBehavior               cadena actual
 BoomerangBehavior           salida, retorno y registro de impactos
 PulseAreaBehavior           anillos instantáneos/expansivos
-AuraBehavior                banda persistente con tick acotado
+MagneticChargeBehavior      carga remota, atracción y banda annular
 ```
 
 Los behaviors usan el pool y la spatial grid existentes. No importan Pixi,
@@ -2326,18 +2326,22 @@ expansivo que daña una vez y empuja; premia esperar a que el grupo se acerque.
   de telegraph y libera un golpe al 165% con mayor empuje. Intervalo 35% mayor;
   la fase de atracción no hace daño y el boss no se desplaza.
 
-### Resonant Aura — dominar una distancia concreta
+### Magnetic Charge — control remoto y colapso de masas
 
-Nuevo sexto comportamiento. Daña en una banda entre radio interior y exterior;
-el centro permanece sin daño. Evita copiar un aura circular que premie quedarse
-quieto encima de los enemigos.
+Nuevo sexto comportamiento. El player lanza una carga a distancia larga, sin
+seguir a un objetivo y aunque no haya enemigos. La carga viaja hasta un punto
+determinista dentro de la arena, atrae enemigos comunes durante una ventana
+corta y después detona en una banda anular con centro seguro. Sólo existe una
+carga activa; los bosses pueden recibir el daño de la detonación, pero nunca
+son desplazados por la atracción.
 
-- **Breathing Halo (`breathing_halo`)**: la banda oscila entre radios 65–150,
-  suma 20% de daño y mantiene cooldown por objetivo de al menos 0.35 s. Obliga
-  a acompañar el ritmo del anillo.
-- **Prism Wall (`prism_wall`)**: sustituye el anillo completo por tres arcos
-  rotatorios de 55 grados, con 70% más daño y huecos reales. Premia orientación
-  y movimiento; sólo existen tres segmentos visuales y lógicos.
+- **Event Horizon (`event_horizon`)**: ruta de control. Aumenta duración,
+  radio y fuerza de atracción, pero reduce daño y cadencia. Premia preparar
+  una zona de convergencia y reposicionarse alrededor del hueco.
+- **Polar Collapse (`polar_collapse`)**: ruta ofensiva. Reduce la ventana de
+  atracción y añade una segunda contracción/expansión de la banda con daño
+  parcial, a cambio de una cadencia más lenta. Mantiene un solo cast activo y
+  no convierte la carga en daño inevitable.
 
 Los nombres y valores son baseline de contenido, no promesa de balance final.
 Cada implementación empieza con tests de invariantes y termina con runs
@@ -2817,19 +2821,22 @@ y cubierta por test. Esta deuda no bloquea EX-08; una iteración futura debe
 medir una separación del FX y geometría estable, sin filtros ni cambios de
 gameplay.
 
-### 22.1j Refinamiento del Orbiter: seguimiento y foco local — 13-09-2026
+### 22.1k Refinamiento del Orbiter: cadencia temporal y arco ampliado — 14-09-2026
 
-La revisión de juego detectó que el Orbiter convergía siempre a un círculo
-centrado en `ARENA_CENTER`, lo que permitía al jugador acampar en una esquina.
-La corrección queda localizada en `OrbiterBehavior`, `EnemySystem`, el estado
+La revisión de juego detectó que el Orbiter podía parecer que huía al converger
+a un objetivo lateral y que no atacaba hasta estar cerca. La corrección queda
+localizada en `OrbiterBehavior`, `EnemyDefinitions`, `EnemySystem`, el estado
 pooled y `OrbiterTelegraphView`:
 
-- durante `approach` cada nave sigue la posición del player desde un lado
-  determinista, con distancia y sesgo lateral authored;
-- al iniciar `telegraph` captura un foco cercano al player, radio, ángulo y
-  sentido. La ruta empieza exactamente en la posición actual del Orbiter;
-- durante `commit` recorre el arco local capturado sin homing, aunque el player
-  se mueva; `recovery` continúa desde el endpoint y vuelve al seguimiento;
+- durante `approach` cada nave persigue directamente la posición del player
+  mientras avanza `attackDelaySeconds`; el ataque no espera una distancia ni
+  otra posición de preparación;
+- al vencer el reloj inicia `telegraph` desde la posición actual del Orbiter,
+  con radio local fijo de 112 u y arco authored de 135°, aunque esté lejos o ya
+  esté delante/en contacto;
+- durante `commit` recorre el arco local capturado a mayor velocidad, sin homing
+  y sin cancelar por la posición del player; `recovery` continúa desde el
+  endpoint, sigue al player y reinicia la espera temporal;
 - la presentación traslada las ocho plumas cacheadas al foco local y deja de
   dibujar un anillo global. El contenedor raíz permanece en `(0, 0)` para no
   sumar una segunda traslación a las coordenadas mundiales del slot. El riel
@@ -2837,13 +2844,110 @@ pooled y `OrbiterTelegraphView`:
 - se mantiene `commitCap = 1` para que el cambio mejore la amenaza sin generar
   una cortina ilegible ni adelantar el balance de EX-02c.
 
-La prueba pura cubre seguimiento, ruta fuera del centro, variación entre
-Orbiters, bloqueo durante telegraph, contacto y estabilidad a 30/60/144 Hz; la
-prueba de vista cubre el traslado del telegraph y su reutilización. El cambio
-es automático OK tras typecheck y pruebas dirigidas, pero requiere una nueva
-validación humana en `?orbiter=1&debug=1` y dentro de la campaña Angular. La
-aprobación general del Acto II se conserva; sólo se reabre la lectura/evasión
-específica del Orbiter. EX-02c sigue pendiente.
+La prueba pura cubre persecución durante la espera, lanzamiento remoto,
+segunda secuencia después de recovery, variación entre Orbiters, bloqueo durante
+telegraph, contacto y estabilidad a 30/60/144 Hz; la prueba de vista cubre el
+traslado del telegraph y su reutilización. El cambio
+es automático OK tras typecheck y pruebas dirigidas y queda aprobado por la
+validación humana del usuario en el drill y la campaña Angular. La aprobación
+general del Acto II queda cerrada; EX-02c sigue pendiente para el balance final.
+
+### 22.1l Decisión de orden: EX-08 se prueba en Acto II — 14-09-2026
+
+Con EX-07 aprobado, EX-08 se adelanta como siguiente entrega jugable dentro del
+consumidor Angular real. Las armas y evoluciones se probarán usando sus
+enemigos, transformaciones de arena y hazards ya aprobados, sin esperar la
+recalibración de EX-02c. La primera entrega seguirá siendo una sola ruta de
+Projectile u Orbit, con escenario reproducible y comparación contra su nivel 7
+base; no se abren todas las evoluciones juntas ni se cambia la dificultad
+definitiva de enemigos.
+
+### 22.1m Estado de EX-08a — Pulse Ring de jugador — 14-09-2026
+
+EX-08a es la primera entrega de armas faltantes y queda **AUTOMÁTICO OK;
+validación humana pendiente**. `pulse_ring` se incorpora al catálogo de
+mejoras como quinta familia activa y respeta el máximo global de tres armas.
+Su behavior puro captura el origen del player, ejecuta
+`telegraph → active → recovery`, resuelve la banda con cruce radial barrido,
+aplica un solo impacto por enemigo y empuja objetivos vivos sin mover bosses.
+
+La vista de `WeaponView` usa una carcasa de tinta, armadura, manto cian, filo
+marfil, crestas y residuo segmentado. Los paths se construyen una vez por
+`sequence`; Low conserva la señal de gameplay y reduce sólo ornamentos. El
+arma no comparte estado, cooldown ni daño con el `PulseRingHazard` de Acto II.
+El drill reproducible es `?weapon=pulse-ring&debug=1&quality=low|high`; presenta
+siete blancos estáticos, desactiva otras armas y acelera su primer cast.
+
+La ficha de contrato es
+[`docs/balance/EX-08a-pulse-ring-weapon.md`](docs/balance/EX-08a-pulse-ring-weapon.md)
+y la receta visual es
+[`docs/design/PULSE_RING_WEAPON_FX_PREMIUM.md`](docs/design/PULSE_RING_WEAPON_FX_PREMIUM.md).
+La suite automática cubre behavior, simulación, progresión, vista y boot
+browser: typecheck, suite y smoke dirigido pasan. No se modifica el balance
+diferido de EX-02c. Por instrucción explícita del usuario, la validación humana
+de Pulse Ring queda pendiente pero no bloquea la construcción de Resonant Aura;
+la siguiente puerta de contenido será validar ambas armas antes de abrir sus
+evoluciones una por una.
+
+### 22.1n Estado histórico de EX-08b - Resonant Aura de jugador - 14-09-2026
+
+**SUPERSEDIDA:** la propuesta Aura fue reemplazada uno por uno por Magnetic
+Charge en §22.1o. Se conserva esta nota únicamente como historial de diseño;
+Aura no forma parte del catálogo activo ni de los contratos actuales.
+
+La propuesta histórica contemplaba una banda persistente alrededor del
+jugador, pero nunca se conserva como contrato activo. Sus nombres, drill,
+behavior y evoluciones quedan archivados en los documentos marcados como
+históricos; no deben reutilizarse para nuevas cartas ni implementaciones.
+
+La automatización de aquella propuesta queda como historial y no es una puerta
+vigente. Sus evoluciones no se implementan.
+
+### 22.1o Estado de EX-08b - Magnetic Charge de jugador - 14-09-2026
+
+Por decisión explícita del usuario, Magnetic Charge reemplaza uno por uno a la
+propuesta Resonant Aura como sexta familia de arma. La carta activa es
+`magnetic_charge`, respeta el límite de tres armas y su behavior puro captura
+un destino remoto dentro de la frontera, ejecuta `travel → attract → detonate →
+recovery`, atrae sólo enemigos no boss y daña la banda annular con cooldown por
+objetivo. El centro permanece seguro y la carga no persigue objetivos.
+
+La vista usa ocho Graphics persistentes: estela de viaje, baliza, campo de
+atracción, backplate, banda segmentada, rieles, núcleo y residuo. La geometría
+del destino se construye una vez por `sequence`; sólo la estela y el núcleo
+móvil se actualizan durante el cast. Low mantiene baliza, núcleo y banda de
+daño; High añade campo, rieles y residuo sin cambiar la señal jugable.
+
+El acceso directo es `/?weapon=magnetic-charge&debug=1&quality=low|high` y
+expone `mode: magnetic-charge-drill` y el estado `magnetic: phase | x,y`.
+La ficha de contrato es
+[`docs/balance/EX-08b-magnetic-charge-weapon.md`](docs/balance/EX-08b-magnetic-charge-weapon.md)
+y la receta visual es
+[`docs/design/MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md`](docs/design/MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md).
+
+Las evoluciones quedan **PENDIENTES DE VALIDACIÓN HUMANA** y no están en el
+catálogo ejecutable: `event_horizon` (control) y `polar_collapse` (ofensiva).
+Primero se valida base en Low/High, centro seguro, atracción, detonación,
+boss, reset y rendimiento; después se abre una sola evolución por entrega.
+
+### 22.1p Estado de EX-08c - cartas jugables de Pulse Ring y Magnetic Charge
+
+Las dos armas ya están integradas como cartas del level-up: `pulse_ring` y
+`magnetic_charge`. La rotación authored las alcanza en los niveles 7 y 8, y
+`UpgradeApplier` conserva la elegibilidad, los prerrequisitos y el máximo de
+tres armas activas.
+
+Para probar el arma en una partida real sin esperar la rotación, existe una
+entrada de desarrollo que abre el mismo overlay de tres cartas y coloca una
+carta válida primero: `/?card=pulse-ring&debug=1&quality=low|high` o
+`/?card=magnetic-charge&debug=1&quality=low|high`. El acceso no concede el arma
+por fuera de la carta ni cambia los valores de combate; tras elegirla, la run
+continúa con enemigos, arena y hazards normales. Sin `debug=1` el parámetro no
+altera el flujo público del menú.
+
+La validación automática cubre catálogo, cap de armas, prioridad de oferta y
+selección browser de ambas cartas. La validación humana de las dos armas en
+PC/móvil y Low/High sigue pendiente; las evoluciones permanecen cerradas.
 
 ### 22.1a Prototipo autorizado del Acto I
 

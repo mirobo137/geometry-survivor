@@ -47,6 +47,35 @@ export interface BoomerangWeaponDefinition {
   readonly maxActive: number;
 }
 
+export interface PulseRingWeaponDefinition {
+  readonly damage: number;
+  readonly cooldownSeconds: number;
+  readonly telegraphSeconds: number;
+  readonly attackSeconds: number;
+  readonly recoverySeconds: number;
+  readonly startRadius: number;
+  readonly endRadius: number;
+  readonly width: number;
+  /** One visible but modest displacement applied once when the wave crosses. */
+  readonly pushDistance: number;
+}
+
+export interface MagneticChargeWeaponDefinition {
+  readonly damage: number;
+  readonly cooldownSeconds: number;
+  readonly travelSeconds: number;
+  readonly attractSeconds: number;
+  readonly detonateSeconds: number;
+  readonly recoverySeconds: number;
+  readonly pullRadius: number;
+  readonly pullStrength: number;
+  readonly innerRadius: number;
+  readonly outerRadius: number;
+  readonly hitCooldownSeconds: number;
+  readonly minLaunchDistance: number;
+  readonly maxLaunchDistance: number;
+}
+
 export const WEAPON_DEFINITIONS = {
   projectile: {
     damage: 14,
@@ -79,5 +108,34 @@ export const WEAPON_DEFINITIONS = {
     lifetimeSeconds: 2.2,
     cooldownSeconds: 1.25,
     maxActive: 3
-  } satisfies BoomerangWeaponDefinition
+  } satisfies BoomerangWeaponDefinition,
+  pulseRing: {
+    damage: 26,
+    cooldownSeconds: 3.8,
+    telegraphSeconds: 0.65,
+    attackSeconds: 0.75,
+    recoverySeconds: 0.35,
+    startRadius: 30,
+    endRadius: 200,
+    width: 28,
+    pushDistance: 10
+  } satisfies PulseRingWeaponDefinition,
+  magneticCharge: {
+    damage: 18,
+    cooldownSeconds: 5.2,
+    travelSeconds: 0.42,
+    attractSeconds: 1,
+    detonateSeconds: 1.3,
+    recoverySeconds: 0.36,
+    pullRadius: 180,
+    pullStrength: 135,
+    innerRadius: 62,
+    outerRadius: 148,
+    hitCooldownSeconds: 0.32,
+    minLaunchDistance: 190,
+    maxLaunchDistance: 255
+  } satisfies MagneticChargeWeaponDefinition
 } as const;
+
+/** Faster cadence used only by the isolated weapon drill. */
+export const PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS = 1.6;

@@ -5,7 +5,7 @@ describe('UpgradeDefinitions', () => {
   it('keeps every upgrade identifiable and data-driven', () => {
     const ids = UPGRADE_DEFINITIONS.map((upgrade) => upgrade.id);
 
-    expect(ids).toHaveLength(16);
+    expect(ids).toHaveLength(18);
     expect(new Set(ids).size).toBe(ids.length);
     expect(UPGRADE_DEFINITIONS.every((upgrade) => upgrade.title && upgrade.description && upgrade.effect)).toBe(true);
   });
@@ -25,5 +25,18 @@ describe('UpgradeDefinitions', () => {
 
     expect(choices).toHaveLength(3);
     expect(choices.some((choice) => choice.id === blocked.id)).toBe(false);
+  });
+
+  it('places the new weapon cards in the authored level rotation', () => {
+    expect(getLevelUpChoices(7).map((choice) => choice.id)).toEqual([
+      'chain_lightning',
+      'vector_boomerang',
+      'pulse_ring'
+    ]);
+    expect(getLevelUpChoices(8).map((choice) => choice.id)).toEqual([
+      'vector_boomerang',
+      'pulse_ring',
+      'magnetic_charge'
+    ]);
   });
 });

@@ -15,6 +15,7 @@ import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 import type { ActId } from './content/run/ActDefinitions';
+import type { UpgradeId } from './content/upgrades/UpgradeDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -89,6 +90,14 @@ const bootstrap = async (): Promise<void> => {
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
+  const requestedWeaponCard = searchParams.get('card');
+  const weaponCardId: UpgradeId | undefined = searchParams.get('debug') === '1'
+    ? requestedWeaponCard === 'pulse-ring'
+      ? 'pulse_ring'
+      : requestedWeaponCard === 'magnetic-charge'
+        ? 'magnetic_charge'
+        : undefined
+    : undefined;
   const spike = searchParams.get('spike');
   const orbiterDrill = searchParams.get('orbiter') === '1';
   const chargerDrill = searchParams.get('charger') === '1' && !orbiterDrill;
@@ -102,9 +111,15 @@ const bootstrap = async (): Promise<void> => {
   const wardenDrill = searchParams.get('warden') === '1'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
     && !pulseRingDrill && !angularSweepDrill;
+  const pulseRingWeaponDrill = searchParams.get('weapon') === 'pulse-ring'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    && !pulseRingDrill && !angularSweepDrill && !wardenDrill;
+  const magneticChargeWeaponDrill = searchParams.get('weapon') === 'magnetic-charge'
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill;
   const stressMode = searchParams.get('stress') === '1'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill
-    && !angularSweepDrill && !wardenDrill;
+    && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill;
   const bossDebugMode = searchParams.get('boss') === '1';
   const requestedSkin = searchParams.get('skin');
   const playerSkin: PlayerSkinId | undefined = isPlayerSkinId(requestedSkin)
@@ -133,7 +148,8 @@ const bootstrap = async (): Promise<void> => {
     && hazardCadenceMode === 'chaos'
     && calibrationId === undefined
     && actId === 'radial'
-    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill;
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    && !pulseRingDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -177,6 +193,9 @@ const bootstrap = async (): Promise<void> => {
     splitterDrill,
     prismWeaverDrill,
     pulseRingDrill,
+    pulseRingWeaponDrill,
+    magneticChargeWeaponDrill,
+    weaponCardId,
     angularSweepDrill,
     wardenDrill,
     playerSkin,
@@ -191,7 +210,8 @@ const bootstrap = async (): Promise<void> => {
     initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
-      && !pulseRingDrill && !angularSweepDrill && !wardenDrill,
+      && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
+      && !magneticChargeWeaponDrill && weaponCardId === undefined,
     platform: new LocalPlatform()
   });
   await game.start();

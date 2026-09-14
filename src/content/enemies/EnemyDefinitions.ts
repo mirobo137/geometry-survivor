@@ -9,17 +9,11 @@ export interface OrbiterDefinition {
   readonly sectorCount: 8;
   readonly reservedArcRadians: number;
   readonly minimumFreeArcRadians: number;
-  readonly bandInset: number;
-  readonly maximumBandRadius: number;
   readonly approachSpeed: number;
-  /** Distance the ship tries to keep while shadowing the player. */
-  readonly followDistance: number;
-  /** Small lateral bias that prevents every approach from becoming collinear. */
-  readonly followLateralOffset: number;
-  /** Pulls the captured attack focus slightly inside when the player is near a wall. */
-  readonly attackFocusInset: number;
-  /** Deterministic per-sector offset applied to the captured focus. */
-  readonly attackFocusLateralOffset: number;
+  /** Time the Orbiter chases before launching, independent of player distance. */
+  readonly attackDelaySeconds: number;
+  /** Radius of the local arc route captured at the Orbiter's current position. */
+  readonly attackRadius: number;
   readonly telegraphSeconds: number;
   readonly commitSeconds: number;
   readonly recoverySeconds: number;
@@ -161,19 +155,15 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
  */
 export const ORBITER_DEFINITION: OrbiterDefinition = {
   sectorCount: 8,
-  reservedArcRadians: Math.PI / 2,
+  reservedArcRadians: Math.PI * 0.75,
   minimumFreeArcRadians: Math.PI / 2,
-  bandInset: 76,
-  maximumBandRadius: 176,
   approachSpeed: 94,
-  followDistance: 116,
-  followLateralOffset: 30,
-  attackFocusInset: 28,
-  attackFocusLateralOffset: 22,
-  telegraphSeconds: 0.7,
-  commitSeconds: 0.95,
-  recoverySeconds: 0.6,
-  commitAngularSpeed: 1.65,
+  attackDelaySeconds: 1.8,
+  attackRadius: 112,
+  telegraphSeconds: 0.62,
+  commitSeconds: 0.72,
+  recoverySeconds: 1.1,
+  commitAngularSpeed: (Math.PI * 0.75) / 0.72,
   activeCap: 6,
   commitCap: 1
 };

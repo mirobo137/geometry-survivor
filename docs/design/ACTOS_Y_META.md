@@ -256,13 +256,14 @@ ofrece una plantilla de entrada, no una build arbitraria. La composición del
 Acto II quedó aprobada por validación humana el 12-09-2026; el balance final de
 daño, vida y resistencia permanece diferido a EX-02c.
 
-El Orbiter tiene una regla adicional aprobada para la siguiente iteración:
-durante `approach` sigue la posición del player con una distancia de preparación;
-al iniciar `telegraph` captura un foco local cercano al player y comienza su
-arco desde la posición real de la nave. El `commit` no hace homing y conserva la
-ruta aunque el player se mueva. Así una esquina no funciona como refugio
-permanente y cada Orbiter puede presentar una curva distinta sin convertir el
-telegraph en daño invisible. La especificación técnica está en
+El Orbiter tiene una regla de comportamiento vigente: durante `approach`
+persigue directamente al player mientras avanza un reloj authored; al vencerlo
+inicia `telegraph` desde su posición actual, sin esperar estar cerca ni estar en
+un lado concreto. La ruta usa un radio local fijo orientado hacia el player, y
+el `commit` no hace homing ni se cancela porque el player se coloque delante o
+se mueva. Durante `recovery` la nave vuelve a perseguirlo y espera la siguiente
+ventana temporal. Así una esquina no funciona como refugio permanente. La
+especificación técnica está en
 [`EX-07b-orbiter.md`](EX-07b-orbiter.md).
 
 #### Arena Angular — calendario de espacio, no de balance

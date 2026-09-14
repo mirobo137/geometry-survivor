@@ -108,6 +108,69 @@ export class EnemySystem {
     return state;
   }
 
+  /** Development-only layout for reading the player-owned Pulse Ring cast. */
+  public spawnPulseRingWeaponDrill(arenaRadius: number): number {
+    const placements = [
+      { radius: 68, angle: -Math.PI / 2 },
+      { radius: 102, angle: -Math.PI / 6 },
+      { radius: 142, angle: Math.PI / 6 },
+      { radius: 184, angle: Math.PI / 2 },
+      { radius: 146, angle: Math.PI * 5 / 6 },
+      { radius: 104, angle: Math.PI * 7 / 6 },
+      { radius: 72, angle: Math.PI * 3 / 2 }
+    ] as const;
+    let spawned = 0;
+    for (let index = 0; index < placements.length; index += 1) {
+      const state = this.pool.acquire();
+      if (!state) break;
+      this.configureEnemy(state, arenaRadius, this.spawnIndex, 'chaser');
+      this.spawnIndex += 1;
+      state.x = ARENA_CENTER.x + Math.cos(placements[index].angle) * placements[index].radius;
+      state.y = ARENA_CENTER.y + Math.sin(placements[index].angle) * placements[index].radius;
+      state.vx = 0;
+      state.vy = 0;
+      state.speed = 0;
+      state.contactEnabled = false;
+      state.maxHealth = 250;
+      state.health = state.maxHealth;
+      spawned += 1;
+    }
+    this.rebuildGrid();
+    return spawned;
+  }
+
+  /** Development-only layout for reading the remote Magnetic Charge cast. */
+  public spawnMagneticChargeWeaponDrill(arenaRadius: number): number {
+    const placements = [
+      { radius: 28, angle: -Math.PI / 2 },
+      { radius: 82, angle: -Math.PI / 2 },
+      { radius: 112, angle: -Math.PI / 4 },
+      { radius: 138, angle: 0 },
+      { radius: 104, angle: Math.PI / 3 },
+      { radius: 168, angle: Math.PI * 0.72 },
+      { radius: 196, angle: Math.PI },
+      { radius: 92, angle: Math.PI * 1.35 }
+    ] as const;
+    let spawned = 0;
+    for (let index = 0; index < placements.length; index += 1) {
+      const state = this.pool.acquire();
+      if (!state) break;
+      this.configureEnemy(state, arenaRadius, this.spawnIndex, 'chaser');
+      this.spawnIndex += 1;
+      state.x = ARENA_CENTER.x + Math.cos(placements[index].angle) * placements[index].radius;
+      state.y = ARENA_CENTER.y + Math.sin(placements[index].angle) * placements[index].radius;
+      state.vx = 0;
+      state.vy = 0;
+      state.speed = 0;
+      state.contactEnabled = false;
+      state.maxHealth = 250;
+      state.health = state.maxHealth;
+      spawned += 1;
+    }
+    this.rebuildGrid();
+    return spawned;
+  }
+
   /**
    * Replaces one defeated parent with at most two children. The pool and the
    * family cap are checked before every acquire, so this cannot inflate the
@@ -213,7 +276,6 @@ export class EnemySystem {
         this.orbiterBehavior.update(
           enemy,
           dt,
-          arenaRadius,
           player,
           wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap
         );
@@ -335,7 +397,6 @@ export class EnemySystem {
     state.orbiterProgress = 0;
     state.orbiterBandRadius = 0;
     state.orbiterStartAngle = 0;
-    state.orbiterFollowAngle = 0;
     state.orbiterRouteCenterX = 0;
     state.orbiterRouteCenterY = 0;
     state.orbiterRouteRadius = 0;
@@ -348,7 +409,7 @@ export class EnemySystem {
     state.prismWeaverTimer = 0; state.prismWeaverSequence = 0; state.prismWeaverHitApplied = false;
     state.splitterDepth = kind === 'splitter' ? splitterDepth : 0;
     state.wardenReplica = kind === 'warden-replica';
-    if (kind === 'orbiter') this.orbiterBehavior.configure(state, index, arenaRadius);
+    if (kind === 'orbiter') this.orbiterBehavior.configure(state, index);
     if (kind === 'charger') this.chargerBehavior.configure(state);
     if (kind === 'prism-weaver') this.prismWeaverBehavior.configure(state, index, arenaRadius);
   }
@@ -377,7 +438,6 @@ export class EnemySystem {
     state.orbiterProgress = 0;
     state.orbiterBandRadius = 0;
     state.orbiterStartAngle = 0;
-    state.orbiterFollowAngle = 0;
     state.orbiterRouteCenterX = 0;
     state.orbiterRouteCenterY = 0;
     state.orbiterRouteRadius = 0;

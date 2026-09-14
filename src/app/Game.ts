@@ -15,7 +15,7 @@ import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
-import type { UpgradeDefinition } from '../content/upgrades/UpgradeDefinitions';
+import type { UpgradeDefinition, UpgradeId } from '../content/upgrades/UpgradeDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import { isPlayerSkinId } from '../content/visual/SkinDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../content/visual/CannonSkinDefinitions';
@@ -106,6 +106,12 @@ export interface GameOptions {
   readonly angularSweepDrill?: boolean;
   /** Isolated EX-07d Orbital Warden drill; never starts from the home menu. */
   readonly wardenDrill?: boolean;
+  /** Isolated player-owned Pulse Ring drill; separate from the Act II hazard. */
+  readonly pulseRingWeaponDrill?: boolean;
+  /** Isolated player-owned Magnetic Charge drill; separate from arena hazards. */
+  readonly magneticChargeWeaponDrill?: boolean;
+  /** Developer-only direct card entry; preserves the real level-up flow. */
+  readonly weaponCardId?: UpgradeId;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -123,6 +129,9 @@ export class Game {
   private readonly pulseRingDrill: boolean;
   private readonly angularSweepDrill: boolean;
   private readonly wardenDrill: boolean;
+  private readonly pulseRingWeaponDrill: boolean;
+  private readonly magneticChargeWeaponDrill: boolean;
+  private readonly weaponCardId: UpgradeId | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -391,6 +400,15 @@ export class Game {
     this.wardenDrill = options.wardenDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill;
+    this.pulseRingWeaponDrill = options.pulseRingWeaponDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill;
+    this.magneticChargeWeaponDrill = options.magneticChargeWeaponDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill && !this.pulseRingWeaponDrill;
+    this.weaponCardId = options.weaponCardId ?? null;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -449,7 +467,9 @@ export class Game {
       prismWeaverDrill: this.prismWeaverDrill,
       pulseRingDrill: this.pulseRingDrill,
       angularSweepDrill: this.angularSweepDrill,
-      wardenDrill: this.wardenDrill
+      wardenDrill: this.wardenDrill,
+      pulseRingWeaponDrill: this.pulseRingWeaponDrill,
+      magneticChargeWeaponDrill: this.magneticChargeWeaponDrill
     });
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
   }
@@ -620,7 +640,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : `${this.combat.actId}-act`,
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -630,7 +650,12 @@ export class Game {
       level: this.progression.state.level,
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
-      pulse: `${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
+      pulse: this.combat.isPulseRingWeaponDrill
+        ? `${this.combat.renderState.pulseRingWeapon.phase} | radius ${this.combat.renderState.pulseRingWeapon.radius.toFixed(1)}`
+        : `${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
+      magnetic: this.combat.renderState.magneticCharge.active
+        ? `${this.combat.renderState.magneticCharge.phase} | ${this.combat.renderState.magneticCharge.targetX.toFixed(0)},${this.combat.renderState.magneticCharge.targetY.toFixed(0)}`
+        : 'idle',
       calibration: this.calibrationId ?? 'none',
       orbiter: this.combat.isOrbiterDrill
         ? (() => {
@@ -665,14 +690,16 @@ export class Game {
     });
   }
 
-  private openLevelUp(): void {
+  private openLevelUp(preferredUpgradeId: UpgradeId | null = null): void {
     if (this.gameState.enterLevelUp()) {
       this.lifecycle.onGamePause();
       this.audio.playCue('level-up');
       this.baseline.noteLevelUp(this.combat.stats.elapsedSeconds);
     }
     const level = this.progression.state.level;
-    const choices = this.upgradeApplier.getChoices(level);
+    const choices = preferredUpgradeId === null
+      ? this.upgradeApplier.getChoices(level)
+      : this.upgradeApplier.getChoicesWithPriority(level, preferredUpgradeId);
     const requestToken = ++this.levelUpRequestToken;
     void this.prepareLevelUp(level, choices, requestToken);
   }
@@ -770,6 +797,7 @@ export class Game {
     if (unlockAudio) void this.audio.unlock();
     this.audio.startMusic();
     this.lifecycle.onGameStart();
+    if (this.weaponCardId !== null) this.openLevelUp(this.weaponCardId);
   }
 
   private persistAudioSettings(settings: AudioSettings): void {

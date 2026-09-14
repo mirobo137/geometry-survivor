@@ -128,4 +128,100 @@ describe('WeaponView', () => {
     view.reset();
     expect(root.visible).toBe(false);
   });
+
+  it('renders the Pulse Ring through persistent premium layers in Low and High', () => {
+    const pulseRingWeapon = {
+      active: true,
+      phase: 'active' as 'active' | 'recovery',
+      originX: 320,
+      originY: 240,
+      radius: 120,
+      startRadius: 30,
+      endRadius: 200,
+      progress: 0.5,
+      width: 28,
+      sequence: 1
+    };
+    const combat = {
+      orbitBlades: Array.from({ length: WEAPON_DEFINITIONS.orbit.maxBlades }, () => ({
+        active: false, x: 0, y: 0, radius: 10, angle: 0
+      })),
+      chainSegments: [],
+      pulseRingWeapon
+    };
+
+    const lowView = new WeaponView(fakeRenderer, undefined, 'low');
+    lowView.render(combat);
+    const lowLayer = lowView.root.children[5];
+    expect(lowLayer.visible).toBe(true);
+    expect(lowLayer.children).toHaveLength(8);
+    expect(lowLayer.children[3].visible).toBe(true); // active body remains readable in Low.
+    expect(lowLayer.children[2].visible).toBe(false); // mantle is decorative in Low.
+
+    const highView = new WeaponView(fakeRenderer, undefined, 'high');
+    highView.render(combat);
+    const highLayer = highView.root.children[5];
+    expect(highLayer.visible).toBe(true);
+    expect(highLayer.children[2].visible).toBe(true); // layered mantle is available in High.
+    expect(highLayer.children[6].visible).toBe(true); // cadence markers are High-only.
+
+    pulseRingWeapon.phase = 'recovery';
+    pulseRingWeapon.progress = 0.25;
+    highView.render(combat);
+    expect(highLayer.children[7].visible).toBe(true);
+    highView.reset();
+    expect(highLayer.visible).toBe(false);
+  });
+
+  it('renders Magnetic Charge with a remote beacon, safe center and detonation layers', () => {
+    const magneticCharge = {
+      active: true,
+      phase: 'detonate' as const,
+      originX: 120,
+      originY: 180,
+      x: 320,
+      y: 240,
+      targetX: 320,
+      targetY: 240,
+      innerRadius: WEAPON_DEFINITIONS.magneticCharge.innerRadius,
+      outerRadius: WEAPON_DEFINITIONS.magneticCharge.outerRadius,
+      pullRadius: WEAPON_DEFINITIONS.magneticCharge.pullRadius,
+      progress: 0.25,
+      rotation: 0.4,
+      sequence: 1
+    };
+    const combat = {
+      orbitBlades: Array.from({ length: WEAPON_DEFINITIONS.orbit.maxBlades }, () => ({
+        active: false, x: 0, y: 0, radius: 10, angle: 0
+      })),
+      chainSegments: [],
+      magneticCharge
+    };
+    const lowView = new WeaponView(fakeRenderer, undefined, 'low');
+    lowView.render(combat);
+    const lowLayer = lowView.root.children[6];
+    expect(lowLayer.visible).toBe(true);
+    expect(lowLayer.children).toHaveLength(8);
+    expect(lowLayer.children[4].visible).toBe(true); // damage band remains readable in Low.
+    expect(lowLayer.children[2].visible).toBe(false); // attraction ornaments are decorative in Low.
+
+    const highView = new WeaponView(fakeRenderer, undefined, 'high');
+    highView.render(combat);
+    const highLayer = highView.root.children[6];
+    expect(highLayer.visible).toBe(true);
+    expect(highLayer.children[4].visible).toBe(true);
+    for (const index of [1, 2, 3, 4, 5, 7]) {
+      const layer = highLayer.children[index];
+      expect(layer.position.x).toBe(magneticCharge.targetX);
+      expect(layer.position.y).toBe(magneticCharge.targetY);
+      expect(layer.pivot.x).toBe(0);
+      expect(layer.pivot.y).toBe(0);
+    }
+    const bandBounds = highLayer.children[4].getLocalBounds();
+    expect(Math.abs(bandBounds.x + bandBounds.width / 2)).toBeLessThan(1);
+    expect(Math.abs(bandBounds.y + bandBounds.height / 2)).toBeLessThan(1);
+    magneticCharge.active = false;
+    highView.render(combat);
+    expect(highLayer.visible).toBe(false);
+  });
 });

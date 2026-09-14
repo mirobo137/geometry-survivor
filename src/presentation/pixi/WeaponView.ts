@@ -20,6 +20,20 @@ const ARC_VIOLET = 0x9b7cff;
 const ARC_CYAN = 0x75e6ff;
 const ARC_HOT = 0xffd978;
 const ARC_WHITE = 0xf4ffff;
+const PULSE_INK = 0x071120;
+const PULSE_ARMOR = 0x332044;
+const PULSE_VIOLET = 0xc477ff;
+const PULSE_MAGENTA = 0xff66c9;
+const PULSE_HOT = 0xfff0cf;
+const PULSE_AMBER = 0xffad63;
+const PULSE_RECOVERY = 0x8a6ba9;
+const MAGNETIC_CHARGE_INK = 0x071120;
+const MAGNETIC_CHARGE_ARMOR = 0x1b2a44;
+const MAGNETIC_CHARGE_CYAN = 0x6fe7f2;
+const MAGNETIC_CHARGE_VIOLET = 0xb77cff;
+const MAGNETIC_CHARGE_GOLD = 0xffd478;
+const MAGNETIC_CHARGE_WHITE = 0xf1fbff;
+const FULL_CIRCLE = Math.PI * 2;
 
 interface OrbitBladeVisual {
   readonly root: Container;
@@ -40,7 +54,7 @@ interface BoomerangVisual {
 }
 
 type WeaponRenderInput = Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>
-  & Partial<Pick<CombatRenderState, 'boomerangs'>>;
+  & Partial<Pick<CombatRenderState, 'boomerangs' | 'pulseRingWeapon' | 'magneticCharge'>>;
 
 const polygon = (graphics: Graphics, points: readonly [number, number][], color: number, alpha = 1): void => {
   graphics.beginPath().moveTo(points[0][0], points[0][1]);
@@ -100,11 +114,33 @@ export class WeaponView {
   private readonly chainImpactLayer = new Container();
   private readonly chainPulseLayer = new Container();
   private readonly boomerangLayer = new Container();
+  private readonly pulseRingLayer = new Container();
+  private readonly pulseRingTrack = new Graphics();
+  private readonly pulseRingCore = new Graphics();
+  private readonly pulseRingActiveShell = new Graphics();
+  private readonly pulseRingActiveMantle = new Graphics();
+  private readonly pulseRingActiveBody = new Graphics();
+  private readonly pulseRingActiveEdge = new Graphics();
+  private readonly pulseRingMarkers = new Graphics();
+  private readonly pulseRingResidue = new Graphics();
+  private readonly magneticChargeLayer = new Container();
+  private readonly magneticChargeTrail = new Graphics();
+  private readonly magneticChargeBeacon = new Graphics();
+  private readonly magneticChargeField = new Graphics();
+  private readonly magneticChargeBackplate = new Graphics();
+  private readonly magneticChargeBand = new Graphics();
+  private readonly magneticChargeRails = new Graphics();
+  private readonly magneticChargeCore = new Graphics();
+  private readonly magneticChargeResidue = new Graphics();
   private readonly orbitVisuals: OrbitBladeVisual[] = [];
   private readonly boomerangVisuals: BoomerangVisual[] = [];
   private readonly chainImpactSprites: Sprite[] = [];
   private readonly chainPulseSprites: Sprite[] = [];
   private readonly previousChainActive: boolean[];
+  private pulseRingSequence = -1;
+  private pulseRingBaseRadius = 1;
+  private magneticChargeSequence = -1;
+  private readonly reducedMotion: boolean;
 
   public constructor(
     renderer: Renderer,
@@ -112,7 +148,37 @@ export class WeaponView {
     private readonly quality: FxQuality = 'medium'
   ) {
     this.previousChainActive = Array.from({ length: WEAPON_DEFINITIONS.chainLightning.maxTargets }, () => false);
-    this.root.addChild(this.orbitLayer, this.chainLayer, this.chainImpactLayer, this.chainPulseLayer, this.boomerangLayer);
+    this.reducedMotion = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    this.root.addChild(
+      this.orbitLayer,
+      this.chainLayer,
+      this.chainImpactLayer,
+      this.chainPulseLayer,
+      this.boomerangLayer,
+      this.pulseRingLayer,
+      this.magneticChargeLayer
+    );
+    this.pulseRingLayer.addChild(
+      this.pulseRingTrack,
+      this.pulseRingActiveShell,
+      this.pulseRingActiveMantle,
+      this.pulseRingActiveBody,
+      this.pulseRingActiveEdge,
+      this.pulseRingCore,
+      this.pulseRingMarkers,
+      this.pulseRingResidue
+    );
+    this.magneticChargeLayer.addChild(
+      this.magneticChargeTrail,
+      this.magneticChargeBeacon,
+      this.magneticChargeField,
+      this.magneticChargeBackplate,
+      this.magneticChargeBand,
+      this.magneticChargeRails,
+      this.magneticChargeCore,
+      this.magneticChargeResidue
+    );
     const textures = createOrbitTextures(renderer);
     for (let index = 0; index < WEAPON_DEFINITIONS.orbit.maxBlades; index += 1) {
       const root = new Container();
@@ -255,6 +321,9 @@ export class WeaponView {
       visual.core.alpha = returning ? 1 : 0.88;
     }
 
+    this.renderPulseRing(combat.pulseRingWeapon);
+    this.renderMagneticCharge(combat.magneticCharge);
+
     let hasActiveChain = false;
     for (const segment of combat.chainSegments) {
       if (segment.active) {
@@ -314,6 +383,29 @@ export class WeaponView {
     this.chainLayer.visible = false;
     this.chainImpactLayer.visible = false;
     this.chainPulseLayer.visible = false;
+    this.pulseRingLayer.visible = false;
+    this.magneticChargeLayer.visible = false;
+    this.pulseRingSequence = -1;
+    this.magneticChargeSequence = -1;
+    this.pulseRingTrack.clear();
+    this.pulseRingCore.clear();
+    this.pulseRingActiveShell.clear();
+    this.pulseRingActiveMantle.clear();
+    this.pulseRingActiveBody.clear();
+    this.pulseRingActiveEdge.clear();
+    this.pulseRingMarkers.clear();
+    this.pulseRingResidue.clear();
+    this.magneticChargeTrail.clear();
+    this.magneticChargeBeacon.clear();
+    this.magneticChargeField.clear();
+    this.magneticChargeBackplate.clear();
+    this.magneticChargeBand.clear();
+    this.magneticChargeRails.clear();
+    this.magneticChargeCore.clear();
+    this.magneticChargeCore.position.set(0, 0);
+    this.magneticChargeCore.scale.set(1);
+    this.magneticChargeCore.alpha = 1;
+    this.magneticChargeResidue.clear();
     for (const visual of this.orbitVisuals) {
       visual.root.visible = false;
       visual.root.scale.set(1);
@@ -332,6 +424,213 @@ export class WeaponView {
       this.chainImpactSprites[index].visible = false;
       this.chainPulseSprites[index].visible = false;
     }
+  }
+
+  private renderPulseRing(
+    state: CombatRenderState['pulseRingWeapon'] | undefined
+  ): void {
+    if (!state?.active || state.phase === 'idle') {
+      this.pulseRingLayer.visible = false;
+      return;
+    }
+    if (state.sequence !== this.pulseRingSequence) this.buildPulseRingSequence(state);
+
+    this.pulseRingLayer.visible = true;
+    this.pulseRingLayer.position.set(state.originX, state.originY);
+    this.pulseRingTrack.visible = state.phase === 'telegraph';
+    this.pulseRingCore.visible = state.phase === 'telegraph';
+    this.pulseRingActiveShell.visible = state.phase === 'active';
+    this.pulseRingActiveMantle.visible = state.phase === 'active' && this.quality !== 'low';
+    this.pulseRingActiveBody.visible = state.phase === 'active';
+    this.pulseRingActiveEdge.visible = state.phase === 'active' && this.quality !== 'low';
+    this.pulseRingMarkers.visible = state.phase === 'active' && this.quality === 'high';
+    this.pulseRingResidue.visible = state.phase === 'recovery';
+
+    const progress = clamp01(state.progress);
+    if (state.phase === 'telegraph') {
+      this.pulseRingTrack.alpha = 0.52 + progress * 0.42;
+      this.pulseRingCore.alpha = 0.68 + progress * 0.32;
+      this.pulseRingCore.scale.set(0.9 + progress * 0.1);
+      this.pulseRingTrack.scale.set(this.reducedMotion ? 1 : 1.32 - progress * 0.32);
+      this.pulseRingCore.rotation = this.reducedMotion ? 0 : -progress * Math.PI / 4;
+      this.pulseRingTrack.rotation = this.reducedMotion ? 0 : progress * 0.08;
+      return;
+    }
+    if (state.phase === 'active') {
+      const scale = Math.max(0.05, state.radius / this.pulseRingBaseRadius);
+      const rotation = this.reducedMotion ? 0 : progress * 0.12;
+      this.pulseRingActiveShell.scale.set(scale);
+      this.pulseRingActiveMantle.scale.set(scale);
+      this.pulseRingActiveBody.scale.set(scale);
+      this.pulseRingActiveEdge.scale.set(scale);
+      this.pulseRingMarkers.scale.set(scale);
+      this.pulseRingActiveShell.rotation = rotation;
+      this.pulseRingActiveMantle.rotation = -rotation * 1.4;
+      this.pulseRingActiveBody.rotation = rotation * 0.6;
+      this.pulseRingActiveEdge.rotation = -rotation * 1.8;
+      this.pulseRingMarkers.rotation = rotation;
+      this.pulseRingActiveShell.alpha = 0.88;
+      this.pulseRingActiveMantle.alpha = 0.34 + Math.sin(progress * Math.PI) * 0.18;
+      this.pulseRingActiveBody.alpha = 0.76 + Math.sin(progress * Math.PI) * 0.18;
+      this.pulseRingActiveEdge.alpha = 0.62 + Math.exp(-progress * 10) * 0.38;
+      this.pulseRingMarkers.alpha = 0.72 + (1 - progress) * 0.22;
+      return;
+    }
+    const fade = (1 - progress) ** 2;
+    this.pulseRingResidue.alpha = fade * 0.82;
+    this.pulseRingResidue.scale.set(this.reducedMotion ? 1 : 1 + progress * 0.09);
+    this.pulseRingResidue.rotation = this.reducedMotion ? 0 : -progress * 0.08;
+  }
+
+  private renderMagneticCharge(
+    state: CombatRenderState['magneticCharge'] | undefined
+  ): void {
+    if (!state?.active) {
+      this.magneticChargeLayer.visible = false;
+      return;
+    }
+    if (state.sequence !== this.magneticChargeSequence) this.buildMagneticChargeSequence(state);
+
+    this.magneticChargeLayer.visible = true;
+    this.magneticChargeLayer.position.set(0, 0);
+    const progress = clamp01(state.progress);
+    const rhythm = Math.sin(progress * Math.PI);
+    const intensity = this.quality === 'high' ? 0.9 : this.quality === 'medium' ? 0.74 : 0.56;
+    const inFlight = state.phase === 'travel';
+    const attracting = state.phase === 'attract';
+    const detonating = state.phase === 'detonate';
+    const recovering = state.phase === 'recovery';
+
+    const lift = inFlight && !this.reducedMotion ? Math.sin(progress * Math.PI) * 62 : 0;
+    this.magneticChargeTrail.clear();
+    if (inFlight) {
+      drawMagneticTravelTrail(
+        this.magneticChargeTrail,
+        state.x - (state.targetX - state.originX) * Math.min(progress, 0.16),
+        state.y - lift - (state.targetY - state.originY) * Math.min(progress, 0.16),
+        state.x,
+        state.y - lift,
+        intensity
+      );
+    }
+    this.magneticChargeTrail.visible = inFlight;
+    this.magneticChargeBeacon.visible = inFlight || attracting;
+    this.magneticChargeField.visible = attracting && this.quality !== 'low';
+    this.magneticChargeBackplate.visible = detonating;
+    this.magneticChargeBand.visible = detonating;
+    this.magneticChargeRails.visible = detonating;
+    this.magneticChargeCore.visible = !recovering;
+    this.magneticChargeResidue.visible = recovering;
+
+    const rotation = this.reducedMotion ? 0 : state.rotation;
+    this.magneticChargeBeacon.rotation = rotation * 0.35;
+    this.magneticChargeField.rotation = -rotation * 0.7;
+    this.magneticChargeBackplate.rotation = -rotation * 0.28;
+    this.magneticChargeBand.rotation = rotation * 0.42;
+    this.magneticChargeRails.rotation = -rotation * 0.78;
+    this.magneticChargeResidue.rotation = rotation * 0.5;
+
+    this.magneticChargeBeacon.alpha = intensity * (inFlight ? 0.62 + progress * 0.28 : 0.86 + rhythm * 0.1);
+    this.magneticChargeField.alpha = intensity * (0.62 + rhythm * 0.2);
+    this.magneticChargeBackplate.alpha = intensity * (0.7 + rhythm * 0.1);
+    this.magneticChargeBand.alpha = intensity * (0.86 + rhythm * 0.14);
+    this.magneticChargeRails.alpha = intensity * (0.72 + rhythm * 0.16);
+    this.magneticChargeResidue.alpha = intensity * (1 - progress) ** 2;
+
+    // Contract: the damage boundaries stay at their exact radii. Only ornaments contract.
+    this.magneticChargeField.scale.set(attracting ? 1 - progress * 0.48 : 1);
+    this.magneticChargeResidue.scale.set(1 + progress * 0.12);
+    this.magneticChargeCore.position.set(state.x, state.y - lift);
+    this.magneticChargeCore.scale.set(inFlight ? 0.65 + Math.sin(progress * Math.PI) * 0.9
+      : detonating ? 0.65 + Math.exp(-progress * 14) * 0.65 : 0.85 + progress * 0.15);
+    this.magneticChargeCore.rotation = inFlight && !this.reducedMotion ? progress * Math.PI * 2 : 0;
+    this.magneticChargeCore.alpha = intensity * (recovering ? 0 : 0.92 + rhythm * 0.08);
+  }
+
+  private buildMagneticChargeSequence(state: CombatRenderState['magneticCharge']): void {
+    this.magneticChargeBeacon.clear();
+    this.magneticChargeField.clear();
+    this.magneticChargeBackplate.clear();
+    this.magneticChargeBand.clear();
+    this.magneticChargeRails.clear();
+    this.magneticChargeCore.clear();
+    this.magneticChargeResidue.clear();
+    drawMagneticBeacon(this.magneticChargeBeacon, 0, 0, state.pullRadius);
+    drawMagneticField(this.magneticChargeField, 0, 0, state.pullRadius);
+    drawMagneticDetonationBackplate(
+      this.magneticChargeBackplate,
+      0,
+      0,
+      state.innerRadius,
+      state.outerRadius
+    );
+    drawMagneticDetonationBand(
+      this.magneticChargeBand,
+      0,
+      0,
+      state.innerRadius,
+      state.outerRadius
+    );
+    drawMagneticRails(
+      this.magneticChargeRails,
+      0,
+      0,
+      state.innerRadius,
+      state.outerRadius
+    );
+    drawMagneticCore(this.magneticChargeCore, 0, 0, 1, MAGNETIC_CHARGE_CYAN);
+    drawMagneticResidue(this.magneticChargeResidue, 0, 0, state.outerRadius);
+    for (const layer of [this.magneticChargeBeacon, this.magneticChargeField,
+      this.magneticChargeBackplate, this.magneticChargeBand, this.magneticChargeRails,
+      this.magneticChargeResidue]) {
+      layer.position.set(state.targetX, state.targetY);
+      layer.pivot.set(0, 0);
+    }
+    this.magneticChargeSequence = state.sequence;
+  }
+
+  private buildPulseRingSequence(state: CombatRenderState['pulseRingWeapon']): void {
+    this.pulseRingTrack.clear();
+    this.pulseRingCore.clear();
+    this.pulseRingActiveShell.clear();
+    this.pulseRingActiveMantle.clear();
+    this.pulseRingActiveBody.clear();
+    this.pulseRingActiveEdge.clear();
+    this.pulseRingMarkers.clear();
+    this.pulseRingResidue.clear();
+    this.pulseRingBaseRadius = Math.max(1, state.endRadius);
+
+    // Telegraph: four independent reactor shutters, never a closed shield.
+    drawPulseChargeBrackets(this.pulseRingTrack, state.startRadius, PULSE_AMBER, 2.5, 0.92);
+    drawPulseChargeSpokes(this.pulseRingTrack, state.startRadius, PULSE_HOT, 0.82);
+    drawPulseAperture(this.pulseRingCore);
+    // Four armored shutters close toward the captured origin before release.
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index * Math.PI / 2 + Math.PI / 4;
+      const radius = state.startRadius + 7;
+      const a = polarPoint(radius, angle - 0.22);
+      const b = polarPoint(radius + 10, angle);
+      const c = polarPoint(radius, angle + 0.22);
+      const d = polarPoint(radius - 5, angle);
+      this.pulseRingTrack.beginPath().moveTo(a.x, a.y).lineTo(b.x, b.y)
+        .lineTo(c.x, c.y).lineTo(d.x, d.y).closePath()
+        .fill({ color: PULSE_INK, alpha: 0.96 })
+        .stroke({ color: PULSE_VIOLET, width: 1.8, alpha: 0.9 });
+      this.pulseRingTrack.beginPath().moveTo(a.x, a.y).lineTo(b.x, b.y)
+        .stroke({ color: PULSE_HOT, width: 1.2, alpha: 0.9 });
+    }
+
+    // Active cast: a segmented, serrated wavefront. Its broken silhouette and
+    // warm-violet palette separate it from the arena's smooth radial hazard.
+    drawPulseSegmentedBand(this.pulseRingActiveShell, this.pulseRingBaseRadius, state.width + 16, PULSE_INK, 0.96, 16, 0);
+    drawPulseSegmentedBand(this.pulseRingActiveMantle, this.pulseRingBaseRadius, state.width + 7, PULSE_ARMOR, 0.96, 12, Math.PI / 12);
+    drawPulseWaveBand(this.pulseRingActiveBody, this.pulseRingBaseRadius, state.width, PULSE_VIOLET, 0.92, 14);
+    drawPulseSerratedEdge(this.pulseRingActiveEdge, this.pulseRingBaseRadius, state.width, 14);
+    drawPulseExpansionVectors(this.pulseRingMarkers, this.pulseRingBaseRadius, 8, PULSE_HOT, 0.92);
+
+    // Recovery: eight fading echo shards, not another full arena ring.
+    drawPulseEchoTicks(this.pulseRingResidue, state.endRadius, PULSE_RECOVERY, 0.78);
+    this.pulseRingSequence = state.sequence;
   }
 
   private drawChainBeam(
@@ -387,3 +686,497 @@ export class WeaponView {
       .stroke({ color, width, alpha });
   }
 }
+
+const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+
+const drawMagneticTravelTrail = (
+  graphics: Graphics,
+  originX: number,
+  originY: number,
+  x: number,
+  y: number,
+  intensity: number
+): void => {
+  const dx = x - originX;
+  const dy = y - originY;
+  const length = Math.hypot(dx, dy);
+  if (length < 2) return;
+  const nx = -dy / length;
+  const ny = dx / length;
+  const tailX = x - dx * 0.9;
+  const tailY = y - dy * 0.9;
+  const wide = Math.min(14, 4 + length * 0.035);
+  graphics.beginPath().moveTo(tailX + nx * wide, tailY + ny * wide)
+    .lineTo(x, y)
+    .lineTo(tailX - nx * wide, tailY - ny * wide)
+    .closePath()
+    .fill({ color: MAGNETIC_CHARGE_CYAN, alpha: intensity * 0.16 });
+  graphics.beginPath().moveTo(originX, originY).lineTo(x, y)
+    .stroke({ color: MAGNETIC_CHARGE_INK, width: 8, alpha: intensity * 0.55 });
+  graphics.beginPath().moveTo(originX, originY).lineTo(x, y)
+    .stroke({ color: MAGNETIC_CHARGE_CYAN, width: 2.6, alpha: intensity * 0.78 });
+  graphics.beginPath().moveTo(originX, originY).lineTo(tailX + dx * 0.08, tailY + dy * 0.08)
+    .stroke({ color: MAGNETIC_CHARGE_WHITE, width: 0.9, alpha: intensity * 0.7 });
+  for (let index = 0; index < 3; index += 1) {
+    const t = 0.18 + index * 0.2;
+    const centerX = originX + dx * t;
+    const centerY = originY + dy * t;
+    const size = 4 - index * 0.8;
+    graphics.beginPath().moveTo(centerX - nx * size, centerY - ny * size)
+      .lineTo(centerX + nx * size, centerY + ny * size)
+      .stroke({ color: index === 0 ? MAGNETIC_CHARGE_GOLD : MAGNETIC_CHARGE_WHITE, width: 1.2, alpha: intensity * (0.7 - index * 0.12) });
+  }
+};
+
+const drawMagneticBeacon = (graphics: Graphics, x: number, y: number, pullRadius: number): void => {
+  const radius = Math.max(42, pullRadius * 0.36);
+  const count = 8;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const start = index * sector + sector * 0.18;
+    const end = (index + 1) * sector - sector * 0.12;
+    drawMagneticArc(graphics, x, y, radius + 8, start, end, MAGNETIC_CHARGE_INK, 6, 0.9);
+    drawMagneticArc(graphics, x, y, radius, start, end, index % 2 === 0 ? MAGNETIC_CHARGE_CYAN : MAGNETIC_CHARGE_VIOLET, 1.7, 0.78);
+  }
+  graphics.beginPath().regularPoly(x, y, 18, 8, Math.PI / 8)
+    .fill({ color: MAGNETIC_CHARGE_INK, alpha: 0.86 })
+    .stroke({ color: MAGNETIC_CHARGE_CYAN, width: 1.3, alpha: 0.75 });
+  graphics.beginPath().moveTo(x - 9, y).lineTo(x, y - 5).lineTo(x + 9, y).lineTo(x, y + 5).closePath()
+    .stroke({ color: MAGNETIC_CHARGE_GOLD, width: 1.2, alpha: 0.88 });
+};
+
+const drawMagneticField = (graphics: Graphics, x: number, y: number, pullRadius: number): void => {
+  const count = 8;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const angle = index * sector + Math.PI / 8;
+    const outer = pullRadius * (0.72 + (index % 2) * 0.08);
+    const start = polarPoint(outer, angle - sector * 0.23);
+    const end = polarPoint(outer, angle + sector * 0.23);
+    graphics.beginPath().moveTo(x + start.x, y + start.y).lineTo(x + end.x, y + end.y)
+      .stroke({ color: index % 2 === 0 ? MAGNETIC_CHARGE_CYAN : MAGNETIC_CHARGE_VIOLET, width: 1.4, alpha: 0.7 });
+    const tip = polarPoint(outer - 18, angle);
+    const left = polarPoint(outer - 5, angle - 0.12);
+    const right = polarPoint(outer - 5, angle + 0.12);
+    graphics.beginPath().moveTo(x + left.x, y + left.y)
+      .lineTo(x + tip.x, y + tip.y)
+      .lineTo(x + right.x, y + right.y)
+      .stroke({ color: MAGNETIC_CHARGE_WHITE, width: 1.5, alpha: 0.8 });
+  }
+  drawMagneticArc(graphics, x, y, pullRadius * 0.54, 0.2, 1.18, MAGNETIC_CHARGE_CYAN, 1, 0.48);
+  drawMagneticArc(graphics, x, y, pullRadius * 0.54, Math.PI + 0.2, Math.PI + 1.18, MAGNETIC_CHARGE_VIOLET, 1, 0.48);
+};
+
+const drawMagneticDetonationBackplate = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number
+): void => {
+  const count = 12;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const start = index * sector + sector * 0.14;
+    const end = (index + 1) * sector - sector * 0.1;
+    drawMagneticArc(graphics, x, y, outerRadius + 8, start, end, MAGNETIC_CHARGE_INK, 10, 0.92);
+    drawMagneticArc(graphics, x, y, Math.max(2, innerRadius - 6), start + 0.03, end - 0.03, MAGNETIC_CHARGE_INK, 3, 0.9);
+  }
+};
+
+const drawMagneticDetonationBand = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number
+): void => {
+  graphics.beginPath().arc(x, y, (innerRadius + outerRadius) * 0.5, 0, FULL_CIRCLE)
+    .stroke({ color: MAGNETIC_CHARGE_VIOLET, width: outerRadius - innerRadius, alpha: 0.09 });
+  const count = 12;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const start = index * sector + sector * 0.15;
+    const end = (index + 1) * sector - sector * 0.12;
+    const panelInner = innerRadius + (index % 3 === 0 ? 3 : 0);
+    const panelOuter = outerRadius - (index % 4 === 0 ? 4 : 0);
+    drawMagneticAnnularPanel(
+      graphics,
+      x,
+      y,
+      panelInner,
+      panelOuter,
+      start,
+      end,
+      index % 3 === 0 ? MAGNETIC_CHARGE_VIOLET : index % 2 === 0 ? MAGNETIC_CHARGE_CYAN : MAGNETIC_CHARGE_ARMOR,
+      index % 3 === 0 ? 0.22 : 0.14
+    );
+    const edgeInner = polarPoint(panelInner + 2, end);
+    const edgeOuter = polarPoint(panelOuter - 2, end);
+    // Nested plasma ribbons concentrate light instead of filling the whole zone.
+    for (let ribbon = 0; ribbon < 3; ribbon += 1) {
+      const radius = innerRadius + (outerRadius - innerRadius) * (0.25 + ribbon * 0.27);
+      drawMagneticArc(graphics, x, y, radius, start + ribbon * 0.035,
+        end - 0.06, ribbon === 1 ? MAGNETIC_CHARGE_CYAN : MAGNETIC_CHARGE_VIOLET,
+        ribbon === 1 ? 2.2 : 1.1, ribbon === 1 ? 0.6 : 0.36);
+    }
+    const tip = polarPoint(panelOuter - 5, start + 0.08);
+    const heel = polarPoint(panelOuter - 15, start + 0.14);
+    graphics.beginPath().moveTo(x + tip.x, y + tip.y)
+      .lineTo(x + heel.x, y + heel.y)
+      .stroke({ color: MAGNETIC_CHARGE_WHITE, width: 1.6, alpha: 0.82 });
+    graphics.beginPath().moveTo(x + edgeInner.x, y + edgeInner.y).lineTo(x + edgeOuter.x, y + edgeOuter.y)
+      .stroke({ color: index % 2 === 0 ? MAGNETIC_CHARGE_GOLD : MAGNETIC_CHARGE_WHITE, width: 1, alpha: 0.62 });
+  }
+};
+
+const drawMagneticRails = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number
+): void => {
+  for (const radius of [innerRadius, outerRadius]) {
+    drawMagneticArc(graphics, x, y, radius, 0, FULL_CIRCLE, MAGNETIC_CHARGE_INK, 6, 0.9);
+    drawMagneticArc(graphics, x, y, radius, 0, FULL_CIRCLE, MAGNETIC_CHARGE_VIOLET, 3.4, 0.84);
+    drawMagneticArc(graphics, x, y, radius, 0, FULL_CIRCLE, MAGNETIC_CHARGE_CYAN, 1.2, 0.92);
+  }
+  const count = 8;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const start = index * sector + sector * 0.2;
+    const end = (index + 1) * sector - sector * 0.18;
+    drawMagneticArc(graphics, x, y, innerRadius - 1, start, end, MAGNETIC_CHARGE_WHITE, 1.5, 0.76);
+    drawMagneticArc(graphics, x, y, outerRadius + 1, start + 0.04, end - 0.04, MAGNETIC_CHARGE_GOLD, 1.3, 0.72);
+  }
+  for (let index = 0; index < 6; index += 1) {
+    const angle = index * FULL_CIRCLE / 6 + Math.PI / 6;
+    const inner = polarPoint(innerRadius - 9, angle);
+    const outer = polarPoint(innerRadius + 10, angle);
+    graphics.beginPath().moveTo(x + inner.x, y + inner.y).lineTo(x + outer.x, y + outer.y)
+      .stroke({ color: MAGNETIC_CHARGE_CYAN, width: 1.4, alpha: 0.64 });
+  }
+};
+
+const drawMagneticCore = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  scale: number,
+  accent: number
+): void => {
+  const radius = 16 * scale;
+  for (let index = 0; index < 4; index += 1) {
+    const angle = index * Math.PI / 2 + Math.PI / 4;
+    const px = x + Math.cos(angle) * 25 * scale;
+    const py = y + Math.sin(angle) * 25 * scale;
+    graphics.beginPath().regularPoly(px, py, 6 * scale, 4, angle)
+      .fill({ color: MAGNETIC_CHARGE_INK }).stroke({ color: 0x788ba8, width: 1.4 });
+    graphics.beginPath().moveTo(px - 3, py).lineTo(px, py - 4).lineTo(px + 3, py)
+      .stroke({ color: MAGNETIC_CHARGE_WHITE, width: 1.1, alpha: 0.9 });
+  }
+  graphics.beginPath().regularPoly(x, y, radius + 7, 8, Math.PI / 8)
+    .fill({ color: MAGNETIC_CHARGE_INK, alpha: 0.94 })
+    .stroke({ color: MAGNETIC_CHARGE_ARMOR, width: 3, alpha: 0.94 });
+  graphics.beginPath().regularPoly(x, y, radius, 8, Math.PI / 8)
+    .fill({ color: MAGNETIC_CHARGE_ARMOR, alpha: 0.96 })
+    .stroke({ color: accent, width: 1.8, alpha: 0.95 });
+  graphics.beginPath().moveTo(x - radius * 0.62, y).lineTo(x, y - radius * 0.32).lineTo(x + radius * 0.62, y)
+    .lineTo(x, y + radius * 0.32).closePath()
+    .fill({ color: accent, alpha: 0.78 });
+  graphics.beginPath().circle(x, y, Math.max(2.5, radius * 0.22))
+    .fill({ color: MAGNETIC_CHARGE_WHITE, alpha: 0.96 });
+  graphics.beginPath().moveTo(x - radius - 4, y).lineTo(x - radius + 2, y)
+    .moveTo(x + radius - 2, y).lineTo(x + radius + 4, y)
+    .stroke({ color: MAGNETIC_CHARGE_GOLD, width: 1.5, alpha: 0.9 });
+};
+
+const drawMagneticResidue = (graphics: Graphics, x: number, y: number, outerRadius: number): void => {
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index * FULL_CIRCLE / 8 + Math.PI / 8;
+    const point = polarPoint(outerRadius * (0.78 + (index % 2) * 0.12), angle);
+    const tip = polarPoint(outerRadius * (0.91 + (index % 2) * 0.08), angle);
+    graphics.beginPath().moveTo(x + point.x, y + point.y).lineTo(x + tip.x, y + tip.y)
+      .stroke({ color: index % 2 === 0 ? MAGNETIC_CHARGE_CYAN : MAGNETIC_CHARGE_VIOLET, width: 2, alpha: 0.82 });
+    graphics.beginPath().regularPoly(x + tip.x, y + tip.y, 3.2, 4, angle)
+      .fill({ color: MAGNETIC_CHARGE_WHITE, alpha: 0.78 });
+  }
+};
+
+const drawMagneticAnnularPanel = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  innerRadius: number,
+  outerRadius: number,
+  start: number,
+  end: number,
+  color: number,
+  alpha: number
+): void => {
+  const steps = 3;
+  graphics.beginPath();
+  for (let step = 0; step <= steps; step += 1) {
+    const angle = start + (end - start) * step / steps;
+    const point = polarPoint(outerRadius, angle);
+    if (step === 0) graphics.moveTo(x + point.x, y + point.y);
+    else graphics.lineTo(x + point.x, y + point.y);
+  }
+  for (let step = steps; step >= 0; step -= 1) {
+    const angle = start + (end - start) * step / steps;
+    const point = polarPoint(innerRadius, angle);
+    graphics.lineTo(x + point.x, y + point.y);
+  }
+  graphics.closePath().fill({ color, alpha });
+};
+
+const drawMagneticArc = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  radius: number,
+  start: number,
+  end: number,
+  color: number,
+  width: number,
+  alpha: number
+): void => {
+  graphics.beginPath().arc(x, y, Math.max(1, radius), start, end)
+    .stroke({ color, width, alpha });
+};
+
+const drawPulseChargeBrackets = (
+  graphics: Graphics,
+  radius: number,
+  color: number,
+  width: number,
+  alpha: number
+): void => {
+  const bracketCount = 4;
+  const sector = FULL_CIRCLE / bracketCount;
+  const span = sector * 0.26;
+  for (let index = 0; index < bracketCount; index += 1) {
+    const center = index * sector + Math.PI / 4;
+    graphics.beginPath()
+      .arc(0, 0, Math.max(1, radius), center - span, center + span)
+      .stroke({ color, width, alpha });
+    graphics.beginPath()
+      .arc(0, 0, Math.max(1, radius - 7), center - span * 0.72, center + span * 0.72)
+      .stroke({ color: PULSE_VIOLET, width: 1.1, alpha: alpha * 0.72 });
+  }
+};
+
+const drawPulseChargeSpokes = (
+  graphics: Graphics,
+  radius: number,
+  color: number,
+  alpha: number
+): void => {
+  for (let index = 0; index < 4; index += 1) {
+    const angle = index * (FULL_CIRCLE / 4);
+    const inner = Math.max(8, radius - 11);
+    const outer = radius + 8;
+    const innerX = Math.cos(angle) * inner;
+    const innerY = Math.sin(angle) * inner;
+    const outerX = Math.cos(angle) * outer;
+    const outerY = Math.sin(angle) * outer;
+    graphics.beginPath().moveTo(innerX, innerY).lineTo(outerX, outerY)
+      .stroke({ color, width: 1.3, alpha: alpha * 0.7 });
+    const tipX = Math.cos(angle) * (outer + 6);
+    const tipY = Math.sin(angle) * (outer + 6);
+    const tangentX = -Math.sin(angle) * 3.5;
+    const tangentY = Math.cos(angle) * 3.5;
+    graphics.beginPath()
+      .moveTo(outerX - tangentX, outerY - tangentY)
+      .lineTo(tipX, tipY)
+      .lineTo(outerX + tangentX, outerY + tangentY)
+      .closePath()
+      .fill({ color: PULSE_HOT, alpha: alpha * 0.9 });
+  }
+};
+
+const drawPulseAperture = (graphics: Graphics): void => {
+  graphics.beginPath().regularPoly(0, 0, 13, 8, Math.PI / 8)
+    .fill({ color: PULSE_INK, alpha: 0.96 })
+    .stroke({ color: PULSE_VIOLET, width: 1.8, alpha: 0.96 });
+  graphics.beginPath().regularPoly(0, 0, 8, 8, Math.PI / 8)
+    .stroke({ color: PULSE_HOT, width: 1.4, alpha: 0.95 });
+  graphics.beginPath().moveTo(-3, 0).lineTo(0, -4).lineTo(3, 0).lineTo(0, 4).closePath()
+    .fill({ color: PULSE_MAGENTA, alpha: 0.94 });
+  for (let index = 0; index < 4; index += 1) {
+    const angle = index * (FULL_CIRCLE / 4) + Math.PI / 4;
+    const x = Math.cos(angle) * 17;
+    const y = Math.sin(angle) * 17;
+    graphics.beginPath().moveTo(x, y - 2.6).lineTo(x + 2.6, y).lineTo(x, y + 2.6).lineTo(x - 2.6, y).closePath()
+      .fill({ color: PULSE_AMBER, alpha: 0.82 });
+  }
+};
+
+const drawPulseSegmentedBand = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  color: number,
+  alpha: number,
+  count: number,
+  phase: number
+): void => {
+  const sector = FULL_CIRCLE / count;
+  const gap = sector * 0.14;
+  for (let index = 0; index < count; index += 1) {
+    const start = phase + index * sector + gap;
+    const end = phase + (index + 1) * sector - gap;
+    drawPulseSectorBand(graphics, radius, width, color, alpha, start, end);
+  }
+};
+
+const drawPulseSectorBand = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  color: number,
+  alpha: number,
+  start: number,
+  end: number
+): void => {
+  const outer = Math.max(1, radius + width * 0.5);
+  const inner = Math.max(0.5, radius - width * 0.5);
+  const arcSteps = 3;
+  graphics.beginPath();
+  for (let step = 0; step <= arcSteps; step += 1) {
+    const angle = start + (end - start) * (step / arcSteps);
+    const x = Math.cos(angle) * outer;
+    const y = Math.sin(angle) * outer;
+    if (step === 0) graphics.moveTo(x, y);
+    else graphics.lineTo(x, y);
+  }
+  for (let step = arcSteps; step >= 0; step -= 1) {
+    const angle = start + (end - start) * (step / arcSteps);
+    graphics.lineTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+  }
+  graphics.closePath().fill({ color, alpha });
+};
+
+const drawPulseWaveBand = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  color: number,
+  alpha: number,
+  count: number
+): void => {
+  const sector = FULL_CIRCLE / count;
+  const outer = Math.max(1, radius + width * 0.5);
+  const inner = Math.max(0.5, radius - width * 0.46);
+  for (let index = 0; index < count; index += 1) {
+    const center = index * sector + sector * 0.5;
+    const halfSpan = sector * 0.31;
+    const tipRadius = outer + (index % 2 === 0 ? width * 0.32 : width * 0.18);
+    const outerStart = polarPoint(outer, center - halfSpan);
+    const outerTip = polarPoint(tipRadius, center);
+    const outerEnd = polarPoint(outer, center + halfSpan);
+    const innerEnd = polarPoint(inner, center + halfSpan * 0.86);
+    const innerTip = polarPoint(inner - width * 0.12, center);
+    const innerStart = polarPoint(inner, center - halfSpan * 0.86);
+    graphics.beginPath()
+      .moveTo(outerStart.x, outerStart.y)
+      .lineTo(outerTip.x, outerTip.y)
+      .lineTo(outerEnd.x, outerEnd.y)
+      .lineTo(innerEnd.x, innerEnd.y)
+      .lineTo(innerTip.x, innerTip.y)
+      .lineTo(innerStart.x, innerStart.y)
+      .closePath()
+      .fill({ color: PULSE_ARMOR, alpha: alpha * 0.9 });
+    // A broad dark heel, a colored bevel and a narrow hot crest give each
+    // pressure petal a cross-section. Keep these facets in Low as well.
+    graphics.beginPath().moveTo(outerStart.x, outerStart.y)
+      .lineTo(outerTip.x, outerTip.y).lineTo(outerEnd.x, outerEnd.y)
+      .lineTo(innerTip.x, innerTip.y).closePath()
+      .fill({ color: index % 3 === 0 ? PULSE_MAGENTA : color, alpha: alpha * 0.7 });
+    graphics.beginPath().moveTo(outerStart.x, outerStart.y)
+      .lineTo(outerTip.x, outerTip.y).lineTo(outerEnd.x, outerEnd.y)
+      .stroke({ color: PULSE_AMBER, width: 2.6, alpha: alpha * 0.9 });
+    graphics.beginPath().moveTo(outerStart.x, outerStart.y)
+      .lineTo(outerTip.x, outerTip.y)
+      .stroke({ color: PULSE_HOT, width: 1.2, alpha: alpha * 0.95 });
+    const seam = polarPoint(radius - width * 0.12, center);
+    graphics.beginPath().moveTo(innerStart.x, innerStart.y)
+      .lineTo(seam.x, seam.y).lineTo(innerEnd.x, innerEnd.y)
+      .stroke({ color: PULSE_VIOLET, width: 1.2, alpha: alpha * 0.6 });
+  }
+};
+
+const drawPulseSerratedEdge = (
+  graphics: Graphics,
+  radius: number,
+  width: number,
+  count: number
+): void => {
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const center = index * sector + sector * 0.5;
+    const inner = radius + width * 0.1;
+    const outer = radius + width * (index % 2 === 0 ? 0.74 : 0.58);
+    const tangent = Math.max(3.5, sector * 0.16);
+    const innerPoint = polarPoint(inner, center);
+    const outerPoint = polarPoint(outer, center);
+    const left = polarPoint(inner, center - tangent / Math.max(inner, 1));
+    const right = polarPoint(inner, center + tangent / Math.max(inner, 1));
+    graphics.beginPath()
+      .moveTo(left.x, left.y)
+      .lineTo(outerPoint.x, outerPoint.y)
+      .lineTo(right.x, right.y)
+      .closePath()
+      .fill({ color: index % 2 === 0 ? PULSE_HOT : PULSE_AMBER, alpha: 0.92 });
+    graphics.beginPath().moveTo(innerPoint.x, innerPoint.y).lineTo(outerPoint.x, outerPoint.y)
+      .stroke({ color: PULSE_MAGENTA, width: 1.1, alpha: 0.72 });
+  }
+};
+
+const drawPulseExpansionVectors = (
+  graphics: Graphics,
+  radius: number,
+  count: number,
+  color: number,
+  alpha: number
+): void => {
+  for (let index = 0; index < count; index += 1) {
+    const angle = index * (FULL_CIRCLE / count) - Math.PI / 2 + Math.PI / 8;
+    const base = radius + 5;
+    const tip = radius + 17;
+    const tangent = 3.8;
+    const baseLeft = polarPoint(base, angle - tangent / Math.max(base, 1));
+    const baseRight = polarPoint(base, angle + tangent / Math.max(base, 1));
+    const tipPoint = polarPoint(tip, angle);
+    graphics.beginPath()
+      .moveTo(baseLeft.x, baseLeft.y)
+      .lineTo(tipPoint.x, tipPoint.y)
+      .lineTo(baseRight.x, baseRight.y)
+      .closePath()
+      .fill({ color: index % 2 === 0 ? color : PULSE_MAGENTA, alpha });
+  }
+};
+
+const drawPulseEchoTicks = (
+  graphics: Graphics,
+  radius: number,
+  color: number,
+  alpha: number
+): void => {
+  const count = 8;
+  const sector = FULL_CIRCLE / count;
+  for (let index = 0; index < count; index += 1) {
+    const center = index * sector + (index % 2 === 0 ? 0.08 : -0.08);
+    const span = sector * 0.18;
+    graphics.beginPath().arc(0, 0, Math.max(1, radius), center - span, center + span)
+      .stroke({ color, width: 2.1, alpha });
+    graphics.beginPath().arc(0, 0, Math.max(1, radius - 8), center - span * 0.68, center + span * 0.68)
+      .stroke({ color: PULSE_MAGENTA, width: 1, alpha: alpha * 0.58 });
+  }
+};
+
+const polarPoint = (radius: number, angle: number): { x: number; y: number } => ({
+  x: Math.cos(angle) * radius,
+  y: Math.sin(angle) * radius
+});

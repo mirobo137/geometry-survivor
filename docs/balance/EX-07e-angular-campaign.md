@@ -130,18 +130,20 @@ gameplay: el Orbiter siempre llegaba a una banda fija y recorría un círculo
 centrado en la arena. Eso permitía quedarse en una esquina sin que el enemigo
 representara una amenaza significativa.
 
-La corrección mantiene la lectura de `telegraph → commit → recovery`, pero
-cambia el ancla:
+La corrección mantiene la lectura de `approach → telegraph → commit → recovery`,
+pero cambia la cadencia y el ancla:
 
-- en `approach`, cada nave sigue la posición actual del player desde un lado
-  estable, con `followDistance = 116` y un sesgo lateral de `30` unidades;
+- en `approach`, cada nave persigue directamente la posición actual del player
+  mientras avanza su reloj; el lanzamiento no depende de un lado estable, una
+  posición lateral ni una distancia mínima;
 - al entrar en `telegraph`, la simulación captura `routeCenterX/Y`,
-  `routeRadius`, ángulo y sentido. El centro queda cerca del player, con un
-  pequeño desplazamiento interior para conservar margen junto a la pared;
+  `routeRadius`, ángulo y sentido desde la posición actual de la nave. El radio
+  authored mantiene la curva local y no busca el centro de la arena;
 - el primer punto de la curva coincide con la posición real de la nave y
-  `commit` recorre ese arco capturado sin homing;
-- `recovery` continúa desde el endpoint real y vuelve a seguir al player; no
-  salta al centro ni repite una única ruta global;
+  `commit` recorre ese arco capturado sin homing y no se cancela por la posición
+  que el player adopte durante el aviso; el barrido es más rápido y cubre 135°;
+- `recovery` continúa desde el endpoint real, sigue al player durante 1.10 s y
+  reinicia la espera temporal del siguiente lanzamiento;
 - el riel sigue siendo visual. El daño continúa viniendo únicamente del
   collider circular del casco y respeta el cooldown de contacto.
 

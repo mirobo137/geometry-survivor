@@ -4,6 +4,7 @@ export interface WeaponScheduleCallbacks {
   readonly fireProjectile: (player: PlayerState) => void;
   readonly fireChain: (player: PlayerState) => void;
   readonly fireBoomerang?: (player: PlayerState) => void;
+  readonly firePulseRing?: (player: PlayerState) => void;
 }
 
 /** Owns only elapsed cooldown time and trigger order for authored weapons. */
@@ -11,6 +12,7 @@ export class WeaponScheduler {
   private projectileAccumulator = 0;
   private chainAccumulator = 0;
   private boomerangAccumulator = 0;
+  private pulseRingAccumulator = 0;
 
   public constructor(private readonly callbacks: WeaponScheduleCallbacks) {}
 
@@ -22,7 +24,9 @@ export class WeaponScheduler {
     player: PlayerState,
     projectileEnabled = true,
     boomerangEnabled = false,
-    boomerangCooldownSeconds = 1
+    boomerangCooldownSeconds = 1,
+    pulseRingEnabled = false,
+    pulseRingCooldownSeconds = 1
   ): void {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (dt <= 0) return;
@@ -59,11 +63,23 @@ export class WeaponScheduler {
     } else {
       this.chainAccumulator = 0;
     }
+
+    if (pulseRingEnabled && this.callbacks.firePulseRing) {
+      this.pulseRingAccumulator += dt;
+      const pulseRingCooldown = Math.max(0.001, pulseRingCooldownSeconds);
+      while (this.pulseRingAccumulator >= pulseRingCooldown) {
+        this.pulseRingAccumulator -= pulseRingCooldown;
+        this.callbacks.firePulseRing(player);
+      }
+    } else {
+      this.pulseRingAccumulator = 0;
+    }
   }
 
   public reset(): void {
     this.projectileAccumulator = 0;
     this.chainAccumulator = 0;
     this.boomerangAccumulator = 0;
+    this.pulseRingAccumulator = 0;
   }
 }

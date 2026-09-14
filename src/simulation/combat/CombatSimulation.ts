@@ -26,6 +26,7 @@ import {
   getHazardCadenceProfile,
   type HazardCadenceMode
 } from '../../content/hazards/HazardCadenceDefinitions';
+import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -51,6 +52,10 @@ export interface CombatSimulationOptions {
   readonly angularSweepDrill?: boolean;
   /** Isolated EX-07d boss scenario; not a campaign act. */
   readonly wardenDrill?: boolean;
+  /** Isolated fifth-weapon scenario; distinct from the Act II hazard drill. */
+  readonly pulseRingWeaponDrill?: boolean;
+  /** Isolated sixth-weapon scenario; remote magnetic charge and detonation. */
+  readonly magneticChargeWeaponDrill?: boolean;
 }
 
 export type CombatEvent =
@@ -98,6 +103,7 @@ export class CombatSimulation {
   public readonly orbitBlades: CombatWeaponSystem['orbitBlades'];
   public readonly chainSegments: CombatWeaponSystem['chainSegments'];
   public readonly boomerangStates: readonly BoomerangState[];
+  public readonly pulseRingWeapon: CombatWeaponSystem['pulseRingWeapon'];
   public readonly renderState: CombatRenderState;
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
@@ -110,6 +116,10 @@ export class CombatSimulation {
   private readonly pulseRingDrill: boolean;
   private readonly angularSweepDrill: boolean;
   private readonly wardenDrill: boolean;
+  private readonly pulseRingWeaponDrill: boolean;
+  private readonly magneticChargeWeaponDrill: boolean;
+  private pulseRingWeaponDrillInitialized = false;
+  private magneticChargeWeaponDrillInitialized = false;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
@@ -132,6 +142,14 @@ export class CombatSimulation {
     this.wardenDrill = options.wardenDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill && !this.stressMode;
+    this.pulseRingWeaponDrill = options.pulseRingWeaponDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill && !this.stressMode;
+    this.magneticChargeWeaponDrill = options.magneticChargeWeaponDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.stressMode;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
     const isAngularAct = this.actDirector.definition.id === 'angular';
     const radialPulseDefinition = {
@@ -169,17 +187,22 @@ export class CombatSimulation {
       (enemy) => this.defeatEnemy(enemy),
       options.permanentBonuses
     );
+    if (this.pulseRingWeaponDrill) this.weaponSystem.unlockPulseRing();
+    if (this.magneticChargeWeaponDrill) this.weaponSystem.unlockMagneticCharge();
     this.projectiles = this.weaponSystem.projectiles;
     this.boomerangs = this.weaponSystem.boomerangs;
     this.orbitBlades = this.weaponSystem.orbitBlades;
     this.chainSegments = this.weaponSystem.chainSegments;
     this.boomerangStates = this.weaponSystem.boomerangStates;
+    this.pulseRingWeapon = this.weaponSystem.pulseRingWeapon;
     this.renderState = {
       enemies: this.enemies.states,
       projectiles: this.projectiles.states,
       orbitBlades: this.orbitBlades,
       chainSegments: this.chainSegments,
       boomerangs: this.boomerangStates,
+      pulseRingWeapon: this.pulseRingWeapon,
+      magneticCharge: this.weaponSystem.magneticCharge,
       laser: this.laser.state,
       radialPulse: this.radialPulse.state,
       pulseRing: this.pulseRing.state,
@@ -230,6 +253,10 @@ export class CombatSimulation {
 
   public get isWardenDrill(): boolean { return this.wardenDrill; }
 
+  public get isPulseRingWeaponDrill(): boolean { return this.pulseRingWeaponDrill; }
+
+  public get isMagneticChargeWeaponDrill(): boolean { return this.magneticChargeWeaponDrill; }
+
   public get isAngularAct(): boolean {
     return this.actDirector.definition.id === 'angular';
   }
@@ -252,6 +279,22 @@ export class CombatSimulation {
 
   public get currentChainCooldown(): number {
     return this.weaponSystem.currentChainCooldown;
+  }
+
+  public get currentPulseRingDamage(): number {
+    return this.weaponSystem.currentPulseRingDamage;
+  }
+
+  public get currentPulseRingCooldown(): number {
+    return this.weaponSystem.currentPulseRingCooldown;
+  }
+
+  public get currentMagneticChargeDamage(): number {
+    return this.weaponSystem.currentMagneticChargeDamage;
+  }
+
+  public get currentMagneticChargeCooldown(): number {
+    return this.weaponSystem.currentMagneticChargeCooldown;
   }
 
   public get currentExperienceMultiplier(): number {
@@ -311,6 +354,26 @@ export class CombatSimulation {
     return this.weaponSystem.hasVectorBoomerang;
   }
 
+  public unlockPulseRing(): boolean {
+    return this.weaponSystem.unlockPulseRing();
+  }
+
+  public get hasPulseRing(): boolean {
+    return this.weaponSystem.hasPulseRing;
+  }
+
+  public unlockMagneticCharge(): boolean {
+    return this.weaponSystem.unlockMagneticCharge();
+  }
+
+  public get hasMagneticCharge(): boolean {
+    return this.weaponSystem.hasMagneticCharge;
+  }
+
+  public increasePulseRingDamage(amount: number): void {
+    this.weaponSystem.increasePulseRingDamage(amount);
+  }
+
   public get activeOrbitBlades(): number {
     return this.weaponSystem.activeOrbitBlades;
   }
@@ -354,7 +417,8 @@ export class CombatSimulation {
     this.spawnAccumulator += dt;
     const angularAct = this.isAngularAct;
     const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
-      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill;
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill;
     if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
@@ -436,6 +500,16 @@ export class CombatSimulation {
     } else if (this.pulseRingDrill) {
       // The EX-07c drill isolates the hazard so its opening and push can be
       // read without enemy silhouettes hiding the answer.
+    } else if (this.pulseRingWeaponDrill) {
+      if (!this.pulseRingWeaponDrillInitialized) {
+        this.enemySystem.spawnPulseRingWeaponDrill(arenaRadius);
+        this.pulseRingWeaponDrillInitialized = true;
+      }
+    } else if (this.magneticChargeWeaponDrill) {
+      if (!this.magneticChargeWeaponDrillInitialized) {
+        this.enemySystem.spawnMagneticChargeWeaponDrill(arenaRadius);
+        this.magneticChargeWeaponDrillInitialized = true;
+      }
     } else if (this.angularSweepDrill || this.wardenDrill) {
       // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
@@ -468,7 +542,28 @@ export class CombatSimulation {
     // target alive. Splitter and Warden deliberately keep autofire: their
     // lessons are the bounded fracture and destructible copies, respectively.
     if (!this.orbiterDrill && !this.chargerDrill && !this.prismWeaverDrill && !this.angularSweepDrill) {
-      this.weaponSystem.update(dt, player);
+      this.weaponSystem.update(dt, player, this.pulseRingWeaponDrill
+        ? {
+          projectileEnabled: false,
+          orbitEnabled: false,
+          chainEnabled: false,
+          boomerangEnabled: false,
+          pulseRingEnabled: true,
+          magneticChargeArena: arenaBoundary,
+          pulseRingCooldownSeconds: PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS
+        }
+        : this.magneticChargeWeaponDrill
+          ? {
+            projectileEnabled: false,
+            orbitEnabled: false,
+            chainEnabled: false,
+            boomerangEnabled: false,
+            pulseRingEnabled: false,
+            magneticChargeEnabled: true,
+            magneticChargeArena: arenaBoundary,
+            magneticChargeCooldownSeconds: 1.8
+          }
+        : { magneticChargeArena: arenaBoundary });
     }
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
@@ -483,6 +578,11 @@ export class CombatSimulation {
     this.enemySystem.reset();
     this.boss.reset();
     this.weaponSystem.reset();
+    // Development drills must remain directly playable after restart/pause.
+    // `CombatWeaponSystem.reset()` correctly clears run-owned unlocks, so
+    // re-apply this drill-only unlock without changing campaign progression.
+    if (this.pulseRingWeaponDrill) this.weaponSystem.unlockPulseRing();
+    if (this.magneticChargeWeaponDrill) this.weaponSystem.unlockMagneticCharge();
     this.laser.reset();
     this.radialPulse.reset();
     this.pulseRing.reset();
@@ -495,6 +595,8 @@ export class CombatSimulation {
     this.experienceMultiplier = 1;
     this.pendingEvents.length = 0;
     this.spawnAccumulator = 0;
+    this.pulseRingWeaponDrillInitialized = false;
+    this.magneticChargeWeaponDrillInitialized = false;
     this.stressInitialized = false;
   }
 
@@ -506,13 +608,15 @@ export class CombatSimulation {
 
   private maintainStressEnemies(arenaRadius: number): void {
     if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
-      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
     if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
-      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill) return;
+      || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }
 

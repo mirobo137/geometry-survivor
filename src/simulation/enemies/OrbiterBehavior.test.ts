@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
+import { ENEMY_DEFINITIONS, ORBITER_DEFINITION } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER, ARENA_RADIUS } from '../../config/constants';
 import { EnemyPool } from '../combat/EntityPools';
 import { OrbiterBehavior } from './OrbiterBehavior';
@@ -22,7 +22,7 @@ const prepare = (spawnIndex = 0) => {
     armor: 0
   };
   const behavior = new OrbiterBehavior();
-  behavior.configure(state, spawnIndex, ARENA_RADIUS);
+  behavior.configure(state, spawnIndex);
   return { state, behavior, player };
 };
 
@@ -34,22 +34,21 @@ const stepUntil = (
   dt = 1 / 60
 ) => {
   for (let index = 0; index < 600 && !predicate(); index += 1) {
-    behavior.update(state, dt, ARENA_RADIUS, player);
+    behavior.update(state, dt, player);
   }
 };
 
 describe('OrbiterBehavior', () => {
-  it('follows the player, then commits a local arc from its current position', () => {
+  it('chases for an authored delay, then commits a local arc from its current position', () => {
     const { state, behavior, player } = prepare(0);
+    const initialDistance = Math.hypot(state.x - player.x, state.y - player.y);
     stepUntil(behavior, state, player, () => state.orbiterPhase === 'telegraph');
     expect(state.orbiterSector).toBe(0);
     expect(state.orbiterDirection).toBe(1);
     expect(state.contactEnabled).toBe(true);
-    expect(Math.hypot(state.x - player.x, state.y - player.y)).toBeLessThan(160);
-    expect(Math.hypot(
-      state.orbiterRouteCenterX - ARENA_CENTER.x,
-      state.orbiterRouteCenterY - ARENA_CENTER.y
-    )).toBeGreaterThan(40);
+    expect(Math.hypot(state.x - player.x, state.y - player.y)).toBeGreaterThan(ORBITER_DEFINITION.attackRadius);
+    expect(Math.hypot(state.x - player.x, state.y - player.y)).toBeLessThan(initialDistance);
+    expect(state.orbiterRouteRadius).toBe(ORBITER_DEFINITION.attackRadius);
     expect(Math.hypot(
       state.x - state.orbiterRouteCenterX,
       state.y - state.orbiterRouteCenterY
@@ -61,7 +60,7 @@ describe('OrbiterBehavior', () => {
     expect(state.contactEnabled).toBe(true);
     const startX = state.x;
     const startY = state.y;
-    behavior.update(state, 0.2, ARENA_RADIUS, player);
+    behavior.update(state, 0.2, player);
     expect(state.orbiterPhase).toBe('commit');
     expect(Math.hypot(
       state.x - state.orbiterRouteCenterX,
@@ -71,18 +70,30 @@ describe('OrbiterBehavior', () => {
     expect(Math.hypot(state.vx, state.vy)).toBeGreaterThan(1);
     stepUntil(behavior, state, player, () => state.orbiterPhase === 'recovery');
     expect(state.contactEnabled).toBe(true);
+    player.x = ARENA_CENTER.x + 180;
+    player.y = ARENA_CENTER.y + 120;
+    const recoveryX = state.x;
+    const recoveryY = state.y;
+    for (let index = 0; index < 20; index += 1) behavior.update(state, 1 / 60, player);
+    expect(state.orbiterPhase).toBe('recovery');
+    expect(Math.hypot(state.x - recoveryX, state.y - recoveryY)).toBeGreaterThan(1);
+    stepUntil(behavior, state, player, () => state.orbiterPhase === 'approach');
+    expect(state.orbiterSequence).toBe(1);
+    for (let index = 0; index < 60; index += 1) behavior.update(state, 1 / 60, player);
+    expect(state.orbiterPhase).toBe('approach');
+    stepUntil(behavior, state, player, () => state.orbiterPhase === 'telegraph');
+    expect(state.orbiterSequence).toBe(2);
   });
 
-  it('does not stall when its hull starts in contact with the player', () => {
+  it('starts its attack when its hull is already in contact with the player', () => {
     const { state, behavior, player } = prepare(0);
     state.x = player.x;
     state.y = player.y;
-    behavior.update(state, 1 / 60, ARENA_RADIUS, player);
+    behavior.update(state, 1 / 60, player);
     expect(state.orbiterPhase).toBe('approach');
-    expect(Math.hypot(state.x - player.x, state.y - player.y)).toBeGreaterThan(0);
 
     for (let index = 0; index < 120 && state.orbiterPhase === 'approach'; index += 1) {
-      behavior.update(state, 1 / 60, ARENA_RADIUS, player);
+      behavior.update(state, 1 / 60, player);
     }
     expect(state.orbiterPhase).toBe('telegraph');
   });
@@ -109,14 +120,20 @@ describe('OrbiterBehavior', () => {
     expect(state.contactEnabled).toBe(true);
   });
 
-  it('gives different orbiters distinct local route biases instead of one shared arena route', () => {
+  it('keeps attack direction variation independent from direct pursuit', () => {
     const first = prepare(0);
     const second = prepare(1);
+    expect(first.state.orbiterDirection).toBe(1);
+    expect(second.state.orbiterDirection).toBe(-1);
     stepUntil(first.behavior, first.state, first.player, () => first.state.orbiterPhase === 'telegraph');
     stepUntil(second.behavior, second.state, second.player, () => second.state.orbiterPhase === 'telegraph');
+    stepUntil(first.behavior, first.state, first.player, () => first.state.orbiterPhase === 'commit');
+    stepUntil(second.behavior, second.state, second.player, () => second.state.orbiterPhase === 'commit');
+    first.behavior.update(first.state, 0.1, first.player);
+    second.behavior.update(second.state, 0.1, second.player);
     expect(Math.hypot(
-      first.state.orbiterRouteCenterX - second.state.orbiterRouteCenterX,
-      first.state.orbiterRouteCenterY - second.state.orbiterRouteCenterY
+      first.state.x - second.state.x,
+      first.state.y - second.state.y
     )).toBeGreaterThan(1);
   });
 
@@ -124,15 +141,15 @@ describe('OrbiterBehavior', () => {
     const moving = prepare(0);
     const staticTarget = prepare(0);
     for (let index = 0; index < 60; index += 1) {
-      moving.behavior.update(moving.state, 1 / 60, ARENA_RADIUS, moving.player);
-      staticTarget.behavior.update(staticTarget.state, 1 / 60, ARENA_RADIUS, staticTarget.player);
+      moving.behavior.update(moving.state, 1 / 60, moving.player);
+      staticTarget.behavior.update(staticTarget.state, 1 / 60, staticTarget.player);
     }
 
     moving.player.x = ARENA_CENTER.x + 110;
     moving.player.y = ARENA_CENTER.y - 215;
     for (let index = 0; index < 45; index += 1) {
-      moving.behavior.update(moving.state, 1 / 60, ARENA_RADIUS, moving.player);
-      staticTarget.behavior.update(staticTarget.state, 1 / 60, ARENA_RADIUS, staticTarget.player);
+      moving.behavior.update(moving.state, 1 / 60, moving.player);
+      staticTarget.behavior.update(staticTarget.state, 1 / 60, staticTarget.player);
     }
 
     expect(moving.state.orbiterPhase).toBe('approach');
@@ -144,7 +161,7 @@ describe('OrbiterBehavior', () => {
     const sample = (dt: number) => {
       const { state, behavior, player } = prepare(1);
       for (let elapsed = 0; elapsed < 3.5; elapsed += dt) {
-        behavior.update(state, dt, ARENA_RADIUS, player);
+        behavior.update(state, dt, player);
       }
       return { x: state.x, y: state.y, phase: state.orbiterPhase };
     };

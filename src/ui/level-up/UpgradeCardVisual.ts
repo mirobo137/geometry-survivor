@@ -7,6 +7,8 @@ export type UpgradeCardIconId =
   | 'orbit'
   | 'chain'
   | 'boomerang'
+  | 'pulse'
+  | 'magnet'
   | 'armor'
   | 'experience'
   | 'repair'
@@ -30,6 +32,8 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   orbit_blade: { icon: 'orbit', tone: 'violet', category: 'ÓRBITA' },
   chain_lightning: { icon: 'chain', tone: 'cyan', category: 'ENERGÍA' },
   vector_boomerang: { icon: 'boomerang', tone: 'amber', category: 'RETORNO' },
+  pulse_ring: { icon: 'pulse', tone: 'cyan', category: 'ONDA' },
+  magnetic_charge: { icon: 'magnet', tone: 'violet', category: 'CONTROL REMOTO' },
   rapid_projectiles: { icon: 'projectile', tone: 'amber', category: 'ARSENAL' },
   resonant_core: { icon: 'experience', tone: 'gold', category: 'PROGRESIÓN' },
   regenerative_reactor: { icon: 'repair', tone: 'mint', category: 'RECUPERACIÓN' },

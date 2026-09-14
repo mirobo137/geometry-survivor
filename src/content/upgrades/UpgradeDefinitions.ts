@@ -6,6 +6,8 @@ export type UpgradeId =
   | 'orbit_blade'
   | 'chain_lightning'
   | 'vector_boomerang'
+  | 'pulse_ring'
+  | 'magnetic_charge'
   | 'rapid_projectiles'
   | 'resonant_core'
   | 'regenerative_reactor'
@@ -33,6 +35,8 @@ export type UpgradeEffect =
   | { readonly type: 'orbitBlade' }
   | { readonly type: 'chainLightning' }
   | { readonly type: 'vectorBoomerang' }
+  | { readonly type: 'pulseRing' }
+  | { readonly type: 'magneticCharge' }
   | { readonly type: 'projectileCooldown'; readonly amount: number }
   | { readonly type: 'experienceGain'; readonly amount: number }
   | { readonly type: 'healthRecovery'; readonly amount: number }
@@ -88,6 +92,20 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Búmeran vectorial',
     description: 'Lanza una hoja que golpea al salir y al regresar hacia ti',
     effect: { type: 'vectorBoomerang' },
+    maxStacks: 1
+  },
+  {
+    id: 'pulse_ring',
+    title: 'Anillo de pulso',
+    description: 'Carga una onda que se expande, daña una vez y empuja',
+    effect: { type: 'pulseRing' },
+    maxStacks: 1
+  },
+  {
+    id: 'magnetic_charge',
+    title: 'Carga magnética',
+    description: 'Lanza una carga remota que atrae y detona en una banda',
+    effect: { type: 'magneticCharge' },
     maxStacks: 1
   },
   {

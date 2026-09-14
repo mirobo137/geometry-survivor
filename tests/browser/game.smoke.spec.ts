@@ -500,6 +500,29 @@ test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
   expect(failures).toEqual([]);
 });
 
+for (const weaponCard of [
+  { query: 'pulse-ring', id: 'pulse_ring' },
+  { query: 'magnetic-charge', id: 'magnetic_charge' }
+] as const) {
+  test(`permite probar la carta ${weaponCard.query} dentro de una run real`, async ({ page }) => {
+    const failures = captureRuntimeFailures(page);
+    await page.goto(`/?card=${weaponCard.query}&debug=1&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    await expect(page.locator('#start-screen')).toBeHidden();
+
+    const levelUp = page.locator('#level-up');
+    await expect(levelUp).toBeVisible({ timeout: 10_000 });
+    const card = page.locator(`#level-up-options button[data-upgrade-id="${weaponCard.id}"]`);
+    await expect(card).toBeVisible();
+    await card.click();
+    await expect(levelUp).toBeHidden({ timeout: 5_000 });
+    await expect(page.locator('#game-hud')).toBeVisible();
+
+    expect(failures).toEqual([]);
+  });
+}
+
 test('permite probar el boss desde el atajo de desarrollo', async ({ page }) => {
   test.setTimeout(20_000);
   const failures = captureRuntimeFailures(page);
@@ -527,6 +550,37 @@ test('carga el drill del Pulse Ring y expone la abertura durante el ataque', asy
   await expect(page.locator('#debug-panel')).toContainText('mode: pulse-ring-drill');
   await expect.poll(() => page.locator('#debug-panel').textContent()).toContain('pulse: active');
   await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('pulse-ring-low.png') });
+  expect(failures).toEqual([]);
+});
+
+test('carga el drill del arma Pulse Ring con blancos de prueba y vista premium', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?weapon=pulse-ring&debug=1&quality=high');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: pulse-ring-weapon-drill');
+  await expect(page.locator('#debug-panel')).toContainText('enemies: 7/250');
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 20_000, intervals: [50] })
+    .toMatch(/pulse: active/);
+  await page.locator('#pause-toggle').evaluate((button: HTMLElement) => button.click());
+  await page.locator('#game-container canvas').screenshot({
+    path: testInfo.outputPath('pulse-ring-weapon-high.png'),
+    style: '#pause-overlay { visibility: hidden !important; }'
+  });
+  expect(failures).toEqual([]);
+});
+
+test('carga el drill del arma Magnetic Charge con atracción remota y banda premium', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?weapon=magnetic-charge&debug=1&quality=high');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: magnetic-charge-drill');
+  await expect(page.locator('#debug-panel')).toContainText('enemies: 8/250');
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 8_000 })
+    .toMatch(/magnetic: detonate \|/);
+  await page.locator('#pause-toggle').evaluate((button: HTMLElement) => button.click());
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('magnetic-charge-weapon-high.png') });
   expect(failures).toEqual([]);
 });
 

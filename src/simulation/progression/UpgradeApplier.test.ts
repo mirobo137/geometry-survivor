@@ -35,6 +35,35 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('chain_lightning')).toBe(false);
   });
 
+  it('unlocks Pulse Ring as the fifth authored weapon family', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+
+    expect(applier.apply('pulse_ring')).toBe(true);
+    expect(combat.hasPulseRing).toBe(true);
+    expect(applier.getPreview('pulse_ring')).toBeNull();
+    expect(applier.apply('pulse_ring')).toBe(false);
+  });
+
+  it('unlocks Magnetic Charge as the sixth authored weapon family', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+
+    expect(applier.apply('magnetic_charge')).toBe(true);
+    expect(combat.hasMagneticCharge).toBe(true);
+    expect(applier.getPreview('magnetic_charge')).toBeNull();
+    expect(applier.apply('magnetic_charge')).toBe(false);
+  });
+
+  it('can prioritize either new weapon card without bypassing the cap', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+
+    expect(applier.getChoicesWithPriority(1, 'pulse_ring')[0].id).toBe('pulse_ring');
+    expect(applier.apply('orbit_blade')).toBe(true);
+    expect(applier.apply('chain_lightning')).toBe(true);
+    expect(applier.getChoicesWithPriority(1, 'magnetic_charge').some((choice) => choice.id === 'magnetic_charge')).toBe(false);
+  });
+
   it('filters prerequisites and stops finite upgrades at their authored limits', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
 

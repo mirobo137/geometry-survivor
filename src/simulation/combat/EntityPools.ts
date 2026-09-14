@@ -24,8 +24,6 @@ export interface EnemyState {
   orbiterProgress: number;
   orbiterBandRadius: number;
   orbiterStartAngle: number;
-  /** Stable side of the player used by the follow phase until the next cast. */
-  orbiterFollowAngle: number;
   /** Captured local focus for the current Orbiter route; never the arena origin by default. */
   orbiterRouteCenterX: number;
   orbiterRouteCenterY: number;
@@ -108,7 +106,6 @@ const createEnemyState = (): EnemyState => ({
   orbiterProgress: 0,
   orbiterBandRadius: 0,
   orbiterStartAngle: 0,
-  orbiterFollowAngle: 0,
   orbiterRouteCenterX: 0,
   orbiterRouteCenterY: 0,
   orbiterRouteRadius: 0,

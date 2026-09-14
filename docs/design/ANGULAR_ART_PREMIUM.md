@@ -54,7 +54,8 @@ La única superficie dañina de estos enemigos es el casco.
 ### Orbiter: telegraph local y lectura de persecución
 
 La ruta del Orbiter ya no debe dibujarse como un anillo centrado en la arena.
-La simulación captura `orbiterRouteCenterX/Y`, `orbiterRouteRadius` y el ángulo
+Durante `approach` la nave persigue directamente al player hasta
+`attackDistance`; la simulación captura `orbiterRouteCenterX/Y`, `orbiterRouteRadius` y el ángulo
 de inicio cuando termina la aproximación. El renderer traslada la geometría
 cacheada a ese foco; no recalcula el player, no busca `ARENA_CENTER` y no crea
 una segunda hitbox.

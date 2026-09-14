@@ -430,8 +430,8 @@ build correcta, sesión de 5 minutos y la anomalía FPS como error de reporte.
 `WeaponScheduler`, `ProjectileBehavior`, `OrbitBehavior` y `ChainBehavior` ya
 existen. Verificar sus tests y fachada; no volver a extraerlos. El scheduler
 actual tiene callbacks concretos: no asumir que existe un registry genérico.
-Sólo ampliar lo necesario al entrar Boomerang. No crear behaviors de Aura/Pulse
-ni un ECS antes de tener su consumidor.
+Sólo ampliar lo necesario al entrar Boomerang. No crear behaviors de armas
+futuras ni un ECS antes de tener su consumidor.
 
 ## 4. Arsenal y actos: ejecución por incrementos
 
@@ -570,9 +570,10 @@ balance.
 ### EX-07b — ficha Orbiter antes de código
 
 La primera familia Angular queda especificada en
-[`docs/design/EX-07b-orbiter.md`](design/EX-07b-orbiter.md). Orbiter reserva un
-arco de dos sectores, anuncia por 0.70 s sentido y recorrido, hace daño
-por contacto con el casco en todo el ciclo y libera una abertura mínima de 90°. Su cap es
+[`docs/design/EX-07b-orbiter.md`](design/EX-07b-orbiter.md). Orbiter persigue al
+player durante un reloj de 1.80 s y despues anuncia un arco local de 135 grados
+que puede lanzar desde cualquier distancia; hace daño por contacto con el casco
+en todo el ciclo y deja una abertura mínima documentada de 90 grados. Su cap es
 seis activos y un commit simultáneo mientras la lección inicial se valida.
 
 La primera implementación vive en `?orbiter=1&debug=1`: un drill aislado sin
@@ -745,26 +746,87 @@ cambia colisión ni gameplay. La ruta futura es desacoplar la geometría estable
 del FX de expansión o medir `GraphicsContext`; no usar filtros ni retirar el
 feedback de expansión para esconderlo.
 
-#### Refinamiento Orbiter — seguimiento y ruta local — 13-09-2026
+#### Refinamiento Orbiter — cadencia temporal y arco ampliado — 14-09-2026
 
-La prueba de campaña mostró que el Orbiter anterior siempre recorría un círculo
-centrado en la arena. El comportamiento vigente sigue al player durante
-`approach`, mantiene `followDistance` y un sesgo lateral authored, y captura al
-comenzar `telegraph` un foco local, radio, ángulo y sentido. `commit` empieza en
-la posición real de la nave y permanece comprometido aunque el player se mueva;
-`recovery` continúa desde el endpoint antes de volver a seguirlo. El telegraph
-recibe ese foco y traslada las plumas cacheadas, sin dibujar un anillo global.
+La prueba de campaña mostró que el Orbiter anterior podía parecer que huía al
+seguir un objetivo lateral y que además esperaba estar cerca para atacar. El
+comportamiento vigente persigue directamente al player durante `approach`,
+acumula un `attackDelaySeconds` authored y lanza desde su posición actual sin
+comprobar distancia. Al comenzar `telegraph` captura un foco local de radio
+fijo, ángulo y sentido; `commit` empieza en la posición real de la nave y
+permanece comprometido aunque el player se mueva o se coloque delante.
+`recovery` continúa desde el endpoint, sigue al player y reinicia la espera del
+siguiente lanzamiento. El telegraph recibe esa ruta y traslada las plumas
+cacheadas, sin dibujar un anillo global.
 
 La entrega conserva el daño de contacto del casco, `commitCap = 1`, los pools y
 el balance provisional de EX-02c. Tests dirigidos y typecheck están verdes; la
-validación humana queda pendiente en el drill `?orbiter=1&debug=1` y en una run
-Angular, comprobando especialmente el comportamiento cuando el player se queda
-en una esquina y la salida touch durante el arco.
+validación humana del usuario aprobó el drill `?orbiter=1&debug=1` y una run
+Angular, incluyendo el comportamiento en esquina, la cadencia temporal y la
+salida touch durante el arco.
+
+### EX-08b - Magnetic Charge de jugador
+
+La sexta familia activa es `magnetic_charge`, reemplazo uno por uno de la
+propuesta Resonant Aura. Su behavior puro lanza una carga a distancia larga a
+un punto determinista dentro de la arena, aunque no haya enemigos; ejecuta
+`travel → attract → detonate → recovery`, atrae enemigos comunes y detona en
+una banda entre 62 y 148 unidades con centro seguro. La detonación usa cooldown
+por objetivo; el boss puede recibir daño, pero nunca es desplazado.
+
+La carta respeta el límite de tres armas activas. `WeaponView` usa ocho capas
+Graphics persistentes: estela, baliza, campo de atracción, backplate, banda,
+rieles, núcleo y residuo. La geometría del destino se hornea por secuencia; Low
+conserva baliza, núcleo y banda, High agrega el campo, rieles y residuo sin
+cambiar la lectura jugable. La guía visual vive en
+[`MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md`](design/MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md)
+y el contrato en
+[`EX-08b-magnetic-charge-weapon.md`](balance/EX-08b-magnetic-charge-weapon.md).
+
+El acceso directo es `/?weapon=magnetic-charge&debug=1&quality=low|high`. El
+drill crea ocho blancos estáticos, apaga el resto del arsenal y hazards y
+muestra `mode: magnetic-charge-drill` junto a `magnetic: phase | x,y`. La
+validación humana de la base queda pendiente antes de abrir sus evoluciones:
+`event_horizon` y `polar_collapse`.
+
+### EX-08c - Cartas de armas en una run real
+
+Las cartas `pulse_ring` y `magnetic_charge` ya están en el catálogo ejecutable,
+con sus iconos premium y aplicación mediante `UpgradeApplier`. La rotación
+normal las presenta en los niveles 7 y 8, respectivamente, siempre que el
+jugador no haya alcanzado el máximo de tres armas activas.
+
+Para validación inmediata sin esperar esos niveles, el bootstrap acepta una
+entrada de desarrollo que conserva el overlay real de tres cartas y coloca la
+carta pedida primero:
+
+- `/?card=pulse-ring&debug=1&quality=low|high`
+- `/?card=magnetic-charge&debug=1&quality=low|high`
+
+El acceso sólo funciona con `debug=1`, no aplica la mejora automáticamente y
+no altera daño, cadencia, enemigos, hazards ni el límite de armas. Elegir la
+carta cierra el level-up y continúa la run normal para probarla en contexto.
+La siguiente puerta es validación humana de ambas cartas en PC/móvil y
+Low/High; sus evoluciones continúan bloqueadas.
 
 ### EX-08 — Niveles y evoluciones, ficha reutilizable por arma
 
 Los nombres y porcentajes viven únicamente en §16.4–16.5 del plan. Una entrega
 implementa un arma o una evolución; no las doce rutas a la vez.
+
+**Estado actual (EX-08a):** Pulse Ring de jugador es la primera arma faltante
+implementada. Su carta es `pulse_ring`, el behavior es puro y su vista premium
+está separada del hazard `PulseRingHazard` del Acto II. Probar primero
+`/?weapon=pulse-ring&debug=1&quality=low|high`; el drill usa siete blancos
+estáticos y desactiva el resto del arsenal. La ficha de contrato vive en
+[`EX-08a-pulse-ring-weapon.md`](balance/EX-08a-pulse-ring-weapon.md) y la
+receta visual en
+[`PULSE_RING_WEAPON_FX_PREMIUM.md`](design/PULSE_RING_WEAPON_FX_PREMIUM.md).
+La automatización de esta entrega está OK: typecheck, suite completa y smoke
+browser dirigido del drill High (1/1). Por instrucción explícita del usuario,
+la validación humana de Pulse Ring sigue pendiente pero no bloquea la siguiente
+implementación de arma. Las evoluciones siguen cerradas hasta validar las armas
+base.
 
 1. Diseñar mapeo explícito de las cartas existentes a niveles 1–7 sin duplicar
    bonus de stacks. Guardar fixtures de las builds anteriores. Hacerlo antes de
@@ -773,7 +835,8 @@ implementa un arma o una evolución; no las doce rutas a la vez.
    exclusión mutua, aplicación única y comportamiento de reroll. DEC-03 cierra
    el layout de dos rutas frente a las tres cartas normales antes de UI.
 3. Implementar las rutas en orden de dependencia real: modificaciones de
-   Projectile/Orbit primero; Boomerang tras EX-05; Pulse en Acto II; Aura en III.
+   Projectile/Orbit primero; Boomerang tras EX-05; Pulse y Magnetic Charge tras
+   validar sus armas base. No abrir evoluciones mientras la base siga pendiente.
    Closed Circuit espera un estado de borde cargado definido y probado; no
    deduce carga de colores ni inventa un segundo estado de arena en render.
 4. Comparar contra nivel 7 base: objetivo +30–45% de contribución ideal, techo
@@ -808,14 +871,15 @@ marcar QA de portal pendiente, no declarar integración comercial cerrada.
 ### EX-10 — Acto III Fracture
 
 Orden: especificación DEC-02 → barrera temporal aislada → una familia enemiga
-por entrega → Resonant Aura base → evoluciones pendientes → Fracture Engine
+por entrega → Magnetic Charge base → evoluciones pendientes → Fracture Engine
 → transición II→III y final de Expedition → diez runs.
 
 Barreras no nacen bajo el player; telegraph inicial mínimo 0.8 s y corredor de
 cuatro diámetros del player. Probar transitabilidad con combinaciones activas,
-no sólo dibujar un hueco. Aura tiene banda interior vacía y cooldown por target;
-Prism Wall tiene huecos lógicos reales, no sólo arcos visuales. Reutilizar los
-límites globales; no aumentar enemigos/proyectiles para aparentar progresión.
+no sólo dibujar un hueco. Magnetic Charge tiene centro seguro, destino remoto,
+atracción sin boss y cooldown por target; sus evoluciones deben conservar un
+solo cast activo. Reutilizar los límites globales; no aumentar
+enemigos/proyectiles para aparentar progresión.
 
 ### EX-11 — Overdrive y preparación de lanzamiento
 

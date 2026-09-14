@@ -75,6 +75,40 @@ export interface ChainSegmentState {
 
 export type BoomerangState = PooledBoomerangState;
 
+export type PulseRingWeaponPhase = 'idle' | 'telegraph' | 'active' | 'recovery';
+
+export interface PulseRingWeaponState {
+  active: boolean;
+  phase: PulseRingWeaponPhase;
+  originX: number;
+  originY: number;
+  radius: number;
+  startRadius: number;
+  endRadius: number;
+  progress: number;
+  width: number;
+  sequence: number;
+}
+
+export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'recovery';
+
+export interface MagneticChargeState {
+  active: boolean;
+  phase: MagneticChargePhase;
+  originX: number;
+  originY: number;
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  innerRadius: number;
+  outerRadius: number;
+  pullRadius: number;
+  progress: number;
+  rotation: number;
+  sequence: number;
+}
+
 /**
  * Presentation only sees the fields needed to draw an enemy. Keeping these
  * fields readonly prevents a view from mutating simulation state through the
@@ -155,6 +189,8 @@ export interface CombatRenderState {
   readonly orbitBlades: readonly OrbitBladeRenderState[];
   readonly chainSegments: readonly ChainSegmentRenderState[];
   readonly boomerangs: readonly BoomerangRenderState[];
+  readonly pulseRingWeapon: Readonly<PulseRingWeaponState>;
+  readonly magneticCharge: Readonly<MagneticChargeState>;
   readonly laser: Readonly<LaserHazardState>;
   readonly radialPulse: Readonly<RadialPulseState>;
   readonly pulseRing: Readonly<PulseRingState>;

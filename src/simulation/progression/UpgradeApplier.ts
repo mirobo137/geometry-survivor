@@ -1,10 +1,15 @@
 import {
   getLevelUpChoices,
+  getWeaponPathEvolutionOffer,
+  getWeaponPathRankChoices,
   getWeaponEvolutionChoices,
   UPGRADE_DEFINITIONS,
+  WEAPON_PATH_RANK_DEFINITIONS,
+  WEAPON_EVOLUTION_OFFER_DEFINITIONS,
   WEAPON_EVOLUTION_DEFINITIONS,
   type UpgradeDefinition,
-  type UpgradeId
+  type UpgradeId,
+  type WeaponPathId
 } from '../../content/upgrades/UpgradeDefinitions';
 import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
@@ -13,11 +18,11 @@ import type { UpgradePreview } from './UpgradePreview';
 
 const MAX_ACTIVE_WEAPONS = 3;
 const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'];
-const EVOLUTION_FAMILIES: readonly { readonly base: UpgradeId | 'projectile'; readonly ids: readonly WeaponEvolutionId[] }[] = [
+const EVOLUTION_FAMILIES: readonly { readonly base: WeaponPathId; readonly ids: readonly WeaponEvolutionId[] }[] = [
   { base: 'projectile', ids: ['rail_lance', 'pulse_volley'] },
-  { base: 'orbit_blade', ids: ['solar_crown', 'graviton_halo'] },
-  { base: 'chain_lightning', ids: ['closed_circuit', 'thunderhead'] },
-  { base: 'vector_boomerang', ids: ['twin_comet', 'singularity_return'] },
+  { base: 'orbit', ids: ['solar_crown', 'graviton_halo'] },
+  { base: 'chain', ids: ['closed_circuit', 'thunderhead'] },
+  { base: 'boomerang', ids: ['twin_comet', 'singularity_return'] },
   { base: 'pulse_ring', ids: ['echo_shock', 'compression_wave'] },
   { base: 'magnetic_charge', ids: ['event_horizon', 'polar_collapse'] }
 ];
@@ -54,6 +59,26 @@ export class UpgradeApplier {
     return getWeaponEvolutionChoices((upgrade) => (
       family.ids.includes(upgrade.id as WeaponEvolutionId) && this.canApply(upgrade)
     ));
+  }
+
+  /** Returns the two route choices for the isolated focused-weapon path. */
+  public getWeaponPathEvolutionChoices(path: WeaponPathId): readonly UpgradeDefinition[] {
+    const family = EVOLUTION_FAMILIES.find((candidate) => candidate.base === path);
+    if (!family) return [];
+    return getWeaponEvolutionChoices((upgrade) => (
+      family.ids.includes(upgrade.id as WeaponEvolutionId)
+    ));
+  }
+
+  /** Returns the single no-stat evolution gate for the focused test path. */
+  public getWeaponPathEvolutionOfferChoices(path: WeaponPathId): readonly UpgradeDefinition[] {
+    return [getWeaponPathEvolutionOffer(path)];
+  }
+
+  /** Returns the next deterministic rank card for a focused weapon route. */
+  public getWeaponPathRankChoices(path: WeaponPathId, rank: number): readonly UpgradeDefinition[] {
+    if (!WEAPON_PATH_RANK_DEFINITIONS[path]) return [];
+    return getWeaponPathRankChoices(path, rank, (upgrade) => !this.stacks.has(upgrade.id));
   }
 
   /**
@@ -174,6 +199,10 @@ export class UpgradeApplier {
         return null;
       case 'magneticCharge':
         return null;
+      case 'weaponRank':
+        return null;
+      case 'evolutionOffer':
+        return null;
       case 'weaponEvolution':
         return null;
     }
@@ -251,6 +280,12 @@ export class UpgradeApplier {
       case 'weaponEvolution':
         applied = this.applyWeaponEvolution(definition.effect.evolution);
         break;
+      case 'weaponRank':
+        applied = this.combat.setWeaponRank(definition.effect.family, definition.effect.rank);
+        break;
+      case 'evolutionOffer':
+        applied = false;
+        break;
     }
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
@@ -261,6 +296,10 @@ export class UpgradeApplier {
   private resolveDefinition(upgrade: UpgradeDefinition | UpgradeId): UpgradeDefinition | undefined {
     return typeof upgrade === 'string'
       ? UPGRADE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
+        ?? Object.values(WEAPON_PATH_RANK_DEFINITIONS)
+          .flat()
+          .find((candidate) => candidate.id === upgrade)
+        ?? WEAPON_EVOLUTION_OFFER_DEFINITIONS.find((candidate) => candidate.id === upgrade)
         ?? WEAPON_EVOLUTION_DEFINITIONS.find((candidate) => candidate.id === upgrade)
       : upgrade;
   }

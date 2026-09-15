@@ -102,29 +102,54 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.state.phase).toBe('travel');
   });
 
-  it('Event Horizon widens the field while preserving one remote cast', () => {
-    const pool = new EnemyPool(1);
+  it('Event Horizon damages its remote core before a single final collapse', () => {
+    const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
     const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
     weapon.unlock();
     expect(weapon.setEvolution('event_horizon')).toBe(true);
     advance(weapon, player, 1 / 60);
-    expect(weapon.state.pullRadius).toBe(230);
-    expect(weapon.state.outerRadius).toBe(170);
+    const target = createTarget(pool, weapon.state.targetX, weapon.state.targetY, 'chaser');
+    enemies.rebuildGrid();
+    const before = target.health;
+    advance(weapon, player, 1.8);
+    expect(weapon.state.pullRadius).toBe(180);
+    expect(weapon.state.innerRadius).toBe(64);
+    expect(weapon.state.outerRadius).toBe(110);
     expect(weapon.currentCooldown).toBeCloseTo(6.24);
+    expect(target.health).toBeLessThan(before);
   });
 
-  it('Polar Collapse exposes a second partial detonation phase', () => {
-    const pool = new EnemyPool(1);
+  it('Polar Collapse pulls safely and delivers two delayed pulses in its final core', () => {
+    const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
-    const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    const damages: number[] = [];
+    const weapon = new MagneticChargeBehavior({
+      enemies,
+      rollCriticalDamage: (damage) => {
+        damages.push(damage);
+        return damage;
+      },
+      onEnemyDefeated: () => undefined
+    });
     weapon.unlock();
-    weapon.setEvolution('polar_collapse');
-    advance(weapon, player, 2.3);
-    expect(weapon.state.phase).toBe('collapse');
+    expect(weapon.setEvolution('polar_collapse')).toBe(true);
+    advance(weapon, player, 1 / 60);
+    const target = createTarget(pool, weapon.state.targetX + 115, weapon.state.targetY, 'chaser');
+    enemies.rebuildGrid();
+    const before = target.health;
+    let sawCollapse = false;
+    for (let index = 0; index < 180; index += 1) {
+      weapon.update(1 / 60, player.state, ARENA_RADIUS);
+      sawCollapse ||= weapon.state.phase === 'collapse';
+    }
+    expect(sawCollapse).toBe(true);
     expect(weapon.state.evolution).toBe('polar_collapse');
+    expect(target.health).toBeLessThan(before);
+    expect(Math.hypot(target.x - weapon.state.targetX, target.y - weapon.state.targetY)).toBeLessThan(82);
+    expect(damages.length).toBeGreaterThanOrEqual(2);
   });
 });
 

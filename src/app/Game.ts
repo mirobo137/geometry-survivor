@@ -15,7 +15,13 @@ import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
 import { PlayerModel } from '../simulation/PlayerModel';
-import type { UpgradeDefinition, UpgradeId } from '../content/upgrades/UpgradeDefinitions';
+import {
+  getWeaponPathBaseUpgradeId,
+  getWeaponPathForEvolutionOffer,
+  type UpgradeDefinition,
+  type UpgradeId,
+  type WeaponPathId
+} from '../content/upgrades/UpgradeDefinitions';
 import type {
   WeaponEvolutionId,
   WeaponEvolutionScenario
@@ -28,7 +34,7 @@ import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
-import { LevelUpOverlay } from '../ui/level-up/LevelUpOverlay';
+import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/LevelUpOverlay';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
@@ -120,6 +126,8 @@ export interface GameOptions {
   readonly evolutionId?: WeaponEvolutionId;
   /** Developer-only lab layout; auto-applies the selected evolution. */
   readonly evolutionScenario?: WeaponEvolutionScenario;
+  /** Developer-only real-run path that focuses one weapon family. */
+  readonly weaponPath?: WeaponPathId;
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -142,6 +150,7 @@ export class Game {
   private readonly weaponCardId: UpgradeId | null;
   private readonly evolutionId: WeaponEvolutionId | null;
   private readonly evolutionScenario: WeaponEvolutionScenario | null;
+  private readonly weaponPath: WeaponPathId | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -198,6 +207,9 @@ export class Game {
   private hitStopSeconds = 0;
   private baselinePanelSeconds = 0;
   private calibrationApplied = false;
+  private weaponPathStepIndex = 0;
+  private weaponPathEvolutionPending = false;
+  private weaponPathEvolutionOfferChoices: readonly UpgradeDefinition[] | null = null;
 
   private readonly queueResize = (): void => {
     if (this.resizeQueued || this.stopped) return;
@@ -421,6 +433,7 @@ export class Game {
     this.weaponCardId = options.weaponCardId ?? null;
     this.evolutionId = options.evolutionId ?? null;
     this.evolutionScenario = options.evolutionScenario ?? null;
+    this.weaponPath = options.weaponPath ?? null;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -448,7 +461,8 @@ export class Game {
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(
       options.elements.debug,
-      this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled || this.evolutionScenario !== null
+      this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled
+        || this.evolutionScenario !== null || this.weaponPath !== null
     );
     this.baseline = new BaselineRunRecorder(this.baselineMode);
     this.baselinePanel = this.baselineMode && options.elements.baseline
@@ -485,7 +499,8 @@ export class Game {
       wardenDrill: this.wardenDrill,
       pulseRingWeaponDrill: this.pulseRingWeaponDrill,
       magneticChargeWeaponDrill: this.magneticChargeWeaponDrill,
-      evolutionDrill: this.evolutionScenario ?? undefined
+      evolutionDrill: this.evolutionScenario ?? undefined,
+      evolutionDrillWeapon: this.evolutionId ?? undefined
     });
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
   }
@@ -656,7 +671,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : `${this.combat.actId}-act`,
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -664,6 +679,9 @@ export class Game {
       chain: this.combat.hasChainLightning ? 'ready' : 'locked',
       paused: this.lifecyclePaused ? 'lifecycle' : this.gameState.phase,
       level: this.progression.state.level,
+      weaponPath: this.weaponPath === null
+        ? 'off'
+        : `${this.weaponPath} | rank ${this.combat.getWeaponPathRank(this.weaponPath)}/6 | step ${this.weaponPathStepIndex}/5${this.weaponPathEvolutionPending ? ' | evolution ready' : ''}`,
       arena: `${this.arena.state.radius.toFixed(1)} | ${this.arena.state.shape} (${this.arena.state.shapePhase}) | expansión ${this.arena.state.expansionIndex}`,
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
       pulse: this.combat.isPulseRingWeaponDrill
@@ -710,7 +728,8 @@ export class Game {
   private openLevelUp(
     preferredUpgradeId: UpgradeId | null = null,
     forcedChoices?: readonly UpgradeDefinition[],
-    levelOverride?: number
+    levelOverride?: number,
+    navigation: LevelUpNavigationOptions = {}
   ): void {
     if (this.gameState.enterLevelUp()) {
       this.lifecycle.onGamePause();
@@ -718,31 +737,57 @@ export class Game {
       this.baseline.noteLevelUp(this.combat.stats.elapsedSeconds);
     }
     const level = levelOverride ?? this.progression.state.level;
-    const choices = forcedChoices ?? (preferredUpgradeId === null
-      ? this.upgradeApplier.getChoices(level)
-      : this.upgradeApplier.getChoicesWithPriority(level, preferredUpgradeId));
+    const pathChoices = this.getWeaponPathChoices();
+    const choices = forcedChoices ?? (pathChoices.length > 0
+      ? pathChoices
+      : preferredUpgradeId === null
+        ? this.upgradeApplier.getChoices(level)
+        : this.upgradeApplier.getChoicesWithPriority(level, preferredUpgradeId));
     const requestToken = ++this.levelUpRequestToken;
-    void this.prepareLevelUp(level, choices, requestToken);
+    void this.prepareLevelUp(level, choices, requestToken, navigation);
   }
 
   private async prepareLevelUp(
     level: number,
     choices: readonly UpgradeDefinition[],
-    requestToken: number
+    requestToken: number,
+    navigation: LevelUpNavigationOptions = {}
   ): Promise<void> {
+    const hasEvolutionOffer = choices.some((choice) => choice.effect.type === 'evolutionOffer');
     const rerollAvailable = choices.length === 3
+      && !hasEvolutionOffer
       && this.rewardedOffers.canOffer('reroll')
       && await this.rewardedAds.isAvailable('reroll');
     if (this.stopped || requestToken !== this.levelUpRequestToken || this.gameState.phase !== 'level-up') return;
-    this.showLevelUp(level, choices, rerollAvailable);
+    this.showLevelUp(level, choices, rerollAvailable, navigation);
   }
 
-  private showLevelUp(level: number, choices: readonly UpgradeDefinition[], rerollAvailable: boolean): void {
+  private showLevelUp(
+    level: number,
+    choices: readonly UpgradeDefinition[],
+    rerollAvailable: boolean,
+    navigation: LevelUpNavigationOptions = {}
+  ): void {
+    if (choices.some((choice) => choice.effect.type === 'evolutionOffer')) {
+      this.weaponPathEvolutionOfferChoices = choices;
+    }
     this.levelUp.open(level, choices, (upgradeId) => {
       this.view.closeLevelUpFx();
       this.input.reset();
+      const evolutionOfferPath = getWeaponPathForEvolutionOffer(upgradeId);
+      if (evolutionOfferPath !== null && evolutionOfferPath === this.weaponPath) {
+        const offerChoices = this.weaponPathEvolutionOfferChoices ?? choices;
+        this.openLevelUp(
+          null,
+          this.upgradeApplier.getWeaponPathEvolutionChoices(evolutionOfferPath),
+          level,
+          { onBack: () => this.openLevelUp(null, offerChoices, level) }
+        );
+        return;
+      }
       this.baseline.noteUpgrade(upgradeId);
       this.upgradeApplier.apply(upgradeId);
+      this.advanceWeaponPath(upgradeId);
       this.progression.consumeLevelUp();
       if (this.progression.state.pendingLevelUps > 0) {
         this.openLevelUp();
@@ -755,7 +800,7 @@ export class Game {
     }, (upgrade) => this.upgradeApplier.getPreview(upgrade), this.onLevelUpInteraction, {
       rerollAvailable,
       onReroll: () => { void this.requestReroll(level, choices); }
-    });
+    }, navigation);
     this.syncLevelUpFx();
   }
 
@@ -813,6 +858,12 @@ export class Game {
   private activateRun(unlockAudio: boolean): void {
     this.baseline.beginRun(this.fxQuality);
     this.applyCalibration();
+    if (this.weaponPath !== null) {
+      const baseUpgradeId = getWeaponPathBaseUpgradeId(this.weaponPath);
+      if (baseUpgradeId !== null && !this.upgradeApplier.apply(baseUpgradeId)) {
+        throw new Error(`No se pudo preparar la ruta enfocada ${this.weaponPath}`);
+      }
+    }
     this.input.attach();
     this.hudElement.hidden = false;
     if (unlockAudio) void this.audio.unlock();
@@ -827,6 +878,33 @@ export class Game {
     } else if (this.weaponCardId !== null) {
       this.openLevelUp(this.weaponCardId);
     }
+  }
+
+  private getWeaponPathChoices(): readonly UpgradeDefinition[] {
+    if (this.weaponPath === null) return [];
+    if (this.weaponPathStepIndex < 5) {
+      return this.upgradeApplier.getWeaponPathRankChoices(this.weaponPath, this.weaponPathStepIndex + 2);
+    }
+    if (this.weaponPathEvolutionPending) {
+      return this.weaponPathEvolutionOfferChoices
+        ?? this.upgradeApplier.getWeaponPathEvolutionOfferChoices(this.weaponPath);
+    }
+    return [];
+  }
+
+  private advanceWeaponPath(upgradeId: UpgradeId): void {
+    if (this.weaponPath === null) return;
+    if (upgradeId.startsWith(`${this.weaponPath}_rank_`)) {
+      this.weaponPathStepIndex = Math.min(5, this.weaponPathStepIndex + 1);
+      this.weaponPathEvolutionPending = this.weaponPathStepIndex === 5;
+      return;
+    }
+    if (this.upgradeApplier.getWeaponPathEvolutionChoices(this.weaponPath).some((choice) => choice.id === upgradeId)) {
+      this.weaponPathEvolutionPending = false;
+      this.weaponPathEvolutionOfferChoices = null;
+      return;
+    }
+    if (getWeaponPathForEvolutionOffer(upgradeId) === null) this.weaponPathEvolutionOfferChoices = null;
   }
 
   private persistAudioSettings(settings: AudioSettings): void {
@@ -940,6 +1018,18 @@ export class Game {
     if (pending.settled) return true;
 
     const saved = this.saveStore.load();
+    if (this.weaponPath !== null) {
+      this.baseline.finish({
+        outcome: pending.summary.outcome,
+        elapsedSeconds: pending.summary.elapsedSeconds,
+        nova: 0,
+        frameProfile: pending.frameProfile
+      });
+      this.baselinePanel?.render(this.baseline);
+      pending.settled = true;
+      this.terminalTotalNova = saved.wallet.nova;
+      return true;
+    }
     const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + pending.novaReward) };
     const unlockedActs = this.nextUnlockedActs(saved.unlockedActs, pending.summary.outcome);
     if (!this.saveStore.save({ ...saved, best: pending.best, wallet, unlockedActs })) return false;
@@ -978,7 +1068,8 @@ export class Game {
     if (summary.outcome === 'game-over' && !canRevive) this.settleTerminalRun(terminalToken);
     const settled = this.pendingTerminalRun?.token === terminalToken
       && this.pendingTerminalRun.settled;
-    const canDoubleNova = settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
+    const canDoubleNova = this.weaponPath === null
+      && settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
       && this.rewardedOffers.canOffer('double-nova')
       && await this.rewardedAds.isAvailable('double-nova');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
@@ -1005,7 +1096,8 @@ export class Game {
   }
 
   private canContinueToAngular(): boolean {
-    return this.actId === 'radial'
+    return this.weaponPath === null
+      && this.actId === 'radial'
       && this.isActUnlocked('angular');
   }
 
@@ -1158,6 +1250,9 @@ export class Game {
     this.combat.reset();
     this.progression.reset();
     this.upgradeApplier.reset();
+    this.weaponPathStepIndex = 0;
+    this.weaponPathEvolutionPending = false;
+    this.weaponPathEvolutionOfferChoices = null;
     this.calibrationApplied = false;
     this.view.resetPresentation();
     this.lifecyclePaused = false;

@@ -42,6 +42,25 @@ describe('CombatSimulation', () => {
     expect(combat.currentChainDamage).toBeCloseTo(WEAPON_DEFINITIONS.chainLightning.damage * 1.1);
   });
 
+  it('applies Projectile path ranks as absolute cumulative weapon profiles', () => {
+    const combat = new CombatSimulation();
+
+    expect(combat.currentProjectileRank).toBe(1);
+    expect(combat.setProjectileRank(2)).toBe(true);
+    expect(combat.hasTwinEmitters).toBe(true);
+    expect(combat.setProjectileRank(4)).toBe(false);
+    expect(combat.setProjectileRank(3)).toBe(true);
+    expect(combat.currentProjectileDamage).toBeCloseTo(18);
+    expect(combat.setProjectileRank(4)).toBe(true);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.47);
+    expect(combat.setProjectileRank(5)).toBe(true);
+    expect(combat.currentProjectileDamage).toBeCloseTo(22);
+    expect(combat.setProjectileRank(6)).toBe(true);
+    expect(combat.currentProjectileSpeed).toBe(540);
+    expect(combat.setProjectileRank(7)).toBe(true);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.39);
+  });
+
   it('spawns enemies, auto-fires projectiles and resolves defeats without Pixi', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

@@ -1,34 +1,124 @@
 # Geometry Survivor — estado y continuación
 
-## Vigente: EX-08-R — plan de rediseño, aún sin implementar — 14-09-2026
+## Estado operativo vigente — lote completo de progresión y evoluciones v2 — 14-09-2026
+
+La solicitud más reciente autoriza implementar de forma continua las seis
+familias restantes, sin esperar validación humana entre una y otra. Ya están
+conectadas las rutas `projectile`, `orbit`, `chain`, `boomerang`, `pulse_ring` y
+`magnetic_charge`: cada una inicia con su arma I, ofrece II→VI una carta por
+nivel, y después muestra en el nivel global 7 una carta hito sin estadísticas.
+El hito abre las dos evoluciones de esa familia; elegir una consume la subida y
+la alternativa queda excluida.
+
+Rutas de partida normal enfocada:
+
+- `/?weapon-path=projectile&debug=1&quality=low|medium|high`
+- `/?weapon-path=orbit&debug=1&quality=low|medium|high`
+- `/?weapon-path=chain&debug=1&quality=low|medium|high`
+- `/?weapon-path=boomerang&debug=1&quality=low|medium|high`
+- `/?weapon-path=pulse-ring&debug=1&quality=low|medium|high`
+- `/?weapon-path=magnetic-charge&debug=1&quality=low|medium|high`
+
+Evidencia exacta de esta pasada: `npm run test:browser` reconstruyo el bundle,
+paso **97/97 archivos y 383/383 pruebas unitarias**, y Playwright paso
+**44/44 pruebas browser** en desktop y mobile. Durante la comprobacion se
+corrigio una divergencia de capacidad de render: Closed Circuit/rango VII
+puede producir hasta ocho segmentos, por lo que simulacion y `WeaponView`
+comparten `CHAIN_SEGMENT_POOL_CAPACITY = 8`; antes la vista reservaba seis y
+podía lanzar `Cannot set properties of undefined (setting 'visible')`.
+
+## Correccion vigente de evoluciones - 14-09-2026
+
+Se corrigieron tres contratos que requerian comprobacion adicional:
+
+- `solar_crown` ya no dispara cuchillas hacia afuera. Al elegirse agrega tres
+  cuchillas y deja seis activas orbitando a radio fijo 94u. El dano proviene
+  del contacto orbital real y el primer posicionamiento no genera un golpe
+  fantasma desde la coordenada cero.
+- `compression_wave` captura el eje al comenzar el aviso y conserva esa misma
+  direccion durante el cast; la vista muestra ahora solo el frente de 110
+  grados, igual que la colision. El radio final visible/fisico queda en 320u
+  y el borde considera el radio completo de cada enemigo.
+- `polar_collapse` mantiene tres frentes convergentes, activa una atraccion
+  remota segura durante 0.3 s y deja el nucleo 0.42 s. El nucleo de 0.43 del
+  radio exterior (aprox. 64u en base) entrega dos pulsos retrasados; el frente
+  y los dos pulsos conservan el presupuesto de dano del cast. La vista muestra
+  triangulo, frentes y doble pulso.
+
+La auditoria unitaria ahora exige dano real de las doce ramas: Rail Lance,
+Pulse Volley, Solar Crown, Graviton Halo, Closed Circuit, Thunderhead, Twin
+Comet, Singularity Return, Echo Shock, Compression Wave, Event Horizon y
+Polar Collapse. Tambien comprueba que Rail Lance avance despues de disparar y
+libere su slot por TTL; no queda una bala congelada por la estela ni por el
+pool. El balance global de vida/dano y la aprobacion humana siguen pendientes.
+
+El siguiente paso es la validacion humana de las seis rutas por rango, hitos y
+evoluciones; el balance global de enemigos sigue deliberadamente pendiente.
+
+El rango VII de las tablas permanece reservado para la campaña normal futura;
+no aparece como una carta adicional en estas rutas. Las URLs
+`?evolution=<slug>&scenario=single|mass&debug=1` siguen disponibles para
+inspeccionar una rama ya aplicada, y ahora el laboratorio actualiza únicamente
+la familia de la evolución indicada.
+
+La implementación está validada automáticamente con typecheck, suite unitaria
+y smoke browser; la aprobación de presentación, diversión y balance continúa
+siendo humana. No ajustar aún la vida/daño global de enemigos ni cerrar EX-02c.
+
+## Vigente: EX-08-R — plan de rediseño, R1 parcial implementado — 14-09-2026
 
 **Ampliación más reciente:** [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md)
 define las 42 filas de rango I–VII, mejoras concretas y valores de prototipo.
 Se adopta secuencia fija por familia, con carta del siguiente rango; sustituye
 contar stacks libremente. Incluye migración de cartas, calibración Acto II,
-herencia de cada mejora hacia la evolución y pruebas. R1 debe implementar
-estas tablas antes de R2. Solo documentación; el juego sigue en v1.
+herencia de cada mejora hacia la evolución y pruebas. R1 ya tiene una ruta
+debug de Projectile; falta su validación humana y la integración normal de las
+tablas. El juego principal sigue en v1.
 
 El usuario probó evoluciones: aprueba Rail Lance/Pulse Volley; Solar Crown y
 Event Horizon no explican su utilidad, Compression Wave/Singularity Return
 atraen enemigos peligrosamente cerca, Polar Collapse no aporta diferencia.
 Las otras cinco rutas no tienen aprobación explícita. No cerrar EX-08.
 
-Por petición explícita esta entrega **solo documenta** cómo rediseñar las diez
-rutas restantes; no modifica gameplay ni arte. Leer plan §16.4–16.5/§22.1r y
+Por petición explícita esta entrega documenta cómo rediseñar las diez rutas
+restantes. La primera ruta modifica gameplay solo bajo el query debug descrito
+abajo; no altera la campaña normal. Leer plan §16.4–16.5/§22.1r y
 [EVOLUCIONES_V2.md](docs/design/EVOLUCIONES_V2.md), especificación para Luna con
 fases, geometrías, riesgos, cartas, visuales, caps y pruebas.
 
-Siguiente paso R1: laboratorio que realmente aísle armas y pruebe perseguidores;
-inventario de cartas que aumentan rango propio I–VII y selección de evolución
-dentro de la mano normal. El código actual usa nivel global, discrepancia
-registrada. Luego R2: Echo Shock en dos posiciones y Compression como frente
-saliente sin atracción. Entregar base/A/B y presión; esperar prueba humana
-antes de la siguiente pareja. Preservar Projectile y balance EX-02c diferido.
+R1 está parcialmente implementado con la ruta normal enfocada de Projectile.
+Siguiente paso: validar manualmente I–VI, la carta hito del nivel 7 y ambas
+evoluciones.
+Después de esa puerta se integra el inventario normal y se clona el contrato
+para la siguiente familia. Luego R2: Echo Shock en dos posiciones y Compression
+como frente saliente sin atracción. Entregar base/A/B y presión; esperar prueba
+humana antes de la siguiente pareja. Preservar Projectile y balance EX-02c
+diferido.
 
-R0 documental completado; R1–R7 pendientes. No se ejecutaron pruebas de runtime
-en esta entrega documental; los números de tests siguientes pertenecen a v1.
+R0 documental completado; R1 parcial implementado y R2–R7 pendientes. La ruta
+ya tiene pruebas unitarias, typecheck, build y un smoke browser inicial; la
+validación humana completa sigue pendiente. Los escenarios de evoluciones
+directas continúan siendo históricos.
 El comportamiento rechazado sigue en código hasta su implementación v2.
+
+> Estado operativo: R1 parcial implementado. La ruta `/?weapon-path=projectile&debug=1&quality=high`
+> permite validar Projectile rango por rango en una partida normal; falta la
+> validacion humana de I-VI, la carta hito del nivel 7 y ambas evoluciones.
+> Despues se clonara el contrato
+> para la siguiente familia.
+
+**Nueva ruta de prueba implementada:** `/?weapon-path=projectile&debug=1&quality=low`
+abre una partida normal con Projectile enfocado. Sus level-ups ofrecen una sola
+carta secuencial: rango II, III, IV y V; después VI deja listo el hito del nivel
+7 `Evolucion disponible`, que abre Rail Lance y Pulse Volley. El panel muestra
+`mode: weapon-path-projectile`, rango y paso.
+La ruta no usa escenarios, no da XP ni modifica el pool normal o el guardado.
+En el nivel 7, la carta hito abre Rail Lance/Pulse Volley, con `Volver` para
+restaurar la oferta anterior sin consumir la subida. El rango VII queda para la
+integración normal futura. La prueba
+browser verifica el arranque y el primer salto; la validación humana de los
+seis rangos base, el hito y las dos evoluciones sigue pendiente. Después de aprobar
+Projectile se clonará el patrón para la siguiente familia, una por una.
 
 ## Histórico: EX-08d — lote completo de evoluciones implementado — 14-09-2026
 

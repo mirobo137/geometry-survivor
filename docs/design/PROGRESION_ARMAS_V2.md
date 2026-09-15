@@ -1,7 +1,18 @@
 # EX-08-R1 — Progresión de armas I–VII y cartas
 
-Fecha: 2026-09-14. Estado: **propuesta de contenido especificada; implementación
-y balance pendientes**. Complementa [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md).
+Fecha: 2026-09-14. Estado: **las seis rutas de prueba implementadas; flujo
+normal de campaña y validación humana siguen pendientes**. Complementa
+[EVOLUCIONES_V2.md](EVOLUCIONES_V2.md).
+
+Las rutas activas son `/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`.
+Arranca una partida real con el director normal, sin escenario aislado ni
+bonificaciones de XP. Cada level-up muestra una sola carta del siguiente rango
+Projectile. En el nivel 7 del jugador, después de aplicar VI, aparece una sola
+carta hito `Evolucion disponible`; al elegirla se abre la pareja Rail
+Lance/Pulse Volley con `Volver`, sin consumir la subida hasta confirmar una
+rama. El rango VII queda disponible para la futura integración normal, pero no
+se ofrece en esta ruta. La ruta es de desarrollo y no se ofrece desde el menú
+ni escribe una build especial en el guardado.
 
 ## 1. Decisión de diseño
 
@@ -292,8 +303,15 @@ No presentar dañoPorHit/cooldown como DPS medido si faltan esas fases.
    combinación de tres armas. Comparar arma baseVII y ambas ramas por separado.
    Registrar tiempo a primera evolución y cada mejora realmente elegida.
 
-R1 termina con progresión y laboratorio probados, incluyendo una prueba humana
-breve de cartas y rangos. Después R2–R6 añaden las ramas en el orden existente.
+El lote queda implementado con seis cartas de rango base I→VI por familia,
+aplicación acumulativa, hito de evolución, panel debug y partida normal. El
+laboratorio directo aísla la familia elegida; queda validar manualmente los seis
+rangos, seis hitos y doce ramas. La ruta no cierra todavía la progresión normal
+de campaña ni el balance de EX-02c.
+
+La integración normal de cartas queda deliberadamente separada de estas rutas
+de desarrollo. Cada familia conserva el mismo contrato: una partida normal,
+una sola familia en sus level-ups, hito en nivel global 7 y sus dos ramas.
 La aprobación antigua de armas y Projectile sigue como referencia funcional/
 visual; **no certifica estos números nuevos**. EX-02c conserva el balance final
 de daño y resistencia enemigos. Esta entrega de documentación no ejecuta

@@ -15,7 +15,7 @@ import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 import type { ActId } from './content/run/ActDefinitions';
-import type { UpgradeId } from './content/upgrades/UpgradeDefinitions';
+import { isWeaponPathId, type UpgradeId, type WeaponPathId } from './content/upgrades/UpgradeDefinitions';
 import {
   isWeaponEvolutionId,
   isWeaponEvolutionScenario,
@@ -113,6 +113,7 @@ const bootstrap = async (): Promise<void> => {
     && isWeaponEvolutionScenario(searchParams.get('scenario'))
     ? searchParams.get('scenario') as WeaponEvolutionScenario
     : undefined;
+  const requestedWeaponPath = searchParams.get('weapon-path')?.replaceAll('-', '_');
   const spike = searchParams.get('spike');
   const orbiterDrill = searchParams.get('orbiter') === '1';
   const chargerDrill = searchParams.get('charger') === '1' && !orbiterDrill;
@@ -165,6 +166,14 @@ const bootstrap = async (): Promise<void> => {
     && actId === 'radial'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
     && !pulseRingDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill;
+  const weaponPath: WeaponPathId | undefined = searchParams.get('debug') === '1'
+    && isWeaponPathId(requestedWeaponPath)
+    && weaponCardId === undefined
+    && evolutionId === undefined
+    && evolutionScenario === undefined
+    && !stressMode
+    ? requestedWeaponPath
+    : undefined;
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -213,6 +222,7 @@ const bootstrap = async (): Promise<void> => {
     weaponCardId,
     evolutionId,
     evolutionScenario,
+    weaponPath,
     angularSweepDrill,
     wardenDrill,
     playerSkin,
@@ -228,7 +238,8 @@ const bootstrap = async (): Promise<void> => {
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
-      && !magneticChargeWeaponDrill && weaponCardId === undefined && evolutionId === undefined,
+      && !magneticChargeWeaponDrill && weaponCardId === undefined && evolutionId === undefined
+      && weaponPath === undefined,
     platform: new LocalPlatform()
   });
   await game.start();

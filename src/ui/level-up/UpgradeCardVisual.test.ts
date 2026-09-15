@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { UPGRADE_DEFINITIONS, WEAPON_EVOLUTION_DEFINITIONS } from '../../content/upgrades/UpgradeDefinitions';
+import {
+  UPGRADE_DEFINITIONS,
+  WEAPON_EVOLUTION_DEFINITIONS,
+  WEAPON_EVOLUTION_OFFER_DEFINITIONS
+} from '../../content/upgrades/UpgradeDefinitions';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
 
 describe('upgrade card visual map', () => {
   it('assigns every data-driven upgrade a stable icon, tone and category', () => {
-    for (const upgrade of [...UPGRADE_DEFINITIONS, ...WEAPON_EVOLUTION_DEFINITIONS]) {
+    for (const upgrade of [
+      ...UPGRADE_DEFINITIONS,
+      ...WEAPON_EVOLUTION_DEFINITIONS,
+      ...WEAPON_EVOLUTION_OFFER_DEFINITIONS
+    ]) {
       const visual = getUpgradeCardVisual(upgrade.id);
       expect(visual.icon).toMatch(/^(speed|projectile|core|orbit|chain|boomerang|pulse|magnet|armor|experience|repair|vampirism|critical|shield|rail|volley|crown|gravity|circuit|thunder|comet|singularity|echo|compression|horizon|collapse)$/);
       expect(visual.tone).toMatch(/^(cyan|gold|violet|amber|rose|mint)$/);

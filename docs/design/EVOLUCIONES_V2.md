@@ -1,11 +1,40 @@
 # EX-08-R — Evoluciones con decisiones reales
 
-Fecha: 2026-09-14. Estado: **especificación para implementar y probar, no implementada ni aprobada visualmente**.
+Fecha: 2026-09-14. Estado: **las seis rutas implementadas; validación humana pendiente**.
 
 Ampliación vigente: [PROGRESION_ARMAS_V2.md](PROGRESION_ARMAS_V2.md) define
 las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
 evolucionar. Sus fórmulas de herencia prevalecen sobre los valores fijos de
 prototipo en §4. Los rangos tienen ahora una secuencia fija por familia.
+
+## Correccion vigente de dano y lectura - 14-09-2026
+
+Este bloque prevalece sobre las descripciones de prototipo mas abajo cuando
+hay una diferencia.
+
+- `solar_crown`: ya no emite cuchillas hacia afuera. Al evolucionar agrega
+  tres cuchillas a la formacion y fija el total en seis, todas orbitando a
+  radio authored fijo de 94u. El contacto de las seis cuchillas es el dano
+  real; no existe fase de salida, desaparicion ni hit fantasma en el centro.
+- `compression_wave`: el frente conserva el eje capturado al iniciar el
+  telegraph, aunque el player se mueva durante el cast. La simulacion y la
+  vista usan ese mismo eje; la vista ya no dibuja un aro completo para no
+  prometer dano detras del player. El radio final es 320u y el borde fisico
+  considera el radio del enemigo, por lo que un hull que roza el frente no se
+  pierde por comprobar solo su centro.
+- `polar_collapse`: los tres frentes convergentes conservan ancho fisico24u,
+  pero la evolucion ahora activa una atraccion remota segura durante0.3 s.
+  El nucleo final usa0.43 del radio exterior (aprox.64u en base) y permanece
+  0.42 s: entrega dos pulsos de0.2 del dano base, en progreso0.18 y0.68. El
+  frente aplica otro0.2; el presupuesto total sigue en60% por cast. La vista
+  muestra el triangulo, las tres cuchillas y el doble pulso del nucleo.
+- La auditoria automatica exige que las doce ramas (`rail_lance`,
+  `pulse_volley`, `solar_crown`, `graviton_halo`, `closed_circuit`,
+  `thunderhead`, `twin_comet`, `singularity_return`, `echo_shock`,
+  `compression_wave`, `event_horizon`, `polar_collapse`) reduzcan la vida de
+  un objetivo colocado en su zona fisica descrita. Tambien exige que Rail Lance
+  avance y se libere por TTL; una textura de estela no puede mantener un slot
+  muerto en pantalla.
 
 ## 1. Mandato y diagnóstico
 
@@ -16,9 +45,10 @@ aporta una diferencia útil. Las otras cinco rutas tampoco tienen aprobación
 humana explícita. Conservar la pareja Projectile; rediseñar las otras diez.
 No confundir «tests pasan» con «la evolución es divertida».
 
-Esta entrega solamente modifica documentación. Luna debe implementar por
-parejas, detenerse para su prueba humana y conservar una comparación con el
-arma base. No ejecutar otra vez todo el lote sin revisión.
+Esta especificación sigue siendo la guía de implementación y validación de las
+seis familias. Por decisión explícita del usuario, el patrón se clonó para todo
+el lote antes de la revisión humana; conservar la comparación con el arma base
+y no interpretar la automatización como aprobación de diversión o balance.
 
 Evidencia del código revisado:
 
@@ -139,26 +169,26 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 
 #### Solar Crown / Corona de lanzamiento — `solar_crown`
 
-- **Verbo:** las cuchillas abandonan la órbita en una emisión espiral escalonada.
-  Permite alcanzar grupos alejados, perdiendo cobertura próxima durante la salida.
-- Ciclo inicial: 1.8 s orbitando; preparación 0.25 s; salida una por una cada
-  0.08 s. Capturar origen en la preparación. Durante 0.7 s cada blade sigue
-  `r = lerp(radioOrbital, radioOrbital + 150, t)` y
-  `ángulo = ánguloSalida + sentido * 1.4 * t`. Trayectoria en simulación.
-- Al terminar se desactiva el blade; reaparece cerca de la nave tras una
-  recuperación común de 0.3 s. **No daña por el salto de reconstrucción**.
-  No añadir blades: usar cantidad adquirida, máximo seis.
-- Presupuesto: 40% fase orbital, 60% emisión repartida entre blades; ledger
-  limita golpes de salida por target/cast. Intervalo de emisión independiente
-  del frame rate. No conservar órbita invisible dañina mientras está vacía.
-- Arte: seis alojamientos según cantidad real, filos marfil/lavanda, costura
-  ámbar que se carga; salida como comas espirales afiladas con cola corta que
-  desvanece. Núcleo de órbita queda visualmente abierto al perder sus piezas.
-  Nada de un aro continuo que sugiera daño donde no pasan cuchillas.
-- Carta: «Lanza tus cuchillas en espiral. Alcanza grupos lejanos; durante la
-  descarga pierdes protección cercana».
-- Prueba decisiva: enemigo fuera del radio orbital recibe un blade real;
-  enemigo próximo no recibe hits fantasma de blades ya lanzados.
+> Corrección vigente: la evolución ya no usa la emisión espiral del prototipo.
+> Al elegirse agrega tres cuchillas y fija la formación en seis cuchillas a
+> radio 94u. Las seis permanecen orbitando a distancia constante y cada
+> contacto real conserva el daño orbital; no hay salida, recuperación ni
+> proyectil remoto.
+
+- **Verbo histórico:** las cuchillas abandonaban la órbita en una emisión
+  espiral escalonada. Ese prototipo queda reemplazado por la formación estable
+  descrita arriba.
+- Las cuchillas usan el ciclo orbital normal, máximo seis slots del pool y
+  radio authored fijo de 94u. No se construye una órbita invisible ni se
+  simula una línea de salida.
+- Presupuesto: 100% contacto orbital repartido entre las seis cuchillas; el
+  primer posicionamiento es visual y no daña desde una coordenada ficticia.
+- Arte: seis alojamientos, filos marfil/lavanda y costura ámbar; la corona
+  completa comunica cobertura constante sin dibujar un aro continuo dañino.
+- Carta: «Añade tres cuchillas. Forma una corona estable de seis filos a
+  distancia fija».
+- Prueba decisiva: los seis slots permanecen activos y a 94u durante la
+  rotación; un enemigo en la trayectoria recibe daño orbital real.
 
 #### Graviton Halo / Órbita de avance — `graviton_halo`
 
@@ -291,8 +321,8 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - **Verbo:** convertir el aro completo en un frente direccional que abre paso.
   Orientación último movimiento, fallback arriba; mostrarla durante carga base
   y fijar eje 0.15 s antes del disparo. Sin apuntado extra ni target requerido.
-- Frente de arco de 110°, espesor28, radio desde30 hasta280 en0.55 s, alrededor
-  del origen capturado. Un hit/target/cast y empuje radial saliente máximo26 u
+- Frente de arco de 110°, espesor28, radio desde30 hasta320 en0.55 s, alrededor
+  del origen capturado. Un hit/target/cast y empuje radial saliente máximo32 u
   limitado por arena; bosses reciben daño sin desplazamiento. **Cero atracción**.
 - Presupuesto 100% frente. Ventaja alcance y corredor despejado; pérdida total
   de cobertura trasera. El interior ya barrido no sigue haciendo daño.
@@ -333,21 +363,24 @@ estas ramas cambian expresamente sus zonas de daño.
 
 #### Polar Collapse / Prensa polar — `polar_collapse`
 
-- **Verbo:** la bomba abre tres satélites y tres frentes convergen hacia su centro.
-  Sin atracción de enemigos. Viaje base, apertura0.3 s hacia vértices de un
-  triángulo radio90; aviso0.25 s; cada lado avanza paralelamente al centro
-  durante0.45 s; explosión final disco radio55, recuperación0.25 s.
-- Los frentes son tres segmentos finitos de ancho18; extremos interpolan de
+- **Verbo:** la bomba abre tres satélites, atrae con seguridad a los enemigos
+  hacia su destino remoto y tres frentes convergen hacia el centro. Viaje base,
+  atracción0.3 s, apertura visual hacia vértices de un triángulo radio90 y
+  frentes durante0.45 s; el núcleo final permanece0.42 s, recuperación base.
+- Los frentes son tres segmentos finitos de ancho24; extremos interpolan de
   vértices originales al centro. Barrer su desplazamiento. En el instante
   degenerado no dibujar segmentos de longitud cero; usar disco final.
-- Máximo tres satélites, tres segmentos y un centro por cast. Un hit combinado
-  de frentes por enemigo, más un final; presupuesto60% frentes,40% centro.
+- Máximo tres satélites, tres segmentos y un centro por cast. Un hit de
+  frentes por enemigo, más dos pulsos finales por objetivo que permanezca en
+  el núcleo; cada pulso final es20% del daño authored y el frente20%, para
+  conservar el presupuesto60% por cast. El control no afecta bosses.
 - Elegir centro lejano con margen para triángulo completo usando ArenaBoundary;
   intentos limitados (8), luego reducir uniformemente radio hasta caber. Si
   no cabe radio32, usar solo final de55 recortado al área disponible, sin
   ampliar daño. No clamp independiente de vértices que deforme colisión/arte.
-- Ventaja: daño concentrado y barrido remoto sin acercar enemigos al jugador;
-  pérdida: puede fallar al salir del área durante preparación, sin control.
+- Ventaja: concentrar enemigos en un destino remoto y castigarlos dos veces
+  mientras el núcleo permanece; pérdida: el centro debe estar dentro del área
+  y los objetivos fuera del radio de atracción no reciben el pulso final.
 - Arte: cápsula se divide en tres polos angulares cian/lavanda/ámbar, cables
   tenues de preparación; al activar aparecen tres filos materiales que cierran
   una prensa. Desvanecer detrás, punta sólida delante. Centro explota en gema
@@ -415,7 +448,36 @@ Fuentes visuales canónicas: [efectos](EFECTOS_PREMIUM.md),
 - Revisar sin pérdida el worktree existente. No resetear la entrega EX-08d;
   tests y documentación son evidencia histórica, no autorización de arte v2.
 
-## 7. Laboratorio antes de cambiar armas
+## 7. Ruta de prueba arma por arma
+
+La prueba autorizada por el usuario se realiza como una partida normal enfocada
+en una sola familia. Las seis entradas disponibles son:
+
+`/?weapon-path=projectile&debug=1&quality=low|medium|high`
+
+`/?weapon-path=orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`
+
+La ruta no usa `scenario=single|mass`, no desactiva el director ni concede XP.
+Empieza con Projectile en I; los level-ups muestran únicamente la carta del
+siguiente rango hasta VI. El nivel 7 del jugador no entrega una mejora de
+estadística: muestra una sola carta hito `Evolucion disponible`. Al elegirla se
+abre la pareja Rail Lance/Pulse Volley sin consumir todavía la subida. La
+pareja incluye `Volver`; confirmar una rama consume esa oportunidad y
+continuar vuelve a la selección normal. El rango VII queda reservado para la
+integración normal futura y no aparece en esta ruta de prueba. El panel debug
+muestra `mode: weapon-path-projectile`, rango y paso. El flujo es temporal de
+desarrollo, no aparece en el menú ni altera el guardado. Las cinco familias
+restantes reutilizan este mismo patrón y ya están conectadas al código; la
+validación humana puede ejecutarse ahora familia por familia.
+
+Para validar Projectile, registrar I, II, III, IV, VI, la carta hito, Rail
+Lance y Pulse Volley por separado. Comprobar que cada carta se muestra una sola
+vez, que se juega con enemigos/hazards normales, que el disparo cambia en cada
+rango y que la evolución conserva el perfil de cierre. No usar una URL de evolución directa
+como sustituto de esta prueba: esa entrada sigue siendo el laboratorio aislado
+histórico.
+
+## 8. Laboratorio comparativo
 
 Conservar entradas `?evolution=<slug>&scenario=single|mass&debug=1`.
 No prometer escenarios nuevos como si existieran: implementar lo siguiente en R1:
@@ -438,12 +500,12 @@ No prometer escenarios nuevos como si existieran: implementar lo siguiente en R1
 - Las rutas actuales sin acto explícito no garantizan Acto II. Documentar URL
   verificada en código para cada entrega; no inventar parámetros en la respuesta.
 
-## 8. Orden de entregas y puertas
+## 9. Orden de entregas y puertas
 
 | Paso | Alcance | Condición para avanzar |
 | --- | --- | --- |
 | R0 | Este plan y registro del rechazo | Documentación solamente; completado |
-| R1 | Laboratorio, tablas I–VII, migración de cartas/calibración y selección | Tests de aislamiento, perfiles y UI; conservar mecánicas de evoluciones Projectile |
+| R1 | Ruta normal enfocada, tablas I–VII, migración de cartas/calibración y selección | Projectile probado rango por rango; después inventario normal |
 | R2 | Pulse Ring: Echo + Ariete | Prueba humana de dos centros y frente útil sin atraer |
 | R3 | Magnetic: Núcleo + Prensa | Daño en centro visible y cierre geométrico distinto |
 | R4 | Boomerang: Cometas + Retorno | Cruces físicos y retención lejos de nave segura |
@@ -472,14 +534,10 @@ humana. Si una rama se rechaza, revisar su verbo antes de aumentar brillo/daño.
   evidencia de esos dispositivos, no certificación de gama baja. Balance final
   de enemigos/daño sigue diferido. Automatización no cierra aprobación humana.
 
-## 9. Instrucción de arranque para el siguiente agente
+## 10. Instrucción de arranque para el siguiente agente
 
 Leer CONTINUACION → plan §16.4–16.5 y §22.1r → este documento → skills.
-Empezar **R1**, aplicar [PROGRESION_ARMAS_V2.md](PROGRESION_ARMAS_V2.md),
-enseñar rangos/cartas y verificar laboratorio. Incluye nueva progresión base
-Projectile; conserva comportamiento y arte de sus dos evoluciones aprobadas.
-Después implementar únicamente **R2** y entregar accesos comprobados para
-base/Echo/Ariete, individual y presión. Resumir qué funciona, qué se midió y
-qué falta probar. No presentar los diez diseños de esta especificación como
-features que ya existen. Conservar aprobación de Projectile y pedir aprobación
-de cada nueva pareja sobre gameplay y presentación reales.
+Empezar por cualquier ruta `weapon-path` de la lista anterior y probar los seis
+rangos base I→VI, después el hito y ambas evoluciones. Projectile conserva el
+comportamiento aprobado; las otras cinco rutas son prototipos v2 pendientes de
+juicio humano. No modificar balance global de enemigos durante esta revisión.

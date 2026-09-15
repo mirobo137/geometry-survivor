@@ -29,6 +29,7 @@ import type {
   ProjectileEvolution,
   PulseRingEvolution
 } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
@@ -37,6 +38,16 @@ const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
 const PULSE_RING_DEFINITION = WEAPON_DEFINITIONS.pulseRing;
 const MAGNETIC_CHARGE_DEFINITION = WEAPON_DEFINITIONS.magneticCharge;
+
+const PROJECTILE_RANK_STATS = [
+  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 18, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 18, speed: 460, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 460, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 540, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 540, cooldownSeconds: 0.39 }
+] as const;
 
 export interface CombatWeaponUpdateOptions {
   readonly projectileEnabled?: boolean;
@@ -79,6 +90,7 @@ export class CombatWeaponSystem {
   private boomerangCooldown = BOOMERANG_DEFINITION.cooldownSeconds;
   private pulseRingCooldown = PULSE_RING_DEFINITION.cooldownSeconds;
   private magneticChargeCooldown = MAGNETIC_CHARGE_DEFINITION.cooldownSeconds;
+  private projectileRank = 1;
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
@@ -178,6 +190,10 @@ export class CombatWeaponSystem {
     return this.projectileSpeed;
   }
 
+  public get currentProjectileRank(): number {
+    return this.projectileRank;
+  }
+
   public get hasTwinEmitters(): boolean {
     return this.twinEmitters;
   }
@@ -193,6 +209,10 @@ export class CombatWeaponSystem {
     return this.orbitBehavior.currentRadius;
   }
 
+  public get currentOrbitRank(): number {
+    return this.orbitBehavior.currentRank;
+  }
+
   public get currentOrbitDamage(): number {
     return this.orbitBehavior.currentDamage;
   }
@@ -205,12 +225,20 @@ export class CombatWeaponSystem {
     return this.chainBehavior.currentDamage;
   }
 
+  public get currentChainRank(): number {
+    return this.chainBehavior.currentRank;
+  }
+
   public get currentChainCooldown(): number {
     return this.chainCooldown;
   }
 
   public get currentBoomerangDamage(): number {
     return this.boomerangBehavior.currentDamage;
+  }
+
+  public get currentBoomerangRank(): number {
+    return this.boomerangBehavior.currentRank;
   }
 
   public get currentBoomerangCooldown(): number {
@@ -221,12 +249,20 @@ export class CombatWeaponSystem {
     return this.pulseRingBehavior.currentDamage;
   }
 
+  public get currentPulseRingRank(): number {
+    return this.pulseRingBehavior.currentRank;
+  }
+
   public get currentPulseRingCooldown(): number {
     return this.pulseRingCooldown;
   }
 
   public get currentMagneticChargeDamage(): number {
     return this.magneticChargeBehavior.currentDamage;
+  }
+
+  public get currentMagneticChargeRank(): number {
+    return this.magneticChargeBehavior.currentRank;
   }
 
   public get currentMagneticChargeCooldown(): number {
@@ -251,9 +287,8 @@ export class CombatWeaponSystem {
     this.pulseRingBehavior.reset();
     this.magneticChargeBehavior.reset();
     this.stressScenario.reset();
-    this.projectileDamage = PROJECTILE_DEFINITION.damage * this.permanentBonuses.weaponDamageMultiplier;
-    this.projectileSpeed = PROJECTILE_DEFINITION.speed;
-    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.projectileRank = 1;
+    this.applyProjectileRankStats();
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier;
     this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
@@ -266,12 +301,7 @@ export class CombatWeaponSystem {
 
   public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
     this.permanentBonuses = permanentBonuses;
-    this.projectileDamage = PROJECTILE_DEFINITION.damage * permanentBonuses.weaponDamageMultiplier;
-    this.projectileCooldown = Math.max(0.18, PROJECTILE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
-    this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier;
-    this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
-    this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
-    this.magneticChargeCooldown = Math.max(0.45, MAGNETIC_CHARGE_DEFINITION.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);
+    this.applyProjectileRankStats();
     this.orbitBehavior.setPermanentBonuses(
       permanentBonuses.weaponDamageMultiplier,
       permanentBonuses.weaponCadenceMultiplier
@@ -283,6 +313,10 @@ export class CombatWeaponSystem {
       permanentBonuses.weaponDamageMultiplier,
       permanentBonuses.weaponCadenceMultiplier
     );
+    this.chainCooldown = this.getChainCooldownForRank();
+    this.boomerangCooldown = this.getBoomerangCooldownForRank();
+    this.pulseRingCooldown = this.getPulseRingCooldownForRank();
+    this.magneticChargeCooldown = this.magneticChargeBehavior.currentCooldown;
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -301,6 +335,46 @@ export class CombatWeaponSystem {
     if (this.twinEmitters) return false;
     this.twinEmitters = true;
     return true;
+  }
+
+  /** Applies one focused-path rank and keeps it idempotent for test routes. */
+  public setProjectileRank(rank: 2 | 3 | 4 | 5 | 6 | 7): boolean {
+    if (rank !== this.projectileRank + 1) return false;
+    this.projectileRank = rank;
+    this.applyProjectileRankStats();
+    return true;
+  }
+
+  /** Single entry point for the data-driven focused paths. */
+  public setWeaponRank(path: WeaponPathId, rank: WeaponRank): boolean {
+    switch (path) {
+      case 'projectile':
+        return this.setProjectileRank(rank);
+      case 'orbit': {
+        const applied = this.orbitBehavior.setRank(rank);
+        return applied;
+      }
+      case 'chain': {
+        const applied = this.chainBehavior.setRank(rank);
+        if (applied) this.chainCooldown = this.getChainCooldownForRank();
+        return applied;
+      }
+      case 'boomerang': {
+        const applied = this.boomerangBehavior.setRank(rank);
+        if (applied) this.boomerangCooldown = this.getBoomerangCooldownForRank();
+        return applied;
+      }
+      case 'pulse_ring': {
+        const applied = this.pulseRingBehavior.setRank(rank);
+        if (applied) this.pulseRingCooldown = this.getPulseRingCooldownForRank();
+        return applied;
+      }
+      case 'magnetic_charge': {
+        const applied = this.magneticChargeBehavior.setRank(rank);
+        if (applied) this.magneticChargeCooldown = this.magneticChargeBehavior.currentCooldown;
+        return applied;
+      }
+    }
   }
 
   public applyProjectileEvolution(evolution: ProjectileEvolution): boolean {
@@ -392,7 +466,7 @@ export class CombatWeaponSystem {
     this.chainBehavior.updateSegments(dt);
     this.chainBehavior.setArenaBoundary(options.arena ?? options.magneticChargeArena ?? 270);
     this.boomerangBehavior.update(dt, player);
-    this.pulseRingBehavior.update(dt);
+    this.pulseRingBehavior.update(dt, player);
     if ((options.magneticChargeEnabled ?? this.magneticChargeBehavior.isUnlocked)
       && options.magneticChargeArena !== undefined) {
       this.magneticChargeBehavior.update(
@@ -423,10 +497,33 @@ export class CombatWeaponSystem {
       * (this.projectileEvolution === 'rail_lance' ? 1.35 : this.projectileEvolution === 'pulse_volley' ? 1.15 : 1);
   }
 
+  private applyProjectileRankStats(): void {
+    const stats = PROJECTILE_RANK_STATS[this.projectileRank - 1] ?? PROJECTILE_RANK_STATS[0];
+    this.projectileDamage = stats.damage * this.permanentBonuses.weaponDamageMultiplier;
+    this.projectileSpeed = stats.speed;
+    this.projectileCooldown = Math.max(0.18, stats.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.twinEmitters = this.projectileRank >= 2;
+  }
+
   private getEffectiveBoomerangCooldown(): number {
     const multiplier = this.boomerangBehavior.currentEvolution === 'twin_comet'
       ? 1.2 : this.boomerangBehavior.currentEvolution === 'singularity_return' ? 1.35 : 1;
     return this.boomerangCooldown * multiplier;
+  }
+
+  private getChainCooldownForRank(): number {
+    const authored = this.chainBehavior.currentRank >= 5 ? 1.05 : CHAIN_DEFINITION.cooldownSeconds;
+    return authored * this.permanentBonuses.weaponCadenceMultiplier;
+  }
+
+  private getBoomerangCooldownForRank(): number {
+    const authored = this.boomerangBehavior.currentRank >= 6 ? 1.10 : BOOMERANG_DEFINITION.cooldownSeconds;
+    return Math.max(0.35, authored * this.permanentBonuses.weaponCadenceMultiplier);
+  }
+
+  private getPulseRingCooldownForRank(): number {
+    const authored = this.pulseRingBehavior.currentRank >= 6 ? 3.30 : PULSE_RING_DEFINITION.cooldownSeconds;
+    return Math.max(0.5, authored * this.permanentBonuses.weaponCadenceMultiplier);
   }
 
   private getEffectivePulseRingCooldown(): number {

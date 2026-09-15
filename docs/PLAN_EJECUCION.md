@@ -811,10 +811,54 @@ Low/High; sus evoluciones continúan bloqueadas.
 
 ### EX-08 — Niveles y evoluciones, ficha reutilizable por arma
 
-Los nombres y porcentajes viven únicamente en §16.4–16.5 del plan. Una entrega
-implementa un arma o una evolución; no las doce rutas a la vez.
+### EX-08-R1 vigente — lote continuo de seis rutas — 14-09-2026
 
-**Estado actual (EX-08a):** Pulse Ring de jugador es la primera arma faltante
+La solicitud actual sustituye para esta entrega la secuencia histórica de una
+familia por vez. Ya están conectadas las seis rutas enfocadas: Projectile,
+Orbit, Chain, Boomerang, Pulse Ring y Magnetic Charge. Todas usan una partida
+normal con el director y enemigos reales, comienzan con su arma I, muestran una
+carta única por cada rango II→VI y, en la siguiente subida, una carta hito sin
+estadísticas que abre exactamente dos evoluciones.
+
+URLs de prueba:
+
+`/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`
+
+El rango VII de las tablas no aparece en la ruta: queda reservado para la
+integración normal futura. La URL directa
+`/?evolution=<slug>&scenario=single|mass&debug=1` conserva el laboratorio y
+ahora activa solo la familia de la evolución seleccionada. La validación
+automática no sustituye la revisión humana en PC/S25, Low/High y presión real;
+el balance de vida/daño de enemigos continúa diferido.
+
+Los nombres y porcentajes viven únicamente en §16.4–16.5 del plan. Este lote
+implementa las seis familias y sus doce ramas; el balance de combate sigue
+siendo una puerta posterior.
+
+Evidencia automatica de cierre de implementacion: `npm run test:browser`
+reconstruye el bundle y paso 97/97 archivos, 383/383 pruebas unitarias y
+44/44 pruebas browser en desktop/mobile. La capacidad de ocho segmentos de
+Chain/Closed Circuit esta compartida entre simulacion y `WeaponView` para
+evitar sprites fuera del pool.
+
+### Correccion vigente dentro de EX-08-R1 - 14-09-2026
+
+- `solar_crown` reemplaza la emision espiral por seis cuchillas activas a
+  radio fijo 94u; la evolucion suma tres cuchillas a la formacion.
+- `compression_wave` captura el eje al comenzar el aviso, conserva esa
+  direccion durante el cast y extiende el frente a 320u. La vista limita el
+  aro al mismo cono de110 grados y la colision considera el radio del enemigo
+  en el borde.
+- `polar_collapse` conserva tres frentes de ancho fisico24u, atrae durante0.3 s
+  hacia un destino remoto seguro y mantiene el nucleo0.42 s. El nucleo de0.43
+  del radio exterior (aprox.64u en base) entrega dos pulsos retrasados.
+- La suite de combate comprueba dano real en las doce ramas y movimiento/
+  expiracion por TTL de Rail Lance. Esto es una puerta automatica de contrato,
+  no una aprobacion humana de balance o sensacion.
+
+### Registro historico de entregas anteriores (no vigente)
+
+**Estado registrado (EX-08a):** Pulse Ring de jugador es la primera arma faltante
 implementada. Su carta es `pulse_ring`, el behavior es puro y su vista premium
 está separada del hazard `PulseRingHazard` del Acto II. Probar primero
 `/?weapon=pulse-ring&debug=1&quality=low|high`; el drill usa siete blancos
@@ -864,6 +908,18 @@ Cada pareja requiere prueba humana antes de abrir la siguiente. La guía define
 las funciones, visuales, límites y pruebas, sin reabrir balance EX-02c.
 No ejecutar el antiguo contrato de porcentajes como rediseño premium ni
 interpretar los tests de EX-08d como aprobación de las nuevas propuestas.
+
+### EX-08-R — ruta vigente arma por arma
+
+R1 añade una ruta de partida normal enfocada en una sola familia. La primera
+ruta disponible es `/?weapon-path=projectile&debug=1&quality=low|medium|high`:
+cada level-up ofrece únicamente el siguiente rango Projectile I→VI. En el nivel
+7 aparece una sola carta hito `Evolucion disponible`; al seleccionarla se abren
+las dos evoluciones con `Volver`, y solo confirmar una rama consume la subida.
+El rango VII queda reservado para la futura integración normal. No usa escenarios aislados, no concede XP y no
+modifica el pool normal ni el guardado. Probar los seis rangos, el hito y ambas
+evoluciones antes de construir la siguiente familia. La implementación,
+definición de cartas y pruebas están en [PROGRESION_ARMAS_V2.md](design/PROGRESION_ARMAS_V2.md).
 
 ### EX-08d - histórico del lote implementado, sustituido por EX-08-R
 

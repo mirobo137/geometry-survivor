@@ -1,6 +1,36 @@
 # EX-08d - lote completo de evoluciones de armas
 
 Fecha: 2026-09-14  
+## Addendum vigente — implementación v2 continua — 14-09-2026
+
+### Correccion de funcionamiento - 14-09-2026
+
+La siguiente correccion es la referencia ejecutable para futuras iteraciones:
+
+- `solar_crown`: seis cuchillas activas a radio fijo 94u; la evolucion suma
+  tres cuchillas y abandona la emision espiral del prototipo.
+- `compression_wave`: eje capturado al inicio del aviso, frente de 110 grados
+  hasta 320u y dano alineado con la lectura visual incluso si el player se
+  mueve durante el cast. El borde incluye el radio del enemigo.
+- `polar_collapse`: tres segmentos convergentes, atraccion remota segura de
+  0.3 s, ancho fisico24u y nucleo final de0.43 del radio exterior (aprox.64u en
+  base) con dos pulsos retrasados durante0.42 s.
+- Las pruebas de combate comprueban que cada una de las doce evoluciones
+  reduce vida en su zona fisica descrita. Rail Lance tambien debe avanzar y
+  expirar por TTL; el render de estela no es propietario del ciclo de vida del
+  proyectil.
+
+La especificación v2 de `docs/design/EVOLUCIONES_V2.md` y
+`docs/design/PROGRESION_ARMAS_V2.md` prevalece sobre el registro histórico de
+este archivo. Las seis familias ya tienen progresión I→VI, hito de nivel global
+7 y sus dos ramas conectadas a la simulación. Las pruebas directas
+`scenario=single|mass` aíslan la familia solicitada; no deben confundirse con la
+aprobación humana ni con el cierre del balance de enemigos.
+
+Rutas de partida enfocada:
+
+`/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`
+
 Estado histórico: implementación v1; feedback humano posterior obliga a rediseño.
 
 **Prevalece [EX-08-R](../design/EVOLUCIONES_V2.md):** solo la pareja Projectile

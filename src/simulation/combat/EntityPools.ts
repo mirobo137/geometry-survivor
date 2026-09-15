@@ -2,7 +2,7 @@ import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeav
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
-export type BoomerangPhase = 'outbound' | 'returning';
+export type BoomerangPhase = 'outbound' | 'holding' | 'returning';
 
 export interface EnemyState {
   active: boolean;
@@ -87,6 +87,20 @@ export interface BoomerangState {
   directionX: number;
   directionY: number;
   distanceTravelled: number;
+  /** Quadratic path anchors used only by Twin Comet's physical trajectory. */
+  curveStartX: number;
+  curveStartY: number;
+  curveControlX: number;
+  curveControlY: number;
+  curveEndX: number;
+  curveEndY: number;
+  returnControlX: number;
+  returnControlY: number;
+  returnStartX: number;
+  returnStartY: number;
+  returnTargetX: number;
+  returnTargetY: number;
+  pathProgress: number;
   slotIndex: number;
   evolution?: BoomerangEvolution | null;
 }
@@ -153,9 +167,22 @@ const createBoomerangState = (slotIndex: number): BoomerangState => ({
   ageSeconds: 0,
   lifetimeSeconds: 0,
   phase: 'outbound',
-  directionX: 1,
-  directionY: 0,
-  distanceTravelled: 0,
+      directionX: 1,
+      directionY: 0,
+      distanceTravelled: 0,
+      curveStartX: 0,
+      curveStartY: 0,
+      curveControlX: 0,
+      curveControlY: 0,
+      curveEndX: 0,
+      curveEndY: 0,
+      returnControlX: 0,
+      returnControlY: 0,
+      returnStartX: 0,
+      returnStartY: 0,
+      returnTargetX: 0,
+      returnTargetY: 0,
+      pathProgress: 0,
   slotIndex,
   evolution: null
 });

@@ -2266,6 +2266,18 @@ textura cacheada, sprites pooled y FX limitados por calidad.
   todavía no implementado; no agregar cofres, recetas ni costes para evolucionar.
 - Una evolución debe cambiar lectura, posicionamiento o targeting, no limitarse
   a sumar un porcentaje invisible.
+
+### Ajuste vigente para la ruta arma-por-arma (14-09-2026)
+
+Para el laboratorio `weapon-path`, el recorrido se comprime a seis rangos base:
+I de adquisición y II→VI como cinco mejoras. El level-up del jugador 7 muestra
+una carta hito sin cambio de estadística y abre las dos evoluciones; confirmar
+una rama consume esa oportunidad. La fila VII numérica de las tablas queda
+reservada como compatibilidad/propuesta para la futura integración normal y no
+se ofrece en esta ruta. Este ajuste sustituye únicamente el calendario del
+laboratorio actual; no se aplica silenciosamente a la campaña normal hasta que
+la progresión completa sea migrada y validada.
+
 - Objetivo inicial: +30–45% de contribución efectiva dentro de su escenario
   ideal, nunca más de 1.6× DPS sostenido contra un solo objetivo ni más de 2×
   cobertura respecto al nivel 7 base.
@@ -2291,8 +2303,8 @@ función, visuales, cartas, límites y pruebas. **Solo plan, no código v2.**
 | Orbit | Solar Crown: emisión espiral de blades | Graviton Halo: órbita elíptica orientada al movimiento |
 | Chain | Closed Circuit: cables estacionarios que dañan al cruzar | Thunderhead: sobrecargas fijadas y explosiones retardadas |
 | Boomerang | Twin Comet: alas curvas y regresos cruzados | Singularity Return: retención remota y regreso cargado |
-| Pulse Ring | Echo Shock: ondas en dos posiciones del desplazamiento | Compression Wave: frente direccional saliente, sin atracción |
-| Magnetic | Event Horizon: núcleo remoto con centro dañino | Polar Collapse: tres frentes convergentes sin atracción |
+| Pulse Ring | Echo Shock: ondas en dos posiciones del desplazamiento | Compression Wave: frente direccional saliente, cono visible y sin atracción |
+| Magnetic | Event Horizon: núcleo remoto con centro dañino | Polar Collapse: tres frentes convergentes, atracción remota y doble pulso final |
 
 Los IDs permanecen estables. R1 prepara laboratorio y progresión; R2–R6
 implementan una pareja por entrega con prueba humana antes de seguir. R7
@@ -2377,10 +2389,11 @@ son desplazados por la atracción.
 - **Event Horizon (`event_horizon`)**: ruta de control. Aumenta duración,
   radio y fuerza de atracción, pero reduce daño y cadencia. Premia preparar
   una zona de convergencia y reposicionarse alrededor del hueco.
-- **Polar Collapse (`polar_collapse`)**: ruta ofensiva. Reduce la ventana de
-  atracción y añade una segunda contracción/expansión de la banda con daño
-  parcial, a cambio de una cadencia más lenta. Mantiene un solo cast activo y
-  no convierte la carga en daño inevitable.
+- **Polar Collapse (`polar_collapse`)**: ruta ofensiva. Mantiene una ventana
+  corta de atracción remota segura, abre tres frentes convergentes y deja un
+  núcleo final durante0.42 s con dos pulsos retrasados. La cadencia es más
+  lenta; el control no afecta bosses y el daño no se vuelve inevitable fuera
+  del radio final.
 
 Los nombres y valores son baseline de contenido, no promesa de balance final.
 Cada implementación empieza con tests de invariantes y termina con runs
@@ -3066,19 +3079,28 @@ se recalibra vida/daño de enemigos dentro de EX-08.
 ### 22.1r EX-08-R — rechazo parcial y rediseño de evoluciones — 14-09-2026
 
 El feedback posterior a EX-08d aprueba Rail Lance/Pulse Volley y rechaza la
+
+> Estado operativo: R1 ya tiene una ruta debug parcial para Projectile:
+> `/?weapon-path=projectile&debug=1&quality=high`. Abre una partida normal,
+> ofrece Projectile I-VI en secuencia y en el nivel 7 abre el hito de sus dos
+> evoluciones. Falta la
+> validacion humana completa y la integracion del inventario normal; R2-R7
+> siguen pendientes. No tratar esta ruta como cierre del balance ni cambiar
+> vida/dano de enemigos en esta fase.
 utilidad o lectura de Solar Crown, Compression Wave, Event Horizon, Polar
 Collapse y Singularity Return. No hay aprobación de las otras cinco rutas.
 La implementación y los resultados automáticos de §22.1q son históricos;
 no equivalen al cierre humano del arsenal.
 
-La entrega actual es exclusivamente documental, a petición del usuario:
-[EX-08-R](docs/design/EVOLUCIONES_V2.md) define diez rediseños, progresión por
-arma, selección dentro de la mano normal, dirección premium, presupuestos y
-pruebas. R0 completado; R1–R7 pendientes. Siguiente agente: R1 (laboratorio
-aislado, escenarios móviles, inventario de cartas/rangos y selección atómica),
-después R2 (Echo Shock/Compression Wave), y detenerse para validación humana.
-No implementar todo el lote sin revisión. No cambiar daño/vida de enemigos,
-economía, actos ni la pareja Projectile aprobada. El código v1 sigue activo.
+La entrega actual tiene una implementación parcial de R1, a petición del
+usuario. [EX-08-R](docs/design/EVOLUCIONES_V2.md) define diez rediseños,
+progresión por arma, selección dentro de la mano normal, dirección premium,
+presupuestos y pruebas. La ruta debug de Projectile abre una partida normal,
+ofrece I–VII, muestra el hito de evolución en una mano posterior de tres
+cartas y luego sus dos ramas con Volver. R1 queda pendiente solo de validación
+humana e integración del inventario normal; R2–R7 siguen pendientes. No
+implementar todo el lote sin revisión. No cambiar daño/vida de enemigos,
+economía ni actos. El código v1 sigue activo.
 
 Ampliación documental posterior de R1: el usuario solicita definir qué mejora
 cada nivel. [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md)
@@ -3087,6 +3109,54 @@ concreta secuencia I–VII para las seis familias y adapta la interpretación de
 base usa las nuevas transiciones. Calibración reproduce las tres builds con
 rangos IV/II/II respectivamente; rango VII y evolución siguen separados. Estos
 valores son prototipos pendientes de prueba, no cierre del balance EX-02c.
+
+### 22.1s Estado vigente EX-08-R1 — progresión y evoluciones v2 — 14-09-2026
+
+La solicitud actual autoriza cerrar en un solo lote la implementación de las
+seis familias, aunque la secuencia histórica de §22.1r describa entregas
+detenidas para validación humana. Ya están conectadas las rutas enfocadas de
+Projectile, Orbit, Chain, Boomerang, Pulse Ring y Magnetic Charge. Cada ruta
+arranca con su arma I, ofrece II→VI en level-ups sucesivos y, tras VI, presenta
+en la siguiente subida una carta hito sin estadísticas; el hito abre las dos
+evoluciones de esa familia y solo una puede confirmarse.
+
+La ruta de desarrollo se abre con
+`/?weapon-path=<projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge>&debug=1&quality=<low|medium|high>`.
+El rango VII queda reservado a la integración normal futura. El laboratorio
+`?evolution=<slug>&scenario=single|mass&debug=1` recibe ahora la familia de la
+evolución y deshabilita las demás armas para que la lectura sea aislada.
+
+La implementación conserva pools, caps, pausa, boss inmune a fuerzas y
+separación de simulación/presentación. Typecheck, tests y smoke browser son
+puertas automáticas; la aceptación humana de utilidad, claridad, arte y balance
+sigue pendiente. EX-02c y el balance general de vida/daño de enemigos no se
+abren en esta entrega.
+
+Evidencia de la pasada: `npm run test:browser` reconstruyo el bundle y paso
+97/97 archivos y 383/383 pruebas unitarias, ademas de 44/44 pruebas browser
+en desktop y mobile. La capacidad compartida de ocho segmentos de Chain
+evita que el render de Closed Circuit/rango VII acceda a sprites inexistentes.
+
+### 22.1t Correccion de dano de evoluciones - 14-09-2026
+
+Esta es la correccion vigente del lote EX-08-R1 y prevalece sobre las notas de
+prototipo anteriores:
+
+- Solar Crown deja de emitir cuchillas. La evolucion activa seis cuchillas,
+  suma las tres que faltaban y las mantiene a radio fijo 94u; el dano proviene
+  exclusivamente del contacto orbital real.
+- Compression Wave captura el eje al iniciar el aviso y lo conserva durante
+  todo el cast, por lo que movimiento posterior no desincroniza visual y
+  colision. La vista es un frente de 110 grados, no un aro completo; el borde
+  fisico considera el radio del enemigo y el alcance visible/fisico es 320u.
+- Polar Collapse conserva tres frentes de ancho fisico24u, pero ahora atrae
+  durante0.3 s hacia un destino remoto seguro y deja un nucleo final0.42 s.
+  Ese nucleo de0.43 del radio exterior (aprox.64u en base) entrega dos pulsos
+  retrasados; junto con el frente mantiene el presupuesto authored del cast.
+- La regresion unitaria cubre dano para las doce ramas, incluyendo las dos
+  ramas recien corregidas, y Rail Lance debe avanzar y liberar su slot por TTL.
+  Esto comprueba el contrato de combate; no equivale a aprobar balance o
+  presentacion humana.
 
 ## 22.2 Resolución de instrucciones históricas
 

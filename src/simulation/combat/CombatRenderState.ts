@@ -90,6 +90,8 @@ export interface ChainSegmentState {
   x2: number;
   y2: number;
   lifeSeconds: number;
+  /** True for the short-lived stationary network created by Closed Circuit. */
+  persistent?: boolean;
 }
 
 export interface ChainExplosionState {
@@ -117,6 +119,12 @@ export interface PulseRingWeaponState {
   progress: number;
   width: number;
   sequence: number;
+  /** Captured movement axis used by Compression Wave. */
+  directionX?: number;
+  directionY?: number;
+  /** Second anchored origin used by Echo Shock diagnostics/presentation. */
+  secondaryOriginX?: number;
+  secondaryOriginY?: number;
   wave?: number;
   evolution?: PulseRingEvolution | null;
 }
@@ -138,6 +146,9 @@ export interface MagneticChargeState {
   progress: number;
   rotation: number;
   sequence: number;
+  /** Triangle orientation/progress used by Polar Collapse. */
+  polarAngle?: number;
+  polarRadius?: number;
   evolution?: MagneticChargeEvolution | null;
 }
 

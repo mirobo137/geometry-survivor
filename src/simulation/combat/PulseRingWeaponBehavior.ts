@@ -7,6 +7,7 @@ import type { PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDe
 
 const DEFINITION = WEAPON_DEFINITIONS.pulseRing;
 const EPSILON = 0.000001;
+const COMPRESSION_WAVE_END_RADIUS = 320;
 
 export interface PulseRingWeaponBehaviorContext {
   readonly enemies: EnemySystem;
@@ -33,6 +34,10 @@ export class PulseRingWeaponBehavior {
     width: DEFINITION.width,
     sequence: 0,
     wave: 0,
+    directionX: 0,
+    directionY: -1,
+    secondaryOriginX: 0,
+    secondaryOriginY: 0,
     evolution: null
   };
 
@@ -42,6 +47,16 @@ export class PulseRingWeaponBehavior {
   private phaseTimer = 0;
   private phase: PulseRingWeaponState['phase'] = 'idle';
   private damage = DEFINITION.damage;
+  private telegraphSeconds = DEFINITION.telegraphSeconds;
+  private endRadius = DEFINITION.endRadius;
+  private pushDistance = DEFINITION.pushDistance;
+  private rank = 1;
+  private directionX = 0;
+  private directionY = -1;
+  private castDirectionX = 0;
+  private castDirectionY = -1;
+  private lastPlayerX: number | null = null;
+  private lastPlayerY: number | null = null;
   private permanentDamageMultiplier = 1;
   private evolution: PulseRingEvolution | null = null;
 
@@ -63,6 +78,14 @@ export class PulseRingWeaponBehavior {
     return this.evolution;
   }
 
+  public get currentRank(): number {
+    return this.rank;
+  }
+
+  public get currentEndRadius(): number {
+    return this.effectiveEndRadius();
+  }
+
   public unlock(): boolean {
     if (this.unlocked) return false;
     // A sequence of zero means the weapon has never fired. Keep the unlock
@@ -78,7 +101,15 @@ export class PulseRingWeaponBehavior {
 
   public setPermanentDamageMultiplier(multiplier: number): void {
     this.permanentDamageMultiplier = normalizeMultiplier(multiplier);
-    this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
+    this.applyRankTuning();
+  }
+
+  /** Applies one focused-path rank; the scheduler owns the cast interval. */
+  public setRank(rank: 2 | 3 | 4 | 5 | 6 | 7): boolean {
+    if (rank !== this.rank + 1) return false;
+    this.rank = rank;
+    this.applyRankTuning();
+    return true;
   }
 
   public setEvolution(evolution: PulseRingEvolution): boolean {
@@ -95,9 +126,18 @@ export class PulseRingWeaponBehavior {
     this.state.originX = player.x;
     this.state.originY = player.y;
     this.state.startRadius = DEFINITION.startRadius;
-    this.state.endRadius = DEFINITION.endRadius;
+    this.state.endRadius = this.effectiveEndRadius();
     this.state.width = DEFINITION.width;
     this.state.wave = 0;
+    this.state.secondaryOriginX = player.x;
+    this.state.secondaryOriginY = player.y;
+    // The telegraph and the damaging front share one captured axis. Player
+    // movement can aim the next cast, but cannot rotate an already announced
+    // wave away from the hitbox the player just read.
+    this.castDirectionX = this.directionX;
+    this.castDirectionY = this.directionY;
+    this.state.directionX = this.castDirectionX;
+    this.state.directionY = this.castDirectionY;
     this.state.evolution = this.evolution;
     this.hitCounts.fill(0);
     this.state.sequence = this.state.sequence >= 2_000_000_000 ? 1 : this.state.sequence + 1;
@@ -105,9 +145,10 @@ export class PulseRingWeaponBehavior {
     return true;
   }
 
-  public update(dtSeconds: number): void {
+  public update(dtSeconds: number, player?: PlayerState): void {
     let remaining = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (!this.unlocked || this.phase === 'idle' || remaining <= 0) return;
+    if (player) this.updateMovementDirection(player);
 
     while (remaining > EPSILON && this.phase !== 'idle') {
       const previousRadius = this.state.radius;
@@ -117,7 +158,6 @@ export class PulseRingWeaponBehavior {
       remaining -= step;
       this.syncState();
 
-      if (this.phase === 'telegraph' && this.evolution === 'compression_wave') this.pullEnemies(step);
       if (this.phase === 'active') this.hitAlongSweep(previousRadius, this.state.radius);
 
       if (this.phaseTimer + EPSILON < duration) continue;
@@ -129,6 +169,10 @@ export class PulseRingWeaponBehavior {
       } else if (this.phase === 'recovery' && this.evolution === 'echo_shock' && this.state.wave === 0) {
         this.phase = 'active';
         this.state.wave = 1;
+        this.state.secondaryOriginX = this.lastPlayerX ?? this.state.originX;
+        this.state.secondaryOriginY = this.lastPlayerY ?? this.state.originY;
+        this.state.originX = this.state.secondaryOriginX;
+        this.state.originY = this.state.secondaryOriginY;
       } else {
         this.phase = 'idle';
       }
@@ -140,7 +184,17 @@ export class PulseRingWeaponBehavior {
     this.phase = 'idle';
     this.phaseTimer = 0;
     this.unlocked = false;
+    this.rank = 1;
     this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
+    this.telegraphSeconds = DEFINITION.telegraphSeconds;
+    this.endRadius = DEFINITION.endRadius;
+    this.pushDistance = DEFINITION.pushDistance;
+    this.directionX = 0;
+    this.directionY = -1;
+    this.castDirectionX = 0;
+    this.castDirectionY = -1;
+    this.lastPlayerX = null;
+    this.lastPlayerY = null;
     this.hitCastMarkers.fill(0);
     this.hitEnemyGenerations.fill(0);
     this.hitCounts.fill(0);
@@ -156,6 +210,10 @@ export class PulseRingWeaponBehavior {
       width: DEFINITION.width,
       sequence: 0,
       wave: 0,
+      directionX: 0,
+      directionY: -1,
+      secondaryOriginX: 0,
+      secondaryOriginY: 0,
       evolution: null
     });
   }
@@ -179,12 +237,13 @@ export class PulseRingWeaponBehavior {
       const bandLow = Math.min(previousRadius, currentRadius) - tolerance;
       const bandHigh = Math.max(previousRadius, currentRadius) + tolerance;
       if (distance < bandLow || distance > bandHigh) continue;
+      if (this.evolution === 'compression_wave' && !this.isInsideCompressionFront(enemy)) continue;
 
       this.hitCastMarkers[index] = cast;
       this.hitEnemyGenerations[index] = enemy.generation;
       this.hitCounts[index] = Math.min(2, this.hitCounts[index] + 1);
       const waveMultiplier = this.evolution === 'echo_shock' && this.state.wave === 1 ? 0.45 : 1;
-      const damageMultiplier = this.evolution === 'compression_wave' ? 1.65 : waveMultiplier;
+      const damageMultiplier = this.evolution === 'compression_wave' ? 1 : waveMultiplier;
       enemy.health -= this.context.rollCriticalDamage(this.damage * damageMultiplier);
       if (enemy.health <= 0) {
         this.context.onEnemyDefeated(enemy);
@@ -200,15 +259,30 @@ export class PulseRingWeaponBehavior {
     // frame dt makes the response readable at 30/60/144 Hz and avoids the
     // old 1.5-unit nudge that was technically correct but imperceptible.
     const push = this.evolution === 'compression_wave'
-      ? 26
-      : Math.min(24, Math.max(0, DEFINITION.pushDistance));
+      ? 32
+      : Math.min(24, Math.max(0, this.pushDistance));
     enemy.x += ((enemy.x - this.state.originX) / distance) * push;
     enemy.y += ((enemy.y - this.state.originY) / distance) * push;
   }
 
+  private isInsideCompressionFront(enemy: EnemyState): boolean {
+    const x = enemy.x;
+    const y = enemy.y;
+    const distance = Math.hypot(x - this.state.originX, y - this.state.originY);
+    if (distance <= EPSILON) return true;
+    const dot = ((x - this.state.originX) / distance) * (this.state.directionX ?? this.castDirectionX)
+      + ((y - this.state.originY) / distance) * (this.state.directionY ?? this.castDirectionY);
+    // The visible 110-degree front collides as a capsule, not as a point
+    // sample. Account for the enemy's radius at the edge so a hull that
+    // visibly overlaps the front cannot be skipped just because its centre is
+    // a few pixels outside the authored cone.
+    const angularAllowance = Math.asin(Math.min(0.99, enemy.radius / Math.max(distance, enemy.radius)));
+    return dot >= Math.cos(Math.PI * 55 / 180 + angularAllowance);
+  }
+
   private phaseDuration(): number {
-    if (this.phase === 'telegraph') return this.evolution === 'compression_wave' ? 0.35 : DEFINITION.telegraphSeconds;
-    if (this.phase === 'active') return DEFINITION.attackSeconds;
+    if (this.phase === 'telegraph') return this.evolution === 'compression_wave' ? 0.35 : this.telegraphSeconds;
+    if (this.phase === 'active') return this.evolution === 'compression_wave' ? 0.55 : DEFINITION.attackSeconds;
     return this.state.wave === 0 && this.evolution === 'echo_shock' ? 0.45 : DEFINITION.recoverySeconds;
   }
 
@@ -219,6 +293,9 @@ export class PulseRingWeaponBehavior {
     this.state.evolution = this.evolution;
     this.state.wave = this.state.wave;
     this.state.width = DEFINITION.width;
+    this.state.directionX = this.phase === 'idle' ? this.directionX : this.castDirectionX;
+    this.state.directionY = this.phase === 'idle' ? this.directionY : this.castDirectionY;
+    this.state.endRadius = this.effectiveEndRadius();
     this.state.progress = active
       ? Math.min(1, this.phaseTimer / Math.max(EPSILON, this.phaseDuration()))
       : 0;
@@ -228,27 +305,41 @@ export class PulseRingWeaponBehavior {
     }
     const travelProgress = this.phase === 'active' ? this.state.progress : 1;
     this.state.radius = DEFINITION.startRadius
-      + (DEFINITION.endRadius - DEFINITION.startRadius) * smoothstep(travelProgress);
+      + (this.effectiveEndRadius() - DEFINITION.startRadius)
+        * smoothstep(travelProgress);
   }
 
   private applyEvolutionTuning(): void {
-    this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
+    // Evolution-specific geometry is resolved by its behavior branch; rank
+    // values remain the source of truth for the base wave.
   }
 
-  private pullEnemies(dtSeconds: number): void {
-    const radius = DEFINITION.startRadius + 72;
-    const candidates = this.context.enemies.queryCircle(this.state.originX, this.state.originY, radius + 48);
-    for (const index of candidates) {
-      const enemy = this.context.enemies.getState(index);
-      if (!enemy.active || enemy.health <= 0 || enemy.kind === 'boss') continue;
-      const dx = this.state.originX - enemy.x;
-      const dy = this.state.originY - enemy.y;
+  private applyRankTuning(): void {
+    this.damage = (this.rank >= 5 ? 32 : DEFINITION.damage) * this.permanentDamageMultiplier;
+    this.telegraphSeconds = this.rank >= 2 ? 0.5 : DEFINITION.telegraphSeconds;
+    this.endRadius = this.rank >= 7 ? 240 : this.rank >= 3 ? 220 : DEFINITION.endRadius;
+    this.pushDistance = this.rank >= 4 ? 16 : DEFINITION.pushDistance;
+    this.applyEvolutionTuning();
+  }
+
+  private effectiveEndRadius(): number {
+    return this.evolution === 'compression_wave'
+      ? Math.max(this.endRadius, COMPRESSION_WAVE_END_RADIUS)
+      : this.endRadius;
+  }
+
+  private updateMovementDirection(player: PlayerState): void {
+    if (this.lastPlayerX !== null && this.lastPlayerY !== null) {
+      const dx = player.x - this.lastPlayerX;
+      const dy = player.y - this.lastPlayerY;
       const distance = Math.hypot(dx, dy);
-      if (distance <= 0.001 || distance > radius + enemy.radius) continue;
-      const step = Math.min(distance, 72 * dtSeconds);
-      enemy.x += dx / distance * step;
-      enemy.y += dy / distance * step;
+      if (distance > 0.01) {
+        this.directionX = dx / distance;
+        this.directionY = dy / distance;
+      }
     }
+    this.lastPlayerX = player.x;
+    this.lastPlayerY = player.y;
   }
 
   private unlocked = false;

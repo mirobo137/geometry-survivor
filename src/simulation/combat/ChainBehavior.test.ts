@@ -36,23 +36,27 @@ const setup = (count: number) => {
 
 describe('ChainBehavior evolutions', () => {
   it('Closed Circuit extends the chain and returns from a loaded arena edge', () => {
-    const { behavior } = setup(5);
+    const { behavior, enemies } = setup(5);
     expect(behavior.setEvolution('closed_circuit')).toBe(true);
+    const before = enemies.pool.states[0].health;
     behavior.fire(player);
 
     expect(behavior.segments.filter((segment) => segment.active)).toHaveLength(6);
     expect(behavior.segments[5].x1).toBeGreaterThan(0);
     expect(behavior.segments[5].x2).toBeGreaterThan(0);
+    expect(enemies.pool.states[0].health).toBeLessThan(before);
   });
 
   it('Thunderhead trades one jump for delayed bounded explosions', () => {
     const { behavior, enemies } = setup(3);
     expect(behavior.setEvolution('thunderhead')).toBe(true);
+    const linkHealthBefore = enemies.pool.states[2].health;
     behavior.fire(player);
-    expect(behavior.segments.filter((segment) => segment.active)).toHaveLength(2);
+    expect(behavior.segments.filter((segment) => segment.active)).toHaveLength(3);
     expect(behavior.explosions.filter((explosion) => explosion.active)).toHaveLength(2);
 
     const healthBefore = enemies.pool.states[2].health;
+    expect(healthBefore).toBeLessThan(linkHealthBefore);
     behavior.updateSegments(0.2);
     expect(behavior.explosions.some((explosion) => explosion.phase === 'active')).toBe(true);
     expect(enemies.pool.states[2].health).toBeLessThan(healthBefore);

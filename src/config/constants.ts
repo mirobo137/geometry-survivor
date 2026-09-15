@@ -11,6 +11,7 @@ export const ARENA_RESONANCE_DURATION_SECONDS = 2.8;
 export const ENEMY_POOL_CAPACITY = 250;
 export const PROJECTILE_POOL_CAPACITY = 300;
 export const BOOMERANG_POOL_CAPACITY = 8;
+export const CHAIN_SEGMENT_POOL_CAPACITY = 8;
 export const PLAYER_RADIUS = 22;
 export const PLAYER_MAX_HEALTH = 100;
 export const PLAYER_SPEED = 250;

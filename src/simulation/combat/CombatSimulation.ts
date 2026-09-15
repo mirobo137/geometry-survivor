@@ -27,7 +27,8 @@ import {
   type HazardCadenceMode
 } from '../../content/hazards/HazardCadenceDefinitions';
 import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
-import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -59,6 +60,8 @@ export interface CombatSimulationOptions {
   readonly magneticChargeWeaponDrill?: boolean;
   /** Isolated evolution lab: one durable target or a dense target formation. */
   readonly evolutionDrill?: WeaponEvolutionScenario;
+  /** Family selected by the evolution lab; omitted by simulation-only fixtures. */
+  readonly evolutionDrillWeapon?: WeaponEvolutionId;
 }
 
 export type CombatEvent =
@@ -125,6 +128,7 @@ export class CombatSimulation {
   private readonly pulseRingWeaponDrill: boolean;
   private readonly magneticChargeWeaponDrill: boolean;
   private readonly evolutionDrill: WeaponEvolutionScenario | null;
+  private readonly evolutionDrillWeapon: WeaponEvolutionId | null;
   private pulseRingWeaponDrillInitialized = false;
   private magneticChargeWeaponDrillInitialized = false;
   private evolutionDrillInitialized = false;
@@ -159,6 +163,7 @@ export class CombatSimulation {
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
       && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.stressMode;
     this.evolutionDrill = options.evolutionDrill ?? null;
+    this.evolutionDrillWeapon = options.evolutionDrillWeapon ?? null;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
     const isAngularAct = this.actDirector.definition.id === 'angular';
     const radialPulseDefinition = {
@@ -248,8 +253,23 @@ export class CombatSimulation {
     return this.weaponSystem.currentProjectileSpeed;
   }
 
+  public get currentProjectileRank(): number {
+    return this.weaponSystem.currentProjectileRank;
+  }
+
   public get currentOrbitRadius(): number {
     return this.weaponSystem.currentOrbitRadius;
+  }
+
+  public getWeaponPathRank(path: WeaponPathId): number {
+    switch (path) {
+      case 'projectile': return this.weaponSystem.currentProjectileRank;
+      case 'orbit': return this.weaponSystem.currentOrbitRank;
+      case 'chain': return this.weaponSystem.currentChainRank;
+      case 'boomerang': return this.weaponSystem.currentBoomerangRank;
+      case 'pulse_ring': return this.weaponSystem.currentPulseRingRank;
+      case 'magnetic_charge': return this.weaponSystem.currentMagneticChargeRank;
+    }
   }
 
   public get isOrbiterDrill(): boolean {
@@ -343,6 +363,14 @@ export class CombatSimulation {
 
   public increaseProjectileSpeed(amount: number): void {
     this.weaponSystem.increaseProjectileSpeed(amount);
+  }
+
+  public setProjectileRank(rank: 2 | 3 | 4 | 5 | 6 | 7): boolean {
+    return this.weaponSystem.setProjectileRank(rank);
+  }
+
+  public setWeaponRank(path: WeaponPathId, rank: WeaponRank): boolean {
+    return this.weaponSystem.setWeaponRank(path, rank);
   }
 
   public enableTwinEmitters(): boolean {
@@ -590,7 +618,9 @@ export class CombatSimulation {
     // target alive. Splitter and Warden deliberately keep autofire: their
     // lessons are the bounded fracture and destructible copies, respectively.
     if (!this.orbiterDrill && !this.chargerDrill && !this.prismWeaverDrill && !this.angularSweepDrill) {
-      this.weaponSystem.update(dt, player, this.pulseRingWeaponDrill
+      this.weaponSystem.update(dt, player, this.evolutionDrillWeapon !== null
+        ? getEvolutionWeaponUpdateOptions(this.evolutionDrillWeapon, arenaBoundary)
+        : this.pulseRingWeaponDrill
         ? {
           projectileEnabled: false,
           orbitEnabled: false,
@@ -689,3 +719,30 @@ export class CombatSimulation {
     this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience });
   }
 }
+
+const getEvolutionWeaponUpdateOptions = (
+  evolution: WeaponEvolutionId,
+  arena: ArenaBoundaryInput
+): Parameters<CombatWeaponSystem['update']>[2] => {
+  const family = evolution === 'rail_lance' || evolution === 'pulse_volley'
+    ? 'projectile'
+    : evolution === 'solar_crown' || evolution === 'graviton_halo'
+      ? 'orbit'
+      : evolution === 'closed_circuit' || evolution === 'thunderhead'
+        ? 'chain'
+        : evolution === 'twin_comet' || evolution === 'singularity_return'
+          ? 'boomerang'
+          : evolution === 'echo_shock' || evolution === 'compression_wave'
+            ? 'pulse_ring'
+            : 'magnetic_charge';
+  return {
+    projectileEnabled: family === 'projectile',
+    orbitEnabled: family === 'orbit',
+    chainEnabled: family === 'chain',
+    boomerangEnabled: family === 'boomerang',
+    pulseRingEnabled: family === 'pulse_ring',
+    magneticChargeEnabled: family === 'magnetic_charge',
+    magneticChargeArena: arena,
+    arena
+  };
+};

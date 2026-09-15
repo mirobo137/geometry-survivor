@@ -4,6 +4,8 @@ import cardFrameSvg from '../../assets/svg/ui/level-up/premium-card-frame.svg?ra
 import upgradeIconsSvg from '../../assets/svg/ui/level-up/premium-icons.svg?raw';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
 import type { LevelUpCardInteraction, LevelUpCardLayout } from './LevelUpCardInteraction';
+import type { WeaponPathId } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 export type UpgradePreviewProvider = (upgrade: UpgradeDefinition) => UpgradePreview | null;
@@ -13,6 +15,10 @@ export type RerollHandler = () => void;
 export interface LevelUpRewardedOptions {
   readonly rerollAvailable?: boolean;
   readonly onReroll?: RerollHandler;
+}
+
+export interface LevelUpNavigationOptions {
+  readonly onBack?: () => void;
 }
 
 const CARD_SELECTION_DELAY_MS = 220;
@@ -51,30 +57,42 @@ const formatValue = (value: number, stat: UpgradePreviewStat): string => {
 export class LevelUpOverlay {
   private readonly root: HTMLElement;
   private readonly title: HTMLElement;
+  private readonly subtitle: HTMLElement;
   private readonly options: HTMLElement;
   private readonly rewardedSection: HTMLElement;
   private readonly rewardedMessage: HTMLElement;
   private readonly rerollButton: HTMLButtonElement;
+  private readonly backButton: HTMLButtonElement | null;
   private selectionTimer: number | null = null;
   private rerollHandler: RerollHandler | null = null;
+  private backHandler: (() => void) | null = null;
 
   public constructor(root: HTMLElement) {
     const title = root.querySelector<HTMLElement>('#level-up-title');
+    const subtitle = root.querySelector<HTMLElement>('.level-up-subtitle');
     const options = root.querySelector<HTMLElement>('#level-up-options');
     const rewardedSection = root.querySelector<HTMLElement>('#level-up-rewarded');
     const rewardedMessage = root.querySelector<HTMLElement>('#level-up-rewarded-message');
     const rerollButton = root.querySelector<HTMLButtonElement>('#level-up-reroll');
-    if (!title || !options || !rewardedSection || !rewardedMessage || !rerollButton) {
+    if (!title || !subtitle || !options || !rewardedSection || !rewardedMessage || !rerollButton) {
       throw new Error('Faltan elementos del level-up');
     }
     this.root = root;
     this.title = title;
+    this.subtitle = subtitle;
     this.options = options;
     this.rewardedSection = rewardedSection;
     this.rewardedMessage = rewardedMessage;
     this.rerollButton = rerollButton;
+    this.backButton = root.querySelector<HTMLButtonElement>('#level-up-back');
     this.mountIconSprite();
     this.rerollButton.addEventListener('click', () => this.rerollHandler?.());
+    this.backButton?.addEventListener('click', () => {
+      if (this.selectionTimer !== null) return;
+      const handler = this.backHandler;
+      this.close();
+      handler?.();
+    });
   }
 
   private mountIconSprite(): void {
@@ -88,14 +106,43 @@ export class LevelUpOverlay {
     onSelection: UpgradeSelectionHandler,
     getPreview: UpgradePreviewProvider = () => null,
     onInteraction?: LevelUpInteractionHandler,
-    rewarded: LevelUpRewardedOptions = {}
+    rewarded: LevelUpRewardedOptions = {},
+    navigation: LevelUpNavigationOptions = {}
   ): void {
     this.cancelPendingSelection();
     const isEvolutionOffer = choices.length === 2
       && choices.every((choice) => choice.effect.type === 'weaponEvolution');
-    this.title.textContent = isEvolutionOffer ? `Nivel ${level} · EVOLUCION` : `Nivel ${level}`;
+    const isEvolutionGateOffer = choices.some((choice) => choice.effect.type === 'evolutionOffer');
+    const evolutionFamily = choices.find((choice) => (
+      choice.effect.type === 'weaponEvolution' || choice.effect.type === 'evolutionOffer'
+    ));
+    const family = evolutionFamily?.effect.type === 'weaponEvolution'
+      ? getEvolutionFamily(evolutionFamily.effect.evolution)
+      : evolutionFamily?.effect.type === 'evolutionOffer'
+        ? evolutionFamily.effect.family
+        : null;
+    const familyLabel = family === null ? 'arma' : getWeaponFamilyLabel(family);
     this.options.dataset.choiceCount = String(choices.length);
-    this.root.dataset.offerKind = isEvolutionOffer ? 'evolution' : 'standard';
+    this.title.textContent = isEvolutionOffer
+      ? `Nivel ${level} Â· EVOLUCION`
+      : isEvolutionGateOffer
+        ? `Nivel ${level} Â· EVOLUCION DISPONIBLE`
+        : `Nivel ${level}`;
+    this.subtitle.textContent = isEvolutionOffer
+      ? `Elige una ruta y confirma como cambia ${familyLabel}`
+      : isEvolutionGateOffer
+        ? `${familyLabel} esta lista; abre la carta para comparar sus dos rutas`
+        : 'Elige una carta para cambiar el destino de esta run';
+    this.root.dataset.offerKind = isEvolutionOffer
+      ? 'evolution'
+      : isEvolutionGateOffer
+        ? 'evolution-offer'
+        : 'standard';
+    this.backHandler = navigation.onBack ?? null;
+    if (this.backButton) {
+      this.backButton.hidden = !isEvolutionOffer || this.backHandler === null;
+      this.backButton.disabled = false;
+    }
     this.options.replaceChildren();
     choices.forEach((choice, index) => {
       const visual = getUpgradeCardVisual(choice.id);
@@ -105,6 +152,14 @@ export class LevelUpOverlay {
       button.dataset.upgradeId = choice.id;
       button.dataset.tone = visual.tone;
       button.dataset.category = visual.category;
+      button.dataset.cardKind = choice.effect.type === 'evolutionOffer'
+        ? 'evolution-offer'
+        : choice.effect.type === 'weaponRank' && choice.effect.rank === 7
+          ? 'milestone'
+          : 'standard';
+      if (choice.effect.type === 'evolutionOffer') {
+        button.setAttribute('aria-label', `${choice.title}. Abre las dos evoluciones de ${familyLabel}.`);
+      }
 
       const frame = document.createElement('span');
       frame.className = 'upgrade-card-frame';
@@ -172,6 +227,7 @@ export class LevelUpOverlay {
           if (other !== button) other.classList.add('is-dimmed');
         }
         this.rerollButton.disabled = true;
+        if (this.backButton) this.backButton.disabled = true;
         onInteraction?.({ kind: 'select', index, upgradeId: choice.id });
         this.selectionTimer = window.setTimeout(() => {
           this.selectionTimer = null;
@@ -255,6 +311,11 @@ export class LevelUpOverlay {
     this.cancelPendingSelection();
     this.root.hidden = true;
     this.rerollHandler = null;
+    this.backHandler = null;
+    if (this.backButton) {
+      this.backButton.hidden = true;
+      this.backButton.disabled = false;
+    }
   }
 
   private cancelPendingSelection(): void {
@@ -269,3 +330,31 @@ export class LevelUpOverlay {
     }
   }
 }
+
+const getEvolutionFamily = (evolution: WeaponEvolutionId): WeaponPathId => {
+  switch (evolution) {
+    case 'rail_lance':
+    case 'pulse_volley': return 'projectile';
+    case 'solar_crown':
+    case 'graviton_halo': return 'orbit';
+    case 'closed_circuit':
+    case 'thunderhead': return 'chain';
+    case 'twin_comet':
+    case 'singularity_return': return 'boomerang';
+    case 'echo_shock':
+    case 'compression_wave': return 'pulse_ring';
+    case 'event_horizon':
+    case 'polar_collapse': return 'magnetic_charge';
+  }
+};
+
+const getWeaponFamilyLabel = (family: WeaponPathId): string => {
+  switch (family) {
+    case 'projectile': return 'Projectile';
+    case 'orbit': return 'Órbita';
+    case 'chain': return 'Cadena';
+    case 'boomerang': return 'Búmeran';
+    case 'pulse_ring': return 'Pulso';
+    case 'magnetic_charge': return 'Magnética';
+  }
+};

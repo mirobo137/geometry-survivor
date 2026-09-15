@@ -218,4 +218,73 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('rail_lance')).toBe(true);
     expect(applier.getChoices(7)).toHaveLength(3);
   });
+
+  it('walks the focused Projectile path through rank VI before evolution', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+    const ranks = [2, 3, 4, 5, 6] as const;
+
+    for (const rank of ranks) {
+      const choices = applier.getWeaponPathRankChoices('projectile', rank);
+      expect(choices).toHaveLength(1);
+      expect(choices[0]?.effect).toEqual({ type: 'weaponRank', family: 'projectile', rank });
+      expect(applier.apply(choices[0]!.id)).toBe(true);
+      expect(combat.currentProjectileRank).toBe(rank);
+    }
+
+    expect(applier.getWeaponPathRankChoices('projectile', 7)).toHaveLength(1);
+    expect(applier.getWeaponPathEvolutionChoices('projectile').map((choice) => choice.id)).toEqual([
+      'rail_lance',
+      'pulse_volley'
+    ]);
+    expect(applier.getWeaponPathEvolutionOfferChoices('projectile')).toEqual([
+      expect.objectContaining({ id: 'projectile_evolution_offer' })
+    ]);
+  });
+
+  it('keeps the Projectile evolution behind a recognisable no-stat gate', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    for (const rank of [2, 3, 4, 5, 6] as const) {
+      expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    }
+
+    const offer = applier.getWeaponPathEvolutionOfferChoices('projectile');
+    expect(offer).toHaveLength(1);
+    expect(offer[0]).toMatchObject({
+      id: 'projectile_evolution_offer',
+      effect: { type: 'evolutionOffer', family: 'projectile' }
+    });
+    expect(applier.apply('projectile_evolution_offer')).toBe(false);
+    expect(applier.getWeaponPathEvolutionChoices('projectile').map((choice) => choice.id)).toEqual([
+      'rail_lance',
+      'pulse_volley'
+    ]);
+  });
+
+  it('walks every focused weapon family through VI and exposes its level-seven gate', () => {
+    const families = [
+      { path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { path: 'orbit' as const, base: 'orbit_blade' as const, evolution: 'solar_crown' as const },
+      { path: 'chain' as const, base: 'chain_lightning' as const, evolution: 'closed_circuit' as const },
+      { path: 'boomerang' as const, base: 'vector_boomerang' as const, evolution: 'twin_comet' as const },
+      { path: 'pulse_ring' as const, base: 'pulse_ring' as const, evolution: 'echo_shock' as const },
+      { path: 'magnetic_charge' as const, base: 'magnetic_charge' as const, evolution: 'event_horizon' as const }
+    ];
+
+    for (const family of families) {
+      const combat = new CombatSimulation();
+      const applier = new UpgradeApplier(new PlayerModel(), combat);
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6] as const) {
+        const choices = applier.getWeaponPathRankChoices(family.path, rank);
+        expect(choices).toHaveLength(1);
+        expect(applier.apply(choices[0]!.id)).toBe(true);
+        expect(combat.getWeaponPathRank(family.path)).toBe(rank);
+      }
+      expect(applier.getWeaponPathEvolutionOfferChoices(family.path)).toHaveLength(1);
+      expect(applier.getWeaponPathEvolutionChoices(family.path).map((choice) => choice.id)).toContain(family.evolution);
+      expect(applier.apply(family.evolution)).toBe(true);
+      expect(applier.apply(family.evolution)).toBe(false);
+    }
+  });
 });

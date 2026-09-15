@@ -28,27 +28,40 @@ const createBehavior = () => {
     onEnemyDefeated: () => undefined
   });
   behavior.addBlade();
-  return { behavior, target };
+  return { behavior, enemies, target };
 };
 
 describe('OrbitBehavior evolutions', () => {
-  it('Solar Crown changes radius, damage and rotation without adding blades', () => {
-    const { behavior } = createBehavior();
+  it('Solar Crown adds three blades and keeps all six at a fixed radius', () => {
+    const { behavior, target } = createBehavior();
     expect(behavior.setEvolution('solar_crown')).toBe(true);
-    expect(behavior.currentRadius).toBeCloseTo(69.6);
-    expect(behavior.currentDamage).toBeCloseTo(24.3);
-    behavior.update(1, player);
+    expect(behavior.activeBladeCount).toBe(6);
+    expect(behavior.currentRadius).toBeCloseTo(94);
+    expect(behavior.currentDamage).toBeCloseTo(18);
     expect(behavior.blades).toHaveLength(6);
-    expect(behavior.blades[0].angle).toBeCloseTo(2.43);
+    const before = target.health;
+    for (let index = 0; index < 80; index += 1) {
+      behavior.update(0.05, player);
+      expect(behavior.blades.every((blade) => blade.active)).toBe(true);
+      for (const blade of behavior.blades) {
+        expect(Math.hypot(blade.x - player.x, blade.y - player.y)).toBeCloseTo(94, 4);
+      }
+    }
+    expect(target.health).toBeLessThan(before);
   });
 
-  it('Graviton Halo emits a bounded pulse and excludes bosses from its force', () => {
-    const { behavior, target } = createBehavior();
+  it('Graviton Halo stretches the orbit along its movement axis without a pulse', () => {
+    const { behavior, enemies, target } = createBehavior();
     expect(behavior.setEvolution('graviton_halo')).toBe(true);
     const before = target.health;
-    behavior.update(3, player);
-    expect(behavior.pulseState.sequence).toBe(1);
+    behavior.update(0.1, player);
+    expect(behavior.pulseState.sequence).toBe(0);
+    target.x = behavior.blades[0].x;
+    target.y = behavior.blades[0].y;
+    enemies.rebuildGrid();
+    behavior.update(0.1, player);
     expect(target.health).toBeLessThan(before);
+    expect(Math.hypot(behavior.blades[0].x - player.x, behavior.blades[0].y - player.y)).toBeGreaterThan(90);
     expect(behavior.setEvolution('solar_crown')).toBe(false);
   });
 });

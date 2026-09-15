@@ -2899,6 +2899,35 @@ body {
   margin: 0;
 }
 
+#level-up-options[data-choice-count="1"] {
+  grid-template-columns: minmax(0, 26rem);
+  justify-content: center;
+  width: min(26rem, 100%);
+}
+
+#level-up-back {
+  min-height: 2.75rem;
+  margin-top: 0.9rem;
+  padding: 0.6rem 1rem;
+  color: #d2a8ff;
+  background: rgba(35, 27, 67, 0.72);
+  border: 1px solid rgba(210, 168, 255, 0.55);
+  border-radius: 0.5rem;
+  font: 700 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#level-up-back[hidden] {
+  display: none;
+}
+
+#level-up-back:focus-visible {
+  outline: 3px solid #d2a8ff;
+  outline-offset: 3px;
+}
+
 #level-up-rewarded {
   display: grid;
   gap: 0.55rem;
@@ -2989,6 +3018,30 @@ body {
   --card-accent: #b8ffd9;
   --card-line: #376b68;
   --card-surface: #0e242c;
+}
+
+#level-up[data-offer-kind="evolution-offer"] #level-up-options button[data-card-kind="evolution-offer"],
+#level-up-options button.upgrade-card[data-card-kind="milestone"] {
+  --card-accent: #f2d6ff;
+  --card-line: #8c5cc0;
+  --card-surface: #24183b;
+  box-shadow: 0 0 0 1px rgba(242, 214, 255, 0.18), 0 0 2rem rgba(177, 103, 255, 0.2);
+}
+
+#level-up[data-offer-kind="evolution-offer"] #level-up-options button[data-card-kind="evolution-offer"] .upgrade-card-meta,
+#level-up-options button.upgrade-card[data-card-kind="milestone"] .upgrade-card-meta {
+  letter-spacing: 0.18em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #level-up[data-offer-kind="evolution-offer"] #level-up-options button[data-card-kind="evolution-offer"] {
+    animation: evolution-gate-breathe 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes evolution-gate-breathe {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
 }
 
 #level-up-options button.upgrade-card:focus-visible {

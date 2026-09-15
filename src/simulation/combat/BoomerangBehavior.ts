@@ -10,8 +10,9 @@ const TARGET_SEARCH_RADIUS = 960;
 const CAPTURE_PADDING = 6;
 const EPSILON = 0.000001;
 const TWIN_COMET_ANGLES = [-0.16, 0.16] as const;
-const SINGULARITY_RADIUS = 54;
-const SINGULARITY_PULL = 16;
+const SINGULARITY_RADIUS = 100;
+const SINGULARITY_HOLD_SECONDS = 0.65;
+const SINGULARITY_PULL_SPEED = 90;
 const SINGULARITY_LIFE_SECONDS = 0.32;
 
 export interface BoomerangBehaviorContext {
@@ -29,8 +30,17 @@ export interface BoomerangBehaviorContext {
 export class BoomerangBehavior {
   private readonly outboundHitGenerations: Uint32Array[];
   private readonly returnHitGenerations: Uint32Array[];
+  private readonly singularityHoldTimers: Float32Array;
+  private readonly returnCurveComplete: Uint8Array;
   private unlocked = false;
   private damage = BOOMERANG_DEFINITION.damage;
+  private speed = BOOMERANG_DEFINITION.speed;
+  private returnSpeed = BOOMERANG_DEFINITION.returnSpeed;
+  private radius = BOOMERANG_DEFINITION.radius;
+  private outboundDistance = BOOMERANG_DEFINITION.outboundDistance;
+  private rank = 1;
+  private lastDirectionX = 0;
+  private lastDirectionY = -1;
   private permanentDamageMultiplier = 1;
   private evolution: BoomerangEvolution | null = null;
   public readonly pulseState: BoomerangPulseState = {
@@ -51,6 +61,8 @@ export class BoomerangBehavior {
       { length: context.boomerangs.capacity },
       () => new Uint32Array(context.enemies.pool.capacity)
     );
+    this.singularityHoldTimers = new Float32Array(context.boomerangs.capacity);
+    this.returnCurveComplete = new Uint8Array(context.boomerangs.capacity);
   }
 
   public get isUnlocked(): boolean {
@@ -65,6 +77,22 @@ export class BoomerangBehavior {
     return this.evolution;
   }
 
+  public get currentRank(): number {
+    return this.rank;
+  }
+
+  public get currentOutboundDistance(): number {
+    return this.outboundDistance;
+  }
+
+  public get currentReturnSpeed(): number {
+    return this.returnSpeed;
+  }
+
+  public get currentRadius(): number {
+    return this.radius;
+  }
+
   public unlock(): boolean {
     if (this.unlocked) return false;
     this.unlocked = true;
@@ -77,7 +105,15 @@ export class BoomerangBehavior {
 
   public setPermanentDamageMultiplier(multiplier: number): void {
     this.permanentDamageMultiplier = normalizeMultiplier(multiplier);
-    this.damage = BOOMERANG_DEFINITION.damage * this.permanentDamageMultiplier;
+    this.applyRankTuning();
+  }
+
+  /** Applies one focused-path rank; cooldown remains owned by the scheduler. */
+  public setRank(rank: 2 | 3 | 4 | 5 | 6 | 7): boolean {
+    if (rank !== this.rank + 1) return false;
+    this.rank = rank;
+    this.applyRankTuning();
+    return true;
   }
 
   public setEvolution(evolution: BoomerangEvolution): boolean {
@@ -90,32 +126,61 @@ export class BoomerangBehavior {
     const pieceCount = this.evolution === 'twin_comet' ? 2 : 1;
     if (!this.unlocked || this.context.boomerangs.activeCount + pieceCount > BOOMERANG_DEFINITION.maxActive) return;
     const targetIndex = this.context.enemies.findNearestEnemyIndex(player.x, player.y, TARGET_SEARCH_RADIUS);
-    if (targetIndex < 0) return;
-    const target = this.context.enemies.getState(targetIndex);
-    if (!target.active || target.health <= 0) return;
-    const dx = target.x - player.x;
-    const dy = target.y - player.y;
-    const distance = Math.max(EPSILON, Math.hypot(dx, dy));
+    const target = targetIndex >= 0 ? this.context.enemies.getState(targetIndex) : null;
+    const targetIsValid = target?.active === true && target.health > 0;
+    if (targetIsValid) {
+      const dx = target!.x - player.x;
+      const dy = target!.y - player.y;
+      const distance = Math.max(EPSILON, Math.hypot(dx, dy));
+      this.lastDirectionX = dx / distance;
+      this.lastDirectionY = dy / distance;
+    }
+    const baseDirectionX = targetIsValid ? this.lastDirectionX : this.lastDirectionX;
+    const baseDirectionY = targetIsValid ? this.lastDirectionY : this.lastDirectionY;
     for (let piece = 0; piece < pieceCount; piece += 1) {
       const state = this.context.boomerangs.acquire();
       if (!state) return;
       const angle = this.evolution === 'twin_comet' ? TWIN_COMET_ANGLES[piece] : 0;
       const cosine = Math.cos(angle);
       const sine = Math.sin(angle);
-      const directionX = (dx / distance) * cosine - (dy / distance) * sine;
-      const directionY = (dx / distance) * sine + (dy / distance) * cosine;
+      const directionX = baseDirectionX * cosine - baseDirectionY * sine;
+      const directionY = baseDirectionX * sine + baseDirectionY * cosine;
       state.x = player.x;
       state.y = player.y;
-      state.vx = directionX * BOOMERANG_DEFINITION.speed;
-      state.vy = directionY * BOOMERANG_DEFINITION.speed;
-      state.radius = BOOMERANG_DEFINITION.radius;
-      state.damage = this.damage * (this.evolution === 'twin_comet' ? 0.65 : this.evolution === 'singularity_return' ? 1.2 : 1);
+      state.vx = directionX * this.speed;
+      state.vy = directionY * this.speed;
+      state.radius = this.radius;
+      state.damage = this.damage;
       state.ageSeconds = 0;
       state.lifetimeSeconds = BOOMERANG_DEFINITION.lifetimeSeconds;
       state.phase = 'outbound';
       state.directionX = directionX;
       state.directionY = directionY;
       state.distanceTravelled = 0;
+      state.pathProgress = 0;
+      state.curveStartX = player.x;
+      state.curveStartY = player.y;
+      state.curveControlX = 0;
+      state.curveControlY = 0;
+      state.curveEndX = player.x + directionX * this.outboundDistance;
+      state.curveEndY = player.y + directionY * this.outboundDistance;
+      state.returnControlX = 0;
+      state.returnControlY = 0;
+      state.returnStartX = state.curveEndX;
+      state.returnStartY = state.curveEndY;
+      state.returnTargetX = player.x;
+      state.returnTargetY = player.y;
+      this.singularityHoldTimers[state.slotIndex] = 0;
+      this.returnCurveComplete[state.slotIndex] = 0;
+      if (this.evolution === 'twin_comet') {
+        const normalX = -baseDirectionY;
+        const normalY = baseDirectionX;
+        const side = piece === 0 ? 1 : -1;
+        state.curveControlX = player.x + directionX * 120 + normalX * side * 100;
+        state.curveControlY = player.y + directionY * 120 + normalY * side * 100;
+        state.curveEndX = player.x + directionX * this.outboundDistance + normalX * side * 50;
+        state.curveEndY = player.y + directionY * this.outboundDistance + normalY * side * 50;
+      }
       state.evolution = this.evolution;
       this.outboundHitGenerations[state.slotIndex].fill(0);
       this.returnHitGenerations[state.slotIndex].fill(0);
@@ -143,27 +208,65 @@ export class BoomerangBehavior {
       let remaining = dt;
       while (state.active && remaining > EPSILON) {
         if (state.phase === 'outbound') {
-          const distanceToTurn = Math.max(0, BOOMERANG_DEFINITION.outboundDistance - state.distanceTravelled);
-          if (distanceToTurn <= EPSILON) {
-            state.phase = 'returning';
-            this.setReturnVelocity(state, player);
-            continue;
-          }
-
-          const travel = Math.min(BOOMERANG_DEFINITION.speed * remaining, distanceToTurn);
           const startX = state.x;
           const startY = state.y;
+          if (state.evolution === 'twin_comet') {
+            const duration = Math.max(EPSILON, this.outboundDistance / this.speed);
+            state.pathProgress = Math.min(1, state.pathProgress + remaining / duration);
+            this.setQuadraticPosition(state, state.pathProgress, false);
+            state.vx = (state.x - startX) / Math.max(EPSILON, remaining);
+            state.vy = (state.y - startY) / Math.max(EPSILON, remaining);
+            this.hitAlongSegment(state, startX, startY, state.x, state.y, 'outbound');
+            remaining = 0;
+            if (state.pathProgress >= 1 - EPSILON) this.beginReturn(state, player);
+            continue;
+          }
+          const distanceToTurn = Math.max(0, this.outboundDistance - state.distanceTravelled);
+          const travel = Math.min(this.speed * remaining, distanceToTurn);
           state.x += state.directionX * travel;
           state.y += state.directionY * travel;
-          state.vx = state.directionX * BOOMERANG_DEFINITION.speed;
-          state.vy = state.directionY * BOOMERANG_DEFINITION.speed;
+          state.vx = state.directionX * this.speed;
+          state.vy = state.directionY * this.speed;
           state.distanceTravelled += travel;
           this.hitAlongSegment(state, startX, startY, state.x, state.y, 'outbound');
-          remaining -= travel / BOOMERANG_DEFINITION.speed;
-          if (state.distanceTravelled >= BOOMERANG_DEFINITION.outboundDistance - EPSILON) {
-            state.phase = 'returning';
-            this.setReturnVelocity(state, player);
+          remaining -= travel / this.speed;
+          if (state.distanceTravelled >= this.outboundDistance - EPSILON) {
+            if (state.evolution === 'singularity_return') {
+              state.phase = 'holding';
+              this.singularityHoldTimers[state.slotIndex] = SINGULARITY_HOLD_SECONDS;
+              state.vx = 0;
+              state.vy = 0;
+              this.triggerSingularityPulse(state.x, state.y);
+            } else {
+              this.beginReturn(state, player);
+            }
           }
+          continue;
+        }
+
+        if (state.phase === 'holding') {
+          const holdStep = Math.min(remaining, this.singularityHoldTimers[state.slotIndex]);
+          this.pullAtRemoteEndpoint(state, player, holdStep);
+          this.singularityHoldTimers[state.slotIndex] -= holdStep;
+          remaining -= holdStep;
+          if (this.singularityHoldTimers[state.slotIndex] <= EPSILON) this.beginReturn(state, player);
+          continue;
+        }
+
+        if (state.evolution === 'twin_comet' && this.returnCurveComplete[state.slotIndex] === 0) {
+          const startX = state.x;
+          const startY = state.y;
+          const distance = Math.max(EPSILON, Math.hypot(
+            state.returnTargetX - state.returnStartX,
+            state.returnTargetY - state.returnStartY
+          ));
+          state.pathProgress = Math.min(1, state.pathProgress + remaining * this.returnSpeed / distance);
+          this.setQuadraticPosition(state, state.pathProgress, true);
+          state.vx = (state.x - startX) / Math.max(EPSILON, remaining);
+          state.vy = (state.y - startY) / Math.max(EPSILON, remaining);
+          this.hitAlongSegment(state, startX, startY, state.x, state.y, 'returning');
+          remaining = 0;
+          if (state.pathProgress >= 1 - EPSILON) this.returnCurveComplete[state.slotIndex] = 1;
           continue;
         }
 
@@ -172,24 +275,22 @@ export class BoomerangBehavior {
         const distance = Math.hypot(dx, dy);
         const captureRadius = player.radius + CAPTURE_PADDING;
         if (distance <= captureRadius) {
-          if (state.evolution === 'singularity_return') this.triggerSingularityPulse(player);
           this.context.boomerangs.release(state);
           break;
         }
 
         const directionX = dx / Math.max(EPSILON, distance);
         const directionY = dy / Math.max(EPSILON, distance);
-        state.vx = directionX * BOOMERANG_DEFINITION.returnSpeed;
-        state.vy = directionY * BOOMERANG_DEFINITION.returnSpeed;
-        const travel = Math.min(BOOMERANG_DEFINITION.returnSpeed * remaining, distance);
+        state.vx = directionX * this.returnSpeed;
+        state.vy = directionY * this.returnSpeed;
+        const travel = Math.min(this.returnSpeed * remaining, distance);
         const startX = state.x;
         const startY = state.y;
         state.x += directionX * travel;
         state.y += directionY * travel;
         this.hitAlongSegment(state, startX, startY, state.x, state.y, 'returning');
-        remaining -= travel / BOOMERANG_DEFINITION.returnSpeed;
+        remaining -= travel / this.returnSpeed;
         if (Math.hypot(player.x - state.x, player.y - state.y) <= captureRadius) {
-          if (state.evolution === 'singularity_return') this.triggerSingularityPulse(player);
           this.context.boomerangs.release(state);
         }
       }
@@ -211,49 +312,104 @@ export class BoomerangBehavior {
       state.directionX = 1;
       state.directionY = 0;
       state.distanceTravelled = 0;
+      state.curveStartX = 0;
+      state.curveStartY = 0;
+      state.curveControlX = 0;
+      state.curveControlY = 0;
+      state.curveEndX = 0;
+      state.curveEndY = 0;
+      state.returnControlX = 0;
+      state.returnControlY = 0;
+      state.returnStartX = 0;
+      state.returnStartY = 0;
+      state.returnTargetX = 0;
+      state.returnTargetY = 0;
+      state.pathProgress = 0;
       state.evolution = null;
     }
     for (const ledger of this.outboundHitGenerations) ledger.fill(0);
     for (const ledger of this.returnHitGenerations) ledger.fill(0);
+    this.singularityHoldTimers.fill(0);
+    this.returnCurveComplete.fill(0);
     this.unlocked = false;
+    this.rank = 1;
     this.damage = BOOMERANG_DEFINITION.damage * this.permanentDamageMultiplier;
+    this.speed = BOOMERANG_DEFINITION.speed;
+    this.returnSpeed = BOOMERANG_DEFINITION.returnSpeed;
+    this.radius = BOOMERANG_DEFINITION.radius;
+    this.outboundDistance = BOOMERANG_DEFINITION.outboundDistance;
     this.evolution = null;
     this.pulseState.active = false;
     this.pulseState.progress = 0;
     this.pulseState.sequence = 0;
   }
 
-  private triggerSingularityPulse(player: PlayerState): void {
+  private triggerSingularityPulse(x: number, y: number): void {
     this.pulseState.active = true;
-    this.pulseState.x = player.x;
-    this.pulseState.y = player.y;
+    this.pulseState.x = x;
+    this.pulseState.y = y;
     this.pulseState.radius = SINGULARITY_RADIUS;
     this.pulseState.progress = 0;
     this.pulseState.sequence = this.pulseState.sequence >= 2_000_000_000
       ? 1 : this.pulseState.sequence + 1;
-    const candidates = this.context.enemies.queryCircle(player.x, player.y, SINGULARITY_RADIUS + 48);
-    for (const index of candidates) {
-      const enemy = this.context.enemies.getState(index);
-      if (!enemy.active || enemy.health <= 0) continue;
-      const dx = player.x - enemy.x;
-      const dy = player.y - enemy.y;
-      const distance = Math.hypot(dx, dy);
-      if (distance > SINGULARITY_RADIUS + enemy.radius) continue;
-      if (enemy.kind !== 'boss' && distance > EPSILON) {
-        enemy.x += dx / distance * SINGULARITY_PULL;
-        enemy.y += dy / distance * SINGULARITY_PULL;
-      }
-      enemy.health -= this.context.rollCriticalDamage(this.damage * 0.6);
-      if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
+  }
+
+  private beginReturn(state: BoomerangState, player: PlayerState): void {
+    state.phase = 'returning';
+    state.pathProgress = 0;
+    state.returnStartX = state.x;
+    state.returnStartY = state.y;
+    state.returnTargetX = player.x;
+    state.returnTargetY = player.y;
+    this.returnCurveComplete[state.slotIndex] = state.evolution === 'twin_comet' ? 0 : 1;
+    if (state.evolution === 'twin_comet') {
+      const dx = player.x - state.x;
+      const dy = player.y - state.y;
+      const distance = Math.max(EPSILON, Math.hypot(dx, dy));
+      const normalX = -dy / distance;
+      const normalY = dx / distance;
+      const side = state.directionX * normalX + state.directionY * normalY >= 0 ? 1 : -1;
+      state.returnControlX = state.x + dx * 0.52 + normalX * side * 100;
+      state.returnControlY = state.y + dy * 0.52 + normalY * side * 100;
     }
+    this.setReturnVelocity(state, player);
   }
 
   private setReturnVelocity(state: BoomerangState, player: PlayerState): void {
     const dx = player.x - state.x;
     const dy = player.y - state.y;
     const distance = Math.max(EPSILON, Math.hypot(dx, dy));
-    state.vx = (dx / distance) * BOOMERANG_DEFINITION.returnSpeed;
-    state.vy = (dy / distance) * BOOMERANG_DEFINITION.returnSpeed;
+    state.vx = (dx / distance) * this.returnSpeed;
+    state.vy = (dy / distance) * this.returnSpeed;
+  }
+
+  private setQuadraticPosition(state: BoomerangState, progress: number, returning: boolean): void {
+    const t = Math.min(1, Math.max(0, progress));
+    const startX = returning ? state.returnStartX : state.curveStartX;
+    const startY = returning ? state.returnStartY : state.curveStartY;
+    const controlX = returning ? state.returnControlX : state.curveControlX;
+    const controlY = returning ? state.returnControlY : state.curveControlY;
+    const endX = returning ? state.returnTargetX : state.curveEndX;
+    const endY = returning ? state.returnTargetY : state.curveEndY;
+    const inverse = 1 - t;
+    state.x = inverse * inverse * startX + 2 * inverse * t * controlX + t * t * endX;
+    state.y = inverse * inverse * startY + 2 * inverse * t * controlY + t * t * endY;
+  }
+
+  private pullAtRemoteEndpoint(state: BoomerangState, player: PlayerState, dtSeconds: number): void {
+    const candidates = this.context.enemies.queryCircle(state.x, state.y, SINGULARITY_RADIUS + 48);
+    for (const index of candidates) {
+      const enemy = this.context.enemies.getState(index);
+      if (!enemy.active || enemy.health <= 0 || enemy.kind === 'boss') continue;
+      const dx = state.x - enemy.x;
+      const dy = state.y - enemy.y;
+      const distance = Math.hypot(dx, dy);
+      const safeDistance = player.radius + enemy.radius + 24;
+      if (distance <= safeDistance || distance > SINGULARITY_RADIUS + enemy.radius) continue;
+      const step = Math.min(distance - safeDistance, SINGULARITY_PULL_SPEED * dtSeconds);
+      enemy.x += dx / distance * step;
+      enemy.y += dy / distance * step;
+    }
   }
 
   private hitAlongSegment(
@@ -279,9 +435,23 @@ export class BoomerangBehavior {
       if (!enemy.active || enemy.health <= 0 || ledger[index] === enemy.generation) continue;
       if (distanceToSegmentSquared(enemy.x, enemy.y, startX, startY, dx, dy) > (state.radius + enemy.radius) ** 2) continue;
       ledger[index] = enemy.generation;
-      enemy.health -= this.context.rollCriticalDamage(state.damage);
+      const phaseMultiplier = state.evolution === 'twin_comet'
+        ? 0.5
+        : state.evolution === 'singularity_return'
+          ? phase === 'outbound' ? 0.3 : 0.7
+          : 1;
+      enemy.health -= this.context.rollCriticalDamage(state.damage * phaseMultiplier);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
     }
+  }
+
+  private applyRankTuning(): void {
+    this.damage = (this.rank >= 7 ? 19 : this.rank >= 2 ? 16 : BOOMERANG_DEFINITION.damage)
+      * this.permanentDamageMultiplier;
+    this.speed = BOOMERANG_DEFINITION.speed;
+    this.returnSpeed = this.rank >= 4 ? 500 : BOOMERANG_DEFINITION.returnSpeed;
+    this.radius = this.rank >= 5 ? 13 : BOOMERANG_DEFINITION.radius;
+    this.outboundDistance = this.rank >= 3 ? 280 : BOOMERANG_DEFINITION.outboundDistance;
   }
 }
 

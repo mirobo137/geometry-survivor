@@ -64,21 +64,20 @@ describe('BoomerangBehavior', () => {
     expect(boomerangs.activeCount).toBe(0);
   });
 
-  it('does not fire without a target and reset clears active motion', () => {
+  it('uses its retained direction without a target and reset clears active motion', () => {
     const { enemies, enemy, boomerangs, behavior, player } = setup();
     enemy.health = 0;
     enemies.rebuildGrid();
     behavior.fire(player);
-    expect(boomerangs.activeCount).toBe(0);
+    expect(boomerangs.activeCount).toBe(1);
+    behavior.reset();
 
     enemies.pool.reset();
     enemies.rebuildGrid();
 
+    behavior.unlock();
     behavior.fire(player);
-    expect(boomerangs.activeCount).toBe(0);
-
-    behavior.fire(player);
-    behavior.update(0.1, player);
+    expect(boomerangs.activeCount).toBe(1);
     behavior.reset();
     expect(boomerangs.activeCount).toBe(0);
     expect(boomerangs.states.every((state) => !state.active && state.ageSeconds === 0)).toBe(true);
@@ -143,19 +142,27 @@ describe('BoomerangBehavior', () => {
   });
 
   it('Twin Comet fires two opposed pieces inside the same fixed pool cap', () => {
-    const { boomerangs, behavior, player } = setup();
+    const { boomerangs, behavior, enemies, enemy, player } = setup();
     expect(behavior.setEvolution('twin_comet')).toBe(true);
+    const before = enemy.health;
     behavior.fire(player);
 
     expect(boomerangs.activeCount).toBe(2);
     expect(boomerangs.states[0].evolution).toBe('twin_comet');
     expect(boomerangs.states[1].evolution).toBe('twin_comet');
     expect(boomerangs.states[0].directionY).not.toBe(boomerangs.states[1].directionY);
+    behavior.update(1 / 60, player);
+    enemy.x = boomerangs.states[0].x;
+    enemy.y = boomerangs.states[0].y;
+    enemies.rebuildGrid();
+    for (let index = 0; index < 100; index += 1) behavior.update(1 / 60, player);
+    expect(enemy.health).toBeLessThan(before);
   });
 
-  it('Singularity Return emits its capture pulse only on the returning phase', () => {
-    const { behavior, player } = setup();
+  it('Singularity Return emits its capture pulse at the remote endpoint', () => {
+    const { behavior, enemy, player } = setup();
     expect(behavior.setEvolution('singularity_return')).toBe(true);
+    const before = enemy.health;
     behavior.fire(player);
     expect(behavior.pulseState.active).toBe(false);
 
@@ -163,6 +170,8 @@ describe('BoomerangBehavior', () => {
       behavior.update(1 / 60, player);
       if (behavior.pulseState.sequence === 1) {
         expect(behavior.pulseState.active).toBe(true);
+        expect(behavior.pulseState.x).toBeGreaterThan(player.x);
+        expect(enemy.health).toBeLessThan(before);
         return;
       }
     }

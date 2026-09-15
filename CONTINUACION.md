@@ -1,5 +1,83 @@
 # Geometry Survivor — estado y continuación
 
+## Vigente: EX-08-R — plan de rediseño, aún sin implementar — 14-09-2026
+
+**Ampliación más reciente:** [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md)
+define las 42 filas de rango I–VII, mejoras concretas y valores de prototipo.
+Se adopta secuencia fija por familia, con carta del siguiente rango; sustituye
+contar stacks libremente. Incluye migración de cartas, calibración Acto II,
+herencia de cada mejora hacia la evolución y pruebas. R1 debe implementar
+estas tablas antes de R2. Solo documentación; el juego sigue en v1.
+
+El usuario probó evoluciones: aprueba Rail Lance/Pulse Volley; Solar Crown y
+Event Horizon no explican su utilidad, Compression Wave/Singularity Return
+atraen enemigos peligrosamente cerca, Polar Collapse no aporta diferencia.
+Las otras cinco rutas no tienen aprobación explícita. No cerrar EX-08.
+
+Por petición explícita esta entrega **solo documenta** cómo rediseñar las diez
+rutas restantes; no modifica gameplay ni arte. Leer plan §16.4–16.5/§22.1r y
+[EVOLUCIONES_V2.md](docs/design/EVOLUCIONES_V2.md), especificación para Luna con
+fases, geometrías, riesgos, cartas, visuales, caps y pruebas.
+
+Siguiente paso R1: laboratorio que realmente aísle armas y pruebe perseguidores;
+inventario de cartas que aumentan rango propio I–VII y selección de evolución
+dentro de la mano normal. El código actual usa nivel global, discrepancia
+registrada. Luego R2: Echo Shock en dos posiciones y Compression como frente
+saliente sin atracción. Entregar base/A/B y presión; esperar prueba humana
+antes de la siguiente pareja. Preservar Projectile y balance EX-02c diferido.
+
+R0 documental completado; R1–R7 pendientes. No se ejecutaron pruebas de runtime
+en esta entrega documental; los números de tests siguientes pertenecen a v1.
+El comportamiento rechazado sigue en código hasta su implementación v2.
+
+## Histórico: EX-08d — lote completo de evoluciones implementado — 14-09-2026
+
+Por solicitud explicita del usuario se implementaron todas las evoluciones
+authored, una por una dentro del codigo y con sus pruebas, sin esperar a que el
+usuario valide cada ruta durante esta sesion. Esta decision sustituye para este
+lote la instruccion historica de abrir solo una evolucion por entrega; no cambia
+el balance diferido de EX-02c ni el limite de tres armas activas.
+
+Las seis familias tienen dos rutas mutuamente excluyentes: Rail Lance / Pulse
+Volley, Solar Crown / Graviton Halo, Closed Circuit / Thunderhead, Twin Comet /
+Singularity Return, Echo Shock / Compression Wave y Event Horizon / Polar
+Collapse. Cada una usa la simulacion real, pools fijos, cooldown por objetivo
+cuando aplica, y el boss queda inmune a fuerzas. El overlay de nivel 7 cambia a
+dos cartas, marca `EVOLUCION` y no ofrece reroll para no romper la decision.
+
+Para probar cualquier ruta directamente, con el servidor local activo:
+
+`http://localhost:5173/?evolution=rail-lance&debug=1&quality=high`
+
+Sustituir `rail-lance` por cualquiera de estos slugs: `pulse-volley`,
+`solar-crown`, `graviton-halo`, `closed-circuit`, `thunderhead`, `twin-comet`,
+`singularity-return`, `echo-shock`, `compression-wave`, `event-horizon` o
+`polar-collapse`. `quality=low` tambien esta disponible. El acceso prepara la
+familia base cuando hace falta, muestra la pareja correcta y al elegir una
+continua una run real del Acto II.
+
+Para probar cada evolucion por separado sin esperar al nivel 7, usar el mismo
+slug con `scenario=single` o `scenario=mass`:
+
+- `http://localhost:5173/?evolution=rail-lance&scenario=single&debug=1&quality=high`
+  aplica Rail Lance y deja un blanco durable.
+- `http://localhost:5173/?evolution=rail-lance&scenario=mass&debug=1&quality=high`
+  aplica Rail Lance y deja 56 blancos durables en tres anillos.
+
+Sustituir `rail-lance` por cualquiera de los doce slugs y `high` por `low`.
+Estos escenarios desactivan hazards y boss para aislar la lectura del arma; el
+panel debug muestra `mode: evolution-single`/`evolution-mass` y el conteo
+`enemies: 1/250`/`56/250`. La ruta sin `scenario` sigue siendo la prueba de la
+oferta real de dos cartas.
+
+Validacion automatica: typecheck correcto; suite completa **97 archivos / 379
+tests** correcta; build local correcto; y smoke browser completo **37/37**, con
+las 24 rutas de laboratorio. La ficha de contrato, valores authored, checklist humano y todos
+los accesos viven en
+[`docs/balance/EX-08d-weapon-evolutions-batch.md`](docs/balance/EX-08d-weapon-evolutions-batch.md).
+La validacion humana en PC/movil y Low/High queda para el regreso del usuario;
+no se debe ajustar todavia el dano o la vida general de enemigos.
+
 ## EX-08c — cartas de armas disponibles para prueba — 14-09-2026
 
 `pulse_ring` y `magnetic_charge` ya forman parte del catálogo normal de

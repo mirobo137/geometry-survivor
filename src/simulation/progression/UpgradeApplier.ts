@@ -1,15 +1,26 @@
 import {
   getLevelUpChoices,
+  getWeaponEvolutionChoices,
   UPGRADE_DEFINITIONS,
+  WEAPON_EVOLUTION_DEFINITIONS,
   type UpgradeDefinition,
   type UpgradeId
 } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
 import type { UpgradePreview } from './UpgradePreview';
 
 const MAX_ACTIVE_WEAPONS = 3;
 const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'];
+const EVOLUTION_FAMILIES: readonly { readonly base: UpgradeId | 'projectile'; readonly ids: readonly WeaponEvolutionId[] }[] = [
+  { base: 'projectile', ids: ['rail_lance', 'pulse_volley'] },
+  { base: 'orbit_blade', ids: ['solar_crown', 'graviton_halo'] },
+  { base: 'chain_lightning', ids: ['closed_circuit', 'thunderhead'] },
+  { base: 'vector_boomerang', ids: ['twin_comet', 'singularity_return'] },
+  { base: 'pulse_ring', ids: ['echo_shock', 'compression_wave'] },
+  { base: 'magnetic_charge', ids: ['event_horizon', 'polar_collapse'] }
+];
 
 /** Applies authored upgrade effects at the composition boundary. */
 export class UpgradeApplier {
@@ -22,7 +33,27 @@ export class UpgradeApplier {
   ) {}
 
   public getChoices(level: number): readonly UpgradeDefinition[] {
+    const evolutions = this.getEvolutionChoices(level);
+    if (evolutions.length === 2) return evolutions;
     return getLevelUpChoices(level, (upgrade) => this.canApply(upgrade));
+  }
+
+  /**
+   * At level 7+, the first fully eligible weapon family gets its two routes.
+   * The caller may select a family explicitly for a development drill.
+   */
+  public getEvolutionChoices(level: number, preferredId?: UpgradeId): readonly UpgradeDefinition[] {
+    if (level < 7) return [];
+    const preferredFamily = preferredId === undefined
+      ? undefined
+      : EVOLUTION_FAMILIES.find((family) => family.ids.includes(preferredId as WeaponEvolutionId));
+    const family = preferredFamily ?? EVOLUTION_FAMILIES.find((candidate) => (
+      candidate.ids.every((id) => this.canApply(id))
+    ));
+    if (!family || !family.ids.every((id) => this.canApply(id))) return [];
+    return getWeaponEvolutionChoices((upgrade) => (
+      family.ids.includes(upgrade.id as WeaponEvolutionId) && this.canApply(upgrade)
+    ));
   }
 
   /**
@@ -143,6 +174,8 @@ export class UpgradeApplier {
         return null;
       case 'magneticCharge':
         return null;
+      case 'weaponEvolution':
+        return null;
     }
   }
 
@@ -215,6 +248,9 @@ export class UpgradeApplier {
       case 'armor':
         this.player.increaseArmor(definition.effect.amount);
         break;
+      case 'weaponEvolution':
+        applied = this.applyWeaponEvolution(definition.effect.evolution);
+        break;
     }
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
@@ -225,7 +261,31 @@ export class UpgradeApplier {
   private resolveDefinition(upgrade: UpgradeDefinition | UpgradeId): UpgradeDefinition | undefined {
     return typeof upgrade === 'string'
       ? UPGRADE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
+        ?? WEAPON_EVOLUTION_DEFINITIONS.find((candidate) => candidate.id === upgrade)
       : upgrade;
+  }
+
+  private applyWeaponEvolution(evolution: WeaponEvolutionId): boolean {
+    switch (evolution) {
+      case 'rail_lance':
+      case 'pulse_volley':
+        return this.combat.applyProjectileEvolution(evolution);
+      case 'solar_crown':
+      case 'graviton_halo':
+        return this.combat.applyOrbitEvolution(evolution);
+      case 'closed_circuit':
+      case 'thunderhead':
+        return this.combat.applyChainEvolution(evolution);
+      case 'twin_comet':
+      case 'singularity_return':
+        return this.combat.applyBoomerangEvolution(evolution);
+      case 'echo_shock':
+      case 'compression_wave':
+        return this.combat.applyPulseRingEvolution(evolution);
+      case 'event_horizon':
+      case 'polar_collapse':
+        return this.combat.applyMagneticChargeEvolution(evolution);
+    }
   }
 
   private activeWeaponCount(): number {

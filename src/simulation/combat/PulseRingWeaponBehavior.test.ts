@@ -62,4 +62,55 @@ describe('PulseRingWeaponBehavior', () => {
     expect(weapon.isUnlocked).toBe(false);
     expect(weapon.state).toMatchObject({ phase: 'idle', active: false, radius: 0, sequence: 0 });
   });
+
+  it('Echo Shock opens a second wave with a two-hit per target ledger', () => {
+    const pool = new EnemyPool(4);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const target = pool.acquire();
+    if (!target) throw new Error('No se pudo preparar el objetivo del eco');
+    target.kind = 'chaser';
+    target.x = player.state.x + 120;
+    target.y = player.state.y;
+    target.radius = 18;
+    target.health = 1_000;
+    target.maxHealth = 1_000;
+    target.speed = 0;
+    target.contactEnabled = false;
+    enemies.rebuildGrid();
+    const weapon = new PulseRingWeaponBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    weapon.setEvolution('echo_shock');
+    weapon.fire(player.state);
+    for (let index = 0; index < 19; index += 1) weapon.update(0.1);
+    expect(weapon.state.wave).toBe(1);
+    expect(weapon.state.phase).toBe('active');
+  });
+
+  it('Compression Wave pulls during telegraph and commits a heavier push', () => {
+    const pool = new EnemyPool(4);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const target = pool.acquire();
+    if (!target) throw new Error('No se pudo preparar el objetivo de compresion');
+    target.kind = 'chaser';
+    target.x = player.state.x + 70;
+    target.y = player.state.y;
+    target.radius = 14;
+    target.health = 1_000;
+    target.maxHealth = 1_000;
+    target.speed = 0;
+    target.contactEnabled = false;
+    enemies.rebuildGrid();
+    const weapon = new PulseRingWeaponBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    weapon.setEvolution('compression_wave');
+    weapon.fire(player.state);
+    // Inspect during the authored compression telegraph, before the impact
+    // push starts moving the target out of the origin.
+    for (let index = 0; index < 3; index += 1) weapon.update(0.1);
+    expect(target.x).toBeLessThan(player.state.x + 70);
+    for (let index = 0; index < 9; index += 1) weapon.update(0.1);
+    expect(target.health).toBeLessThan(1_000);
+  });
 });

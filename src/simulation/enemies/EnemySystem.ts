@@ -14,11 +14,13 @@ import { RadialActDirector } from '../acts/RadialActDirector';
 import { OrbiterBehavior } from './OrbiterBehavior';
 import { ChargerBehavior } from './ChargerBehavior';
 import { PrismWeaverBehavior } from './PrismWeaverBehavior';
+import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
 const SPAWN_ANGLE_STEP = 2.399963229728653;
 const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
+const EVOLUTION_DRILL_ENEMY_HEALTH = 10_000;
 
 // Kept as a compatibility export for simulation consumers and existing tools.
 // New runtime code uses RadialActDirector so the act owns its timeline.
@@ -169,6 +171,46 @@ export class EnemySystem {
     }
     this.rebuildGrid();
     return spawned;
+  }
+
+  /**
+   * Development-only target layouts for validating one evolution in isolation.
+   * Targets are durable, stationary and contact-safe so the weapon remains
+   * readable instead of turning the route into another combat challenge.
+   */
+  public spawnEvolutionDrill(arenaRadius: number, scenario: WeaponEvolutionScenario): number {
+    const placements = scenario === 'single'
+      ? [{ radius: 150, angle: -Math.PI / 2 }]
+      : [
+        ...this.createEvolutionRing(14, 90),
+        ...this.createEvolutionRing(18, 145),
+        ...this.createEvolutionRing(24, 205)
+      ];
+    let spawned = 0;
+    for (const placement of placements) {
+      const state = this.pool.acquire();
+      if (!state) break;
+      this.configureEnemy(state, arenaRadius, this.spawnIndex, 'chaser');
+      this.spawnIndex += 1;
+      state.x = ARENA_CENTER.x + Math.cos(placement.angle) * placement.radius;
+      state.y = ARENA_CENTER.y + Math.sin(placement.angle) * placement.radius;
+      state.vx = 0;
+      state.vy = 0;
+      state.speed = 0;
+      state.contactEnabled = false;
+      state.maxHealth = EVOLUTION_DRILL_ENEMY_HEALTH;
+      state.health = state.maxHealth;
+      spawned += 1;
+    }
+    this.rebuildGrid();
+    return spawned;
+  }
+
+  private createEvolutionRing(count: number, radius: number): readonly { radius: number; angle: number }[] {
+    return Array.from({ length: count }, (_, index) => ({
+      radius,
+      angle: (index / count) * Math.PI * 2 - Math.PI / 2
+    }));
   }
 
   /**

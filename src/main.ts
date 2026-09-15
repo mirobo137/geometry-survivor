@@ -16,6 +16,12 @@ import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/H
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 import type { ActId } from './content/run/ActDefinitions';
 import type { UpgradeId } from './content/upgrades/UpgradeDefinitions';
+import {
+  isWeaponEvolutionId,
+  isWeaponEvolutionScenario,
+  type WeaponEvolutionId,
+  type WeaponEvolutionScenario
+} from './content/weapons/WeaponEvolutionDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -97,6 +103,15 @@ const bootstrap = async (): Promise<void> => {
       : requestedWeaponCard === 'magnetic-charge'
         ? 'magnetic_charge'
         : undefined
+    : undefined;
+  const requestedEvolution = searchParams.get('evolution')?.replaceAll('-', '_');
+  const evolutionId: WeaponEvolutionId | undefined = searchParams.get('debug') === '1'
+    && isWeaponEvolutionId(requestedEvolution)
+    ? requestedEvolution
+    : undefined;
+  const evolutionScenario: WeaponEvolutionScenario | undefined = evolutionId !== undefined
+    && isWeaponEvolutionScenario(searchParams.get('scenario'))
+    ? searchParams.get('scenario') as WeaponEvolutionScenario
     : undefined;
   const spike = searchParams.get('spike');
   const orbiterDrill = searchParams.get('orbiter') === '1';
@@ -196,6 +211,8 @@ const bootstrap = async (): Promise<void> => {
     pulseRingWeaponDrill,
     magneticChargeWeaponDrill,
     weaponCardId,
+    evolutionId,
+    evolutionScenario,
     angularSweepDrill,
     wardenDrill,
     playerSkin,
@@ -211,7 +228,7 @@ const bootstrap = async (): Promise<void> => {
     buildTarget: __BUILD_TARGET__,
     startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
-      && !magneticChargeWeaponDrill && weaponCardId === undefined,
+      && !magneticChargeWeaponDrill && weaponCardId === undefined && evolutionId === undefined,
     platform: new LocalPlatform()
   });
   await game.start();

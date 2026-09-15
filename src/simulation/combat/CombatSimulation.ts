@@ -27,6 +27,7 @@ import {
   type HazardCadenceMode
 } from '../../content/hazards/HazardCadenceDefinitions';
 import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
+import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -56,6 +57,8 @@ export interface CombatSimulationOptions {
   readonly pulseRingWeaponDrill?: boolean;
   /** Isolated sixth-weapon scenario; remote magnetic charge and detonation. */
   readonly magneticChargeWeaponDrill?: boolean;
+  /** Isolated evolution lab: one durable target or a dense target formation. */
+  readonly evolutionDrill?: WeaponEvolutionScenario;
 }
 
 export type CombatEvent =
@@ -101,8 +104,11 @@ export class CombatSimulation {
   public readonly pulseRing: PulseRingHazard;
   public readonly angularSweep: AngularSweepHazard;
   public readonly orbitBlades: CombatWeaponSystem['orbitBlades'];
+  public readonly orbitPulse: CombatWeaponSystem['orbitPulse'];
   public readonly chainSegments: CombatWeaponSystem['chainSegments'];
+  public readonly chainExplosions: CombatWeaponSystem['chainExplosions'];
   public readonly boomerangStates: readonly BoomerangState[];
+  public readonly boomerangPulse: CombatWeaponSystem['boomerangPulse'];
   public readonly pulseRingWeapon: CombatWeaponSystem['pulseRingWeapon'];
   public readonly renderState: CombatRenderState;
   private readonly pendingEvents: CombatEvent[] = [];
@@ -118,8 +124,10 @@ export class CombatSimulation {
   private readonly wardenDrill: boolean;
   private readonly pulseRingWeaponDrill: boolean;
   private readonly magneticChargeWeaponDrill: boolean;
+  private readonly evolutionDrill: WeaponEvolutionScenario | null;
   private pulseRingWeaponDrillInitialized = false;
   private magneticChargeWeaponDrillInitialized = false;
+  private evolutionDrillInitialized = false;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
   private stressInitialized = false;
@@ -150,6 +158,7 @@ export class CombatSimulation {
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
       && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.stressMode;
+    this.evolutionDrill = options.evolutionDrill ?? null;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
     const isAngularAct = this.actDirector.definition.id === 'angular';
     const radialPulseDefinition = {
@@ -192,15 +201,21 @@ export class CombatSimulation {
     this.projectiles = this.weaponSystem.projectiles;
     this.boomerangs = this.weaponSystem.boomerangs;
     this.orbitBlades = this.weaponSystem.orbitBlades;
+    this.orbitPulse = this.weaponSystem.orbitPulse;
     this.chainSegments = this.weaponSystem.chainSegments;
+    this.chainExplosions = this.weaponSystem.chainExplosions;
     this.boomerangStates = this.weaponSystem.boomerangStates;
+    this.boomerangPulse = this.weaponSystem.boomerangPulse;
     this.pulseRingWeapon = this.weaponSystem.pulseRingWeapon;
     this.renderState = {
       enemies: this.enemies.states,
       projectiles: this.projectiles.states,
       orbitBlades: this.orbitBlades,
+      orbitPulse: this.orbitPulse,
       chainSegments: this.chainSegments,
+      chainExplosions: this.chainExplosions,
       boomerangs: this.boomerangStates,
+      boomerangPulse: this.boomerangPulse,
       pulseRingWeapon: this.pulseRingWeapon,
       magneticCharge: this.weaponSystem.magneticCharge,
       laser: this.laser.state,
@@ -256,6 +271,10 @@ export class CombatSimulation {
   public get isPulseRingWeaponDrill(): boolean { return this.pulseRingWeaponDrill; }
 
   public get isMagneticChargeWeaponDrill(): boolean { return this.magneticChargeWeaponDrill; }
+
+  public get isEvolutionDrill(): boolean { return this.evolutionDrill !== null; }
+
+  public get evolutionDrillMode(): WeaponEvolutionScenario | null { return this.evolutionDrill; }
 
   public get isAngularAct(): boolean {
     return this.actDirector.definition.id === 'angular';
@@ -346,6 +365,30 @@ export class CombatSimulation {
     return this.weaponSystem.hasChainLightning;
   }
 
+  public applyProjectileEvolution(evolution: Parameters<CombatWeaponSystem['applyProjectileEvolution']>[0]): boolean {
+    return this.weaponSystem.applyProjectileEvolution(evolution);
+  }
+
+  public applyOrbitEvolution(evolution: Parameters<CombatWeaponSystem['applyOrbitEvolution']>[0]): boolean {
+    return this.weaponSystem.applyOrbitEvolution(evolution);
+  }
+
+  public applyChainEvolution(evolution: Parameters<CombatWeaponSystem['applyChainEvolution']>[0]): boolean {
+    return this.weaponSystem.applyChainEvolution(evolution);
+  }
+
+  public applyBoomerangEvolution(evolution: Parameters<CombatWeaponSystem['applyBoomerangEvolution']>[0]): boolean {
+    return this.weaponSystem.applyBoomerangEvolution(evolution);
+  }
+
+  public applyPulseRingEvolution(evolution: Parameters<CombatWeaponSystem['applyPulseRingEvolution']>[0]): boolean {
+    return this.weaponSystem.applyPulseRingEvolution(evolution);
+  }
+
+  public applyMagneticChargeEvolution(evolution: Parameters<CombatWeaponSystem['applyMagneticChargeEvolution']>[0]): boolean {
+    return this.weaponSystem.applyMagneticChargeEvolution(evolution);
+  }
+
   public unlockVectorBoomerang(): boolean {
     return this.weaponSystem.unlockVectorBoomerang();
   }
@@ -418,7 +461,7 @@ export class CombatSimulation {
     const angularAct = this.isAngularAct;
     const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
-      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill;
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.evolutionDrill !== null;
     if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
@@ -510,6 +553,11 @@ export class CombatSimulation {
         this.enemySystem.spawnMagneticChargeWeaponDrill(arenaRadius);
         this.magneticChargeWeaponDrillInitialized = true;
       }
+    } else if (this.evolutionDrill !== null) {
+      if (!this.evolutionDrillInitialized) {
+        this.enemySystem.spawnEvolutionDrill(arenaRadius, this.evolutionDrill);
+        this.evolutionDrillInitialized = true;
+      }
     } else if (this.angularSweepDrill || this.wardenDrill) {
       // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
@@ -563,7 +611,7 @@ export class CombatSimulation {
             magneticChargeArena: arenaBoundary,
             magneticChargeCooldownSeconds: 1.8
           }
-        : { magneticChargeArena: arenaBoundary });
+        : { magneticChargeArena: arenaBoundary, arena: arenaBoundary });
     }
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
@@ -597,6 +645,7 @@ export class CombatSimulation {
     this.spawnAccumulator = 0;
     this.pulseRingWeaponDrillInitialized = false;
     this.magneticChargeWeaponDrillInitialized = false;
+    this.evolutionDrillInitialized = false;
     this.stressInitialized = false;
   }
 

@@ -98,4 +98,71 @@
     <path d="m24 15 8 5v5l-8 9-8-9v-5Z" fill="none" stroke="currentColor" stroke-width="2"/>
     <path d="M24 19v10M19 24h10" stroke="#eef8ff" stroke-width="2"/>
   </symbol>
+  <symbol id="ui-upgrade-icon-rail" viewBox="0 0 48 48">
+    <path d="M24 3 31 18 43 24 31 30 24 45 17 30 5 24 17 18Z" fill="#111c2e" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 8 4 13 11 3-11 3-4 13-4-13-11-3 11-3Z" fill="currentColor"/>
+    <path d="M24 8v32M8 24h32" stroke="#fff3c8" stroke-width="1.5" opacity=".9"/>
+    <path d="M3 12h9M36 36h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-volley" viewBox="0 0 48 48">
+    <path d="m9 36 15-30 15 30-15-8Z" fill="#14283a" stroke="currentColor" stroke-width="2"/>
+    <path d="m24 8 5 23-5-3-5 3Z" fill="currentColor"/>
+    <path d="M24 5 10 41M24 5l14 36M24 5v37" fill="none" stroke="#eef8ff" stroke-width="1.5" opacity=".85"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-crown" viewBox="0 0 48 48">
+    <path d="m6 12 10 10 8-17 8 17 10-10-4 28H10Z" fill="#14263b" stroke="currentColor" stroke-width="2"/>
+    <path d="m10 18 6 7 8-15 8 15 6-7-3 17H13Z" fill="currentColor"/>
+    <path d="M14 35h20" stroke="#fff3c8" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-gravity" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="7" fill="currentColor"/>
+    <ellipse cx="24" cy="24" rx="19" ry="9" fill="none" stroke="currentColor" stroke-width="2" transform="rotate(32 24 24)"/>
+    <path d="M8 24h7M33 24h7M24 8v7M24 33v7" stroke="#eef8ff" stroke-width="2"/>
+    <path d="m6 21 3 3-3 3m36-6-3 3 3 3" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-circuit" viewBox="0 0 48 48">
+    <path d="M7 34 19 18 31 30 41 12" fill="none" stroke="#162b3f" stroke-width="7"/>
+    <path d="M7 34 19 18 31 30 41 12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="7" cy="34" r="4" fill="#eef8ff"/><circle cx="19" cy="18" r="4" fill="currentColor"/>
+    <circle cx="31" cy="30" r="4" fill="currentColor"/><circle cx="41" cy="12" r="4" fill="#eef8ff"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-thunder" viewBox="0 0 48 48">
+    <path d="M24 4 8 25h12l-3 19 23-27H27Z" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <path d="M24 6 10 24h12l-3 16 17-21H25Z" fill="currentColor"/>
+    <path d="m5 11 5 3m33 20-5-3M39 7l-4 4" stroke="#fff3c8" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-comet" viewBox="0 0 48 48">
+    <path d="m29 10 9 9-16 16-9-9Z" fill="#14283a" stroke="currentColor" stroke-width="2"/>
+    <path d="m29 10 9 9-10 2-7-7Z" fill="currentColor"/><circle cx="27" cy="21" r="3" fill="#fff3c8"/>
+    <path d="M14 27 5 36M18 31l-7 10M10 24l-7 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-singularity" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="9" fill="#0d1426" stroke="currentColor" stroke-width="2"/>
+    <circle cx="24" cy="24" r="3" fill="#fff3c8"/>
+    <path d="M6 24c5-13 31-18 36-2M42 24C35 38 13 38 6 28" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="m9 17-4 6 7-1m27 9 4-6-7 1" fill="none" stroke="#eef8ff" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-echo" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    <circle cx="24" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 3"/>
+    <circle cx="24" cy="24" r="20" fill="none" stroke="#eef8ff" stroke-width="1.5" stroke-dasharray="3 5"/>
+    <path d="M24 2v7M24 39v7M2 24h7M39 24h7" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-compression" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="14" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <circle cx="24" cy="24" r="5" fill="currentColor"/>
+    <path d="M5 24h12m14 0h12M24 5v12m0 14v12" stroke="#eef8ff" stroke-width="2"/>
+    <path d="m13 20 4 4-4 4m22-8-4 4 4 4M20 13l4 4 4-4m-8 22 4-4 4 4" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-horizon" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="8" fill="#0b1324" stroke="currentColor" stroke-width="2"/>
+    <path d="M4 24c7-8 13-12 20-12s13 4 20 12c-7 8-13 12-20 12S11 32 4 24Z" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M24 4v10M24 34v10M4 24h10M34 24h10" stroke="#eef8ff" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="ui-upgrade-icon-collapse" viewBox="0 0 48 48">
+    <path d="M24 4 42 24 24 44 6 24Z" fill="#17283b" stroke="currentColor" stroke-width="2"/>
+    <path d="M24 10 36 24 24 38 12 24Z" fill="currentColor" opacity=".9"/>
+    <circle cx="24" cy="24" r="4" fill="#fff3c8"/>
+    <path d="m4 14 6 3m34 17-6-3M14 4l3 6m17 34-3-6" stroke="#eef8ff" stroke-width="1.7"/>
+  </symbol>
 </svg>

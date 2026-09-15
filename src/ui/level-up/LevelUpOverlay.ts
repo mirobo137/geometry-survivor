@@ -91,7 +91,11 @@ export class LevelUpOverlay {
     rewarded: LevelUpRewardedOptions = {}
   ): void {
     this.cancelPendingSelection();
-    this.title.textContent = `Nivel ${level}`;
+    const isEvolutionOffer = choices.length === 2
+      && choices.every((choice) => choice.effect.type === 'weaponEvolution');
+    this.title.textContent = isEvolutionOffer ? `Nivel ${level} · EVOLUCION` : `Nivel ${level}`;
+    this.options.dataset.choiceCount = String(choices.length);
+    this.root.dataset.offerKind = isEvolutionOffer ? 'evolution' : 'standard';
     this.options.replaceChildren();
     choices.forEach((choice, index) => {
       const visual = getUpgradeCardVisual(choice.id);

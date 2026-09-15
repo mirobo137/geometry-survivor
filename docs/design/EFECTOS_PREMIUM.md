@@ -150,3 +150,10 @@ Para la hoja sectorial y el patrón móvil del boss leer también
 [`EX-07d-angular-warden.md`](../balance/EX-07d-angular-warden.md): el aviso
 compromete sector y sentido, el cuerpo activo rota por transform y la vista no
 convierte la zona segura en una superficie pintada.
+# Evoluciones: contrato específico vigente
+
+Para EX-08-R aplicar además [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md): contiene
+storyboard, geometría física, identidad y pruebas de cada nueva ruta. Es una
+especificación pendiente de implementación y aprobación humana; no sustituir
+un cambio de comportamiento por más brillo. La pareja Projectile ya aprobada
+se conserva. Las reglas generales de efectos de este documento siguen vigentes.

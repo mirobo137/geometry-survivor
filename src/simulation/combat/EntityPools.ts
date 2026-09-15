@@ -1,5 +1,6 @@
 import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
+import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 export type BoomerangPhase = 'outbound' | 'returning';
 
@@ -67,6 +68,9 @@ export interface ProjectileState {
   ageSeconds: number;
   lifetimeSeconds: number;
   muzzle: ProjectileMuzzle;
+  evolution: ProjectileEvolution | null;
+  piercingHitCount: number;
+  lastHitEnemyIndex: number;
 }
 
 export interface BoomerangState {
@@ -84,6 +88,7 @@ export interface BoomerangState {
   directionY: number;
   distanceTravelled: number;
   slotIndex: number;
+  evolution?: BoomerangEvolution | null;
 }
 
 const createEnemyState = (): EnemyState => ({
@@ -131,7 +136,10 @@ const createProjectileState = (): ProjectileState => ({
   damage: 0,
   ageSeconds: 0,
   lifetimeSeconds: 0,
-  muzzle: 0
+  muzzle: 0,
+  evolution: null,
+  piercingHitCount: 0,
+  lastHitEnemyIndex: -1
 });
 
 const createBoomerangState = (slotIndex: number): BoomerangState => ({
@@ -148,7 +156,8 @@ const createBoomerangState = (slotIndex: number): BoomerangState => ({
   directionX: 1,
   directionY: 0,
   distanceTravelled: 0,
-  slotIndex
+  slotIndex,
+  evolution: null
 });
 
 export class EnemyPool {

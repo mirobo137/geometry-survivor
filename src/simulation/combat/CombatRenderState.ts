@@ -4,6 +4,7 @@ import type { PulseRingState } from '../hazards/PulseRingHazard';
 import type { AngularSweepState } from '../hazards/AngularSweepHazard';
 import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
+import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 
@@ -64,6 +65,24 @@ export interface OrbitBladeState {
   angle: number;
 }
 
+export interface OrbitPulseState {
+  active: boolean;
+  x: number;
+  y: number;
+  radius: number;
+  progress: number;
+  sequence: number;
+}
+
+export interface BoomerangPulseState {
+  active: boolean;
+  x: number;
+  y: number;
+  radius: number;
+  progress: number;
+  sequence: number;
+}
+
 export interface ChainSegmentState {
   active: boolean;
   x1: number;
@@ -71,6 +90,16 @@ export interface ChainSegmentState {
   x2: number;
   y2: number;
   lifeSeconds: number;
+}
+
+export interface ChainExplosionState {
+  active: boolean;
+  phase: 'telegraph' | 'active';
+  x: number;
+  y: number;
+  radius: number;
+  progress: number;
+  sequence: number;
 }
 
 export type BoomerangState = PooledBoomerangState;
@@ -88,9 +117,11 @@ export interface PulseRingWeaponState {
   progress: number;
   width: number;
   sequence: number;
+  wave?: number;
+  evolution?: PulseRingEvolution | null;
 }
 
-export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'recovery';
+export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'collapse' | 'recovery';
 
 export interface MagneticChargeState {
   active: boolean;
@@ -107,6 +138,7 @@ export interface MagneticChargeState {
   progress: number;
   rotation: number;
   sequence: number;
+  evolution?: MagneticChargeEvolution | null;
 }
 
 /**
@@ -164,6 +196,8 @@ export interface ProjectileRenderState {
   readonly ageSeconds: number;
   readonly lifetimeSeconds: number;
   readonly muzzle: ProjectileMuzzle;
+  readonly evolution?: ProjectileEvolution | null;
+  readonly piercingHitCount?: number;
 }
 
 /** Stable presentation signal for the latest authored projectile burst. */
@@ -187,8 +221,11 @@ export interface CombatRenderState {
   readonly enemies: readonly EnemyRenderState[];
   readonly projectiles: readonly ProjectileRenderState[];
   readonly orbitBlades: readonly OrbitBladeRenderState[];
+  readonly orbitPulse: Readonly<OrbitPulseState>;
   readonly chainSegments: readonly ChainSegmentRenderState[];
+  readonly chainExplosions: readonly ChainExplosionState[];
   readonly boomerangs: readonly BoomerangRenderState[];
+  readonly boomerangPulse: Readonly<BoomerangPulseState>;
   readonly pulseRingWeapon: Readonly<PulseRingWeaponState>;
   readonly magneticCharge: Readonly<MagneticChargeState>;
   readonly laser: Readonly<LaserHazardState>;

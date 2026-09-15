@@ -523,6 +523,67 @@ for (const weaponCard of [
   });
 }
 
+const WEAPON_EVOLUTION_DRILLS = [
+  { query: 'rail-lance', ids: ['rail_lance', 'pulse_volley'] },
+  { query: 'pulse-volley', ids: ['rail_lance', 'pulse_volley'] },
+  { query: 'solar-crown', ids: ['solar_crown', 'graviton_halo'] },
+  { query: 'graviton-halo', ids: ['solar_crown', 'graviton_halo'] },
+  { query: 'closed-circuit', ids: ['closed_circuit', 'thunderhead'] },
+  { query: 'thunderhead', ids: ['closed_circuit', 'thunderhead'] },
+  { query: 'twin-comet', ids: ['twin_comet', 'singularity_return'] },
+  { query: 'singularity-return', ids: ['twin_comet', 'singularity_return'] },
+  { query: 'echo-shock', ids: ['echo_shock', 'compression_wave'] },
+  { query: 'compression-wave', ids: ['echo_shock', 'compression_wave'] },
+  { query: 'event-horizon', ids: ['event_horizon', 'polar_collapse'] },
+  { query: 'polar-collapse', ids: ['event_horizon', 'polar_collapse'] }
+] as const;
+
+test('expone cada familia de evoluciones como una decision de dos cartas', async ({ page }) => {
+  test.setTimeout(60_000);
+  const failures = captureRuntimeFailures(page);
+  const levelUp = page.locator('#level-up');
+  const choices = page.locator('#level-up-options button');
+
+  for (const drill of WEAPON_EVOLUTION_DRILLS) {
+    await page.goto(`/?evolution=${drill.query}&debug=1&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#start-screen')).toBeHidden();
+    await expect(levelUp).toBeVisible({ timeout: 10_000 });
+    await expect(levelUp).toHaveAttribute('data-offer-kind', 'evolution');
+    await expect(choices).toHaveCount(2);
+    await expect(page.locator('#level-up-reroll')).toBeHidden();
+    expect(await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.upgradeId))).toEqual(drill.ids);
+    await choices.first().click();
+    await expect(levelUp).toBeHidden({ timeout: 5_000 });
+  }
+
+  expect(failures).toEqual([]);
+});
+
+test('permite probar cada evolucion aplicada contra un objetivo o una masa', async ({ page }) => {
+  test.setTimeout(120_000);
+  const failures = captureRuntimeFailures(page);
+  const debugPanel = page.locator('#debug-panel');
+
+  for (const drill of WEAPON_EVOLUTION_DRILLS) {
+    await page.goto(`/?evolution=${drill.query}&scenario=single&debug=1&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#start-screen')).toBeHidden();
+    await expect(page.locator('#level-up')).toBeHidden();
+    await expect.poll(async () => debugPanel.textContent(), { timeout: 5_000 })
+      .toMatch(new RegExp(`mode: evolution-single[\\s\\S]*enemies: 1/250[\\s\\S]*evolution: ${drill.query.replaceAll('-', '_')}`));
+
+    await page.goto(`/?evolution=${drill.query}&scenario=mass&debug=1&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#start-screen')).toBeHidden();
+    await expect(page.locator('#level-up')).toBeHidden();
+    await expect.poll(async () => debugPanel.textContent(), { timeout: 5_000 })
+      .toMatch(new RegExp(`mode: evolution-mass[\\s\\S]*enemies: 56/250[\\s\\S]*evolution: ${drill.query.replaceAll('-', '_')}`));
+  }
+
+  expect(failures).toEqual([]);
+});
+
 test('permite probar el boss desde el atajo de desarrollo', async ({ page }) => {
   test.setTimeout(20_000);
   const failures = captureRuntimeFailures(page);

@@ -101,6 +101,31 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.state.sequence).toBe(2);
     expect(weapon.state.phase).toBe('travel');
   });
+
+  it('Event Horizon widens the field while preserving one remote cast', () => {
+    const pool = new EnemyPool(1);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    expect(weapon.setEvolution('event_horizon')).toBe(true);
+    advance(weapon, player, 1 / 60);
+    expect(weapon.state.pullRadius).toBe(230);
+    expect(weapon.state.outerRadius).toBe(170);
+    expect(weapon.currentCooldown).toBeCloseTo(6.24);
+  });
+
+  it('Polar Collapse exposes a second partial detonation phase', () => {
+    const pool = new EnemyPool(1);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    weapon.setEvolution('polar_collapse');
+    advance(weapon, player, 2.3);
+    expect(weapon.state.phase).toBe('collapse');
+    expect(weapon.state.evolution).toBe('polar_collapse');
+  });
 });
 
 const createTarget = (

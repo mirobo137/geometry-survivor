@@ -80,9 +80,12 @@ export class ProjectileTrailView {
         continue;
       }
       const speed = Math.hypot(state.vx, state.vy);
+      const railLance = state.evolution === 'rail_lance';
+      const pulseVolley = state.evolution === 'pulse_volley';
       if (alpha > 0 && this.previousActive[index] && this.activeSegments < limit && speed > 0.5) {
         // A newborn shot cannot have a tail behind its muzzle.
-        const seconds = Math.min(state.ageSeconds, PROJECTILE_TRAIL_TOKENS.lengthSeconds, PROJECTILE_TRAIL_TOKENS.maxLength / speed);
+        const trailLength = railLance ? PROJECTILE_TRAIL_TOKENS.maxLength * 1.22 : PROJECTILE_TRAIL_TOKENS.maxLength;
+        const seconds = Math.min(state.ageSeconds, PROJECTILE_TRAIL_TOKENS.lengthSeconds, trailLength / speed);
         const normalX = -state.vy / speed;
         const normalY = state.vx / speed;
         let age = state.ageSeconds - seconds;
@@ -114,8 +117,8 @@ export class ProjectileTrailView {
             sprite.position.set(x, y);
             sprite.rotation = Math.atan2(endY - y, endX - x);
             sprite.width = Math.max(0.01, Math.hypot(endX - x, endY - y));
-            sprite.height = recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : recipe === 'bloom' ? 6 : 8;
-            sprite.tint = recipe === 'rainbow' ? SPECTRUM[band]
+            sprite.height = railLance ? 10 : recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : recipe === 'bloom' ? 6 : 8;
+            sprite.tint = railLance ? (band % 2 === 0 ? 0xfff0cf : 0xffb86b) : pulseVolley ? 0x9fffe8 : recipe === 'rainbow' ? SPECTRUM[band]
               : recipe === 'lattice' && band % 2 === 0 ? 0xd3e8ff
                 : recipe === 'helix' && band % 2 === 0 ? this.definition.accent
                   : this.definition.projectileAccent;

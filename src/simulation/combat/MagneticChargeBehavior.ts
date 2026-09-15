@@ -4,13 +4,14 @@ import type { PlayerState } from '../PlayerModel';
 import type { MagneticChargeState } from './CombatRenderState';
 import type { EnemyState } from './EntityPools';
 import type { EnemySystem } from '../enemies/EnemySystem';
+import type { MagneticChargeEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const DEFINITION = WEAPON_DEFINITIONS.magneticCharge;
 const FULL_CIRCLE = Math.PI * 2;
 const EPSILON = 0.000001;
 const RANDOM_SEED = 0x4d61_676e;
 
-export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'recovery';
+export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'collapse' | 'recovery';
 
 export interface MagneticChargeBehaviorContext {
   readonly enemies: EnemySystem;
@@ -38,11 +39,13 @@ export class MagneticChargeBehavior {
     pullRadius: DEFINITION.pullRadius,
     progress: 0,
     rotation: 0,
-    sequence: 0
+    sequence: 0,
+    evolution: null
   };
 
   private readonly hitCooldowns: Float32Array;
   private readonly hitGenerations: Uint32Array;
+  private readonly collapseHitGenerations: Uint32Array;
   private phase: MagneticChargePhase = 'idle';
   private phaseTimer = 0;
   private cooldownTimer = 0;
@@ -52,11 +55,13 @@ export class MagneticChargeBehavior {
   private cooldownSeconds = DEFINITION.cooldownSeconds;
   private permanentDamageMultiplier = 1;
   private permanentCadenceMultiplier = 1;
+  private evolution: MagneticChargeEvolution | null = null;
   private randomState = RANDOM_SEED;
 
   public constructor(private readonly context: MagneticChargeBehaviorContext) {
     this.hitCooldowns = new Float32Array(context.enemies.pool.capacity);
     this.hitGenerations = new Uint32Array(context.enemies.pool.capacity);
+    this.collapseHitGenerations = new Uint32Array(context.enemies.pool.capacity);
   }
 
   public get isUnlocked(): boolean {
@@ -69,6 +74,10 @@ export class MagneticChargeBehavior {
 
   public get currentCooldown(): number {
     return this.cooldownSeconds;
+  }
+
+  public get currentEvolution(): MagneticChargeEvolution | null {
+    return this.evolution;
   }
 
   public unlock(): boolean {
@@ -90,6 +99,14 @@ export class MagneticChargeBehavior {
       0.45,
       DEFINITION.cooldownSeconds * this.permanentCadenceMultiplier
     );
+    this.applyEvolutionTuning();
+  }
+
+  public setEvolution(evolution: MagneticChargeEvolution): boolean {
+    if (this.evolution !== null) return false;
+    this.evolution = evolution;
+    this.applyEvolutionTuning();
+    return true;
   }
 
   /** Allows deterministic tests and the isolated drill to launch immediately. */
@@ -141,6 +158,7 @@ export class MagneticChargeBehavior {
 
       if (this.phase === 'attract') this.pullEnemies(step);
       if (this.phase === 'detonate') this.hitDetonationBand();
+      if (this.phase === 'collapse') this.hitDetonationBand(0.55, true);
 
       if (this.phaseTimer + EPSILON < duration) continue;
       this.phaseTimer = 0;
@@ -149,6 +167,8 @@ export class MagneticChargeBehavior {
       } else if (this.phase === 'attract') {
         this.phase = 'detonate';
       } else if (this.phase === 'detonate') {
+        this.phase = this.evolution === 'polar_collapse' ? 'collapse' : 'recovery';
+      } else if (this.phase === 'collapse') {
         this.phase = 'recovery';
       } else {
         this.phase = 'idle';
@@ -169,6 +189,7 @@ export class MagneticChargeBehavior {
     this.randomState = RANDOM_SEED;
     this.hitCooldowns.fill(0);
     this.hitGenerations.fill(0);
+    this.collapseHitGenerations.fill(0);
     Object.assign(this.state, {
       active: false,
       phase: 'idle' as const,
@@ -183,7 +204,8 @@ export class MagneticChargeBehavior {
       pullRadius: DEFINITION.pullRadius,
       progress: 0,
       rotation: 0,
-      sequence: 0
+      sequence: 0,
+      evolution: null
     });
   }
 
@@ -199,10 +221,11 @@ export class MagneticChargeBehavior {
     this.state.y = player.y;
     this.state.targetX = target.x;
     this.state.targetY = target.y;
-    this.state.innerRadius = DEFINITION.innerRadius;
-    this.state.outerRadius = DEFINITION.outerRadius;
-    this.state.pullRadius = DEFINITION.pullRadius;
+    this.state.innerRadius = this.effectiveInnerRadius();
+    this.state.outerRadius = this.effectiveOuterRadius();
+    this.state.pullRadius = this.effectivePullRadius();
     this.state.rotation = 0;
+    this.state.evolution = this.evolution;
     this.state.sequence = this.state.sequence >= 2_000_000_000 ? 1 : this.state.sequence + 1;
     this.syncState();
   }
@@ -234,7 +257,7 @@ export class MagneticChargeBehavior {
     const candidates = this.context.enemies.queryCircle(
       this.state.targetX,
       this.state.targetY,
-      DEFINITION.pullRadius + 48
+      this.state.pullRadius + 48
     );
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
@@ -242,16 +265,16 @@ export class MagneticChargeBehavior {
       const dx = this.state.targetX - enemy.x;
       const dy = this.state.targetY - enemy.y;
       const distance = Math.hypot(dx, dy);
-      if (distance <= 0.001 || distance > DEFINITION.pullRadius + enemy.radius) continue;
-      const step = Math.min(distance, DEFINITION.pullStrength * dtSeconds);
+      if (distance <= 0.001 || distance > this.state.pullRadius + enemy.radius) continue;
+      const step = Math.min(distance, this.effectivePullStrength() * dtSeconds);
       enemy.x += (dx / distance) * step;
       enemy.y += (dy / distance) * step;
       enemy.vx = (dx / distance) * DEFINITION.pullStrength;
-      enemy.vy = (dy / distance) * DEFINITION.pullStrength;
+      enemy.vy = (dy / distance) * this.effectivePullStrength();
     }
   }
 
-  private hitDetonationBand(): void {
+  private hitDetonationBand(partialDamage = 1, collapse = false): void {
     const candidates = this.context.enemies.queryCircle(
       this.state.targetX,
       this.state.targetY,
@@ -260,14 +283,21 @@ export class MagneticChargeBehavior {
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
       if (!enemy.active || enemy.health <= 0) continue;
-      if (this.hitGenerations[index] === enemy.generation && this.hitCooldowns[index] > 0) continue;
+      if (!collapse && this.hitGenerations[index] === enemy.generation && this.hitCooldowns[index] > 0) continue;
+      if (collapse && this.collapseHitGenerations[index] === enemy.generation) continue;
       const distance = Math.hypot(enemy.x - this.state.targetX, enemy.y - this.state.targetY);
-      const insideBand = distance + enemy.radius >= DEFINITION.innerRadius
-        && distance - enemy.radius <= DEFINITION.outerRadius;
+      const contraction = collapse ? 1 - Math.sin(this.state.progress * Math.PI) * 0.28 : 1;
+      const innerRadius = this.state.innerRadius * contraction;
+      const outerRadius = this.state.outerRadius * contraction;
+      const insideBand = distance + enemy.radius >= innerRadius
+        && distance - enemy.radius <= outerRadius;
       if (!insideBand) continue;
-      this.hitGenerations[index] = enemy.generation;
-      this.hitCooldowns[index] = this.currentHitCooldown();
-      enemy.health -= this.context.rollCriticalDamage(this.damage);
+      if (collapse) this.collapseHitGenerations[index] = enemy.generation;
+      else {
+        this.hitGenerations[index] = enemy.generation;
+        this.hitCooldowns[index] = this.currentHitCooldown();
+      }
+      enemy.health -= this.context.rollCriticalDamage(this.damage * partialDamage);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
     }
   }
@@ -284,8 +314,11 @@ export class MagneticChargeBehavior {
 
   private phaseDuration(): number {
     if (this.phase === 'travel') return DEFINITION.travelSeconds;
-    if (this.phase === 'attract') return DEFINITION.attractSeconds;
+    if (this.phase === 'attract') return this.evolution === 'event_horizon'
+      ? DEFINITION.attractSeconds * 1.35
+      : this.evolution === 'polar_collapse' ? 0.55 : DEFINITION.attractSeconds;
     if (this.phase === 'detonate') return DEFINITION.detonateSeconds;
+    if (this.phase === 'collapse') return 0.55;
     return DEFINITION.recoverySeconds;
   }
 
@@ -293,6 +326,7 @@ export class MagneticChargeBehavior {
     const active = this.phase !== 'idle';
     this.state.active = active;
     this.state.phase = this.phase;
+    this.state.evolution = this.evolution;
     this.state.progress = active
       ? Math.min(1, this.phaseTimer / Math.max(EPSILON, this.phaseDuration()))
       : 0;
@@ -304,6 +338,32 @@ export class MagneticChargeBehavior {
       this.state.x = this.state.targetX;
       this.state.y = this.state.targetY;
     }
+  }
+
+  private applyEvolutionTuning(): void {
+    this.damage = DEFINITION.damage * this.permanentDamageMultiplier
+      * (this.evolution === 'event_horizon' ? 0.85 : 1);
+    this.cooldownSeconds = Math.max(
+      0.45,
+      DEFINITION.cooldownSeconds * this.permanentCadenceMultiplier
+        * (this.evolution === 'event_horizon' ? 1.2 : this.evolution === 'polar_collapse' ? 1.25 : 1)
+    );
+  }
+
+  private effectivePullRadius(): number {
+    return this.evolution === 'event_horizon' ? 230 : DEFINITION.pullRadius;
+  }
+
+  private effectivePullStrength(): number {
+    return this.evolution === 'event_horizon' ? 180 : DEFINITION.pullStrength;
+  }
+
+  private effectiveInnerRadius(): number {
+    return this.evolution === 'event_horizon' ? 56 : DEFINITION.innerRadius;
+  }
+
+  private effectiveOuterRadius(): number {
+    return this.evolution === 'event_horizon' ? 170 : DEFINITION.outerRadius;
   }
 
   private nextRandom(): number {

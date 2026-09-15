@@ -2248,8 +2248,22 @@ textura cacheada, sprites pooled y FX limitados por calidad.
   run**. Las nuevas reemplazan opciones del pool; no se regalan todas juntas.
 - Cada arma tiene niveles 1–7. Nivel 1 desbloquea el verbo, niveles 2–6 mejoran
   potencia/cobertura con límites y nivel 7 habilita evolución.
-- En la siguiente oportunidad elegible se muestran las dos evoluciones de esa
-  arma. Son mutuamente excluyentes durante la run.
+- Cada familia tiene una secuencia fija: adquisición I y seis transiciones,
+  incluida una mejora real al llegar a VII. Las 42 filas, valores provisionales,
+  conversión de cartas antiguas y plantillas del Acto II se especifican en
+  [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md). Sustituye el
+  conteo libre de stacks como rango. Los parámetros base de las seis armas
+  se desarrollan según esas tablas; se conservan arte y mecánicas aprobadas de
+  Rail Lance/Pulse Volley, con regresión sobre su nueva entrada VII. No hay
+  multiplicador adicional por rango ni oferta de estadísticas antiguas paralela.
+- El nivel VII es del arma, no el nivel global del jugador. En la siguiente
+  mano normal de tres cartas se ofrece como máximo una carta «Evolucionar» de
+  una familia elegible. Abrirla muestra sus dos ramas exclusivas y «Volver»;
+  solo confirmar consume la oportunidad. Se puede posponer eligiendo otra
+  carta. Rotar familias elegibles sin prioridad permanente de Projectile.
+  El inventario de cartas que aumentan rango y la selección atómica se rigen
+  por [EX-08-R §2](docs/design/EVOLUCIONES_V2.md). Este flujo está planificado,
+  todavía no implementado; no agregar cofres, recetas ni costes para evolucionar.
 - Una evolución debe cambiar lectura, posicionamiento o targeting, no limitarse
   a sumar un porcentaje invisible.
 - Objetivo inicial: +30–45% de contribución efectiva dentro de su escenario
@@ -2260,7 +2274,32 @@ textura cacheada, sprites pooled y FX limitados por calidad.
 - El balance se compara con la misma semilla, duración, acto y loadout. Una
   evolución que domina daño, control y seguridad simultáneamente se recorta.
 
-## 16.5 Arsenal aprobado y dos evoluciones por arma
+## 16.5 Arsenal y rediseño vigente de evoluciones
+
+**Actualización EX-08-R, 14-09-2026:** la validación humana aprueba únicamente
+la pareja de Projectile. Solar Crown y Event Horizon no comunicaron utilidad;
+Compression Wave y Singularity Return acercan enemigos peligrosamente;
+Polar Collapse no aportó una diferencia útil. Las otras rutas no tienen
+aprobación explícita. Se conservan las seis armas base y la pareja Projectile;
+las otras diez evoluciones se rediseñan según
+[EVOLUCIONES_V2.md](docs/design/EVOLUCIONES_V2.md), contrato de ejecución de
+función, visuales, cartas, límites y pruebas. **Solo plan, no código v2.**
+
+| Familia | Rama A v2 | Rama B v2 |
+| --- | --- | --- |
+| Projectile | Rail Lance: conservar | Pulse Volley: conservar |
+| Orbit | Solar Crown: emisión espiral de blades | Graviton Halo: órbita elíptica orientada al movimiento |
+| Chain | Closed Circuit: cables estacionarios que dañan al cruzar | Thunderhead: sobrecargas fijadas y explosiones retardadas |
+| Boomerang | Twin Comet: alas curvas y regresos cruzados | Singularity Return: retención remota y regreso cargado |
+| Pulse Ring | Echo Shock: ondas en dos posiciones del desplazamiento | Compression Wave: frente direccional saliente, sin atracción |
+| Magnetic | Event Horizon: núcleo remoto con centro dañino | Polar Collapse: tres frentes convergentes sin atracción |
+
+Los IDs permanecen estables. R1 prepara laboratorio y progresión; R2–R6
+implementan una pareja por entrega con prueba humana antes de seguir. R7
+integra. EX-02c permanece diferido. Las diez fichas siguientes describen el
+**contrato v1 histórico, sustituido por v2**; no ejecutarlas como pendientes ni
+sumar sus porcentajes a los comportamientos nuevos. Las bases y la pareja
+Projectile siguen vigentes.
 
 ### Projectile / Pulse Cannon — precisión confiable
 
@@ -2987,6 +3026,67 @@ Los módulos y pruebas del prototipo son:
 y sus pruebas asociadas. La referencia de diseño, calendario, perfiles de
 presión y exclusiones vive en
 [`docs/design/ACTOS_Y_META.md`](docs/design/ACTOS_Y_META.md).
+
+### 22.1q Estado EX-08d - lote completo de evoluciones - 14-09-2026
+
+Por instruccion explicita del usuario, esta entrega implementa las doce rutas de
+evolucion del arsenal en un solo lote para que puedan probarse cuando regrese.
+Esto actualiza la secuencia de entrega historica de §22.1l/§22.1p solo para el
+alcance de esta tarea: no se abre el balance final de EX-02c, no se regalan
+armas fuera de sus cartas y no se cambia la dificultad authored de los actos.
+
+El catalogo ejecutable separado `WEAPON_EVOLUTION_DEFINITIONS` contiene dos
+rutas por familia: `rail_lance`/`pulse_volley`, `solar_crown`/`graviton_halo`,
+`closed_circuit`/`thunderhead`, `twin_comet`/`singularity_return`,
+`echo_shock`/`compression_wave` y `event_horizon`/`polar_collapse`. Cada pareja
+se ofrece como exactamente dos cartas de nivel 7, es mutuamente excluyente y
+no muestra reroll. La aplicacion llega a `CombatSimulation`; render consume
+snapshots pooled y conserva la jerarquia visual estable.
+
+Cada ruta tiene entrada de desarrollo `/?evolution=<slug>&debug=1&quality=low|high`.
+El acceso prepara su arma base cuando es necesario y abre el overlay real antes
+de continuar la run. El detalle de mecanicas, URLs, limites y checklist humano
+esta en
+[`docs/balance/EX-08d-weapon-evolutions-batch.md`](docs/balance/EX-08d-weapon-evolutions-batch.md).
+
+La misma entrada admite el laboratorio focalizado `scenario=single` (evolucion
+aplicada, un blanco durable, sin overlay) y `scenario=mass` (evolucion aplicada,
+56 blancos durables en tres anillos). Ambos desactivan hazards y boss para poder
+leer una ruta concreta; el panel debug identifica el escenario y el conteo de
+enemigos. No sustituyen la validacion humana de una run real.
+
+Validacion automatica de esta entrega: `npm test -- --run` pasa con 97 archivos y
+379 tests; `npm run build:local` pasa typecheck, suite y Vite local; el smoke
+browser incluye la pareja, la aplicacion inicial de las doce rutas y las 24 rutas
+de laboratorio. La puerta
+pendiente es la validacion humana en PC/movil y Low/High. Si una ruta domina
+danio, control o seguridad se corrige solo esa familia con la misma semilla; no
+se recalibra vida/daño de enemigos dentro de EX-08.
+
+### 22.1r EX-08-R — rechazo parcial y rediseño de evoluciones — 14-09-2026
+
+El feedback posterior a EX-08d aprueba Rail Lance/Pulse Volley y rechaza la
+utilidad o lectura de Solar Crown, Compression Wave, Event Horizon, Polar
+Collapse y Singularity Return. No hay aprobación de las otras cinco rutas.
+La implementación y los resultados automáticos de §22.1q son históricos;
+no equivalen al cierre humano del arsenal.
+
+La entrega actual es exclusivamente documental, a petición del usuario:
+[EX-08-R](docs/design/EVOLUCIONES_V2.md) define diez rediseños, progresión por
+arma, selección dentro de la mano normal, dirección premium, presupuestos y
+pruebas. R0 completado; R1–R7 pendientes. Siguiente agente: R1 (laboratorio
+aislado, escenarios móviles, inventario de cartas/rangos y selección atómica),
+después R2 (Echo Shock/Compression Wave), y detenerse para validación humana.
+No implementar todo el lote sin revisión. No cambiar daño/vida de enemigos,
+economía, actos ni la pareja Projectile aprobada. El código v1 sigue activo.
+
+Ampliación documental posterior de R1: el usuario solicita definir qué mejora
+cada nivel. [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md)
+concreta secuencia I–VII para las seis familias y adapta la interpretación de
+«conservar Projectile»: se conserva su evolución/arte, mientras su desarrollo
+base usa las nuevas transiciones. Calibración reproduce las tres builds con
+rangos IV/II/II respectivamente; rango VII y evolución siguen separados. Estos
+valores son prototipos pendientes de prueba, no cierre del balance EX-02c.
 
 ## 22.2 Resolución de instrucciones históricas
 

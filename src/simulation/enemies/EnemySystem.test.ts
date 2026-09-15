@@ -90,4 +90,22 @@ describe('EnemySystem', () => {
     expect(pool.states.filter((enemy) => enemy.active && enemy.kind === 'prism-weaver')).toHaveLength(1);
     expect(pool.states.find((enemy) => enemy.kind === 'prism-weaver')?.prismWeaverPhase).toBe('approach');
   });
+
+  it('builds isolated evolution layouts without contact damage or movement', () => {
+    const pool = new EnemyPool(64);
+    const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+
+    expect(system.spawnEvolutionDrill(ARENA_RADIUS, 'single')).toBe(1);
+    const single = pool.states.find((enemy) => enemy.active);
+    expect(single?.speed).toBe(0);
+    expect(single?.contactEnabled).toBe(false);
+    expect(single?.maxHealth).toBe(10_000);
+
+    system.reset();
+    expect(system.spawnEvolutionDrill(ARENA_RADIUS, 'mass')).toBe(56);
+    expect(pool.states.filter((enemy) => enemy.active)).toHaveLength(56);
+    expect(pool.states.filter((enemy) => enemy.active).every((enemy) => (
+      enemy.speed === 0 && !enemy.contactEnabled && enemy.health === 10_000
+    ))).toBe(true);
+  });
 });

@@ -188,4 +188,34 @@ describe('UpgradeApplier', () => {
     expect(rerolled.map((choice) => choice.id)).toEqual(repeated.map((choice) => choice.id));
     expect(rerolled.every((choice) => !current.some((currentChoice) => currentChoice.id === choice.id))).toBe(true);
   });
+
+  it('offers exactly two mutually-exclusive routes for every authored weapon family', () => {
+    const families = [
+      { base: undefined, ids: ['rail_lance', 'pulse_volley'] as const },
+      { base: 'orbit_blade' as const, ids: ['solar_crown', 'graviton_halo'] as const },
+      { base: 'chain_lightning' as const, ids: ['closed_circuit', 'thunderhead'] as const },
+      { base: 'vector_boomerang' as const, ids: ['twin_comet', 'singularity_return'] as const },
+      { base: 'pulse_ring' as const, ids: ['echo_shock', 'compression_wave'] as const },
+      { base: 'magnetic_charge' as const, ids: ['event_horizon', 'polar_collapse'] as const }
+    ];
+
+    for (const family of families) {
+      const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      const choices = applier.getEvolutionChoices(7, family.ids[0]);
+      expect(choices.map((choice) => choice.id)).toEqual([...family.ids]);
+      expect(applier.apply(family.ids[0])).toBe(true);
+      expect(applier.apply(family.ids[1])).toBe(false);
+      expect(applier.getEvolutionChoices(7, family.ids[0])).toHaveLength(0);
+    }
+  });
+
+  it('replaces the normal level-seven offer with the Projectile evolution pair', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+
+    expect(applier.getChoices(6)).toHaveLength(3);
+    expect(applier.getChoices(7).map((choice) => choice.id)).toEqual(['rail_lance', 'pulse_volley']);
+    expect(applier.apply('rail_lance')).toBe(true);
+    expect(applier.getChoices(7)).toHaveLength(3);
+  });
 });

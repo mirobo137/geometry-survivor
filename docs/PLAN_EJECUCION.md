@@ -846,6 +846,50 @@ base.
    una run por ruta. Si una ruta domina daño/control/seguridad, recalibrar antes
    de seguir. No usar su aspecto más brillante como evidencia de diferenciación.
 
+### EX-08-R — ejecución vigente tras feedback humano
+
+Prevalece [plan §22.1r](../PLAN_DESARROLLO.md) y
+[EVOLUCIONES_V2.md](design/EVOLUCIONES_V2.md). Solo Rail Lance/Pulse Volley
+están aprobadas. Cinco rutas fueron cuestionadas explícitamente por falta de
+utilidad/lectura o atracción peligrosa; las otras cinco no están aprobadas.
+R0 completó únicamente el plan; el código actual sigue siendo v1.
+
+Orden: R1 laboratorio aislado + rango propio de arma + selección atómica;
+R2 Pulse Ring; R3 Magnetic; R4 Boomerang; R5 Orbit; R6 Chain; R7 integración.
+R1 aplica [PROGRESION_ARMAS_V2.md](design/PROGRESION_ARMAS_V2.md): seis tablas
+I–VII, oferta del siguiente rango, retiro de upgrades antiguos paralelos y
+calibración explícita IV/II/II. La pareja Projectile conserva arte/mecánica,
+con regresión de potencia sobre sus nuevos rangos base. Valores de prototipo.
+Cada pareja requiere prueba humana antes de abrir la siguiente. La guía define
+las funciones, visuales, límites y pruebas, sin reabrir balance EX-02c.
+No ejecutar el antiguo contrato de porcentajes como rediseño premium ni
+interpretar los tests de EX-08d como aprobación de las nuevas propuestas.
+
+### EX-08d - histórico del lote implementado, sustituido por EX-08-R
+
+La solicitud de esa entrega autorizó implementar todas las evoluciones del arsenal
+antes de la prueba humana, aunque la ficha historica describa una ruta por
+entrega. El lote conserva el contrato de §16.4-§16.5: nivel 7, dos cartas por
+familia, exclusion mutua, tres armas activas como maximo, pools fijos y sin
+reroll en la pareja.
+
+Se puede abrir cada pareja desde una run real con
+`/?evolution=<slug>&debug=1&quality=low|high`. Los doce slugs y el checklist
+estan en [`EX-08d-weapon-evolutions-batch.md`](balance/EX-08d-weapon-evolutions-batch.md).
+Los tests puros cubren las seis familias; `WeaponView` cubre sus pulsos,
+explosiones, rail/volley y capas de lectura; el smoke browser recorre las doce
+entradas, verifica dos cartas sin reroll y aplica la primera opcion; el smoke
+completo queda en 37/37 e incluye las 24 variantes de laboratorio.
+
+Para probar una ruta ya aplicada, se puede anadir `scenario=single` para un
+blanco durable o `scenario=mass` para 56 blancos durables en tres anillos. Estos
+escenarios aislan hazards y boss, muestran su modo en debug y sirven para leer
+la cobertura de cada evolucion; no reemplazan una run real de balance.
+
+Estado: AUTOMATICO OK. La validacion humana en PC/movil, Low/High y el juicio
+de balance quedan pendientes. EX-02c sigue diferido; no ajustar dano o vida de
+enemigos durante esta pasada.
+
 ## 5. Plataforma y producción
 
 ### EX-09 — SDKs, uno por build y por entrega

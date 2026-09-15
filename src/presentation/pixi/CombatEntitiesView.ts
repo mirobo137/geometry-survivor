@@ -415,11 +415,16 @@ export class CombatEntitiesView {
       const rot = Math.atan2(state.vy + normalY * curveVelocity, state.vx + normalX * curveVelocity);
       sprite.rotation = rot;
       const pulse = 1 + Math.sin(state.ageSeconds * 28) * 0.09;
-      sprite.scale.set(pulse);
+      const evolutionScale = state.radius / 7;
+      const evolutionTint = state.evolution === 'rail_lance'
+        ? 0xffd978 : state.evolution === 'pulse_volley' ? 0x9fffe8 : 0xffffff;
+      sprite.tint = evolutionTint;
+      sprite.scale.set(pulse * evolutionScale);
       if (glow) {
         glow.position.set(px, py);
         glow.rotation = rot;
-        glow.scale.set(pulse * 1.9);
+        glow.tint = evolutionTint;
+        glow.scale.set(pulse * 1.9 * evolutionScale);
         glow.alpha = 0.22 + Math.sin(state.ageSeconds * 14) * 0.06;
       }
     }

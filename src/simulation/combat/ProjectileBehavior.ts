@@ -11,6 +11,7 @@ import type { PlayerState } from '../PlayerModel';
 import type { ShotRenderState } from './CombatRenderState';
 import type { EnemyState, ProjectilePool, ProjectileState } from './EntityPools';
 import type { EnemySystem } from '../enemies/EnemySystem';
+import type { ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 
@@ -20,6 +21,7 @@ export interface ProjectileBehaviorContext {
   readonly isTwinEmitterEnabled: () => boolean;
   readonly getProjectileDamage: () => number;
   readonly getProjectileSpeed: () => number;
+  readonly getProjectileEvolution: () => ProjectileEvolution | null;
   readonly rollCriticalDamage: (baseDamage: number) => number;
   readonly onEnemyDefeated: (enemy: EnemyState) => void;
 }
@@ -34,6 +36,11 @@ const createShotState = (): ShotRenderState => ({
   rightOriginX: 0,
   rightOriginY: 0
 });
+
+const VOLLEY_ANGLES = [-0.14, 0, 0.14] as const;
+const RAIL_LANCE_DAMAGE_MULTIPLIER = 1.35;
+const RAIL_LANCE_RADIUS_MULTIPLIER = 1.45;
+const RAIL_LANCE_MAX_TARGETS = 5;
 
 /** Projectile firing, muzzle geometry and collision against the enemy query surface. */
 export class ProjectileBehavior {
@@ -57,31 +64,49 @@ export class ProjectileBehavior {
     const distance = Math.max(0.001, Math.hypot(dx, dy));
     const directionX = dx / distance;
     const directionY = dy / distance;
+    const evolution = this.context.getProjectileEvolution();
     const muzzleCount = this.context.isTwinEmitterEnabled() ? 2 : 1;
+    const volleyCount = evolution === 'pulse_volley' ? VOLLEY_ANGLES.length : 1;
     let sequence = 0;
     for (let index = 0; index < muzzleCount; index += 1) {
-      const projectile = this.context.projectiles.acquire();
-      if (!projectile) break;
       const muzzle = this.context.isTwinEmitterEnabled()
         ? index as ProjectileMuzzle
         : this.takeNextMuzzle();
       this.calculateMuzzleOrigin(player, directionX, directionY, muzzle);
-      const targetDirectionX = target.x - this.originScratch.x;
-      const targetDirectionY = target.y - this.originScratch.y;
-      const targetDistance = Math.max(0.001, Math.hypot(targetDirectionX, targetDirectionY));
-      const projectileDirectionX = targetDirectionX / targetDistance;
-      const projectileDirectionY = targetDirectionY / targetDistance;
-      if (sequence === 0) sequence = this.beginShotBurst(projectileDirectionX, projectileDirectionY);
-      this.configureProjectile(
-        projectile,
-        this.originScratch.x,
-        this.originScratch.y,
-        projectileDirectionX,
-        projectileDirectionY,
-        muzzle
-      );
-      this.recordShotOrigin(this.originScratch.x, this.originScratch.y, muzzle, sequence);
-      this.shotsFired += 1;
+      for (let volleyIndex = 0; volleyIndex < volleyCount; volleyIndex += 1) {
+        const projectile = this.context.projectiles.acquire();
+        if (!projectile) return;
+        let projectileDirectionX = directionX;
+        let projectileDirectionY = directionY;
+        if (evolution === 'pulse_volley') {
+          const angle = VOLLEY_ANGLES[volleyIndex];
+          const cosine = Math.cos(angle);
+          const sine = Math.sin(angle);
+          projectileDirectionX = directionX * cosine - directionY * sine;
+          projectileDirectionY = directionX * sine + directionY * cosine;
+        }
+        const targetDirectionX = target.x - this.originScratch.x;
+        const targetDirectionY = target.y - this.originScratch.y;
+        const targetDistance = Math.max(0.001, Math.hypot(targetDirectionX, targetDirectionY));
+        // The fan is authored around the target direction, but its origin is
+        // still the real muzzle so twin emitters retain their identity.
+        if (evolution !== 'pulse_volley') {
+          projectileDirectionX = targetDirectionX / targetDistance;
+          projectileDirectionY = targetDirectionY / targetDistance;
+        }
+        if (sequence === 0) sequence = this.beginShotBurst(projectileDirectionX, projectileDirectionY);
+        this.configureProjectile(
+          projectile,
+          this.originScratch.x,
+          this.originScratch.y,
+          projectileDirectionX,
+          projectileDirectionY,
+          muzzle,
+          evolution
+        );
+        this.recordShotOrigin(this.originScratch.x, this.originScratch.y, muzzle, sequence);
+        this.shotsFired += 1;
+      }
     }
   }
 
@@ -95,7 +120,15 @@ export class ProjectileBehavior {
   ): void {
     this.calculateMuzzleOrigin(player, directionX, directionY, muzzle);
     const sequence = this.beginShotBurst(directionX, directionY);
-    this.configureProjectile(projectile, this.originScratch.x, this.originScratch.y, directionX, directionY, muzzle);
+    this.configureProjectile(
+      projectile,
+      this.originScratch.x,
+      this.originScratch.y,
+      directionX,
+      directionY,
+      muzzle,
+      this.context.getProjectileEvolution()
+    );
     this.recordShotOrigin(this.originScratch.x, this.originScratch.y, muzzle, sequence);
     this.shotsFired += 1;
   }
@@ -123,12 +156,26 @@ export class ProjectileBehavior {
       const candidates = this.context.enemies.queryCircle(projectile.x, projectile.y, projectile.radius + 32);
       for (const index of candidates) {
         const enemy = this.context.enemies.getState(index);
-        if (!enemy.active) continue;
+        if (!enemy.active || enemy.health <= 0) continue;
+        if (projectile.evolution === 'rail_lance' && projectile.lastHitEnemyIndex === index) continue;
         const hitDistance = projectile.radius + enemy.radius;
         if (Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y) > hitDistance) continue;
-        enemy.health -= projectile.damage;
-        this.context.projectiles.release(projectile);
+        const damageMultiplier = projectile.evolution === 'rail_lance'
+          ? Math.max(0.6, 1 - projectile.piercingHitCount * 0.1)
+          : 1;
+        enemy.health -= projectile.damage * damageMultiplier;
         if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
+        if (projectile.evolution !== 'rail_lance'
+          || projectile.piercingHitCount + 1 >= RAIL_LANCE_MAX_TARGETS) {
+          this.context.projectiles.release(projectile);
+        } else {
+          projectile.piercingHitCount += 1;
+          projectile.lastHitEnemyIndex = index;
+          const speed = Math.max(0.001, Math.hypot(projectile.vx, projectile.vy));
+          const clearance = projectile.radius + enemy.radius + 2;
+          projectile.x += projectile.vx / speed * clearance;
+          projectile.y += projectile.vy / speed * clearance;
+        }
         break;
       }
     }
@@ -160,18 +207,26 @@ export class ProjectileBehavior {
     originY: number,
     directionX: number,
     directionY: number,
-    muzzle: ProjectileMuzzle
+    muzzle: ProjectileMuzzle,
+    evolution: ProjectileEvolution | null
   ): void {
     projectile.active = true;
     projectile.x = originX;
     projectile.y = originY;
     projectile.vx = directionX * this.context.getProjectileSpeed();
     projectile.vy = directionY * this.context.getProjectileSpeed();
-    projectile.radius = PROJECTILE_DEFINITION.radius;
-    projectile.damage = this.context.rollCriticalDamage(this.context.getProjectileDamage());
+    projectile.radius = PROJECTILE_DEFINITION.radius
+      * (evolution === 'rail_lance' ? RAIL_LANCE_RADIUS_MULTIPLIER : 1);
+    const damageMultiplier = evolution === 'rail_lance'
+      ? RAIL_LANCE_DAMAGE_MULTIPLIER
+      : evolution === 'pulse_volley' ? 0.55 : 1;
+    projectile.damage = this.context.rollCriticalDamage(this.context.getProjectileDamage() * damageMultiplier);
     projectile.ageSeconds = 0;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;
     projectile.muzzle = muzzle;
+    projectile.evolution = evolution;
+    projectile.piercingHitCount = 0;
+    projectile.lastHitEnemyIndex = -1;
   }
 
   private beginShotBurst(directionX: number, directionY: number): number {

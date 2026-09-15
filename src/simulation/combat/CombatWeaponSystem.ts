@@ -2,7 +2,14 @@ import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { BOOMERANG_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { BoomerangPool, ProjectilePool, type EnemyState } from './EntityPools';
-import type { BoomerangRenderState, ChainSegmentState, OrbitBladeState, ShotRenderState } from './CombatRenderState';
+import type {
+  BoomerangRenderState,
+  ChainExplosionState,
+  ChainSegmentState,
+  OrbitBladeState,
+  OrbitPulseState,
+  ShotRenderState
+} from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
@@ -14,6 +21,14 @@ import { ChainBehavior } from './ChainBehavior';
 import { BoomerangBehavior } from './BoomerangBehavior';
 import { PulseRingWeaponBehavior } from './PulseRingWeaponBehavior';
 import { MagneticChargeBehavior } from './MagneticChargeBehavior';
+import type {
+  BoomerangEvolution,
+  ChainEvolution,
+  MagneticChargeEvolution,
+  OrbitEvolution,
+  ProjectileEvolution,
+  PulseRingEvolution
+} from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
@@ -31,6 +46,7 @@ export interface CombatWeaponUpdateOptions {
   readonly pulseRingEnabled?: boolean;
   readonly magneticChargeEnabled?: boolean;
   readonly magneticChargeArena?: ArenaBoundaryInput;
+  readonly arena?: ArenaBoundaryInput;
   /** Development-only cadence override for the isolated Pulse Ring drill. */
   readonly pulseRingCooldownSeconds?: number;
   /** Development-only cadence override for the isolated Magnetic Charge drill. */
@@ -42,8 +58,11 @@ export class CombatWeaponSystem {
   public readonly projectiles = new ProjectilePool(PROJECTILE_POOL_CAPACITY);
   public readonly boomerangs = new BoomerangPool(BOOMERANG_POOL_CAPACITY);
   public readonly orbitBlades: readonly OrbitBladeState[];
+  public readonly orbitPulse: OrbitPulseState;
   public readonly chainSegments: readonly ChainSegmentState[];
+  public readonly chainExplosions: readonly ChainExplosionState[];
   public readonly boomerangStates: readonly BoomerangRenderState[];
+  public readonly boomerangPulse: BoomerangBehavior['pulseState'];
   public readonly pulseRingWeapon: PulseRingWeaponBehavior['state'];
   public readonly magneticCharge: MagneticChargeBehavior['state'];
   private readonly projectileBehavior: ProjectileBehavior;
@@ -63,6 +82,7 @@ export class CombatWeaponSystem {
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
+  private projectileEvolution: ProjectileEvolution | null = null;
   public readonly lastShot: ShotRenderState;
   private readonly stressScenario: StressCombatScenario;
   private permanentBonuses: PermanentCombatBonuses;
@@ -82,6 +102,7 @@ export class CombatWeaponSystem {
       isTwinEmitterEnabled: () => this.twinEmitters,
       getProjectileDamage: () => this.projectileDamage,
       getProjectileSpeed: () => this.projectileSpeed,
+      getProjectileEvolution: () => this.projectileEvolution,
       rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
       onEnemyDefeated: this.onEnemyDefeated
     });
@@ -112,8 +133,11 @@ export class CombatWeaponSystem {
       onEnemyDefeated: this.onEnemyDefeated
     });
     this.orbitBlades = this.orbitBehavior.blades;
+    this.orbitPulse = this.orbitBehavior.pulseState;
     this.chainSegments = this.chainBehavior.segments;
+    this.chainExplosions = this.chainBehavior.explosions;
     this.boomerangStates = this.boomerangs.states;
+    this.boomerangPulse = this.boomerangBehavior.pulseState;
     this.pulseRingWeapon = this.pulseRingBehavior.state;
     this.magneticCharge = this.magneticChargeBehavior.state;
     this.lastShot = this.projectileBehavior.lastShot;
@@ -157,6 +181,13 @@ export class CombatWeaponSystem {
   public get hasTwinEmitters(): boolean {
     return this.twinEmitters;
   }
+
+  public get currentProjectileEvolution(): ProjectileEvolution | null { return this.projectileEvolution; }
+  public get currentOrbitEvolution(): OrbitEvolution | null { return this.orbitBehavior.currentEvolution; }
+  public get currentChainEvolution(): ChainEvolution | null { return this.chainBehavior.currentEvolution; }
+  public get currentBoomerangEvolution(): BoomerangEvolution | null { return this.boomerangBehavior.currentEvolution; }
+  public get currentPulseRingEvolution(): PulseRingEvolution | null { return this.pulseRingBehavior.currentEvolution; }
+  public get currentMagneticChargeEvolution(): MagneticChargeEvolution | null { return this.magneticChargeBehavior.currentEvolution; }
 
   public get currentOrbitRadius(): number {
     return this.orbitBehavior.currentRadius;
@@ -230,6 +261,7 @@ export class CombatWeaponSystem {
     this.criticalChance = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
+    this.projectileEvolution = null;
   }
 
   public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
@@ -269,6 +301,20 @@ export class CombatWeaponSystem {
     if (this.twinEmitters) return false;
     this.twinEmitters = true;
     return true;
+  }
+
+  public applyProjectileEvolution(evolution: ProjectileEvolution): boolean {
+    if (this.projectileEvolution !== null) return false;
+    this.projectileEvolution = evolution;
+    return true;
+  }
+
+  public applyOrbitEvolution(evolution: OrbitEvolution): boolean { return this.orbitBehavior.setEvolution(evolution); }
+  public applyChainEvolution(evolution: ChainEvolution): boolean { return this.chainBehavior.setEvolution(evolution); }
+  public applyBoomerangEvolution(evolution: BoomerangEvolution): boolean { return this.boomerangBehavior.setEvolution(evolution); }
+  public applyPulseRingEvolution(evolution: PulseRingEvolution): boolean { return this.pulseRingBehavior.setEvolution(evolution); }
+  public applyMagneticChargeEvolution(evolution: MagneticChargeEvolution): boolean {
+    return this.magneticChargeBehavior.setEvolution(evolution);
   }
 
   public addOrbitBlade(): boolean {
@@ -344,6 +390,7 @@ export class CombatWeaponSystem {
     if (dt === 0) return;
 
     this.chainBehavior.updateSegments(dt);
+    this.chainBehavior.setArenaBoundary(options.arena ?? options.magneticChargeArena ?? 270);
     this.boomerangBehavior.update(dt, player);
     this.pulseRingBehavior.update(dt);
     if ((options.magneticChargeEnabled ?? this.magneticChargeBehavior.isUnlocked)
@@ -358,17 +405,34 @@ export class CombatWeaponSystem {
     if (options.orbitEnabled ?? true) this.orbitBehavior.update(dt, player);
     this.scheduler.update(
       dt,
-      this.projectileCooldown,
+      this.getEffectiveProjectileCooldown(),
       options.chainEnabled ?? this.chainBehavior.isUnlocked,
       this.chainCooldown,
       player,
       options.projectileEnabled ?? true,
       options.boomerangEnabled ?? this.boomerangBehavior.isUnlocked,
-      this.boomerangCooldown,
+      this.getEffectiveBoomerangCooldown(),
       options.pulseRingEnabled ?? this.pulseRingBehavior.isUnlocked,
-      options.pulseRingCooldownSeconds ?? this.pulseRingCooldown
+      options.pulseRingCooldownSeconds ?? this.getEffectivePulseRingCooldown()
     );
     this.projectileBehavior.update(dt);
+  }
+
+  private getEffectiveProjectileCooldown(): number {
+    return this.projectileCooldown
+      * (this.projectileEvolution === 'rail_lance' ? 1.35 : this.projectileEvolution === 'pulse_volley' ? 1.15 : 1);
+  }
+
+  private getEffectiveBoomerangCooldown(): number {
+    const multiplier = this.boomerangBehavior.currentEvolution === 'twin_comet'
+      ? 1.2 : this.boomerangBehavior.currentEvolution === 'singularity_return' ? 1.35 : 1;
+    return this.boomerangCooldown * multiplier;
+  }
+
+  private getEffectivePulseRingCooldown(): number {
+    const multiplier = this.pulseRingBehavior.currentEvolution === 'echo_shock'
+      ? 1.15 : this.pulseRingBehavior.currentEvolution === 'compression_wave' ? 1.35 : 1;
+    return this.pulseRingCooldown * multiplier;
   }
 
   public initializeStress(player: PlayerState): void {

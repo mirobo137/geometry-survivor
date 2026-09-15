@@ -1,3 +1,7 @@
+import type {
+  WeaponEvolutionId
+} from '../weapons/WeaponEvolutionDefinitions';
+
 export type UpgradeId =
   | 'swift_step'
   | 'focused_projectiles'
@@ -16,7 +20,8 @@ export type UpgradeId =
   | 'recharging_shield'
   | 'orbit_reach'
   | 'chain_overload'
-  | 'hardened_shell';
+  | 'hardened_shell'
+  | WeaponEvolutionId;
 
 export interface UpgradeDefinition {
   readonly id: UpgradeId;
@@ -45,7 +50,8 @@ export type UpgradeEffect =
   | { readonly type: 'shield'; readonly rechargeSeconds: number }
   | { readonly type: 'orbitRadius'; readonly amount: number }
   | { readonly type: 'chainDamage'; readonly amount: number }
-  | { readonly type: 'armor'; readonly amount: number };
+  | { readonly type: 'armor'; readonly amount: number }
+  | { readonly type: 'weaponEvolution'; readonly evolution: WeaponEvolutionId };
 
 export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
@@ -172,6 +178,112 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     maxStacks: 9
   }
 ];
+
+/**
+ * Evolution cards live outside the normal three-card rotation. Keeping them
+ * in a separate pool preserves the authored level rotation and guarantees
+ * that an evolution offer contains exactly two mutually-exclusive routes.
+ */
+export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
+  {
+    id: 'rail_lance',
+    title: 'Rail Lance',
+    description: 'Proyectil pesado: +35% dano, mayor calibre y atraviesa hasta 5 objetivos.',
+    effect: { type: 'weaponEvolution', evolution: 'rail_lance' },
+    maxStacks: 1
+  },
+  {
+    id: 'pulse_volley',
+    title: 'Pulse Volley',
+    description: 'Abre un abanico de 3 proyectiles estrechos para cubrir grupos.',
+    effect: { type: 'weaponEvolution', evolution: 'pulse_volley' },
+    maxStacks: 1
+  },
+  {
+    id: 'solar_crown',
+    title: 'Solar Crown',
+    description: 'La orbita gana alcance y potencia; sus hojas giran con una cadencia mas pesada.',
+    effect: { type: 'weaponEvolution', evolution: 'solar_crown' },
+    maxStacks: 1,
+    requires: ['orbit_blade']
+  },
+  {
+    id: 'graviton_halo',
+    title: 'Graviton Halo',
+    description: 'Sacrifica dano directo para emitir un pulso de control cada 3 s.',
+    effect: { type: 'weaponEvolution', evolution: 'graviton_halo' },
+    maxStacks: 1,
+    requires: ['orbit_blade']
+  },
+  {
+    id: 'closed_circuit',
+    title: 'Closed Circuit',
+    description: 'La cadena salta hasta 5 veces y puede regresar desde un borde cargado.',
+    effect: { type: 'weaponEvolution', evolution: 'closed_circuit' },
+    maxStacks: 1,
+    requires: ['chain_lightning']
+  },
+  {
+    id: 'thunderhead',
+    title: 'Thunderhead',
+    description: 'Pierde un salto; cada objetivo alcanzado deja una explosion retardada.',
+    effect: { type: 'weaponEvolution', evolution: 'thunderhead' },
+    maxStacks: 1,
+    requires: ['chain_lightning']
+  },
+  {
+    id: 'twin_comet',
+    title: 'Twin Comet',
+    description: 'Lanza dos piezas con apertura opuesta, cada una al 65% del dano.',
+    effect: { type: 'weaponEvolution', evolution: 'twin_comet' },
+    maxStacks: 1,
+    requires: ['vector_boomerang']
+  },
+  {
+    id: 'singularity_return',
+    title: 'Singularity Return',
+    description: 'El retorno gana dano y libera un pulso que atrae y golpea al capturarse.',
+    effect: { type: 'weaponEvolution', evolution: 'singularity_return' },
+    maxStacks: 1,
+    requires: ['vector_boomerang']
+  },
+  {
+    id: 'echo_shock',
+    title: 'Echo Shock',
+    description: 'Una segunda onda llega 0.45 s despues con el 45% del dano.',
+    effect: { type: 'weaponEvolution', evolution: 'echo_shock' },
+    maxStacks: 1,
+    requires: ['pulse_ring']
+  },
+  {
+    id: 'compression_wave',
+    title: 'Compression Wave',
+    description: 'Atrae durante la carga y libera un impacto al 165% con mayor empuje.',
+    effect: { type: 'weaponEvolution', evolution: 'compression_wave' },
+    maxStacks: 1,
+    requires: ['pulse_ring']
+  },
+  {
+    id: 'event_horizon',
+    title: 'Event Horizon',
+    description: 'Amplia duracion, radio y atraccion; reduce dano y cadencia para controlar el espacio.',
+    effect: { type: 'weaponEvolution', evolution: 'event_horizon' },
+    maxStacks: 1,
+    requires: ['magnetic_charge']
+  },
+  {
+    id: 'polar_collapse',
+    title: 'Polar Collapse',
+    description: 'Acorta la atraccion y anade una segunda contraccion con dano parcial.',
+    effect: { type: 'weaponEvolution', evolution: 'polar_collapse' },
+    maxStacks: 1,
+    requires: ['magnetic_charge']
+  }
+];
+
+export const getWeaponEvolutionChoices = (
+  isAvailable: (upgrade: UpgradeDefinition) => boolean = () => true
+): readonly UpgradeDefinition[] => WEAPON_EVOLUTION_DEFINITIONS.filter(isAvailable);
 
 export const getLevelUpChoices = (
   level: number,

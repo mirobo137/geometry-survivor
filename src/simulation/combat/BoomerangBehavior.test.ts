@@ -141,4 +141,31 @@ describe('BoomerangBehavior', () => {
     behavior.reset();
     expect(boomerangs.activeCount).toBe(0);
   });
+
+  it('Twin Comet fires two opposed pieces inside the same fixed pool cap', () => {
+    const { boomerangs, behavior, player } = setup();
+    expect(behavior.setEvolution('twin_comet')).toBe(true);
+    behavior.fire(player);
+
+    expect(boomerangs.activeCount).toBe(2);
+    expect(boomerangs.states[0].evolution).toBe('twin_comet');
+    expect(boomerangs.states[1].evolution).toBe('twin_comet');
+    expect(boomerangs.states[0].directionY).not.toBe(boomerangs.states[1].directionY);
+  });
+
+  it('Singularity Return emits its capture pulse only on the returning phase', () => {
+    const { behavior, player } = setup();
+    expect(behavior.setEvolution('singularity_return')).toBe(true);
+    behavior.fire(player);
+    expect(behavior.pulseState.active).toBe(false);
+
+    for (let index = 0; index < 100; index += 1) {
+      behavior.update(1 / 60, player);
+      if (behavior.pulseState.sequence === 1) {
+        expect(behavior.pulseState.active).toBe(true);
+        return;
+      }
+    }
+    throw new Error('Singularity Return no emitió su pulso al capturar el búmeran');
+  });
 });

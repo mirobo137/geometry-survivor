@@ -2329,6 +2329,11 @@ body {
   margin: 0;
 }
 
+#level-up-options[data-choice-count="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(44rem, 100%);
+}
+
 #game-over-kicker {
   color: #ff92a3;
   font: 700 0.8rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -2664,6 +2669,11 @@ body {
 
   #level-up-options {
     grid-template-columns: 1fr;
+  }
+
+  #level-up-options[data-choice-count="2"] {
+    grid-template-columns: 1fr;
+    width: min(30rem, 100%);
   }
 
   #level-up-options button {

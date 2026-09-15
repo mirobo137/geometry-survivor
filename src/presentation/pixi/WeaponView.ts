@@ -54,7 +54,7 @@ interface BoomerangVisual {
 }
 
 type WeaponRenderInput = Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>
-  & Partial<Pick<CombatRenderState, 'boomerangs' | 'pulseRingWeapon' | 'magneticCharge'>>;
+  & Partial<Pick<CombatRenderState, 'orbitPulse' | 'chainExplosions' | 'boomerangs' | 'boomerangPulse' | 'pulseRingWeapon' | 'magneticCharge'>>;
 
 const polygon = (graphics: Graphics, points: readonly [number, number][], color: number, alpha = 1): void => {
   graphics.beginPath().moveTo(points[0][0], points[0][1]);
@@ -110,6 +110,7 @@ const createOrbitTextures = (renderer: Renderer): Readonly<Record<'wake' | 'aura
 export class WeaponView {
   public readonly root = new Container();
   private readonly orbitLayer = new Container();
+  private readonly orbitPulseLayer = new Graphics();
   private readonly chainLayer = new Graphics();
   private readonly chainImpactLayer = new Container();
   private readonly chainPulseLayer = new Container();
@@ -132,6 +133,7 @@ export class WeaponView {
   private readonly magneticChargeRails = new Graphics();
   private readonly magneticChargeCore = new Graphics();
   private readonly magneticChargeResidue = new Graphics();
+  private readonly boomerangPulseLayer = new Graphics();
   private readonly orbitVisuals: OrbitBladeVisual[] = [];
   private readonly boomerangVisuals: BoomerangVisual[] = [];
   private readonly chainImpactSprites: Sprite[] = [];
@@ -147,7 +149,7 @@ export class WeaponView {
     private readonly onChainImpact?: () => void,
     private readonly quality: FxQuality = 'medium'
   ) {
-    this.previousChainActive = Array.from({ length: WEAPON_DEFINITIONS.chainLightning.maxTargets }, () => false);
+    this.previousChainActive = Array.from({ length: WEAPON_DEFINITIONS.chainLightning.maxTargets + 3 }, () => false);
     this.reducedMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
     this.root.addChild(
@@ -192,6 +194,9 @@ export class WeaponView {
       this.orbitVisuals.push({ root, wake, aura, shell, accent, core });
       this.orbitLayer.addChild(root);
     }
+    // Keep the pooled blade roots first for stable layer ordering and tests;
+    // the transient evolution pulse is deliberately rendered after them.
+    this.orbitLayer.addChild(this.orbitPulseLayer);
     const chainImpactTexture = createTexture(renderer, (graphics) => {
       graphics.beginPath().regularPoly(0, 0, 10, 6, Math.PI / 6)
         .fill({ color: ARC_INK, alpha: 1 })
@@ -207,6 +212,18 @@ export class WeaponView {
         .stroke({ color: ARC_WHITE, width: 1, alpha: 0.95 });
     });
     for (let index = 0; index < WEAPON_DEFINITIONS.chainLightning.maxTargets; index += 1) {
+      const sprite = new Sprite(chainImpactTexture);
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+      this.chainImpactSprites.push(sprite);
+      this.chainImpactLayer.addChild(sprite);
+      const pulse = new Sprite(chainPulseTexture);
+      pulse.anchor.set(0.5);
+      pulse.visible = false;
+      this.chainPulseSprites.push(pulse);
+      this.chainPulseLayer.addChild(pulse);
+    }
+    for (let index = WEAPON_DEFINITIONS.chainLightning.maxTargets; index < WEAPON_DEFINITIONS.chainLightning.maxTargets + 3; index += 1) {
       const sprite = new Sprite(chainImpactTexture);
       sprite.anchor.set(0.5);
       sprite.visible = false;
@@ -255,9 +272,22 @@ export class WeaponView {
       this.boomerangVisuals.push({ root, trail, aura, wake, body, core });
       this.boomerangLayer.addChild(root);
     }
+    // The capture pulse must sit above the pooled boomerang bodies without
+    // changing the public child ordering of the weapon layer.
+    this.boomerangLayer.addChild(this.boomerangPulseLayer);
   }
 
   public render(combat: WeaponRenderInput): void {
+    const orbitPulse = combat.orbitPulse;
+    this.orbitPulseLayer.clear();
+    this.orbitPulseLayer.visible = orbitPulse?.active === true;
+    if (orbitPulse?.active) {
+      const progress = clamp01(orbitPulse.progress);
+      const radius = orbitPulse.radius * (0.32 + progress * 0.68);
+      const alpha = (1 - progress) * (this.quality === 'high' ? 0.78 : this.quality === 'medium' ? 0.62 : 0.5);
+      drawSegmentedPulse(this.orbitPulseLayer, radius, alpha, 0x9b7cff, 0x75e6ff);
+      this.orbitPulseLayer.position.set(orbitPulse.x, orbitPulse.y);
+    }
     for (let index = 0; index < this.orbitVisuals.length; index += 1) {
       const state = combat.orbitBlades[index];
       const visual = this.orbitVisuals[index];
@@ -290,6 +320,8 @@ export class WeaponView {
       const directionY = speed > 0.5 ? state.vy / speed : state.directionY;
       const angle = Math.atan2(directionY, directionX);
       const returning = state.phase === 'returning';
+      const singularity = state.evolution === 'singularity_return';
+      const twinComet = state.evolution === 'twin_comet';
       const pulse = 1 + Math.sin(state.ageSeconds * (returning ? 26 : 20) + index * 0.8) * 0.06;
       const baseScale = state.radius / WEAPON_DEFINITIONS.vectorBoomerang.radius;
       const trailLength = this.quality === 'high' ? 38 : this.quality === 'medium' ? 29 : 20;
@@ -303,7 +335,7 @@ export class WeaponView {
         .lineTo(0, 0)
         .lineTo(-trailLength * 0.32, -trailWidth)
         .closePath()
-        .fill({ color: returning ? 0xd2a8ff : 0x75e6ff, alpha: this.quality === 'low' ? 0.34 : 0.5 });
+        .fill({ color: singularity ? 0x9b7cff : twinComet ? 0xffd978 : returning ? 0xd2a8ff : 0x75e6ff, alpha: this.quality === 'low' ? 0.34 : 0.5 });
       visual.trail.beginPath()
         .moveTo(-trailLength * 0.82, 0)
         .lineTo(-trailLength * 0.18, 0)
@@ -321,6 +353,21 @@ export class WeaponView {
       visual.core.alpha = returning ? 1 : 0.88;
     }
 
+    this.boomerangPulseLayer.clear();
+    const boomerangPulse = combat.boomerangPulse;
+    this.boomerangPulseLayer.visible = boomerangPulse?.active === true;
+    if (boomerangPulse?.active) {
+      const progress = clamp01(boomerangPulse.progress);
+      drawSegmentedPulse(
+        this.boomerangPulseLayer,
+        boomerangPulse.radius * (0.45 + progress * 0.55),
+        (1 - progress) * (this.quality === 'high' ? 0.78 : 0.58),
+        0x9b7cff,
+        0xffd978
+      );
+      this.boomerangPulseLayer.position.set(boomerangPulse.x, boomerangPulse.y);
+    }
+
     this.renderPulseRing(combat.pulseRingWeapon);
     this.renderMagneticCharge(combat.magneticCharge);
 
@@ -331,7 +378,9 @@ export class WeaponView {
         break;
       }
     }
-    if (!hasActiveChain) {
+    const chainExplosions = combat.chainExplosions ?? [];
+    const hasActiveExplosion = chainExplosions.some((explosion) => explosion.active);
+    if (!hasActiveChain && !hasActiveExplosion) {
       this.chainLayer.clear();
       this.chainLayer.visible = false;
       this.chainPulseLayer.visible = false;
@@ -340,13 +389,14 @@ export class WeaponView {
         this.chainImpactSprites[index].visible = false;
       }
       this.chainImpactLayer.visible = false;
+      this.chainLayer.clear();
       return;
     }
 
     this.chainLayer.visible = true;
     this.chainLayer.clear();
-    this.chainImpactLayer.visible = true;
-    this.chainPulseLayer.visible = this.quality !== 'low';
+    this.chainImpactLayer.visible = hasActiveChain;
+    this.chainPulseLayer.visible = hasActiveChain && this.quality !== 'low';
     for (let index = 0; index < combat.chainSegments.length; index += 1) {
       const segment = combat.chainSegments[index];
       if (!segment.active) {
@@ -376,6 +426,18 @@ export class WeaponView {
       pulse.alpha = alpha * 0.9;
       pulse.visible = this.quality !== 'low';
     }
+    for (let index = 0; index < chainExplosions.length; index += 1) {
+      const explosion = chainExplosions[index];
+      if (!explosion.active) continue;
+      const progress = clamp01(explosion.progress);
+      const radius = explosion.phase === 'telegraph'
+        ? explosion.radius * (0.46 + progress * 0.24)
+        : explosion.radius * (0.76 + progress * 0.24);
+      const alpha = explosion.phase === 'telegraph'
+        ? 0.4 + progress * 0.35
+        : (1 - progress) * 0.9;
+      drawSegmentedPulse(this.chainLayer, radius, alpha, 0xff92a3, 0xffd978, explosion.x, explosion.y);
+    }
   }
 
   public reset(): void {
@@ -385,6 +447,10 @@ export class WeaponView {
     this.chainPulseLayer.visible = false;
     this.pulseRingLayer.visible = false;
     this.magneticChargeLayer.visible = false;
+    this.orbitPulseLayer.visible = false;
+    this.orbitPulseLayer.clear();
+    this.boomerangPulseLayer.visible = false;
+    this.boomerangPulseLayer.clear();
     this.pulseRingSequence = -1;
     this.magneticChargeSequence = -1;
     this.pulseRingTrack.clear();
@@ -406,6 +472,9 @@ export class WeaponView {
     this.magneticChargeCore.scale.set(1);
     this.magneticChargeCore.alpha = 1;
     this.magneticChargeResidue.clear();
+    this.magneticChargeBackplate.scale.set(1);
+    this.magneticChargeBand.scale.set(1);
+    this.magneticChargeRails.scale.set(1);
     for (const visual of this.orbitVisuals) {
       visual.root.visible = false;
       visual.root.scale.set(1);
@@ -498,7 +567,8 @@ export class WeaponView {
     const intensity = this.quality === 'high' ? 0.9 : this.quality === 'medium' ? 0.74 : 0.56;
     const inFlight = state.phase === 'travel';
     const attracting = state.phase === 'attract';
-    const detonating = state.phase === 'detonate';
+    const detonating = state.phase === 'detonate' || state.phase === 'collapse';
+    const collapsing = state.phase === 'collapse';
     const recovering = state.phase === 'recovery';
 
     const lift = inFlight && !this.reducedMotion ? Math.sin(progress * Math.PI) * 62 : 0;
@@ -539,10 +609,14 @@ export class WeaponView {
 
     // Contract: the damage boundaries stay at their exact radii. Only ornaments contract.
     this.magneticChargeField.scale.set(attracting ? 1 - progress * 0.48 : 1);
+    const collapseScale = collapsing ? 1 - Math.sin(progress * Math.PI) * 0.28 : 1;
+    this.magneticChargeBackplate.scale.set(collapseScale);
+    this.magneticChargeBand.scale.set(collapseScale);
+    this.magneticChargeRails.scale.set(collapseScale);
     this.magneticChargeResidue.scale.set(1 + progress * 0.12);
     this.magneticChargeCore.position.set(state.x, state.y - lift);
     this.magneticChargeCore.scale.set(inFlight ? 0.65 + Math.sin(progress * Math.PI) * 0.9
-      : detonating ? 0.65 + Math.exp(-progress * 14) * 0.65 : 0.85 + progress * 0.15);
+      : detonating ? 0.65 + Math.exp(-progress * (collapsing ? 4 : 14)) * 0.65 : 0.85 + progress * 0.15);
     this.magneticChargeCore.rotation = inFlight && !this.reducedMotion ? progress * Math.PI * 2 : 0;
     this.magneticChargeCore.alpha = intensity * (recovering ? 0 : 0.92 + rhythm * 0.08);
   }
@@ -688,6 +762,34 @@ export class WeaponView {
 }
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+
+const drawSegmentedPulse = (
+  graphics: Graphics,
+  radius: number,
+  alpha: number,
+  primary: number,
+  secondary: number,
+  centerX = 0,
+  centerY = 0
+): void => {
+  const segments = 10;
+  const gap = 0.09;
+  for (let index = 0; index < segments; index += 1) {
+    const start = index / segments * FULL_CIRCLE + gap;
+    const end = (index + 0.72) / segments * FULL_CIRCLE - gap;
+    graphics.beginPath().arc(centerX, centerY, radius, start, end)
+      .stroke({ color: index % 2 === 0 ? primary : secondary, width: 2.4, alpha });
+    if (index % 2 === 0) {
+      const x = centerX + Math.cos(end) * radius;
+      const y = centerY + Math.sin(end) * radius;
+      graphics.beginPath().moveTo(x, y)
+        .lineTo(centerX + Math.cos(end + 0.1) * (radius + 7), centerY + Math.sin(end + 0.1) * (radius + 7))
+        .stroke({ color: 0xfff4cf, width: 1, alpha: alpha * 0.82 });
+    }
+  }
+  graphics.beginPath().circle(centerX, centerY, Math.max(2, radius * 0.08))
+    .fill({ color: 0xf4ffff, alpha: alpha * 0.55 });
+};
 
 const drawMagneticTravelTrail = (
   graphics: Graphics,

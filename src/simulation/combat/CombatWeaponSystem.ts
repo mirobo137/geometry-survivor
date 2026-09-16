@@ -29,7 +29,7 @@ import type {
   ProjectileEvolution,
   PulseRingEvolution
 } from '../../content/weapons/WeaponEvolutionDefinitions';
-import type { WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
@@ -37,7 +37,6 @@ const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
 const PULSE_RING_DEFINITION = WEAPON_DEFINITIONS.pulseRing;
-const MAGNETIC_CHARGE_DEFINITION = WEAPON_DEFINITIONS.magneticCharge;
 
 const PROJECTILE_RANK_STATS = [
   { damage: 14, speed: 460, cooldownSeconds: 0.55 },
@@ -89,7 +88,6 @@ export class CombatWeaponSystem {
   private chainCooldown = CHAIN_DEFINITION.cooldownSeconds;
   private boomerangCooldown = BOOMERANG_DEFINITION.cooldownSeconds;
   private pulseRingCooldown = PULSE_RING_DEFINITION.cooldownSeconds;
-  private magneticChargeCooldown = MAGNETIC_CHARGE_DEFINITION.cooldownSeconds;
   private projectileRank = 1;
   private criticalChance = 0;
   private randomState = CRITICAL_RANDOM_SEED;
@@ -209,6 +207,10 @@ export class CombatWeaponSystem {
     return this.orbitBehavior.currentRadius;
   }
 
+  public get currentOrbitContactRadius(): number {
+    return this.orbitBehavior.currentContactRadius;
+  }
+
   public get currentOrbitRank(): number {
     return this.orbitBehavior.currentRank;
   }
@@ -233,6 +235,10 @@ export class CombatWeaponSystem {
     return this.chainCooldown;
   }
 
+  public get currentChainJumpRadius(): number {
+    return this.chainBehavior.currentJumpRadius;
+  }
+
   public get currentBoomerangDamage(): number {
     return this.boomerangBehavior.currentDamage;
   }
@@ -243,6 +249,10 @@ export class CombatWeaponSystem {
 
   public get currentBoomerangCooldown(): number {
     return this.boomerangCooldown;
+  }
+
+  public get currentBoomerangOutboundDistance(): number {
+    return this.boomerangBehavior.currentOutboundDistance;
   }
 
   public get currentPulseRingDamage(): number {
@@ -257,6 +267,10 @@ export class CombatWeaponSystem {
     return this.pulseRingCooldown;
   }
 
+  public get currentPulseRingEndRadius(): number {
+    return this.pulseRingBehavior.currentEndRadius;
+  }
+
   public get currentMagneticChargeDamage(): number {
     return this.magneticChargeBehavior.currentDamage;
   }
@@ -267,6 +281,10 @@ export class CombatWeaponSystem {
 
   public get currentMagneticChargeCooldown(): number {
     return this.magneticChargeBehavior.currentCooldown;
+  }
+
+  public get currentMagneticChargeOuterRadius(): number {
+    return this.magneticChargeBehavior.currentOuterRadius;
   }
 
   public get currentCriticalChance(): number {
@@ -292,7 +310,6 @@ export class CombatWeaponSystem {
     this.chainCooldown = CHAIN_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier;
     this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
-    this.magneticChargeCooldown = Math.max(0.45, MAGNETIC_CHARGE_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.criticalChance = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
@@ -316,7 +333,6 @@ export class CombatWeaponSystem {
     this.chainCooldown = this.getChainCooldownForRank();
     this.boomerangCooldown = this.getBoomerangCooldownForRank();
     this.pulseRingCooldown = this.getPulseRingCooldownForRank();
-    this.magneticChargeCooldown = this.magneticChargeBehavior.currentCooldown;
   }
 
   public increaseProjectileDamage(amount: number): void {
@@ -370,9 +386,7 @@ export class CombatWeaponSystem {
         return applied;
       }
       case 'magnetic_charge': {
-        const applied = this.magneticChargeBehavior.setRank(rank);
-        if (applied) this.magneticChargeCooldown = this.magneticChargeBehavior.currentCooldown;
-        return applied;
+        return this.magneticChargeBehavior.setRank(rank);
       }
     }
   }
@@ -455,6 +469,43 @@ export class CombatWeaponSystem {
     this.criticalChance = Math.min(1, Math.max(0, this.criticalChance + Math.max(0, amount)));
   }
 
+  /** Applies a post-evolution specialization without coupling content to Pixi. */
+  public applyWeaponMastery(family: WeaponPathId, channel: WeaponMasteryChannel): boolean {
+    switch (family) {
+      case 'projectile':
+        if (channel === 'power') this.increaseProjectileDamage(4);
+        else if (channel === 'tempo') this.decreaseProjectileCooldown(0.05);
+        else this.increaseProjectileSpeed(45);
+        return true;
+      case 'orbit':
+        if (channel === 'power') this.orbitBehavior.increaseDamage(4);
+        else if (channel === 'tempo') this.orbitBehavior.decreaseHitCooldown(0.03);
+        else if (this.orbitBehavior.currentEvolution === 'solar_crown') this.orbitBehavior.increaseContactRadius(4);
+        else this.orbitBehavior.increaseRadius(14);
+        return true;
+      case 'chain':
+        if (channel === 'power') this.chainBehavior.increaseDamage(4);
+        else if (channel === 'tempo') this.chainCooldown = Math.max(0.45, this.chainCooldown - 0.12);
+        else this.chainBehavior.increaseJumpRadius(30);
+        return true;
+      case 'boomerang':
+        if (channel === 'power') this.boomerangBehavior.increaseDamage(4);
+        else if (channel === 'tempo') this.boomerangCooldown = Math.max(0.35, this.boomerangCooldown - 0.08);
+        else this.boomerangBehavior.increaseOutboundDistance(40);
+        return true;
+      case 'pulse_ring':
+        if (channel === 'power') this.pulseRingBehavior.increaseDamage(6);
+        else if (channel === 'tempo') this.pulseRingCooldown = Math.max(0.5, this.pulseRingCooldown - 0.25);
+        else this.pulseRingBehavior.increaseEndRadius(22);
+        return true;
+      case 'magnetic_charge':
+        if (channel === 'power') this.magneticChargeBehavior.increaseDamage(5);
+        else if (channel === 'tempo') this.magneticChargeBehavior.decreaseCooldown(0.45);
+        else this.magneticChargeBehavior.increaseOuterRadius(24);
+        return true;
+    }
+  }
+
   public update(
     dtSeconds: number,
     player: PlayerState,
@@ -473,7 +524,7 @@ export class CombatWeaponSystem {
         dt,
         player,
         options.magneticChargeArena,
-        options.magneticChargeCooldownSeconds ?? this.magneticChargeCooldown
+        options.magneticChargeCooldownSeconds
       );
     }
     if (options.orbitEnabled ?? true) this.orbitBehavior.update(dt, player);

@@ -1,6 +1,7 @@
 # EX-08-R — Evoluciones con decisiones reales
 
-Fecha: 2026-09-14. Estado: **las seis rutas implementadas; validación humana pendiente**.
+Fecha: 2026-09-14. Estado: **las seis rutas implementadas y aprobadas por
+validación humana; balance EX-02c pendiente**.
 
 Ampliación vigente: [PROGRESION_ARMAS_V2.md](PROGRESION_ARMAS_V2.md) define
 las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
@@ -36,19 +37,19 @@ hay una diferencia.
   avance y se libere por TTL; una textura de estela no puede mantener un slot
   muerto en pantalla.
 
-## 1. Mandato y diagnóstico
+## 1. Mandato y diagnóstico histórico
 
-El usuario aprueba Rail Lance y Pulse Volley por cambiar realmente el disparo.
-Solar Crown y Event Horizon no comunican su utilidad; Compression Wave y
-Singularity Return atraen enemigos peligrosamente cerca; Polar Collapse no
-aporta una diferencia útil. Las otras cinco rutas tampoco tienen aprobación
-humana explícita. Conservar la pareja Projectile; rediseñar las otras diez.
-No confundir «tests pasan» con «la evolución es divertida».
+El siguiente diagnóstico conserva el motivo por el que se revisaron las
+evoluciones: la pareja Projectile comunicaba mejor el cambio, mientras que
+Solar Crown, Event Horizon, Compression Wave, Singularity Return y Polar
+Collapse necesitaban una diferencia funcional más clara y una ejecución segura.
+Ese registro no representa el estado de aprobación actual.
 
-Esta especificación sigue siendo la guía de implementación y validación de las
-seis familias. Por decisión explícita del usuario, el patrón se clonó para todo
-el lote antes de la revisión humana; conservar la comparación con el arma base
-y no interpretar la automatización como aprobación de diversión o balance.
+La decisión vigente del usuario es aprobar las seis parejas después de su
+validación humana. Esta especificación continúa siendo la guía de
+implementación, regresión y futuras iteraciones; los tests no sustituyen la
+aprobación humana, y la aprobación humana tampoco cierra el balance global de
+enemigos/daño de EX-02c.
 
 Evidencia del código revisado:
 
@@ -500,6 +501,119 @@ No prometer escenarios nuevos como si existieran: implementar lo siguiente en R1
 - Las rutas actuales sin acto explícito no garantizan Acto II. Documentar URL
   verificada en código para cada entrega; no inventar parámetros en la respuesta.
 
+## 8.1 Cartas post-evolución — contrato vigente — 15-09-2026
+
+Esta capa se aplica a los tres actos de campaña. El modo infinito tendrá una
+política de ofertas separada y no heredará silenciosamente el límite de tres
+armas. La evolución sigue siendo el momento de elegir una rama; las cartas
+post-evolución son maestrías del arma ya transformada y no crean una tercera
+rama.
+
+### Diferencia entre Evolucionar y Maestría
+
+- `Evolucionar [arma]` solo aparece cuando una familia llega a VII. Al
+  seleccionarla se abre la pantalla de sus dos ramas exclusivas y `Volver`.
+  Confirmar una rama consume la subida.
+- `Potencia calibrada` **no abre esa pantalla** y nunca vuelve a mostrar las
+  dos evoluciones. Al seleccionarla abre una selección breve de las armas ya
+  evolucionadas que pueden recibirla; el jugador elige explícitamente una y
+  después la carta se consume.
+- `Potencia calibrada` solo es elegible cuando las tres armas activas de la
+  campaña están evolucionadas. Si todavía falta una evolución, no entra en el
+  pool ni aparece como carta bloqueada.
+- Las maestrías específicas de una familia sí pueden aparecer desde la mano
+  posterior a su evolución. No deben esperar a que las otras dos armas
+  evolucionen.
+
+### Rareza y presentación
+
+`Potencia calibrada` es una carta rara de maestría universal, no una carta
+normal de rotación. Su primera configuración de prueba usa como límites una
+aparición máxima cada tres manos normales y hasta tres aplicaciones por run;
+los números se podrán recalibrar después de EX-02c sin cambiar el contrato.
+La rareza no depende de anuncios, NOVA ni de una probabilidad sin límite.
+
+El límite de tres es de estado real, no solo una intención de composición. La
+carta no puede entrar sin al menos un objetivo de Potencia válido, y el reroll
+queda bloqueado durante la selección de objetivo para no convertirla en una
+cuarta mano gratis. El selector muestra el preview numérico antes → después del
+canal elegido.
+
+La carta debe diferenciarse visualmente de una evolución:
+
+- etiqueta `MAESTRÍA UNIVERSAL` y marco de rareza propio, ámbar/iridiscente;
+- emblema de tres núcleos conectados, no el icono de una rama de evolución;
+- animación corta de calibración al abrir la selección de arma;
+- comparación antes → después del arma elegida;
+- Low conserva etiqueta, silueta, color de rareza y selección táctil sin
+  partículas costosas; High añade pulso y destello acotados desde los pools
+  existentes.
+
+No usar glow permanente, shader de pantalla completa ni una textura nueva por
+arma. La rareza debe comunicar valor y disponibilidad, no tapar el combate.
+
+### Maestrías compartidas por las dos ramas
+
+Cada familia evolucionada expone tres canales de maestría. El resolver aplica
+el modificador a todas las fuentes de daño o tiempo de esa familia, conservando
+la diferencia de la rama. La fórmula conceptual es:
+
+```text
+daño efectivo = daño de la rama × modificador de Potencia
+tiempo efectivo = tiempo de la rama × modificador de Ritmo
+cobertura efectiva = geometría de la rama + modificador de Cobertura
+```
+
+| Familia | Potencia | Ritmo | Cobertura / identidad compartida |
+|---|---|---|---|
+| Projectile | Carga calibrada: daño de cada proyectil | Ciclo de fuego: menor intervalo | Balística extendida: velocidad y alcance útil |
+| Orbit | Filos resonantes: daño de hojas y pulsos | Impulso angular: giro o frecuencia | Campo de contacto: ancho de impacto; Solar conserva radio fijo |
+| Chain | Núcleo de descarga: daño de enlaces/explosiones | Recarga conductiva: menor intervalo | Red ampliada: salto, alcance o capacidad de conexión |
+| Boomerang | Filos vectoriales: daño de ida, regreso y pulso | Retorno cinético: regreso y relanzamiento | Arco amplio: alcance o radio de impacto |
+| Pulse Ring | Cresta energética: daño de ondas | Resonancia acelerada: carga/recuperación | Frente expandido: alcance y ancho sin cambiar el verbo |
+| Magnetic Charge | Núcleo de flujo: daño de núcleo, frentes y pulsos | Recarga magnética: cadencia o persistencia | Envolvente magnética: captación/detonación con freno seguro |
+
+Las tres maestrías benefician a las dos ramas de su familia, pero no pueden
+borrar su identidad: Rail Lance sigue perforando, Pulse Volley sigue usando
+abanico, Solar Crown mantiene seis filos, Compression conserva su frente y
+Polar conserva sus frentes convergentes. La potencia no se implementa como una
+carta de daño exclusiva del rayo.
+
+### Composición después de evolucionar
+
+1. Después de una evolución, la siguiente mano puede reservar una maestría de
+   esa familia; las cartas de rango base de esa familia se retiran.
+2. Mientras existan armas no evolucionadas, una mano conserva como máximo una
+   maestría, una mejora de otra familia o rango válido y una pasiva/sinergia.
+3. Al tener tres armas evolucionadas, `Potencia calibrada` puede ocupar una de
+   las tres opciones según su enfriamiento de rareza. Las otras dos opciones
+   siguen siendo maestrías específicas, pasivas o sinergias válidas.
+4. La selección de `Potencia calibrada` muestra solo armas evolucionadas que no
+   alcanzaron su límite de calibración. No ofrece cartas muertas ni permite
+   elegir un arma no evolucionada.
+5. Si todas las maestrías de todas las armas están al límite, la campaña ofrece
+   únicamente sinergias y mejoras globales válidas. Un futuro `Limit Break`
+   pertenece al modo infinito y no se agrega a los actos por anticipado.
+6. La mano normal se compone solo de pools authored: nunca se rellena desde el
+   catálogo legacy completo. Reserva/rota una evolución o rango pendiente para
+   que una familia elegible no desaparezca indefinidamente entre pasivas.
+
+### Requisitos de implementación y prueba
+
+- La política de campaña está confinada en el compositor de `UpgradeApplier`;
+  cuando se construya infinito deberá extraerse como `EndlessOfferPolicy`
+  separada, sin heredar este cap ni alterar los actos.
+- Registrar por familia: rango, rama elegida, maestrías aplicadas y límite de
+  rareza de `Potencia calibrada`.
+- Aplicar las maestrías en simulación; la UI solo muestra el preview y emite
+  la selección del arma objetivo.
+- Probar ambas ramas de las seis familias con cada canal de maestría, preview
+  antes → después, exclusión mutua, pausa, reroll y reinicio.
+- Verificar que la carta universal no aparezca con dos o menos armas
+  evolucionadas y que, con tres, nunca deje una mano sin tres opciones válidas.
+- Comparar base evolucionada y maestría con la misma semilla a 30/60/144 Hz.
+  No fijar porcentajes finales hasta cerrar EX-02c.
+
 ## 9. Orden de entregas y puertas
 
 | Paso | Alcance | Condición para avanzar |
@@ -525,19 +639,21 @@ humana. Si una rama se rechaza, revisar su verbo antes de aumentar brillo/daño.
   borde; bosses inmóviles a fuerzas; cambios de arena sin desalineación.
 - Pausa, suspensión, reset, muerte, cambio de acto y máximos de tres armas.
 - Browser comprueba resultado de mecánica y selección, no únicamente texto
-  «evolución activa»; screenshot/clip revisado a tamaño de juego Low/High.
+   «evolución activa»; screenshot/clip revisado a tamaño de juego Low/High.
 - Primera prueba humana breve: base/A/B, aislada y bajo presión. Preguntar:
   ¿explicas la diferencia?, ¿cuándo elegirías cada una?, ¿te hizo daño un
   enemigo acercado artificialmente?, ¿ves el área real?, ¿hay una opción
   siempre superior? No exigir ahora otras diez runs para aceptar un prototipo.
 - Stress y run completa en Acto II tras aceptar la pareja; usar PC y S25 como
   evidencia de esos dispositivos, no certificación de gama baja. Balance final
-  de enemigos/daño sigue diferido. Automatización no cierra aprobación humana.
+  de enemigos/daño sigue diferido. La aprobación humana de las seis parejas ya
+  está registrada; cualquier cambio posterior requiere una nueva validación.
 
 ## 10. Instrucción de arranque para el siguiente agente
 
 Leer CONTINUACION → plan §16.4–16.5 y §22.1r → este documento → skills.
 Empezar por cualquier ruta `weapon-path` de la lista anterior y probar los seis
-rangos base I→VI, después el hito y ambas evoluciones. Projectile conserva el
-comportamiento aprobado; las otras cinco rutas son prototipos v2 pendientes de
-juicio humano. No modificar balance global de enemigos durante esta revisión.
+rangos base I→VI, después el hito y ambas evoluciones. Las seis parejas tienen
+aprobación humana vigente; cualquier ajuste de sus verbos, daño o presentación
+debe conservar este contrato y solicitar una nueva validación. No modificar el
+balance global de enemigos durante esta revisión.

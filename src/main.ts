@@ -160,6 +160,10 @@ const bootstrap = async (): Promise<void> => {
     : undefined;
   const requestedAct = searchParams.get('act');
   const actId: ActId = requestedAct === 'angular' ? 'angular' : 'radial';
+  const campaignBuild = searchParams.get('debug') === '1'
+    && searchParams.get('campaign') === 'evolved'
+    ? 'three-evolved' as const
+    : undefined;
   const baselineMode = searchParams.get('baseline') === '1'
     && hazardCadenceMode === 'chaos'
     && calibrationId === undefined
@@ -219,6 +223,7 @@ const bootstrap = async (): Promise<void> => {
     pulseRingDrill,
     pulseRingWeaponDrill,
     magneticChargeWeaponDrill,
+    campaignBuild,
     weaponCardId,
     evolutionId,
     evolutionScenario,
@@ -239,7 +244,7 @@ const bootstrap = async (): Promise<void> => {
     startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
       && !magneticChargeWeaponDrill && weaponCardId === undefined && evolutionId === undefined
-      && weaponPath === undefined,
+      && weaponPath === undefined && campaignBuild === undefined,
     platform: new LocalPlatform()
   });
   await game.start();

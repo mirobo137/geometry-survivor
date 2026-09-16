@@ -290,7 +290,7 @@ test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al reca
   expect(failures).toEqual([]);
 });
 
-test('muestra el gating de actos y permite seleccionar Angular cuando esta desbloqueado', async ({ page }) => {
+test('muestra el gating de actos y entra a Angular con build limpia cuando esta desbloqueado', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
   await page.addInitScript(() => {
     localStorage.setItem('geometry-survivor:save', JSON.stringify({
@@ -308,8 +308,7 @@ test('muestra el gating de actos y permite seleccionar Angular cuando esta desbl
   await expect(page.locator('#start-act-status')).toContainText('Acto II');
   await page.locator('#start-act-back').click();
   await page.locator('#start-play').click();
-  await expect(page.locator('#start-entry-view')).toBeVisible();
-  await page.locator('[data-start-calibration="projectile"]').click();
+  await expect(page.locator('#start-entry-view')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeHidden();
   await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
@@ -497,6 +496,29 @@ test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
   await expect(choices.first()).toHaveAttribute('aria-pressed', 'true');
   await expect(levelUp).toBeHidden();
 
+  expect(failures).toEqual([]);
+});
+
+test('presenta el compositor de campaña y la pantalla de objetivo post-evolución', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1&campaign=evolved&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  const levelUp = page.locator('#level-up');
+  const choices = levelUp.locator('#level-up-options button');
+  await expect(levelUp).toBeVisible({ timeout: 10_000 });
+  await expect(choices).toHaveCount(3);
+  await expect(levelUp.locator('[data-upgrade-id="universal_weapon_mastery"]')).toBeVisible();
+  await expect(levelUp).toHaveAttribute('data-offer-kind', 'standard');
+
+  await levelUp.locator('[data-upgrade-id="universal_weapon_mastery"]').click();
+  await expect(levelUp).toBeVisible();
+  await expect(levelUp).toHaveAttribute('data-offer-kind', 'mastery-target');
+  await expect(choices).toHaveCount(3);
+  const cardKinds = await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.cardKind));
+  expect(cardKinds.every((kind) => kind === 'mastery')).toBe(true);
+  await choices.first().click();
+  await expect(levelUp).toBeHidden({ timeout: 5_000 });
   expect(failures).toEqual([]);
 });
 

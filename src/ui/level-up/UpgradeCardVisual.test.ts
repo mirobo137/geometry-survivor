@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   UPGRADE_DEFINITIONS,
   WEAPON_EVOLUTION_DEFINITIONS,
-  WEAPON_EVOLUTION_OFFER_DEFINITIONS
+  WEAPON_EVOLUTION_OFFER_DEFINITIONS,
+  WEAPON_MASTERY_DEFINITIONS
 } from '../../content/upgrades/UpgradeDefinitions';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
 
@@ -11,7 +12,8 @@ describe('upgrade card visual map', () => {
     for (const upgrade of [
       ...UPGRADE_DEFINITIONS,
       ...WEAPON_EVOLUTION_DEFINITIONS,
-      ...WEAPON_EVOLUTION_OFFER_DEFINITIONS
+      ...WEAPON_EVOLUTION_OFFER_DEFINITIONS,
+      ...WEAPON_MASTERY_DEFINITIONS
     ]) {
       const visual = getUpgradeCardVisual(upgrade.id);
       expect(visual.icon).toMatch(/^(speed|projectile|core|orbit|chain|boomerang|pulse|magnet|armor|experience|repair|vampirism|critical|shield|rail|volley|crown|gravity|circuit|thunder|comet|singularity|echo|compression|horizon|collapse)$/);

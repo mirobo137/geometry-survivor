@@ -505,17 +505,21 @@ export class WeaponView {
 
     const progress = clamp01(state.progress);
     if (state.phase === 'telegraph') {
+      const directional = state.evolution === 'compression_wave';
       this.pulseRingTrack.alpha = 0.52 + progress * 0.42;
       this.pulseRingCore.alpha = 0.68 + progress * 0.32;
       this.pulseRingCore.scale.set(0.9 + progress * 0.1);
       this.pulseRingTrack.scale.set(this.reducedMotion ? 1 : 1.32 - progress * 0.32);
       this.pulseRingCore.rotation = this.reducedMotion ? 0 : -progress * Math.PI / 4;
-      this.pulseRingTrack.rotation = this.reducedMotion ? 0 : progress * 0.08;
+      // Compression's cone is a telegraph boundary, not a decorative ring:
+      // it must remain on the axis captured by simulation for the whole cast.
+      this.pulseRingTrack.rotation = directional || this.reducedMotion ? 0 : progress * 0.08;
       return;
     }
     if (state.phase === 'active') {
       const scale = Math.max(0.05, state.radius / this.pulseRingBaseRadius);
-      const rotation = this.reducedMotion ? 0 : progress * 0.12;
+      const directional = state.evolution === 'compression_wave';
+      const rotation = directional || this.reducedMotion ? 0 : progress * 0.12;
       this.pulseRingActiveShell.scale.set(scale);
       this.pulseRingActiveMantle.scale.set(scale);
       this.pulseRingActiveBody.scale.set(scale);
@@ -558,6 +562,7 @@ export class WeaponView {
     const detonating = state.phase === 'detonate' || state.phase === 'collapse';
     const collapsing = state.phase === 'collapse';
     const recovering = state.phase === 'recovery';
+    const polarCollapse = state.evolution === 'polar_collapse';
 
     const lift = inFlight && !this.reducedMotion ? Math.sin(progress * Math.PI) * 62 : 0;
     this.magneticChargeTrail.clear();
@@ -574,7 +579,7 @@ export class WeaponView {
     this.magneticChargeTrail.visible = inFlight;
     this.magneticChargeBeacon.visible = inFlight || attracting;
     this.magneticChargeField.visible = attracting && this.quality !== 'low';
-    this.magneticChargeBackplate.visible = detonating;
+    this.magneticChargeBackplate.visible = detonating && (!polarCollapse || state.phase === 'detonate');
     this.magneticChargeBand.visible = detonating;
     this.magneticChargeRails.visible = detonating;
     this.magneticChargeCore.visible = !recovering;
@@ -583,9 +588,11 @@ export class WeaponView {
     const rotation = this.reducedMotion ? 0 : state.rotation;
     this.magneticChargeBeacon.rotation = rotation * 0.35;
     this.magneticChargeField.rotation = -rotation * 0.7;
-    this.magneticChargeBackplate.rotation = -rotation * 0.28;
-    this.magneticChargeBand.rotation = rotation * 0.42;
-    this.magneticChargeRails.rotation = -rotation * 0.78;
+    this.magneticChargeBackplate.rotation = polarCollapse ? 0 : -rotation * 0.28;
+    // Polar's band is the actual collision front. It never rotates apart
+    // from its snapshot geometry; only non-damaging charge ornaments may spin.
+    this.magneticChargeBand.rotation = polarCollapse ? 0 : rotation * 0.42;
+    this.magneticChargeRails.rotation = polarCollapse ? 0 : -rotation * 0.78;
     this.magneticChargeResidue.rotation = rotation * 0.5;
 
     this.magneticChargeBeacon.alpha = intensity * (inFlight ? 0.62 + progress * 0.28 : 0.86 + rhythm * 0.1);
@@ -598,10 +605,7 @@ export class WeaponView {
     // Contract: the damage boundaries stay at their exact radii. Only ornaments contract.
     this.magneticChargeField.scale.set(attracting ? 1 - progress * 0.48 : 1);
     const collapseScale = collapsing ? 1 - Math.sin(progress * Math.PI) * 0.28 : 1;
-    const polarCollapse = state.evolution === 'polar_collapse';
-    const polarFrontScale = polarCollapse && state.phase === 'detonate'
-      ? Math.max(0.08, 1 - progress)
-      : polarCollapse ? 0.08 : collapseScale;
+    const polarFrontScale = polarCollapse ? 1 : collapseScale;
     this.magneticChargeBackplate.scale.set(collapseScale);
     this.magneticChargeBand.scale.set(polarFrontScale);
     this.magneticChargeRails.scale.set(polarCollapse ? polarFrontScale : collapseScale);
@@ -612,6 +616,32 @@ export class WeaponView {
       : detonating ? 0.65 + Math.exp(-progress * (collapsing ? 4 : 14)) * 0.65 : 0.85 + progress * 0.15);
     this.magneticChargeCore.rotation = inFlight && !this.reducedMotion ? progress * Math.PI * 2 : 0;
     this.magneticChargeCore.alpha = intensity * (recovering ? 0 : 0.92 + rhythm * 0.08);
+    if (polarCollapse && detonating) this.renderPolarCollapseGeometry(state);
+  }
+
+  /**
+   * Polar has only three dynamic fronts, so redraw its simple Graphics rather
+   * than scaling a whole triangle and shrinking its physical 24u width. This
+   * is one active weapon, pooled layers and no SVG/filter work per frame.
+   */
+  private renderPolarCollapseGeometry(state: CombatRenderState['magneticCharge']): void {
+    if (state.phase === 'detonate') {
+      const frontRadius = state.polarFrontRadius ?? state.polarRadius ?? 0;
+      const angle = state.polarAngle ?? 0;
+      this.magneticChargeBand.clear();
+      this.magneticChargeRails.clear();
+      drawPolarCollapseFronts(this.magneticChargeBand, 0, 0, frontRadius, angle);
+      drawPolarCollapseRails(this.magneticChargeRails, 0, 0, frontRadius, angle);
+      return;
+    }
+    if (state.phase === 'collapse') {
+      const radius = state.polarFinalRadius ?? state.outerRadius * 0.43;
+      const pulses = state.polarPulseCount ?? 0;
+      this.magneticChargeBand.clear();
+      this.magneticChargeRails.clear();
+      drawPolarFinalCore(this.magneticChargeBand, 0, 0, radius, pulses);
+      drawPolarFinalCoreRails(this.magneticChargeRails, 0, 0, radius, pulses);
+    }
   }
 
   private buildMagneticChargeSequence(state: CombatRenderState['magneticCharge']): void {
@@ -949,6 +979,53 @@ const drawPolarCollapseRails = (
         width: scale === 1 ? 1.8 : 1.1,
         alpha: scale === 1 ? 0.82 : 0.5
       });
+  }
+};
+
+/** Draws the exact damaging disk left after Polar's three fronts converge. */
+const drawPolarFinalCore = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  radius: number,
+  pulseCount: number
+): void => {
+  graphics.beginPath().circle(x, y, radius)
+    .fill({ color: MAGNETIC_CHARGE_VIOLET, alpha: 0.15 });
+  graphics.beginPath().circle(x, y, radius)
+    .stroke({ color: MAGNETIC_CHARGE_INK, width: 8, alpha: 0.92 });
+  graphics.beginPath().circle(x, y, radius)
+    .stroke({ color: MAGNETIC_CHARGE_VIOLET, width: 3.4, alpha: 0.94 });
+  graphics.beginPath().circle(x, y, radius)
+    .stroke({ color: MAGNETIC_CHARGE_CYAN, width: 1.2, alpha: 0.96 });
+  for (let index = 0; index < 3; index += 1) {
+    const angle = index * FULL_CIRCLE / 3 + Math.PI / 6;
+    const point = polarPoint(radius * 0.64, angle);
+    graphics.beginPath().regularPoly(x + point.x, y + point.y, 4, 4, angle)
+      .fill({ color: MAGNETIC_CHARGE_ARMOR, alpha: 0.78 })
+      .stroke({ color: MAGNETIC_CHARGE_GOLD, width: 1.1, alpha: 0.82 });
+  }
+  if (pulseCount >= 1) {
+    drawMagneticArc(graphics, x, y, radius * 0.62, 0, FULL_CIRCLE, MAGNETIC_CHARGE_CYAN, 2.2, 0.94);
+  }
+  if (pulseCount >= 2) {
+    drawMagneticArc(graphics, x, y, radius * 0.34, 0, FULL_CIRCLE, MAGNETIC_CHARGE_WHITE, 2.2, 0.96);
+  }
+};
+
+const drawPolarFinalCoreRails = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  radius: number,
+  pulseCount: number
+): void => {
+  const spokeRadius = radius * (pulseCount >= 2 ? 0.88 : 0.7);
+  for (let index = 0; index < 3; index += 1) {
+    const angle = index * FULL_CIRCLE / 3 + Math.PI / 6;
+    const point = polarPoint(spokeRadius, angle);
+    graphics.beginPath().moveTo(x, y).lineTo(x + point.x, y + point.y)
+      .stroke({ color: MAGNETIC_CHARGE_GOLD, width: 1.1, alpha: 0.74 });
   }
 };
 

@@ -3033,6 +3033,30 @@ body {
   letter-spacing: 0.18em;
 }
 
+#level-up-options button.upgrade-card[data-card-kind="mastery"],
+#level-up-options button.upgrade-card[data-card-kind="mastery-offer"] {
+  --card-accent: #ffe39a;
+  --card-line: #9a7043;
+  --card-surface: #2a2030;
+  box-shadow: 0 0 0 1px rgba(255, 227, 154, 0.2), 0 0 2rem rgba(255, 171, 91, 0.16);
+}
+
+#level-up-options button.upgrade-card[data-card-kind="mastery"] .upgrade-card-meta,
+#level-up-options button.upgrade-card[data-card-kind="mastery-offer"] .upgrade-card-meta {
+  letter-spacing: 0.16em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #level-up[data-offer-kind="mastery-target"] #level-up-options button[data-card-kind="mastery"] {
+    animation: mastery-card-breathe 2.8s ease-in-out infinite;
+  }
+}
+
+@keyframes mastery-card-breathe {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.1); }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   #level-up[data-offer-kind="evolution-offer"] #level-up-options button[data-card-kind="evolution-offer"] {
     animation: evolution-gate-breathe 2.4s ease-in-out infinite;

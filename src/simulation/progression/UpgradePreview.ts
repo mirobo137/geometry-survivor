@@ -1,6 +1,7 @@
 export type UpgradePreviewStat =
   | 'movementSpeed'
   | 'projectileDamage'
+  | 'projectileSpeed'
   | 'maxHealth'
   | 'projectileCooldown'
   | 'experienceGain'
@@ -8,7 +9,21 @@ export type UpgradePreviewStat =
   | 'vampirism'
   | 'criticalChance'
   | 'orbitRadius'
+  | 'orbitDamage'
+  | 'orbitHitCooldown'
+  | 'orbitContactRadius'
   | 'chainDamage'
+  | 'chainCooldown'
+  | 'chainJumpRadius'
+  | 'boomerangDamage'
+  | 'boomerangCooldown'
+  | 'boomerangDistance'
+  | 'pulseRingDamage'
+  | 'pulseRingCooldown'
+  | 'pulseRingRadius'
+  | 'magneticChargeDamage'
+  | 'magneticChargeCooldown'
+  | 'magneticChargeRadius'
   | 'armor';
 
 /** Runtime values needed by presentation to explain a numeric upgrade. */

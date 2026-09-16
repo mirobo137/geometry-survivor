@@ -98,6 +98,10 @@ export class ChainBehavior {
     this.damage += Math.max(0, amount);
   }
 
+  public increaseJumpRadius(amount: number): void {
+    this.jumpRadius += Math.max(0, amount);
+  }
+
   /** Applies the permanent damage branch to every jump in a cast. */
   public setPermanentDamageMultiplier(multiplier: number): void {
     this.permanentDamageMultiplier = normalizeMultiplier(multiplier);

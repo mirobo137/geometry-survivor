@@ -237,4 +237,73 @@ describe('WeaponView', () => {
     highView.render(combat);
     expect(highLayer.visible).toBe(false);
   });
+
+  it('keeps Compression Wave and Polar Collapse damage geometry aligned with their snapshots', () => {
+    const compressionWave = {
+      active: true,
+      phase: 'active' as const,
+      originX: 320,
+      originY: 240,
+      radius: 160,
+      startRadius: 30,
+      endRadius: 320,
+      progress: 0.5,
+      width: 28,
+      sequence: 7,
+      directionX: 1,
+      directionY: 0,
+      evolution: 'compression_wave' as const
+    };
+    const polarCollapse = {
+      active: true,
+      phase: 'detonate' as 'detonate' | 'collapse',
+      originX: 120,
+      originY: 180,
+      x: 320,
+      y: 240,
+      targetX: 320,
+      targetY: 240,
+      innerRadius: 62,
+      outerRadius: 148,
+      pullRadius: 180,
+      progress: 0.5,
+      rotation: 1.2,
+      sequence: 9,
+      polarAngle: 0.4,
+      polarRadius: 90,
+      polarFrontRadius: 45,
+      polarFinalRadius: 64,
+      polarPulseCount: 0,
+      evolution: 'polar_collapse' as const
+    };
+    const combat = {
+      orbitBlades: Array.from({ length: WEAPON_DEFINITIONS.orbit.maxBlades }, () => ({
+        active: false, x: 0, y: 0, radius: 10, angle: 0
+      })),
+      chainSegments: [],
+      pulseRingWeapon: compressionWave,
+      magneticCharge: polarCollapse
+    };
+    const view = new WeaponView(fakeRenderer, undefined, 'high');
+    view.render(combat);
+
+    const pulseLayer = view.root.children[5];
+    for (const index of [2, 3, 4, 5, 6]) expect(pulseLayer.children[index].rotation).toBe(0);
+    const magneticLayer = view.root.children[6];
+    const polarBand = magneticLayer.children[4];
+    const polarRails = magneticLayer.children[5];
+    expect(polarBand.rotation).toBe(0);
+    expect(polarRails.rotation).toBe(0);
+    expect(polarBand.getLocalBounds().width).toBeLessThan(110);
+
+    polarCollapse.phase = 'collapse';
+    polarCollapse.progress = 0.7;
+    polarCollapse.polarPulseCount = 2;
+    view.render(combat);
+    const coreBounds = polarBand.getLocalBounds();
+    expect(coreBounds.width).toBeGreaterThan(120);
+    expect(coreBounds.width).toBeLessThan(150);
+    expect(polarBand.rotation).toBe(0);
+    expect(polarRails.rotation).toBe(0);
+  });
 });

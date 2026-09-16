@@ -517,4 +517,19 @@ describe('CombatSimulation', () => {
     expect(combat.boss.state.phase).toBe('inactive');
     expect(combat.boss.state.active).toBe(false);
   });
+
+  it('allows a new Pulse Ring and Magnetic Charge evolution after reusing a run', () => {
+    const combat = new CombatSimulation();
+    expect(combat.unlockPulseRing()).toBe(true);
+    expect(combat.unlockMagneticCharge()).toBe(true);
+    expect(combat.applyPulseRingEvolution('echo_shock')).toBe(true);
+    expect(combat.applyMagneticChargeEvolution('event_horizon')).toBe(true);
+
+    combat.reset();
+
+    expect(combat.unlockPulseRing()).toBe(true);
+    expect(combat.unlockMagneticCharge()).toBe(true);
+    expect(combat.applyPulseRingEvolution('compression_wave')).toBe(true);
+    expect(combat.applyMagneticChargeEvolution('polar_collapse')).toBe(true);
+  });
 });

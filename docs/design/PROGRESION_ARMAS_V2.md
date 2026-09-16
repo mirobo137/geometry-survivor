@@ -1,7 +1,8 @@
 # EX-08-R1 — Progresión de armas I–VII y cartas
 
-Fecha: 2026-09-14. Estado: **las seis rutas de prueba implementadas; flujo
-normal de campaña y validación humana siguen pendientes**. Complementa
+Fecha: 2026-09-14. Estado: **las seis rutas de prueba y el compositor normal
+de campaña están implementados; la validación humana de la nueva rotación
+queda pendiente**. Complementa
 [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md).
 
 Las rutas activas son `/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`.
@@ -10,8 +11,8 @@ bonificaciones de XP. Cada level-up muestra una sola carta del siguiente rango
 Projectile. En el nivel 7 del jugador, después de aplicar VI, aparece una sola
 carta hito `Evolucion disponible`; al elegirla se abre la pareja Rail
 Lance/Pulse Volley con `Volver`, sin consumir la subida hasta confirmar una
-rama. El rango VII queda disponible para la futura integración normal, pero no
-se ofrece en esta ruta. La ruta es de desarrollo y no se ofrece desde el menú
+rama. El rango VII queda reservado en esta ruta de desarrollo, pero ya se
+ofrece en la campaña normal de los tres actos. La ruta no se ofrece desde el menú
 ni escribe una build especial en el guardado.
 
 ## 1. Decisión de diseño
@@ -316,3 +317,28 @@ La aprobación antigua de armas y Projectile sigue como referencia funcional/
 visual; **no certifica estos números nuevos**. EX-02c conserva el balance final
 de daño y resistencia enemigos. Esta entrega de documentación no ejecuta
 ninguna migración ni prueba de rendimiento del juego.
+
+## Estado vigente de campaña - 15-09-2026
+
+La integración normal descrita arriba ya está conectada en `UpgradeApplier` y
+prevalece sobre los párrafos históricos de este documento. En cada mano normal
+se compone una oferta de arsenal con peso uniforme entre `projectile_rank_2`
+(Doble cañón) y las cinco armas adicionales que aún caben. Se conserva como
+máximo una adquisición por mano; al completar tres armas se retiran todas las
+adquisiciones del pool. Las familias activas avanzan por sus rangos reales
+II→VII, después reciben una carta hito de evolución y finalmente las
+maestrías de Potencia/Ritmo/Cobertura.
+
+La carta universal `Potencia calibrada` solo entra cuando las tres armas
+activas ya evolucionaron; abre una segunda pantalla para elegir el objetivo y
+no reabre ramas. La ruta QA `/?debug=1&campaign=evolved&act=angular&quality=high`
+permite revisar esa presentación directamente en una partida de acto. El modo
+infinito conserva un compositor futuro separado y el balance EX-02c no cambia.
+
+Corrección de compositor, 16-09-2026: las runs reales reciben semilla nueva;
+las pruebas pueden inyectarla. La mano no vuelve a usar el pool legacy como
+relleno, reserva rangos/evoluciones pendientes, admite solo una adquisición de
+arsenal y convierte una adquisición tomada en progreso de rango. `Potencia
+calibrada` exige objetivo válido, tiene cap real de tres y bloquea reroll en su
+selector. La entrada pública al Acto II permanece temporalmente limpia; las
+calibraciones directas se conservan solo para QA.

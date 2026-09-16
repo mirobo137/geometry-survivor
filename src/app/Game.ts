@@ -48,7 +48,6 @@ import { RadialActDirector } from '../simulation/acts/RadialActDirector';
 import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
-import { CALIBRATION_DEFINITIONS } from '../content/run/CalibrationDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -128,6 +127,8 @@ export interface GameOptions {
   readonly evolutionScenario?: WeaponEvolutionScenario;
   /** Developer-only real-run path that focuses one weapon family. */
   readonly weaponPath?: WeaponPathId;
+  /** Developer-only campaign hand with three evolved weapons for card QA. */
+  readonly campaignBuild?: 'three-evolved';
 }
 
 /** Coordinates the run lifecycle and loop without implementing domain systems. */
@@ -151,6 +152,7 @@ export class Game {
   private readonly evolutionId: WeaponEvolutionId | null;
   private readonly evolutionScenario: WeaponEvolutionScenario | null;
   private readonly weaponPath: WeaponPathId | null;
+  private readonly campaignBuild: 'three-evolved' | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly playerSkin: PlayerSkinId;
@@ -231,7 +233,6 @@ export class Game {
   };
 
   private readonly onStartPlay = (calibrationId?: CalibrationId): void => {
-    if (this.actId === 'angular' && calibrationId === undefined) return;
     if (this.stopped || !this.gameState.startRun()) return;
     if (calibrationId !== undefined) {
       this.calibrationId = calibrationId;
@@ -334,7 +335,7 @@ export class Game {
     this.returnToMenuState();
   };
 
-  private readonly onActIntermissionContinue = (calibrationId: CalibrationId): void => {
+  private readonly onActIntermissionContinue = (): void => {
     if (this.contextLost || this.gameState.phase !== 'act-intermission') return;
     if (this.actId !== 'radial' || !this.isActUnlocked('angular')) return;
 
@@ -346,7 +347,7 @@ export class Game {
     this.terminalRunToken += 1;
     this.rewardedOffers.reset();
     this.actId = 'angular';
-    this.calibrationId = calibrationId;
+    this.calibrationId = null;
     this.calibrationApplied = false;
     if (!this.gameState.continueToNextAct()) return;
     this.configureActRuntime(saved);
@@ -434,6 +435,7 @@ export class Game {
     this.evolutionId = options.evolutionId ?? null;
     this.evolutionScenario = options.evolutionScenario ?? null;
     this.weaponPath = options.weaponPath ?? null;
+    this.campaignBuild = options.campaignBuild ?? null;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -462,7 +464,7 @@ export class Game {
     this.debug = new DebugPanel(
       options.elements.debug,
       this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled
-        || this.evolutionScenario !== null || this.weaponPath !== null
+        || this.evolutionScenario !== null || this.weaponPath !== null || this.campaignBuild !== null
     );
     this.baseline = new BaselineRunRecorder(this.baselineMode);
     this.baselinePanel = this.baselineMode && options.elements.baseline
@@ -756,6 +758,8 @@ export class Game {
     const hasEvolutionOffer = choices.some((choice) => choice.effect.type === 'evolutionOffer');
     const rerollAvailable = choices.length === 3
       && !hasEvolutionOffer
+      && !choices.some((choice) => choice.effect.type === 'universalWeaponMastery')
+      && navigation.masteryTarget !== true
       && this.rewardedOffers.canOffer('reroll')
       && await this.rewardedAds.isAvailable('reroll');
     if (this.stopped || requestToken !== this.levelUpRequestToken || this.gameState.phase !== 'level-up') return;
@@ -774,19 +778,36 @@ export class Game {
     this.levelUp.open(level, choices, (upgradeId) => {
       this.view.closeLevelUpFx();
       this.input.reset();
+      if (upgradeId === 'universal_weapon_mastery') {
+        const targetChoices = this.upgradeApplier.getUniversalMasteryChoices();
+        if (targetChoices.length > 0) {
+          this.openLevelUp(
+            null,
+            targetChoices,
+            level,
+            { masteryTarget: true, onBack: () => this.openLevelUp(null, choices, level) }
+          );
+        }
+        return;
+      }
       const evolutionOfferPath = getWeaponPathForEvolutionOffer(upgradeId);
-      if (evolutionOfferPath !== null && evolutionOfferPath === this.weaponPath) {
-        const offerChoices = this.weaponPathEvolutionOfferChoices ?? choices;
+      if (evolutionOfferPath !== null) {
+        const offerChoices = evolutionOfferPath === this.weaponPath
+          ? this.weaponPathEvolutionOfferChoices ?? choices
+          : choices;
         this.openLevelUp(
           null,
-          this.upgradeApplier.getWeaponPathEvolutionChoices(evolutionOfferPath),
+      this.upgradeApplier.getWeaponPathEvolutionChoices(evolutionOfferPath),
           level,
           { onBack: () => this.openLevelUp(null, offerChoices, level) }
         );
         return;
       }
-      this.baseline.noteUpgrade(upgradeId);
-      this.upgradeApplier.apply(upgradeId);
+      const applied = navigation.masteryTarget === true
+        ? this.upgradeApplier.applyUniversalMastery(upgradeId)
+        : this.upgradeApplier.apply(upgradeId);
+      if (!applied) return;
+      this.baseline.noteUpgrade(navigation.masteryTarget === true ? 'universal_weapon_mastery' : upgradeId);
       this.advanceWeaponPath(upgradeId);
       this.progression.consumeLevelUp();
       if (this.progression.state.pendingLevelUps > 0) {
@@ -864,6 +885,9 @@ export class Game {
         throw new Error(`No se pudo preparar la ruta enfocada ${this.weaponPath}`);
       }
     }
+    if (this.campaignBuild === 'three-evolved') {
+      this.prepareCampaignDebugBuild();
+    }
     this.input.attach();
     this.hudElement.hidden = false;
     if (unlockAudio) void this.audio.unlock();
@@ -877,6 +901,8 @@ export class Game {
       }
     } else if (this.weaponCardId !== null) {
       this.openLevelUp(this.weaponCardId);
+    } else if (this.campaignBuild === 'three-evolved') {
+      this.openLevelUp(null, undefined, 20);
     }
   }
 
@@ -1087,10 +1113,10 @@ export class Game {
       actName: this.actId === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial',
       message: this.actId === 'angular'
         ? 'El Acto II queda registrado. La recompensa ya fue acreditada una sola vez.'
-        : 'El Acto I queda registrado. Conserva tu build y entra al siguiente acto cuando estés listo.',
+        : 'El Acto I queda registrado. El Acto II inicia con una build limpia durante esta validación.',
       restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : 'Repetir Acto I',
-      templates: this.canContinueToAngular() ? CALIBRATION_DEFINITIONS : undefined,
-      onSelectTemplate: this.canContinueToAngular() ? this.onActIntermissionContinue : undefined,
+      continueLabel: this.canContinueToAngular() ? 'Continuar al Acto II' : undefined,
+      onContinue: this.canContinueToAngular() ? this.onActIntermissionContinue : undefined,
       onReturnToMenu: this.startScreen ? this.onActIntermissionReturnToMenu : undefined
     } : undefined);
   }
@@ -1225,6 +1251,27 @@ export class Game {
     }
     if (this.evolutionScenario !== null && !this.upgradeApplier.apply(this.evolutionId)) {
       throw new Error(`No se pudo aplicar la evolucion ${this.evolutionId}`);
+    }
+  }
+
+  private prepareCampaignDebugBuild(): void {
+    const build = [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const }
+    ];
+    for (const family of build) {
+      if (family.base !== undefined && !this.upgradeApplier.apply(family.base)) {
+        throw new Error(`No se pudo preparar la build de campana ${family.path}`);
+      }
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+        if (!this.upgradeApplier.apply(`${family.path}_rank_${rank}`)) {
+          throw new Error(`No se pudo preparar el rango ${family.path} ${rank}`);
+        }
+      }
+      if (!this.upgradeApplier.apply(family.evolution)) {
+        throw new Error(`No se pudo preparar la evolucion ${family.evolution}`);
+      }
     }
   }
 

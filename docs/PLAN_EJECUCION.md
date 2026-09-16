@@ -61,7 +61,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
 | EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, EX-06d con validación reducida aprobada; ocho runs extendidas pendientes |
 | EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante y EX-02c conserva el balance final pendiente |
-| EX-08 | 7/9 | niveles/evoluciones, una ruta por entrega | acompaña el acto que consume cada ruta |
+| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | pendiente, después de EX-09 |
 | EX-11 | 10 | Overdrive y producción | pendiente, después de EX-10 |
@@ -840,6 +840,48 @@ reconstruye el bundle y paso 97/97 archivos, 383/383 pruebas unitarias y
 44/44 pruebas browser en desktop/mobile. La capacidad de ocho segmentos de
 Chain/Closed Circuit esta compartida entre simulacion y `WeaponView` para
 evitar sprites fuera del pool.
+
+### EX-08-R2 - compositor normal de campaña y maestrías - 15-09-2026
+
+La progresión dejó de depender de la rotación fija histórica y ya consume el
+estado real de los tres actos. Mientras haya ranuras, cada mano de tres cartas
+incluye como máximo una oferta de arsenal escogida con el mismo peso entre las
+seis entradas jugables: `projectile_rank_2` (Doble cañón), Orbit, Chain,
+Boomerang, Pulse Ring y Magnetic Charge. No se prioriza Projectile; cuando se
+completa el límite de tres armas desaparecen las adquisiciones y permanecen
+rangos, evoluciones, maestrías y pasivas válidas.
+
+El rango de cada familia avanza II→VII. Al llegar a VII aparece en una mano
+normal una sola carta `Evolución disponible`; abrirla muestra las dos ramas y
+solo confirmar una consume la subida. Después de evolucionar aparecen las
+maestrías Potencia/Ritmo/Cobertura de esa familia. Con las tres armas
+evolucionadas, cada tercera mano puede presentar `Potencia calibrada`, que abre
+una segunda pantalla para elegir el arma evolucionada objetivo; no reabre las
+ramas. El reroll usa el mismo compositor y excluye la mano actual.
+
+QA directo de presentación: `/?debug=1&campaign=evolved&act=angular&quality=high`
+abre una build real de tres armas evolucionadas y la primera mano de campaña.
+Para revisar el reparto inicial basta jugar Acto I o II desde el menú; las
+adquisiciones disponibles tienen el mismo peso y el cap sigue siendo tres.
+Esta entrega no cambia daño/vida de enemigos ni la política futura del modo
+infinito.
+
+#### Corrección de auditoría — 16-09-2026
+
+El compositor ya no parte de una semilla fija en runs reales, conserva semillas
+inyectables en tests y no rellena manos con `UPGRADE_DEFINITIONS` completo. Así
+se evita el retorno de cartas legacy, se limita a una adquisición por mano y se
+reserva de forma rotativa una evolución/rango pendiente. `Potencia calibrada`
+requiere objetivo, tiene cap real de tres, conserva su cadencia y bloquea reroll
+mientras el jugador decide el objetivo. Los previews post-evolución muestran la
+estadística que cambia; Cobertura respeta Solar Crown fijo y extiende las ramas
+de alcance fijo aplicables.
+
+Durante esta validación queda suspendida la oferta pública de calibraciones de
+entrada a Angular: Acto II empieza limpio desde intermisión y selector. Los
+parámetros `?calibration=...` sobreviven exclusivamente para QA. Typecheck,
+397 pruebas unitarias/integración, build local y los 2 smoke browser afectados
+pasaron; la validación humana de rotación y balance sigue pendiente.
 
 ### Correccion vigente dentro de EX-08-R1 - 14-09-2026
 

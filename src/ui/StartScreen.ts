@@ -385,18 +385,6 @@ export class StartScreen {
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-act-open');
   }
 
-  private openEntrySelector(): void {
-    if (!this.metaView.hidden) this.closeMeta();
-    if (!this.skinsPanelIsClosed()) this.closeSkins();
-    this.setSettingsExpanded(false);
-    this.mainView.hidden = true;
-    this.actView.hidden = true;
-    this.entryView.hidden = false;
-    this.root.classList.add('is-entry-mode');
-    this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-entry-open');
-    this.entryButtons[0]?.focus({ preventScroll: true });
-  }
-
   private closeEntrySelector(): void {
     this.entryView.hidden = true;
     this.mainView.hidden = false;
@@ -405,10 +393,6 @@ export class StartScreen {
   }
 
   private handlePlay(): void {
-    if (this.selectedAct === 'angular') {
-      this.openEntrySelector();
-      return;
-    }
     this.playHandler?.();
   }
 
@@ -432,10 +416,7 @@ export class StartScreen {
     this.angularActButton.disabled = !angularUnlocked;
     this.angularActButton.setAttribute('aria-label', angularUnlocked ? 'Seleccionar Acto II Angular' : 'Acto II Angular bloqueado');
     const actName = this.selectedAct === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial';
-    const nextStep = this.selectedAct === 'angular' && angularUnlocked
-      ? ' · al iniciar eliges 1 de 3 calibraciones'
-      : '';
-    this.actStatus.textContent = `${actName}${nextStep}${angularUnlocked ? '' : ' · Angular se desbloquea al vencer Acto I'}`;
+    this.actStatus.textContent = `${actName}${angularUnlocked ? '' : ' · Angular se desbloquea al vencer Acto I'}`;
   }
 
   private openSkins(): void {

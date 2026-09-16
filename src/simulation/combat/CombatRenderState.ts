@@ -149,6 +149,12 @@ export interface MagneticChargeState {
   /** Triangle orientation/progress used by Polar Collapse. */
   polarAngle?: number;
   polarRadius?: number;
+  /** Exact radial extent of the currently damaging Polar fronts. */
+  polarFrontRadius?: number;
+  /** Exact final-core radius used by Polar Collapse collision. */
+  polarFinalRadius?: number;
+  /** Number of final-core pulses that are damage-eligible this frame. */
+  polarPulseCount?: number;
   evolution?: MagneticChargeEvolution | null;
 }
 

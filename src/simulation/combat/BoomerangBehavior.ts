@@ -103,6 +103,10 @@ export class BoomerangBehavior {
     this.damage += Math.max(0, amount);
   }
 
+  public increaseOutboundDistance(amount: number): void {
+    this.outboundDistance += Math.max(0, amount);
+  }
+
   public setPermanentDamageMultiplier(multiplier: number): void {
     this.permanentDamageMultiplier = normalizeMultiplier(multiplier);
     this.applyRankTuning();

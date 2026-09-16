@@ -2262,10 +2262,20 @@ textura cacheada, sprites pooled y FX limitados por calidad.
   solo confirmar consume la oportunidad. Se puede posponer eligiendo otra
   carta. Rotar familias elegibles sin prioridad permanente de Projectile.
   El inventario de cartas que aumentan rango y la selección atómica se rigen
-  por [EX-08-R §2](docs/design/EVOLUCIONES_V2.md). Este flujo está planificado,
-  todavía no implementado; no agregar cofres, recetas ni costes para evolucionar.
+  por [EX-08-R §2](docs/design/EVOLUCIONES_V2.md). En campaña ya está
+  implementado: `UpgradeApplier` ofrece como máximo una adquisición de arsenal
+  por mano mientras haya ranuras, con peso uniforme entre Doble cañón y las
+  cinco familias adicionales; al llegar a tres armas retira adquisiciones y
+  continúa con rangos/evoluciones. No agregar cofres, recetas ni costes para
+  evolucionar.
 - Una evolución debe cambiar lectura, posicionamiento o targeting, no limitarse
   a sumar un porcentaje invisible.
+- Las cartas posteriores a la evolución se rigen por el contrato de
+  [EVOLUCIONES_V2 §8.1](docs/design/EVOLUCIONES_V2.md): las maestrías específicas
+  aparecen después de evolucionar una familia; la carta rara `Potencia
+  calibrada` solo aparece con tres armas evolucionadas, permite elegir el arma
+  objetivo y no reabre la pantalla de dos ramas. Campaña e infinito usan
+  políticas de oferta separadas.
 
 ### Ajuste vigente para la ruta arma-por-arma (14-09-2026)
 
@@ -2287,6 +2297,13 @@ la progresión completa sea migrada y validada.
   evolución que domina daño, control y seguridad simultáneamente se recorta.
 
 ## 16.5 Arsenal y rediseño vigente de evoluciones
+
+**Nota de precedencia — 15-09-2026:** la descripción de prototipo que sigue
+conserva decisiones históricas. Para implementación actual de rutas enfocadas
+y Solar Crown prevalecen §22.1s/t. La revisión estática posterior encontró
+contratos aún abiertos: ver
+[auditoría acotada](docs/design/AUDITORIA_EVOLUCIONES_2026-09-15.md).
+No equivale a cierre de EX-08, aprobación visual ni migración de campaña normal.
 
 **Actualización EX-08-R, 14-09-2026:** la validación humana aprueba únicamente
 la pareja de Projectile. Solar Crown y Event Horizon no comunicaron utilidad;
@@ -3157,6 +3174,45 @@ prototipo anteriores:
   ramas recien corregidas, y Rail Lance debe avanzar y liberar su slot por TTL.
   Esto comprueba el contrato de combate; no equivale a aprobar balance o
   presentacion humana.
+
+### 22.1u Estado vigente - compositor de cartas de campaña - 15-09-2026
+
+La campaña real de los actos I–III ya usa un compositor con estado, no la
+rotación fija histórica. Mientras el inventario tenga espacio, cada mano
+normal incluye como máximo una oferta de arsenal y la familia se sortea con el
+mismo peso entre `projectile_rank_2` (Doble cañón) y Orbit, Chain, Boomerang,
+Pulse Ring y Magnetic Charge. No se prioriza Projectile ni Doble cañón. Al
+completar tres armas se retiran adquisiciones y quedan rangos, cartas hito,
+evoluciones, maestrías y pasivas válidas.
+
+El rango VII pertenece al arma: habilita una carta `Evolución disponible` que
+abre sus dos ramas sin consumir la subida hasta confirmar. `Potencia calibrada`
+es una carta rara posterior a las tres evoluciones; abre una segunda pantalla
+para elegir el arma objetivo y aplica el canal Potencia, sin volver a mostrar
+ramas. Las tres familias de maestría (Potencia/Ritmo/Cobertura) se resuelven en
+simulación y conservan las diferencias de ambas evoluciones.
+
+Acceso de QA: `/?debug=1&campaign=evolved&act=angular&quality=high` inicia una
+partida del acto con tres armas evolucionadas y abre la primera mano normal.
+No modifica la política futura del modo infinito ni adelanta EX-02c; el balance
+global de vida/daño de enemigos permanece pendiente.
+
+### 22.1v Corrección de compositor y entrada limpia Angular — 16-09-2026
+
+La auditoría posterior corrigió variación de semilla por run, filtración de
+cartas legacy, duplicación de adquisiciones, reserva de evolución/rango,
+validación y cap de `Potencia calibrada`, bloqueo de reroll durante su selector
+de objetivo y previews numéricos de maestría. Solar Crown conserva radio 94u:
+su Cobertura incrementa radio de contacto; las ramas fijas Compression Wave y
+Event Horizon reciben su incremento de alcance correspondiente. La evidencia
+automática es typecheck, 397 pruebas unitarias/integración, build local y dos
+smokes browser focalizados.
+
+Como override temporal de §16.4 y de las descripciones históricas de
+calibraciones, el flujo público Acto I → Acto II y el selector de Angular ya no
+ofrecen las tres builds iniciales. Angular inicia con build limpia y compone su
+primera mano normal. `?calibration=projectile|orbit|chain` se mantiene sólo
+como acceso de QA hasta que producto reactive las plantillas tras validación.
 
 ## 22.2 Resolución de instrucciones históricas
 

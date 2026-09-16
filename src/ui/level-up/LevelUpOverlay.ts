@@ -19,6 +19,8 @@ export interface LevelUpRewardedOptions {
 
 export interface LevelUpNavigationOptions {
   readonly onBack?: () => void;
+  /** Second screen opened by Potencia calibrada; it is never a reroll hand. */
+  readonly masteryTarget?: boolean;
 }
 
 const CARD_SELECTION_DELAY_MS = 220;
@@ -26,6 +28,7 @@ const CARD_SELECTION_DELAY_MS = 220;
 const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   movementSpeed: 'Velocidad',
   projectileDamage: 'Daño de proyectil',
+  projectileSpeed: 'Velocidad de proyectil',
   maxHealth: 'Vida máxima',
   projectileCooldown: 'Intervalo',
   experienceGain: 'Experiencia',
@@ -33,7 +36,21 @@ const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   vampirism: 'Vampirismo',
   criticalChance: 'Cr\u00edtico',
   orbitRadius: 'Radio de órbita',
+  orbitDamage: 'Daño orbital',
+  orbitHitCooldown: 'Intervalo orbital',
+  orbitContactRadius: 'Radio de contacto',
   chainDamage: 'Daño de cadena',
+  chainCooldown: 'Intervalo de cadena',
+  chainJumpRadius: 'Salto de cadena',
+  boomerangDamage: 'Daño de búmeran',
+  boomerangCooldown: 'Intervalo de búmeran',
+  boomerangDistance: 'Alcance de búmeran',
+  pulseRingDamage: 'Daño de pulso',
+  pulseRingCooldown: 'Intervalo de pulso',
+  pulseRingRadius: 'Radio de pulso',
+  magneticChargeDamage: 'Daño magnético',
+  magneticChargeCooldown: 'Intervalo magnético',
+  magneticChargeRadius: 'Radio magnético',
   armor: 'Armadura'
 };
 
@@ -113,6 +130,8 @@ export class LevelUpOverlay {
     const isEvolutionOffer = choices.length === 2
       && choices.every((choice) => choice.effect.type === 'weaponEvolution');
     const isEvolutionGateOffer = choices.some((choice) => choice.effect.type === 'evolutionOffer');
+    const isMasteryTargetOffer = choices.length > 0
+      && choices.every((choice) => choice.effect.type === 'weaponMastery');
     const evolutionFamily = choices.find((choice) => (
       choice.effect.type === 'weaponEvolution' || choice.effect.type === 'evolutionOffer'
     ));
@@ -127,20 +146,26 @@ export class LevelUpOverlay {
       ? `Nivel ${level} Â· EVOLUCION`
       : isEvolutionGateOffer
         ? `Nivel ${level} Â· EVOLUCION DISPONIBLE`
-        : `Nivel ${level}`;
+        : isMasteryTargetOffer
+          ? `Nivel ${level} · MAESTRÍA`
+          : `Nivel ${level}`;
     this.subtitle.textContent = isEvolutionOffer
       ? `Elige una ruta y confirma como cambia ${familyLabel}`
       : isEvolutionGateOffer
         ? `${familyLabel} esta lista; abre la carta para comparar sus dos rutas`
-        : 'Elige una carta para cambiar el destino de esta run';
+        : isMasteryTargetOffer
+          ? 'Elige el arma evolucionada que recibira la calibracion'
+          : 'Elige una carta para cambiar el destino de esta run';
     this.root.dataset.offerKind = isEvolutionOffer
       ? 'evolution'
       : isEvolutionGateOffer
         ? 'evolution-offer'
-        : 'standard';
+        : isMasteryTargetOffer
+          ? 'mastery-target'
+          : 'standard';
     this.backHandler = navigation.onBack ?? null;
     if (this.backButton) {
-      this.backButton.hidden = !isEvolutionOffer || this.backHandler === null;
+      this.backButton.hidden = this.backHandler === null;
       this.backButton.disabled = false;
     }
     this.options.replaceChildren();
@@ -154,11 +179,18 @@ export class LevelUpOverlay {
       button.dataset.category = visual.category;
       button.dataset.cardKind = choice.effect.type === 'evolutionOffer'
         ? 'evolution-offer'
-        : choice.effect.type === 'weaponRank' && choice.effect.rank === 7
-          ? 'milestone'
-          : 'standard';
+        : choice.effect.type === 'universalWeaponMastery'
+          ? 'mastery-offer'
+          : choice.effect.type === 'weaponMastery'
+            ? 'mastery'
+            : choice.effect.type === 'weaponRank' && choice.effect.rank === 7
+              ? 'milestone'
+              : 'standard';
       if (choice.effect.type === 'evolutionOffer') {
         button.setAttribute('aria-label', `${choice.title}. Abre las dos evoluciones de ${familyLabel}.`);
+      }
+      if (choice.effect.type === 'universalWeaponMastery') {
+        button.setAttribute('aria-label', `${choice.title}. Abre la seleccion de un arma evolucionada.`);
       }
 
       const frame = document.createElement('span');

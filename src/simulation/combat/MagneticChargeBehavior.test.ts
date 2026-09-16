@@ -102,6 +102,18 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.state.phase).toBe('travel');
   });
 
+  it('clears its internal evolution when a run is reset', () => {
+    const pool = new EnemyPool(1);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    expect(weapon.setEvolution('event_horizon')).toBe(true);
+    weapon.reset();
+    expect(weapon.currentEvolution).toBeNull();
+    expect(weapon.unlock()).toBe(true);
+    expect(weapon.setEvolution('polar_collapse')).toBe(true);
+  });
+
   it('Event Horizon damages its remote core before a single final collapse', () => {
     const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
@@ -125,11 +137,12 @@ describe('MagneticChargeBehavior', () => {
     const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
-    const damages: number[] = [];
-    const weapon = new MagneticChargeBehavior({
+    const damages: { phase: string; damage: number }[] = [];
+    let weapon: MagneticChargeBehavior;
+    weapon = new MagneticChargeBehavior({
       enemies,
       rollCriticalDamage: (damage) => {
-        damages.push(damage);
+        damages.push({ phase: weapon.state.phase, damage });
         return damage;
       },
       onEnemyDefeated: () => undefined
@@ -137,7 +150,7 @@ describe('MagneticChargeBehavior', () => {
     weapon.unlock();
     expect(weapon.setEvolution('polar_collapse')).toBe(true);
     advance(weapon, player, 1 / 60);
-    const target = createTarget(pool, weapon.state.targetX + 115, weapon.state.targetY, 'chaser');
+    const target = createTarget(pool, weapon.state.targetX, weapon.state.targetY, 'chaser');
     enemies.rebuildGrid();
     const before = target.health;
     let sawCollapse = false;
@@ -149,7 +162,11 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.state.evolution).toBe('polar_collapse');
     expect(target.health).toBeLessThan(before);
     expect(Math.hypot(target.x - weapon.state.targetX, target.y - weapon.state.targetY)).toBeLessThan(82);
-    expect(damages.length).toBeGreaterThanOrEqual(2);
+    const collapseHits = damages.filter((hit) => hit.phase === 'collapse');
+    expect(collapseHits).toEqual([
+      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 0.2 },
+      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 0.2 }
+    ]);
   });
 });
 

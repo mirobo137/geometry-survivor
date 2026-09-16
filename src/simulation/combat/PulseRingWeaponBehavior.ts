@@ -43,12 +43,14 @@ export class PulseRingWeaponBehavior {
 
   private readonly hitCastMarkers: Uint32Array;
   private readonly hitEnemyGenerations: Uint32Array;
-  private readonly hitCounts: Uint8Array;
+  /** Wave marker per cast/pooled enemy slot. Echo may hit once per wave. */
+  private readonly hitWaveMarkers: Uint8Array;
   private phaseTimer = 0;
   private phase: PulseRingWeaponState['phase'] = 'idle';
   private damage = DEFINITION.damage;
   private telegraphSeconds = DEFINITION.telegraphSeconds;
   private endRadius = DEFINITION.endRadius;
+  private compressionCoverageBonus = 0;
   private pushDistance = DEFINITION.pushDistance;
   private rank = 1;
   private directionX = 0;
@@ -63,7 +65,7 @@ export class PulseRingWeaponBehavior {
   public constructor(private readonly context: PulseRingWeaponBehaviorContext) {
     this.hitCastMarkers = new Uint32Array(context.enemies.pool.capacity);
     this.hitEnemyGenerations = new Uint32Array(context.enemies.pool.capacity);
-    this.hitCounts = new Uint8Array(context.enemies.pool.capacity);
+    this.hitWaveMarkers = new Uint8Array(context.enemies.pool.capacity);
   }
 
   public get isUnlocked(): boolean {
@@ -97,6 +99,12 @@ export class PulseRingWeaponBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public increaseEndRadius(amount: number): void {
+    const increase = Math.max(0, amount);
+    this.endRadius += increase;
+    if (this.evolution === 'compression_wave') this.compressionCoverageBonus += increase;
   }
 
   public setPermanentDamageMultiplier(multiplier: number): void {
@@ -139,7 +147,7 @@ export class PulseRingWeaponBehavior {
     this.state.directionX = this.castDirectionX;
     this.state.directionY = this.castDirectionY;
     this.state.evolution = this.evolution;
-    this.hitCounts.fill(0);
+    this.hitWaveMarkers.fill(0);
     this.state.sequence = this.state.sequence >= 2_000_000_000 ? 1 : this.state.sequence + 1;
     this.syncState();
     return true;
@@ -147,8 +155,9 @@ export class PulseRingWeaponBehavior {
 
   public update(dtSeconds: number, player?: PlayerState): void {
     let remaining = Math.min(Math.max(dtSeconds, 0), 0.1);
-    if (!this.unlocked || this.phase === 'idle' || remaining <= 0) return;
+    if (!this.unlocked || remaining <= 0) return;
     if (player) this.updateMovementDirection(player);
+    if (this.phase === 'idle') return;
 
     while (remaining > EPSILON && this.phase !== 'idle') {
       const previousRadius = this.state.radius;
@@ -173,6 +182,9 @@ export class PulseRingWeaponBehavior {
         this.state.secondaryOriginY = this.lastPlayerY ?? this.state.originY;
         this.state.originX = this.state.secondaryOriginX;
         this.state.originY = this.state.secondaryOriginY;
+        // A new Echo Shock origin starts from the authored inner radius. Do
+        // not sweep the completed radius of wave 0 around this new point.
+        this.state.radius = DEFINITION.startRadius;
       } else {
         this.phase = 'idle';
       }
@@ -185,9 +197,11 @@ export class PulseRingWeaponBehavior {
     this.phaseTimer = 0;
     this.unlocked = false;
     this.rank = 1;
+    this.evolution = null;
     this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
     this.telegraphSeconds = DEFINITION.telegraphSeconds;
     this.endRadius = DEFINITION.endRadius;
+    this.compressionCoverageBonus = 0;
     this.pushDistance = DEFINITION.pushDistance;
     this.directionX = 0;
     this.directionY = -1;
@@ -197,7 +211,7 @@ export class PulseRingWeaponBehavior {
     this.lastPlayerY = null;
     this.hitCastMarkers.fill(0);
     this.hitEnemyGenerations.fill(0);
-    this.hitCounts.fill(0);
+    this.hitWaveMarkers.fill(0);
     Object.assign(this.state, {
       active: false,
       phase: 'idle' as const,
@@ -229,9 +243,10 @@ export class PulseRingWeaponBehavior {
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
       if (!enemy.active || enemy.health <= 0) continue;
+      const waveMarker = (this.state.wave ?? 0) + 1;
       if (this.hitCastMarkers[index] === cast
         && this.hitEnemyGenerations[index] === enemy.generation
-        && (this.evolution !== 'echo_shock' || this.hitCounts[index] >= 2)) continue;
+        && this.hitWaveMarkers[index] === waveMarker) continue;
       const distance = Math.hypot(enemy.x - this.state.originX, enemy.y - this.state.originY);
       const tolerance = toleranceBase + enemy.radius;
       const bandLow = Math.min(previousRadius, currentRadius) - tolerance;
@@ -241,7 +256,7 @@ export class PulseRingWeaponBehavior {
 
       this.hitCastMarkers[index] = cast;
       this.hitEnemyGenerations[index] = enemy.generation;
-      this.hitCounts[index] = Math.min(2, this.hitCounts[index] + 1);
+      this.hitWaveMarkers[index] = waveMarker;
       const waveMultiplier = this.evolution === 'echo_shock' && this.state.wave === 1 ? 0.45 : 1;
       const damageMultiplier = this.evolution === 'compression_wave' ? 1 : waveMultiplier;
       enemy.health -= this.context.rollCriticalDamage(this.damage * damageMultiplier);
@@ -324,7 +339,7 @@ export class PulseRingWeaponBehavior {
 
   private effectiveEndRadius(): number {
     return this.evolution === 'compression_wave'
-      ? Math.max(this.endRadius, COMPRESSION_WAVE_END_RADIUS)
+      ? Math.max(this.endRadius, COMPRESSION_WAVE_END_RADIUS + this.compressionCoverageBonus)
       : this.endRadius;
   }
 

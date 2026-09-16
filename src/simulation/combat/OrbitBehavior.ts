@@ -35,6 +35,7 @@ export class OrbitBehavior {
   private damage = ORBIT_DEFINITION.damage;
   private hitCooldownSeconds = ORBIT_DEFINITION.hitCooldownSeconds;
   private rotationSpeed = ORBIT_DEFINITION.rotationSpeed;
+  private contactRadiusBonus = 0;
   private rank = 1;
   private permanentDamageMultiplier = 1;
   private permanentCadenceMultiplier = 1;
@@ -60,6 +61,10 @@ export class OrbitBehavior {
 
   public get currentRadius(): number {
     return this.radius;
+  }
+
+  public get currentContactRadius(): number {
+    return ORBIT_DEFINITION.radius + this.contactRadiusBonus;
   }
 
   public get currentDamage(): number {
@@ -88,8 +93,18 @@ export class OrbitBehavior {
     this.radius = Math.max(ORBIT_DEFINITION.orbitRadius, this.radius + Math.max(0, amount));
   }
 
+  /** Expands contact forgiveness without moving Solar Crown off its fixed ring. */
+  public increaseContactRadius(amount: number): void {
+    this.contactRadiusBonus += Math.max(0, amount);
+    for (const blade of this.blades) blade.radius = ORBIT_DEFINITION.radius + this.contactRadiusBonus;
+  }
+
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public decreaseHitCooldown(amount: number): void {
+    this.hitCooldownSeconds = Math.max(0.08, this.hitCooldownSeconds - Math.max(0, amount));
   }
 
   /**
@@ -147,6 +162,7 @@ export class OrbitBehavior {
       blade.x = 0;
       blade.y = 0;
       blade.angle = 0;
+      blade.radius = ORBIT_DEFINITION.radius;
     }
     this.bladeCount = 0;
     this.angle = 0;
@@ -155,6 +171,7 @@ export class OrbitBehavior {
     this.damage = ORBIT_DEFINITION.damage * this.permanentDamageMultiplier;
     this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
     this.rotationSpeed = ORBIT_DEFINITION.rotationSpeed;
+    this.contactRadiusBonus = 0;
     this.evolution = null;
     this.solarHasPosition = false;
     this.gravitonAxisAngle = -Math.PI / 2;

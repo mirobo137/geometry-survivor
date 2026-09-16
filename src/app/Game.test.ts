@@ -303,7 +303,7 @@ describe('Game', () => {
     expect(saved.wallet.nova).toBe(33);
   });
 
-  it('unlocks Angular and starts it from a selected authored calibration', async () => {
+  it('unlocks Angular and continues with a clean build while calibration selection is disabled', async () => {
     let saved = createDefaultSaveData();
     const save = vi.fn((next: typeof saved) => {
       saved = next;
@@ -339,14 +339,15 @@ describe('Game', () => {
       actName: 'Acto I · Radial',
       restartLabel: 'Repetir Acto I'
     });
-    expect(intermission.templates).toHaveLength(3);
+    expect(intermission.templates).toBeUndefined();
+    expect(intermission.continueLabel).toBe('Continuar al Acto II');
     expect(saved.unlockedActs).toEqual(['radial', 'angular']);
-    intermission.onSelectTemplate('orbit');
+    intermission.onContinue();
     expect(runtime.gameState.phase).toBe('playing');
     expect(runtime.actId).toBe('angular');
     expect(runtime.combat.actId).toBe('angular');
     expect(runtime.combat.hasTwinEmitters).toBe(false);
-    expect(runtime.upgradeApplier.snapshot()).toEqual(['orbit_blade', 'orbit_reach', 'reinforced_core']);
+    expect(runtime.upgradeApplier.snapshot()).toEqual([]);
   });
 
   it('rejects a stale revive callback after a victory', async () => {

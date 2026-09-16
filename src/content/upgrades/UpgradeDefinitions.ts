@@ -74,6 +74,25 @@ export type UpgradeId =
   | 'magnetic_charge_rank_6'
   | 'magnetic_charge_rank_7'
   | 'magnetic_charge_evolution_offer'
+  | 'universal_weapon_mastery'
+  | 'projectile_mastery_power'
+  | 'projectile_mastery_tempo'
+  | 'projectile_mastery_coverage'
+  | 'orbit_mastery_power'
+  | 'orbit_mastery_tempo'
+  | 'orbit_mastery_coverage'
+  | 'chain_mastery_power'
+  | 'chain_mastery_tempo'
+  | 'chain_mastery_coverage'
+  | 'boomerang_mastery_power'
+  | 'boomerang_mastery_tempo'
+  | 'boomerang_mastery_coverage'
+  | 'pulse_ring_mastery_power'
+  | 'pulse_ring_mastery_tempo'
+  | 'pulse_ring_mastery_coverage'
+  | 'magnetic_charge_mastery_power'
+  | 'magnetic_charge_mastery_tempo'
+  | 'magnetic_charge_mastery_coverage'
   | WeaponEvolutionId;
 
 export interface UpgradeDefinition {
@@ -106,7 +125,11 @@ export type UpgradeEffect =
   | { readonly type: 'armor'; readonly amount: number }
   | { readonly type: 'weaponRank'; readonly family: WeaponPathId; readonly rank: WeaponRank }
   | { readonly type: 'evolutionOffer'; readonly family: WeaponPathId }
-  | { readonly type: 'weaponEvolution'; readonly evolution: WeaponEvolutionId };
+  | { readonly type: 'weaponEvolution'; readonly evolution: WeaponEvolutionId }
+  | { readonly type: 'universalWeaponMastery' }
+  | { readonly type: 'weaponMastery'; readonly family: WeaponPathId; readonly channel: WeaponMasteryChannel };
+
+export type WeaponMasteryChannel = 'power' | 'tempo' | 'coverage';
 
 export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
@@ -752,3 +775,70 @@ export const getLevelUpChoices = (
     UPGRADE_DEFINITIONS[(start + index) % UPGRADE_DEFINITIONS.length]
   )).filter(isAvailable).slice(0, 3);
 };
+
+const masteryLabel = (channel: WeaponMasteryChannel): string => {
+  switch (channel) {
+    case 'power': return 'Potencia';
+    case 'tempo': return 'Ritmo';
+    case 'coverage': return 'Cobertura';
+  }
+};
+
+const createMasteryCards = (
+  family: WeaponPathId,
+  label: string,
+  descriptions: Record<WeaponMasteryChannel, string>
+): readonly UpgradeDefinition[] => (
+  (['power', 'tempo', 'coverage'] as const).map((channel) => ({
+    id: `${family}_mastery_${channel}` as UpgradeId,
+    title: `${label} · ${masteryLabel(channel)}`,
+    description: descriptions[channel],
+    effect: { type: 'weaponMastery', family, channel } as const,
+    maxStacks: 3
+  }))
+);
+
+/**
+ * Post-evolution cards are separate from the base campaign pool. A mastery
+ * is a small repeatable specialization shared by both evolution branches;
+ * it never reopens the evolution decision.
+ */
+export const WEAPON_MASTERY_DEFINITIONS: readonly UpgradeDefinition[] = [
+  {
+    id: 'universal_weapon_mastery',
+    title: 'Potencia calibrada',
+    description: 'Elige un arma evolucionada para aumentar el dano de todas sus fuentes.',
+    effect: { type: 'universalWeaponMastery' },
+    maxStacks: 3
+  },
+  ...createMasteryCards('projectile', 'Projectile', {
+    power: 'El impacto sube de calibre y atraviesa mejor las formaciones.',
+    tempo: 'El ciclo de disparo se comprime sin cambiar la lectura de la estela.',
+    coverage: 'La municion gana velocidad para cubrir mas distancia en cada rafaga.'
+  }),
+  ...createMasteryCards('orbit', 'Orbita', {
+    power: 'Cada hoja entrega una descarga mas contundente al contacto.',
+    tempo: 'La ventana entre impactos sobre el mismo objetivo se reduce.',
+    coverage: 'La corona abre ligeramente su radio de contacto y control.'
+  }),
+  ...createMasteryCards('chain', 'Cadena', {
+    power: 'Cada enlace descarga mas energia sobre su objetivo.',
+    tempo: 'La red electrica recupera su siguiente salto con mayor rapidez.',
+    coverage: 'La cadena encuentra enlaces validos a mayor distancia.'
+  }),
+  ...createMasteryCards('boomerang', 'Bumeran', {
+    power: 'La hoja gana peso de impacto en ida y regreso.',
+    tempo: 'El lanzador prepara el siguiente recorrido antes.',
+    coverage: 'La trayectoria alcanza mas lejos y conserva su silueta legible.'
+  }),
+  ...createMasteryCards('pulse_ring', 'Pulso', {
+    power: 'La cresta de la onda inflige mas dano al detonar.',
+    tempo: 'La carga y el siguiente pulso se encadenan con menor intervalo.',
+    coverage: 'El frente de onda llega a un radio mayor.'
+  }),
+  ...createMasteryCards('magnetic_charge', 'Magnetica', {
+    power: 'La banda de detencion golpea con mas intensidad.',
+    tempo: 'La carga vuelve a estar disponible antes.',
+    coverage: 'La zona magnetica captura y detona en un radio mayor.'
+  })
+];

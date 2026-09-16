@@ -28,7 +28,7 @@ import {
 } from '../../content/hazards/HazardCadenceDefinitions';
 import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
 import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
-import type { WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -257,8 +257,36 @@ export class CombatSimulation {
     return this.weaponSystem.currentProjectileRank;
   }
 
+  public get currentProjectileEvolution(): CombatWeaponSystem['currentProjectileEvolution'] {
+    return this.weaponSystem.currentProjectileEvolution;
+  }
+
+  public get currentOrbitEvolution(): CombatWeaponSystem['currentOrbitEvolution'] {
+    return this.weaponSystem.currentOrbitEvolution;
+  }
+
+  public get currentChainEvolution(): CombatWeaponSystem['currentChainEvolution'] {
+    return this.weaponSystem.currentChainEvolution;
+  }
+
+  public get currentBoomerangEvolution(): CombatWeaponSystem['currentBoomerangEvolution'] {
+    return this.weaponSystem.currentBoomerangEvolution;
+  }
+
+  public get currentPulseRingEvolution(): CombatWeaponSystem['currentPulseRingEvolution'] {
+    return this.weaponSystem.currentPulseRingEvolution;
+  }
+
+  public get currentMagneticChargeEvolution(): CombatWeaponSystem['currentMagneticChargeEvolution'] {
+    return this.weaponSystem.currentMagneticChargeEvolution;
+  }
+
   public get currentOrbitRadius(): number {
     return this.weaponSystem.currentOrbitRadius;
+  }
+
+  public get currentOrbitContactRadius(): number {
+    return this.weaponSystem.currentOrbitContactRadius;
   }
 
   public getWeaponPathRank(path: WeaponPathId): number {
@@ -320,6 +348,22 @@ export class CombatSimulation {
     return this.weaponSystem.currentChainCooldown;
   }
 
+  public get currentChainJumpRadius(): number {
+    return this.weaponSystem.currentChainJumpRadius;
+  }
+
+  public get currentBoomerangDamage(): number {
+    return this.weaponSystem.currentBoomerangDamage;
+  }
+
+  public get currentBoomerangCooldown(): number {
+    return this.weaponSystem.currentBoomerangCooldown;
+  }
+
+  public get currentBoomerangOutboundDistance(): number {
+    return this.weaponSystem.currentBoomerangOutboundDistance;
+  }
+
   public get currentPulseRingDamage(): number {
     return this.weaponSystem.currentPulseRingDamage;
   }
@@ -328,12 +372,20 @@ export class CombatSimulation {
     return this.weaponSystem.currentPulseRingCooldown;
   }
 
+  public get currentPulseRingEndRadius(): number {
+    return this.weaponSystem.currentPulseRingEndRadius;
+  }
+
   public get currentMagneticChargeDamage(): number {
     return this.weaponSystem.currentMagneticChargeDamage;
   }
 
   public get currentMagneticChargeCooldown(): number {
     return this.weaponSystem.currentMagneticChargeCooldown;
+  }
+
+  public get currentMagneticChargeOuterRadius(): number {
+    return this.weaponSystem.currentMagneticChargeOuterRadius;
   }
 
   public get currentExperienceMultiplier(): number {
@@ -470,6 +522,10 @@ export class CombatSimulation {
 
   public increaseCriticalChance(amount: number): void {
     this.weaponSystem.increaseCriticalChance(amount);
+  }
+
+  public applyWeaponMastery(family: WeaponPathId, channel: WeaponMasteryChannel): boolean {
+    return this.weaponSystem.applyWeaponMastery(family, channel);
   }
 
   public update(dtSeconds: number, player: PlayerState, arena: ArenaBoundaryInput): void {

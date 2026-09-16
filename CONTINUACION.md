@@ -1,5 +1,74 @@
 # Geometry Survivor — estado y continuación
 
+## Auditoría de compositor corregida — 16-09-2026
+
+La revisión posterior del compositor de campaña cerró siete regresiones de
+ofertas sin tocar el balance EX-02c: cada run recibe semilla nueva (las pruebas
+inyectan una semilla fija), una mano contiene como máximo una adquisición de
+arsenal y no puede filtrar cartas legacy. Las evoluciones pendientes y los
+rangos se reservan/rotan entre manos; una adquisición ya tomada pasa a ofrecer
+su rango, no vuelve a duplicar el arma.
+
+`Potencia calibrada` requiere un objetivo válido, tiene un máximo real de tres
+aplicaciones y no puede rerollearse durante la pantalla de objetivo. Sus
+previews muestran el cambio numérico de la maestría elegida. Cobertura también
+afecta las ramas de radio fijo compatibles: Solar Crown conserva su radio de
+órbita de 94u y amplía contacto; Compression Wave y Event Horizon sí aumentan
+su alcance efectivo. Pruebas: typecheck, 397 pruebas unitarias/integración,
+build local y 2/2 smoke browser específico verdes.
+
+### Decisión temporal — entrada limpia al Acto II
+
+Por decisión de producto, la selección pública de las tres calibraciones
+iniciales (`Projectile`, `Orbit`, `Chain`) está **deshabilitada temporalmente**.
+Al continuar desde Acto I o iniciar Angular desde el selector, Acto II comienza
+con build limpia y la primera mano normal de campaña. El acceso directo
+`?calibration=projectile|orbit|chain` se conserva únicamente para QA; no es una
+oferta visible. Reactivar las plantillas exige una validación de composición,
+no asumir que vuelven por defecto.
+
+## Auditoría acotada corregida — 15-09-2026
+
+Antes de ampliar las evoluciones, consultar
+[AUDITORIA_EVOLUCIONES_2026-09-15.md](docs/design/AUDITORIA_EVOLUCIONES_2026-09-15.md).
+Contiene los ocho hallazgos, su corrección, evidencias y pruebas de aceptación
+para cualquier agente. Se corrigieron reset, impactos por onda, transición del
+eco, sincronización visual, cooldown integrado y rumbo idle; las regresiones
+específicas pasan; typecheck, 390 unitarias y build local también pasaron.
+El smoke browser completo quedó pendiente por su inestabilidad conocida, al no
+terminar en esta ejecución. Quedan pendientes revisión visual humana, balance
+EX-02c y la migración normal de progresión.
+
+## Decisión vigente — cartas post-evolución — 15-09-2026
+
+La validación humana de las seis evoluciones queda aprobada por decisión del
+usuario. Se establece que los actos I–III comparten el límite de tres armas y
+la progresión de rangos/evoluciones. Las maestrías específicas aparecen después
+de evolucionar cada familia; `Potencia calibrada` es una carta rara universal
+que solo aparece cuando las tres armas están evolucionadas. No abre otra vez las
+dos ramas: muestra una selección de armas evolucionadas, aplica la potencia al
+objetivo elegido y se retira. Su rareza visual y el contrato completo, incluida
+la separación del futuro modo infinito, están en
+[EVOLUCIONES_V2 §8.1](docs/design/EVOLUCIONES_V2.md).
+
+Implementado en la campaña real: `UpgradeApplier.getChoices()` compone manos
+de tres cartas con estado de armas, rangos, evoluciones y maestrías válidas.
+Mientras haya ranuras libres aparece una sola oferta de arsenal elegida con el
+mismo peso entre `projectile_rank_2` (Doble cañón) y las cinco adquisiciones
+restantes; no existe prioridad fija para Projectile ni para Doble cañón. Al
+llegar a tres armas desaparecen las adquisiciones. El rango VII habilita una
+carta hito `Evolución disponible`, que abre sus dos ramas y consume solo al
+confirmar. Las cartas antiguas de daño/cadencia de armas quedan fuera de la
+mano normal para no duplicar el sistema de rangos.
+
+También quedó conectada la pantalla de objetivo de `Potencia calibrada` y los
+tres canales de maestría por familia (`Potencia`, `Ritmo`, `Cobertura`). Para
+probarla sin construir tres armas durante una run, usar
+`/?debug=1&campaign=evolved&act=angular&quality=high` (si Acto II todavía no
+está desbloqueado, quitar `act=angular`). La ruta abre una build real de tres
+armas evolucionadas y la primera mano normal; no es un laboratorio de daño.
+El balance EX-02c continúa separado.
+
 ## Estado operativo vigente — lote completo de progresión y evoluciones v2 — 14-09-2026
 
 La solicitud más reciente autoriza implementar de forma continua las seis
@@ -50,22 +119,32 @@ Pulse Volley, Solar Crown, Graviton Halo, Closed Circuit, Thunderhead, Twin
 Comet, Singularity Return, Echo Shock, Compression Wave, Event Horizon y
 Polar Collapse. Tambien comprueba que Rail Lance avance despues de disparar y
 libere su slot por TTL; no queda una bala congelada por la estela ni por el
-pool. El balance global de vida/dano y la aprobacion humana siguen pendientes.
+pool. El balance global de vida/dano sigue pendiente; la aprobacion humana de
+las seis evoluciones ya queda registrada en la decision vigente de este archivo.
 
-El siguiente paso es la validacion humana de las seis rutas por rango, hitos y
-evoluciones; el balance global de enemigos sigue deliberadamente pendiente.
+El compositor normal de cartas y sus maestrias post-evolucion ya estan
+integrados en los tres actos. La siguiente validacion humana debe revisar la
+rotacion inicial, la desaparicion de adquisiciones al completar tres armas,
+la pantalla de evolucion y la carta universal; el balance global de enemigos
+sigue deliberadamente pendiente.
 
-El rango VII de las tablas permanece reservado para la campaña normal futura;
-no aparece como una carta adicional en estas rutas. Las URLs
+La ruta `weapon-path` conserva su recorrido comprimido de laboratorio y no
+representa la mano normal de campana. En la campana real el rango VII si se
+ofrece y habilita la carta hito. Las URLs
 `?evolution=<slug>&scenario=single|mass&debug=1` siguen disponibles para
 inspeccionar una rama ya aplicada, y ahora el laboratorio actualiza únicamente
 la familia de la evolución indicada.
 
 La implementación está validada automáticamente con typecheck, suite unitaria
-y smoke browser; la aprobación de presentación, diversión y balance continúa
-siendo humana. No ajustar aún la vida/daño global de enemigos ni cerrar EX-02c.
+y smoke browser; cualquier cambio posterior de presentación o diversión en las
+evoluciones requiere una nueva aprobación humana. No ajustar aún la vida/daño
+global de enemigos ni cerrar EX-02c.
 
-## Vigente: EX-08-R — plan de rediseño, R1 parcial implementado — 14-09-2026
+## Histórico: EX-08-R — plan de rediseño, R1 parcial implementado — 14-09-2026
+
+Este bloque conserva contexto anterior al lote completo descrito al inicio.
+No interpretar sus pendientes de implementación como el estado actual de las
+seis rutas enfocadas. Consultar también la auditoría del 15-09-2026.
 
 **Ampliación más reciente:** [PROGRESION_ARMAS_V2.md](docs/design/PROGRESION_ARMAS_V2.md)
 define las 42 filas de rango I–VII, mejoras concretas y valores de prototipo.

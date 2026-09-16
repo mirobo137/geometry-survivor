@@ -56,7 +56,7 @@ describe('UpgradeApplier', () => {
   });
 
   it('can prioritize either new weapon card without bypassing the cap', () => {
-    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1234);
 
     expect(applier.getChoicesWithPriority(1, 'pulse_ring')[0].id).toBe('pulse_ring');
     expect(applier.apply('orbit_blade')).toBe(true);
@@ -178,10 +178,12 @@ describe('UpgradeApplier', () => {
   });
 
   it('generates a deterministic reroll without repeating the current cards', () => {
-    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1234);
     const current = applier.getChoices(2);
     const rerolled = applier.getRerollChoices(2, current);
-    const repeated = applier.getRerollChoices(2, current);
+    const mirror = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1234);
+    const mirrorCurrent = mirror.getChoices(2);
+    const repeated = mirror.getRerollChoices(2, mirrorCurrent);
 
     expect(rerolled).toHaveLength(3);
     expect(new Set(rerolled.map((choice) => choice.id)).size).toBe(3);
@@ -210,13 +212,170 @@ describe('UpgradeApplier', () => {
     }
   });
 
-  it('replaces the normal level-seven offer with the Projectile evolution pair', () => {
-    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+  it('keeps the normal hand intact until Projectile reaches rank VII', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x77);
 
     expect(applier.getChoices(6)).toHaveLength(3);
-    expect(applier.getChoices(7).map((choice) => choice.id)).toEqual(['rail_lance', 'pulse_volley']);
+    expect(applier.getChoices(7)).toHaveLength(3);
+    expect(applier.getChoices(7).some((choice) => choice.id === 'projectile_evolution_offer')).toBe(false);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+      expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    }
+    expect(applier.getChoices(7).some((choice) => choice.id === 'projectile_evolution_offer')).toBe(true);
+    expect(applier.apply('projectile_evolution_offer')).toBe(false);
     expect(applier.apply('rail_lance')).toBe(true);
     expect(applier.getChoices(7)).toHaveLength(3);
+  });
+
+  it('offers each unowned weapon with the same seeded probability and respects the cap', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const weaponIds = ['projectile_rank_2', 'orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'] as const;
+    const counts = new Map(weaponIds.map((id) => [id, 0]));
+    for (let index = 0; index < 600; index += 1) {
+      const weapon = applier.getChoices(1).find((choice) => weaponIds.includes(choice.id as typeof weaponIds[number]));
+      if (weapon) counts.set(weapon.id as typeof weaponIds[number], counts.get(weapon.id as typeof weaponIds[number])! + 1);
+    }
+    expect([...counts.values()].every((count) => count > 70)).toBe(true);
+    expect(Math.max(...counts.values()) - Math.min(...counts.values())).toBeLessThan(70);
+
+    expect(applier.apply('orbit_blade')).toBe(true);
+    expect(applier.apply('chain_lightning')).toBe(true);
+    const cappedHand = applier.getChoices(3);
+    expect(cappedHand.some((choice) => ['orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'].includes(choice.id))).toBe(false);
+    expect(cappedHand.some((choice) => choice.id === 'projectile_rank_2')).toBe(true);
+  });
+
+  it('offers the rare universal mastery only after three evolved families', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+    const families = [
+      { path: 'projectile' as const, base: undefined, evolution: 'rail_lance' as const },
+      { path: 'orbit' as const, base: 'orbit_blade' as const, evolution: 'solar_crown' as const },
+      { path: 'chain' as const, base: 'chain_lightning' as const, evolution: 'closed_circuit' as const }
+    ];
+
+    for (const family of families) {
+      if (family.base) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+        expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      }
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+
+    expect(applier.canApply('universal_weapon_mastery')).toBe(true);
+    expect(applier.getChoices(20).some((choice) => choice.id === 'universal_weapon_mastery')).toBe(true);
+    expect(applier.getUniversalMasteryChoices().map((choice) => choice.id)).toEqual([
+      'projectile_mastery_power',
+      'orbit_mastery_power',
+      'chain_mastery_power'
+    ]);
+    expect(applier.apply('universal_weapon_mastery')).toBe(false);
+    expect(applier.applyUniversalMastery('projectile_mastery_power')).toBe(true);
+    expect(applier.getStacks('universal_weapon_mastery')).toBe(1);
+  });
+
+  it('keeps campaign hands inside the authored pools and reserves a pending evolution', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x12ab);
+    const acquisitionIds = new Set(['projectile_rank_2', 'orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge']);
+    const legacyWeaponIds = new Set(['twin_emitters', 'focused_projectiles', 'rapid_projectiles', 'orbit_reach', 'chain_overload']);
+
+    for (let index = 0; index < 24; index += 1) {
+      const hand = applier.getChoices(index + 1);
+      expect(hand.filter((choice) => acquisitionIds.has(choice.id)).length).toBeLessThanOrEqual(1);
+      expect(hand.some((choice) => legacyWeaponIds.has(choice.id))).toBe(false);
+    }
+
+    const acquiredOrbit = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x33);
+    expect(acquiredOrbit.apply('orbit_blade')).toBe(true);
+    for (let index = 0; index < 12; index += 1) {
+      expect(acquiredOrbit.getChoices(index + 1).some((choice) => choice.id === 'orbit_blade')).toBe(false);
+    }
+
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    for (let index = 0; index < 6; index += 1) {
+      const hand = applier.getChoices(index + 30);
+      expect(hand.filter((choice) => choice.effect.type === 'evolutionOffer')).toHaveLength(1);
+    }
+  });
+
+  it('varies run seeds while preserving deterministic seeded hands', () => {
+    const sameA = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1001);
+    const sameB = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1001);
+    const other = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1002);
+    expect(sameA.getChoices(1).map((choice) => choice.id)).toEqual(sameB.getChoices(1).map((choice) => choice.id));
+    expect(sameA.getChoices(2).map((choice) => choice.id)).not.toEqual(other.getChoices(1).map((choice) => choice.id));
+  });
+
+  it('caps universal mastery, requires a valid target and keeps Solar Crown at its fixed radius', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x4444);
+    const families = [
+      { path: 'projectile' as const, base: undefined, evolution: 'rail_lance' as const },
+      { path: 'orbit' as const, base: 'orbit_blade' as const, evolution: 'solar_crown' as const },
+      { path: 'chain' as const, base: 'chain_lightning' as const, evolution: 'closed_circuit' as const }
+    ];
+    for (const family of families) {
+      if (family.base) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+
+    expect(combat.currentOrbitRadius).toBe(94);
+    expect(applier.getPreview('orbit_mastery_coverage')).toEqual({
+      stat: 'orbitContactRadius',
+      before: 10,
+      after: 14
+    });
+    expect(applier.apply('orbit_mastery_coverage')).toBe(true);
+    expect(combat.currentOrbitRadius).toBe(94);
+    expect(applier.applyUniversalMastery('projectile_mastery_power')).toBe(true);
+    expect(applier.applyUniversalMastery('projectile_mastery_power')).toBe(true);
+    expect(applier.applyUniversalMastery('projectile_mastery_power')).toBe(true);
+    expect(applier.canApply('universal_weapon_mastery')).toBe(false);
+
+    for (const target of ['orbit_mastery_power', 'chain_mastery_power'] as const) {
+      for (let index = 0; index < 3; index += 1) expect(applier.apply(target)).toBe(true);
+    }
+    expect(applier.getUniversalMasteryChoices()).toHaveLength(0);
+  });
+
+  it('extends both fixed-radius evolution branches through coverage mastery', () => {
+    const pulseCombat = new CombatSimulation();
+    const pulse = new UpgradeApplier(new PlayerModel(), pulseCombat, 0x9001);
+    expect(pulse.apply('pulse_ring')).toBe(true);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(pulse.apply(`pulse_ring_rank_${rank}`)).toBe(true);
+    expect(pulse.apply('compression_wave')).toBe(true);
+    expect(pulseCombat.currentPulseRingEndRadius).toBe(320);
+    expect(pulse.apply('pulse_ring_mastery_coverage')).toBe(true);
+    expect(pulseCombat.currentPulseRingEndRadius).toBe(342);
+
+    const magneticCombat = new CombatSimulation();
+    const magnetic = new UpgradeApplier(new PlayerModel(), magneticCombat, 0x9002);
+    expect(magnetic.apply('magnetic_charge')).toBe(true);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(magnetic.apply(`magnetic_charge_rank_${rank}`)).toBe(true);
+    expect(magnetic.apply('event_horizon')).toBe(true);
+    expect(magneticCombat.currentMagneticChargeOuterRadius).toBe(110);
+    expect(magnetic.apply('magnetic_charge_mastery_coverage')).toBe(true);
+    expect(magneticCombat.currentMagneticChargeOuterRadius).toBe(134);
+  });
+
+  it('limits a normal campaign hand to one evolution decision', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const families = [
+      { path: 'projectile' as const, base: undefined },
+      { path: 'orbit' as const, base: 'orbit_blade' as const },
+      { path: 'chain' as const, base: 'chain_lightning' as const }
+    ];
+
+    for (const family of families) {
+      if (family.base) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+        expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      }
+    }
+
+    const choices = applier.getChoices(20);
+    expect(choices.filter((choice) => choice.effect.type === 'evolutionOffer')).toHaveLength(1);
   });
 
   it('walks the focused Projectile path through rank VI before evolution', () => {

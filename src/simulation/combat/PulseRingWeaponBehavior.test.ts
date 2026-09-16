@@ -58,18 +58,22 @@ describe('PulseRingWeaponBehavior', () => {
     expect(weapon.state.active).toBe(false);
     expect(weapon.fire(new PlayerModel().state)).toBe(false);
     expect(weapon.unlock()).toBe(true);
+    expect(weapon.setEvolution('echo_shock')).toBe(true);
     weapon.reset();
     expect(weapon.isUnlocked).toBe(false);
+    expect(weapon.currentEvolution).toBeNull();
+    expect(weapon.unlock()).toBe(true);
+    expect(weapon.setEvolution('compression_wave')).toBe(true);
     expect(weapon.state).toMatchObject({ phase: 'idle', active: false, radius: 0, sequence: 0 });
   });
 
-  it('Echo Shock opens a second wave with a two-hit per target ledger', () => {
+  it('Echo Shock damages a durable target exactly once in each wave', () => {
     const pool = new EnemyPool(4);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
     const target = pool.acquire();
     if (!target) throw new Error('No se pudo preparar el objetivo del eco');
-    target.kind = 'chaser';
+    target.kind = 'boss';
     target.x = player.state.x + 120;
     target.y = player.state.y;
     target.radius = 18;
@@ -78,15 +82,80 @@ describe('PulseRingWeaponBehavior', () => {
     target.speed = 0;
     target.contactEnabled = false;
     enemies.rebuildGrid();
+    const hits: { wave: number; damage: number }[] = [];
+    let weapon: PulseRingWeaponBehavior;
+    weapon = new PulseRingWeaponBehavior({
+      enemies,
+      rollCriticalDamage: (damage) => {
+        hits.push({ wave: weapon.state.wave ?? -1, damage });
+        return damage;
+      },
+      onEnemyDefeated: () => undefined
+    });
+    weapon.unlock();
+    weapon.setEvolution('echo_shock');
+    weapon.fire(player.state);
+    for (let index = 0; index < 40; index += 1) weapon.update(0.1, player.state);
+
+    expect(hits).toEqual([
+      { wave: 0, damage: 26 },
+      { wave: 1, damage: 26 * 0.45 }
+    ]);
+  });
+
+  it('Echo Shock starts the relocated second wave at its inner radius', () => {
+    const pool = new EnemyPool(4);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
     const weapon = new PulseRingWeaponBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
     weapon.unlock();
     weapon.setEvolution('echo_shock');
     weapon.fire(player.state);
-    const before = target.health;
-    for (let index = 0; index < 19; index += 1) weapon.update(0.1);
+
+    for (let index = 0; index < 30; index += 1) {
+      weapon.update(0.1, player.state);
+      if (weapon.state.phase === 'recovery' && weapon.state.progress > 0.75) break;
+    }
+    expect(weapon.state.phase).toBe('recovery');
+
+    player.state.x += 100;
+    const target = pool.acquire();
+    if (!target) throw new Error('No se pudo preparar el objetivo del segundo eco');
+    target.kind = 'boss';
+    target.x = player.state.x + 120;
+    target.y = player.state.y;
+    target.radius = 18;
+    target.maxHealth = 1_000;
+    target.health = 1_000;
+    target.speed = 0;
+    target.contactEnabled = false;
+    enemies.rebuildGrid();
+
+    weapon.update(0.1, player.state);
     expect(weapon.state.wave).toBe(1);
-    expect(weapon.state.phase).toBe('active');
-    expect(target.health).toBeLessThan(before);
+    expect(target.health).toBe(1_000);
+    for (let index = 0; index < 12 && target.health === 1_000; index += 1) weapon.update(0.1, player.state);
+    expect(target.health).toBeLessThan(1_000);
+  });
+
+  it('captures the latest movement direction while idle, then freezes it for Compression Wave', () => {
+    const pool = new EnemyPool(1);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const weapon = new PulseRingWeaponBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    weapon.setEvolution('compression_wave');
+    weapon.update(0.1, player.state);
+    player.state.x += 80;
+    weapon.update(0.1, player.state);
+    weapon.fire(player.state);
+    expect(weapon.state.directionX).toBeCloseTo(1);
+    expect(weapon.state.directionY).toBeCloseTo(0);
+
+    player.state.y += 80;
+    weapon.update(0.1, player.state);
+    expect(weapon.state.directionX).toBeCloseTo(1);
+    expect(weapon.state.directionY).toBeCloseTo(0);
   });
 
   it('Compression Wave opens a directional front without attraction', () => {
@@ -123,15 +192,15 @@ describe('PulseRingWeaponBehavior', () => {
     expect(target.y).toBeLessThan(initialY);
   });
 
-  it('Compression Wave damages every durable target swept by its front, including edge overlap', () => {
+  it('Compression Wave damages every durable target swept by its front, including real edge overlap', () => {
     const pool = new EnemyPool(32);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
     const targets = [];
-    for (let index = 0; index < 24; index += 1) {
+    for (let index = 0; index < 22; index += 1) {
       const target = pool.acquire();
       if (!target) throw new Error('No se pudo preparar la masa de compresion');
-      const angle = -0.93 + (index / 23) * 1.86;
+      const angle = -0.88 + (index / 21) * 1.76;
       const radius = 70 + index * 9;
       target.kind = 'chaser';
       target.x = player.state.x + Math.cos(angle - Math.PI / 2) * radius;
@@ -142,6 +211,20 @@ describe('PulseRingWeaponBehavior', () => {
       target.speed = 0;
       target.contactEnabled = false;
       targets.push(target);
+    }
+    const edgeTarget = pool.acquire();
+    const outsideTarget = pool.acquire();
+    if (!edgeTarget || !outsideTarget) throw new Error('No se pudieron preparar los bordes de compresion');
+    for (const [target, degrees] of [[edgeTarget, 58], [outsideTarget, 66]] as const) {
+      const angle = -Math.PI / 2 + degrees * Math.PI / 180;
+      target.kind = 'chaser';
+      target.x = player.state.x + Math.cos(angle) * 150;
+      target.y = player.state.y + Math.sin(angle) * 150;
+      target.radius = 20;
+      target.health = 1_000;
+      target.maxHealth = 1_000;
+      target.speed = 0;
+      target.contactEnabled = false;
     }
     enemies.rebuildGrid();
 
@@ -157,5 +240,7 @@ describe('PulseRingWeaponBehavior', () => {
     for (let index = 0; index < 12; index += 1) weapon.update(0.1, player.state);
 
     expect(targets.every((target) => target.health < target.maxHealth)).toBe(true);
+    expect(edgeTarget.health).toBeLessThan(edgeTarget.maxHealth);
+    expect(outsideTarget.health).toBe(outsideTarget.maxHealth);
   });
 });

@@ -56,6 +56,9 @@ export class MagneticChargeBehavior {
     sequence: 0,
     polarAngle: 0,
     polarRadius: DEFINITION.outerRadius * POLAR_TRIANGLE_RADIUS_FACTOR,
+    polarFrontRadius: DEFINITION.outerRadius * POLAR_TRIANGLE_RADIUS_FACTOR,
+    polarFinalRadius: DEFINITION.outerRadius * POLAR_FINAL_RADIUS_FACTOR,
+    polarPulseCount: 0,
     evolution: null
   };
 
@@ -75,6 +78,7 @@ export class MagneticChargeBehavior {
   private detonateSeconds = DEFINITION.detonateSeconds;
   private pullRadius = DEFINITION.pullRadius;
   private outerRadius = DEFINITION.outerRadius;
+  private eventHorizonRadius = EVENT_FINAL_RADIUS;
   private rank = 1;
   private permanentDamageMultiplier = 1;
   private permanentCadenceMultiplier = 1;
@@ -110,7 +114,7 @@ export class MagneticChargeBehavior {
   }
 
   public get currentOuterRadius(): number {
-    return this.outerRadius;
+    return this.evolution === 'event_horizon' ? this.eventHorizonRadius : this.outerRadius;
   }
 
   public unlock(): boolean {
@@ -122,6 +126,16 @@ export class MagneticChargeBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public decreaseCooldown(amount: number): void {
+    this.cooldownSeconds = Math.max(0.45, this.cooldownSeconds - Math.max(0, amount));
+  }
+
+  public increaseOuterRadius(amount: number): void {
+    const increase = Math.max(0, amount);
+    this.outerRadius += increase;
+    if (this.evolution === 'event_horizon') this.eventHorizonRadius += increase;
   }
 
   public setPermanentBonuses(damageMultiplier: number, cadenceMultiplier: number): void {
@@ -226,12 +240,14 @@ export class MagneticChargeBehavior {
     this.readyToFire = false;
     this.unlocked = false;
     this.rank = 1;
+    this.evolution = null;
     this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
     this.cooldownSeconds = Math.max(0.45, DEFINITION.cooldownSeconds * this.permanentCadenceMultiplier);
     this.travelSeconds = DEFINITION.travelSeconds;
     this.detonateSeconds = DEFINITION.detonateSeconds;
     this.pullRadius = DEFINITION.pullRadius;
     this.outerRadius = DEFINITION.outerRadius;
+    this.eventHorizonRadius = EVENT_FINAL_RADIUS;
     this.randomState = RANDOM_SEED;
     this.hitCooldowns.fill(0);
     this.hitGenerations.fill(0);
@@ -255,6 +271,9 @@ export class MagneticChargeBehavior {
       sequence: 0,
       polarAngle: 0,
       polarRadius: DEFINITION.outerRadius * POLAR_TRIANGLE_RADIUS_FACTOR,
+      polarFrontRadius: DEFINITION.outerRadius * POLAR_TRIANGLE_RADIUS_FACTOR,
+      polarFinalRadius: DEFINITION.outerRadius * POLAR_FINAL_RADIUS_FACTOR,
+      polarPulseCount: 0,
       evolution: null
     });
   }
@@ -391,13 +410,14 @@ export class MagneticChargeBehavior {
   }
 
   private hitEventFinal(): void {
-    const candidates = this.context.enemies.queryCircle(this.state.targetX, this.state.targetY, EVENT_FINAL_RADIUS + 48);
+    const radius = this.eventHorizonRadius;
+    const candidates = this.context.enemies.queryCircle(this.state.targetX, this.state.targetY, radius + 48);
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
       if (!enemy.active || enemy.health <= 0) continue;
       if (this.collapseHitGenerations[index] === enemy.generation) continue;
       if (Math.hypot(enemy.x - this.state.targetX, enemy.y - this.state.targetY)
-        > EVENT_FINAL_RADIUS + enemy.radius) continue;
+        > radius + enemy.radius) continue;
       this.collapseHitGenerations[index] = enemy.generation;
       enemy.health -= this.context.rollCriticalDamage(this.damage * 0.35);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
@@ -405,13 +425,11 @@ export class MagneticChargeBehavior {
   }
 
   private hitPolarFronts(): void {
-    const progress = this.state.progress;
     for (let spoke = 0; spoke < 3; spoke += 1) {
       const angle = (this.state.polarAngle ?? 0) + spoke * FULL_CIRCLE / 3;
-      const vertexX = this.state.targetX + Math.cos(angle) * (this.state.polarRadius ?? 0);
-      const vertexY = this.state.targetY + Math.sin(angle) * (this.state.polarRadius ?? 0);
-      const startX = vertexX + (this.state.targetX - vertexX) * progress;
-      const startY = vertexY + (this.state.targetY - vertexY) * progress;
+      const frontRadius = this.state.polarFrontRadius ?? 0;
+      const startX = this.state.targetX + Math.cos(angle) * frontRadius;
+      const startY = this.state.targetY + Math.sin(angle) * frontRadius;
       const dx = this.state.targetX - startX;
       const dy = this.state.targetY - startY;
       const length = Math.hypot(dx, dy);
@@ -434,11 +452,9 @@ export class MagneticChargeBehavior {
   }
 
   private hitPolarFinal(): void {
-    const radius = this.state.outerRadius * POLAR_FINAL_RADIUS_FACTOR;
+    const radius = this.state.polarFinalRadius ?? this.effectivePolarFinalRadius();
     const candidates = this.context.enemies.queryCircle(this.state.targetX, this.state.targetY, radius + 48);
-    const targetHitCount = this.state.progress >= POLAR_FINAL_SECOND_TICK_PROGRESS
-      ? 2
-      : this.state.progress >= POLAR_FINAL_FIRST_TICK_PROGRESS ? 1 : 0;
+    const targetHitCount = this.state.polarPulseCount ?? 0;
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
       if (!enemy.active || enemy.health <= 0) continue;
@@ -486,6 +502,17 @@ export class MagneticChargeBehavior {
     this.state.progress = active
       ? Math.min(1, this.phaseTimer / Math.max(EPSILON, this.phaseDuration()))
       : 0;
+    const polarCollapse = this.evolution === 'polar_collapse';
+    const polarRadius = this.state.polarRadius ?? this.effectivePolarRadius();
+    this.state.polarFrontRadius = polarCollapse && this.phase === 'detonate'
+      ? polarRadius * (1 - this.state.progress)
+      : polarRadius;
+    this.state.polarFinalRadius = polarCollapse
+      ? this.effectivePolarFinalRadius()
+      : 0;
+    this.state.polarPulseCount = polarCollapse && this.phase === 'collapse'
+      ? this.getPolarFinalPulseCount(this.state.progress)
+      : 0;
     if (this.phase === 'travel') {
       const progress = smoothstep(this.state.progress);
       this.state.x = this.state.originX + (this.state.targetX - this.state.originX) * progress;
@@ -503,6 +530,12 @@ export class MagneticChargeBehavior {
     } else if (this.evolution === 'polar_collapse') {
       this.cooldownSeconds *= 1.25;
     }
+  }
+
+  private getPolarFinalPulseCount(progress: number): number {
+    if (progress >= POLAR_FINAL_SECOND_TICK_PROGRESS) return 2;
+    if (progress >= POLAR_FINAL_FIRST_TICK_PROGRESS) return 1;
+    return 0;
   }
 
   private applyRankTuning(): void {
@@ -533,7 +566,7 @@ export class MagneticChargeBehavior {
   }
 
   private effectiveOuterRadius(): number {
-    return this.evolution === 'event_horizon' ? EVENT_FINAL_RADIUS : this.outerRadius;
+    return this.evolution === 'event_horizon' ? this.eventHorizonRadius : this.outerRadius;
   }
 
   private effectivePolarRadius(): number {

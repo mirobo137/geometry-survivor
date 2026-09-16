@@ -3214,6 +3214,50 @@ ofrecen las tres builds iniciales. Angular inicia con build limpia y compone su
 primera mano normal. `?calibration=projectile|orbit|chain` se mantiene sólo
 como acceso de QA hasta que producto reactive las plantillas tras validación.
 
+### 22.1w Implementación EX-10 — Acto III Fracture — 16-09-2026
+
+Por solicitud explícita se implementó el Acto III completo en una sola entrega,
+sin esperar el trabajo de SDK de EX-09. Esta excepción de orden no cierra EX-09
+ni cambia la regla de que los portales se integran aislados por build.
+
+El consumidor real es `FractureActDirector`, conectado a `Game`,
+`CombatSimulation`, `ArenaModel` y el selector persistente de actos. El acto
+inicia con build limpia en octágono, rota cada 25 s por rectángulo horizontal,
+rombo, círculo, hexágono, rectángulo vertical, octágono, rombo, rectángulo,
+hexágono y círculo final. El último morph termina antes de los 250 s y el boss
+conserva la arena circular. Esta composición usa la misma frontera geométrica
+para clamp, hazards y render; no existen límites paralelos en la vista.
+
+La presión de arena combina las cuatro familias ya existentes: láser, pulso
+radial, Pulse Ring y Angular Sweep. El runtime mantiene sus snapshots
+separados, dibuja el pulso y el anillo simultáneamente en Fracture y detiene
+los hazards de arena cuando aparece el boss según el contrato de cada sistema.
+
+La familia nueva está compuesta por Fracture Gunner (disparo telegrafiado a
+distancia), Thorn Bastion (tanque con púas y daño de proximidad), Zigzag Reaver
+(recorrido comprometido en zigzag) y Rift Miner (dos minas temporizadas). Cada
+acción separa aproximación, aviso, daño y recuperación. La munición hostil es
+un sistema de arrays fijos: 48 proyectiles, 12 minas, sin allocations por
+frame. El Fracture Engine usa una nave modular nueva y alterna batería,
+púas, zigzag y minas; cada patrón nace del cuerpo del boss o de su posición
+capturada y no del centro abstracto de la arena.
+
+Accesos directos para la validación manual:
+
+- `/?debug=1&act=fracture&quality=high`: acto completo, build limpia.
+- `/?debug=1&act=fracture&boss=1&quality=high`: boss desde su umbral.
+- `/?debug=1&fracture-drill=gunner|thorn|zigzag|miner&quality=high`: drill
+  de cada enemigo, sin alterar la campaña guardada.
+
+La evidencia automática de esta entrega es `npm run typecheck`, 407 pruebas
+unitarias/integración mediante Vitest con `--configLoader runner` y build local
+con Vite. El runner por defecto de Vitest/Vite falla al resolver esta carpeta
+de OneDrive por `Access is denied`; el loader runner es el workaround de
+validación, no un cambio de producción. Queda pendiente la puerta humana:
+probar Low/Medium/High, touch, 10 runs comparables, comprobar la lectura de
+los cuatro enemigos y confirmar el balance EX-02c al final del desarrollo.
+Acto III sólo se marca CERRADO después de esa evidencia.
+
 ## 22.2 Resolución de instrucciones históricas
 
 - Las secciones de entrega describen el momento de su fecha. Por ejemplo,

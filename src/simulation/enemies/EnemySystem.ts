@@ -4,6 +4,10 @@ import {
   ORBITER_DEFINITION,
   PRISM_WEAVER_DEFINITION,
   SPLITTER_DEFINITION,
+  FRACTURE_GUNNER_DEFINITION,
+  THORN_BASTION_DEFINITION,
+  ZIGZAG_REAVER_DEFINITION,
+  RIFT_MINER_DEFINITION,
   type EnemyKind
 } from '../../content/enemies/EnemyDefinitions';
 import { ARENA_CENTER } from '../../config/constants';
@@ -15,6 +19,7 @@ import { OrbiterBehavior } from './OrbiterBehavior';
 import { ChargerBehavior } from './ChargerBehavior';
 import { PrismWeaverBehavior } from './PrismWeaverBehavior';
 import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -37,7 +42,8 @@ export class EnemySystem {
   public constructor(
     public readonly pool: EnemyPool,
     private readonly grid: SpatialGrid,
-    private readonly actDirector: RadialActDirector = new RadialActDirector()
+    private readonly actDirector: RadialActDirector = new RadialActDirector(),
+    private readonly fractureThreats?: FractureThreatEmitter
   ) {}
 
   public get states(): readonly EnemyState[] {
@@ -52,6 +58,11 @@ export class EnemySystem {
     this.spawnIndex += 1;
     const kind = this.actDirector.selectEnemyKind(elapsedSeconds, index);
     if (kind === 'prism-weaver' && this.countActivePrismWeavers() >= PRISM_WEAVER_DEFINITION.activeCap) {
+      this.pool.release(state);
+      return null;
+    }
+    const fractureDefinition = getFractureDefinition(kind);
+    if (fractureDefinition && this.countActiveKind(kind) >= fractureDefinition.activeCap) {
       this.pool.release(state);
       return null;
     }
@@ -107,6 +118,17 @@ export class EnemySystem {
     const index = this.spawnIndex;
     this.spawnIndex += 1;
     this.configureEnemy(state, arenaRadius, index, 'prism-weaver');
+    return state;
+  }
+
+  /** Development-only consumer for one Act III family at a time. */
+  public spawnFractureDrill(arenaRadius: number, kind: EnemyKind = 'fracture-gunner'): EnemyState | null {
+    if (!getFractureDefinition(kind) || this.countActiveKind(kind) >= (getFractureDefinition(kind)?.activeCap ?? 0)) return null;
+    const state = this.pool.acquire();
+    if (!state) return null;
+    const index = this.spawnIndex;
+    this.spawnIndex += 1;
+    this.configureEnemy(state, arenaRadius, index, kind);
     return state;
   }
 
@@ -332,6 +354,12 @@ export class EnemySystem {
           this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
           contactDamage = PRISM_WEAVER_DEFINITION.attackDamage;
         }
+      } else if (isFractureKind(enemy.kind)) {
+        const fractureDamage = this.updateFractureEnemy(enemy, dt, player, arenaRadius);
+        if (fractureDamage !== null && contactDamage === null && this.contactCooldown <= 0) {
+          this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
+          contactDamage = fractureDamage;
+        }
       } else {
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
@@ -451,6 +479,7 @@ export class EnemySystem {
     state.prismWeaverTimer = 0; state.prismWeaverSequence = 0; state.prismWeaverHitApplied = false;
     state.splitterDepth = kind === 'splitter' ? splitterDepth : 0;
     state.wardenReplica = kind === 'warden-replica';
+    this.resetFractureState(state, kind);
     if (kind === 'orbiter') this.orbiterBehavior.configure(state, index);
     if (kind === 'charger') this.chargerBehavior.configure(state);
     if (kind === 'prism-weaver') this.prismWeaverBehavior.configure(state, index, arenaRadius);
@@ -458,19 +487,22 @@ export class EnemySystem {
 
   private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
     const definition = ENEMY_DEFINITIONS.boss;
+    const bossDefinition = this.actDirector.bossDefinition;
+    const bossRadius = bossDefinition.bossRadius ?? definition.radius;
+    const bossHealth = bossDefinition.maxHealth ?? definition.maxHealth;
     const distance = Math.min(
       Math.max(0, spawnDistance),
-      Math.max(0, arenaRadius - definition.radius - 16)
+      Math.max(0, arenaRadius - bossRadius - 16)
     );
     state.kind = definition.kind;
     state.x = ARENA_CENTER.x;
     state.y = ARENA_CENTER.y - distance;
     state.vx = 0;
     state.vy = 0;
-    state.radius = definition.radius;
+    state.radius = bossRadius;
     state.speed = definition.speed;
-    state.maxHealth = definition.maxHealth;
-    state.health = definition.maxHealth;
+    state.maxHealth = bossHealth;
+    state.health = bossHealth;
     state.contactDamage = definition.contactDamage;
     state.contactEnabled = false;
     state.orbitHitCooldown = 0;
@@ -492,6 +524,7 @@ export class EnemySystem {
     state.prismWeaverTimer = 0; state.prismWeaverSequence = 0; state.prismWeaverHitApplied = false;
     state.splitterDepth = 0;
     state.wardenReplica = false;
+    this.resetFractureState(state, 'boss');
   }
 
   private spawnWardenReplica(x: number, y: number, arenaRadius: number): EnemyState | null {
@@ -522,4 +555,172 @@ export class EnemySystem {
   private countActivePrismWeavers(): number {
     return this.pool.states.reduce((count, state) => count + (state.active && state.kind === 'prism-weaver' ? 1 : 0), 0);
   }
+
+  private countActiveKind(kind: EnemyKind): number {
+    return this.pool.states.reduce((count, state) => count + (state.active && state.kind === kind ? 1 : 0), 0);
+  }
+
+  private resetFractureState(state: EnemyState, kind: EnemyKind): void {
+    state.fracturePhase = isFractureKind(kind) ? 'approach' : 'inactive';
+    state.fractureTimer = 0;
+    state.fractureProgress = 0;
+    state.fractureAimX = 0;
+    state.fractureAimY = 0;
+    state.fractureStartX = 0;
+    state.fractureStartY = 0;
+    state.fractureEndX = 0;
+    state.fractureEndY = 0;
+    state.fractureSequence = 0;
+    state.fractureHitApplied = false;
+    state.fractureSpikeRadius = 0;
+  }
+
+  private updateFractureEnemy(
+    state: EnemyState,
+    dt: number,
+    player: PlayerState,
+    arenaRadius: number
+  ): number | null {
+    const definition = getFractureDefinition(state.kind);
+    if (!definition) return null;
+    const phase = state.fracturePhase;
+    state.fractureTimer += dt;
+    state.fractureProgress = Math.min(1, state.fractureTimer / Math.max(0.001,
+      phase === 'telegraph' ? definition.telegraphSeconds
+        : phase === 'active' ? definition.activeSeconds : definition.recoverySeconds));
+
+    if (phase === 'approach') {
+      if (state.kind === 'fracture-gunner') this.moveGunner(state, player, dt, definition.attackRange ?? 190);
+      else this.moveToPlayer(state, player, dt);
+      if (state.fractureTimer >= definition.attackDelaySeconds) {
+        state.fracturePhase = 'telegraph';
+        state.fractureTimer = 0;
+        state.fractureProgress = 0;
+        state.fractureAimX = player.x;
+        state.fractureAimY = player.y;
+        state.fractureSequence += 1;
+        if (state.kind === 'zigzag-reaver') {
+          state.fractureStartX = state.x;
+          state.fractureStartY = state.y;
+          const dx = player.x - state.x;
+          const dy = player.y - state.y;
+          const distance = Math.max(0.001, Math.hypot(dx, dy));
+          const travel = Math.min(ZIGZAG_REAVER_DEFINITION.zigzagDistance ?? 178, distance + 90);
+          state.fractureEndX = state.x + dx / distance * travel;
+          state.fractureEndY = state.y + dy / distance * travel;
+        }
+      }
+      return null;
+    }
+
+    if (phase === 'telegraph') {
+      if (state.fractureTimer >= definition.telegraphSeconds) {
+        state.fracturePhase = 'active';
+        state.fractureTimer = 0;
+        state.fractureProgress = 0;
+        state.fractureHitApplied = false;
+        if (state.kind === 'fracture-gunner') {
+          this.fractureThreats?.fireProjectile(
+            state.x, state.y, state.fractureAimX, state.fractureAimY,
+            FRACTURE_GUNNER_DEFINITION.projectileSpeed ?? 275,
+            FRACTURE_GUNNER_DEFINITION.projectileDamage ?? 10,
+            0.16,
+            FRACTURE_GUNNER_DEFINITION.projectileCount ?? 2
+          );
+        } else if (state.kind === 'rift-miner') {
+          this.deployMinerMines(state, arenaRadius);
+        }
+      }
+      return null;
+    }
+
+    if (phase === 'active') {
+      if (state.kind === 'zigzag-reaver') this.updateZigzag(state, definition);
+      if (state.kind === 'thorn-bastion') {
+        state.fractureSpikeRadius = THORN_BASTION_DEFINITION.spikeRadius ?? 58;
+        const distance = Math.hypot(player.x - state.x, player.y - state.y);
+        if (!state.fractureHitApplied && distance <= state.fractureSpikeRadius + player.radius) {
+          state.fractureHitApplied = true;
+          return state.contactDamage;
+        }
+      }
+      if (state.fractureTimer >= definition.activeSeconds) {
+        state.fracturePhase = 'recovery';
+        state.fractureTimer = 0;
+        state.fractureProgress = 0;
+        state.fractureSpikeRadius = 0;
+      }
+      return null;
+    }
+
+    if (state.fractureTimer >= definition.recoverySeconds) {
+      state.fracturePhase = 'approach';
+      state.fractureTimer = 0;
+      state.fractureProgress = 0;
+    }
+    return null;
+  }
+
+  private moveToPlayer(state: EnemyState, player: PlayerState, dt: number): void {
+    const dx = player.x - state.x;
+    const dy = player.y - state.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= 0.001) { state.vx = 0; state.vy = 0; return; }
+    state.vx = dx / distance * state.speed;
+    state.vy = dy / distance * state.speed;
+    state.x += state.vx * dt;
+    state.y += state.vy * dt;
+  }
+
+  private moveGunner(state: EnemyState, player: PlayerState, dt: number, desiredRange: number): void {
+    const dx = player.x - state.x;
+    const dy = player.y - state.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= 0.001) return;
+    const tangentX = -dy / distance;
+    const tangentY = dx / distance;
+    const radial = distance < desiredRange * 0.78 ? -1 : distance > desiredRange * 1.18 ? 1 : 0;
+    state.vx = (dx / distance * radial + tangentX * (radial === 0 ? 0.72 : 0.22)) * state.speed;
+    state.vy = (dy / distance * radial + tangentY * (radial === 0 ? 0.72 : 0.22)) * state.speed;
+    state.x += state.vx * dt;
+    state.y += state.vy * dt;
+  }
+
+  private updateZigzag(state: EnemyState, definition: { readonly zigzagWidth?: number }): void {
+    const progress = Math.min(1, state.fractureTimer / Math.max(0.001, ZIGZAG_REAVER_DEFINITION.activeSeconds));
+    const dx = state.fractureEndX - state.fractureStartX;
+    const dy = state.fractureEndY - state.fractureStartY;
+    const length = Math.max(0.001, Math.hypot(dx, dy));
+    const normalX = -dy / length;
+    const normalY = dx / length;
+    const zig = Math.sin(progress * Math.PI * 2) * (definition.zigzagWidth ?? 70);
+    state.x = state.fractureStartX + dx * progress + normalX * zig;
+    state.y = state.fractureStartY + dy * progress + normalY * zig;
+    state.vx = dx / Math.max(0.001, ZIGZAG_REAVER_DEFINITION.activeSeconds);
+    state.vy = dy / Math.max(0.001, ZIGZAG_REAVER_DEFINITION.activeSeconds);
+  }
+
+  private deployMinerMines(state: EnemyState, arenaRadius: number): void {
+    const baseAngle = state.fractureSequence * 2.3999632297;
+    const targetRadius = Math.min(RIFT_MINER_DEFINITION.attackRadius ?? 150, Math.max(48, arenaRadius - 55));
+    const count = RIFT_MINER_DEFINITION.mineCount ?? 2;
+    for (let index = 0; index < count; index += 1) {
+      const angle = baseAngle + (index - (count - 1) * 0.5) * 0.62;
+      const x = ARENA_CENTER.x + Math.cos(angle) * targetRadius;
+      const y = ARENA_CENTER.y + Math.sin(angle) * targetRadius;
+      this.fractureThreats?.deployMine(state.x, state.y, x, y, RIFT_MINER_DEFINITION.mineDamage ?? 18);
+    }
+  }
 }
+
+const isFractureKind = (kind: EnemyKind): boolean => (
+  kind === 'fracture-gunner' || kind === 'thorn-bastion' || kind === 'zigzag-reaver' || kind === 'rift-miner'
+);
+
+const getFractureDefinition = (kind: EnemyKind) => {
+  if (kind === 'fracture-gunner') return FRACTURE_GUNNER_DEFINITION;
+  if (kind === 'thorn-bastion') return THORN_BASTION_DEFINITION;
+  if (kind === 'zigzag-reaver') return ZIGZAG_REAVER_DEFINITION;
+  if (kind === 'rift-miner') return RIFT_MINER_DEFINITION;
+  return null;
+};

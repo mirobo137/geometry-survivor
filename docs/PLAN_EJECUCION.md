@@ -63,7 +63,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante y EX-02c conserva el balance final pendiente |
 | EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
-| EX-10 | 9 | Acto III Fracture | pendiente, después de EX-09 |
+| EX-10 | 9 | Acto III Fracture | IMPLEMENTADO; QA humana del acto pendiente |
 | EX-11 | 10 | Overdrive y producción | pendiente, después de EX-10 |
 
 EX-08 es una ficha transversal, no permiso para adelantar todas las evoluciones.
@@ -1012,9 +1012,33 @@ marcar QA de portal pendiente, no declarar integración comercial cerrada.
 
 ### EX-10 — Acto III Fracture
 
-Orden: especificación DEC-02 → barrera temporal aislada → una familia enemiga
-por entrega → Magnetic Charge base → evoluciones pendientes → Fracture Engine
-→ transición II→III y final de Expedition → diez runs.
+Estado vigente (16-09-2026): implementado por solicitud explícita del usuario,
+adelantado respecto a EX-09 porque esta entrega no incorpora SDK ni publicación
+comercial. La campaña ya puede abrir Acto III directamente cuando está
+desbloqueado y el acceso de QA puede omitir el desbloqueo.
+
+La composición implementada es: arena octagonal al inicio, morphs a rectángulo
+horizontal, rombo, círculo, hexágono, rectángulo vertical y octágono con
+intervenciones cada 25 s; pulso radial, Pulse Ring, Angular Sweep y láser como
+hazards concurrentes; Fracture Gunner, Thorn Bastion, Zigzag Reaver y Rift
+Miner como familias enemigas; y Fracture Engine como boss a los 250 s. El boss
+reutiliza los verbos del acto: batería de proyectiles, púas radiales, embestida
+zigzag y minas desplegables. Sus ataques conservan telegraph → active →
+recovery y su munición usa pools fijos de 48 proyectiles y 12 minas.
+
+Accesos de QA:
+
+- `/?debug=1&act=fracture&quality=high` — Acto III completo, build limpia.
+- `/?debug=1&act=fracture&boss=1&quality=high` — entrada directa al boss.
+- `/?debug=1&fracture-drill=gunner|thorn|zigzag|miner&quality=high` — una
+  familia aislada, conservando el loop real de simulación.
+
+La transición pública II→III y el desbloqueo persistente están conectados.
+La entrada del Acto III es limpia: no hereda las armas ni cartas del acto
+anterior. El balance final de vida/daño de enemigos permanece en EX-02c.
+La validación automática está cubierta; faltan pruebas humanas visuales en
+Low/Medium/High, touch y las diez runs comparables antes de declarar EX-10
+CERRADO.
 
 Barreras no nacen bajo el player; telegraph inicial mínimo 0.8 s y corredor de
 cuatro diámetros del player. Probar transitabilidad con combinaciones activas,

@@ -2,17 +2,26 @@ import type { LaserHazardState } from '../hazards/LaserHazard';
 import type { RadialPulseState } from '../hazards/RadialPulseHazard';
 import type { PulseRingState } from '../hazards/PulseRingHazard';
 import type { AngularSweepState } from '../hazards/AngularSweepHazard';
-import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
+import type { ChargerPhase, EnemyKind, FractureEnemyPhase, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
+import type { FractureMineState, FractureProjectileState } from '../fracture/FractureThreatSystem';
 
 export type { BoomerangPhase } from './EntityPools';
 
 export type BossPhase =
   | 'inactive'
   | 'intro'
+  | 'battery-telegraph'
+  | 'battery-active'
+  | 'spikes-telegraph'
+  | 'spikes-active'
+  | 'zigzag-telegraph'
+  | 'zigzag-active'
+  | 'mines-telegraph'
+  | 'mines-active'
   | 'sweep-telegraph'
   | 'sweep-active'
   | 'charge-telegraph'
@@ -200,6 +209,16 @@ export interface EnemyRenderState {
   readonly splitterDepth?: number;
   /** Warden copies use the common enemy renderer with a distinct asset family. */
   readonly wardenReplica?: boolean;
+  readonly fracturePhase?: FractureEnemyPhase;
+  readonly fractureProgress?: number;
+  readonly fractureAimX?: number;
+  readonly fractureAimY?: number;
+  readonly fractureStartX?: number;
+  readonly fractureStartY?: number;
+  readonly fractureEndX?: number;
+  readonly fractureEndY?: number;
+  readonly fractureSequence?: number;
+  readonly fractureSpikeRadius?: number;
 }
 
 /** Projectile view contract; velocity is included for the sprite orientation. */
@@ -250,5 +269,7 @@ export interface CombatRenderState {
   readonly pulseRing: Readonly<PulseRingState>;
   readonly angularSweep: Readonly<AngularSweepState>;
   readonly boss: Readonly<BossRenderState>;
+  readonly fractureProjectiles: readonly FractureProjectileState[];
+  readonly fractureMines: readonly FractureMineState[];
   readonly shot: Readonly<ShotRenderState>;
 }

@@ -1,17 +1,17 @@
-import { BOSS_DEFINITION, ORBITAL_WARDEN_DEFINITION, type BossDefinition } from '../bosses/BossDefinition';
+import { BOSS_DEFINITION, FRACTURE_ENGINE_DEFINITION, ORBITAL_WARDEN_DEFINITION, type BossDefinition } from '../bosses/BossDefinition';
 import type { ArenaShape, ArenaShapeChangeDefinition } from './ArenaShapeDefinitions';
-import { ACT_I_ARENA_SHAPE_CHANGES, ACT_II_ARENA_SHAPE_CHANGES } from './ArenaShapeDefinitions';
+import { ACT_I_ARENA_SHAPE_CHANGES, ACT_II_ARENA_SHAPE_CHANGES, ACT_III_ARENA_SHAPE_CHANGES } from './ArenaShapeDefinitions';
 import type { DifficultyPhase } from './DifficultyDefinitions';
-import { ACT_II_DIFFICULTY_PHASES, DIFFICULTY_PHASES } from './DifficultyDefinitions';
+import { ACT_II_DIFFICULTY_PHASES, ACT_III_DIFFICULTY_PHASES, DIFFICULTY_PHASES } from './DifficultyDefinitions';
 import type { EnemySpawnProfile } from './EnemySpawnDefinitions';
-import { ACT_II_ENEMY_SPAWN_PROFILES, ENEMY_SPAWN_PROFILES } from './EnemySpawnDefinitions';
+import { ACT_II_ENEMY_SPAWN_PROFILES, ACT_III_ENEMY_SPAWN_PROFILES, ENEMY_SPAWN_PROFILES } from './EnemySpawnDefinitions';
 import { RADIAL_PULSE_DEFINITION, type RadialPulseDefinition } from '../hazards/RadialPulseDefinition';
 import { ANGULAR_SWEEP_DEFINITION, type AngularSweepDefinition } from '../hazards/AngularSweepDefinition';
 import { PULSE_RING_DEFINITION, type PulseRingDefinition } from '../hazards/PulseRingDefinition';
 import type { BossId } from '../bosses/BossDefinition';
 
 /** Only acts with a real consumer belong in this catalog. */
-export type ActId = 'radial' | 'angular';
+export type ActId = 'radial' | 'angular' | 'fracture';
 
 /**
  * Authored contract for a playable act. The detailed timelines stay in their
@@ -22,8 +22,8 @@ export interface ActDefinition {
   readonly id: ActId;
   /** Opening timeline up to the boss window; victory still requires the boss. */
   readonly durationSeconds: number;
-  readonly arenaProfile: 'radial' | 'angular';
-  readonly spawnProfile: 'act-i-default' | 'act-ii-angular';
+  readonly arenaProfile: 'radial' | 'angular' | 'fracture';
+  readonly spawnProfile: 'act-i-default' | 'act-ii-angular' | 'act-iii-fracture';
   readonly hazardIds: readonly ('laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep')[];
   readonly bossId: BossId;
   readonly bossStartSeconds: number;
@@ -87,4 +87,52 @@ export const ANGULAR_ACT_DEFINITION = {
   pulseRing: PULSE_RING_DEFINITION,
   angularSweep: ANGULAR_SWEEP_DEFINITION,
   boss: ANGULAR_WARDEN_ACT_DEFINITION
+} as const satisfies ActDefinition;
+
+/**
+ * Act III campaign composition. It starts clean and keeps the boss arena
+ * circular after the final pre-boss morph; all four existing arena hazards
+ * remain authored consumers so the arena becomes a fourth enemy family.
+ */
+export const FRACTURE_ACT_DEFINITION = {
+  id: 'fracture',
+  durationSeconds: FRACTURE_ENGINE_DEFINITION.startSeconds,
+  arenaProfile: 'fracture',
+  spawnProfile: 'act-iii-fracture',
+  hazardIds: ['laser', 'radial-pulse', 'pulse-ring', 'angular-sweep'],
+  bossId: 'fracture-engine',
+  bossStartSeconds: FRACTURE_ENGINE_DEFINITION.startSeconds,
+  spawnPhases: ACT_III_DIFFICULTY_PHASES,
+  spawnProfiles: ACT_III_ENEMY_SPAWN_PROFILES,
+  initialArenaShape: 'octagon',
+  arenaShapeChanges: ACT_III_ARENA_SHAPE_CHANGES,
+  radialPulse: {
+    ...RADIAL_PULSE_DEFINITION,
+    firstTriggerSeconds: 18,
+    intervalSeconds: 31,
+    lastTriggerSeconds: 238,
+    telegraphSeconds: 0.9,
+    attackSeconds: 1.25
+  },
+  pulseRing: {
+    ...PULSE_RING_DEFINITION,
+    firstTriggerSeconds: 11,
+    intervalSeconds: 27,
+    lastTriggerSeconds: 236,
+    telegraphSeconds: 0.8,
+    attackSeconds: 1.45,
+    safeGapHalfAngle: 0.27,
+    safeGapRotationRadians: 0.9
+  },
+  angularSweep: {
+    ...ANGULAR_SWEEP_DEFINITION,
+    firstTriggerSeconds: 7,
+    intervalSeconds: 22,
+    lastTriggerSeconds: 236,
+    telegraphSeconds: 0.78,
+    attackSeconds: 1.3,
+    travelRadians: 1.18,
+    dangerHalfAngle: 0.2
+  },
+  boss: FRACTURE_ENGINE_DEFINITION
 } as const satisfies ActDefinition;

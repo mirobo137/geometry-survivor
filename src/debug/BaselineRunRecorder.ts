@@ -5,7 +5,7 @@ export const BASELINE_TARGET_RUNS = 10;
 const BASELINE_SCHEMA_VERSION = 1;
 
 export type BaselineOutcome = 'game-over' | 'victory';
-export type BaselineDamageSource = 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss';
+export type BaselineDamageSource = 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss' | 'fracture-projectile' | 'fracture-mine';
 
 export interface BaselineObservation {
   readonly enemies: number;

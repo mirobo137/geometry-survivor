@@ -1,5 +1,33 @@
 # Geometry Survivor — estado y continuación
 
+## Estado vigente — Acto III Fracture implementado — 16-09-2026
+
+La entrega actual implementó el Acto III completo y lo dejó conectado al flujo
+de campaña: arena octagonal con morphs frecuentes de rectángulo, rombo, círculo,
+hexágono y octágono; presión simultánea de láser, pulso radial, Pulse Ring y
+Angular Sweep; cuatro enemigos nuevos (`fracture-gunner`, `thorn-bastion`,
+`zigzag-reaver`, `rift-miner`); y el boss `fracture-engine` a los 250 s.
+Fracture Engine alterna batería de proyectiles, púas, zigzag y minas. La entrada
+al acto es limpia y el desbloqueo persistente ocurre al vencer Acto II.
+
+QA directa disponible:
+
+- `/?debug=1&act=fracture&quality=high` — acto completo.
+- `/?debug=1&act=fracture&boss=1&quality=high` — boss directo.
+- `/?debug=1&fracture-drill=gunner|thorn|zigzag|miner&quality=high` — enemigo
+  aislado.
+
+Validación automática realizada: typecheck limpio, 407 pruebas unitarias/
+integración y build local Vite. En este checkout el runner bundle por defecto
+de Vitest/Vite no puede resolver la ruta de OneDrive (`Access is denied`); se
+validó con `--configLoader runner`, sin modificar la configuración de producción.
+
+El acto no está declarado cerrado todavía: falta la inspección humana en las
+tres calidades, touch y runs comparables. EX-02c (balance final de vida/daño),
+EX-09 (SDKs reales) y EX-11 (Overdrive) siguen pendientes. El código y esta
+nota son el punto de continuación; no rehacer Acto I/II ni las seis armas y
+evoluciones aprobadas.
+
 ## Auditoría de compositor corregida — 16-09-2026
 
 La revisión posterior del compositor de campaña cerró siete regresiones de

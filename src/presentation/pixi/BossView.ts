@@ -57,7 +57,9 @@ export class BossView {
     this.safeGuide.clear();
     this.health.clear();
     this.safeGuide.visible = false;
-    this.label.text = state.bossId === 'orbital-warden' ? 'ORBITAL WARDEN' : 'BOSS';
+    this.label.text = state.bossId === 'orbital-warden'
+      ? 'ORBITAL WARDEN'
+      : state.bossId === 'fracture-engine' ? 'FRACTURE ENGINE' : 'BOSS';
     this.label.position.set(state.x, state.y - state.radius - 28);
     this.label.alpha = state.phase === 'intro' ? 0.45 + state.progress * 0.55 : 1;
     this.renderHealth(state);

@@ -45,6 +45,7 @@ import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
 import { AngularActDirector } from '../simulation/acts/AngularActDirector';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
+import { FractureActDirector } from '../simulation/acts/FractureActDirector';
 import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
@@ -101,6 +102,8 @@ export interface GameOptions {
   readonly calibrationId?: CalibrationId;
   /** Initial campaign act; the home selector can change this before play. */
   readonly actId?: ActId;
+  /** Development-only direct act entry; never exposed by the campaign menu. */
+  readonly allowLockedAct?: boolean;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
   readonly orbiterDrill?: boolean;
   /** Isolated Angular Charger drill. */
@@ -119,6 +122,8 @@ export interface GameOptions {
   readonly pulseRingWeaponDrill?: boolean;
   /** Isolated player-owned Magnetic Charge drill; separate from arena hazards. */
   readonly magneticChargeWeaponDrill?: boolean;
+  readonly fractureDrill?: boolean;
+  readonly fractureEnemyKind?: import('../content/enemies/EnemyDefinitions').EnemyKind;
   /** Developer-only direct card entry; preserves the real level-up flow. */
   readonly weaponCardId?: UpgradeId;
   /** Developer-only direct evolution entry; opens the real two-card choice. */
@@ -148,6 +153,8 @@ export class Game {
   private readonly wardenDrill: boolean;
   private readonly pulseRingWeaponDrill: boolean;
   private readonly magneticChargeWeaponDrill: boolean;
+  private readonly fractureDrill: boolean;
+  private readonly fractureEnemyKind: import('../content/enemies/EnemyDefinitions').EnemyKind;
   private readonly weaponCardId: UpgradeId | null;
   private readonly evolutionId: WeaponEvolutionId | null;
   private readonly evolutionScenario: WeaponEvolutionScenario | null;
@@ -337,7 +344,8 @@ export class Game {
 
   private readonly onActIntermissionContinue = (): void => {
     if (this.contextLost || this.gameState.phase !== 'act-intermission') return;
-    if (this.actId !== 'radial' || !this.isActUnlocked('angular')) return;
+    const nextAct: ActId = this.actId === 'radial' ? 'angular' : this.actId === 'angular' ? 'fracture' : 'fracture';
+    if (this.actId === 'fracture' || !this.isActUnlocked(nextAct)) return;
 
     const saved = this.saveStore.load();
     this.gameOver.close();
@@ -346,7 +354,7 @@ export class Game {
     this.pendingTerminalRun = null;
     this.terminalRunToken += 1;
     this.rewardedOffers.reset();
-    this.actId = 'angular';
+    this.actId = nextAct;
     this.calibrationId = null;
     this.calibrationApplied = false;
     if (!this.gameState.continueToNextAct()) return;
@@ -431,6 +439,11 @@ export class Game {
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
       && !this.wardenDrill && !this.pulseRingWeaponDrill;
+    this.fractureDrill = options.fractureDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.magneticChargeWeaponDrill;
+    this.fractureEnemyKind = options.fractureEnemyKind ?? 'fracture-gunner';
     this.weaponCardId = options.weaponCardId ?? null;
     this.evolutionId = options.evolutionId ?? null;
     this.evolutionScenario = options.evolutionScenario ?? null;
@@ -448,7 +461,7 @@ export class Game {
     this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     const requestedAct = options.actId ?? 'radial';
-    this.actId = requestedAct === 'radial' || saved.unlockedActs.includes(requestedAct)
+    this.actId = requestedAct === 'radial' || options.allowLockedAct === true || saved.unlockedActs.includes(requestedAct)
       ? requestedAct
       : 'radial';
     this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
@@ -484,7 +497,7 @@ export class Game {
   private configureActRuntime(saved: ReturnType<SaveStore['load']>): void {
     this.actDirector = this.actId === 'angular'
       ? new AngularActDirector()
-      : new RadialActDirector();
+      : this.actId === 'fracture' ? new FractureActDirector() : new RadialActDirector();
     this.arena = new ArenaModel(this.actDirector);
     this.combat = new CombatSimulation({
       stress: this.stressMode,
@@ -501,6 +514,8 @@ export class Game {
       wardenDrill: this.wardenDrill,
       pulseRingWeaponDrill: this.pulseRingWeaponDrill,
       magneticChargeWeaponDrill: this.magneticChargeWeaponDrill,
+      fractureDrill: this.fractureDrill,
+      fractureEnemyKind: this.fractureEnemyKind,
       evolutionDrill: this.evolutionScenario ?? undefined,
       evolutionDrillWeapon: this.evolutionId ?? undefined
     });
@@ -594,7 +609,11 @@ export class Game {
       }
       if (event.type === 'bossDefeated') {
         this.audio.playCue('boss-defeated');
-        this.view.playBossDefeat(this.combat.renderState.boss.x, this.combat.renderState.boss.y, 48);
+        this.view.playBossDefeat(
+          this.combat.renderState.boss.x,
+          this.combat.renderState.boss.y,
+          this.combat.renderState.boss.radius || 48,
+        );
         this.triggerHitStop(HIT_STOP_SECONDS.terminal);
         this.finishRun('victory');
         return;
@@ -617,9 +636,19 @@ export class Game {
     this.view.renderRadialPulse(this.pulseRingDrill || this.combat.isAngularAct
       ? this.combat.renderState.pulseRing
       : this.combat.renderState.radialPulse);
+    this.view.renderFracturePulseRing(this.combat.isFractureAct
+      ? this.combat.renderState.pulseRing
+      : {
+        ...this.combat.renderState.pulseRing,
+        phase: 'idle',
+        progress: 0,
+        travelProgress: 0,
+        radius: 0
+      });
     this.view.renderAngularSweep(this.combat.renderState.angularSweep, this.arena.state);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
+    this.view.renderFractureThreats(this.combat.renderState, this.arena.state.radius);
     this.syncShotFeedback();
     this.view.renderPlayer(this.player.state, this.presentationTime, this.player.shieldChargeProgress);
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
@@ -673,7 +702,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
+      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isFractureDrill ? 'fracture-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -688,7 +717,7 @@ export class Game {
       laser: `${this.combat.renderState.laser.phase}${this.combat.renderState.laser.sweeping ? ' | sweep' : ''} | ${this.combat.renderState.laser.angle.toFixed(2)} rad`,
       pulse: this.combat.isPulseRingWeaponDrill
         ? `${this.combat.renderState.pulseRingWeapon.phase} | radius ${this.combat.renderState.pulseRingWeapon.radius.toFixed(1)}`
-        : `${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
+        : `${(this.combat.isPulseRingDrill || this.combat.isAngularAct || this.combat.isFractureAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).phase} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct || this.combat.isFractureAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).direction} | ${(this.combat.isPulseRingDrill || this.combat.isAngularAct || this.combat.isFractureAct ? this.combat.renderState.pulseRing : this.combat.renderState.radialPulse).radius.toFixed(1)}`,
       magnetic: this.combat.renderState.magneticCharge.active
         ? `${this.combat.renderState.magneticCharge.phase} | ${this.combat.renderState.magneticCharge.targetX.toFixed(0)},${this.combat.renderState.magneticCharge.targetY.toFixed(0)}`
         : 'idle',
@@ -717,6 +746,9 @@ export class Game {
         : 'off',
       angular: this.combat.isAngularSweepDrill || this.combat.isWardenDrill || this.combat.isAngularAct
         ? `${this.combat.renderState.angularSweep.phase} | ${this.combat.renderState.angularSweep.angle.toFixed(2)} rad`
+        : 'off',
+      fracture: this.combat.isFractureAct || this.combat.isFractureDrill
+        ? `${this.combat.renderState.fractureProjectiles.filter((state) => state.active).length} projectiles | ${this.combat.renderState.fractureMines.filter((state) => state.active).length} mines`
         : 'off',
       resonance: this.arena.state.resonance,
       boss: this.combat.renderState.boss.active
@@ -1072,8 +1104,14 @@ export class Game {
   }
 
   private nextUnlockedActs(unlockedActs: readonly CampaignActId[], outcome: RunOutcome): readonly CampaignActId[] {
-    if (outcome !== 'victory' || this.actId !== 'radial') return unlockedActs;
-    return unlockedActs.includes('angular') ? unlockedActs : [...unlockedActs, 'angular'];
+    if (outcome !== 'victory') return unlockedActs;
+    if (this.actId === 'radial') {
+      return unlockedActs.includes('angular') ? unlockedActs : [...unlockedActs, 'angular'];
+    }
+    if (this.actId === 'angular') {
+      return unlockedActs.includes('fracture') ? unlockedActs : [...unlockedActs, 'fracture'];
+    }
+    return unlockedActs;
   }
 
   private isActUnlocked(actId: ActId): boolean {
@@ -1100,6 +1138,10 @@ export class Game {
       && await this.rewardedAds.isAvailable('double-nova');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
     const isActVictory = summary.outcome === 'victory';
+    const actName = this.actId === 'angular'
+      ? 'Acto II · Angular'
+      : this.actId === 'fracture' ? 'Acto III · Fracture' : 'Acto I · Radial';
+    const nextActName = this.actId === 'radial' ? 'Acto II' : 'Acto III';
     if (isActVictory && this.gameState.phase === 'victory') this.gameState.enterActIntermission();
     if (isActVictory && this.gameState.phase !== 'act-intermission') return;
     this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
@@ -1110,21 +1152,21 @@ export class Game {
       reviveAvailable: canRevive,
       onRevive: canRevive ? () => { void this.requestRevive(terminalToken); } : undefined
     }, isActVictory ? {
-      actName: this.actId === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial',
-      message: this.actId === 'angular'
-        ? 'El Acto II queda registrado. La recompensa ya fue acreditada una sola vez.'
-        : 'El Acto I queda registrado. El Acto II inicia con una build limpia durante esta validación.',
-      restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : 'Repetir Acto I',
-      continueLabel: this.canContinueToAngular() ? 'Continuar al Acto II' : undefined,
-      onContinue: this.canContinueToAngular() ? this.onActIntermissionContinue : undefined,
+      actName,
+      message: this.actId === 'fracture'
+        ? 'El Acto III queda registrado. Fracture cierra la campaña authored; el modo infinito queda pendiente.'
+        : `El ${actName} queda registrado. ${nextActName} inicia con una build limpia durante esta validación.`,
+      restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : this.actId === 'fracture' ? 'Repetir Acto III' : 'Repetir Acto I',
+      continueLabel: this.canContinueToNextAct() ? `Continuar al ${nextActName}` : undefined,
+      onContinue: this.canContinueToNextAct() ? this.onActIntermissionContinue : undefined,
       onReturnToMenu: this.startScreen ? this.onActIntermissionReturnToMenu : undefined
     } : undefined);
   }
 
-  private canContinueToAngular(): boolean {
+  private canContinueToNextAct(): boolean {
     return this.weaponPath === null
-      && this.actId === 'radial'
-      && this.isActUnlocked('angular');
+      && this.actId !== 'fracture'
+      && this.isActUnlocked(this.actId === 'radial' ? 'angular' : 'fracture');
   }
 
   private async requestRevive(terminalToken: number): Promise<void> {

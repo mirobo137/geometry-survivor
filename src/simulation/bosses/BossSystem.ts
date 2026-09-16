@@ -4,6 +4,7 @@ import type { PlayerState } from '../PlayerModel';
 import type { BossRenderState } from '../combat/CombatRenderState';
 import type { EnemyState } from '../combat/EntityPools';
 import { EnemySystem } from '../enemies/EnemySystem';
+import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
 
 export type BossPhase = BossRenderState['phase'];
 
@@ -39,7 +40,8 @@ export class BossSystem {
 
   public constructor(
     private readonly enemies: EnemySystem,
-    private readonly definition: BossDefinition = BOSS_DEFINITION
+    private readonly definition: BossDefinition = BOSS_DEFINITION,
+    private readonly fractureThreats?: FractureThreatEmitter
   ) {
     this.state = {
       bossId: definition.id,
@@ -261,6 +263,14 @@ export class BossSystem {
 
   private phaseDuration(): number {
     if (this.phase === 'intro') return this.definition.introSeconds;
+    if (this.phase === 'battery-telegraph') return this.definition.sweepTelegraphSeconds;
+    if (this.phase === 'battery-active') return this.definition.sweepActiveSeconds;
+    if (this.phase === 'spikes-telegraph') return this.definition.chargeTelegraphSeconds;
+    if (this.phase === 'spikes-active') return this.definition.chargeActiveSeconds;
+    if (this.phase === 'zigzag-telegraph') return this.definition.curveTelegraphSeconds;
+    if (this.phase === 'zigzag-active') return this.definition.curveActiveSeconds;
+    if (this.phase === 'mines-telegraph') return this.definition.replicasTelegraphSeconds;
+    if (this.phase === 'mines-active') return this.definition.replicasActiveSeconds;
     if (this.phase === 'sweep-telegraph') return this.definition.sweepTelegraphSeconds;
     if (this.phase === 'sweep-active') return this.definition.sweepActiveSeconds;
     if (this.phase === 'charge-telegraph') return this.definition.chargeTelegraphSeconds;
@@ -286,6 +296,20 @@ export class BossSystem {
     } else if (this.phase === 'curve-telegraph') {
       this.phase = 'curve-active';
       this.hitApplied = false;
+    } else if (this.phase === 'battery-telegraph') {
+      this.phase = 'battery-active';
+      this.hitApplied = true;
+      this.fireFractureBattery(player);
+    } else if (this.phase === 'spikes-telegraph') {
+      this.phase = 'spikes-active';
+      this.hitApplied = false;
+    } else if (this.phase === 'zigzag-telegraph') {
+      this.phase = 'zigzag-active';
+      this.hitApplied = false;
+    } else if (this.phase === 'mines-telegraph') {
+      this.phase = 'mines-active';
+      this.hitApplied = true;
+      this.deployFractureMines();
     } else if (this.phase === 'replicas-telegraph') {
       this.phase = 'replicas-active';
       this.hitApplied = true;
@@ -301,6 +325,9 @@ export class BossSystem {
     } else if (this.phase === 'charge-active') {
       this.phase = 'recovery';
     } else if (this.phase === 'curve-active') {
+      this.phase = 'recovery';
+    } else if (this.phase === 'battery-active' || this.phase === 'spikes-active'
+      || this.phase === 'zigzag-active' || this.phase === 'mines-active') {
       this.phase = 'recovery';
     } else if (this.phase === 'replicas-active') {
       this.phase = 'recovery';
@@ -323,6 +350,18 @@ export class BossSystem {
       : ['sweep', 'ring'] as const;
     const pattern: BossPattern = order[this.attackIndex % order.length] ?? 'sweep';
     this.state.pattern = pattern;
+    if (pattern === 'battery') {
+      this.phase = 'battery-telegraph';
+      this.state.sweepAngle = normalizeAngle(Math.atan2(
+        player.y - (this.boss?.y ?? ARENA_CENTER.y),
+        player.x - (this.boss?.x ?? ARENA_CENTER.x)
+      ));
+      return;
+    }
+    if (pattern === 'spikes') {
+      this.phase = 'spikes-telegraph';
+      return;
+    }
     if (pattern === 'sweep') {
       this.phase = 'sweep-telegraph';
       this.state.sweepAngle = normalizeAngle(this.attackIndex * SWEEP_ANGLE_STEP);
@@ -353,6 +392,15 @@ export class BossSystem {
         dot * dot + safeRadius * safeRadius - ox * ox - oy * oy)));
       this.state.chargeAimX = this.state.chargeStartX + directionX * chargeDistance;
       this.state.chargeAimY = this.state.chargeStartY + directionY * chargeDistance;
+      return;
+    }
+    if (pattern === 'zigzag') {
+      this.phase = 'zigzag-telegraph';
+      this.captureChargeTarget(player);
+      return;
+    }
+    if (pattern === 'mines') {
+      this.phase = 'mines-telegraph';
       return;
     }
     if (pattern === 'curve') {
@@ -443,7 +491,7 @@ export class BossSystem {
   }
 
   private isAttackMovementPhase(): boolean {
-    return this.phase === 'charge-active' || this.phase === 'curve-active';
+    return this.phase === 'charge-active' || this.phase === 'curve-active' || this.phase === 'zigzag-active';
   }
 
   /**
@@ -456,7 +504,15 @@ export class BossSystem {
       || this.phase === 'charge-telegraph'
       || this.phase === 'curve-telegraph'
       || this.phase === 'replicas-telegraph'
-      || this.phase === 'replicas-active';
+      || this.phase === 'replicas-active'
+      || this.phase === 'battery-telegraph'
+      || this.phase === 'battery-active'
+      || this.phase === 'spikes-telegraph'
+      || this.phase === 'spikes-active'
+      || this.phase === 'zigzag-telegraph'
+      || this.phase === 'zigzag-active'
+      || this.phase === 'mines-telegraph'
+      || this.phase === 'mines-active';
   }
 
   private updateAttackMovement(): void {
@@ -471,6 +527,20 @@ export class BossSystem {
         / Math.max(EPSILON, this.definition.chargeActiveSeconds);
       this.boss.vy = (this.state.chargeAimY - this.state.chargeStartY)
         / Math.max(EPSILON, this.definition.chargeActiveSeconds);
+      return;
+    }
+    if (this.phase === 'zigzag-active') {
+      const progress = Math.min(1, this.phaseTimer / Math.max(EPSILON, this.definition.curveActiveSeconds));
+      const dx = this.state.chargeAimX - this.state.chargeStartX;
+      const dy = this.state.chargeAimY - this.state.chargeStartY;
+      const distance = Math.max(EPSILON, Math.hypot(dx, dy));
+      const normalX = -dy / distance;
+      const normalY = dx / distance;
+      const offset = Math.sin(progress * Math.PI * 2) * 58;
+      this.boss.x = this.state.chargeStartX + dx * progress + normalX * offset;
+      this.boss.y = this.state.chargeStartY + dy * progress + normalY * offset;
+      this.boss.vx = dx / Math.max(EPSILON, this.definition.curveActiveSeconds);
+      this.boss.vy = dy / Math.max(EPSILON, this.definition.curveActiveSeconds);
       return;
     }
     if (this.phase !== 'curve-active') return;
@@ -495,6 +565,10 @@ export class BossSystem {
     endY: number
   ): boolean {
     if (this.phase === 'sweep-active') return this.intersectsSweep(player, arenaRadius);
+    if (this.phase === 'spikes-active') {
+      return Math.hypot(player.x - (this.boss?.x ?? ARENA_CENTER.x), player.y - (this.boss?.y ?? ARENA_CENTER.y))
+        <= player.radius + (this.definition.spikeRadius ?? 84);
+    }
     if (this.phase === 'ring-active') return this.intersectsRing(player);
     if (this.phase === 'charge-active') {
       return this.distanceToSegment(player.x, player.y, startX, startY, endX, endY)
@@ -504,7 +578,60 @@ export class BossSystem {
       return this.distanceToSegment(player.x, player.y, startX, startY, endX, endY)
         <= player.radius + this.definition.curveWidth * 0.5 + (this.boss?.radius ?? 0);
     }
+    if (this.phase === 'zigzag-active') {
+      return this.distanceToSegment(player.x, player.y, startX, startY, endX, endY)
+        <= player.radius + (this.definition.spikeWidth ?? this.definition.curveWidth) * 0.5
+          + (this.boss?.radius ?? 0);
+    }
     return false;
+  }
+
+  private captureChargeTarget(player: PlayerState): void {
+    this.state.chargeStartX = this.boss?.x ?? ARENA_CENTER.x;
+    this.state.chargeStartY = this.boss?.y ?? ARENA_CENTER.y;
+    const dx = player.x - this.state.chargeStartX;
+    const dy = player.y - this.state.chargeStartY;
+    const distance = Math.max(EPSILON, Math.hypot(dx, dy));
+    const safeRadius = Math.max(0, this.arenaRadius - (this.boss?.radius ?? 48) - 24);
+    const ox = this.state.chargeStartX - ARENA_CENTER.x;
+    const oy = this.state.chargeStartY - ARENA_CENTER.y;
+    const directionX = dx / distance;
+    const directionY = dy / distance;
+    const dot = ox * directionX + oy * directionY;
+    const travel = Math.max(0, -dot + Math.sqrt(Math.max(0,
+      dot * dot + safeRadius * safeRadius - ox * ox - oy * oy)));
+    this.state.chargeAimX = this.state.chargeStartX + directionX * travel;
+    this.state.chargeAimY = this.state.chargeStartY + directionY * travel;
+  }
+
+  private fireFractureBattery(player: PlayerState): void {
+    if (this.definition.id !== 'fracture-engine') return;
+    this.fractureThreats?.fireProjectile(
+      this.boss?.x ?? ARENA_CENTER.x,
+      this.boss?.y ?? ARENA_CENTER.y,
+      player.x,
+      player.y,
+      245,
+      13,
+      0.92,
+      5
+    );
+  }
+
+  private deployFractureMines(): void {
+    if (this.definition.id !== 'fracture-engine') return;
+    const originX = this.boss?.x ?? ARENA_CENTER.x;
+    const originY = this.boss?.y ?? ARENA_CENTER.y;
+    for (let index = 0; index < 4; index += 1) {
+      const angle = this.attackIndex * 0.73 + index * Math.PI / 2;
+      const radius = Math.min(this.arenaRadius - 60, 148);
+      this.fractureThreats?.deployMine(
+        originX, originY,
+        ARENA_CENTER.x + Math.cos(angle) * Math.max(40, radius),
+        ARENA_CENTER.y + Math.sin(angle) * Math.max(40, radius),
+        21
+      );
+    }
   }
 
   private distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {

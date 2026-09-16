@@ -83,6 +83,7 @@ export class StartScreen {
   private readonly entryBack: HTMLButtonElement;
   private readonly radialActButton: HTMLButtonElement;
   private readonly angularActButton: HTMLButtonElement;
+  private readonly fractureActButton: HTMLButtonElement;
   private readonly entryButtons: readonly HTMLButtonElement[];
   private readonly actStatus: HTMLElement;
   private readonly skinsToggle: HTMLButtonElement;
@@ -168,6 +169,7 @@ export class StartScreen {
     const entryBack = root.querySelector<HTMLButtonElement>('#start-entry-back');
     const radialActButton = root.querySelector<HTMLButtonElement>('#start-act-radial');
     const angularActButton = root.querySelector<HTMLButtonElement>('#start-act-angular');
+    const fractureActButton = root.querySelector<HTMLButtonElement>('#start-act-fracture');
     const entryButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-start-calibration]'));
     const actStatus = root.querySelector<HTMLElement>('#start-act-status');
     const skinsToggle = root.querySelector<HTMLButtonElement>('#start-skins');
@@ -186,7 +188,7 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || !fractureActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -210,6 +212,7 @@ export class StartScreen {
     this.entryBack = entryBack;
     this.radialActButton = radialActButton;
     this.angularActButton = angularActButton;
+    this.fractureActButton = fractureActButton;
     this.entryButtons = entryButtons;
     this.actStatus = actStatus;
     this.skinsToggle = skinsToggle;
@@ -250,6 +253,7 @@ export class StartScreen {
     this.entryBack.addEventListener('click', () => this.closeEntrySelector());
     this.radialActButton.addEventListener('click', () => this.selectAct('radial'));
     this.angularActButton.addEventListener('click', () => this.selectAct('angular'));
+    this.fractureActButton.addEventListener('click', () => this.selectAct('fracture'));
     for (const button of this.entryButtons) {
       button.addEventListener('click', () => {
         const id = button.dataset.startCalibration;
@@ -409,14 +413,24 @@ export class StartScreen {
 
   private updateActSelector(): void {
     const angularUnlocked = this.unlockedActs.includes('angular');
+    const fractureUnlocked = this.unlockedActs.includes('fracture');
     this.radialActButton.classList.toggle('is-selected', this.selectedAct === 'radial');
     this.angularActButton.classList.toggle('is-selected', this.selectedAct === 'angular');
     this.radialActButton.setAttribute('aria-pressed', String(this.selectedAct === 'radial'));
     this.angularActButton.setAttribute('aria-pressed', String(this.selectedAct === 'angular'));
+    this.fractureActButton.classList.toggle('is-selected', this.selectedAct === 'fracture');
+    this.fractureActButton.setAttribute('aria-pressed', String(this.selectedAct === 'fracture'));
     this.angularActButton.disabled = !angularUnlocked;
     this.angularActButton.setAttribute('aria-label', angularUnlocked ? 'Seleccionar Acto II Angular' : 'Acto II Angular bloqueado');
-    const actName = this.selectedAct === 'angular' ? 'Acto II · Angular' : 'Acto I · Radial';
-    this.actStatus.textContent = `${actName}${angularUnlocked ? '' : ' · Angular se desbloquea al vencer Acto I'}`;
+    this.fractureActButton.disabled = !fractureUnlocked;
+    this.fractureActButton.setAttribute('aria-label', fractureUnlocked ? 'Seleccionar Acto III Fracture' : 'Acto III Fracture bloqueado');
+    const actName = this.selectedAct === 'angular'
+      ? 'Acto II · Angular'
+      : this.selectedAct === 'fracture' ? 'Acto III · Fracture' : 'Acto I · Radial';
+    const lockMessage = !angularUnlocked
+      ? ' · Angular se desbloquea al vencer Acto I'
+      : !fractureUnlocked ? ' · Fracture se desbloquea al vencer Acto II' : '';
+    this.actStatus.textContent = `${actName}${lockMessage}`;
   }
 
   private openSkins(): void {

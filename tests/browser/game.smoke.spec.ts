@@ -785,6 +785,49 @@ test('recorre la familia de ataques premium de Orbital Warden', async ({ page },
   expect(failures).toEqual([]);
 });
 
+test('carga el Acto III Fracture con arena activa y entrada limpia', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1&act=fracture&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: fracture-act');
+  await expect(page.locator('#debug-panel')).toContainText('arena: 270.0 | octagon');
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('fracture-opening-low.png') });
+  expect(failures).toEqual([]);
+});
+
+test('expone el Fracture Engine desde su atajo y ejecuta sus patrones authored', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1&act=fracture&boss=1&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: fracture-act');
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+    .toMatch(/boss: (intro|battery-)/);
+  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+    .toMatch(/boss: (spikes-|zigzag-|mines-)/);
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('fracture-engine-low.png') });
+  expect(failures).toEqual([]);
+});
+
+for (const [query, mode] of [
+  ['gunner', 'fracture-drill'],
+  ['thorn', 'fracture-drill'],
+  ['zigzag', 'fracture-drill'],
+  ['miner', 'fracture-drill']
+] as const) {
+  test(`carga el drill Fracture ${query}`, async ({ page }) => {
+    const failures = captureRuntimeFailures(page);
+    await page.goto(`/?debug=1&fracture-drill=${query}&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    await expect(page.locator('#debug-panel')).toContainText(`mode: ${mode}`);
+    await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+      .toMatch(/fracture: /);
+    expect(failures).toEqual([]);
+  });
+}
+
 test('pausa y reanuda tras perder y recuperar el contexto WebGL', async ({ page }) => {
   const failures = await openGame(page);
   const contextState = await page.evaluate(() => {

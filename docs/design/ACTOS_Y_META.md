@@ -326,6 +326,23 @@ al menos 0.8 s y mantener un corredor de cuatro diámetros del player. Resonant
 Aura conserva una banda interior segura y Fracture Engine combina reglas ya
 conocidas antes de introducir presión adicional.
 
+#### Implementación vigente de Fracture — 16-09-2026
+
+La especificación anterior nombraba familias futuras de forma conceptual. El
+consumidor actual usa cuatro familias concretas y ya está conectado a la
+campaña: `Fracture Gunner` dispara desde distancia; `Thorn Bastion` abre púas
+de proximidad; `Zigzag Reaver` compromete un recorrido quebrado; y `Rift Miner`
+deja dos minas temporizadas. El boss `Fracture Engine` reutiliza exactamente
+esos verbos en el orden batería → púas → zigzag → minas.
+
+La arena comienza octagonal y cambia cada 25 s entre rectángulos, rombo,
+círculo, hexágono y octágono. Antes del boss hace un último morph a círculo y
+permanece estable durante la pelea. Láser, pulso radial, Pulse Ring y Angular
+Sweep pueden coexistir en la fase previa; sus estados de simulación y pools de
+munición permanecen separados. Los nombres conceptuales de `Boundary Runner`,
+`Linker` y `Swarm` de esta sección histórica no deben reintroducirse como
+implementación alternativa sin una nueva decisión de producto.
+
 ## Flujo y transiciones
 
 1. **Campaña principal:** comienza en Radial. Cada boss abre una intermisión

@@ -15,6 +15,7 @@ import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 import type { ActId } from './content/run/ActDefinitions';
+import type { EnemyKind } from './content/enemies/EnemyDefinitions';
 import { isWeaponPathId, type UpgradeId, type WeaponPathId } from './content/upgrades/UpgradeDefinitions';
 import {
   isWeaponEvolutionId,
@@ -133,6 +134,17 @@ const bootstrap = async (): Promise<void> => {
   const magneticChargeWeaponDrill = searchParams.get('weapon') === 'magnetic-charge'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
     && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill;
+  const requestedFractureDrill = searchParams.get('fracture-drill');
+  const fractureEnemyKind: EnemyKind = requestedFractureDrill === 'thorn'
+    ? 'thorn-bastion'
+    : requestedFractureDrill === 'zigzag'
+      ? 'zigzag-reaver'
+      : requestedFractureDrill === 'miner' ? 'rift-miner' : 'fracture-gunner';
+  const fractureDrill = searchParams.get('debug') === '1'
+    && requestedFractureDrill !== null
+    && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
+    && !magneticChargeWeaponDrill;
   const stressMode = searchParams.get('stress') === '1'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill && !pulseRingDrill
     && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill;
@@ -159,7 +171,7 @@ const bootstrap = async (): Promise<void> => {
     ? requestedCalibration
     : undefined;
   const requestedAct = searchParams.get('act');
-  const actId: ActId = requestedAct === 'angular' ? 'angular' : 'radial';
+  const actId: ActId = requestedAct === 'angular' ? 'angular' : requestedAct === 'fracture' ? 'fracture' : 'radial';
   const campaignBuild = searchParams.get('debug') === '1'
     && searchParams.get('campaign') === 'evolved'
     ? 'three-evolved' as const
@@ -169,7 +181,7 @@ const bootstrap = async (): Promise<void> => {
     && calibrationId === undefined
     && actId === 'radial'
     && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
-    && !pulseRingDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill;
+    && !pulseRingDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill && !fractureDrill;
   const weaponPath: WeaponPathId | undefined = searchParams.get('debug') === '1'
     && isWeaponPathId(requestedWeaponPath)
     && weaponCardId === undefined
@@ -223,6 +235,8 @@ const bootstrap = async (): Promise<void> => {
     pulseRingDrill,
     pulseRingWeaponDrill,
     magneticChargeWeaponDrill,
+    fractureDrill,
+    fractureEnemyKind,
     campaignBuild,
     weaponCardId,
     evolutionId,
@@ -239,11 +253,14 @@ const bootstrap = async (): Promise<void> => {
     hazardCadenceMode,
     calibrationId,
     actId,
-    initialElapsedSeconds: bossDebugMode ? RADIAL_ACT_DIRECTOR.bossStartSeconds : undefined,
+    allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
+    initialElapsedSeconds: bossDebugMode
+      ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds
+      : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    startOnMenu: requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
-      && !magneticChargeWeaponDrill && weaponCardId === undefined && evolutionId === undefined
+      && !magneticChargeWeaponDrill && !fractureDrill && weaponCardId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined,
     platform: new LocalPlatform()
   });

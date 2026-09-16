@@ -5,6 +5,7 @@ import type { FxQuality } from '../../../content/visual/VisualTokens';
 import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderState';
 
 export type EnemyShipKind = Exclude<EnemyKind, 'boss'>;
+type LegacyEnemyShipKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica';
 
 export interface EnemyShipTextureSet {
   /** Optional flattened source for Low: preserve silhouette with one sprite. */
@@ -15,7 +16,8 @@ export interface EnemyShipTextureSet {
   readonly cockpit: Texture;
 }
 
-export type EnemyShipTextureMap = Readonly<Record<EnemyShipKind, EnemyShipTextureSet>>;
+export type EnemyShipTextureMap = Readonly<Record<LegacyEnemyShipKind, EnemyShipTextureSet>>
+  & Readonly<Partial<Record<Exclude<EnemyShipKind, LegacyEnemyShipKind>, EnemyShipTextureSet>>>;
 
 interface EnemyShipMotionProfile {
   readonly cycleSeconds: number;
@@ -88,6 +90,22 @@ const MOTION_PROFILES: Readonly<Record<EnemyShipKind, EnemyShipMotionProfile>> =
   'warden-replica': {
     cycleSeconds: 2.4, bobAmplitude: 0.48, wingSway: 1.1, wingRotation: 0.08,
     cockpitSway: 0.32, cockpitLift: 0.55, hullPulse: 0.014
+  },
+  'fracture-gunner': {
+    cycleSeconds: 3.4, bobAmplitude: 0.72, wingSway: 1.8, wingRotation: 0.09,
+    cockpitSway: 0.48, cockpitLift: 0.84, hullPulse: 0.018
+  },
+  'thorn-bastion': {
+    cycleSeconds: 2.1, bobAmplitude: 0.28, wingSway: 0.55, wingRotation: 0.035,
+    cockpitSway: 0.2, cockpitLift: 0.25, hullPulse: 0.012
+  },
+  'zigzag-reaver': {
+    cycleSeconds: 2.8, bobAmplitude: 0.88, wingSway: 2.1, wingRotation: 0.14,
+    cockpitSway: 0.64, cockpitLift: 1.1, hullPulse: 0.02
+  },
+  'rift-miner': {
+    cycleSeconds: 4.2, bobAmplitude: 0.52, wingSway: 1.15, wingRotation: 0.075,
+    cockpitSway: 0.38, cockpitLift: 0.5, hullPulse: 0.016
   }
 };
 
@@ -226,6 +244,34 @@ export class EnemyShipVisual {
       this.hull.scale.set(1 + pulse * 0.45 + active * 0.018, 1 - pulse * 0.3);
       this.cockpit.scale.set(1 + telegraph * 0.08 + active * 0.035);
     }
+    if (this.kind === 'fracture-gunner') {
+      const phaseState = state.fracturePhase ?? 'inactive';
+      const telegraph = phaseState === 'telegraph' ? Math.sin((state.fractureProgress ?? 0) * Math.PI) : 0;
+      const active = phaseState === 'active' ? 1 : 0;
+      this.wings.position.x += telegraph * 2.4 + active * 0.8;
+      this.wings.rotation += telegraph * 0.06;
+      this.cockpit.scale.set(1 + telegraph * 0.08 + active * 0.03);
+    }
+    if (this.kind === 'thorn-bastion') {
+      const active = state.fracturePhase === 'active' ? 1 : 0;
+      const throb = Math.sin(phase * 2.4) * 0.6 + 0.6;
+      this.rear.scale.set(1 + active * 0.035, 1 + active * 0.035);
+      this.wings.rotation += active * 0.04;
+      this.cockpit.scale.set(1 + active * (0.03 + throb * 0.02));
+    }
+    if (this.kind === 'zigzag-reaver') {
+      const telegraph = state.fracturePhase === 'telegraph' ? Math.sin((state.fractureProgress ?? 0) * Math.PI) : 0;
+      const active = state.fracturePhase === 'active' ? 1 : 0;
+      this.wings.rotation += Math.sin(phase * 2) * 0.025 + active * 0.09;
+      this.wings.scale.set(1 + telegraph * 0.07 + active * 0.035, 1 - telegraph * 0.03);
+      this.cockpit.position.y -= active * 1.1;
+    }
+    if (this.kind === 'rift-miner') {
+      const telegraph = state.fracturePhase === 'telegraph' ? Math.sin((state.fractureProgress ?? 0) * Math.PI) : 0;
+      this.rear.rotation += Math.sin(phase * 0.8) * 0.04;
+      this.hull.scale.set(1 + telegraph * 0.05, 1 - telegraph * 0.025);
+      this.cockpit.scale.set(1 + telegraph * 0.1);
+    }
     this.hitFlash.position.set(0, bob * 0.18);
     this.hitFlash.rotation = this.hull.rotation;
     this.hitFlash.scale.set(1 + hitPulse * 0.06, 1 - hitPulse * 0.03);
@@ -253,7 +299,7 @@ export class EnemyShipVisual {
   private setKind(kind: EnemyShipKind): void {
     if (this.kind === kind) return;
     this.kind = kind;
-    const textures = this.textures[kind];
+    const textures = this.textures[kind] ?? this.textures.chaser;
     this.rear.texture = textures.rear;
     this.wings.texture = textures.wings;
     this.hull.texture = !this.detailedPartsEnabled && textures.flat ? textures.flat : textures.hull;

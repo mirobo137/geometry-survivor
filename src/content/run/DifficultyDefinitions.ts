@@ -21,6 +21,15 @@ export const ACT_II_DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
   { startSeconds: 220, spawnIntervalSeconds: 0.38 }
 ];
 
+/** Act III pressure: a faster baseline, with room for the hazards to remain readable. */
+export const ACT_III_DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
+  { startSeconds: 0, spawnIntervalSeconds: 0.78 },
+  { startSeconds: 50, spawnIntervalSeconds: 0.62 },
+  { startSeconds: 100, spawnIntervalSeconds: 0.5 },
+  { startSeconds: 150, spawnIntervalSeconds: 0.4 },
+  { startSeconds: 200, spawnIntervalSeconds: 0.32 }
+];
+
 export const getSpawnIntervalSeconds = (elapsedSeconds: number): number => {
   const elapsed = Math.max(0, elapsedSeconds);
   for (let index = DIFFICULTY_PHASES.length - 1; index >= 0; index -= 1) {

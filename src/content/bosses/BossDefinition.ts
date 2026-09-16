@@ -1,5 +1,5 @@
-export type BossId = 'core-sentinel' | 'orbital-warden';
-export type BossPattern = 'sweep' | 'ring' | 'charge' | 'curve' | 'replicas';
+export type BossId = 'core-sentinel' | 'orbital-warden' | 'fracture-engine';
+export type BossPattern = 'sweep' | 'ring' | 'charge' | 'curve' | 'replicas' | 'battery' | 'spikes' | 'zigzag' | 'mines';
 
 export interface BossDefinition {
   readonly id: BossId;
@@ -38,6 +38,11 @@ export interface BossDefinition {
   readonly replicasActiveSeconds: number;
   readonly replicaCount: number;
   readonly replicaSpreadRadians: number;
+  /** Optional boss-only hull overrides for authored acts. */
+  readonly bossRadius?: number;
+  readonly maxHealth?: number;
+  readonly spikeRadius?: number;
+  readonly spikeWidth?: number;
 }
 
 export const BOSS_DEFINITION = {
@@ -113,4 +118,37 @@ export const ORBITAL_WARDEN_DEFINITION = {
   replicasActiveSeconds: 0.55,
   replicaCount: 2,
   replicaSpreadRadians: 0.76
+} satisfies BossDefinition;
+
+/**
+ * Act III boss: Fracture Engine. Its pattern order recycles each new enemy
+ * verb so the act reads as one coherent family rather than a random boss kit.
+ */
+export const FRACTURE_ENGINE_DEFINITION = {
+  ...BOSS_DEFINITION,
+  id: 'fracture-engine',
+  startSeconds: 250,
+  spawnDistance: 164,
+  movementRadius: 142,
+  movementAngularSpeed: 0.24,
+  introSeconds: 1.3,
+  recoverySeconds: 0.72,
+  damage: 18,
+  sweepTelegraphSeconds: 0.82,
+  sweepActiveSeconds: 0.3,
+  ringTelegraphSeconds: 0.82,
+  ringActiveSeconds: 1.1,
+  patternOrder: ['battery', 'spikes', 'zigzag', 'mines'],
+  chargeTelegraphSeconds: 0.76,
+  chargeActiveSeconds: 0.7,
+  chargeWidth: 30,
+  curveTelegraphSeconds: 0.8,
+  curveActiveSeconds: 0.9,
+  curveWidth: 28,
+  replicasTelegraphSeconds: 0.72,
+  replicasActiveSeconds: 0.5,
+  bossRadius: 56,
+  maxHealth: 900,
+  spikeRadius: 84,
+  spikeWidth: 22
 } satisfies BossDefinition;

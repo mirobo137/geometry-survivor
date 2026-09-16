@@ -79,6 +79,45 @@ export const ACT_II_ENEMY_SPAWN_PROFILES: readonly EnemySpawnProfile[] = [
   }
 ] as const;
 
+/** Act III layers four new verbs without replacing the familiar survivors. */
+export const ACT_III_ENEMY_SPAWN_PROFILES: readonly EnemySpawnProfile[] = [
+  { startSeconds: 0, defaultKind: 'fracture-gunner' },
+  {
+    startSeconds: 45,
+    defaultKind: 'fracture-gunner',
+    alternateKind: 'thorn-bastion',
+    alternateEvery: 3
+  },
+  {
+    startSeconds: 95,
+    defaultKind: 'thorn-bastion',
+    alternateKind: 'zigzag-reaver',
+    alternateEvery: 2,
+    overrideKind: 'fracture-gunner',
+    overrideEvery: 5
+  },
+  {
+    startSeconds: 155,
+    defaultKind: 'zigzag-reaver',
+    alternateKind: 'rift-miner',
+    alternateEvery: 2,
+    overrideKind: 'thorn-bastion',
+    overrideEvery: 4,
+    supportKind: 'fracture-gunner',
+    supportEvery: 7
+  },
+  {
+    startSeconds: 205,
+    defaultKind: 'rift-miner',
+    alternateKind: 'zigzag-reaver',
+    alternateEvery: 2,
+    overrideKind: 'thorn-bastion',
+    overrideEvery: 4,
+    supportKind: 'fracture-gunner',
+    supportEvery: 6
+  }
+] as const;
+
 const getProfile = (elapsedSeconds: number): EnemySpawnProfile => {
   const elapsed = Number.isFinite(elapsedSeconds) ? Math.max(0, elapsedSeconds) : 0;
   for (let index = ENEMY_SPAWN_PROFILES.length - 1; index >= 0; index -= 1) {

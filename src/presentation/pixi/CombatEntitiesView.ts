@@ -62,6 +62,7 @@ import orbitalWardenRearSvg from '../../assets/svg/enemies/boss/orbital-warden-r
 import orbitalWardenWingsSvg from '../../assets/svg/enemies/boss/orbital-warden-wings.svg?raw';
 import orbitalWardenHullSvg from '../../assets/svg/enemies/boss/orbital-warden-hull.svg?raw';
 import orbitalWardenCockpitSvg from '../../assets/svg/enemies/boss/orbital-warden-cockpit.svg?raw';
+import { FRACTURE_BOSS_SVGS, FRACTURE_ENEMY_SVGS } from '../../assets/svg/enemies/FractureEnemySvgMarkup';
 import { EnemyDefeatFxView } from './enemies/EnemyDefeatFxView';
 import { EnemyShipVisual, type EnemyShipTextureMap } from './enemies/EnemyShipVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
@@ -161,6 +162,34 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
       wings: createSvgTexture(renderer, wardenReplicaWingsSvg, ENEMY_TEXTURE_FRAME),
       hull: createSvgTexture(renderer, wardenReplicaHullSvg, ENEMY_TEXTURE_FRAME),
       cockpit: createSvgTexture(renderer, wardenReplicaCockpitSvg, ENEMY_TEXTURE_FRAME)
+    },
+    'fracture-gunner': {
+      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].flat, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].rear, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].wings, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].hull, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].cockpit, ENEMY_TEXTURE_FRAME)
+    },
+    'thorn-bastion': {
+      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].flat, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].rear, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].wings, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].hull, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].cockpit, ENEMY_TEXTURE_FRAME)
+    },
+    'zigzag-reaver': {
+      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].flat, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].rear, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].wings, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].hull, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].cockpit, ENEMY_TEXTURE_FRAME)
+    },
+    'rift-miner': {
+      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].flat, ENEMY_TEXTURE_FRAME),
+      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].rear, ENEMY_TEXTURE_FRAME),
+      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].wings, ENEMY_TEXTURE_FRAME),
+      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].hull, ENEMY_TEXTURE_FRAME),
+      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].cockpit, ENEMY_TEXTURE_FRAME)
     }
   },
   boss: {
@@ -173,6 +202,12 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
     'orbital-warden': {
       flat: createSvgTexture(renderer, orbitalWardenSvg, { x: -56, y: -56, width: 112, height: 112 }),
       parts: [orbitalWardenRearSvg, orbitalWardenWingsSvg, orbitalWardenHullSvg, orbitalWardenCockpitSvg].map(svg =>
+        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
+      ) as [Texture, Texture, Texture, Texture]
+    },
+    'fracture-engine': {
+      flat: createSvgTexture(renderer, FRACTURE_BOSS_SVGS.flat, { x: -56, y: -56, width: 112, height: 112 }),
+      parts: [FRACTURE_BOSS_SVGS.rear, FRACTURE_BOSS_SVGS.wings, FRACTURE_BOSS_SVGS.hull, FRACTURE_BOSS_SVGS.cockpit].map(svg =>
         createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
       ) as [Texture, Texture, Texture, Texture]
     }

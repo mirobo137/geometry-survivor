@@ -14,6 +14,7 @@ import { CombatEntitiesView } from './pixi/CombatEntitiesView';
 import { HazardView } from './pixi/HazardView';
 import { RadialPulseView } from './pixi/RadialPulseView';
 import { AngularSweepView } from './pixi/AngularSweepView';
+import { FractureThreatView } from './pixi/FractureThreatView';
 import { ImpactFxView } from './pixi/fx/ImpactFxView';
 import { ScreenFxView } from './pixi/fx/ScreenFxView';
 import { TerminalFxView } from './pixi/fx/TerminalFxView';
@@ -35,7 +36,9 @@ export class PixiGameView {
   private readonly weaponView: WeaponView;
   private readonly hazardView: HazardView;
   private readonly radialPulseView: RadialPulseView;
+  private readonly fracturePulseRingView: RadialPulseView;
   private readonly angularSweepView: AngularSweepView;
+  private readonly fractureThreatView: FractureThreatView;
   private readonly playerView: PlayerView;
   private readonly impactFxView: ImpactFxView;
   private readonly terminalFxView: TerminalFxView;
@@ -55,7 +58,9 @@ export class PixiGameView {
     this.backgroundView = new BackgroundView(renderer, background, quality);
     this.hazardView = new HazardView(quality);
     this.radialPulseView = new RadialPulseView(quality);
+    this.fracturePulseRingView = new RadialPulseView(quality);
     this.angularSweepView = new AngularSweepView(quality);
+    this.fractureThreatView = new FractureThreatView(quality);
     this.bossView = new BossView(quality);
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
@@ -71,7 +76,9 @@ export class PixiGameView {
       this.weaponView.root,
       this.hazardView.root,
       this.radialPulseView.root,
+      this.fracturePulseRingView.root,
       this.angularSweepView.root,
+      this.fractureThreatView.root,
       this.bossView.root,
       this.playerView.root,
       this.impactFxView.root,
@@ -104,6 +111,10 @@ export class PixiGameView {
     this.weaponView.render(combat);
   }
 
+  public renderFractureThreats(combat: CombatRenderState, arenaRadius: number): void {
+    this.fractureThreatView.render(combat, arenaRadius);
+  }
+
   public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind']): void {
     this.entitiesView.playEnemyDefeat(x, y, kind);
     if (kind === 'tank' || kind === 'elite') this.screenFxView.play('enemy-defeat');
@@ -115,6 +126,10 @@ export class PixiGameView {
 
   public renderRadialPulse(state: CombatRenderState['radialPulse']): void {
     this.radialPulseView.render(state);
+  }
+
+  public renderFracturePulseRing(state: CombatRenderState['pulseRing']): void {
+    this.fracturePulseRingView.render(state);
   }
 
   public renderAngularSweep(
@@ -210,7 +225,9 @@ export class PixiGameView {
     this.arenaView.reset();
     this.hazardView.reset();
     this.radialPulseView.reset();
+    this.fracturePulseRingView.reset();
     this.angularSweepView.reset();
+    this.fractureThreatView.reset();
     this.weaponView.reset();
     this.screenFxView.reset();
     this.lastArenaRadius = -1;

@@ -1,4 +1,11 @@
-export type ArenaShape = 'circle' | 'hexagon' | 'square';
+export type ArenaShape =
+  | 'circle'
+  | 'hexagon'
+  | 'square'
+  | 'diamond'
+  | 'rectangle-horizontal'
+  | 'rectangle-vertical'
+  | 'octagon';
 
 export interface ArenaShapeChangeDefinition {
   readonly startSeconds: number;
@@ -47,6 +54,24 @@ export const ACT_II_ARENA_SHAPE_CHANGES: readonly ArenaShapeChangeDefinition[] =
   { startSeconds: 200, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'square', to: 'hexagon' },
   // 248.05 + 1.20 + 0.75 = 250: keep ten seconds of stable circle before the boss.
   { startSeconds: 248.05, telegraphSeconds: 1.2, morphSeconds: 0.75, from: 'hexagon', to: 'circle' }
+] as const;
+
+/**
+ * Act III turns the containment field into an active opponent. The cadence is
+ * intentionally short enough to teach the player that every silhouette is a
+ * new route, while the final intervention completes before the boss window.
+ */
+export const ACT_III_ARENA_SHAPE_CHANGES: readonly ArenaShapeChangeDefinition[] = [
+  { startSeconds: 25, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'octagon', to: 'rectangle-horizontal' },
+  { startSeconds: 50, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'rectangle-horizontal', to: 'diamond' },
+  { startSeconds: 75, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'diamond', to: 'circle' },
+  { startSeconds: 100, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'circle', to: 'hexagon' },
+  { startSeconds: 125, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'hexagon', to: 'rectangle-vertical' },
+  { startSeconds: 150, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'rectangle-vertical', to: 'octagon' },
+  { startSeconds: 175, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'octagon', to: 'diamond' },
+  { startSeconds: 200, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'diamond', to: 'rectangle-horizontal' },
+  { startSeconds: 225, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'rectangle-horizontal', to: 'hexagon' },
+  { startSeconds: 248.05, telegraphSeconds: 0.8, morphSeconds: 0.55, from: 'hexagon', to: 'circle' }
 ] as const;
 
 const CIRCLE_LASER_PRESSURE: ArenaLaserPressure = {

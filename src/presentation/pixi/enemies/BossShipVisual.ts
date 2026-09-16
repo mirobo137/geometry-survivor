@@ -9,7 +9,8 @@ export interface BossShipTextures {
   readonly parts: readonly [Texture, Texture, Texture, Texture];
 }
 
-export type BossShipTextureMap = Readonly<Record<BossId, BossShipTextures>>;
+export type BossShipTextureMap = Readonly<Record<'core-sentinel' | 'orbital-warden', BossShipTextures>>
+  & Readonly<Partial<Record<Exclude<BossId, 'core-sentinel' | 'orbital-warden'>, BossShipTextures>>>;
 
 /** One boss assembly, outside the 250-enemy pool. Never owns attack timing. */
 export class BossShipVisual {
@@ -25,8 +26,8 @@ export class BossShipVisual {
   ) {
     this.textures = 'core-sentinel' in textures
       ? textures
-      : { 'core-sentinel': textures, 'orbital-warden': textures };
-    const initial = this.textures[this.bossId];
+      : { 'core-sentinel': textures, 'orbital-warden': textures, 'fracture-engine': textures };
+    const initial = this.textures[this.bossId] ?? this.textures['core-sentinel'];
     this.pieces = (quality === 'low' ? [initial.flat] : initial.parts).map((texture) => {
       const sprite = new Sprite(texture);
       sprite.anchor.set(0.5);
@@ -39,7 +40,7 @@ export class BossShipVisual {
   public setBossId(bossId: BossId): void {
     if (this.bossId === bossId) return;
     this.bossId = bossId;
-    const textures = this.textures[bossId];
+    const textures = this.textures[bossId] ?? this.textures['core-sentinel'];
     if (this.quality === 'low') {
       this.pieces[0].texture = textures.flat;
       return;

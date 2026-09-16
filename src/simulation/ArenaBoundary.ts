@@ -29,6 +29,9 @@ const SQUARE_APOTHEM_FACTOR = Math.cos(Math.PI / SQUARE_SIDES);
 // closest wall. This preserves a known escape margin while its corners open
 // a new diagonal route instead of making the transformation a hidden squeeze.
 const SQUARE_CIRCUMRADIUS_FACTOR = HEXAGON_APOTHEM_FACTOR / SQUARE_APOTHEM_FACTOR;
+const OCTAGON_APOTHEM_FACTOR = Math.cos(Math.PI / 8);
+const RECTANGLE_LONG_HALF_EXTENT_FACTOR = 1.08;
+const RECTANGLE_SHORT_HALF_EXTENT_FACTOR = 0.72;
 
 export const asArenaBoundary = (input: ArenaBoundaryInput): ArenaBoundary => (
   typeof input === 'number'
@@ -97,8 +100,27 @@ const getShapeRadius = (radius: number, shape: ArenaShape, angle: number): numbe
     const sideNormalOffset = getSideNormalOffset(angle, HEXAGON_SECTOR, Math.PI / HEXAGON_SIDES, HALF_HEXAGON_SECTOR);
     return safeRadius * HEXAGON_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
   }
-  // Axis-aligned square: it reads as a square (not a diamond) while keeping
-  // its minimum clearance compatible with the opening hexagon.
+  if (shape === 'octagon') {
+    const sideNormalOffset = getSideNormalOffset(angle, FULL_CIRCLE / 8, 0, Math.PI / 8);
+    return safeRadius * OCTAGON_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
+  }
+  if (shape === 'diamond') {
+    const sideNormalOffset = getSideNormalOffset(angle, SQUARE_SECTOR, Math.PI / 4, HALF_SQUARE_SECTOR);
+    return safeRadius * SQUARE_CIRCUMRADIUS_FACTOR * SQUARE_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
+  }
+  if (shape === 'rectangle-horizontal' || shape === 'rectangle-vertical') {
+    const horizontal = shape === 'rectangle-horizontal';
+    const halfWidth = safeRadius * (horizontal ? RECTANGLE_LONG_HALF_EXTENT_FACTOR : RECTANGLE_SHORT_HALF_EXTENT_FACTOR);
+    const halfHeight = safeRadius * (horizontal ? RECTANGLE_SHORT_HALF_EXTENT_FACTOR : RECTANGLE_LONG_HALF_EXTENT_FACTOR);
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    const denominator = Math.sqrt(
+      (cosine / Math.max(1, halfWidth)) ** 2 + (sine / Math.max(1, halfHeight)) ** 2
+    );
+    return denominator <= 0 ? safeRadius : 1 / denominator;
+  }
+  // Axis-aligned square: it reads as a square while keeping its minimum
+  // clearance compatible with the opening hexagon.
   const sideNormalOffset = getSideNormalOffset(angle, SQUARE_SECTOR, 0, HALF_SQUARE_SECTOR);
   return safeRadius * SQUARE_CIRCUMRADIUS_FACTOR * SQUARE_APOTHEM_FACTOR / Math.cos(sideNormalOffset);
 };

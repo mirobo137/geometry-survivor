@@ -1,4 +1,4 @@
-import type { ChargerPhase, EnemyKind, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
+import type { ChargerPhase, EnemyKind, FractureEnemyPhase, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
@@ -53,6 +53,18 @@ export interface EnemyState {
   splitterDepth: number;
   /** True only for the Warden's destructible miniature copies. */
   wardenReplica: boolean;
+  fracturePhase: FractureEnemyPhase;
+  fractureTimer: number;
+  fractureProgress: number;
+  fractureAimX: number;
+  fractureAimY: number;
+  fractureStartX: number;
+  fractureStartY: number;
+  fractureEndX: number;
+  fractureEndY: number;
+  fractureSequence: number;
+  fractureHitApplied: boolean;
+  fractureSpikeRadius: number;
   /** Increments whenever a pooled slot is acquired, including recycled slots. */
   generation: number;
 }
@@ -137,6 +149,18 @@ const createEnemyState = (): EnemyState => ({
   prismWeaverTimer: 0, prismWeaverSequence: 0, prismWeaverHitApplied: false,
   splitterDepth: 0,
   wardenReplica: false,
+  fracturePhase: 'inactive',
+  fractureTimer: 0,
+  fractureProgress: 0,
+  fractureAimX: 0,
+  fractureAimY: 0,
+  fractureStartX: 0,
+  fractureStartY: 0,
+  fractureEndX: 0,
+  fractureEndY: 0,
+  fractureSequence: 0,
+  fractureHitApplied: false,
+  fractureSpikeRadius: 0,
   generation: 0
 });
 

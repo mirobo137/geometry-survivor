@@ -51,7 +51,7 @@ export interface MetaUpgradeSaveData {
   readonly levels: Readonly<Partial<Record<PermanentUpgradeId, number>>>;
 }
 
-export type CampaignActId = 'radial' | 'angular';
+export type CampaignActId = 'radial' | 'angular' | 'fracture';
 
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
@@ -142,7 +142,7 @@ const readNonNegativeInt = (value: unknown, fallback: number, max: number): numb
 );
 
 const isCampaignActId = (value: unknown): value is CampaignActId => (
-  value === 'radial' || value === 'angular'
+  value === 'radial' || value === 'angular' || value === 'fracture'
 );
 
 /** Migrates unknown/legacy payloads into the current bounded schema. */

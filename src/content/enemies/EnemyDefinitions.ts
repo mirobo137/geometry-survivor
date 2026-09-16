@@ -1,9 +1,10 @@
-export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica' | 'boss';
+export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica' | 'fracture-gunner' | 'thorn-bastion' | 'zigzag-reaver' | 'rift-miner' | 'boss';
 
 export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
 export type OrbiterDirection = -1 | 1;
 export type ChargerPhase = 'inactive' | 'approach' | 'telegraph' | 'charge' | 'recovery';
 export type PrismWeaverPhase = 'inactive' | 'approach' | 'telegraph' | 'active' | 'recovery';
+export type FractureEnemyPhase = 'inactive' | 'approach' | 'telegraph' | 'active' | 'recovery';
 
 export interface OrbiterDefinition {
   readonly sectorCount: 8;
@@ -57,6 +58,25 @@ export interface PrismWeaverDefinition {
   readonly dangerHalfAngle: number;
   readonly attackDamage: number;
   readonly activeCap: number;
+}
+
+export interface FractureEnemyDefinition {
+  readonly attackDelaySeconds: number;
+  readonly telegraphSeconds: number;
+  readonly activeSeconds: number;
+  readonly recoverySeconds: number;
+  readonly activeCap: number;
+  readonly attackRange?: number;
+  readonly projectileSpeed?: number;
+  readonly projectileDamage?: number;
+  readonly projectileCount?: number;
+  readonly spikeRadius?: number;
+  readonly spikeWidth?: number;
+  readonly attackRadius?: number;
+  readonly zigzagDistance?: number;
+  readonly zigzagWidth?: number;
+  readonly mineCount?: number;
+  readonly mineDamage?: number;
 }
 
 export interface EnemyDefinition {
@@ -137,6 +157,22 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'warden-replica', radius: 15, speed: 86, maxHealth: 30, contactDamage: 8,
     experience: 2, spawnCost: 1, color: 0x78e4ff
   },
+  'fracture-gunner': {
+    kind: 'fracture-gunner', radius: 18, speed: 48, maxHealth: 58, contactDamage: 8,
+    experience: 5, spawnCost: 3, color: 0x6fe8ff
+  },
+  'thorn-bastion': {
+    kind: 'thorn-bastion', radius: 27, speed: 30, maxHealth: 148, contactDamage: 16,
+    experience: 8, spawnCost: 5, color: 0xff6c9f
+  },
+  'zigzag-reaver': {
+    kind: 'zigzag-reaver', radius: 20, speed: 76, maxHealth: 72, contactDamage: 13,
+    experience: 6, spawnCost: 4, color: 0xffcb65
+  },
+  'rift-miner': {
+    kind: 'rift-miner', radius: 22, speed: 42, maxHealth: 92, contactDamage: 12,
+    experience: 7, spawnCost: 4, color: 0xb78cff
+  },
   boss: {
     kind: 'boss',
     radius: 48,
@@ -205,4 +241,31 @@ export const PRISM_WEAVER_DEFINITION: PrismWeaverDefinition = {
   dangerHalfAngle: 0.11,
   attackDamage: 16,
   activeCap: 3
+};
+
+/**
+ * Act III authored enemy verbs. Damage remains intentionally conservative;
+ * the deferred balance pass owns the final tuning after the mechanics are
+ * human-tested in Fracture mode.
+ */
+export const FRACTURE_GUNNER_DEFINITION: FractureEnemyDefinition = {
+  attackDelaySeconds: 2.1, telegraphSeconds: 0.72, activeSeconds: 0.18,
+  recoverySeconds: 0.85, activeCap: 6, attackRange: 190, projectileSpeed: 275,
+  projectileDamage: 10, projectileCount: 2
+};
+
+export const THORN_BASTION_DEFINITION: FractureEnemyDefinition = {
+  attackDelaySeconds: 2.65, telegraphSeconds: 0.72, activeSeconds: 0.9,
+  recoverySeconds: 0.72, activeCap: 4, spikeRadius: 58, spikeWidth: 18
+};
+
+export const ZIGZAG_REAVER_DEFINITION: FractureEnemyDefinition = {
+  attackDelaySeconds: 2.35, telegraphSeconds: 0.58, activeSeconds: 0.78,
+  recoverySeconds: 0.66, activeCap: 5, zigzagDistance: 178, zigzagWidth: 70
+};
+
+export const RIFT_MINER_DEFINITION: FractureEnemyDefinition = {
+  attackDelaySeconds: 3.2, telegraphSeconds: 0.7, activeSeconds: 0.24,
+  recoverySeconds: 1.15, activeCap: 4, mineCount: 2, mineDamage: 18,
+  attackRadius: 150
 };

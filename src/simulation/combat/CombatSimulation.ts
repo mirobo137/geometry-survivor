@@ -29,6 +29,7 @@ import {
 import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
 import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
+import { FractureThreatSystem } from '../fracture/FractureThreatSystem';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -62,6 +63,9 @@ export interface CombatSimulationOptions {
   readonly evolutionDrill?: WeaponEvolutionScenario;
   /** Family selected by the evolution lab; omitted by simulation-only fixtures. */
   readonly evolutionDrillWeapon?: WeaponEvolutionId;
+  /** Isolated Act III family drill; never changes the campaign timeline. */
+  readonly fractureDrill?: boolean;
+  readonly fractureEnemyKind?: EnemyKind;
 }
 
 export type CombatEvent =
@@ -76,7 +80,7 @@ export type CombatEvent =
   | {
     readonly type: 'playerDamaged';
     readonly amount: number;
-    readonly source: 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss';
+    readonly source: 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss' | 'fracture-projectile' | 'fracture-mine';
   };
 
 export interface CombatStats {
@@ -127,8 +131,11 @@ export class CombatSimulation {
   private readonly wardenDrill: boolean;
   private readonly pulseRingWeaponDrill: boolean;
   private readonly magneticChargeWeaponDrill: boolean;
+  private readonly fractureDrill: boolean;
+  private readonly fractureEnemyKind: EnemyKind;
   private readonly evolutionDrill: WeaponEvolutionScenario | null;
   private readonly evolutionDrillWeapon: WeaponEvolutionId | null;
+  public readonly fractureThreats: FractureThreatSystem;
   private pulseRingWeaponDrillInitialized = false;
   private magneticChargeWeaponDrillInitialized = false;
   private evolutionDrillInitialized = false;
@@ -162,6 +169,12 @@ export class CombatSimulation {
       && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
       && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.stressMode;
+    this.fractureDrill = options.fractureDrill === true
+      && !this.orbiterDrill && !this.chargerDrill && !this.splitterDrill
+      && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
+      && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.magneticChargeWeaponDrill
+      && !this.stressMode;
+    this.fractureEnemyKind = options.fractureEnemyKind ?? 'fracture-gunner';
     this.evolutionDrill = options.evolutionDrill ?? null;
     this.evolutionDrillWeapon = options.evolutionDrillWeapon ?? null;
     const hazardCadence = getHazardCadenceProfile(options.hazardCadenceMode);
@@ -171,14 +184,17 @@ export class CombatSimulation {
       intervalSeconds: this.actDirector.radialPulseDefinition.intervalSeconds
         * hazardCadence.radialPulseIntervalMultiplier
     };
+    this.fractureThreats = new FractureThreatSystem();
     this.enemySystem = new EnemySystem(
       this.enemies,
       new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
-      this.actDirector
+      this.actDirector,
+      this.fractureThreats
     );
     this.boss = new BossSystem(
       this.enemySystem,
-      this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition
+      this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition,
+      this.fractureThreats
     );
     this.laser = new LaserHazard(
       LASER_DEFINITION,
@@ -189,12 +205,14 @@ export class CombatSimulation {
     this.pulseRing = new PulseRingHazard(
       this.pulseRingDrill
         ? PULSE_RING_DRILL_DEFINITION
-        : isAngularAct ? this.actDirector.pulseRingDefinition : undefined
+        : isAngularAct || this.actDirector.definition.id === 'fracture'
+          ? this.actDirector.pulseRingDefinition : undefined
     );
     this.angularSweep = new AngularSweepHazard(
       this.angularSweepDrill || this.wardenDrill
         ? ANGULAR_SWEEP_DRILL_DEFINITION
-        : isAngularAct ? this.actDirector.angularSweepDefinition : ANGULAR_SWEEP_DEFINITION
+        : isAngularAct || this.actDirector.definition.id === 'fracture'
+          ? this.actDirector.angularSweepDefinition : ANGULAR_SWEEP_DEFINITION
     );
     this.weaponSystem = new CombatWeaponSystem(
       this.enemySystem,
@@ -228,6 +246,8 @@ export class CombatSimulation {
       pulseRing: this.pulseRing.state,
       angularSweep: this.angularSweep.state,
       boss: this.boss.state,
+      fractureProjectiles: this.fractureThreats.projectiles,
+      fractureMines: this.fractureThreats.mines,
       shot: this.weaponSystem.lastShot
     };
     this.hazardCadenceMode = options.hazardCadenceMode ?? 'chaos';
@@ -320,6 +340,8 @@ export class CombatSimulation {
 
   public get isMagneticChargeWeaponDrill(): boolean { return this.magneticChargeWeaponDrill; }
 
+  public get isFractureDrill(): boolean { return this.fractureDrill; }
+
   public get isEvolutionDrill(): boolean { return this.evolutionDrill !== null; }
 
   public get evolutionDrillMode(): WeaponEvolutionScenario | null { return this.evolutionDrill; }
@@ -328,7 +350,11 @@ export class CombatSimulation {
     return this.actDirector.definition.id === 'angular';
   }
 
-  public get actId(): 'radial' | 'angular' {
+  public get isFractureAct(): boolean {
+    return this.actDirector.definition.id === 'fracture';
+  }
+
+  public get actId(): 'radial' | 'angular' | 'fracture' {
     return this.actDirector.definition.id;
   }
 
@@ -543,9 +569,11 @@ export class CombatSimulation {
     this.stats.elapsedSeconds += dt;
     this.spawnAccumulator += dt;
     const angularAct = this.isAngularAct;
+    const fractureAct = this.isFractureAct;
     const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
-      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.evolutionDrill !== null;
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.evolutionDrill !== null
+      || this.fractureDrill;
     if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
       this.stats.elapsedSeconds,
@@ -572,7 +600,7 @@ export class CombatSimulation {
       });
     }
 
-    if (this.pulseRingDrill || angularAct) {
+    if (this.pulseRingDrill || angularAct || fractureAct) {
       const pulse = this.pulseRing.update(
         dt,
         this.stats.elapsedSeconds,
@@ -586,20 +614,20 @@ export class CombatSimulation {
         this.stats.damageTaken += this.actDirector.pulseRingDefinition.damage;
         this.pendingEvents.push({
           type: 'playerDamaged',
-          amount: PULSE_RING_DRILL_DEFINITION.damage,
+          amount: this.actDirector.pulseRingDefinition.damage,
           source: 'pulse-ring'
         });
       }
     }
 
-    if (this.angularSweepDrill || this.wardenDrill || angularAct) {
+    if (this.angularSweepDrill || this.wardenDrill || angularAct || fractureAct) {
       const sector = this.angularSweep.update(
         dt,
         this.stats.elapsedSeconds,
         player,
         arenaBoundary,
-        angularAct
-          ? !this.boss.state.active
+          angularAct || fractureAct
+            ? !this.boss.state.active
           : !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
       );
       if (sector.damaged) {
@@ -636,6 +664,10 @@ export class CombatSimulation {
       if (!this.magneticChargeWeaponDrillInitialized) {
         this.enemySystem.spawnMagneticChargeWeaponDrill(arenaRadius);
         this.magneticChargeWeaponDrillInitialized = true;
+      }
+    } else if (this.fractureDrill) {
+      if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === this.fractureEnemyKind)) {
+        this.enemySystem.spawnFractureDrill(arenaRadius, this.fractureEnemyKind);
       }
     } else if (this.evolutionDrill !== null) {
       if (!this.evolutionDrillInitialized) {
@@ -699,6 +731,15 @@ export class CombatSimulation {
           }
         : { magneticChargeArena: arenaBoundary, arena: arenaBoundary });
     }
+    const threatDamage = this.fractureThreats.update(dt, player, arenaBoundary);
+    if (threatDamage) {
+      this.stats.damageTaken += threatDamage.amount;
+      this.pendingEvents.push({
+        type: 'playerDamaged',
+        amount: threatDamage.amount,
+        source: threatDamage.source
+      });
+    }
     this.stats.shotsFired = this.weaponSystem.totalShotsFired;
     this.maintainStressEnemies(arenaRadius);
     this.maintainStressProjectiles(player);
@@ -721,6 +762,7 @@ export class CombatSimulation {
     this.radialPulse.reset();
     this.pulseRing.reset();
     this.angularSweep.reset();
+    this.fractureThreats.reset();
     this.stats.elapsedSeconds = this.initialElapsedSeconds;
     this.stats.kills = 0;
     this.stats.experience = 0;
@@ -744,14 +786,14 @@ export class CombatSimulation {
   private maintainStressEnemies(arenaRadius: number): void {
     if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
-      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill) return;
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.fractureDrill) return;
     this.enemySystem.maintainStress(arenaRadius);
   }
 
   private maintainStressProjectiles(player: PlayerState): void {
     if (!this.stressMode || this.orbiterDrill || this.chargerDrill || this.splitterDrill || this.prismWeaverDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
-      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill) return;
+      || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.fractureDrill) return;
     this.weaponSystem.maintainStressProjectiles(player);
   }
 

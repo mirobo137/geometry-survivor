@@ -16,6 +16,8 @@ const SQUARE_BOUNDARY = {
   morphProgress: 0
 };
 
+const FRACTURE_SHAPES = ['diamond', 'rectangle-horizontal', 'rectangle-vertical', 'octagon'] as const;
+
 describe('ArenaBoundary', () => {
   it('keeps circle geometry unchanged and exposes hexagon side depth', () => {
     expect(getArenaRadiusAtAngle(ARENA_RADIUS, 0)).toBe(ARENA_RADIUS);
@@ -64,6 +66,29 @@ describe('ArenaBoundary', () => {
     );
     expect(clamped.x - ARENA_CENTER.x).toBeCloseTo(
       getArenaRadiusAtAngle(SQUARE_BOUNDARY, 0) - PLAYER_RADIUS
+    );
+  });
+
+  it.each(FRACTURE_SHAPES)('keeps the Act III %s boundary finite and clampable', (shape) => {
+    const boundary = {
+      radius: ARENA_RADIUS,
+      shapeFrom: shape,
+      shapeTo: shape,
+      morphProgress: 0
+    } as const;
+    const angle = 0.37;
+    const edge = getArenaRadiusAtAngle(boundary, angle);
+    const clamped = clampPointToArena(
+      ARENA_CENTER.x + Math.cos(angle) * ARENA_RADIUS * 3,
+      ARENA_CENTER.y + Math.sin(angle) * ARENA_RADIUS * 3,
+      PLAYER_RADIUS,
+      boundary
+    );
+    const distance = Math.hypot(clamped.x - ARENA_CENTER.x, clamped.y - ARENA_CENTER.y);
+    expect(Number.isFinite(edge)).toBe(true);
+    expect(distance).toBeLessThanOrEqual(
+      getArenaRadiusAtAngle(boundary, Math.atan2(clamped.y - ARENA_CENTER.y, clamped.x - ARENA_CENTER.x))
+        - PLAYER_RADIUS + 0.0001
     );
   });
 });

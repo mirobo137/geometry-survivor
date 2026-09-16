@@ -28,6 +28,34 @@ const state = (kind: EnemyRenderState['kind'], vx = 80, vy = 0): EnemyRenderStat
 });
 
 describe('EnemyShipVisual', () => {
+  it('aims the Gunner barrel at its captured target while retreating and recoils axially', () => {
+    const view = new EnemyShipVisual(textures, 0, 'high');
+    const gunner = { ...state('fracture-gunner', -40, 0), fractureAimX: 500, fractureAimY: 240 };
+    view.render({ ...gunner, fracturePhase: 'telegraph', fractureProgress: 0.5 }, 0);
+    expect(view.root.rotation).toBeCloseTo(Math.PI / 2);
+    expect(view.root.children[1].position.x).toBe(0);
+    expect(view.root.children[1].rotation).toBe(0);
+    const preparedY = view.root.children[1].position.y;
+    view.render({ ...gunner, fracturePhase: 'active' }, 0);
+    expect(view.root.children[1].position.y).toBeGreaterThan(preparedY);
+    view.render({ ...gunner, fracturePhase: 'recovery' }, 0);
+    expect(view.root.rotation).toBeCloseTo(Math.PI * 1.5);
+  });
+
+  it('does not retain expanded Thorn parts or faded Splitter wings across pooled kinds', () => {
+    const reused = new EnemyShipVisual(textures, 0, 'high');
+    reused.render({ ...state('thorn-bastion'), fracturePhase: 'active' }, 0);
+    expect(reused.root.children[0].scale.x).toBeGreaterThan(1);
+    reused.render({ ...state('splitter'), splitterDepth: 1 }, 0);
+    reused.render(state('rift-miner'), 1);
+    const fresh = new EnemyShipVisual(textures, 0, 'high');
+    fresh.render(state('rift-miner'), 1);
+    for (let index = 0; index < 4; index += 1) {
+      expect(reused.root.children[index].scale.x).toBe(fresh.root.children[index].scale.x);
+      expect(reused.root.children[index].alpha).toBe(fresh.root.children[index].alpha);
+    }
+  });
+
   it('uses a complete Low silhouette on first chaser and after pool reset', () => {
     const map = { ...textures, chaser: { ...textures.chaser, flat: Texture.EMPTY } };
     const view = new EnemyShipVisual(map, 0, 'low');

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fracture · cinco siluetas</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;padding:28px;background:#090f1d;color:#e0e6ed;font:14px system-ui}
+  main{max-width:1180px;margin:auto}h1{font-size:32px;letter-spacing:-1px}h2{font-size:18px}p{color:#a5b3c7;line-height:1.5}
+  #ships{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}article{background:#121d30;border:1px solid #324159;border-radius:10px;padding:14px}
+  .hero{display:block;margin:auto;width:150px;height:150px}.sizes{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:140px}
+  svg{flex-shrink:0}.old{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.old figure{margin:0;text-align:center}.old figcaption{font-size:11px;color:#8e9eb7}
+  button,select{padding:9px;margin:4px;background:#20334e;color:#e2ecf5;border:1px solid #637a95;border-radius:5px}
+  .light article{background:#e4e6e5;color:#152235}.gray .art{filter:grayscale(1)}.silhouette .art{filter:brightness(0)}
+  canvas{max-width:100%;height:auto}#runtime{border:1px solid #334059;border-radius:8px;overflow:hidden}
+  #studies{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}#studies article{background:#dde2e4;color:#152235;width:220px}#studies svg{margin:2px;filter:brightness(0)}summary{cursor:pointer;margin:20px 0}
+  .parts{display:flex;gap:4px;justify-content:center}.parts svg{width:44px;height:44px}label{display:inline-block}
+  @media(max-width:850px){#ships{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<main>
+  <p>GEOMETRY SURVIVOR / ACTO III / ESTUDIO DE FLOTA</p>
+  <h1>Cinco máquinas, cinco verbos</h1>
+  <p>Fuentes de producción. Biseles sólidos, cavidades y energía localizada. Cada master Low se compone de las mismas cuatro piezas que High.</p>
+  <label>Inspección <select id="inspection"><option value="">Oscuro</option><option value="light">Claro</option><option value="gray">Grises</option><option value="light silhouette">Silueta</option></select></label>
+  <div id="ships"></div>
+  <h2>Comparación · Actos I y II</h2><div class="old art" id="old"></div>
+  <details id="exploration"><summary>Estudios de masa · dos alternativas y silueta elegida por familia</summary><div id="studies"></div></details>
+  <h2>Pixi real · High / Low / High ampliado</h2>
+  <p>Las dos primeras filas usan tamaño real y la tercera ×1.8. Dirección, pose de ataque y pausa se aplican al compositor de producción; las miniaturas superiores no sustituyen esta prueba.</p>
+  <label>Pose <select id="phase"><option>approach</option><option>telegraph</option><option>active</option><option>recovery</option></select></label>
+  <label>Giro <select id="angle"><option value="0">Frente</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
+  <button id="motion" aria-pressed="false">Animar</button><button id="defeat">Despiece del boss</button><button id="reset">Restaurar</button>
+  <div id="runtime"></div>
+  <p>QA: <a href="../../?debug=1&act=fracture&quality=high">Acto III</a> · <a href="../../?debug=1&act=fracture&boss=1&quality=low">Boss Low</a>. Galería exclusiva de desarrollo.</p>
+</main>
+<script type="module">
+  import { Application, Container } from 'pixi.js';
+  import { FRACTURE_ENEMY_SVGS, FRACTURE_BOSS_SVGS } from '../../src/assets/svg/enemies/FractureEnemySvgMarkup.ts';
+  import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
+  import { EnemyShipVisual } from '../../src/presentation/pixi/enemies/EnemyShipVisual.ts';
+  import { BossShipVisual } from '../../src/presentation/pixi/enemies/BossShipVisual.ts';
+  const fleet=[...Object.entries(FRACTURE_ENEMY_SVGS),['fracture-engine',FRACTURE_BOSS_SVGS]];
+  const names=['Gunner · batería','Thorn · coraza','Reaver · zigzag','Miner · doble silo','Engine · fundición'];
+  const markup=(svg,prefix,size,cls='')=>svg.replaceAll('enemy-',`${prefix}-enemy-`).replace('<svg ',`<svg width="${size}" height="${size}" class="${cls}" `);
+  fleet.forEach(([id,ship],i)=>{
+    const article=document.createElement('article');article.innerHTML=`<h2>${names[i]}</h2><div class="art">${markup(ship.flat,`${id}-hero`,150,'hero')}<div class="sizes">${[32,48,64,96].map(size=>markup(ship.flat,`${id}-${size}`,size)).join('')}</div><div class="parts">${['rear','wings','hull','cockpit'].map(part=>markup(ship[part],`${id}-${part}`,44)).join('')}</div></div>`;
+    document.querySelector('#ships').append(article);
+  });
+  const alternatives=[
+    ['M0-30L7-14 8 19 0 28-8 19-7-14Z','M-29-10H29V4H8V24H-8V4H-29Z'],
+    ['M-19-24H19L25-16V19L15 26H-15L-25 19V-16Z','M-27 11L-25-23-12-10 0-29 12-10 25-23 27 11 15 25H-15Z'],
+    ['M0-30L24 20 8 13 0 24-8 13-24 20Z','M-29 17L-13-17 0-26 13-17 29 17 9 3 0-6-9 3Z'],
+    ['M0-27L20-18 28 0 20 18 0 27-20 18-28 0-20-18Z','M-6-27H6L9-6 29 11 23 23 0 9-23 23-29 11-9-6Z'],
+    ['M0-30L11-20 26-19 25-4 30 8 17 20 0 30-17 20-30 8-25-4-26-19-11-20Z','M-29-24H-17V-6H17V-24H29V20H10V29H-10V20H-29Z']
+  ];
+  fleet.forEach(([id,ship],i)=>{
+    const article=document.createElement('article');
+    article.innerHTML=`<h2>${names[i]}</h2>${alternatives[i].map(d=>`<svg width="56" height="56" viewBox="-32 -32 64 64" aria-label="Estudio alternativo"><path d="${d}"/></svg>`).join('')}${markup(ship.flat,`study-${id}`,56)}<div>Alternativas → elección</div>`;
+    document.querySelector('#studies').append(article);
+  });
+  const sources=import.meta.glob('../../src/assets/svg/enemies/*/*.svg',{query:'?raw',import:'default',eager:true});
+  for(const id of ['chaser','fast','tank','elite','orbiter','charger','splitter','prism-weaver','boss','orbital-warden']){
+    const directory=id==='orbital-warden'?'boss':id;
+    const svg=sources[`../../src/assets/svg/enemies/${directory}/${id}.svg`];
+    const figure=document.createElement('figure');figure.innerHTML=markup(svg,`old-${id}`,64)+`<figcaption>${id}</figcaption>`;document.querySelector('#old').append(figure);
+  }
+  document.querySelector('#inspection').onchange=event=>document.body.className=event.target.value;
+  const app=new Application();await app.init({width:1120,height:480,resolution:1,background:0x090f1d,preference:'webgl',autoStart:false});
+  document.querySelector('#runtime').append(app.canvas);
+  const textures=Object.fromEntries(fleet.map(([id,ship])=>{
+    const size=id==='fracture-engine'?112:64,frame={x:-size/2,y:-size/2,width:size,height:size};
+    return [id,Object.fromEntries(Object.entries(ship).map(([part,svg])=>[part,createSvgTexture(app.renderer,svg,frame)]))];
+  }));
+  const views=[];const bosses=[];
+  for(let row=0;row<3;row++)fleet.forEach(([id],index)=>{
+    const quality=row===1?'low':'high',wrapper=new Container();wrapper.position.set(112+index*224,68+row*154);wrapper.scale.set(row===2?1.8:1);app.stage.addChild(wrapper);
+    let view;
+    if(id==='fracture-engine'){
+      const t=textures[id],set={flat:t.flat,parts:[t.rear,t.wings,t.hull,t.cockpit]};
+      view=new BossShipVisual({'core-sentinel':set,'orbital-warden':set,'fracture-engine':set},quality);view.setBossId(id);bosses.push(view);
+    }else view=new EnemyShipVisual({...textures,chaser:textures[id]},index,quality);
+    wrapper.addChild(view.root);views.push({id,view,wrapper});
+  });
+  let seconds=0,moving=false,defeating=false;
+  function render(dt=0){
+    const angle=Number(document.querySelector('#angle').value)*Math.PI/180,phase=document.querySelector('#phase').value;
+    for(const {id,view,wrapper} of views){
+      wrapper.rotation=id==='fracture-engine'?angle:0;
+      if(defeating&&id==='fracture-engine'){view.update(dt);continue;}
+      view.render({active:true,kind:id==='fracture-engine'?'boss':id,x:0,y:0,vx:Math.sin(angle)*40,vy:-Math.cos(angle)*40,health:100,maxHealth:100,
+        fracturePhase:phase,fractureProgress:.5,fractureAimX:Math.sin(angle)*200,fractureAimY:-Math.cos(angle)*200},seconds);
+    }
+    app.render();
+  }
+  document.querySelector('#phase').onchange=()=>render();document.querySelector('#angle').onchange=()=>render();
+  document.querySelector('#motion').onclick=()=>{moving=!moving;document.querySelector('#motion').setAttribute('aria-pressed',String(moving));};
+  document.querySelector('#defeat').onclick=()=>{defeating=true;for(const view of bosses)view.playDefeat(0,0);render(.45);};
+  document.querySelector('#reset').onclick=()=>{defeating=false;seconds=0;for(const {id,view} of views){view.reset();if(id==='fracture-engine')view.setBossId(id);}render();};
+  app.ticker.add(t=>{if(moving&&!document.hidden){const dt=Math.min(t.deltaMS/1000,.05);seconds+=dt;render(dt);}});
+  render();app.ticker.start();document.body.dataset.ready='true';
+  window.addEventListener('pagehide',()=>{app.destroy(true,{children:true});for(const set of Object.values(textures))for(const texture of Object.values(set))texture.destroy(true);},{once:true});
+</script>
+</html>

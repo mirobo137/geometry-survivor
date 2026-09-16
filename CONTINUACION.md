@@ -1,5 +1,52 @@
 # Geometry Survivor — estado y continuación
 
+## Rediseño visual de flota Fracture — 16-09-2026
+
+Se sustituyó el casco único recoloreado de Acto III por cuatro geometrías
+independientes: batería asimétrica Gunner, coraza dentada Thorn, interceptor Z
+Reaver y doble silo Miner. Fracture Engine pasa a máquina de asedio de proa
+transversal y reactor rectangular. Master Low y cuatro piezas usan una sola
+fuente de geometría; el boss ya no cambia de diseño según calidad.
+
+Contrato, alternativas, costes y guía para continuar:
+[FLOTA_FRACTURE.md](docs/design/FLOTA_FRACTURE.md). Comparativa ejecutable:
+`/docs/visual/fracture-reference.html` con Vite dev. Se conservaron los tamaños
+de textura, cuatro piezas, pools y reglas de combate; se ajustaron movimientos
+de piezas y orientación visual de Gunner a la puntería capturada al disparar.
+Pendiente aprobación visual del usuario y perfil en móvil físico.
+
+### Handoff a Luna — cierre solicitado por límite del modelo
+
+Los cinco diseños están integrados y no falta terminar ninguno de sus SVG.
+Comprobado en esta entrega: typecheck, **415 tests / 102 archivos**, build local
+(`npx vite build --mode development --configLoader runner`) y script visual
+`node docs/visual/capture-fracture.mjs` sin errores de navegador. El script
+capturó cuatro modos de inspección, 16 poses Pixi Low/High, despiece/reset del
+boss y diez vistas de juego (cuatro drills + boss en Low/High). Se inspeccionó
+la comparativa final de cinco diseños y el compositor. Evidencia local en
+`test-results/fracture-art`; no añadir capturas al build.
+
+Para Luna, en orden:
+
+1. Leer `docs/design/FLOTA_FRACTURE.md` y abrir la lámina antes de cambiar arte.
+   Conservar las cinco siluetas salvo feedback del usuario. No regresar al
+   antiguo `makeEnemy(name, accent)` ni separar el master Low de las piezas.
+2. Recoger aprobación del usuario en juego y medir en móvil físico. El browser
+   headless valida carga/poses, no certifica FPS ni calidad artística humana.
+3. Antes de publicar este refinamiento, ejecutar builds Poki/CrazyGames y el
+   smoke browser completo. Esta entrega hizo build local y capturas de juego;
+   las 45+6 pruebas browser del bloque anterior pertenecen a la entrega anterior.
+4. Revisar diff y hacer commit/push cuando se retome la publicación. **Estos
+   cambios visuales están locales, sin commit ni push**; el remoto anterior
+   `1a583b8` contiene la implementación jugable, no este rediseño.
+
+Servidor Vite de esta entrega: `http://localhost:5173/`, iniciado con
+`npx vite --host 127.0.0.1 --port 5173 --strictPort --configLoader runner`.
+Si no sigue activo, usar ese comando. Lámina:
+`http://localhost:5173/docs/visual/fracture-reference.html`.
+El build conserva el warning de chunk >500 kB: principal ~962 kB minificado,
+~251 kB gzip. No se hizo una nueva partición de bundles en esta tarea visual.
+
 ## Estado vigente — Acto III Fracture implementado — 16-09-2026
 
 La entrega actual implementó el Acto III completo y lo dejó conectado al flujo

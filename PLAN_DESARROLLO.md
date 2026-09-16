@@ -3258,6 +3258,16 @@ probar Low/Medium/High, touch, 10 runs comparables, comprobar la lectura de
 los cuatro enemigos y confirmar el balance EX-02c al final del desarrollo.
 Acto III sólo se marca CERRADO después de esa evidencia.
 
+### Refinamiento visual de EX-10 — flota Fracture — 16-09-2026
+
+Por solicitud del usuario, cuatro cascos independientes y Fracture Engine
+rediseñado sustituyen el prototipo recoloreado. Contratos, referencias,
+presupuestos y QA reproducible en [Flota Fracture](docs/design/FLOTA_FRACTURE.md).
+Low compone las mismas cuatro piezas que High en un único master; se conserva
+el presupuesto de texturas y sprites. Mecánicas y balance EX-02c no cambian.
+Este refinamiento queda pendiente de aprobación artística humana y no cierra
+la puerta de QA del Acto III.
+
 ## 22.2 Resolución de instrucciones históricas
 
 - Las secciones de entrega describen el momento de su fecha. Por ejemplo,

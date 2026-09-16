@@ -648,7 +648,7 @@ export class Game {
     this.view.renderAngularSweep(this.combat.renderState.angularSweep, this.arena.state);
     this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
-    this.view.renderFractureThreats(this.combat.renderState, this.arena.state.radius);
+    this.view.renderFractureThreats(this.combat.renderState, this.arena.state.radius, presentationDelta);
     this.syncShotFeedback();
     this.view.renderPlayer(this.player.state, this.presentationTime, this.player.shieldChargeProgress);
     this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);

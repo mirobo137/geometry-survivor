@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><title>Fracture · ataques</title>
+<style>body{margin:24px;background:#091322;color:#ffefd6;font:16px system-ui}canvas{max-width:100%;height:auto}p{color:#abb6ce}</style>
+<h1>Fracture · lenguaje de ataque</h1><p>Aviso a la izquierda · activo a la derecha. ?quality=low conserva los límites y señales.</p>
+<script type="module">
+import { Application, Container, Text } from 'pixi.js';
+import { FractureThreatView } from '/src/presentation/pixi/FractureThreatView.ts';
+import { FractureThreatSystem } from '/src/simulation/fracture/FractureThreatSystem.ts';
+import { EnemyPool } from '/src/simulation/combat/EntityPools.ts';
+import { EnemySystem } from '/src/simulation/enemies/EnemySystem.ts';
+import { SpatialGrid } from '/src/simulation/spatial/SpatialGrid.ts';
+import { BossSystem } from '/src/simulation/bosses/BossSystem.ts';
+import { FRACTURE_ENGINE_DEFINITION } from '/src/content/bosses/BossDefinition.ts';
+const quality=new URLSearchParams(location.search).get('quality')==='low'?'low':'high';
+const app=new Application(); await app.init({width:900,height:1100,background:0x091322,antialias:true});document.body.append(app.canvas);
+const kinds=['fracture-gunner','thorn-bastion','zigzag-reaver','rift-miner','boss-spikes'];
+for(let row=0;row<kinds.length;row++)for(let active=0;active<2;active++){
+ const box=new Container();box.position.set(active*450,row*220);app.stage.addChild(box);
+ box.addChild(new Text({text:`${kinds[row]} · ${active?'activo':'aviso'}`,style:{fontSize:15,fill:0xabb6ce}}));
+ const pool=new EnemyPool(1), threats=new FractureThreatSystem();
+ const boss=new BossSystem(new EnemySystem(pool,new SpatialGrid(1280,720)),FRACTURE_ENGINE_DEFINITION).state;
+ const combat={enemies:pool.states,boss,fractureProjectiles:threats.projectiles,fractureMines:threats.mines};
+ Object.assign(pool.states[0],{active:true,kind:kinds[row],x:170,y:115,fracturePhase:active?'active':'telegraph',fractureProgress:0.7,fractureAimX:350,fractureAimY:115,fractureStartX:60,fractureStartY:110,fractureEndX:380,fractureEndY:110});
+ if(row===0&&active) Object.assign(threats.projectiles[0],{active:true,x:330,y:115,vx:275,vy:0,ageSeconds:0.5});
+ if(row===3){Object.assign(threats.mines[0],{active:true,x:330,y:115,ageSeconds:2,armSeconds:0.72,detonateSeconds:2.45,radius:11,damageRadius:62});}
+ if(row===4){pool.states[0].active=false;Object.assign(boss,{active:true,bossId:'fracture-engine',pattern:'spikes',phase:active?'spikes-active':'spikes-telegraph',x:210,y:115,progress:0.7,radius:56});}
+ const view=new FractureThreatView(quality);box.addChild(view.root);view.render(combat,270);
+}
+app.render();document.body.dataset.ready='true';
+</script></html>

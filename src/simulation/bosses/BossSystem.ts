@@ -218,10 +218,10 @@ export class BossSystem {
     if (!this.boss || dtSeconds <= 0) return;
     const safeRadius = Math.max(0, this.arenaRadius - this.boss.radius - 24);
 
-    // Warden has presence between attacks, but its idle drift is anchored to
+    // Mobile bosses have presence between attacks, but idle drift is anchored to
     // the endpoint of the previous committed action. Re-projecting to the
-    // original orbit here would create a visible teleport after Charge/Curve.
-    if (this.definition.id === 'orbital-warden') {
+    // original orbit here would teleport after Charge/Curve or Fracture Zigzag.
+    if (this.definition.id === 'orbital-warden' || this.definition.id === 'fracture-engine') {
       if (this.movementWasLocked || this.ambientMovementRadius <= EPSILON) {
         const offsetX = this.boss.x - ARENA_CENTER.x;
         const offsetY = this.boss.y - ARENA_CENTER.y;

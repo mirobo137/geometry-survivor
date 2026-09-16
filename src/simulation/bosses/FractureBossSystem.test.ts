@@ -9,6 +9,35 @@ import { FractureThreatSystem } from '../fracture/FractureThreatSystem';
 import { BossSystem } from './BossSystem';
 
 describe('Fracture Engine boss patterns', () => {
+  for (const dt of [1 / 30, 1 / 60, 1 / 120]) {
+    it(`retains the zigzag endpoint across recovery and the next warning at dt=${dt}`, () => {
+      const boss = new BossSystem(
+        new EnemySystem(new EnemyPool(16), new SpatialGrid(1280, 720)),
+        { ...FRACTURE_ENGINE_DEFINITION, startSeconds: 0, introSeconds: 0.01,
+          patternOrder: ['zigzag'], curveTelegraphSeconds: 0.2,
+          curveActiveSeconds: 0.4, recoverySeconds: 0.3 }
+      );
+      const player = new PlayerModel();
+      let transitions = 0;
+      let recoveryFrames = 0;
+      for (let frame = 0; frame < 240; frame += 1) {
+        const previousPhase = boss.state.phase;
+        const x = boss.state.x, y = boss.state.y;
+        const endX = boss.state.chargeAimX, endY = boss.state.chargeAimY;
+        boss.update(dt, frame * dt, player.state, ARENA_RADIUS);
+        if (previousPhase === 'zigzag-active' && boss.state.phase === 'recovery') {
+          expect(Math.hypot(boss.state.x - endX, boss.state.y - endY)).toBeLessThan(3);
+          transitions += 1;
+        }
+        if (previousPhase === 'recovery') {
+          expect(Math.hypot(boss.state.x - x, boss.state.y - y)).toBeLessThan(3);
+          recoveryFrames += 1;
+        }
+      }
+      expect(transitions).toBeGreaterThanOrEqual(2);
+      expect(recoveryFrames).toBeGreaterThan(0);
+    });
+  }
   it('fires its battery and reaches the authored mine phase instead of falling back to replicas', () => {
     const definition = {
       ...FRACTURE_ENGINE_DEFINITION,

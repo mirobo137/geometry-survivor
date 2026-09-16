@@ -1,5 +1,23 @@
 # Geometry Survivor — estado y continuación
 
+## FX de ataques Fracture y continuidad del boss — 16-09-2026
+
+Mejorados los cuatro enemigos y la misma familia de ataques del boss: dardos
+con estela, corona facetada de púas, zigzag con estela y minas con cuenta atrás
+y detonación. Corregidos avisos invisibles sin boss, radio cero del aviso de
+Thorn y señales persistentes en recovery. Fracture Engine conserva el punto
+de llegada tras zigzag; no vuelve a su órbita de entrada.
+
+Contrato y QA: [FRACTURE_ATTACK_FX.md](docs/design/FRACTURE_ATTACK_FX.md).
+Cambios de esta entrega locales, pendientes de aprobación visual en juego;
+no se ha alterado balance. Typecheck, suite unitaria y build local correctos.
+También pasaron los seis smoke browser de Fracture y el capturador visual;
+se inspeccionaron las láminas de FX Low/High. El preview automático requirió
+arrancar Vite con `--configLoader runner` por permisos del entorno local.
+Pendiente probar sensación/legibilidad y rendimiento en móvil físico.
+La flota de la sección siguiente sí se publicó previamente en `aaa0325`;
+su handoff histórico «sin commit» ya no describe el estado actual.
+
 ## Rediseño visual de flota Fracture — 16-09-2026
 
 Se sustituyó el casco único recoloreado de Acto III por cuatro geometrías

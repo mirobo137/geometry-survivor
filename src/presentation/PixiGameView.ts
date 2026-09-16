@@ -111,8 +111,8 @@ export class PixiGameView {
     this.weaponView.render(combat);
   }
 
-  public renderFractureThreats(combat: CombatRenderState, arenaRadius: number): void {
-    this.fractureThreatView.render(combat, arenaRadius);
+  public renderFractureThreats(combat: CombatRenderState, arenaRadius: number, deltaSeconds = 0): void {
+    this.fractureThreatView.render(combat, arenaRadius, deltaSeconds);
   }
 
   public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind']): void {

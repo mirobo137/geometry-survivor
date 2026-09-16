@@ -51,5 +51,11 @@ try {
     }
   }
   assert.deepEqual(errors,[]);
+  for(const quality of ['low','high']) {
+    await page.goto(`http://127.0.0.1:5173/docs/visual/fracture-fx-reference.html?quality=${quality}`);
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.screenshot({path:`${output}/attack-fx-${quality}.png`,fullPage:true});
+  }
+  assert.deepEqual(errors,[]);
   console.log('Fracture art: five ships, unique IDs, four inspection modes, 16 Pixi poses, defeat/reset, 10 gameplay captures; no browser errors.');
 } finally {await browser.close();}

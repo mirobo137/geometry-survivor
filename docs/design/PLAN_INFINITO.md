@@ -1,6 +1,6 @@
 # EX-11 — Plan de implementación del modo Infinito
 
-Estado: **plan aprobado, pendiente de implementación**  
+Estado: **implementación incremental; EX-11.1 a EX-11.4 completados automáticamente**
 Última actualización: 2026-09-17
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.

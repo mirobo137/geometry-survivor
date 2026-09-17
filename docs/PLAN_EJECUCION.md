@@ -1128,6 +1128,28 @@ worker; builds de local/Poki/CrazyGames con sourcemaps desactivados si el runner
 se queda sin memoria; y smoke manual en Pages. No declarar la puerta humana
 cerrada sin observar al menos una derrota de boss y una reanudación real.
 
+### EX-11.4 — Arsenal de seis armas y cartas de Overdrive
+
+`UpgradeApplier` conserva el límite de tres armas para `campaign` y recibe el
+modo explícito para `overdrive`. En Overdrive las tres familias iniciales deben
+estar evolucionadas antes de abrir el límite de seis; la apertura es monotónica
+durante la run y no depende de que la cuarta adquisición se haya elegido todavía.
+La composición mantiene una sola carta de adquisición por mano, peso uniforme
+entre familias nuevas y la rotación de rangos/evoluciones ya probada. La
+campaña no consume esta ampliación.
+
+La ruta de QA `?debug=1&mode=overdrive&od-build=three-evolved` muestra el estado
+justo al abrir el arsenal; `od-build=six-evolved` prepara las seis familias con
+una evolución cada una. Son atajos efímeros: no escriben `SaveStore`, no pagan
+NOVA y no desbloquean el modo. Sin `od-build`, Overdrive comienza con Projectile
+como build limpia.
+
+Archivos de contrato/consumo: `UpgradeApplier`, `Game` y `main`. La Definition
+of Done de esta subtarea exige tests focalizados de los dos límites y de la
+apertura irreversible, typecheck y suite completa en un worker. La prueba visual
+de las manos en Pages queda pendiente; todavía no se implementan cartas de
+reserva, encuentros dobles ni liquidación de recompensa.
+
 ## 6. Fichas visuales y estado de ejecución
 
 Origen: propuestas de la revisión del 04-09. La solicitud del 05-09 y §22.5

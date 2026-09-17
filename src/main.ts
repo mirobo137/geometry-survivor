@@ -182,6 +182,11 @@ const bootstrap = async (): Promise<void> => {
   const runMode: RunMode = overdriveMode ? 'overdrive' : 'campaign';
   const overdriveStage = normalizeOverdriveStage(Number(searchParams.get('od-stage') ?? 1));
   const overdriveSeed = normalizeOverdriveSeed(Number(searchParams.get('seed') ?? NaN));
+  const requestedOverdriveBuild = searchParams.get('od-build');
+  const overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved' = overdriveMode
+    && (requestedOverdriveBuild === 'three-evolved' || requestedOverdriveBuild === 'six-evolved')
+    ? requestedOverdriveBuild
+    : 'starter';
   const campaignBuild = searchParams.get('debug') === '1'
     && searchParams.get('campaign') === 'evolved'
     ? 'three-evolved' as const
@@ -267,6 +272,7 @@ const bootstrap = async (): Promise<void> => {
     mode: runMode,
     overdriveStage: overdriveMode ? overdriveStage : undefined,
     overdriveSeed: overdriveMode ? overdriveSeed : undefined,
+    overdriveBuild: overdriveMode ? overdriveBuild : undefined,
     allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
     initialElapsedSeconds: bossDebugMode
       ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds

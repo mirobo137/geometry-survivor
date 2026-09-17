@@ -64,6 +64,53 @@ describe('UpgradeApplier', () => {
     expect(applier.getChoicesWithPriority(1, 'magnetic_charge').some((choice) => choice.id === 'magnetic_charge')).toBe(false);
   });
 
+  it('expands Overdrive from three evolved families to six weapons exactly once', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x0ddba11, 'overdrive');
+    const initialFamilies = [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const }
+    ];
+
+    for (const family of initialFamilies) {
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+        expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      }
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+
+    expect(applier.isOverdriveArsenalExpanded).toBe(true);
+    const expandedHand = applier.getChoices(30);
+    expect(applier.isOverdriveArsenalExpanded).toBe(true);
+    expect(expandedHand.some((choice) => choice.id === 'vector_boomerang'
+      || choice.id === 'pulse_ring' || choice.id === 'magnetic_charge')).toBe(true);
+    expect(applier.apply('vector_boomerang')).toBe(true);
+    expect(applier.apply('pulse_ring')).toBe(true);
+    expect(applier.apply('magnetic_charge')).toBe(true);
+    expect(applier.isOverdriveArsenalExpanded).toBe(true);
+    expect(applier.canApply('vector_boomerang')).toBe(false);
+    expect(applier.canApply('pulse_ring')).toBe(false);
+    expect(applier.canApply('magnetic_charge')).toBe(false);
+  });
+
+  it('keeps the campaign ceiling at three even when all initial families evolve', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x0ddba11, 'campaign');
+    for (const family of [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const }
+    ]) {
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+    expect(applier.isOverdriveArsenalExpanded).toBe(false);
+    expect(applier.canApply('vector_boomerang')).toBe(false);
+  });
+
   it('filters prerequisites and stops finite upgrades at their authored limits', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
 

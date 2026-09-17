@@ -3497,3 +3497,33 @@ completa en un worker. La prueba manual del flujo Overdrive en Pages sigue
 siendo necesaria antes de habilitar la entrada publica. Cartas ampliadas,
 encuentros dobles, recompensas y persistencia de records de etapa quedan para
 las subtareas posteriores.
+
+## 22.13 EX-11.4 — arsenal de seis armas en Overdrive — 17-09-2026
+
+La política de cartas de Infinito ya tiene consumidor runtime sin alterar la
+campaña. `UpgradeApplier` recibe el modo `campaign | overdrive`: ambos comienzan
+con un máximo de tres familias activas, pero sólo Overdrive abre de forma
+irreversible el límite de seis cuando sus tres familias iniciales han sido
+evolucionadas. La ampliación se comprueba desde las familias activas y sus
+evoluciones, no desde un contador de cartas; por ello las seis armas siguen
+siendo compatibles con la progresión de rango, las dos rutas de evolución y las
+maestrías existentes.
+
+La mano conserva una sola adquisición de arsenal por nivel, el mismo peso entre
+familias elegibles y sus reservas de rangos/evoluciones. La campaña mantiene su
+límite de tres y sus comprobaciones históricas. `UpgradeApplier.reset()` cierra
+la ampliación al iniciar otra run, mientras que añadir una cuarta arma nunca
+vuelve a bloquear las restantes durante la run actual.
+
+Para inspección reproducible se añaden, sólo con `debug=1`, los presets
+`?mode=overdrive&od-build=three-evolved` y
+`?mode=overdrive&od-build=six-evolved`. Son builds sintéticas de QA: no tocan
+guardado, NOVA, desbloqueos ni la ruta pública. El preset `starter` (por defecto)
+mantiene la entrada limpia del modo.
+
+La puerta automática cubre tests de `UpgradeApplier` para el límite de campaña,
+la apertura irreversible y la adquisición de las seis familias, además de
+typecheck y la suite completa. La inspección browser/Pages del hand de cartas
+queda pendiente por ser una validación humana; las cartas de reserva
+post-evolución (EX-11.5), bosses dobles y recompensa única siguen fuera de esta
+subtarea.

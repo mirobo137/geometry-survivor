@@ -111,6 +111,8 @@ export interface GameOptions {
   readonly mode?: RunMode;
   readonly overdriveStage?: number;
   readonly overdriveSeed?: number;
+  /** Developer-only Overdrive build preset; never affects persistent state. */
+  readonly overdriveBuild?: 'starter' | 'three-evolved' | 'six-evolved';
   /** Development-only direct act entry; never exposed by the campaign menu. */
   readonly allowLockedAct?: boolean;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
@@ -174,6 +176,7 @@ export class Game {
   private readonly runMode: RunMode;
   private overdriveStage: number;
   private readonly overdriveSeed: number | undefined;
+  private readonly overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved';
   private readonly playerSkin: PlayerSkinId;
   private readonly cannonSkin: CannonSkinId;
   private readonly background: BackgroundId;
@@ -469,6 +472,7 @@ export class Game {
       ? Math.max(1, Math.floor(options.overdriveStage ?? 1))
       : 1;
     this.overdriveSeed = options.overdriveSeed;
+    this.overdriveBuild = options.overdriveBuild ?? 'starter';
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -548,7 +552,7 @@ export class Game {
       evolutionDrill: this.evolutionScenario ?? undefined,
       evolutionDrillWeapon: this.evolutionId ?? undefined
     });
-    this.upgradeApplier = new UpgradeApplier(this.player, this.combat);
+    this.upgradeApplier = new UpgradeApplier(this.player, this.combat, undefined, this.runMode);
   }
 
   public async start(): Promise<void> {
@@ -748,6 +752,9 @@ export class Game {
       chain: this.combat.hasChainLightning ? 'ready' : 'locked',
       paused: this.lifecyclePaused ? 'lifecycle' : this.gameState.phase,
       level: this.progression.state.level,
+      overdriveArsenal: this.runMode === 'overdrive'
+        ? (this.upgradeApplier.isOverdriveArsenalExpanded ? 'expanded 6' : 'initial 3')
+        : 'campaign 3',
       weaponPath: this.weaponPath === null
         ? 'off'
         : `${this.weaponPath} | rank ${this.combat.getWeaponPathRank(this.weaponPath)}/6 | step ${this.weaponPathStepIndex}/5${this.weaponPathEvolutionPending ? ' | evolution ready' : ''}`,
@@ -949,6 +956,9 @@ export class Game {
   private activateRun(unlockAudio: boolean): void {
     this.baseline.beginRun(this.fxQuality);
     this.applyCalibration();
+    if (this.runMode === 'overdrive' && this.overdriveBuild !== 'starter') {
+      this.prepareOverdriveDebugBuild(this.overdriveBuild);
+    }
     if (this.weaponPath !== null) {
       const baseUpgradeId = getWeaponPathBaseUpgradeId(this.weaponPath);
       if (baseUpgradeId !== null && !this.upgradeApplier.apply(baseUpgradeId)) {
@@ -1361,14 +1371,31 @@ export class Game {
   }
 
   private prepareCampaignDebugBuild(): void {
-    const build = [
+    this.prepareAuthoredDebugBuild([
       { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
       { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
       { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const }
+    ]);
+  }
+
+  private prepareOverdriveDebugBuild(build: 'three-evolved' | 'six-evolved'): void {
+    const families = [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const },
+      { base: 'vector_boomerang' as const, path: 'boomerang' as const, evolution: 'twin_comet' as const },
+      { base: 'pulse_ring' as const, path: 'pulse_ring' as const, evolution: 'echo_shock' as const },
+      { base: 'magnetic_charge' as const, path: 'magnetic_charge' as const, evolution: 'event_horizon' as const }
     ];
+    this.prepareAuthoredDebugBuild(build === 'six-evolved' ? families : families.slice(0, 3));
+  }
+
+  private prepareAuthoredDebugBuild(
+    build: readonly { readonly base: UpgradeId | undefined; readonly path: WeaponPathId; readonly evolution: WeaponEvolutionId }[]
+  ): void {
     for (const family of build) {
       if (family.base !== undefined && !this.upgradeApplier.apply(family.base)) {
-        throw new Error(`No se pudo preparar la build de campana ${family.path}`);
+        throw new Error(`No se pudo preparar la build de ${this.runMode} ${family.path}`);
       }
       for (const rank of [2, 3, 4, 5, 6, 7] as const) {
         if (!this.upgradeApplier.apply(`${family.path}_rank_${rank}`)) {

@@ -1,6 +1,30 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual — EX-11.3, 17-09-2026
+## Estado actual — EX-11.4, 17-09-2026
+
+Implementado el arsenal ampliado de Overdrive. `UpgradeApplier` recibe el modo
+`campaign | overdrive`: la campaña conserva tres armas; Overdrive comienza con
+el mismo límite y lo abre de forma irreversible a seis después de evolucionar
+sus tres familias iniciales. La mano mantiene una sola adquisición de arsenal,
+peso uniforme entre familias nuevas y la rotación existente de rangos,
+evoluciones y maestrías. `reset()` devuelve la run a build limpia y vuelve a
+cerrar la ampliación.
+
+Añadidos los presets de inspección efímeros
+`/?debug=1&mode=overdrive&od-build=three-evolved` y
+`/?debug=1&mode=overdrive&od-build=six-evolved`; no escriben guardado, NOVA ni
+desbloqueos. El preset por defecto sigue siendo `starter`, con Projectile como
+build inicial. El panel debug indica `overdriveArsenal: initial 3` o
+`expanded 6`.
+
+Validado: tests focalizados de `UpgradeApplier` (25), suite completa en un
+worker (107 archivos / 448 tests), typecheck y builds Vite local/Poki/CrazyGames
+sin sourcemaps. Falta la inspección manual de la mano en Pages; el smoke browser
+sigue inconcluso por la inestabilidad documentada del runner. No se
+implementaron aún cartas de reserva, bosses dobles ni recompensa única.
+Siguiente ID: EX-11.5.
+
+## EX-11.3 — vida escalada y transición segura — 17-09-2026
 
 Implementado el multiplicador de vida de Overdrive y la transición segura de
 tramos. Normales, Splitter hijos, réplicas y boss escalan una vez desde las
@@ -15,7 +39,7 @@ local/Poki/CrazyGames sin sourcemaps. Smoke browser interrumpido después de
 fallos intermitentes de animación inicial/carga diferida de Manta; queda como
 inconcluso, no como aprobación. Publicado en `01d41bc` (`main` y
 `origin/main` sincronizados). Falta prueba humana en Pages de derrota de boss
-y reanudación. Siguiente ID: EX-11.4.
+y reanudación.
 
 ## EX-11.2 — director de composición y ruta de inspección — 17-09-2026
 

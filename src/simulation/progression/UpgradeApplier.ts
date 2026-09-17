@@ -13,11 +13,14 @@ import {
   type WeaponPathId
 } from '../../content/upgrades/UpgradeDefinitions';
 import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { RunMode } from '../../content/run/OverdriveDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
 import type { UpgradePreview } from './UpgradePreview';
 
-const MAX_ACTIVE_WEAPONS = 3;
+const CAMPAIGN_MAX_ACTIVE_WEAPONS = 3;
+const OVERDRIVE_INITIAL_ACTIVE_WEAPONS = 3;
+const OVERDRIVE_MAX_ACTIVE_WEAPONS = 6;
 const ADDITIONAL_WEAPON_IDS: readonly UpgradeId[] = ['orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'];
 const EVOLUTION_FAMILIES: readonly { readonly base: WeaponPathId; readonly ids: readonly WeaponEvolutionId[] }[] = [
   { base: 'projectile', ids: ['rail_lance', 'pulse_volley'] },
@@ -71,17 +74,25 @@ export class UpgradeApplier {
   private readonly acquisitionOrder: UpgradeId[] = [];
   private campaignHandIndex = 0;
   private randomState: number;
+  private overdriveArsenalExpanded = false;
 
   public constructor(
     private readonly player: PlayerModel,
     private readonly combat: CombatSimulation,
-    seed?: number
+    seed?: number,
+    private readonly runMode: RunMode = 'campaign'
   ) {
     this.randomState = normalizeSeed(seed ?? createRunSeed());
   }
 
+  /** The Overdrive six-weapon gate is intentionally monotonic for one run. */
+  public get isOverdriveArsenalExpanded(): boolean {
+    return this.overdriveArsenalExpanded;
+  }
+
   public getChoices(level: number): readonly UpgradeDefinition[] {
     void level;
+    this.syncOverdriveArsenal();
     const choices = this.composeCampaignChoices(new Set());
     this.campaignHandIndex += 1;
     return choices;
@@ -172,7 +183,7 @@ export class UpgradeApplier {
   }
 
   private getAvailableWeaponOfferDefinitions(): readonly UpgradeDefinition[] {
-    if (this.activeWeaponCount() >= MAX_ACTIVE_WEAPONS) return [];
+    if (this.activeWeaponCount() >= this.getActiveWeaponLimit()) return [];
     const projectileRankTwo = this.combat.currentProjectileRank === 1
       ? WEAPON_PATH_RANK_DEFINITIONS.projectile.find((definition) => definition.id === 'projectile_rank_2')
       : undefined;
@@ -260,8 +271,29 @@ export class UpgradeApplier {
 
   private hasThreeEvolvedFamilies(): boolean {
     const activeFamilies = RANKABLE_FAMILIES.filter((family) => this.isFamilyActive(family));
-    return activeFamilies.length === MAX_ACTIVE_WEAPONS
+    return activeFamilies.length === CAMPAIGN_MAX_ACTIVE_WEAPONS
       && activeFamilies.every((family) => this.hasEvolution(family));
+  }
+
+  /**
+   * Overdrive starts with the same three-family ceiling as campaign. Once all
+   * three active families have evolved, the six-family ceiling opens and can
+   * never close again when a fourth weapon is acquired.
+   */
+  private syncOverdriveArsenal(): void {
+    if (this.runMode !== 'overdrive' || this.overdriveArsenalExpanded) return;
+    const activeFamilies = RANKABLE_FAMILIES.filter((family) => this.isFamilyActive(family));
+    if (activeFamilies.length === OVERDRIVE_INITIAL_ACTIVE_WEAPONS
+      && activeFamilies.every((family) => this.hasEvolution(family))) {
+      this.overdriveArsenalExpanded = true;
+    }
+  }
+
+  private getActiveWeaponLimit(): number {
+    this.syncOverdriveArsenal();
+    return this.runMode === 'overdrive' && this.overdriveArsenalExpanded
+      ? OVERDRIVE_MAX_ACTIVE_WEAPONS
+      : CAMPAIGN_MAX_ACTIVE_WEAPONS;
   }
 
   private isFamilyActive(family: WeaponPathId): boolean {
@@ -369,6 +401,7 @@ export class UpgradeApplier {
     this.stacks.clear();
     this.acquisitionOrder.length = 0;
     this.campaignHandIndex = 0;
+    this.overdriveArsenalExpanded = false;
     this.randomState = normalizeSeed(seed ?? createRunSeed());
   }
 
@@ -520,9 +553,10 @@ export class UpgradeApplier {
   public canApply(upgrade: UpgradeDefinition | UpgradeId): boolean {
     const definition = this.resolveDefinition(upgrade);
     if (!definition) return false;
+    this.syncOverdriveArsenal();
     const currentStacks = this.getStacks(definition.id);
     if (definition.maxStacks !== undefined && currentStacks >= definition.maxStacks) return false;
-    if (isWeaponUnlock(definition) && currentStacks === 0 && this.activeWeaponCount() >= MAX_ACTIVE_WEAPONS) return false;
+    if (isWeaponUnlock(definition) && currentStacks === 0 && this.activeWeaponCount() >= this.getActiveWeaponLimit()) return false;
     if (definition.effect.type === 'weaponRank') {
       return this.isFamilyActive(definition.effect.family)
         && this.combat.getWeaponPathRank(definition.effect.family) + 1 === definition.effect.rank
@@ -641,6 +675,7 @@ export class UpgradeApplier {
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
     this.acquisitionOrder.push(upgradeId);
+    this.syncOverdriveArsenal();
     return true;
   }
 

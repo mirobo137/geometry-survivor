@@ -13,8 +13,9 @@ cura 25% sólo si el player está vivo, limita la nueva arena y muestra
 Validado: typecheck; suite 107 archivos / 446 tests en un worker; builds
 local/Poki/CrazyGames sin sourcemaps. Smoke browser interrumpido después de
 fallos intermitentes de animación inicial/carga diferida de Manta; queda como
-inconcluso, no como aprobación. Falta commit/push y prueba humana en Pages de
-derrota de boss + reanudación. Siguiente ID: EX-11.4.
+inconcluso, no como aprobación. Publicado en `01d41bc` (`main` y
+`origin/main` sincronizados). Falta prueba humana en Pages de derrota de boss
+y reanudación. Siguiente ID: EX-11.4.
 
 ## EX-11.2 — director de composición y ruta de inspección — 17-09-2026
 

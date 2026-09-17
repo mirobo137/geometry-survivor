@@ -1,3 +1,4 @@
+import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { ChainSegmentState } from './CombatRenderState';
@@ -50,6 +51,7 @@ export class ChainBehavior {
   private readonly circuitHitGenerations: Uint32Array;
   private unlocked = false;
   private damage = CHAIN_DEFINITION.damage;
+  private overdrivePowerMultiplier = 1;
   private maxTargets = CHAIN_DEFINITION.maxTargets;
   private jumpRadius = CHAIN_DEFINITION.jumpRadius;
   private rank = 1;
@@ -96,6 +98,12 @@ export class ChainBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public setOverdrivePowerMultiplier(multiplier: number): void {
+    const next = normalizePowerMultiplier(multiplier);
+    this.damage *= next / this.overdrivePowerMultiplier;
+    this.overdrivePowerMultiplier = next;
   }
 
   public increaseJumpRadius(amount: number): void {
@@ -217,6 +225,7 @@ export class ChainBehavior {
     }
     this.unlocked = false;
     this.rank = 1;
+    this.overdrivePowerMultiplier = 1;
     this.damage = CHAIN_DEFINITION.damage * this.permanentDamageMultiplier;
     this.maxTargets = CHAIN_DEFINITION.maxTargets;
     this.jumpRadius = CHAIN_DEFINITION.jumpRadius;
@@ -337,7 +346,8 @@ export class ChainBehavior {
 
   private applyRankTuning(): void {
     this.damage = (this.rank >= 6 ? 18 : this.rank >= 2 ? 16 : CHAIN_DEFINITION.damage)
-      * this.permanentDamageMultiplier;
+      * this.permanentDamageMultiplier
+      * this.overdrivePowerMultiplier;
     this.maxTargets = this.rank >= 7 ? 5 : this.rank >= 3 ? 4 : CHAIN_DEFINITION.maxTargets;
     this.jumpRadius = this.rank >= 4 ? 210 : CHAIN_DEFINITION.jumpRadius;
   }
@@ -362,4 +372,8 @@ const distanceToSegmentSquared = (
 
 const normalizeMultiplier = (value: number): number => (
   Number.isFinite(value) && value > 0 ? value : 1
+);
+
+const normalizePowerMultiplier = (value: number): number => (
+  Number.isFinite(value) ? Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, Math.max(1, value)) : 1
 );

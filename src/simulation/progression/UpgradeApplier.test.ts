@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
+import type { UpgradeDefinition } from '../../content/upgrades/UpgradeDefinitions';
 import { UpgradeApplier } from './UpgradeApplier';
 
 describe('UpgradeApplier', () => {
@@ -109,6 +110,97 @@ describe('UpgradeApplier', () => {
     }
     expect(applier.isOverdriveArsenalExpanded).toBe(false);
     expect(applier.canApply('vector_boomerang')).toBe(false);
+  });
+
+  it('offers reserve power only after Overdrive exhausts authored choices', () => {
+    const player = new PlayerModel();
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(player, combat, 0x5eed, 'overdrive');
+    const families = [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const },
+      { base: 'vector_boomerang' as const, path: 'boomerang' as const, evolution: 'twin_comet' as const },
+      { base: 'pulse_ring' as const, path: 'pulse_ring' as const, evolution: 'echo_shock' as const },
+      { base: 'magnetic_charge' as const, path: 'magnetic_charge' as const, evolution: 'event_horizon' as const }
+    ];
+    for (const family of families) {
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+
+    // Exhaust finite authored passives and masteries through the real hand
+    // composer. No reserve card may appear while one authored card remains.
+    let reserveHand: readonly UpgradeDefinition[] = [];
+    for (let index = 0; index < 200; index += 1) {
+      const hand = applier.getChoices(index + 1);
+      const authored = hand.filter((choice) => !choice.id.startsWith('overdrive_'));
+      if (authored.length === 0) {
+        reserveHand = hand;
+        break;
+      }
+      for (const choice of authored) expect(applier.apply(choice.id)).toBe(true);
+    }
+
+    expect(reserveHand.length).toBeGreaterThan(0);
+    expect(reserveHand.every((choice) => choice.id.startsWith('overdrive_power_'))).toBe(true);
+    const before = combat.currentProjectileDamage;
+    expect(applier.apply('overdrive_power_projectile')).toBe(true);
+    expect(combat.currentProjectileDamage).toBeCloseTo(before * 1.05);
+
+    // The authored exhaustion may have granted the one-hit shield; seed the
+    // observable damage state directly so this composition test is stable.
+    player.state.health = player.state.maxHealth - 20;
+    const damagedReserveHand = applier.getChoices(999);
+    expect(damagedReserveHand.some((choice) => choice.id === 'overdrive_repair')).toBe(true);
+    expect(damagedReserveHand.filter((choice) => choice.id.startsWith('overdrive_power_'))).toHaveLength(2);
+  });
+
+  it('offers Repair only while damaged and caps independent Overdrive power', () => {
+    const combat = new CombatSimulation();
+    expect(combat.getOverdrivePowerMultiplier('projectile')).toBe(1);
+    expect(combat.applyOverdrivePower('projectile', 9999)).toBe(true);
+    expect(combat.getOverdrivePowerMultiplier('projectile')).toBe(1_000);
+    expect(combat.applyOverdrivePower('projectile', 0.05)).toBe(false);
+
+    const player = new PlayerModel();
+    const applier = new UpgradeApplier(player, combat, 0x91, 'overdrive');
+    player.takeDamage(20);
+    expect(applier.canApply('overdrive_repair')).toBe(true);
+    expect(applier.apply('overdrive_repair')).toBe(true);
+    expect(player.state.health).toBe(player.state.maxHealth);
+    expect(applier.canApply('overdrive_repair')).toBe(false);
+  });
+
+  it('applies independent Overdrive power to every weapon family and clears it on reset', () => {
+    const combat = new CombatSimulation();
+    const families = [
+      'projectile', 'orbit', 'chain', 'boomerang', 'pulse_ring', 'magnetic_charge'
+    ] as const;
+    const baseDamage = {
+      projectile: combat.currentProjectileDamage,
+      orbit: combat.currentOrbitDamage,
+      chain: combat.currentChainDamage,
+      boomerang: combat.currentBoomerangDamage,
+      pulse_ring: combat.currentPulseRingDamage,
+      magnetic_charge: combat.currentMagneticChargeDamage
+    };
+
+    for (const family of families) {
+      expect(combat.applyOverdrivePower(family)).toBe(true);
+      expect(combat.getOverdrivePowerMultiplier(family)).toBe(1.05);
+    }
+    expect(combat.currentProjectileDamage).toBeCloseTo(baseDamage.projectile * 1.05);
+    expect(combat.currentOrbitDamage).toBeCloseTo(baseDamage.orbit * 1.05);
+    expect(combat.currentChainDamage).toBeCloseTo(baseDamage.chain * 1.05);
+    expect(combat.currentBoomerangDamage).toBeCloseTo(baseDamage.boomerang * 1.05);
+    expect(combat.currentPulseRingDamage).toBeCloseTo(baseDamage.pulse_ring * 1.05);
+    expect(combat.currentMagneticChargeDamage).toBeCloseTo(baseDamage.magnetic_charge * 1.05);
+
+    combat.reset();
+    for (const family of families) expect(combat.getOverdrivePowerMultiplier(family)).toBe(1);
+    expect(combat.currentProjectileDamage).toBeCloseTo(baseDamage.projectile);
   });
 
   it('filters prerequisites and stops finite upgrades at their authored limits', () => {

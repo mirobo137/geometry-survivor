@@ -1,3 +1,4 @@
+import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { OrbitBladeState } from './CombatRenderState';
@@ -38,6 +39,7 @@ export class OrbitBehavior {
   private contactRadiusBonus = 0;
   private rank = 1;
   private permanentDamageMultiplier = 1;
+  private overdrivePowerMultiplier = 1;
   private permanentCadenceMultiplier = 1;
   private evolution: OrbitEvolution | null = null;
   private solarHasPosition = false;
@@ -101,6 +103,12 @@ export class OrbitBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public setOverdrivePowerMultiplier(multiplier: number): void {
+    const next = normalizePowerMultiplier(multiplier);
+    this.damage *= next / this.overdrivePowerMultiplier;
+    this.overdrivePowerMultiplier = next;
   }
 
   public decreaseHitCooldown(amount: number): void {
@@ -168,6 +176,7 @@ export class OrbitBehavior {
     this.angle = 0;
     this.rank = 1;
     this.radius = ORBIT_DEFINITION.orbitRadius;
+    this.overdrivePowerMultiplier = 1;
     this.damage = ORBIT_DEFINITION.damage * this.permanentDamageMultiplier;
     this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
     this.rotationSpeed = ORBIT_DEFINITION.rotationSpeed;
@@ -203,7 +212,9 @@ export class OrbitBehavior {
 
   private applyRankTuning(): void {
     this.radius = this.rank >= 6 ? 94 : this.rank >= 2 ? 76 : ORBIT_DEFINITION.orbitRadius;
-    this.damage = (this.rank >= 4 ? 22 : ORBIT_DEFINITION.damage) * this.permanentDamageMultiplier;
+    this.damage = (this.rank >= 4 ? 22 : ORBIT_DEFINITION.damage)
+      * this.permanentDamageMultiplier
+      * this.overdrivePowerMultiplier;
     this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
     this.rotationSpeed = ORBIT_DEFINITION.rotationSpeed;
     const authoredBladeCount = this.rank >= 7 ? 4 : this.rank >= 5 ? 3 : this.rank >= 3 ? 2 : 1;
@@ -312,4 +323,8 @@ const approachAngle = (current: number, target: number, maxDelta: number): numbe
 
 const normalizeMultiplier = (value: number): number => (
   Number.isFinite(value) && value > 0 ? value : 1
+);
+
+const normalizePowerMultiplier = (value: number): number => (
+  Number.isFinite(value) ? Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, Math.max(1, value)) : 1
 );

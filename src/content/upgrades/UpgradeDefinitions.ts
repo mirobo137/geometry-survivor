@@ -1,6 +1,10 @@
 import type {
   WeaponEvolutionId
 } from '../weapons/WeaponEvolutionDefinitions';
+import {
+  OVERDRIVE_POWER_INCREMENT,
+  OVERDRIVE_POWER_MAX_STACKS
+} from '../run/OverdriveDefinitions';
 
 /** Developer-only focused paths. They all use the same real-run contract. */
 export type WeaponPathId =
@@ -93,6 +97,13 @@ export type UpgradeId =
   | 'magnetic_charge_mastery_power'
   | 'magnetic_charge_mastery_tempo'
   | 'magnetic_charge_mastery_coverage'
+  | 'overdrive_power_projectile'
+  | 'overdrive_power_orbit'
+  | 'overdrive_power_chain'
+  | 'overdrive_power_boomerang'
+  | 'overdrive_power_pulse_ring'
+  | 'overdrive_power_magnetic_charge'
+  | 'overdrive_repair'
   | WeaponEvolutionId;
 
 export interface UpgradeDefinition {
@@ -127,7 +138,9 @@ export type UpgradeEffect =
   | { readonly type: 'evolutionOffer'; readonly family: WeaponPathId }
   | { readonly type: 'weaponEvolution'; readonly evolution: WeaponEvolutionId }
   | { readonly type: 'universalWeaponMastery' }
-  | { readonly type: 'weaponMastery'; readonly family: WeaponPathId; readonly channel: WeaponMasteryChannel };
+  | { readonly type: 'weaponMastery'; readonly family: WeaponPathId; readonly channel: WeaponMasteryChannel }
+  | { readonly type: 'overdrivePower'; readonly family: WeaponPathId; readonly amount: number }
+  | { readonly type: 'overdriveRepair'; readonly amount: number };
 
 export type WeaponMasteryChannel = 'power' | 'tempo' | 'coverage';
 
@@ -841,4 +854,36 @@ export const WEAPON_MASTERY_DEFINITIONS: readonly UpgradeDefinition[] = [
     tempo: 'La carga vuelve a estar disponible antes.',
     coverage: 'La zona magnetica captura y detona en un radio mayor.'
   })
+];
+
+/**
+ * Repeatable fallback cards used only after every authored Overdrive choice is
+ * exhausted. Their power channel is independent from permanent bonuses and
+ * has a finite technical cap in the resolver.
+ */
+export const OVERDRIVE_RESERVE_DEFINITIONS: readonly UpgradeDefinition[] = [
+  ...([
+    ['projectile', 'Projectile'],
+    ['orbit', 'Orbita'],
+    ['chain', 'Cadena'],
+    ['boomerang', 'Bumeran'],
+    ['pulse_ring', 'Pulso'],
+    ['magnetic_charge', 'Magnetica']
+  ] as const).map(([family, label]) => ({
+    id: `overdrive_power_${family}` as UpgradeId,
+    title: `Potencia Overdrive · ${label}`,
+    description: `+5% de dano para todas las fuentes de ${label} (acumulable).`,
+    effect: {
+      type: 'overdrivePower' as const,
+      family,
+      amount: OVERDRIVE_POWER_INCREMENT
+    },
+    maxStacks: OVERDRIVE_POWER_MAX_STACKS
+  })),
+  {
+    id: 'overdrive_repair' as const,
+    title: 'Reparacion Overdrive',
+    description: 'Recupera 25% de la vida maxima; solo aparece con vida incompleta.',
+    effect: { type: 'overdriveRepair' as const, amount: 0.25 }
+  }
 ];

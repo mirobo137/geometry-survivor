@@ -1,6 +1,30 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual — EX-11.4, 17-09-2026
+## Estado actual — EX-11.5, 17-09-2026
+
+Implementadas las cartas de reserva post-evolución de Overdrive. Las
+definiciones viven fuera de la campaña y sólo aparecen cuando se agotaron
+adquisiciones, rangos, evoluciones, maestrías, pasivas y el marcador universal.
+Cada familia evolucionada tiene `Potencia Overdrive` (+5% acumulable en un
+multiplicador independiente, tope técnico x1000) y existe `Reparación
+Overdrive` (+25% de vida máxima sólo con vida incompleta). Con vida completa se
+componen tres potencias; con vida incompleta, dos potencias y reparación.
+
+Para hacer alcanzable la transferencia sin cambiar la campaña, `swift_step` y
+`reinforced_core` tienen topes específicos de Overdrive de 6 y 9 stacks. Los
+behaviors de las seis armas conservan el multiplicador al aplicar rango,
+evolución o limpieza transitoria; `CombatWeaponSystem.reset()` lo devuelve a
+x1. La conversión a NOVA, recompensa única y bosses dobles siguen fuera.
+
+Validación automática: tests focalizados de `UpgradeApplier` (28), suite
+completa en un worker (107 archivos / 451 tests), `npm run typecheck` y builds
+Vite de local/Poki/CrazyGames sin sourcemaps, todos OK. La prueba visual de la
+mano en Pages continúa siendo humana y la ruta pública de Infinito sigue
+bloqueada.
+
+Siguiente ID: EX-11.6 (encuentros dobles). Antes de cerrar esta sesión hay que
+reemplazar la línea de validación anterior con resultados reales y publicar el
+commit en `origin/main`.
 
 Implementado el arsenal ampliado de Overdrive. `UpgradeApplier` recibe el modo
 `campaign | overdrive`: la campaña conserva tres armas; Overdrive comienza con

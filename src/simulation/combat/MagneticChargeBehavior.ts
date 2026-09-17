@@ -1,3 +1,4 @@
+import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { clampPointToArena, type ArenaBoundaryInput } from '../ArenaBoundary';
 import type { PlayerState } from '../PlayerModel';
@@ -73,6 +74,7 @@ export class MagneticChargeBehavior {
   private readyToFire = false;
   private unlocked = false;
   private damage = DEFINITION.damage;
+  private overdrivePowerMultiplier = 1;
   private cooldownSeconds = DEFINITION.cooldownSeconds;
   private travelSeconds = DEFINITION.travelSeconds;
   private detonateSeconds = DEFINITION.detonateSeconds;
@@ -126,6 +128,12 @@ export class MagneticChargeBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public setOverdrivePowerMultiplier(multiplier: number): void {
+    const next = normalizePowerMultiplier(multiplier);
+    this.damage *= next / this.overdrivePowerMultiplier;
+    this.overdrivePowerMultiplier = next;
   }
 
   public decreaseCooldown(amount: number): void {
@@ -241,6 +249,7 @@ export class MagneticChargeBehavior {
     this.unlocked = false;
     this.rank = 1;
     this.evolution = null;
+    this.overdrivePowerMultiplier = 1;
     this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
     this.cooldownSeconds = Math.max(0.45, DEFINITION.cooldownSeconds * this.permanentCadenceMultiplier);
     this.travelSeconds = DEFINITION.travelSeconds;
@@ -556,7 +565,9 @@ export class MagneticChargeBehavior {
   }
 
   private applyRankTuning(): void {
-    this.damage = (this.rank >= 5 ? 22 : DEFINITION.damage) * this.permanentDamageMultiplier;
+    this.damage = (this.rank >= 5 ? 22 : DEFINITION.damage)
+      * this.permanentDamageMultiplier
+      * this.overdrivePowerMultiplier;
     this.cooldownSeconds = Math.max(
       0.45,
       (this.rank >= 6 ? 4.6 : DEFINITION.cooldownSeconds) * this.permanentCadenceMultiplier
@@ -606,6 +617,10 @@ export class MagneticChargeBehavior {
 
 const normalizeMultiplier = (value: number): number => (
   Number.isFinite(value) && value > 0 ? value : 1
+);
+
+const normalizePowerMultiplier = (value: number): number => (
+  Number.isFinite(value) ? Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, Math.max(1, value)) : 1
 );
 
 const smoothstep = (value: number): number => {

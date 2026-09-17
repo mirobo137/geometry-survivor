@@ -30,6 +30,7 @@ import type {
   PulseRingEvolution
 } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
+import { OVERDRIVE_POWER_INCREMENT, OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 
 const CRITICAL_MULTIPLIER = 2;
 const CRITICAL_RANDOM_SEED = 0x6d2b79f5;
@@ -37,6 +38,15 @@ const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 const CHAIN_DEFINITION = WEAPON_DEFINITIONS.chainLightning;
 const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
 const PULSE_RING_DEFINITION = WEAPON_DEFINITIONS.pulseRing;
+
+const createOverdrivePowerMultipliers = (): Record<WeaponPathId, number> => ({
+  projectile: 1,
+  orbit: 1,
+  chain: 1,
+  boomerang: 1,
+  pulse_ring: 1,
+  magnetic_charge: 1
+});
 
 const PROJECTILE_RANK_STATS = [
   { damage: 14, speed: 460, cooldownSeconds: 0.55 },
@@ -96,6 +106,7 @@ export class CombatWeaponSystem {
   public readonly lastShot: ShotRenderState;
   private readonly stressScenario: StressCombatScenario;
   private permanentBonuses: PermanentCombatBonuses;
+  private readonly overdrivePowerMultipliers = createOverdrivePowerMultipliers();
 
   public constructor(
     private readonly enemies: EnemySystem,
@@ -110,7 +121,7 @@ export class CombatWeaponSystem {
       enemies: this.enemies,
       projectiles: this.projectiles,
       isTwinEmitterEnabled: () => this.twinEmitters,
-      getProjectileDamage: () => this.projectileDamage,
+      getProjectileDamage: () => this.currentProjectileDamage,
       getProjectileSpeed: () => this.projectileSpeed,
       getProjectileEvolution: () => this.projectileEvolution,
       rollCriticalDamage: (baseDamage) => this.rollCriticalDamage(baseDamage),
@@ -291,11 +302,57 @@ export class CombatWeaponSystem {
     return this.criticalChance;
   }
 
+  /** Current independent Overdrive multiplier for an authored weapon family. */
+  public getOverdrivePowerMultiplier(family: WeaponPathId): number {
+    return this.overdrivePowerMultipliers[family];
+  }
+
+  /**
+   * Adds one bounded five-point Overdrive power stack. The multiplier is kept
+   * separate from permanent bonuses so authored rank/evolution tuning remains
+   * the source of truth and all secondary damage paths share the same factor.
+   */
+  public applyOverdrivePower(
+    family: WeaponPathId,
+    amount: number = OVERDRIVE_POWER_INCREMENT
+  ): boolean {
+    if (!Number.isFinite(amount) || amount <= 0) return false;
+    const current = this.overdrivePowerMultipliers[family];
+    const next = Math.min(
+      OVERDRIVE_POWER_MULTIPLIER_CAP,
+      Math.round((current + amount) * 10_000) / 10_000
+    );
+    if (next <= current) return false;
+    this.overdrivePowerMultipliers[family] = next;
+    switch (family) {
+      case 'projectile':
+        this.projectileDamage *= next / current;
+        break;
+      case 'orbit':
+        this.orbitBehavior.setOverdrivePowerMultiplier(next);
+        break;
+      case 'chain':
+        this.chainBehavior.setOverdrivePowerMultiplier(next);
+        break;
+      case 'boomerang':
+        this.boomerangBehavior.setOverdrivePowerMultiplier(next);
+        break;
+      case 'pulse_ring':
+        this.pulseRingBehavior.setOverdrivePowerMultiplier(next);
+        break;
+      case 'magnetic_charge':
+        this.magneticChargeBehavior.setOverdrivePowerMultiplier(next);
+        break;
+    }
+    return true;
+  }
+
   public get criticalMultiplier(): number {
     return CRITICAL_MULTIPLIER;
   }
 
   public reset(): void {
+    Object.assign(this.overdrivePowerMultipliers, createOverdrivePowerMultipliers());
     this.projectiles.reset();
     this.scheduler.reset();
     this.projectileBehavior.reset();
@@ -565,7 +622,9 @@ export class CombatWeaponSystem {
 
   private applyProjectileRankStats(): void {
     const stats = PROJECTILE_RANK_STATS[this.projectileRank - 1] ?? PROJECTILE_RANK_STATS[0];
-    this.projectileDamage = stats.damage * this.permanentBonuses.weaponDamageMultiplier;
+    this.projectileDamage = stats.damage
+      * this.permanentBonuses.weaponDamageMultiplier
+      * this.overdrivePowerMultipliers.projectile;
     this.projectileSpeed = stats.speed;
     this.projectileCooldown = Math.max(0.18, stats.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.twinEmitters = this.projectileRank >= 2;

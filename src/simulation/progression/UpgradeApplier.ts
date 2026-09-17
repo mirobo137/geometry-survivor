@@ -8,12 +8,17 @@ import {
   WEAPON_EVOLUTION_OFFER_DEFINITIONS,
   WEAPON_MASTERY_DEFINITIONS,
   WEAPON_EVOLUTION_DEFINITIONS,
+  OVERDRIVE_RESERVE_DEFINITIONS,
   type UpgradeDefinition,
   type UpgradeId,
   type WeaponPathId
 } from '../../content/upgrades/UpgradeDefinitions';
 import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
-import type { RunMode } from '../../content/run/OverdriveDefinitions';
+import {
+  OVERDRIVE_AUTHORED_STACK_CAPS,
+  OVERDRIVE_POWER_MULTIPLIER_CAP,
+  type RunMode
+} from '../../content/run/OverdriveDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
 import type { UpgradePreview } from './UpgradePreview';
@@ -169,6 +174,36 @@ export class UpgradeApplier {
       // takeRandom owns filtering and selection.
     }
 
+    // In Overdrive, reserve cards are reached only after every authored
+    // acquisition, rank, evolution, mastery and passive has been exhausted.
+    // They are deliberately outside the campaign pools and never leak into a
+    // normal run or its rerolls.
+    if (this.runMode === 'overdrive' && selected.length < 3) {
+      const selectedIds = new Set([
+        ...excluded,
+        ...selected.map((choice) => choice.id)
+      ]);
+      const ordinaryRemaining = [
+        ...weaponOffers,
+        ...this.getCampaignEvolutionDefinitions(),
+        ...this.getCampaignRankDefinitions(),
+        ...this.getCampaignMasteryDefinitions(),
+        ...this.getCampaignPassiveDefinitions()
+      ].some((definition) => !selectedIds.has(definition.id) && this.canApply(definition));
+      if (!ordinaryRemaining && this.getScheduledUniversalMastery() === null) {
+        const reserves = this.getOverdriveReserveDefinitions();
+        const repair = reserves.find((definition) => definition.effect.type === 'overdriveRepair');
+        const powerReserves = reserves.filter((definition) => definition.effect.type === 'overdrivePower');
+        // Repair is a guaranteed defensive slot when health is incomplete;
+        // the remaining slots stay random among evolved weapon families.
+        if (repair !== undefined) takeRandom([repair]);
+        while (selected.length < 3 && takeRandom(powerReserves) !== null) {
+          // A reserve card may be absent when its family reached the cap or
+          // when Repair has already restored the player to full health.
+        }
+      }
+    }
+
     return this.shuffle(selected).slice(0, 3);
   }
 
@@ -273,6 +308,17 @@ export class UpgradeApplier {
     const activeFamilies = RANKABLE_FAMILIES.filter((family) => this.isFamilyActive(family));
     return activeFamilies.length === CAMPAIGN_MAX_ACTIVE_WEAPONS
       && activeFamilies.every((family) => this.hasEvolution(family));
+  }
+
+  private getOverdriveReserveDefinitions(): readonly UpgradeDefinition[] {
+    if (this.runMode !== 'overdrive') return [];
+    return OVERDRIVE_RESERVE_DEFINITIONS.filter((definition) => (
+      definition.effect.type === 'overdrivePower'
+        ? this.isFamilyActive(definition.effect.family) && this.hasEvolution(definition.effect.family)
+        : definition.effect.type === 'overdriveRepair'
+          ? this.player.isAlive && this.player.state.health < this.player.state.maxHealth
+          : false
+    )).filter((definition) => this.canApply(definition));
   }
 
   /**
@@ -494,6 +540,10 @@ export class UpgradeApplier {
         return null;
       case 'magneticCharge':
         return null;
+      case 'overdrivePower':
+        return this.getOverdrivePowerPreview(definition.effect.family, definition.effect.amount);
+      case 'overdriveRepair':
+        return null;
       case 'weaponRank':
         return null;
       case 'evolutionOffer':
@@ -550,12 +600,39 @@ export class UpgradeApplier {
     }
   }
 
+  private getOverdrivePowerPreview(
+    family: WeaponPathId,
+    amount: number
+  ): UpgradePreview | null {
+    const multiplier = this.combat.getOverdrivePowerMultiplier(family);
+    const afterMultiplier = Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, multiplier + amount);
+    switch (family) {
+      case 'projectile':
+        return { stat: 'projectileDamage', before: this.combat.currentProjectileDamage, after: this.combat.currentProjectileDamage * afterMultiplier / multiplier };
+      case 'orbit':
+        return { stat: 'orbitDamage', before: this.combat.currentOrbitDamage, after: this.combat.currentOrbitDamage * afterMultiplier / multiplier };
+      case 'chain':
+        return { stat: 'chainDamage', before: this.combat.currentChainDamage, after: this.combat.currentChainDamage * afterMultiplier / multiplier };
+      case 'boomerang':
+        return { stat: 'boomerangDamage', before: this.combat.currentBoomerangDamage, after: this.combat.currentBoomerangDamage * afterMultiplier / multiplier };
+      case 'pulse_ring':
+        return { stat: 'pulseRingDamage', before: this.combat.currentPulseRingDamage, after: this.combat.currentPulseRingDamage * afterMultiplier / multiplier };
+      case 'magnetic_charge':
+        return { stat: 'magneticChargeDamage', before: this.combat.currentMagneticChargeDamage, after: this.combat.currentMagneticChargeDamage * afterMultiplier / multiplier };
+    }
+  }
+
   public canApply(upgrade: UpgradeDefinition | UpgradeId): boolean {
     const definition = this.resolveDefinition(upgrade);
     if (!definition) return false;
     this.syncOverdriveArsenal();
     const currentStacks = this.getStacks(definition.id);
     if (definition.maxStacks !== undefined && currentStacks >= definition.maxStacks) return false;
+    const overdriveAuthoredCap = this.runMode === 'overdrive'
+      && (definition.id === 'swift_step' || definition.id === 'reinforced_core')
+      ? OVERDRIVE_AUTHORED_STACK_CAPS[definition.id]
+      : undefined;
+    if (overdriveAuthoredCap !== undefined && currentStacks >= overdriveAuthoredCap) return false;
     if (isWeaponUnlock(definition) && currentStacks === 0 && this.activeWeaponCount() >= this.getActiveWeaponLimit()) return false;
     if (definition.effect.type === 'weaponRank') {
       return this.isFamilyActive(definition.effect.family)
@@ -575,6 +652,16 @@ export class UpgradeApplier {
       return this.getStacks(definition.id) < UNIVERSAL_MASTERY_MAX_STACKS
         && this.hasThreeEvolvedFamilies()
         && this.getUniversalMasteryChoices().length > 0;
+    }
+    if (definition.effect.type === 'overdrivePower') {
+      return this.runMode === 'overdrive'
+        && this.isFamilyActive(definition.effect.family)
+        && this.hasEvolution(definition.effect.family)
+        && this.combat.getOverdrivePowerMultiplier(definition.effect.family) < OVERDRIVE_POWER_MULTIPLIER_CAP;
+    }
+    if (definition.effect.type === 'overdriveRepair') {
+      return this.runMode === 'overdrive' && this.player.isAlive
+        && this.player.state.health < this.player.state.maxHealth;
     }
     return definition.requires?.every((requiredId) => this.getStacks(requiredId) > 0) ?? true;
   }
@@ -671,6 +758,12 @@ export class UpgradeApplier {
         // global bonus without the player naming an evolved family.
         applied = false;
         break;
+      case 'overdrivePower':
+        applied = this.combat.applyOverdrivePower(definition.effect.family, definition.effect.amount);
+        break;
+      case 'overdriveRepair':
+        applied = this.player.heal(this.player.state.maxHealth * definition.effect.amount) > 0;
+        break;
     }
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
@@ -688,6 +781,7 @@ export class UpgradeApplier {
         ?? WEAPON_EVOLUTION_OFFER_DEFINITIONS.find((candidate) => candidate.id === upgrade)
         ?? WEAPON_EVOLUTION_DEFINITIONS.find((candidate) => candidate.id === upgrade)
         ?? WEAPON_MASTERY_DEFINITIONS.find((candidate) => candidate.id === upgrade)
+        ?? OVERDRIVE_RESERVE_DEFINITIONS.find((candidate) => candidate.id === upgrade)
       : upgrade;
   }
 

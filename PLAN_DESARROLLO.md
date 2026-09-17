@@ -3527,3 +3527,33 @@ typecheck y la suite completa. La inspección browser/Pages del hand de cartas
 queda pendiente por ser una validación humana; las cartas de reserva
 post-evolución (EX-11.5), bosses dobles y recompensa única siguen fuera de esta
 subtarea.
+
+## 22.14 EX-11.5 — cartas de reserva post-evolución — 17-09-2026
+
+Overdrive ya cuenta con una salida finita cuando se agota el contenido
+autorizado. `OVERDRIVE_RESERVE_DEFINITIONS` vive fuera de los pools de campaña
+y sólo puede entrar en una mano cuando no queda ninguna adquisición, rango,
+evolución, maestría, pasiva ni marcador universal aplicable. Nunca se filtra a
+la campaña ni se inyecta por un reroll mientras exista una carta normal válida.
+
+Las seis familias evolucionadas reciben una carta `Potencia Overdrive` propia.
+Cada selección suma 5 puntos porcentuales a un multiplicador independiente de
+la familia (incluidas sus rutas evolucionadas y fuentes secundarias), con tope
+técnico x1000. Los multiplicadores viven en `CombatWeaponSystem` y cada
+behavior conserva su factor al cambiar de rango, evolucionar o limpiar estado
+transitorio; `reset()` los devuelve a x1. El tope no es una promesa de balance,
+sólo evita crecimiento numérico sin límite.
+
+Para que la entrega sea reproducible, las pasivas authored `swift_step` y
+`reinforced_core` tienen en Overdrive topes de 6 y 9 acumulaciones; esos topes
+son específicos del modo y no cambian la campaña. Con vida completa la mano de
+reserva prioriza tres familias de potencia; con vida incompleta ofrece dos
+familias y `Reparación Overdrive`, que cura 25% de la vida máxima sin revivir.
+La conversión a NOVA y la liquidación de recompensa quedan deliberadamente
+para EX-11.7.
+
+La puerta automática de EX-11.5 cubre composición tras agotar contenido,
+exclusión en campaña, aplicación/cap/reset de potencia, reparación condicionada,
+typecheck, suite completa y los tres builds sin sourcemaps. La inspección
+manual de cartas en Pages sigue siendo necesaria; no se habilita la entrada
+pública de Infinito ni se implementan bosses dobles en esta subtarea.

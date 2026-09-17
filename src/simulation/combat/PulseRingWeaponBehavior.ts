@@ -1,3 +1,4 @@
+import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { PulseRingWeaponState } from './CombatRenderState';
@@ -48,6 +49,7 @@ export class PulseRingWeaponBehavior {
   private phaseTimer = 0;
   private phase: PulseRingWeaponState['phase'] = 'idle';
   private damage = DEFINITION.damage;
+  private overdrivePowerMultiplier = 1;
   private telegraphSeconds = DEFINITION.telegraphSeconds;
   private endRadius = DEFINITION.endRadius;
   private compressionCoverageBonus = 0;
@@ -99,6 +101,12 @@ export class PulseRingWeaponBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public setOverdrivePowerMultiplier(multiplier: number): void {
+    const next = normalizePowerMultiplier(multiplier);
+    this.damage *= next / this.overdrivePowerMultiplier;
+    this.overdrivePowerMultiplier = next;
   }
 
   public increaseEndRadius(amount: number): void {
@@ -198,6 +206,7 @@ export class PulseRingWeaponBehavior {
     this.unlocked = false;
     this.rank = 1;
     this.evolution = null;
+    this.overdrivePowerMultiplier = 1;
     this.damage = DEFINITION.damage * this.permanentDamageMultiplier;
     this.telegraphSeconds = DEFINITION.telegraphSeconds;
     this.endRadius = DEFINITION.endRadius;
@@ -346,7 +355,9 @@ export class PulseRingWeaponBehavior {
   }
 
   private applyRankTuning(): void {
-    this.damage = (this.rank >= 5 ? 32 : DEFINITION.damage) * this.permanentDamageMultiplier;
+    this.damage = (this.rank >= 5 ? 32 : DEFINITION.damage)
+      * this.permanentDamageMultiplier
+      * this.overdrivePowerMultiplier;
     this.telegraphSeconds = this.rank >= 2 ? 0.5 : DEFINITION.telegraphSeconds;
     this.endRadius = this.rank >= 7 ? 240 : this.rank >= 3 ? 220 : DEFINITION.endRadius;
     this.pushDistance = this.rank >= 4 ? 16 : DEFINITION.pushDistance;
@@ -378,6 +389,10 @@ export class PulseRingWeaponBehavior {
 
 const normalizeMultiplier = (value: number): number => (
   Number.isFinite(value) && value > 0 ? value : 1
+);
+
+const normalizePowerMultiplier = (value: number): number => (
+  Number.isFinite(value) ? Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, Math.max(1, value)) : 1
 );
 
 const smoothstep = (value: number): number => {

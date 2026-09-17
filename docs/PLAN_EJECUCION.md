@@ -1150,6 +1150,33 @@ apertura irreversible, typecheck y suite completa en un worker. La prueba visual
 de las manos en Pages queda pendiente; todavía no se implementan cartas de
 reserva, encuentros dobles ni liquidación de recompensa.
 
+### EX-11.5 — Cartas de reserva post-evolución
+
+Las reservas se declaran en `OVERDRIVE_RESERVE_DEFINITIONS`, separadas de los
+contenidos de campaña. `UpgradeApplier` sólo las compone en Overdrive después
+de que no exista ninguna adquisición, mejora de rango, evolución, maestría,
+pasiva o marcador universal aplicable. La misma frontera se respeta en rerolls;
+un run normal nunca puede ver un `overdrive_*`.
+
+Hay seis cartas de potencia, una por familia evolucionada. Suman `+0.05` al
+multiplicador independiente de esa familia y afectan el daño primario y
+secundario de su behavior. El multiplicador está limitado a `x1000` y se
+restaura a `x1` al reset. Para alcanzar la transferencia de forma determinista,
+`swift_step` y `reinforced_core` se limitan a 6 y 9 stacks respectivamente sólo
+en Overdrive; la campaña conserva sus reglas.
+
+`Reparación Overdrive` cura 25% de vida máxima y sólo es elegible con vida
+incompleta. La composición ofrece tres potencias con vida completa o dos
+potencias más reparación con vida incompleta. Si una familia llega al cap o no
+hay una carta válida, se ofrecen menos cartas; no se inventa una carta neutra.
+La conversión a NOVA queda para EX-11.7.
+
+Definition of Done: pruebas focalizadas de agotamiento, exclusión de campaña,
+las seis aplicaciones/cap/reset y reparación condicionada; `npm run typecheck`;
+suite Vitest con un worker; builds `local`, `poki` y `crazygames` sin sourcemaps.
+La inspección humana de la mano en Pages permanece pendiente y el acceso
+público de Infinito sigue cerrado.
+
 ## 6. Fichas visuales y estado de ejecución
 
 Origen: propuestas de la revisión del 04-09. La solicitud del 05-09 y §22.5

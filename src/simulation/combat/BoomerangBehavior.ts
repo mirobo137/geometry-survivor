@@ -1,3 +1,4 @@
+import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { BoomerangPulseState } from './CombatRenderState';
@@ -34,6 +35,7 @@ export class BoomerangBehavior {
   private readonly returnCurveComplete: Uint8Array;
   private unlocked = false;
   private damage = BOOMERANG_DEFINITION.damage;
+  private overdrivePowerMultiplier = 1;
   private speed = BOOMERANG_DEFINITION.speed;
   private returnSpeed = BOOMERANG_DEFINITION.returnSpeed;
   private radius = BOOMERANG_DEFINITION.radius;
@@ -101,6 +103,12 @@ export class BoomerangBehavior {
 
   public increaseDamage(amount: number): void {
     this.damage += Math.max(0, amount);
+  }
+
+  public setOverdrivePowerMultiplier(multiplier: number): void {
+    const next = normalizePowerMultiplier(multiplier);
+    this.damage *= next / this.overdrivePowerMultiplier;
+    this.overdrivePowerMultiplier = next;
   }
 
   public increaseOutboundDistance(amount: number): void {
@@ -337,6 +345,7 @@ export class BoomerangBehavior {
     this.returnCurveComplete.fill(0);
     this.unlocked = false;
     this.rank = 1;
+    this.overdrivePowerMultiplier = 1;
     this.damage = BOOMERANG_DEFINITION.damage * this.permanentDamageMultiplier;
     this.speed = BOOMERANG_DEFINITION.speed;
     this.returnSpeed = BOOMERANG_DEFINITION.returnSpeed;
@@ -357,6 +366,7 @@ export class BoomerangBehavior {
       returnSpeed: this.returnSpeed,
       radius: this.radius,
       outboundDistance: this.outboundDistance,
+      overdrivePowerMultiplier: this.overdrivePowerMultiplier,
       rank: this.rank,
       evolution: this.evolution,
       lastDirectionX: this.lastDirectionX,
@@ -370,6 +380,7 @@ export class BoomerangBehavior {
     this.returnSpeed = snapshot.returnSpeed;
     this.radius = snapshot.radius;
     this.outboundDistance = snapshot.outboundDistance;
+    this.overdrivePowerMultiplier = snapshot.overdrivePowerMultiplier;
     this.rank = snapshot.rank;
     this.evolution = snapshot.evolution;
     this.lastDirectionX = snapshot.lastDirectionX;
@@ -480,7 +491,8 @@ export class BoomerangBehavior {
 
   private applyRankTuning(): void {
     this.damage = (this.rank >= 7 ? 19 : this.rank >= 2 ? 16 : BOOMERANG_DEFINITION.damage)
-      * this.permanentDamageMultiplier;
+      * this.permanentDamageMultiplier
+      * this.overdrivePowerMultiplier;
     this.speed = BOOMERANG_DEFINITION.speed;
     this.returnSpeed = this.rank >= 4 ? 500 : BOOMERANG_DEFINITION.returnSpeed;
     this.radius = this.rank >= 5 ? 13 : BOOMERANG_DEFINITION.radius;
@@ -509,4 +521,8 @@ const distanceToSegmentSquared = (
 
 const normalizeMultiplier = (value: number): number => (
   Number.isFinite(value) && value > 0 ? value : 1
+);
+
+const normalizePowerMultiplier = (value: number): number => (
+  Number.isFinite(value) ? Math.min(OVERDRIVE_POWER_MULTIPLIER_CAP, Math.max(1, value)) : 1
 );

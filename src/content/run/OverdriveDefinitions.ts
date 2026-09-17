@@ -7,6 +7,22 @@ export const OVERDRIVE_STAGES_PER_LAP = 3 as const;
 export const OVERDRIVE_HEALTH_MULTIPLIER_CAP = 1_000_000_000 as const;
 export const OVERDRIVE_MAX_PRESSURE_MULTIPLIER = 1.75 as const;
 export const OVERDRIVE_MIN_SPAWN_INTERVAL_SECONDS = 0.2 as const;
+/** Repeatable post-evolution power cards add five percentage points. */
+export const OVERDRIVE_POWER_INCREMENT = 0.05 as const;
+/** Technical safety cap for the independent repeatable power multiplier. */
+export const OVERDRIVE_POWER_MULTIPLIER_CAP = 1_000 as const;
+export const OVERDRIVE_POWER_MAX_STACKS = Math.floor(
+  (OVERDRIVE_POWER_MULTIPLIER_CAP - 1) / OVERDRIVE_POWER_INCREMENT
+);
+/**
+ * Campaign keeps its authored repeatables untouched. Overdrive gives the two
+ * uncapped starter passives a finite authored runway so reserve cards have a
+ * deterministic handoff instead of starving behind infinite filler.
+ */
+export const OVERDRIVE_AUTHORED_STACK_CAPS = {
+  swift_step: 6,
+  reinforced_core: 9
+} as const;
 export const DEFAULT_OVERDRIVE_SEED = 0x6d2b79f5 as const;
 
 export type OverdriveStageInLap = 1 | 2 | 3;

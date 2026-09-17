@@ -30,6 +30,7 @@ import {
 import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
 import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
+import { OVERDRIVE_POWER_INCREMENT } from '../../content/run/OverdriveDefinitions';
 import { FractureThreatSystem } from '../fracture/FractureThreatSystem';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
@@ -429,6 +430,10 @@ export class CombatSimulation {
     return this.weaponSystem.currentCriticalChance;
   }
 
+  public getOverdrivePowerMultiplier(family: WeaponPathId): number {
+    return this.weaponSystem.getOverdrivePowerMultiplier(family);
+  }
+
   /** Updates menu-owned modifiers; they take effect on the next run reset. */
   public setPermanentBonuses(bonuses: PermanentCombatBonuses): void {
     this.weaponSystem.setPermanentBonuses(bonuses);
@@ -555,6 +560,10 @@ export class CombatSimulation {
 
   public applyWeaponMastery(family: WeaponPathId, channel: WeaponMasteryChannel): boolean {
     return this.weaponSystem.applyWeaponMastery(family, channel);
+  }
+
+  public applyOverdrivePower(family: WeaponPathId, amount: number = OVERDRIVE_POWER_INCREMENT): boolean {
+    return this.weaponSystem.applyOverdrivePower(family, amount);
   }
 
   public update(dtSeconds: number, player: PlayerState, arena: ArenaBoundaryInput): void {

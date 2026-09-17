@@ -3,6 +3,55 @@ import { registerHomeChecks } from './home.checks';
 
 registerHomeChecks();
 
+test('joystick opcional persiste y se cancela en pausa, cambio y rotación', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1');
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await page.locator('#start-settings-toggle').click();
+  await page.locator('#start-control-scheme').selectOption('joystick');
+  await page.reload();
+  await page.locator('#start-settings-toggle').click();
+  await expect(page.locator('#start-control-scheme')).toHaveValue('joystick');
+  await page.locator('#start-play').click();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  const gesture = async (type: string, x: number, y: number) => page.evaluate(({ type, x, y }) => {
+    document.querySelector('#game-container')!.dispatchEvent(new PointerEvent(type, {
+      bubbles: true, cancelable: true, pointerId: 71, pointerType: 'touch',
+      clientX: x, clientY: y, button: 0
+    }));
+  }, { type, x, y });
+  const before = await getPlayerX(page);
+  await gesture('pointerdown', 100, 660);
+  await gesture('pointermove', 152, 660);
+  await expect(page.locator('.touch-joystick')).toBeVisible();
+  await expect.poll(() => getPlayerX(page)).toBeGreaterThan(before + 8);
+  await page.screenshot({ path: testInfo.outputPath('joystick-portrait.png') });
+  await page.locator('#pause-toggle').click();
+  await expect(page.locator('.touch-joystick')).toBeHidden();
+  await page.locator('#pause-settings-toggle').click();
+  await expect(page.locator('#pause-control-scheme')).toHaveValue('joystick');
+  await page.locator('#pause-control-scheme').selectOption('touch');
+  await page.locator('#pause-resume').click();
+  await gesture('pointerdown', 200, 400);
+  await expect(page.locator('.touch-joystick')).toBeHidden();
+  await gesture('pointerup', 200, 400);
+  await page.locator('#pause-toggle').click();
+  await page.locator('#pause-settings-toggle').click();
+  await page.locator('#pause-control-scheme').selectOption('joystick');
+  await page.locator('#pause-resume').click();
+  await gesture('pointerdown', 100, 660);
+  await gesture('pointermove', 152, 660);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(page.locator('.touch-joystick')).toBeHidden();
+  await gesture('pointerdown', 120, 290);
+  await gesture('pointermove', 150, 290);
+  await expect(page.locator('.touch-joystick')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('joystick-landscape.png') });
+  await gesture('pointercancel', 150, 290);
+  await expect(page.locator('.touch-joystick')).toBeHidden();
+  expect(failures).toEqual([]);
+});
+
 const captureRuntimeFailures = (page: Page): string[] => {
   const failures: string[] = [];
   page.on('console', (message) => {

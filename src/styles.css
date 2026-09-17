@@ -1350,6 +1350,41 @@ body {
   background-position: center;
 }
 
+/* One event-driven instrument, independent of canvas scale and DPR. */
+.control-help { font-size: .78rem; line-height: 1.4; color: #b4c9d8; margin: .25rem 0 .65rem; }
+.touch-joystick {
+  position: fixed;
+  z-index: 15;
+  width: calc(var(--joystick-radius) * 2);
+  height: calc(var(--joystick-radius) * 2);
+  margin: calc(var(--joystick-radius) * -1);
+  border: 1px solid #83cadc88;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0c192844 48%, #263c5066 50%, #09152555 65%, #72cadd33 67%, #09152555 70%);
+  box-shadow: inset 0 2px 0 #bedce544, inset 0 -2px 0 #030813aa;
+  pointer-events: none;
+}
+.touch-joystick[hidden] { display: none; }
+.touch-joystick::before, .touch-joystick::after {
+  content: '';
+  position: absolute;
+  background: #96d9e166;
+}
+.touch-joystick::before { width: 1px; height: 12px; left: 50%; top: 4px; }
+.touch-joystick::after { height: 1px; width: 12px; top: 50%; left: 4px; }
+.touch-joystick-thumb {
+  position: absolute;
+  left: calc(50% - 21px);
+  top: calc(50% - 21px);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid #92cbd9;
+  background: radial-gradient(circle, #b7f2f5 0 9%, #234759 11% 35%, #102131 38% 65%, #315366 68%);
+  box-shadow: inset 1px 2px 0 #d9f8ff77, inset -1px -3px 0 #030918cc;
+  opacity: .85;
+}
+
 [data-background="vesper-bloom"] {
   --background-accent: #c6b4c6;
   --background-line: rgba(155, 138, 172, 0.42);

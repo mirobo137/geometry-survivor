@@ -1,4 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
+import { isControlScheme } from '../input/ControlScheme';
 import type { ControlScheme } from '../platform/save/SaveStore';
 
 export type ResumeHandler = () => void;
@@ -120,7 +121,7 @@ export class PauseOverlay {
 
   private emitControlScheme(): void {
     const value = this.controlSchemeInput?.value;
-    if (value === 'auto' || value === 'touch' || value === 'relative-touch' || value === 'keyboard') {
+    if (isControlScheme(value)) {
       this.controlSchemeHandler?.(value);
     }
   }

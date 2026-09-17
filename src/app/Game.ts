@@ -5,6 +5,7 @@ import { FrameProfiler } from '../debug/FrameProfiler';
 import { BaselinePanel } from '../debug/BaselinePanel';
 import { BaselineRunRecorder } from '../debug/BaselineRunRecorder';
 import { InputManager } from '../input/InputManager';
+import { JoystickView } from '../ui/JoystickView';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
@@ -192,6 +193,7 @@ export class Game {
   private readonly gameOver: GameOverOverlay;
   private readonly startScreen: StartScreen | null;
   private readonly input: InputManager;
+  private readonly joystick: JoystickView;
   private upgradeApplier!: UpgradeApplier;
   private readonly hazardCadenceMode: HazardCadenceMode;
   private readonly resizeObserver: ResizeObserver | null;
@@ -488,9 +490,11 @@ export class Game {
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
     this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
+    this.joystick = new JoystickView();
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
       void this.audio.unlock();
-    }, saved.settings.controlScheme);
+    }, saved.settings.controlScheme, state => this.joystick.render(state),
+    () => this.gameState.isSimulationRunning && !this.lifecyclePaused);
     this.resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.queueResize);
   }
 
@@ -554,6 +558,7 @@ export class Game {
     this.clearTerminalSummaryTimer();
     this.app.ticker.remove(this.onTick);
     this.input.detach();
+    this.joystick.destroy();
     this.resizeObserver?.disconnect();
     window.removeEventListener('resize', this.queueResize);
     window.removeEventListener('orientationchange', this.queueResize);
@@ -569,6 +574,7 @@ export class Game {
   }
 
   private resizeNow(): void {
+    this.input.reset();
     const state = this.viewport.resize(this.container.clientWidth, this.container.clientHeight, window.devicePixelRatio);
     this.app.renderer.resolution = state.dpr;
     this.app.renderer.resize(state.cssWidth, state.cssHeight);
@@ -625,6 +631,7 @@ export class Game {
   }
 
   private renderFrame(deltaSeconds = 0): void {
+    if (!this.gameState.isSimulationRunning) this.input.reset();
     const presentationDelta = this.gameState.phase === 'paused'
       || this.gameState.phase === 'level-up'
       || this.gameState.phase === 'menu'

@@ -39,6 +39,10 @@ vi.mock('../ui/PauseOverlay', () => ({
   }
 }));
 
+vi.mock('../ui/JoystickView', () => ({
+  JoystickView: class { public render = vi.fn(); public destroy = vi.fn(); }
+}));
+
 vi.mock('../ui/GameOverOverlay', () => ({
   GameOverOverlay: class {
     public open = mocks.gameOverOpen;

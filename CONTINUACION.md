@@ -1,5 +1,19 @@
 # Geometry Survivor — estado y continuación
 
+## Joystick móvil opcional — 16-09-2026
+
+El usuario aprobó la entrega anterior de FX Fracture. Añadido `joystick` a
+Desplazamiento en Inicio y Pausa, persistente en settings. Sigue disponible
+«Seguir el dedo» y se conservan auto/relative-touch/keyboard. Joystick flotante
+con radio 52 CSS px, zona muerta 8 px, fuerza gradual y reinicio del gesto en
+pausa, cancelación, resize y cambio de modo. No cambia velocidad máxima ni build.
+Contrato: [CONTROLES_MOVILES.md](docs/design/CONTROLES_MOVILES.md).
+Validado: typecheck, 424 tests unitarios (103 archivos), build local, cuatro
+smokes móviles y tres desktop de configuración/input/pausa/resize. Capturas
+portrait/landscape inspeccionadas. El build mantiene el warning previo de
+chunk >500 kB; no se añadió dependencia. Vite disponible en localhost:5173.
+Pendiente validación física del usuario en S25; no declarar rendimiento medido.
+
 ## FX de ataques Fracture y continuidad del boss — 16-09-2026
 
 Mejorados los cuatro enemigos y la misma familia de ataques del boss: dardos

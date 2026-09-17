@@ -379,12 +379,19 @@ La shell deberá usar:
 
 ## 6.5 Controles
 
-- touch y mouse usan un joystick dinámico: presionar/arrastrar crea un origen, mover genera vector, soltar detiene;
+- elección persistente en Inicio y Pausa: seguir el dedo (comportamiento previo)
+  o joystick flotante opcional; `auto` conserva el control directo;
+- en joystick, presionar/arrastrar crea un origen, mover genera vector y soltar detiene;
 - no depende de un botón fijo pequeño;
 - teclado acepta WASD, flechas y contempla layouts no QWERTY;
-- `InputManager` entrega solo un `movementVector` normalizado;
+- `InputManager` entrega un `movementVector` de magnitud máxima 1; el joystick
+  admite intensidad analógica sin aumentar la velocidad máxima;
 - la selección de cartas usa targets táctiles amplios y no comparte gestos con movimiento;
 - el primer input desbloquea audio e inicia el estado `PLAYING`.
+
+Contrato implementado y compatibilidad de guardados:
+[Controles móviles](docs/design/CONTROLES_MOVILES.md). La presentación del joystick
+es independiente de cámara/DPR; el input directo conserva la inversa del viewport.
 
 ## 6.6 Matriz mínima de resize
 

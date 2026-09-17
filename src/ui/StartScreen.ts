@@ -1,4 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
+import { isControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
 import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
 import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
@@ -686,7 +687,7 @@ export class StartScreen {
 
   private emitControlScheme(): void {
     const value = this.controlSchemeInput.value;
-    if (value === 'auto' || value === 'touch' || value === 'relative-touch' || value === 'keyboard') {
+    if (isControlScheme(value)) {
       this.controlSchemeHandler?.(value);
     }
   }

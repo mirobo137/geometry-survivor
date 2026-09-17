@@ -138,6 +138,26 @@ describe('Game', () => {
     vi.useRealTimers();
   });
 
+  it('connects the developer Overdrive route to the composed director', () => {
+    const game = new Game({
+      ...createOptions(),
+      mode: 'overdrive',
+      overdriveStage: 4,
+      overdriveSeed: 0x1234
+    });
+    const runtime = game as unknown as {
+      actDirector: {
+        definition: { id: string };
+        bossDefinition: { id: string };
+        stageState: { stage: number; lap: number };
+      };
+    };
+
+    expect(runtime.actDirector.definition.id).toBe('angular');
+    expect(runtime.actDirector.bossDefinition.id).toBe('core-sentinel');
+    expect(runtime.actDirector.stageState).toMatchObject({ stage: 4, lap: 2 });
+  });
+
   it('waits for terminal presentation before opening the victory summary', async () => {
     vi.useFakeTimers();
     const game = new Game(createOptions());

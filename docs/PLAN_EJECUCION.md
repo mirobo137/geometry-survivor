@@ -64,8 +64,9 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | IMPLEMENTADO; QA humana del acto pendiente |
-| EX-11 | 10 | Overdrive y producción | en curso por EX-11.1, después de EX-10 |
-| EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; runtime pendiente |
+| EX-11 | 10 | Overdrive y producción | en curso por EX-11.2, después de EX-10 |
+| EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; consumido por EX-11.2 |
+| EX-11.2 | 10 | Director de composición y ruta de inspección | AUTOMÁTICO OK; transición pendiente |
 
 EX-08 es una ficha transversal, no permiso para adelantar todas las evoluciones.
 Los identificadores EX no reemplazan el orden de prioridades del plan.
@@ -1081,6 +1082,27 @@ La subtarea tiene tests unitarios para normalización, primeros doce
 multiplicadores, primera vuelta, migración y combinación de récords. Esta puerta
 no incluye menú, director, transición, cartas, bosses múltiples ni recompensas;
 se implementarán sólo cuando exista su consumidor runtime correspondiente.
+
+### EX-11.2 — Director de composición y ruta de inspección
+
+El director `OverdriveActDirector` reutiliza el contrato de los directores
+actuales para elegir de forma determinista el perfil de arena, la rotación de
+boss y las familias normales. La primera vuelta conserva exactamente Radial,
+Angular y Fracture. En las vueltas 2 y 3 mezcla invitados al 20% y 35%; desde el
+tramo 10 elige acto y familia normal con distribución uniforme. El intervalo
+de spawn sigue la cadencia de la familia principal hasta el tramo 9 y adopta
+la cronología Acto III desde el tramo 10; aplica la presión aprobada con mínimo
+de 0,20 s. Bosses, réplicas e
+hijos siguen fuera de la selección normal.
+
+La simulación y la campaña consumen el mismo contrato, pero todavía no aplican
+el multiplicador de vida ni realizan transición de tramo: eso corresponde a
+EX-11.3. Para inspección reproducible se habilitó, sólo con `debug=1`,
+`/?debug=1&mode=overdrive&od-stage=4&seed=305441741&quality=low`. Muestra el
+perfil de arena y el modo en el panel debug sin modificar guardado, desbloqueos
+ni recompensas. La prueba browser asociada queda sujeta a la estabilidad del
+runner local; las pruebas unitarias y de integración del director son la puerta
+automática de esta subtarea.
 
 ## 6. Fichas visuales y estado de ejecución
 

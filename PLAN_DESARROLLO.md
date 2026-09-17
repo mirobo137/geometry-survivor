@@ -3452,5 +3452,22 @@ realizará únicamente al resolver una victoria real del boss mediante
 degradarlo.
 
 EX-11.1 queda AUTOMÁTICO OK con pruebas de contratos y migración. Su salida no
-activa todavía una entrada de menú ni una ruta jugable; EX-11.2 podrá conectar
-el consumidor runtime cuando este estado base esté verificado.
+activa una entrada pública de menú ni altera el guardado; EX-11.2 consume este
+estado mediante una ruta de inspección exclusivamente de desarrollo.
+
+## 22.11 EX-11.2 — director de composición — 17-09-2026
+
+`OverdriveActDirector` compone los directores de Radial, Angular y Fracture
+sin copiar sus timelines. La primera vuelta conserva sus tres perfiles; las
+vueltas 2 y 3 mezclan familias normales invitadas con 80/20 y 65/35; desde el
+tramo 10 cada aparición elige acto y familia normal de forma uniforme. El
+perfil de arena y la rotación Acto I→II→III del boss quedan independientes de
+la familia normal seleccionada; la cadencia sigue la familia principal hasta
+el tramo 9 y adopta la cronología Acto III desde el tramo 10. La presión sólo
+reduce el intervalo hasta el mínimo de 0,20 s.
+
+La ruta `?debug=1&mode=overdrive&od-stage=4&seed=305441741` conecta este
+director al `Game` y permite inspeccionar el escenario Angular con familias
+invitadas sin tocar guardado, desbloqueos ni recompensas. El multiplicador de
+vida, la transición, la ampliación de cartas y los encuentros dobles siguen
+fuera de esta entrega; corresponden a EX-11.3 y posteriores.

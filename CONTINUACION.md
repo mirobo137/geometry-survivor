@@ -1,5 +1,39 @@
 # Geometry Survivor — estado y continuación
 
+## EX-11.2 — director de composición y ruta de inspección — 17-09-2026
+
+Fecha y commit de partida: `b5cea91` (`main` y `origin/main` sincronizados).
+ID / subtarea: EX-11.2.
+Objetivo y exclusiones: conectar el modo `overdrive` a la simulación mediante
+un director que reutiliza los tres actos. La primera vuelta conserva sus
+perfiles; las vueltas 2 y 3 mezclan invitados 80/20 y 65/35; desde el tramo 10
+la familia normal se elige de forma uniforme. La arena, el boss y la cadencia
+de la familia principal permanecen separados. No se implementaron todavía
+transición, multiplicador de vida, cartas de seis armas, bosses múltiples ni
+recompensas.
+Archivos cambiados: `src/simulation/acts/OverdriveActDirector.ts` y su test;
+`src/app/Game.ts`, `src/app/Game.test.ts`, `src/main.ts` y smoke browser;
+`PLAN_DESARROLLO.md`; `docs/PLAN_EJECUCION.md`.
+Pruebas ejecutadas y resultados: 20 pruebas focalizadas OK; suite completa en
+un worker, 107 archivos / 442 tests OK; typecheck OK; builds Vite de Poki,
+CrazyGames y local sin sourcemaps OK. El build local con sourcemaps (la
+configuración de desarrollo habitual) agotó la memoria del runner al generar
+chunks; no es un fallo de TypeScript ni del producto. El smoke browser
+específico de Overdrive se quedó detenido en el runner sin producir una
+aserción y fue interrumpido. Un segundo intento con concurrencia limitada
+terminó el worker con código nativo `3221226505` y dejó el servidor de prueba
+activo hasta su interrupción; queda como resultado inconcluso, no como
+aprobación de navegador.
+Evidencia humana / dispositivo / reporte: no aplica todavía; la ruta está
+preparada para inspección manual en GitHub Pages.
+Puerta: AUTOMÁTICO OK; ESPERA HUMANA para la prueba browser/manual.
+Pendiente concreto y condición para avanzar: EX-11.3 debe aplicar el
+multiplicador de vida desde las definiciones base y crear la transición segura
+entre tramos, conservando build, XP, modificadores y recargas. Mantener la
+entrada pública bloqueada hasta una victoria real del Acto III.
+Siguiente ID habilitado: EX-11.3.
+Publicación: pendiente de commit y push de esta entrega.
+
 ## EX-11.1 — contrato y guardado de Infinito — 17-09-2026
 
 Fecha y commit de partida: `dca467b` (`main` y `origin/main` sincronizados).

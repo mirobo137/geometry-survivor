@@ -23,6 +23,11 @@ import {
   type WeaponEvolutionId,
   type WeaponEvolutionScenario
 } from './content/weapons/WeaponEvolutionDefinitions';
+import {
+  normalizeOverdriveSeed,
+  normalizeOverdriveStage,
+  type RunMode
+} from './content/run/OverdriveDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -172,6 +177,10 @@ const bootstrap = async (): Promise<void> => {
     : undefined;
   const requestedAct = searchParams.get('act');
   const actId: ActId = requestedAct === 'angular' ? 'angular' : requestedAct === 'fracture' ? 'fracture' : 'radial';
+  const overdriveMode = searchParams.get('debug') === '1' && searchParams.get('mode') === 'overdrive';
+  const runMode: RunMode = overdriveMode ? 'overdrive' : 'campaign';
+  const overdriveStage = normalizeOverdriveStage(Number(searchParams.get('od-stage') ?? 1));
+  const overdriveSeed = normalizeOverdriveSeed(Number(searchParams.get('seed') ?? NaN));
   const campaignBuild = searchParams.get('debug') === '1'
     && searchParams.get('campaign') === 'evolved'
     ? 'three-evolved' as const
@@ -253,12 +262,15 @@ const bootstrap = async (): Promise<void> => {
     hazardCadenceMode,
     calibrationId,
     actId,
+    mode: runMode,
+    overdriveStage: overdriveMode ? overdriveStage : undefined,
+    overdriveSeed: overdriveMode ? overdriveSeed : undefined,
     allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
     initialElapsedSeconds: bossDebugMode
       ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds
       : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    startOnMenu: !overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
       && !magneticChargeWeaponDrill && !fractureDrill && weaponCardId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined,

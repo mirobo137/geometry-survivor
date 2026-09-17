@@ -50,6 +50,8 @@ import { FractureActDirector } from '../simulation/acts/FractureActDirector';
 import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
+import type { RunMode } from '../content/run/OverdriveDefinitions';
+import { OverdriveActDirector } from '../simulation/acts/OverdriveActDirector';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -103,6 +105,10 @@ export interface GameOptions {
   readonly calibrationId?: CalibrationId;
   /** Initial campaign act; the home selector can change this before play. */
   readonly actId?: ActId;
+  /** Developer-only Overdrive entry; the public menu remains campaign-only. */
+  readonly mode?: RunMode;
+  readonly overdriveStage?: number;
+  readonly overdriveSeed?: number;
   /** Development-only direct act entry; never exposed by the campaign menu. */
   readonly allowLockedAct?: boolean;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
@@ -163,6 +169,9 @@ export class Game {
   private readonly campaignBuild: 'three-evolved' | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
+  private readonly runMode: RunMode;
+  private readonly overdriveStage: number;
+  private readonly overdriveSeed: number | undefined;
   private readonly playerSkin: PlayerSkinId;
   private readonly cannonSkin: CannonSkinId;
   private readonly background: BackgroundId;
@@ -451,6 +460,11 @@ export class Game {
     this.evolutionScenario = options.evolutionScenario ?? null;
     this.weaponPath = options.weaponPath ?? null;
     this.campaignBuild = options.campaignBuild ?? null;
+    this.runMode = options.mode ?? 'campaign';
+    this.overdriveStage = Number.isFinite(options.overdriveStage)
+      ? Math.max(1, Math.floor(options.overdriveStage ?? 1))
+      : 1;
+    this.overdriveSeed = options.overdriveSeed;
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -480,6 +494,7 @@ export class Game {
       options.elements.debug,
       this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled
         || this.evolutionScenario !== null || this.weaponPath !== null || this.campaignBuild !== null
+        || this.runMode === 'overdrive'
     );
     this.baseline = new BaselineRunRecorder(this.baselineMode);
     this.baselinePanel = this.baselineMode && options.elements.baseline
@@ -499,9 +514,12 @@ export class Game {
   }
 
   private configureActRuntime(saved: ReturnType<SaveStore['load']>): void {
-    this.actDirector = this.actId === 'angular'
+    this.actDirector = this.runMode === 'overdrive'
+      ? new OverdriveActDirector(this.overdriveStage, this.overdriveSeed)
+      : this.actId === 'angular'
       ? new AngularActDirector()
       : this.actId === 'fracture' ? new FractureActDirector() : new RadialActDirector();
+    if (this.runMode === 'overdrive') this.actId = this.actDirector.definition.id;
     this.arena = new ArenaModel(this.actDirector);
     this.combat = new CombatSimulation({
       stress: this.stressMode,
@@ -709,7 +727,7 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isFractureDrill ? 'fracture-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
+      mode: this.runMode === 'overdrive' ? `overdrive-stage-${this.overdriveStage}` : this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isFractureDrill ? 'fracture-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,

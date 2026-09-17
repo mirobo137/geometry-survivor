@@ -810,6 +810,17 @@ test('expone el Fracture Engine desde su atajo y ejecuta sus patrones authored',
   expect(failures).toEqual([]);
 });
 
+test('abre el escenario reproducible de Overdrive y conserva su perfil de tramo', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1&mode=overdrive&od-stage=4&seed=305441741&quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#game-container canvas')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: overdrive-stage-4');
+  await expect(page.locator('#debug-panel')).toContainText('arena: 270.0 | hexagon');
+  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('overdrive-stage-4-low.png') });
+  expect(failures).toEqual([]);
+});
+
 for (const [query, mode] of [
   ['gunner', 'fracture-drill'],
   ['thorn', 'fracture-drill'],

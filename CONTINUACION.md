@@ -1,5 +1,29 @@
 # Geometry Survivor — estado y continuación
 
+## EX-11.1 — contrato y guardado de Infinito — 17-09-2026
+
+Fecha y commit de partida: `dca467b` (`main` y `origin/main` sincronizados).
+ID / subtarea: EX-11.1.
+Objetivo y exclusiones: establecer el contrato puro `campaign | overdrive`,
+estado de tramo, semillas, fórmulas de vida/presión y persistencia versionada.
+No se activaron menú, director, transición, cartas, bosses múltiples ni
+recompensas.
+Archivos cambiados: `src/content/run/OverdriveDefinitions.ts` y su test;
+`src/platform/save/SaveStore.ts` y su test; prueba determinista de
+`UpgradeApplier`; `PLAN_DESARROLLO.md`; `docs/PLAN_EJECUCION.md`.
+Pruebas ejecutadas y resultados: typecheck OK; suite focalizada 39/39 OK;
+suite completa en un worker 106 archivos / 434 tests OK; build local Vite con
+`--configLoader runner` OK. La ejecución paralela predeterminada de Vitest y un
+primer intento de build agotaron la memoria del entorno (OOM); no se tomó ese
+fallo de runner como fallo del producto.
+Evidencia humana / dispositivo / reporte: no aplica a este contrato sin UI.
+Puerta: AUTOMÁTICO OK.
+Pendiente concreto y condición para avanzar: conectar el consumidor runtime
+EX-11.2 (director de Infinito) sin importar Pixi/DOM en simulación y conservar
+la migración bloqueada hasta una victoria real del Acto III.
+Siguiente ID habilitado: EX-11.2.
+Publicación: pendiente de commit y push de esta entrega.
+
 ## Joystick móvil opcional — 16-09-2026
 
 Refinamiento solicitado: selector reducido a Seguir el dedo / Joystick, teclado

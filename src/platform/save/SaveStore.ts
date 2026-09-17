@@ -10,7 +10,7 @@ import { isBackgroundId, type BackgroundId } from '../../content/visual/Backgrou
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import { PERMANENT_UPGRADE_DEFINITIONS, type PermanentUpgradeId } from '../../content/meta/PermanentUpgradeDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 6 as const;
+export const SAVE_SCHEMA_VERSION = 7 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -51,6 +51,14 @@ export interface MetaUpgradeSaveData {
   readonly levels: Readonly<Partial<Record<PermanentUpgradeId, number>>>;
 }
 
+/** Persistent records for the optional Infinite/Overdrive mode. */
+export interface OverdriveSaveData {
+  readonly unlocked: boolean;
+  readonly bestTotalTimeSeconds: number;
+  readonly maxStages: number;
+  readonly bestKills: number;
+}
+
 export type CampaignActId = 'radial' | 'angular' | 'fracture';
 
 export interface SaveData {
@@ -65,6 +73,7 @@ export interface SaveData {
   readonly metaUpgrades: MetaUpgradeSaveData;
   /** Acts with a real consumer that the player may start directly for validation. */
   readonly unlockedActs: readonly CampaignActId[];
+  readonly overdrive: OverdriveSaveData;
 }
 
 export interface StorageAdapter {
@@ -83,6 +92,23 @@ export const mergeBestRun = (current: BestRun, candidate: BestRun): BestRun => (
   timeSeconds: Math.max(0, current.timeSeconds, candidate.timeSeconds),
   score: Math.max(0, current.score, candidate.score)
 });
+
+export const mergeOverdriveRecord = (
+  current: OverdriveSaveData,
+  candidate: Pick<OverdriveSaveData, 'bestTotalTimeSeconds' | 'maxStages' | 'bestKills'>
+): OverdriveSaveData => ({
+  unlocked: current.unlocked,
+  bestTotalTimeSeconds: Math.max(0, current.bestTotalTimeSeconds, candidate.bestTotalTimeSeconds),
+  maxStages: Math.max(0, Math.floor(current.maxStages), Math.floor(candidate.maxStages)),
+  bestKills: Math.max(0, Math.floor(current.bestKills), Math.floor(candidate.bestKills))
+});
+
+/** Unlocking is an explicit consequence of a real Act III victory. */
+export const unlockOverdrive = (data: SaveData): SaveData => (
+  data.overdrive.unlocked
+    ? data
+    : { ...data, overdrive: { ...data.overdrive, unlocked: true } }
+);
 
 export const createDefaultSaveData = (): SaveData => ({
   schemaVersion: SAVE_SCHEMA_VERSION,
@@ -116,7 +142,13 @@ export const createDefaultSaveData = (): SaveData => ({
   metaUpgrades: {
     levels: {}
   },
-  unlockedActs: ['radial']
+  unlockedActs: ['radial'],
+  overdrive: {
+    unlocked: false,
+    bestTotalTimeSeconds: 0,
+    maxStages: 0,
+    bestKills: 0
+  }
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -160,6 +192,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawBackgrounds = isRecord(value.backgrounds) ? value.backgrounds : {};
   const rawWallet = isRecord(value.wallet) ? value.wallet : {};
   const rawMetaUpgrades = isRecord(value.metaUpgrades) ? value.metaUpgrades : {};
+  const rawOverdrive = version >= 7 && isRecord(value.overdrive) ? value.overdrive : {};
   const rawUnlockedActs = Array.isArray(value.unlockedActs) ? value.unlockedActs : [];
   const rawMetaLevels = isRecord(rawMetaUpgrades.levels) ? rawMetaUpgrades.levels : {};
   const legacyBestTime = value.bestTimeSeconds;
@@ -172,6 +205,9 @@ export const migrateSaveData = (value: unknown): SaveData => {
     'radial',
     ...rawUnlockedActs.filter(isCampaignActId)
   ]));
+  // Before schema 7 there was no proof of an actual Act III victory. Merely
+  // having the act selectable must not unlock the new mode during migration.
+  const overdriveUnlocked = version >= 7 && rawOverdrive.unlocked === true;
   const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'cyan';
   const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'cyan';
   const cannonUnlocked = Array.isArray(rawCannonSkins.unlocked)
@@ -224,7 +260,13 @@ export const migrateSaveData = (value: unknown): SaveData => {
     metaUpgrades: {
       levels: metaLevels
     },
-    unlockedActs: normalizedUnlockedActs
+    unlockedActs: normalizedUnlockedActs,
+    overdrive: {
+      unlocked: overdriveUnlocked,
+      bestTotalTimeSeconds: Math.max(0, finiteOr(rawOverdrive.bestTotalTimeSeconds, defaults.overdrive.bestTotalTimeSeconds)),
+      maxStages: readNonNegativeInt(rawOverdrive.maxStages, defaults.overdrive.maxStages, Number.MAX_SAFE_INTEGER),
+      bestKills: readNonNegativeInt(rawOverdrive.bestKills, defaults.overdrive.bestKills, Number.MAX_SAFE_INTEGER)
+    }
   };
 };
 

@@ -228,7 +228,7 @@ describe('UpgradeApplier', () => {
   });
 
   it('offers each unowned weapon with the same seeded probability and respects the cap', () => {
-    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x51eed);
     const weaponIds = ['projectile_rank_2', 'orbit_blade', 'chain_lightning', 'vector_boomerang', 'pulse_ring', 'magnetic_charge'] as const;
     const counts = new Map(weaponIds.map((id) => [id, 0]));
     for (let index = 0; index < 600; index += 1) {

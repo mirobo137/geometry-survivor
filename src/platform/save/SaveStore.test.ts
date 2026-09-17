@@ -3,8 +3,10 @@ import {
   createDefaultSaveData,
   migrateSaveData,
   mergeBestRun,
+  mergeOverdriveRecord,
   SAVE_SCHEMA_VERSION,
   SAVE_STORAGE_KEY,
+  unlockOverdrive,
   type StorageAdapter
 } from './SaveStore';
 import { LocalSaveStore } from '../local/LocalSaveStore';
@@ -52,7 +54,8 @@ describe('LocalSaveStore', () => {
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
       metaUpgrades: { levels: { weapon_damage: 2 } },
-      unlockedActs: ['radial']
+      unlockedActs: ['radial'],
+      overdrive: defaults.overdrive
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
@@ -65,7 +68,8 @@ describe('LocalSaveStore', () => {
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
       metaUpgrades: { levels: { weapon_damage: 2 } },
-      unlockedActs: ['radial']
+      unlockedActs: ['radial'],
+      overdrive: defaults.overdrive
     });
   });
 
@@ -91,7 +95,8 @@ describe('LocalSaveStore', () => {
       backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
       wallet: { nova: 0 },
       metaUpgrades: { levels: {} },
-      unlockedActs: ['radial']
+      unlockedActs: ['radial'],
+      overdrive: createDefaultSaveData().overdrive
     });
   });
 
@@ -119,6 +124,51 @@ describe('LocalSaveStore', () => {
       schemaVersion: SAVE_SCHEMA_VERSION,
       unlockedActs: ['unknown']
     }).unlockedActs).toEqual(['radial']);
+  });
+
+  it('keeps Overdrive locked when migrating a pre-7 save and preserves a valid current record', () => {
+    expect(migrateSaveData({
+      schemaVersion: 6,
+      unlockedActs: ['radial', 'angular', 'fracture'],
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 900, maxStages: 6, bestKills: 1200 }
+    }).overdrive).toEqual({
+      unlocked: false,
+      bestTotalTimeSeconds: 0,
+      maxStages: 0,
+      bestKills: 0
+    });
+    expect(migrateSaveData({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 900.5, maxStages: 6.9, bestKills: 1200.9 }
+    }).overdrive).toEqual({
+      unlocked: true,
+      bestTotalTimeSeconds: 900.5,
+      maxStages: 6,
+      bestKills: 1200
+    });
+  });
+
+  it('unlocks explicitly and merges only the best bounded Overdrive records', () => {
+    const locked = createDefaultSaveData();
+    const unlocked = unlockOverdrive(locked);
+    expect(unlocked.overdrive.unlocked).toBe(true);
+    expect(unlockOverdrive(unlocked)).toBe(unlocked);
+    const record = mergeOverdriveRecord(unlocked.overdrive, {
+      bestTotalTimeSeconds: 45,
+      maxStages: 3,
+      bestKills: 120
+    });
+    expect(record).toEqual({
+      unlocked: true,
+      bestTotalTimeSeconds: 45,
+      maxStages: 3,
+      bestKills: 120
+    });
+    expect(mergeOverdriveRecord(record, {
+      bestTotalTimeSeconds: 10,
+      maxStages: 1,
+      bestKills: 3
+    })).toEqual(record);
   });
 
   it('normalizes skin ownership and never equips a locked or unknown skin', () => {

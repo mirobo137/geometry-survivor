@@ -64,7 +64,8 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | IMPLEMENTADO; QA humana del acto pendiente |
-| EX-11 | 10 | Overdrive y producción | pendiente, después de EX-10 |
+| EX-11 | 10 | Overdrive y producción | en curso por EX-11.1, después de EX-10 |
+| EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; runtime pendiente |
 
 EX-08 es una ficha transversal, no permiso para adelantar todas las evoluciones.
 Los identificadores EX no reemplazan el orden de prioridades del plan.
@@ -1059,6 +1060,27 @@ pero no romper números ni volver inútiles los telegraphs.
 Después, y en tareas propias: economía observada, metadatos/capturas, acceso
 comercial y analítica sólo con autorización. No añadir logros, retos diarios,
 cuentas, moneda premium o sincronización propia como «parte implícita» de release.
+
+### EX-11.1 — Contrato y guardado del modo Infinito
+
+Implementado el primer bloque de EX-11 sin activar todavía el flujo jugable.
+`src/content/run/OverdriveDefinitions.ts` contiene el modo `campaign | overdrive`,
+el estado acotado de tramo, la normalización de etapa/semilla, la relación
+vuelta-tramo, la secuencia de actos de la primera vuelta y las fórmulas de vida
+y presión aprobadas por `PLAN_INFINITO.md`. El módulo no importa Pixi, DOM,
+audio ni plataforma.
+
+`SaveStore` usa ahora el esquema 7 y persiste `overdrive.unlocked`,
+`bestTotalTimeSeconds`, `maxStages` y `bestKills`. Los esquemas anteriores
+quedan bloqueados aunque tengan Acto III disponible: la disponibilidad del acto
+no prueba una victoria real. El desbloqueo queda detrás de `unlockOverdrive()`
+para conectarlo únicamente al resultado real del boss de Acto III. Los récords
+se combinan con `mergeOverdriveRecord()` sin reducir valores existentes.
+
+La subtarea tiene tests unitarios para normalización, primeros doce
+multiplicadores, primera vuelta, migración y combinación de récords. Esta puerta
+no incluye menú, director, transición, cartas, bosses múltiples ni recompensas;
+se implementarán sólo cuando exista su consumidor runtime correspondiente.
 
 ## 6. Fichas visuales y estado de ejecución
 

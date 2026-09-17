@@ -3434,3 +3434,23 @@ registro compartido, Low/Medium/High, pooling y separación entre presentación 
 simulación. Cada variante futura requiere sus propias pruebas automáticas,
 capturas a tamaño real y revisión humana; la aprobación de estas seis familias
 no es una aprobación anticipada de diseños posteriores.
+
+## 22.10 Inicio de EX-11.1 — contrato de Infinito — 17-09-2026
+
+La implementación del modo Infinito comienza por un contrato puro y su frontera
+de persistencia, antes de tocar el director, la transición entre tramos, las
+cartas o los encuentros dobles. `OverdriveDefinitions` separa el modo
+`campaign | overdrive`, normaliza etapa y semilla, fija la primera vuelta
+Acto I→II→III y centraliza las fórmulas aprobadas de vida y presión. Su estado
+no depende de Pixi, DOM, audio ni SDK.
+
+El guardado sube al esquema 7 e incorpora `overdrive.unlocked`,
+`bestTotalTimeSeconds`, `maxStages` y `bestKills`. Una migración anterior no
+puede desbloquear el modo por tener Acto III disponible: el desbloqueo se
+realizará únicamente al resolver una victoria real del boss mediante
+`unlockOverdrive()`. `mergeOverdriveRecord()` mantiene el mejor registro sin
+degradarlo.
+
+EX-11.1 queda AUTOMÁTICO OK con pruebas de contratos y migración. Su salida no
+activa todavía una entrada de menú ni una ruta jugable; EX-11.2 podrá conectar
+el consumidor runtime cuando este estado base esté verificado.

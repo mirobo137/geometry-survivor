@@ -32,8 +32,8 @@ multiplicador de vida desde las definiciones base y crear la transición segura
 entre tramos, conservando build, XP, modificadores y recargas. Mantener la
 entrada pública bloqueada hasta una victoria real del Acto III.
 Siguiente ID habilitado: EX-11.3.
-Publicación: artefactos verificados; commit `615db97` publicado en
-`origin/main`.
+Publicación: artefactos verificados; commits `615db97` y `24148b8` publicados
+en `origin/main`.
 
 ## EX-11.1 — contrato y guardado de Infinito — 17-09-2026
 

@@ -1,6 +1,23 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual — EX-11.5, 17-09-2026
+## Estado actual — auditoría de Overdrive, 17-09-2026
+
+Base revisada: `cdd3fa5`, ya publicada en `origin/main`. Antes de EX-11.6,
+resolver [AUDITORIA_OVERDRIVE.md](docs/design/AUDITORIA_OVERDRIVE.md).
+Contiene ocho hallazgos con evidencia, archivos, orden de corrección y pruebas
+de aceptación para Luna. Prioridad: la ruta debug guarda NOVA reales; la
+transición ignora pérdida de foco; la prioridad de muerte depende del orden de
+eventos. También corregir reinicio, reservas prematuras, maestría universal
+con más de tres armas, cronología del boss y cap final de vida.
+
+Esta sesión sólo audita y documenta. Código de producción sin cambios.
+Typecheck y suite existente: 107 archivos / 451 tests OK. Sondas temporales
+confirmaron varios defectos y fueron retiradas; ver resultados en el informe.
+No se certificó navegador ni móvil. Los tests verdes anteriores no cierran
+los casos que faltan. Siguiente tarea: OD-A01, seguido del orden del informe;
+EX-11.6 queda pospuesto hasta reparar y validar los hallazgos.
+
+## Historial — implementación EX-11.5, 17-09-2026
 
 Implementadas las cartas de reserva post-evolución de Overdrive. Las
 definiciones viven fuera de la campaña y sólo aparecen cuando se agotaron
@@ -22,9 +39,10 @@ Vite de local/Poki/CrazyGames sin sourcemaps, todos OK. La prueba visual de la
 mano en Pages continúa siendo humana y la ruta pública de Infinito sigue
 bloqueada.
 
-Siguiente ID: EX-11.6 (encuentros dobles). Antes de cerrar esta sesión hay que
-reemplazar la línea de validación anterior con resultados reales y publicar el
-commit en `origin/main`.
+Publicación de esta implementación: `cdd3fa5`. Su siguiente paso original
+(EX-11.6) queda sustituido por las correcciones de la auditoría de cabecera.
+
+## Historial — implementación EX-11.4, 17-09-2026
 
 Implementado el arsenal ampliado de Overdrive. `UpgradeApplier` recibe el modo
 `campaign | overdrive`: la campaña conserva tres armas; Overdrive comienza con

@@ -1,7 +1,11 @@
 # EX-11 — Plan de implementación del modo Infinito
 
-Estado: **implementación incremental; EX-11.1 a EX-11.5 completados automáticamente**
+Estado: **EX-11.1–EX-11.5 implementados; auditoría requiere correcciones antes de EX-11.6**
 Última actualización: 2026-09-17
+
+Puerta vigente: resolver [auditoría de Overdrive](AUDITORIA_OVERDRIVE.md),
+OD-A01–OD-A08 y sus regresiones. La suite existente pasa, pero no demuestra
+cumplimiento de los casos descubiertos; la validación humana sigue pendiente.
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
 

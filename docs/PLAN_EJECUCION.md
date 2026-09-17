@@ -1051,8 +1051,14 @@ enemigos/proyectiles para aparentar progresión.
 
 ### EX-11 — Overdrive y preparación de lanzamiento
 
+**Puerta vigente, 17-09-2026:** antes de EX-11.6, ejecutar las correcciones
+OD-A01–OD-A08 de [la auditoría](design/AUDITORIA_OVERDRIVE.md) y completar sus
+regresiones. EX-11.1–5 están implementados, pero no cerrados frente a todos los
+casos del contrato. Entrada para Luna: OD-A01 y orden de trabajo del informe.
+
 Entrada: tres actos y sus puertas cerrados. Es una continuación opcional tras
-III, no reemplaza Quick Act/Expedition. Definir tabla de ciclos con composición,
+III, con partida independiente y build limpia; Expedition fue eliminado.
+El contrato vigente es `design/PLAN_INFINITO.md`. Definir tabla de ciclos con composición,
 patrones, presión y caps; no multiplicadores de HP sin límite ni daño inevitable
 como única forma de acabar. Probar sesiones prolongadas, contadores, memoria,
 save y recompensa una sola vez. La dificultad puede ser extremadamente alta,

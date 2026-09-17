@@ -3530,6 +3530,13 @@ subtarea.
 
 ## 22.14 EX-11.5 — cartas de reserva post-evolución — 17-09-2026
 
+**Rectificación tras auditoría, 17-09-2026:** las afirmaciones de agotamiento
+global y aislamiento de debug siguientes describen lo previsto, pero el código
+actual no las cumple en todos los caminos. Antes de avanzar a EX-11.6, resolver
+[AUDITORIA_OVERDRIVE.md](docs/design/AUDITORIA_OVERDRIVE.md), OD-A01–OD-A08,
+y ejecutar sus regresiones. El informe también revisa EX-11.1–4 y fija la
+próxima tarea en OD-A01. No interpretar una suite verde como cierre del modo.
+
 Overdrive ya cuenta con una salida finita cuando se agota el contenido
 autorizado. `OVERDRIVE_RESERVE_DEFINITIONS` vive fuera de los pools de campaña
 y sólo puede entrar en una mano cuando no queda ninguna adquisición, rango,

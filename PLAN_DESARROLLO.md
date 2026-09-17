@@ -380,7 +380,8 @@ La shell deberá usar:
 ## 6.5 Controles
 
 - elección persistente en Inicio y Pausa: seguir el dedo (comportamiento previo)
-  o joystick flotante opcional; `auto` conserva el control directo;
+  o joystick flotante opcional; sólo esas dos opciones visibles. Teclado siempre
+  disponible. Guardados `auto`/`keyboard` migran a directo y `relative-touch` a joystick;
 - en joystick, presionar/arrastrar crea un origen, mover genera vector y soltar detiene;
 - no depende de un botón fijo pequeño;
 - teclado acepta WASD, flechas y contempla layouts no QWERTY;

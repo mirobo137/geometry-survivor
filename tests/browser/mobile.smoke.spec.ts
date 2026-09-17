@@ -174,7 +174,8 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
   await expect(page.locator('#game-container canvas')).toBeVisible();
   await expect(page.locator('#start-screen')).toBeVisible();
   await page.locator('#start-settings-toggle').click();
-  await page.locator('#start-control-scheme').selectOption('relative-touch');
+  await expect(page.locator('#start-control-scheme option')).toHaveCount(2);
+  await page.locator('#start-control-scheme').selectOption('joystick');
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
 
@@ -223,8 +224,9 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-overlay')).toBeVisible();
   await page.locator('#pause-settings-toggle').click();
-  await expect(page.locator('#pause-control-scheme')).toHaveValue('relative-touch');
-  await page.locator('#pause-control-scheme').selectOption('auto');
+  await expect(page.locator('#pause-control-scheme option')).toHaveCount(2);
+  await expect(page.locator('#pause-control-scheme')).toHaveValue('joystick');
+  await page.locator('#pause-control-scheme').selectOption('touch');
   await page.locator('#pause-music').fill('40');
   await expect(page.locator('#pause-music-value')).toHaveText('40%');
   await page.locator('#pause-resume').click();

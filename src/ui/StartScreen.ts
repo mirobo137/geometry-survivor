@@ -1,5 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
-import { isControlScheme } from '../input/ControlScheme';
+import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
 import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
 import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
@@ -673,7 +673,7 @@ export class StartScreen {
   }
 
   private setControlScheme(controlScheme: ControlScheme): void {
-    this.controlSchemeInput.value = controlScheme;
+    this.controlSchemeInput.value = normalizeControlScheme(controlScheme);
   }
 
   private emitSettings(): void {

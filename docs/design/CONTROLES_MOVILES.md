@@ -7,11 +7,11 @@ usan el mismo `settings.controlScheme` y `isControlScheme`. Cambiarlo se aplica
 y guarda inmediatamente sin reiniciar ni modificar la build. Elegir `touch`
 (Seguir el dedo) desactiva el joystick; elegir `joystick` lo activa.
 
-`auto` mantiene el comportamiento previo (dedo/mouse directo y teclado).
-`relative-touch` se conserva por compatibilidad con guardados anteriores;
-no convertirlo silenciosamente. `keyboard` ignora gestos. Guardados sin opción
-o con valores desconocidos vuelven a `auto`. No cambia la versión del save:
-es una ampliación del enum compatible con el lector existente.
+Sólo se muestran «Seguir el dedo» y «Joystick». Teclado siempre disponible,
+no es un modo excluyente. Por simplificación solicitada, `normalizeControlScheme`
+migra `auto`/`keyboard` a `touch`, y `relative-touch` a `joystick`. Guardados
+ausentes/desconocidos usan `touch`. No cambia la versión del save; se conservan
+los identificadores anteriores sólo como entradas de compatibilidad.
 
 ## Joystick flotante
 
@@ -19,6 +19,10 @@ es una ampliación del enum compatible con el lector existente.
   tocar la nave ni un botón fijo: se recomienda apoyarlo debajo/lateral de la arena.
 - Radio máximo 52 CSS px, zona muerta de 8 CSS px. Fuerza lineal entre ambos:
   `(distancia - 8) / 44`, limitada a 1. Diagonal nunca excede velocidad máxima.
+- Si el pulgar supera el radio, el origen acompaña sólo la distancia excedente.
+  No hay aceleración ni interpolación temporal: visual y vector responden juntos.
+  Esto limita el recorrido necesario para volver al neutro después de arrastrar
+  lejos. Es una decisión de diseño propia a validar en móvil, no un estándar.
 - Tanto el pomo visual como el input usan las mismas coordenadas de pantalla.
   No aplicar DPR, cámara ni escala de arena al joystick. El modo directo sí
   mantiene `ViewportTransform.toWorld` para alcanzar el punto tocado.
@@ -33,14 +37,29 @@ es una ampliación del enum compatible con el lector existente.
 
 `InputManager` produce vector acotado y `JoystickState` de sólo lectura para
 el consumidor; no conoce HTML decorativo, Pixi ni daño. `JoystickView` consume
-ese estado con dos nodos DOM reutilizados, pointer-events none y aria-hidden.
+ese estado con tres nodos DOM reutilizados, pointer-events none y aria-hidden.
 Actualiza estilos sólo por eventos; no anima en un loop ni agrega texturas,
 filtros o dependencias. Mismo control en todas las calidades.
 
-CSS usa placa oscura, bisel y acento pequeño conforme a la guía UI; no una luz
+Los masters `joystick-base.svg` (viewBox 128, centro 64, tamaño 104 CSS px) y
+`joystick-thumb.svg` (viewBox 64, centro 32, tamaño 48 CSS px) se cargan como
+fondos CSS una vez, máximo una instancia de cada uno. Base segmentada y pomo
+facetado con placa oscura, bisel y acento pequeño conforme a la guía UI; no una luz
 que compita con hazards. El área de inicio no está limitada al dibujo de 104 px.
 No desplazar visualmente el origen para evitar bordes sin trasladar también
 el origen matemático: causaría movimiento sin arrastrar.
+
+Un chevrón indica dirección e intensidad real, oculto en zona muerta. No hay
+animaciones ambientales, filtros, máscaras, partículas ni nuevos loops.
+
+## Investigación aplicada
+
+[Xbox XAG 107](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107)
+recomienda alternativas de input y configuración accesible. Aquí se mantiene
+el teclado siempre activo y una elección táctil simple. Esto no certifica
+cumplimiento integral de accesibilidad ni sustituye probar comodidad física.
+La respuesta lineal, radio y origen acompañante son decisiones del juego;
+no atribuir esos valores a la guía de Xbox.
 
 ## Validación y futuras iteraciones
 

@@ -51,7 +51,11 @@ describe('InputManager', () => {
     surface.listeners.get('pointermove')?.(pointer(1, 300, 850));
     expect(Math.hypot(input.getMovement().x, input.getMovement().y)).toBeCloseTo(1);
     expect(player).not.toHaveBeenCalled();
-    expect(visual.mock.lastCall?.[0].x).toBe(100);
+    expect(visual.mock.lastCall?.[0].x).toBeGreaterThan(100);
+    // Moving back a single stick radius now reaches neutral, even after overshoot.
+    const origin = { ...visual.mock.lastCall?.[0] };
+    surface.listeners.get('pointermove')?.(pointer(1, origin.x, origin.y));
+    expect(input.getMovement()).toEqual({ x: 0, y: 0 });
     surface.listeners.get('pointercancel')?.(pointer(1, 300, 850));
     expect(input.getMovement()).toEqual({ x: 0, y: 0 });
     expect(visual.mock.lastCall?.[0].active).toBe(false);

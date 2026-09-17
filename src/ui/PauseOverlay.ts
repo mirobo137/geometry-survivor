@@ -1,5 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
-import { isControlScheme } from '../input/ControlScheme';
+import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import type { ControlScheme } from '../platform/save/SaveStore';
 
 export type ResumeHandler = () => void;
@@ -107,7 +107,7 @@ export class PauseOverlay {
   }
 
   private setControlScheme(controlScheme: ControlScheme): void {
-    if (this.controlSchemeInput) this.controlSchemeInput.value = controlScheme;
+    if (this.controlSchemeInput) this.controlSchemeInput.value = normalizeControlScheme(controlScheme);
   }
 
   private emitSettings(): void {

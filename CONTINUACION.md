@@ -2,9 +2,19 @@
 
 ## Joystick móvil opcional — 16-09-2026
 
+Refinamiento solicitado: selector reducido a Seguir el dedo / Joystick, teclado
+siempre disponible en PC. Guardados anteriores normalizados a las dos opciones.
+Nuevos masters SVG de consola segmentada y pomo facetado; indicador direccional
+sin loop. El origen acompaña el exceso de arrastre para facilitar cambios de
+sentido. Contrato actualizado; la comodidad física sigue pendiente del usuario.
+QA del refinamiento: suite completa previa al retiro de código legacy pasó
+(424 tests); luego typecheck, 17 tests focalizados de input/save/assets y build
+local correctos. Cuatro browser móviles correctos; capturas del joystick
+segmentado inspeccionadas en portrait/landscape. No se hizo commit/push.
+
 El usuario aprobó la entrega anterior de FX Fracture. Añadido `joystick` a
 Desplazamiento en Inicio y Pausa, persistente en settings. Sigue disponible
-«Seguir el dedo» y se conservan auto/relative-touch/keyboard. Joystick flotante
+«Seguir el dedo»; auto/relative-touch/keyboard son sólo entradas de compatibilidad. Joystick flotante
 con radio 52 CSS px, zona muerta 8 px, fuerza gradual y reinicio del gesto en
 pausa, cancelación, resize y cambio de modo. No cambia velocidad máxima ni build.
 Contrato: [CONTROLES_MOVILES.md](docs/design/CONTROLES_MOVILES.md).

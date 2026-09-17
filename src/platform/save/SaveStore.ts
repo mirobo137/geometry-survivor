@@ -1,5 +1,5 @@
 import type { ControlScheme } from '../../input/ControlScheme';
-import { isControlScheme } from '../../input/ControlScheme';
+import { isControlScheme, normalizeControlScheme } from '../../input/ControlScheme';
 
 export type QualityPreset = 'low' | 'medium' | 'high';
 export type { ControlScheme } from '../../input/ControlScheme';
@@ -90,7 +90,7 @@ export const createDefaultSaveData = (): SaveData => ({
     musicVolume: 1,
     sfxVolume: 1,
     muted: false,
-    controlScheme: 'auto',
+    controlScheme: 'touch',
     quality: 'medium'
   },
   best: {
@@ -134,7 +134,7 @@ const readQuality = (value: unknown, fallback: QualityPreset): QualityPreset => 
 );
 
 const readControlScheme = (value: unknown, fallback: ControlScheme): ControlScheme => (
-  isControlScheme(value) ? value : fallback
+  normalizeControlScheme(isControlScheme(value) ? value : fallback)
 );
 
 const readNonNegativeInt = (value: unknown, fallback: number, max: number): number => (

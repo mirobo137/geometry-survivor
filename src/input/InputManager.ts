@@ -1,6 +1,7 @@
 import type { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import type { MovementVector } from '../simulation/MovementVector';
 import type { ControlScheme } from './ControlScheme';
+import { normalizeControlScheme } from './ControlScheme';
 
 export type InputVector = MovementVector;
 export interface JoystickState {
@@ -11,7 +12,7 @@ export interface JoystickState {
   dy: number;
 }
 export const JOYSTICK_RADIUS = 52;
-const JOYSTICK_DEAD_ZONE = 8;
+export const JOYSTICK_DEAD_ZONE = 8;
 
 const MOVEMENT_KEYS: Record<string, InputVector> = {
   ArrowUp: { x: 0, y: -1 },
@@ -26,16 +27,12 @@ const MOVEMENT_KEYS: Record<string, InputVector> = {
   KeyD: { x: 1, y: 0 }
 };
 
-const RELATIVE_TOUCH_DEAD_ZONE = 10;
-const RELATIVE_TOUCH_MAX_DISTANCE = 120;
-
 export class InputManager {
   private readonly keys = new Set<string>();
   private readonly supportsPointerEvents = 'PointerEvent' in window;
   private pointerId: number | null = null;
   private touchId: number | null = null;
   private pointerPosition = { x: 0, y: 0 };
-  private pointerStartPosition = { x: 0, y: 0 };
   private firstInputNotified = false;
   private controlScheme: ControlScheme;
   private readonly joystick: JoystickState = { active: false, x: 0, y: 0, dx: 0, dy: 0 };
@@ -58,12 +55,13 @@ export class InputManager {
     private readonly onJoystickChange: (state: Readonly<JoystickState>) => void = () => undefined,
     private readonly canMove: () => boolean = () => true
   ) {
-    this.controlScheme = controlScheme;
+    this.controlScheme = normalizeControlScheme(controlScheme);
   }
 
   public setControlScheme(controlScheme: ControlScheme): void {
-    if (this.controlScheme === controlScheme) return;
-    this.controlScheme = controlScheme;
+    const next = normalizeControlScheme(controlScheme);
+    if (this.controlScheme === next) return;
+    this.controlScheme = next;
     this.clearPointerState();
   }
 
@@ -124,7 +122,7 @@ export class InputManager {
       }
     }
 
-    if (this.controlScheme !== 'keyboard' && (this.pointerId !== null || this.touchId !== null)) {
+    if (this.pointerId !== null || this.touchId !== null) {
       if (this.controlScheme === 'joystick') {
         const distance = Math.hypot(this.joystick.dx, this.joystick.dy);
         if (distance > JOYSTICK_DEAD_ZONE) {
@@ -132,10 +130,6 @@ export class InputManager {
           x += this.joystick.dx / distance * strength;
           y += this.joystick.dy / distance * strength;
         }
-      } else if (this.controlScheme === 'relative-touch') {
-        const relative = this.getRelativePointerMovement();
-        x += relative.x;
-        y += relative.y;
       } else {
         const player = this.getPlayerPosition();
         x += this.pointerPosition.x - player.x;
@@ -174,13 +168,12 @@ export class InputManager {
   }
 
   private onPointerDown(event: PointerEvent): void {
-    if (!this.canMove() || this.controlScheme === 'keyboard' || (event.button !== undefined && event.button !== 0)) return;
+    if (!this.canMove() || (event.button !== undefined && event.button !== 0)) return;
     if (this.isInteractiveTarget(event.target)) return;
     if (this.pointerId !== null) return;
     this.notifyFirstInput();
     this.pointerId = event.pointerId;
     this.updatePointer(event);
-    this.pointerStartPosition = { ...this.pointerPosition };
     this.startJoystick(event.clientX, event.clientY);
     try {
       this.element.setPointerCapture(event.pointerId);
@@ -208,14 +201,13 @@ export class InputManager {
   }
 
   private onTouchStart(event: TouchEvent): void {
-    if (!this.canMove() || this.controlScheme === 'keyboard') return;
+    if (!this.canMove()) return;
     if (this.isInteractiveTarget(event.target)) return;
     if (this.touchId !== null || event.changedTouches.length === 0) return;
     this.notifyFirstInput();
     const touch = event.changedTouches[0];
     this.touchId = touch.identifier;
     this.updateTouch(touch);
-    this.pointerStartPosition = { ...this.pointerPosition };
     this.startJoystick(touch.clientX, touch.clientY);
     event.preventDefault();
   }
@@ -251,24 +243,11 @@ export class InputManager {
     );
   }
 
-  private getRelativePointerMovement(): InputVector {
-    const x = this.pointerPosition.x - this.pointerStartPosition.x;
-    const y = this.pointerPosition.y - this.pointerStartPosition.y;
-    const distance = Math.hypot(x, y);
-    if (distance <= RELATIVE_TOUCH_DEAD_ZONE) return { x: 0, y: 0 };
-    const strength = Math.min(
-      1,
-      (distance - RELATIVE_TOUCH_DEAD_ZONE) / (RELATIVE_TOUCH_MAX_DISTANCE - RELATIVE_TOUCH_DEAD_ZONE)
-    );
-    return { x: (x / distance) * strength, y: (y / distance) * strength };
-  }
-
   private clearPointerState(): void {
     const capturedId = this.pointerId;
     this.pointerId = null;
     this.touchId = null;
     this.pointerPosition = { x: 0, y: 0 };
-    this.pointerStartPosition = { x: 0, y: 0 };
     if (this.joystick.active) {
       this.joystick.active = false;
       this.joystick.dx = this.joystick.dy = 0;
@@ -290,6 +269,9 @@ export class InputManager {
     if (!this.canMove()) { this.reset(); return; }
     const dx = x - this.joystick.x, dy = y - this.joystick.y;
     const scale = Math.min(1, JOYSTICK_RADIUS / Math.max(1, Math.hypot(dx, dy)));
+    // Follow only the excess beyond travel: reversals don't require a long return.
+    this.joystick.x = x - dx * scale;
+    this.joystick.y = y - dy * scale;
     this.joystick.dx = dx * scale;
     this.joystick.dy = dy * scale;
     this.onJoystickChange(this.joystick);

@@ -81,7 +81,7 @@ describe('LocalSaveStore', () => {
         musicVolume: 1,
         sfxVolume: 0,
         muted: false,
-        controlScheme: 'auto',
+        controlScheme: 'touch',
         quality: 'medium'
       },
       best: { timeSeconds: 0, score: 14 },
@@ -103,11 +103,11 @@ describe('LocalSaveStore', () => {
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { controlScheme: 'relative-touch' }
-    }).settings.controlScheme).toBe('relative-touch');
+    }).settings.controlScheme).toBe('joystick');
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { controlScheme: 'unknown' }
-    }).settings.controlScheme).toBe('auto');
+    }).settings.controlScheme).toBe('touch');
   });
 
   it('migrates campaign unlocks with Radial always available and no unknown acts', () => {

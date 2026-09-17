@@ -1095,14 +1095,38 @@ la cronología Acto III desde el tramo 10; aplica la presión aprobada con míni
 de 0,20 s. Bosses, réplicas e
 hijos siguen fuera de la selección normal.
 
-La simulación y la campaña consumen el mismo contrato, pero todavía no aplican
-el multiplicador de vida ni realizan transición de tramo: eso corresponde a
-EX-11.3. Para inspección reproducible se habilitó, sólo con `debug=1`,
+La simulación y la campaña consumen el mismo contrato; EX-11.3 ya aplica el
+multiplicador de vida y la transición sólo en la ruta Overdrive. Para inspección
+reproducible se habilitó, sólo con `debug=1`,
 `/?debug=1&mode=overdrive&od-stage=4&seed=305441741&quality=low`. Muestra el
 perfil de arena y el modo en el panel debug sin modificar guardado, desbloqueos
 ni recompensas. La prueba browser asociada queda sujeta a la estabilidad del
 runner local; las pruebas unitarias y de integración del director son la puerta
 automática de esta subtarea.
+
+### EX-11.3 - Vida escalada y transición segura
+
+`RadialActDirector` ofrece el multiplicador neutral `1`; `OverdriveActDirector`
+lo enlaza a `OverdriveStageState`. Al configurar cada entidad, `EnemySystem`
+escala una vez la vida base de normales, Splitter hijos, réplicas y boss. El
+resto de estadísticas permanece authored. El director se puede mover de etapa
+sin sustituir el sistema: `CombatSimulation.reconfigureOverdriveStage()` limpia
+los pools y casts transitorios, reinicia el reloj de tramo y vuelve a enlazar
+hazards/boss, pero no llama al reset de run de armas ni toca XP, cartas,
+modificadores, kills o acumuladores de scheduler.
+
+`GameState.overdrive-transition` detiene la simulación. `Game` muestra el
+handoff `Vuelta X - Tramo Y` durante 3 s, cura 25% de vida máxima sólo si el
+player sigue vivo, limita su posición a la nueva arena y reanuda. Si al cerrar
+el handoff hay level-up pendiente, se abre el flujo de cartas entonces. La ruta
+se mantiene de desarrollo (`debug=1`) y la victoria de campaña sigue usando su
+intermission existente.
+
+Pruebas a ejecutar: `npm run typecheck`; tests focalizados de
+`OverdriveActDirector`, `GameState` y `CombatSimulation`; suite completa con un
+worker; builds de local/Poki/CrazyGames con sourcemaps desactivados si el runner
+se queda sin memoria; y smoke manual en Pages. No declarar la puerta humana
+cerrada sin observar al menos una derrota de boss y una reanudación real.
 
 ## 6. Fichas visuales y estado de ejecución
 

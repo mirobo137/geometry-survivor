@@ -456,7 +456,9 @@ export class EnemySystem {
     const isSplitterChild = kind === 'splitter' && splitterDepth > 0;
     state.radius = definition.radius * (isSplitterChild ? SPLITTER_DEFINITION.childRadiusScale : 1);
     state.speed = definition.speed * (isSplitterChild ? SPLITTER_DEFINITION.childSpeedScale : 1);
-    state.maxHealth = definition.maxHealth * (isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1);
+    state.maxHealth = definition.maxHealth
+      * this.actDirector.enemyHealthMultiplier
+      * (isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1);
     state.health = state.maxHealth;
     state.contactDamage = definition.contactDamage * (isSplitterChild ? SPLITTER_DEFINITION.childContactDamageScale : 1);
     state.contactEnabled = kind !== 'orbiter';
@@ -489,7 +491,8 @@ export class EnemySystem {
     const definition = ENEMY_DEFINITIONS.boss;
     const bossDefinition = this.actDirector.bossDefinition;
     const bossRadius = bossDefinition.bossRadius ?? definition.radius;
-    const bossHealth = bossDefinition.maxHealth ?? definition.maxHealth;
+    const bossHealth = (bossDefinition.maxHealth ?? definition.maxHealth)
+      * this.actDirector.enemyHealthMultiplier;
     const distance = Math.min(
       Math.max(0, spawnDistance),
       Math.max(0, arenaRadius - bossRadius - 16)

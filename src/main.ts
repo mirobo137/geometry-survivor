@@ -87,6 +87,7 @@ const bootstrap = async (): Promise<void> => {
   const levelUpElement = document.querySelector<HTMLElement>('#level-up');
   const pauseElement = document.querySelector<HTMLElement>('#pause-overlay');
   const gameOverElement = document.querySelector<HTMLElement>('#game-over');
+  const overdriveTransitionElement = document.querySelector<HTMLElement>('#overdrive-transition');
   if (!container || !debugElement || !bootStatus || !startScreenElement || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
@@ -234,6 +235,7 @@ const bootstrap = async (): Promise<void> => {
       levelUp: levelUpElement,
       pause: pauseElement,
       gameOver: gameOverElement,
+      overdriveTransition: overdriveTransitionElement ?? undefined,
       baseline: baselineElement ?? undefined
     },
     stressMode,

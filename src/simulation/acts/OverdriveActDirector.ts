@@ -64,11 +64,11 @@ const normalizeSpawnIndex = (spawnIndex: number): number => (
  * hazard systems can consume it without knowing about Overdrive.
  */
 export class OverdriveActDirector extends RadialActDirector {
-  public readonly stageState: OverdriveStageState;
-  public readonly arenaActId: ActId;
-  public readonly bossActId: ActId;
-  public readonly primaryEnemyActId: ActId;
-  private readonly primaryEnemyDirector: RadialActDirector;
+  public stageState: OverdriveStageState;
+  public arenaActId: ActId;
+  public bossActId: ActId;
+  public primaryEnemyActId: ActId;
+  private primaryEnemyDirector: RadialActDirector;
 
   public constructor(stage: number, seed: unknown) {
     const stageState = createOverdriveStageState(stage, seed);
@@ -79,6 +79,21 @@ export class OverdriveActDirector extends RadialActDirector {
     this.bossActId = stageBossAct(stageState.stage);
     this.primaryEnemyActId = stagePrimaryEnemyAct(stageState.stage);
     this.primaryEnemyDirector = ACT_DIRECTORS[this.primaryEnemyActId];
+  }
+
+  public override get enemyHealthMultiplier(): number {
+    return this.stageState.healthMultiplier;
+  }
+
+  /** Changes only the authored stage profile; run-owned build state lives on. */
+  public setStage(stage: number, seed: unknown = this.stageState.seed): void {
+    const nextState = createOverdriveStageState(stage, seed);
+    this.stageState = nextState;
+    this.arenaActId = stageArenaAct(nextState.stage);
+    this.bossActId = stageBossAct(nextState.stage);
+    this.primaryEnemyActId = stagePrimaryEnemyAct(nextState.stage);
+    this.primaryEnemyDirector = ACT_DIRECTORS[this.primaryEnemyActId];
+    this.definition = ACT_DIRECTORS[this.arenaActId].definition;
   }
 
   public override get bossDefinition(): BossDefinition {

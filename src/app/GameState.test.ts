@@ -104,6 +104,19 @@ describe('GameState', () => {
     expect(state.continueToNextAct()).toBe(false);
   });
 
+  it('freezes and resumes an Overdrive stage transition without making it terminal', () => {
+    const state = new GameState();
+
+    expect(state.enterOverdriveTransition()).toBe(true);
+    expect(state.phase).toBe('overdrive-transition');
+    expect(state.isSimulationRunning).toBe(false);
+    expect(state.isTransitioning).toBe(true);
+    expect(state.isTerminal).toBe(false);
+    expect(state.enterPause()).toBe(false);
+    expect(state.completeOverdriveTransition()).toBe(true);
+    expect(state.phase).toBe('playing');
+  });
+
   it('allows returning to the menu from manual pause only', () => {
     const state = new GameState();
 

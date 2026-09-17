@@ -316,6 +316,21 @@ export class CombatWeaponSystem {
     this.projectileEvolution = null;
   }
 
+  /**
+   * Stage-transition cleanup. Pools and active casts are transient, whereas
+   * weapon upgrades and scheduler accumulators belong to the run and survive.
+   */
+  public clearTransientState(): void {
+    this.projectiles.reset();
+    this.projectileBehavior.clearTransient();
+    this.boomerangBehavior.clearTransient();
+    this.orbitBehavior.clearTransient();
+    this.chainBehavior.clearTransient();
+    this.pulseRingBehavior.clearTransient();
+    this.magneticChargeBehavior.clearTransient();
+    this.stressScenario.reset();
+  }
+
   public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
     this.permanentBonuses = permanentBonuses;
     this.applyProjectileRankStats();

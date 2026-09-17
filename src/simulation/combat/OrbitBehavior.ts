@@ -182,6 +182,15 @@ export class OrbitBehavior {
     this.pulseState.sequence = 0;
   }
 
+  /** Re-anchors the persistent formation on the next frame without losing upgrades. */
+  public clearTransient(): void {
+    this.lastPlayerX = null;
+    this.lastPlayerY = null;
+    this.solarHasPosition = false;
+    this.pulseState.active = false;
+    this.pulseState.progress = 0;
+  }
+
   private applyEvolutionTuning(): void {
     // Solar Crown is a stable six-blade formation. Its authored radius is
     // intentionally fixed so the evolution reads as persistent coverage,

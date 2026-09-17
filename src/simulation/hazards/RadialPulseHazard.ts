@@ -40,7 +40,7 @@ export class RadialPulseHazard {
   private previousPlayerRadius = 0;
   private hasPreviousPlayerRadius = false;
 
-  public constructor(private readonly definition: RadialPulseDefinition = RADIAL_PULSE_DEFINITION) {
+  public constructor(private definition: RadialPulseDefinition = RADIAL_PULSE_DEFINITION) {
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
     this.state = {
       phase: 'idle',
@@ -53,6 +53,12 @@ export class RadialPulseHazard {
       width: definition.width,
       sequence: 0
     };
+  }
+
+  /** Rebinds the authored pulse for a new stage and restarts its local clock. */
+  public reconfigure(definition: RadialPulseDefinition): void {
+    this.definition = definition;
+    this.reset();
   }
 
   /**

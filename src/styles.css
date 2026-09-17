@@ -2502,6 +2502,58 @@ body {
   line-height: 1.35;
 }
 
+.overdrive-transition {
+  position: absolute;
+  z-index: 15;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 0.65rem;
+  width: min(28rem, calc(100% - 2rem));
+  padding: 1.7rem 1.4rem 1.45rem;
+  transform: translate(-50%, -50%);
+  color: #edf7ff;
+  background: linear-gradient(145deg, rgba(8, 21, 44, 0.96), rgba(13, 26, 58, 0.94));
+  border: 1px solid rgba(117, 230, 255, 0.62);
+  border-radius: 0.8rem;
+  box-shadow: 0 1rem 4rem rgba(0, 0, 0, 0.5), 0 0 2.8rem rgba(117, 230, 255, 0.12);
+  text-align: center;
+  pointer-events: none;
+}
+
+.overdrive-transition[hidden] {
+  display: none;
+}
+
+.overdrive-transition p,
+.overdrive-transition h1 {
+  margin: 0;
+}
+
+.overdrive-transition-kicker {
+  color: #75e6ff;
+  font: 700 0.68rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.18em;
+}
+
+.overdrive-transition h1 {
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+  letter-spacing: 0.04em;
+}
+
+.overdrive-transition [data-overdrive-transition-subtitle] {
+  color: #b9c9e8;
+  font: 600 0.82rem/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.overdrive-transition-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #75e6ff, #b8ffd9, transparent);
+  opacity: 0.8;
+}
+
 .start-act-view {
   display: grid;
   gap: 1rem;

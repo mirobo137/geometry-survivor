@@ -16,7 +16,16 @@ import type { AngularSweepDefinition } from '../../content/hazards/AngularSweepD
  * registry or embedding the Radial timeline themselves.
  */
 export class RadialActDirector {
-  public constructor(public readonly definition: ActDefinition = RADIAL_ACT_DEFINITION) {}
+  public constructor(public definition: ActDefinition = RADIAL_ACT_DEFINITION) {}
+
+  /**
+   * Runtime HP scale owned by a run director. Campaign acts stay at one;
+   * Overdrive overrides this narrow contract without leaking mode knowledge
+   * into enemy or boss systems.
+   */
+  public get enemyHealthMultiplier(): number {
+    return 1;
+  }
 
   public get bossDefinition(): BossDefinition {
     return this.definition.boss;

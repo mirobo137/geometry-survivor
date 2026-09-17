@@ -39,6 +39,7 @@ import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/Le
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
+import { OverdriveTransitionOverlay } from '../ui/OverdriveTransitionOverlay';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
@@ -81,6 +82,7 @@ export interface GameElements {
   readonly levelUp: HTMLElement;
   readonly pause: HTMLElement;
   readonly gameOver: HTMLElement;
+  readonly overdriveTransition?: HTMLElement;
   readonly startScreen?: HTMLElement;
   readonly pauseButton?: HTMLButtonElement;
   readonly baseline?: HTMLElement;
@@ -170,7 +172,7 @@ export class Game {
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly runMode: RunMode;
-  private readonly overdriveStage: number;
+  private overdriveStage: number;
   private readonly overdriveSeed: number | undefined;
   private readonly playerSkin: PlayerSkinId;
   private readonly cannonSkin: CannonSkinId;
@@ -200,6 +202,7 @@ export class Game {
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
   private readonly gameOver: GameOverOverlay;
+  private readonly overdriveTransition: OverdriveTransitionOverlay | null;
   private readonly startScreen: StartScreen | null;
   private readonly input: InputManager;
   private readonly joystick: JoystickView;
@@ -218,6 +221,7 @@ export class Game {
   private started = false;
   private stopped = false;
   private terminalSummaryTimer: ReturnType<typeof setTimeout> | null = null;
+  private overdriveTransitionTimer: ReturnType<typeof setTimeout> | null = null;
   private terminalRunToken = 0;
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
@@ -504,6 +508,9 @@ export class Game {
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
+    this.overdriveTransition = options.elements.overdriveTransition
+      ? new OverdriveTransitionOverlay(options.elements.overdriveTransition)
+      : null;
     this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
     this.joystick = new JoystickView();
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
@@ -574,6 +581,7 @@ export class Game {
     if (!this.started || this.stopped) return;
     this.stopped = true;
     this.clearTerminalSummaryTimer();
+    this.clearOverdriveTransitionTimer();
     this.app.ticker.remove(this.onTick);
     this.input.detach();
     this.joystick.destroy();
@@ -639,6 +647,10 @@ export class Game {
           this.combat.renderState.boss.radius || 48,
         );
         this.triggerHitStop(HIT_STOP_SECONDS.terminal);
+        if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
+          this.beginOverdriveStageTransition();
+          return;
+        }
         this.finishRun('victory');
         return;
       }
@@ -653,6 +665,7 @@ export class Game {
     const presentationDelta = this.gameState.phase === 'paused'
       || this.gameState.phase === 'level-up'
       || this.gameState.phase === 'menu'
+      || this.gameState.isTransitioning
       ? 0
       : deltaSeconds;
     this.view.updatePresentationFx(presentationDelta, this.presentationTime);
@@ -1058,6 +1071,32 @@ export class Game {
     });
   }
 
+  private beginOverdriveStageTransition(): void {
+    if (!(this.actDirector instanceof OverdriveActDirector)) return;
+    if (!this.gameState.enterOverdriveTransition()) return;
+
+    this.input.reset();
+    this.hitStopSeconds = 0;
+    this.progression.sync(this.combat.stats.experience);
+    const nextStage = this.actDirector.stageState.stage + 1;
+    this.actDirector.setStage(nextStage, this.overdriveSeed);
+    this.actId = this.actDirector.definition.id;
+    this.combat.reconfigureOverdriveStage();
+    this.arena.reset();
+    this.arena.update(0);
+    this.player.heal(this.player.state.maxHealth * 0.25);
+    this.player.update({ x: 0, y: 0 }, 0, this.arena.state);
+    this.overdriveStage = nextStage;
+    this.overdriveTransition?.open(this.actDirector.stageState);
+    this.clearOverdriveTransitionTimer();
+    this.overdriveTransitionTimer = setTimeout(() => {
+      this.overdriveTransitionTimer = null;
+      if (this.stopped || !this.gameState.completeOverdriveTransition()) return;
+      this.overdriveTransition?.close();
+      if (!this.lifecyclePaused && this.progression.state.pendingLevelUps > 0) this.openLevelUp();
+    }, 3_000);
+  }
+
   private finishRun(outcome: RunOutcome): void {
     const transitioned = outcome === 'victory' ? this.gameState.winRun() : this.gameState.endRun();
     if (!transitioned) return;
@@ -1355,6 +1394,7 @@ export class Game {
 
   private clearRunPresentation(): void {
     this.clearTerminalSummaryTimer();
+    this.clearOverdriveTransitionTimer();
     this.levelUpRequestToken += 1;
     this.hitStopSeconds = 0;
     this.input.reset();
@@ -1382,12 +1422,19 @@ export class Game {
     this.gameOver.close();
     this.startScreen?.close();
     this.view.closeLevelUpFx();
+    this.overdriveTransition?.close();
   }
 
   private clearTerminalSummaryTimer(): void {
     if (this.terminalSummaryTimer === null) return;
     clearTimeout(this.terminalSummaryTimer);
     this.terminalSummaryTimer = null;
+  }
+
+  private clearOverdriveTransitionTimer(): void {
+    if (this.overdriveTransitionTimer === null) return;
+    clearTimeout(this.overdriveTransitionTimer);
+    this.overdriveTransitionTimer = null;
   }
 
   private triggerHitStop(seconds: number): void {

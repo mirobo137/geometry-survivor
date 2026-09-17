@@ -41,7 +41,7 @@ export class AngularSweepHazard {
   private hitApplied = false;
   private strikeStartAngle = 0;
 
-  public constructor(private readonly definition: AngularSweepDefinition = ANGULAR_SWEEP_DEFINITION) {
+  public constructor(private definition: AngularSweepDefinition = ANGULAR_SWEEP_DEFINITION) {
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
     this.state = {
       phase: 'idle',
@@ -54,6 +54,12 @@ export class AngularSweepHazard {
       arenaRadius: 0,
       sequence: 0
     };
+  }
+
+  /** Rebinds the authored sector for a new stage and restarts its local clock. */
+  public reconfigure(definition: AngularSweepDefinition): void {
+    this.definition = definition;
+    this.reset();
   }
 
   public update(

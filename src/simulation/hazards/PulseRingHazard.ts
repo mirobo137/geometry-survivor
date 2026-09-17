@@ -49,7 +49,7 @@ export class PulseRingHazard {
   private previousPlayerAngle = 0;
   private hasPreviousPlayerPosition = false;
 
-  public constructor(private readonly definition: PulseRingDefinition = PULSE_RING_DEFINITION) {
+  public constructor(private definition: PulseRingDefinition = PULSE_RING_DEFINITION) {
     this.nextTriggerSeconds = definition.firstTriggerSeconds;
     this.state = {
       phase: 'idle',
@@ -64,6 +64,12 @@ export class PulseRingHazard {
       safeGapHalfAngle: definition.safeGapHalfAngle,
       sequence: 0
     };
+  }
+
+  /** Rebinds the authored ring for a new stage and restarts its local clock. */
+  public reconfigure(definition: PulseRingDefinition): void {
+    this.definition = definition;
+    this.reset();
   }
 
   public update(

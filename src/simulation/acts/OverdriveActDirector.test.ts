@@ -97,4 +97,16 @@ describe('OverdriveActDirector', () => {
     expect(new OverdriveActDirector(4, 0x1).bossStartSeconds).toBe(260);
     expect(new OverdriveActDirector(6, 0x1).bossStartSeconds).toBe(250);
   });
+
+  it('rebinds the stage profile without replacing the director instance', () => {
+    const director = new OverdriveActDirector(1, 0x1234);
+    const identity = director;
+
+    director.setStage(4);
+
+    expect(director).toBe(identity);
+    expect(director.stageState).toMatchObject({ stage: 4, healthMultiplier: 9, pressureMultiplier: 1.15 });
+    expect(director.definition.id).toBe('angular');
+    expect(director.enemyHealthMultiplier).toBe(9);
+  });
 });

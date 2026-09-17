@@ -1,5 +1,21 @@
 # Geometry Survivor — estado y continuación
 
+## Estado actual — EX-11.3, 17-09-2026
+
+Implementado el multiplicador de vida de Overdrive y la transición segura de
+tramos. Normales, Splitter hijos, réplicas y boss escalan una vez desde las
+definiciones; build, XP, modificadores, kills y cooldowns de armas sobreviven a
+`CombatSimulation.reconfigureOverdriveStage()`. `GameState` congela la
+simulación en `overdrive-transition`; `Game` limpia entidades transitorias,
+cura 25% sólo si el player está vivo, limita la nueva arena y muestra
+`Vuelta X · Tramo Y` durante 3 s. La entrada continúa sólo en debug.
+
+Validado: typecheck; suite 107 archivos / 446 tests en un worker; builds
+local/Poki/CrazyGames sin sourcemaps. Smoke browser interrumpido después de
+fallos intermitentes de animación inicial/carga diferida de Manta; queda como
+inconcluso, no como aprobación. Falta commit/push y prueba humana en Pages de
+derrota de boss + reanudación. Siguiente ID: EX-11.4.
+
 ## EX-11.2 — director de composición y ruta de inspección — 17-09-2026
 
 Fecha y commit de partida: `b5cea91` (`main` y `origin/main` sincronizados).

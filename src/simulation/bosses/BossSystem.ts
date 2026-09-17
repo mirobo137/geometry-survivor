@@ -40,7 +40,7 @@ export class BossSystem {
 
   public constructor(
     private readonly enemies: EnemySystem,
-    private readonly definition: BossDefinition = BOSS_DEFINITION,
+    private definition: BossDefinition = BOSS_DEFINITION,
     private readonly fractureThreats?: FractureThreatEmitter
   ) {
     this.state = {
@@ -73,6 +73,12 @@ export class BossSystem {
       replicaRightX: ARENA_CENTER.x,
       replicaRightY: ARENA_CENTER.y
     };
+  }
+
+  /** Rebinds the authored boss for a new stage without replacing the system. */
+  public reconfigure(definition: BossDefinition): void {
+    this.definition = definition;
+    this.reset();
   }
 
   /** Advances the boss and returns damage dealt to the player this step. */

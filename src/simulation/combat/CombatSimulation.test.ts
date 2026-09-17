@@ -7,6 +7,7 @@ import { getPermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDe
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 import { AngularActDirector } from '../acts/AngularActDirector';
+import { OverdriveActDirector } from '../acts/OverdriveActDirector';
 
 const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: number): void => {
   const steps = Math.ceil(seconds * 60);
@@ -19,6 +20,44 @@ describe('CombatSimulation', () => {
   it('uses the promoted chaos cadence by default and keeps authored as an explicit control', () => {
     expect(new CombatSimulation().hazardCadenceMode).toBe('chaos');
     expect(new CombatSimulation({ hazardCadenceMode: 'authored' }).hazardCadenceMode).toBe('authored');
+  });
+
+  it('scales Overdrive entities and preserves the run build across a stage reconfigure', () => {
+    const director = new OverdriveActDirector(1, 0x1234);
+    const combat = new CombatSimulation({ actDirector: director });
+    const player = new PlayerModel();
+    combat.enableTwinEmitters();
+    combat.addOrbitBlade();
+    combat.increaseExperienceGain(0.2);
+    combat.stats.experience = 77;
+
+    runSeconds(combat, player, 0.9);
+    const firstStageEnemy = combat.enemies.states.find((enemy) => enemy.active);
+    expect(firstStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth);
+
+    director.setStage(4);
+    combat.reconfigureOverdriveStage();
+    expect(combat.stats.experience).toBe(77);
+    expect(combat.currentExperienceMultiplier).toBe(1.2);
+    expect(combat.hasTwinEmitters).toBe(true);
+    expect(combat.activeOrbitBlades).toBe(1);
+
+    runSeconds(combat, player, 0.9);
+    const secondStageEnemy = combat.enemies.states.find((enemy) => enemy.active);
+    expect(secondStageEnemy?.kind).toBe('chaser');
+    expect(secondStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth * 9);
+    expect(combat.stats.experience).toBeGreaterThanOrEqual(77);
+  });
+
+  it('applies the same bounded multiplier to the rotated boss health only', () => {
+    const director = new OverdriveActDirector(4, 0x1234);
+    const combat = new CombatSimulation({ actDirector: director, initialElapsedSeconds: 260 });
+    const player = new PlayerModel();
+
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.renderState.boss.active).toBe(true);
+    expect(combat.renderState.boss.maxHealth).toBe(ENEMY_DEFINITIONS.boss.maxHealth * 9);
   });
 
   it('applies permanent weapon bonuses to damage events and weapon intervals', () => {

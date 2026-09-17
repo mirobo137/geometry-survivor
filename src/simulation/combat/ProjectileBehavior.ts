@@ -195,6 +195,15 @@ export class ProjectileBehavior {
     this.lastShot.rightOriginY = 0;
   }
 
+  /** Clears only presentation state; run shot counters and muzzle cadence stay intact. */
+  public clearTransient(): void {
+    this.lastShot.muzzleMask = 0;
+    this.lastShot.leftOriginX = 0;
+    this.lastShot.leftOriginY = 0;
+    this.lastShot.rightOriginX = 0;
+    this.lastShot.rightOriginY = 0;
+  }
+
   private takeNextMuzzle(): ProjectileMuzzle {
     const muzzle = this.nextMuzzle;
     this.nextMuzzle = muzzle === 0 ? 1 : 0;

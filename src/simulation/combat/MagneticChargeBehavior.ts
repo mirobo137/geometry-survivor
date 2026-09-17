@@ -278,6 +278,23 @@ export class MagneticChargeBehavior {
     });
   }
 
+  /** Cancels a live charge while preserving its authored cooldown progress. */
+  public clearTransient(): void {
+    const wasReadyToFire = this.readyToFire;
+    this.phase = 'idle';
+    this.phaseTimer = 0;
+    this.readyToFire = wasReadyToFire;
+    this.hitCooldowns.fill(0);
+    this.hitGenerations.fill(0);
+    this.collapseHitGenerations.fill(0);
+    this.polarFinalHitGenerations.fill(0);
+    this.polarFinalHitCounts.fill(0);
+    this.state.active = false;
+    this.state.phase = 'idle';
+    this.state.progress = 0;
+    this.state.polarPulseCount = 0;
+  }
+
   private startCast(player: PlayerState, arena: ArenaBoundaryInput): void {
     const target = this.pickTarget(player, arena);
     // Every remote cast owns a fresh hit ledger. This also protects the

@@ -348,6 +348,35 @@ export class BoomerangBehavior {
     this.pulseState.sequence = 0;
   }
 
+  /** Releases active boomerangs and FX without resetting the owned build. */
+  public clearTransient(): void {
+    const snapshot = {
+      unlocked: this.unlocked,
+      damage: this.damage,
+      speed: this.speed,
+      returnSpeed: this.returnSpeed,
+      radius: this.radius,
+      outboundDistance: this.outboundDistance,
+      rank: this.rank,
+      evolution: this.evolution,
+      lastDirectionX: this.lastDirectionX,
+      lastDirectionY: this.lastDirectionY,
+      pulseSequence: this.pulseState.sequence
+    };
+    this.reset();
+    this.unlocked = snapshot.unlocked;
+    this.damage = snapshot.damage;
+    this.speed = snapshot.speed;
+    this.returnSpeed = snapshot.returnSpeed;
+    this.radius = snapshot.radius;
+    this.outboundDistance = snapshot.outboundDistance;
+    this.rank = snapshot.rank;
+    this.evolution = snapshot.evolution;
+    this.lastDirectionX = snapshot.lastDirectionX;
+    this.lastDirectionY = snapshot.lastDirectionY;
+    this.pulseState.sequence = snapshot.pulseSequence;
+  }
+
   private triggerSingularityPulse(x: number, y: number): void {
     this.pulseState.active = true;
     this.pulseState.x = x;

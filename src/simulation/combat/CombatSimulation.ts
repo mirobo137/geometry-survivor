@@ -11,7 +11,8 @@ import { LASER_DEFINITION } from '../../content/hazards/LaserDefinition';
 import { LaserHazard } from '../hazards/LaserHazard';
 import { RadialPulseHazard } from '../hazards/RadialPulseHazard';
 import { PulseRingHazard } from '../hazards/PulseRingHazard';
-import { PULSE_RING_DRILL_DEFINITION } from '../../content/hazards/PulseRingDefinition';
+import { PULSE_RING_DEFINITION, PULSE_RING_DRILL_DEFINITION } from '../../content/hazards/PulseRingDefinition';
+import type { RadialPulseDefinition } from '../../content/hazards/RadialPulseDefinition';
 import { ANGULAR_SWEEP_DEFINITION, ANGULAR_SWEEP_DRILL_DEFINITION } from '../../content/hazards/AngularSweepDefinition';
 import { AngularSweepHazard } from '../hazards/AngularSweepHazard';
 import type { CombatRenderState } from './CombatRenderState';
@@ -141,6 +142,7 @@ export class CombatSimulation {
   private evolutionDrillInitialized = false;
   public readonly hazardCadenceMode: HazardCadenceMode;
   private readonly initialElapsedSeconds: number;
+  private stageElapsedSeconds = 0;
   private stressInitialized = false;
   private currentArenaRadius = 270;
 
@@ -255,6 +257,7 @@ export class CombatSimulation {
       ? Math.max(0, options.initialElapsedSeconds ?? 0)
       : 0;
     this.stats.elapsedSeconds = this.initialElapsedSeconds;
+    this.stageElapsedSeconds = this.initialElapsedSeconds;
   }
 
   public get isStressMode(): boolean {
@@ -567,6 +570,7 @@ export class CombatSimulation {
     }
 
     this.stats.elapsedSeconds += dt;
+    this.stageElapsedSeconds += dt;
     this.spawnAccumulator += dt;
     const angularAct = this.isAngularAct;
     const fractureAct = this.isFractureAct;
@@ -576,7 +580,7 @@ export class CombatSimulation {
       || this.fractureDrill;
     if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
-      this.stats.elapsedSeconds,
+      this.stageElapsedSeconds,
       player,
       arenaBoundary,
       this.radialPulse.state.phase === 'idle'
@@ -586,7 +590,7 @@ export class CombatSimulation {
     }
     if (!isolatedAngularDrill && !angularAct && this.radialPulse.update(
       dt,
-      this.stats.elapsedSeconds,
+      this.stageElapsedSeconds,
       player,
       arenaBoundary,
       this.laser.state.phase === 'idle',
@@ -603,7 +607,7 @@ export class CombatSimulation {
     if (this.pulseRingDrill || angularAct || fractureAct) {
       const pulse = this.pulseRing.update(
         dt,
-        this.stats.elapsedSeconds,
+        this.stageElapsedSeconds,
         player,
         arenaBoundary,
         !this.boss.state.active,
@@ -623,7 +627,7 @@ export class CombatSimulation {
     if (this.angularSweepDrill || this.wardenDrill || angularAct || fractureAct) {
       const sector = this.angularSweep.update(
         dt,
-        this.stats.elapsedSeconds,
+        this.stageElapsedSeconds,
         player,
         arenaBoundary,
           angularAct || fractureAct
@@ -677,11 +681,11 @@ export class CombatSimulation {
     } else if (this.angularSweepDrill || this.wardenDrill) {
       // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
-      const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stats.elapsedSeconds);
+      const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stageElapsedSeconds);
       const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
       while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
         this.spawnAccumulator -= spawnInterval;
-        this.enemySystem.spawn(this.stats.elapsedSeconds, arenaRadius);
+        this.enemySystem.spawn(this.stageElapsedSeconds, arenaRadius);
       }
       if (this.enemies.activeCount >= normalEnemyCapacity) {
         this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval);
@@ -689,7 +693,7 @@ export class CombatSimulation {
     }
 
     if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill)) {
-      const bossDamage = this.boss.update(dt, this.stats.elapsedSeconds, player, arenaRadius);
+      const bossDamage = this.boss.update(dt, this.stageElapsedSeconds, player, arenaRadius);
       if (bossDamage > 0) {
         this.stats.damageTaken += bossDamage;
         this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage, source: 'boss' });
@@ -764,6 +768,7 @@ export class CombatSimulation {
     this.angularSweep.reset();
     this.fractureThreats.reset();
     this.stats.elapsedSeconds = this.initialElapsedSeconds;
+    this.stageElapsedSeconds = this.initialElapsedSeconds;
     this.stats.kills = 0;
     this.stats.experience = 0;
     this.stats.shotsFired = 0;
@@ -775,6 +780,41 @@ export class CombatSimulation {
     this.magneticChargeWeaponDrillInitialized = false;
     this.evolutionDrillInitialized = false;
     this.stressInitialized = false;
+  }
+
+  /**
+   * Clears stage-owned entities and clocks while preserving the run-owned
+   * build, XP, modifiers, stats and weapon cooldown accumulators.
+   * `OverdriveActDirector.setStage()` must run immediately before this call.
+   */
+  public reconfigureOverdriveStage(): void {
+    this.enemySystem.reset();
+    this.boss.reconfigure(this.actDirector.bossDefinition);
+    this.weaponSystem.clearTransientState();
+    this.laser.reset();
+    this.radialPulse.reconfigure(this.createRadialPulseDefinition());
+    this.pulseRing.reconfigure(this.actDirector.definition.id === 'angular' || this.actDirector.definition.id === 'fracture'
+      ? this.actDirector.pulseRingDefinition
+      : PULSE_RING_DEFINITION);
+    this.angularSweep.reconfigure(this.actDirector.definition.id === 'angular' || this.actDirector.definition.id === 'fracture'
+      ? this.actDirector.angularSweepDefinition
+      : ANGULAR_SWEEP_DEFINITION);
+    this.fractureThreats.reset();
+    this.stageElapsedSeconds = 0;
+    this.spawnAccumulator = 0;
+    this.pendingEvents.length = 0;
+    this.pulseRingWeaponDrillInitialized = false;
+    this.magneticChargeWeaponDrillInitialized = false;
+    this.evolutionDrillInitialized = false;
+    this.stressInitialized = false;
+  }
+
+  private createRadialPulseDefinition(): RadialPulseDefinition {
+    return {
+      ...this.actDirector.radialPulseDefinition,
+      intervalSeconds: this.actDirector.radialPulseDefinition.intervalSeconds
+        * getHazardCadenceProfile(this.hazardCadenceMode).radialPulseIntervalMultiplier
+    };
   }
 
   private initializeStress(player: PlayerState, arenaRadius: number): void {

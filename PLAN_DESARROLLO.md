@@ -3469,5 +3469,31 @@ reduce el intervalo hasta el mínimo de 0,20 s.
 La ruta `?debug=1&mode=overdrive&od-stage=4&seed=305441741` conecta este
 director al `Game` y permite inspeccionar el escenario Angular con familias
 invitadas sin tocar guardado, desbloqueos ni recompensas. El multiplicador de
-vida, la transición, la ampliación de cartas y los encuentros dobles siguen
-fuera de esta entrega; corresponden a EX-11.3 y posteriores.
+vida y la transición segura pasan a EX-11.3; la ampliación de cartas, los
+encuentros dobles y las recompensas siguen fuera de esta entrega.
+
+## 22.12 EX-11.3 - vida escalada y transicion segura - 17-09-2026
+
+El director expone un multiplicador de vida acotado (`1` en la primera etapa y
+`3 x (etapa - 1)` despues, con el tope contractual de `1e9`). `EnemySystem`
+lo aplica una sola vez al configurar enemigos normales, hijos de Splitter,
+replicas y bosses; no modifica dano, velocidad, resistencia, experiencia ni
+recompensas. El mismo director se puede reconfigurar para la siguiente etapa,
+por lo que no se duplica la simulacion ni se rompe el contrato de pools.
+
+Al derrotar un boss durante una ruta Overdrive, `GameState` entra en
+`overdrive-transition` durante tres segundos. La coordinacion limpia enemigos,
+amenazas, proyectiles y casts visuales transitorios, conserva build, XP,
+modificadores, estadisticas y acumuladores de cooldown de armas, reinicia solo
+el reloj del tramo, cura 25% de la vida maxima (sin revivir) y reconfigura
+arena, hazards y boss. El jugador se vuelve a limitar a la nueva arena. Las
+cartas pendientes se resuelven al reanudar; muerte y revive mantienen prioridad
+sobre esta curacion. La transicion no abre el menu publico ni guarda una
+recompensa intermedia.
+
+La puerta automatica de EX-11.3 es typecheck, tests de director/estado,
+integracion de `CombatSimulation` para vida de normales y boss, y suite
+completa en un worker. La prueba manual del flujo Overdrive en Pages sigue
+siendo necesaria antes de habilitar la entrada publica. Cartas ampliadas,
+encuentros dobles, recompensas y persistencia de records de etapa quedan para
+las subtareas posteriores.

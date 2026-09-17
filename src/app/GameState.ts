@@ -1,4 +1,4 @@
-export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory' | 'act-intermission';
+export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory' | 'act-intermission' | 'overdrive-transition';
 
 export class GameState {
   public phase: GamePhase;
@@ -13,6 +13,10 @@ export class GameState {
 
   public get isTerminal(): boolean {
     return this.phase === 'game-over' || this.phase === 'victory' || this.phase === 'act-intermission';
+  }
+
+  public get isTransitioning(): boolean {
+    return this.phase === 'overdrive-transition';
   }
 
   public startRun(): boolean {
@@ -71,6 +75,20 @@ export class GameState {
   /** Starts the next act from an intermission without treating it as a new run. */
   public continueToNextAct(): boolean {
     if (this.phase !== 'act-intermission') return false;
+    this.phase = 'playing';
+    return true;
+  }
+
+  /** Freezes simulation while the coordinator rebinds an Overdrive stage. */
+  public enterOverdriveTransition(): boolean {
+    if (this.phase !== 'playing') return false;
+    this.phase = 'overdrive-transition';
+    return true;
+  }
+
+  /** Resumes the preserved run after the transition presentation completes. */
+  public completeOverdriveTransition(): boolean {
+    if (this.phase !== 'overdrive-transition') return false;
     this.phase = 'playing';
     return true;
   }

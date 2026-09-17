@@ -228,6 +228,24 @@ export class ChainBehavior {
     this.circuitHitGenerations.fill(0);
   }
 
+  /** Removes active links/explosions while retaining the current weapon path. */
+  public clearTransient(): void {
+    for (const segment of this.segments) {
+      segment.active = false;
+      segment.lifeSeconds = 0;
+      segment.persistent = false;
+    }
+    for (const explosion of this.explosions) {
+      explosion.active = false;
+      explosion.progress = 0;
+    }
+    this.hitIndices.fill(-1);
+    this.circuitTimer = 0;
+    this.circuitTick = 0;
+    this.circuitHitMarkers.fill(0);
+    this.circuitHitGenerations.fill(0);
+  }
+
   private scheduleExplosion(index: number, x: number, y: number): void {
     const explosion = this.explosions[index];
     explosion.active = true;

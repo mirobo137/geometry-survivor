@@ -232,6 +232,22 @@ export class PulseRingWeaponBehavior {
     });
   }
 
+  /** Cancels an active cast at the stage boundary but keeps rank/evolution. */
+  public clearTransient(): void {
+    this.phase = 'idle';
+    this.phaseTimer = 0;
+    this.lastPlayerX = null;
+    this.lastPlayerY = null;
+    this.hitCastMarkers.fill(0);
+    this.hitEnemyGenerations.fill(0);
+    this.hitWaveMarkers.fill(0);
+    this.state.active = false;
+    this.state.phase = 'idle';
+    this.state.radius = 0;
+    this.state.progress = 0;
+    this.state.wave = 0;
+  }
+
   private hitAlongSweep(previousRadius: number, currentRadius: number): void {
     const toleranceBase = DEFINITION.width * 0.5;
     const low = Math.min(previousRadius, currentRadius) - toleranceBase - 48;

@@ -33,7 +33,7 @@ describe('CombatSimulation', () => {
 
     runSeconds(combat, player, 0.9);
     const firstStageEnemy = combat.enemies.states.find((enemy) => enemy.active);
-    expect(firstStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth);
+    expect(firstStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth * 1.25);
 
     director.setStage(4);
     combat.reconfigureOverdriveStage();
@@ -45,7 +45,7 @@ describe('CombatSimulation', () => {
     runSeconds(combat, player, 0.9);
     const secondStageEnemy = combat.enemies.states.find((enemy) => enemy.active);
     expect(secondStageEnemy?.kind).toBe('chaser');
-    expect(secondStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth * 9);
+    expect(secondStageEnemy?.maxHealth).toBe(ENEMY_DEFINITIONS.chaser.maxHealth * 6.76);
     expect(combat.stats.experience).toBeGreaterThanOrEqual(77);
   });
 
@@ -57,7 +57,22 @@ describe('CombatSimulation', () => {
     combat.update(1 / 60, player.state, ARENA_RADIUS);
 
     expect(combat.renderState.boss.active).toBe(true);
-    expect(combat.renderState.boss.maxHealth).toBe(ENEMY_DEFINITIONS.boss.maxHealth * 9);
+    expect(combat.renderState.boss.maxHealth).toBe(ENEMY_DEFINITIONS.boss.maxHealth * 6.76);
+  });
+
+  it('keeps arena hazards active before a paired boss window', () => {
+    const director = new OverdriveActDirector(10, 0x1234);
+    const combat = new CombatSimulation({
+      actDirector: director,
+      overdriveBossPair: 'core-warden'
+    });
+    const player = new PlayerModel();
+
+    runSeconds(combat, player, 120);
+
+    expect(combat.activeBossCount).toBe(0);
+    expect(combat.renderState.pulseRing.sequence + combat.renderState.angularSweep.sequence)
+      .toBeGreaterThan(0);
   });
 
   it('applies permanent weapon bonuses to damage events and weapon intervals', () => {

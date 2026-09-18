@@ -113,6 +113,8 @@ class PairedBossAttackGate implements BossAttackGate {
   private activeOwner: BossInstanceId | null = null;
   private cooldownSeconds = 0;
   private nextPriority: BossInstanceId = 'primary';
+  private primaryEnabled = true;
+  private secondaryEnabled = true;
 
   public constructor(private paired: boolean) {}
 
@@ -121,6 +123,8 @@ class PairedBossAttackGate implements BossAttackGate {
     this.activeOwner = null;
     this.cooldownSeconds = 0;
     this.nextPriority = 'primary';
+    this.primaryEnabled = true;
+    this.secondaryEnabled = paired;
   }
 
   public update(dtSeconds: number): void {
@@ -129,7 +133,8 @@ class PairedBossAttackGate implements BossAttackGate {
 
   public canStart(instanceId: BossInstanceId, _pattern: BossPattern): boolean {
     if (!this.paired) return true;
-    return this.activeOwner === null
+    return this.isEnabled(instanceId)
+      && this.activeOwner === null
       && this.cooldownSeconds <= 0
       && this.nextPriority === instanceId;
   }
@@ -145,12 +150,28 @@ class PairedBossAttackGate implements BossAttackGate {
     this.activeOwner = null;
     const persistentTail = pattern === 'battery' ? 3.1 : pattern === 'mines' ? 2.45 : 0;
     this.cooldownSeconds = persistentTail + 0.35;
+    this.nextPriority = this.nextEnabledOwner(instanceId);
   }
 
   public skip(instanceId: BossInstanceId): void {
     if (!this.paired) return;
+    if (instanceId === 'primary') this.primaryEnabled = false;
+    else this.secondaryEnabled = false;
     if (this.activeOwner === instanceId) this.activeOwner = null;
-    if (this.nextPriority === instanceId) this.nextPriority = instanceId === 'primary' ? 'secondary' : 'primary';
+    if (this.nextPriority === instanceId || !this.isEnabled(this.nextPriority)) {
+      this.nextPriority = this.nextEnabledOwner(instanceId);
+    }
+  }
+
+  private isEnabled(instanceId: BossInstanceId): boolean {
+    return instanceId === 'primary' ? this.primaryEnabled : this.secondaryEnabled;
+  }
+
+  private nextEnabledOwner(after: BossInstanceId): BossInstanceId {
+    const other = after === 'primary' ? 'secondary' : 'primary';
+    if (this.isEnabled(other)) return other;
+    if (this.isEnabled(after)) return after;
+    return 'primary';
   }
 }
 
@@ -692,7 +713,7 @@ export class CombatSimulation {
       this.stageElapsedSeconds,
       player,
       arenaBoundary,
-      !this.doubleBossEncounter && this.radialPulse.state.phase === 'idle'
+      !this.isPairedBossHazardWindowBlocked() && this.radialPulse.state.phase === 'idle'
     )) {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
@@ -702,7 +723,7 @@ export class CombatSimulation {
       this.stageElapsedSeconds,
       player,
       arenaBoundary,
-      !this.doubleBossEncounter && this.laser.state.phase === 'idle',
+      !this.isPairedBossHazardWindowBlocked() && this.laser.state.phase === 'idle',
       this.activeBossCount > 0
     )) {
       this.stats.damageTaken += this.actDirector.radialPulseDefinition.damage;
@@ -719,7 +740,7 @@ export class CombatSimulation {
         this.stageElapsedSeconds,
         player,
         arenaBoundary,
-        !this.doubleBossEncounter && !this.boss.state.active,
+        !this.isPairedBossHazardWindowBlocked() && !this.boss.state.active,
         this.activeBossCount > 0
       );
       if (pulse.pushX !== 0 || pulse.pushY !== 0) applyHazardPush(player, pulse.pushX, pulse.pushY, arenaBoundary);
@@ -740,7 +761,7 @@ export class CombatSimulation {
         player,
         arenaBoundary,
           angularAct || fractureAct
-            ? !this.doubleBossEncounter && !this.boss.state.active
+            ? !this.isPairedBossHazardWindowBlocked() && !this.boss.state.active
           : !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
       );
       if (sector.damaged) {
@@ -794,7 +815,10 @@ export class CombatSimulation {
       const reservedBossSlots = this.stressMode
         ? 0
         : this.actDirector instanceof OverdriveActDirector ? this.bosses.length : 1;
-      const normalEnemyCapacity = Math.max(0, this.enemies.capacity - reservedBossSlots);
+      const normalEnemyCapacity = Math.max(
+        0,
+        this.enemies.capacity - reservedBossSlots - this.enemySystem.reservedSlots
+      );
       while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
         this.spawnAccumulator -= spawnInterval;
         this.enemySystem.spawn(this.stageElapsedSeconds, arenaRadius);
@@ -928,6 +952,16 @@ export class CombatSimulation {
     this.magneticChargeWeaponDrillInitialized = false;
     this.evolutionDrillInitialized = false;
     this.stressInitialized = false;
+  }
+
+  /**
+   * Paired encounters suppress only new arena hazards after the boss window
+   * begins. Hazards authored before that window are allowed to finish, which
+   * preserves the first-lap timeline and avoids an empty pre-boss stage.
+   */
+  private isPairedBossHazardWindowBlocked(): boolean {
+    return this.doubleBossEncounter
+      && this.stageElapsedSeconds + 0.000001 >= this.actDirector.bossStartSeconds;
   }
 
   private createRadialPulseDefinition(): RadialPulseDefinition {

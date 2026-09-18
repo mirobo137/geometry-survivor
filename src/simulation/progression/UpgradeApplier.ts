@@ -18,6 +18,7 @@ import {
   OVERDRIVE_AUTHORED_STACK_CAPS,
   OVERDRIVE_ACQUISITION_HISTORY_LIMIT,
   OVERDRIVE_POWER_MULTIPLIER_CAP,
+  OVERDRIVE_NOVA_CONVERSION_MAX_STACKS,
   type RunMode
 } from '../../content/run/OverdriveDefinitions';
 import { CombatSimulation } from '../combat/CombatSimulation';
@@ -81,6 +82,7 @@ export class UpgradeApplier {
   private campaignHandIndex = 0;
   private randomState: number;
   private overdriveArsenalExpanded = false;
+  private overdriveNovaAward = 0;
 
   public constructor(
     private readonly player: PlayerModel,
@@ -94,6 +96,10 @@ export class UpgradeApplier {
   /** The Overdrive six-weapon gate is intentionally monotonic for one run. */
   public get isOverdriveArsenalExpanded(): boolean {
     return this.overdriveArsenalExpanded;
+  }
+
+  public get overdriveNovaReward(): number {
+    return this.overdriveNovaAward;
   }
 
   public getChoices(level: number): readonly UpgradeDefinition[] {
@@ -193,6 +199,17 @@ export class UpgradeApplier {
         while (selected.length < 3 && takeRandom(powerReserves) !== null) {
           // A reserve card may be absent when its family reached the cap or
           // when Repair has already restored the player to full health.
+        }
+        if (selected.length < 3) {
+          const remainingPower = reserves.some((definition) => (
+            definition.effect.type === 'overdrivePower'
+            && !selected.some((choice) => choice.id === definition.id)
+            && this.canApply(definition)
+          ));
+          if (!remainingPower) {
+            const nova = reserves.find((definition) => definition.effect.type === 'overdriveNova');
+            if (nova !== undefined) takeRandom([nova]);
+          }
         }
       }
     }
@@ -326,7 +343,10 @@ export class UpgradeApplier {
         ? this.isFamilyActive(definition.effect.family) && this.hasEvolution(definition.effect.family)
         : definition.effect.type === 'overdriveRepair'
           ? this.player.isAlive && this.player.state.health < this.player.state.maxHealth
-          : false
+          : definition.effect.type === 'overdriveNova'
+            ? this.runMode === 'overdrive'
+              && this.getStacks(definition.id) < OVERDRIVE_NOVA_CONVERSION_MAX_STACKS
+            : false
     )).filter((definition) => this.canApply(definition));
   }
 
@@ -457,6 +477,7 @@ export class UpgradeApplier {
     this.acquisitionOrder.length = 0;
     this.campaignHandIndex = 0;
     this.overdriveArsenalExpanded = false;
+    this.overdriveNovaAward = 0;
     this.randomState = normalizeSeed(seed ?? createRunSeed());
   }
 
@@ -559,6 +580,7 @@ export class UpgradeApplier {
       case 'overdrivePower':
         return this.getOverdrivePowerPreview(definition.effect.family, definition.effect.amount);
       case 'overdriveRepair':
+      case 'overdriveNova':
         return null;
       case 'weaponRank':
         return null;
@@ -679,6 +701,10 @@ export class UpgradeApplier {
       return this.runMode === 'overdrive' && this.player.isAlive
         && this.player.state.health < this.player.state.maxHealth;
     }
+    if (definition.effect.type === 'overdriveNova') {
+      return this.runMode === 'overdrive'
+        && this.getStacks(definition.id) < OVERDRIVE_NOVA_CONVERSION_MAX_STACKS;
+    }
     return definition.requires?.every((requiredId) => this.getStacks(requiredId) > 0) ?? true;
   }
 
@@ -779,6 +805,9 @@ export class UpgradeApplier {
         break;
       case 'overdriveRepair':
         applied = this.player.heal(this.player.state.maxHealth * definition.effect.amount) > 0;
+        break;
+      case 'overdriveNova':
+        this.overdriveNovaAward += definition.effect.amount;
         break;
     }
     if (!applied) return false;

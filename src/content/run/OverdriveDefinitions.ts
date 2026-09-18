@@ -7,6 +7,20 @@ export const OVERDRIVE_STAGES_PER_LAP = 3 as const;
 export const OVERDRIVE_HEALTH_MULTIPLIER_CAP = 1_000_000_000 as const;
 export const OVERDRIVE_MAX_PRESSURE_MULTIPLIER = 1.75 as const;
 export const OVERDRIVE_MIN_SPAWN_INTERVAL_SECONDS = 0.2 as const;
+/**
+ * Intermediate health curve for the first infinite passes. The authored first
+ * stage is intentionally 25% above campaign health so the opening is not
+ * free. From stage two onward the curve sits between the former +3-per-stage
+ * rule and the softer first proposal, avoiding both the x9 wall and the run
+ * that stayed comfortable until minute 26.
+ * Values are rounded to two decimals for readable diagnostics and tuning.
+ */
+export const OVERDRIVE_HEALTH_CURVE = {
+  firstStage: 1.25,
+  intercept: 0.625,
+  linear: 1.925,
+  quadratic: 0.04
+} as const;
 /** Repeatable post-evolution power cards add five percentage points. */
 export const OVERDRIVE_POWER_INCREMENT = 0.05 as const;
 /** Technical safety cap for the independent repeatable power multiplier. */
@@ -14,6 +28,9 @@ export const OVERDRIVE_POWER_MULTIPLIER_CAP = 1_000 as const;
 export const OVERDRIVE_POWER_MAX_STACKS = Math.floor(
   (OVERDRIVE_POWER_MULTIPLIER_CAP - 1) / OVERDRIVE_POWER_INCREMENT
 );
+/** Last-resort conversion used only when every authored reserve is exhausted. */
+export const OVERDRIVE_NOVA_CONVERSION_AMOUNT = 25 as const;
+export const OVERDRIVE_NOVA_CONVERSION_MAX_STACKS = 10 as const;
 /** Diagnostic history is bounded; stack counters remain authoritative. */
 export const OVERDRIVE_ACQUISITION_HISTORY_LIMIT = 256 as const;
 /**
@@ -65,16 +82,21 @@ export const getOverdriveStageInLap = (stage: number): OverdriveStageInLap => (
 );
 
 /**
- * Stage one is authored at base HP; later stages use the approved linear
- * multiplier and are clamped only to protect finite-number arithmetic.
+ * Stage health grows smoothly instead of jumping by three points per stage.
+ * The curve is authored data: changing base enemy health still flows through
+ * automatically, while the stage factor itself remains independent of it.
  */
 export const getOverdriveHealthMultiplier = (stage: number): number => (
-  Math.min(
-    OVERDRIVE_HEALTH_MULTIPLIER_CAP,
-    normalizeOverdriveStage(stage) === 1
-      ? 1
-      : 3 * (normalizeOverdriveStage(stage) - 1)
-  )
+  (() => {
+    const stageOffset = normalizeOverdriveStage(stage) - 1;
+    const rawMultiplier = stageOffset === 0
+      ? OVERDRIVE_HEALTH_CURVE.firstStage
+      : OVERDRIVE_HEALTH_CURVE.intercept
+        + OVERDRIVE_HEALTH_CURVE.linear * stageOffset
+        + OVERDRIVE_HEALTH_CURVE.quadratic * stageOffset * stageOffset;
+    const roundedMultiplier = Math.round(rawMultiplier * 100) / 100;
+    return Math.min(OVERDRIVE_HEALTH_MULTIPLIER_CAP, roundedMultiplier);
+  })()
 );
 
 /**

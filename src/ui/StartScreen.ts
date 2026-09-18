@@ -131,6 +131,7 @@ export class StartScreen {
   private activeSkinTab: 'player' | 'cannon' | 'background' = 'player';
   private cosmeticTarget: CosmeticUnlockTarget | null = null;
   private overdrivePlayHandler: (() => void) | null = null;
+  private overdriveUnlocked = false;
 
   private readonly onSkinStateChange = (state: SkinSaveData): void => {
     this.skinState = state;
@@ -285,6 +286,7 @@ export class StartScreen {
   public open(options: StartScreenOptions): void {
     this.playHandler = options.onPlay;
     this.overdrivePlayHandler = options.onOverdrivePlay ?? null;
+    this.overdriveUnlocked = options.overdriveUnlocked === true;
     this.actChangeHandler = options.onActChange;
     this.settingsHandler = options.onSettingsChange;
     this.controlSchemeHandler = options.onControlSchemeChange;
@@ -335,6 +337,7 @@ export class StartScreen {
     this.root.hidden = true;
     this.playHandler = null;
     this.overdrivePlayHandler = null;
+    this.overdriveUnlocked = false;
     this.actChangeHandler = null;
     this.settingsHandler = null;
     this.controlSchemeHandler = null;
@@ -444,6 +447,17 @@ export class StartScreen {
     this.angularActButton.setAttribute('aria-label', angularUnlocked ? 'Seleccionar Acto II Angular' : 'Acto II Angular bloqueado');
     this.fractureActButton.disabled = !fractureUnlocked;
     this.fractureActButton.setAttribute('aria-label', fractureUnlocked ? 'Seleccionar Acto III Fracture' : 'Acto III Fracture bloqueado');
+    if (this.overdriveButton) {
+      const overdriveAvailable = this.overdrivePlayHandler !== null && this.overdriveUnlocked;
+      this.overdriveButton.hidden = this.overdrivePlayHandler === null;
+      this.overdriveButton.disabled = !overdriveAvailable;
+      this.overdriveButton.setAttribute('aria-label', overdriveAvailable
+        ? 'Iniciar modo Infinito Overdrive'
+        : 'Modo Infinito bloqueado: vence el Acto III');
+      this.overdriveButton.title = overdriveAvailable
+        ? 'Iniciar Overdrive'
+        : 'Derrota al boss del Acto III para desbloquearlo';
+    }
     const actName = this.selectedAct === 'angular'
       ? 'Acto II · Angular'
       : this.selectedAct === 'fracture' ? 'Acto III · Fracture' : 'Acto I · Radial';

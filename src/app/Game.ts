@@ -72,6 +72,7 @@ interface PendingTerminalRun {
     readonly averageMs: number | null;
     readonly p95Ms: number | null;
   };
+  readonly terminalCause: 'defeat' | 'withdrawal';
   settled: boolean;
 }
 
@@ -237,6 +238,7 @@ export class Game {
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
   private pendingTerminalRun: PendingTerminalRun | null = null;
+  private nextTerminalCause: 'defeat' | 'withdrawal' = 'defeat';
   private levelUpRequestToken = 0;
   private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
@@ -284,6 +286,13 @@ export class Game {
     if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
     const url = new URL(window.location.href);
     url.search = '?mode=overdrive';
+    window.location.assign(url.toString());
+  };
+
+  private readonly onStartOverdriveDirect = (): void => {
+    if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.search = '?mode=overdrive&autostart=1';
     window.location.assign(url.toString());
   };
 
@@ -368,10 +377,13 @@ export class Game {
 
   private readonly onPauseWithdraw = (): void => {
     if (this.runMode !== 'overdrive' || this.contextLost || !this.gameState.withdrawFromPause()) return;
-    if (typeof window !== 'undefined' && !window.confirm('¿Retirarte y cobrar esta run de Overdrive?')) {
+    if (typeof window !== 'undefined' && !window.confirm(
+      '¿Retirarte y cobrar esta run de Overdrive? La run terminará definitivamente y no se puede reanudar después de cerrar.'
+    )) {
       this.gameState.enterPause();
       return;
     }
+    this.nextTerminalCause = 'withdrawal';
     this.finishRun('game-over');
   };
 
@@ -387,8 +399,18 @@ export class Game {
 
   private readonly onActIntermissionContinue = (): void => {
     if (this.contextLost || this.gameState.phase !== 'act-intermission') return;
+    if (this.actId === 'fracture') {
+      if (!this.canContinueToNextAct()) return;
+      this.gameOver.close();
+      this.clearTerminalSummaryTimer();
+      this.pendingTerminalRun = null;
+      this.terminalRunToken += 1;
+      this.rewardedOffers.reset();
+      this.onStartOverdriveDirect();
+      return;
+    }
     const nextAct: ActId = this.actId === 'radial' ? 'angular' : this.actId === 'angular' ? 'fracture' : 'fracture';
-    if (this.actId === 'fracture' || !this.isActUnlocked(nextAct)) return;
+    if (!this.isActUnlocked(nextAct)) return;
 
     const saved = this.saveStore.load();
     this.gameOver.close();
@@ -1193,9 +1215,12 @@ export class Game {
     this.audio.stopMusic();
     this.lifecycle.onGameOver();
     const summary = createRunSummary(outcome, this.combat.stats);
+    const terminalCause = outcome === 'game-over' ? this.nextTerminalCause : 'defeat';
+    this.nextTerminalCause = 'defeat';
     const saved = this.saveStore.load();
     const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
-    const novaReward = calculateRunNova(summary);
+    const novaReward = calculateRunNova(summary)
+      + (this.runMode === 'overdrive' ? this.upgradeApplier.overdriveNovaReward : 0);
     const profile = this.profiler.enabled ? this.profiler.snapshot(performance.now() + 500) : null;
     this.terminalRunToken += 1;
     const terminalToken = this.terminalRunToken;
@@ -1210,6 +1235,7 @@ export class Game {
         averageMs: profile?.averageMs ?? null,
         p95Ms: profile?.p95Ms ?? null
       },
+      terminalCause,
       settled: false
     };
     // Victory cannot be revived, so it is definitive immediately. Death stays
@@ -1310,6 +1336,7 @@ export class Game {
     terminalToken: number
   ): Promise<void> {
     const canRevive = summary.outcome === 'game-over'
+      && this.pendingTerminalRun?.terminalCause !== 'withdrawal'
       && this.rewardedOffers.canOffer('revive')
       && await this.rewardedAds.isAvailable('revive');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
@@ -1327,7 +1354,7 @@ export class Game {
     const actName = this.actId === 'angular'
       ? 'Acto II · Angular'
       : this.actId === 'fracture' ? 'Acto III · Fracture' : 'Acto I · Radial';
-    const nextActName = this.actId === 'radial' ? 'Acto II' : 'Acto III';
+    const nextActName = this.actId === 'radial' ? 'Acto II' : this.actId === 'angular' ? 'Acto III' : 'Overdrive';
     if (isActVictory && this.gameState.phase === 'victory') this.gameState.enterActIntermission();
     if (isActVictory && this.gameState.phase !== 'act-intermission') return;
     this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
@@ -1340,7 +1367,7 @@ export class Game {
     }, isActVictory ? {
       actName,
       message: this.actId === 'fracture'
-        ? 'El Acto III queda registrado. Overdrive ya está disponible desde el menú principal.'
+        ? 'El Acto III queda registrado. Tu siguiente ruta puede continuar directamente en Overdrive.'
         : `El ${actName} queda registrado. ${nextActName} inicia con una build limpia durante esta validación.`,
       restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : this.actId === 'fracture' ? 'Repetir Acto III' : 'Repetir Acto I',
       continueLabel: this.canContinueToNextAct() ? `Continuar al ${nextActName}` : undefined,
@@ -1350,9 +1377,11 @@ export class Game {
   }
 
   private canContinueToNextAct(): boolean {
-    return this.weaponPath === null
-      && this.actId !== 'fracture'
-      && this.isActUnlocked(this.actId === 'radial' ? 'angular' : 'fracture');
+    if (this.weaponPath !== null) return false;
+    if (this.actId === 'fracture') {
+      return this.runMode === 'campaign' && this.saveStore.load().overdrive.unlocked;
+    }
+    return this.isActUnlocked(this.actId === 'radial' ? 'angular' : 'fracture');
   }
 
   private async requestRevive(terminalToken: number): Promise<void> {

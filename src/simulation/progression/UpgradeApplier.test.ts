@@ -164,6 +164,14 @@ describe('UpgradeApplier', () => {
     const damagedReserveHand = applier.getChoices(999);
     expect(damagedReserveHand.some((choice) => choice.id === 'overdrive_repair')).toBe(true);
     expect(damagedReserveHand.filter((choice) => choice.id.startsWith('overdrive_power_'))).toHaveLength(2);
+
+    for (const family of ['projectile', 'orbit', 'chain', 'boomerang', 'pulse_ring', 'magnetic_charge'] as const) {
+      expect(combat.applyOverdrivePower(family, 9999)).toBe(true);
+    }
+    player.state.health = player.state.maxHealth;
+    expect(applier.getChoices(1000).some((choice) => choice.id === 'overdrive_nova')).toBe(true);
+    expect(applier.apply('overdrive_nova')).toBe(true);
+    expect(applier.overdriveNovaReward).toBe(25);
   });
 
   it('offers Repair only while damaged and caps independent Overdrive power', () => {

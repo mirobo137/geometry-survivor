@@ -8,9 +8,9 @@ import { OverdriveActDirector } from './OverdriveActDirector';
 describe('OverdriveActDirector', () => {
   it('reuses each authored act unchanged during the first lap', () => {
     const stages = [
-      { stage: 1, arena: 'radial', boss: 'core-sentinel', enemy: 'chaser', health: 1 },
-      { stage: 2, arena: 'angular', boss: 'orbital-warden', enemy: 'orbiter', health: 3 },
-      { stage: 3, arena: 'fracture', boss: 'fracture-engine', enemy: 'fracture-gunner', health: 6 }
+      { stage: 1, arena: 'radial', boss: 'core-sentinel', enemy: 'chaser', health: 1.25 },
+      { stage: 2, arena: 'angular', boss: 'orbital-warden', enemy: 'orbiter', health: 2.59 },
+      { stage: 3, arena: 'fracture', boss: 'fracture-engine', enemy: 'fracture-gunner', health: 4.64 }
     ] as const;
 
     for (const expected of stages) {
@@ -46,7 +46,7 @@ describe('OverdriveActDirector', () => {
       arenaActId: 'angular',
       bossActId: 'radial',
       primaryEnemyActId: 'radial',
-      stageState: { lap: 2, stageInLap: 1, healthMultiplier: 9, pressureMultiplier: 1.15 }
+      stageState: { lap: 2, stageInLap: 1, healthMultiplier: 6.76, pressureMultiplier: 1.15 }
     });
     expect(new OverdriveActDirector(6, 0x1234)).toMatchObject({
       arenaActId: 'fracture',
@@ -56,7 +56,7 @@ describe('OverdriveActDirector', () => {
     expect(new OverdriveActDirector(10, 0x1234)).toMatchObject({
       arenaActId: 'fracture',
       bossActId: 'radial',
-      stageState: { lap: 4, stageInLap: 1, healthMultiplier: 27, pressureMultiplier: 1.4 }
+      stageState: { lap: 4, stageInLap: 1, healthMultiplier: 21.19, pressureMultiplier: 1.4 }
     });
   });
 
@@ -108,9 +108,9 @@ describe('OverdriveActDirector', () => {
     director.setStage(4);
 
     expect(director).toBe(identity);
-    expect(director.stageState).toMatchObject({ stage: 4, healthMultiplier: 9, pressureMultiplier: 1.15 });
+    expect(director.stageState).toMatchObject({ stage: 4, healthMultiplier: 6.76, pressureMultiplier: 1.15 });
     expect(director.definition.id).toBe('angular');
-    expect(director.enemyHealthMultiplier).toBe(9);
+    expect(director.enemyHealthMultiplier).toBe(6.76);
   });
 
   it('keeps paired boss selection bounded, deterministic and duplicate-free', () => {

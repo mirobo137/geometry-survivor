@@ -123,6 +123,7 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   overdrive_power_pulse_ring: { icon: 'echo', tone: 'gold', category: 'OVERDRIVE · PULSO' },
   overdrive_power_magnetic_charge: { icon: 'horizon', tone: 'gold', category: 'OVERDRIVE · MAGNÉTICA' },
   overdrive_repair: { icon: 'repair', tone: 'mint', category: 'OVERDRIVE · RECUPERACIÓN' },
+  overdrive_nova: { icon: 'core', tone: 'rose', category: 'OVERDRIVE CONVERSION' },
   rail_lance: { icon: 'rail', tone: 'gold', category: 'EVOLUCION' },
   pulse_volley: { icon: 'volley', tone: 'cyan', category: 'EVOLUCION' },
   solar_crown: { icon: 'crown', tone: 'gold', category: 'EVOLUCION' },

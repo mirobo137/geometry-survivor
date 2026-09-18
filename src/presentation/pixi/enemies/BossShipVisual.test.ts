@@ -58,6 +58,6 @@ describe('BossShipVisual', () => {
     expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
     expect((view.root.children[3] as Sprite).texture).toBe(Texture.EMPTY);
     view.reset();
-    expect((view.root.children[0] as Sprite).texture).toBe(Texture.WHITE);
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
   });
 });

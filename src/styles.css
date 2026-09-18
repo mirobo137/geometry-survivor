@@ -2612,8 +2612,14 @@ body {
 
 .act-options {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+}
+
+@media (min-width: 38rem) {
+  .act-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .act-card-button {
@@ -2661,6 +2667,23 @@ body {
 .act-card-button:disabled {
   cursor: not-allowed;
   opacity: 0.48;
+}
+
+.act-card-button.start-overdrive-button {
+  border-color: rgba(255, 227, 154, 0.62);
+  background: linear-gradient(145deg, rgba(79, 55, 44, 0.9), rgba(32, 27, 48, 0.86));
+}
+
+.act-card-button.start-overdrive-button:not(:disabled) {
+  box-shadow: inset 0 1px rgba(255, 246, 206, 0.18), 0 0 18px rgba(255, 227, 154, 0.08);
+}
+
+.act-card-button.start-overdrive-button .home-action-icon {
+  color: #ffe39a;
+}
+
+.act-card-button.start-overdrive-button span {
+  color: #ffe39a;
 }
 
 .act-status {

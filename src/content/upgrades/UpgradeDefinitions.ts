@@ -3,7 +3,9 @@ import type {
 } from '../weapons/WeaponEvolutionDefinitions';
 import {
   OVERDRIVE_POWER_INCREMENT,
-  OVERDRIVE_POWER_MAX_STACKS
+  OVERDRIVE_POWER_MAX_STACKS,
+  OVERDRIVE_NOVA_CONVERSION_AMOUNT,
+  OVERDRIVE_NOVA_CONVERSION_MAX_STACKS
 } from '../run/OverdriveDefinitions';
 
 /** Developer-only focused paths. They all use the same real-run contract. */
@@ -104,6 +106,7 @@ export type UpgradeId =
   | 'overdrive_power_pulse_ring'
   | 'overdrive_power_magnetic_charge'
   | 'overdrive_repair'
+  | 'overdrive_nova'
   | WeaponEvolutionId;
 
 export interface UpgradeDefinition {
@@ -140,7 +143,8 @@ export type UpgradeEffect =
   | { readonly type: 'universalWeaponMastery' }
   | { readonly type: 'weaponMastery'; readonly family: WeaponPathId; readonly channel: WeaponMasteryChannel }
   | { readonly type: 'overdrivePower'; readonly family: WeaponPathId; readonly amount: number }
-  | { readonly type: 'overdriveRepair'; readonly amount: number };
+  | { readonly type: 'overdriveRepair'; readonly amount: number }
+  | { readonly type: 'overdriveNova'; readonly amount: number };
 
 export type WeaponMasteryChannel = 'power' | 'tempo' | 'coverage';
 
@@ -885,5 +889,12 @@ export const OVERDRIVE_RESERVE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Reparacion Overdrive',
     description: 'Recupera 25% de la vida maxima; solo aparece con vida incompleta.',
     effect: { type: 'overdriveRepair' as const, amount: 0.25 }
+  },
+  {
+    id: 'overdrive_nova' as const,
+    title: 'Conversión Overdrive',
+    description: `Convierte esta oferta en ${OVERDRIVE_NOVA_CONVERSION_AMOUNT} NOVA (reserva final).`,
+    effect: { type: 'overdriveNova' as const, amount: OVERDRIVE_NOVA_CONVERSION_AMOUNT },
+    maxStacks: OVERDRIVE_NOVA_CONVERSION_MAX_STACKS
   }
 ];

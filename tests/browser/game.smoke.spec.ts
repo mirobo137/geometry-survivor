@@ -302,6 +302,8 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   await expect(page.locator('#boot-status')).toBeHidden();
   await page.locator('#start-level').click();
   await expect(page.locator('#start-act-view')).toBeVisible();
+  await expect(page.locator('#start-overdrive')).toBeVisible();
+  await expect(page.locator('#start-overdrive')).toBeDisabled();
   await expect(page.locator('#start-act-angular')).toBeEnabled();
   await page.locator('#start-act-angular').click();
   await expect(page.locator('#start-act-angular')).toHaveClass(/is-selected/);
@@ -311,6 +313,32 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   await expect(page.locator('#start-entry-view')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeHidden();
   await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
+  expect(failures).toEqual([]);
+});
+
+test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 7,
+      unlockedActs: ['radial', 'angular', 'fracture'],
+      overdrive: { unlocked: true }
+    }));
+  });
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-level').click();
+  await expect(page.locator('#start-act-view')).toBeVisible();
+  await expect(page.locator('#start-overdrive')).toBeVisible();
+  await expect(page.locator('#start-overdrive')).toBeEnabled();
+  await page.locator('#start-overdrive').click();
+  await expect(page).toHaveURL(/mode=overdrive/);
+  // The public mode route intentionally returns to the normal start menu so
+  // settings can be reviewed before the run. It must not reopen the campaign
+  // selector or expose the campaign's Overdrive launcher a second time.
+  await expect(page.locator('#start-screen')).toBeVisible();
+  await expect(page.locator('#start-play')).toBeVisible();
+  await expect(page.locator('#start-overdrive')).toBeHidden();
   expect(failures).toEqual([]);
 });
 

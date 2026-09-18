@@ -34,9 +34,9 @@ describe('OverdriveDefinitions', () => {
       .toEqual(['radial', 'angular', 'fracture', null]);
   });
 
-  it('uses the approved health formula and finite cap', () => {
+  it('uses the smooth health curve and finite cap', () => {
     expect([1, 2, 3, 4, 10, 12].map(getOverdriveHealthMultiplier))
-      .toEqual([1, 3, 6, 9, 27, 33]);
+      .toEqual([1.25, 2.59, 4.64, 6.76, 21.19, 26.64]);
     expect(getOverdriveHealthMultiplier(1_000_000_000)).toBe(OVERDRIVE_HEALTH_MULTIPLIER_CAP);
   });
 
@@ -53,7 +53,7 @@ describe('OverdriveDefinitions', () => {
       lap: 2,
       stageInLap: 1,
       seed: DEFAULT_OVERDRIVE_SEED,
-      healthMultiplier: 9,
+      healthMultiplier: 6.76,
       pressureMultiplier: 1.15
     });
   });

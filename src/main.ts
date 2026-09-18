@@ -187,8 +187,15 @@ const bootstrap = async (): Promise<void> => {
   const overdriveMode = requestedOverdrive;
   const diagnosticOverdrive = overdriveMode && searchParams.get('debug') === '1';
   const runMode: RunMode = overdriveMode ? 'overdrive' : 'campaign';
-  const overdriveStage = normalizeOverdriveStage(Number(searchParams.get('od-stage') ?? 1));
-  const overdriveSeed = normalizeOverdriveSeed(Number(searchParams.get('seed') ?? NaN));
+  const overdriveAutostart = searchParams.get('autostart') === '1';
+  // Stage, seed, build and pair overrides are diagnostic-only. A public URL
+  // must always enter a fresh stage-one run and cannot mint a late-stage win.
+  const overdriveStage = diagnosticOverdrive
+    ? normalizeOverdriveStage(Number(searchParams.get('od-stage') ?? 1))
+    : 1;
+  const overdriveSeed = diagnosticOverdrive
+    ? normalizeOverdriveSeed(Number(searchParams.get('seed') ?? NaN))
+    : undefined;
   const overdriveBossPair = diagnosticOverdrive && isOverdriveBossPair(searchParams.get('od-pair'))
     ? searchParams.get('od-pair') as OverdriveBossPair
     : undefined;
@@ -215,6 +222,12 @@ const bootstrap = async (): Promise<void> => {
     && !stressMode
     ? requestedWeaponPath
     : undefined;
+  const platform = new LocalPlatform();
+  const publicOverdriveUnlocked = platform.saveStore.load().overdrive.unlocked;
+  const overdriveBossDebugMode = diagnosticOverdrive && searchParams.get('od-pair') !== null;
+  const overdriveBossStartSeconds = overdriveStage >= 10
+    ? 250
+    : ((overdriveStage - 1) % 3 === 2 ? 250 : 260);
   if (spike === 'audio') {
     const { runAudioSpike } = await import('./spikes/AudioSpike');
     bootStatus.hidden = true;
@@ -288,14 +301,16 @@ const bootstrap = async (): Promise<void> => {
     allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
     initialElapsedSeconds: bossDebugMode
       ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds
+      : overdriveBossDebugMode ? overdriveBossStartSeconds
       : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: (overdriveMode && !diagnosticOverdrive)
+    startOnMenu: (overdriveMode && !diagnosticOverdrive
+      && (!overdriveAutostart || !publicOverdriveUnlocked))
       || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
       && !magneticChargeWeaponDrill && !fractureDrill && weaponCardId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined),
-    platform: new LocalPlatform()
+    platform
   });
   await game.start();
   bootStatus.hidden = true;

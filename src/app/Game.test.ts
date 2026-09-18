@@ -478,6 +478,53 @@ describe('Game', () => {
     expect(runtime.upgradeApplier.snapshot()).toEqual([]);
   });
 
+  it('offers direct continuation from Act III to public Overdrive', async () => {
+    let saved = {
+      ...createDefaultSaveData(),
+      unlockedActs: ['radial', 'angular', 'fracture'] as const,
+      overdrive: { ...createDefaultSaveData().overdrive, unlocked: true }
+    };
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const assign = vi.fn();
+    vi.stubGlobal('window', {
+      location: { href: 'http://localhost:5173/', search: '', assign },
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn()
+    });
+    const game = new Game({
+      ...createOptions({
+        saveStore: {
+          load: () => saved,
+          save,
+          clear: vi.fn()
+        }
+      }),
+      actId: 'fracture',
+      allowLockedAct: true
+    });
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'victory') => void;
+      openGameOverSummary: (...args: unknown[]) => Promise<void>;
+      pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+    };
+
+    runtime.finishRun.call(game, 'victory');
+    const pending = runtime.pendingTerminalRun;
+    if (!pending) throw new Error('Expected a settled Act III victory');
+    await runtime.openGameOverSummary.call(game, pending.summary, pending.best, pending.novaReward, 0, pending.token);
+
+    const intermission = mocks.gameOverOpen.mock.calls.at(-1)?.[6];
+    expect(intermission).toMatchObject({
+      actName: 'Acto III · Fracture',
+      continueLabel: 'Continuar al Overdrive'
+    });
+    intermission.onContinue();
+    expect(assign).toHaveBeenCalledWith(expect.stringContaining('?mode=overdrive&autostart=1'));
+  });
+
   it('rejects a stale revive callback after a victory', async () => {
     const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
     const game = new Game(createOptions({

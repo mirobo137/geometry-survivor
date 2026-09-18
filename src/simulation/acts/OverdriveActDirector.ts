@@ -78,6 +78,11 @@ export class OverdriveActDirector extends RadialActDirector {
   public bossActId: ActId;
   public primaryEnemyActId: ActId;
   private primaryEnemyDirector: RadialActDirector;
+  private pairHistoryStage = 9;
+  private pairHistorySeed = 0;
+  private pairHistoryPrevious = false;
+  private pairHistoryBeforePrevious = false;
+  private pairHistoryCurrent = false;
 
   public constructor(stage: number, seed: unknown) {
     const stageState = createOverdriveStageState(stage, seed);
@@ -153,15 +158,25 @@ export class OverdriveActDirector extends RadialActDirector {
 
   private shouldUseDoubleBoss(): boolean {
     if (this.stageState.stage < 10) return false;
-    const previous: boolean[] = [];
-    for (let stage = 10; stage <= this.stageState.stage; stage += 1) {
-      const forced = previous.length >= 2
-        && previous[previous.length - 1] === false
-        && previous[previous.length - 2] === false;
-      const double = forced || sample(this.stageState.seed, stage, 0x4c1f0a2d) < 0.5;
-      previous.push(double);
+    // Only the last two outcomes affect the forced-pair rule. Reconstruct the
+    // deterministic suffix once, then advance one bounded state per stage so
+    // a long sequential run does not replay the whole history on every stage.
+    if (this.pairHistorySeed !== this.stageState.seed
+      || this.pairHistoryStage > this.stageState.stage) {
+      this.pairHistoryStage = 9;
+      this.pairHistorySeed = this.stageState.seed;
+      this.pairHistoryPrevious = false;
+      this.pairHistoryBeforePrevious = false;
+      this.pairHistoryCurrent = false;
     }
-    return previous[previous.length - 1] ?? false;
+    for (let stage = this.pairHistoryStage + 1; stage <= this.stageState.stage; stage += 1) {
+      const forced: boolean = !this.pairHistoryPrevious && !this.pairHistoryBeforePrevious;
+      this.pairHistoryCurrent = forced || sample(this.stageState.seed, stage, 0x4c1f0a2d) < 0.5;
+      this.pairHistoryBeforePrevious = this.pairHistoryPrevious;
+      this.pairHistoryPrevious = this.pairHistoryCurrent;
+      this.pairHistoryStage = stage;
+    }
+    return this.pairHistoryCurrent;
   }
 
   /**

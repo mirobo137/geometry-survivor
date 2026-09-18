@@ -31,12 +31,33 @@ Este documento es el contrato de trabajo para implementar el modo Infinito despu
   Muerte o retirada liquidan una sola recompensa; el récord de Overdrive se
   guarda separado del récord de campaña y no se ofrece doble NOVA.
 
+## Correcciones de la auditoría OD-B01–OD-B10
+
+Las correcciones de seguridad y consistencia de la auditoría están implementadas
+en el checkout local. Incluyen identidad visual persistente por familia de boss,
+continuidad de ataques cuando muere el otro boss, hazards de arena activos hasta
+la ventana del encuentro doble, aislamiento de atajos diagnósticos, retirada
+terminal sin revive, reservas previas de recursos, conversión final de NOVA,
+entrada `od-pair` en la ventana correcta, continuación directa desde Acto III y
+selección acotada de encuentros dobles sin historial creciente.
+
+La validación humana de parejas, sesiones largas y dispositivos móviles sigue
+siendo una puerta de cierre; estos puntos no se consideran medidos por pruebas
+unitarias.
+
 ## 1. Decisiones cerradas
 
 > Validacion local adicional (17-09-2026): el smoke browser comprobo la ruta
 > publica desbloqueada `?mode=overdrive`, el inicio con build limpia y la
 > retirada visible desde pausa. Sigue pendiente la validacion humana de las
 > tres parejas y de una sesion continua de diez minutos en PC y movil.
+>
+> La entrada de Overdrive se presenta dentro del selector `Actos` como cuarta
+> tarjeta. Bloqueada permanece visible y deshabilitada; tras vencer Acto III
+> queda habilitada y conserva la misma ruta publica.
+>
+> Al cerrar una victoria real del Acto III, la intermisión ofrece
+> `Continuar al Overdrive` y abre la ruta publica directamente con build limpia.
 
 - Infinito se desbloquea al derrotar al boss del Acto III.
 - Es una partida independiente que comienza con **build limpia**. Conserva únicamente las mejoras permanentes que ya aplican a una partida normal.
@@ -55,10 +76,10 @@ Un **tramo** es una secuencia de aparición, arena, hazards y boss. Una **vuelta
 
 | Vuelta | Tramos | Familias principales | Perfil de arena | Vida de enemigos y bosses | Bosses simultáneos |
 |---|---:|---|---|---:|---:|
-| 1 | 1–3 | Acto I → II → III | Acto I → II → III | ×1 → ×3 → ×6 | 1 |
-| 2 | 4–6 | Acto I → II → III con invitados | Acto II → II → III | ×9 → ×12 → ×15 | 1 |
-| 3 | 7–9 | Acto I → II → III con más invitados | Acto II → II → III | ×18 → ×21 → ×24 | 1 |
-| 4 en adelante | 10+ | Mezcla de los tres actos | Acto III | ×27, ×30, ×33… | 1 o 2 |
+| 1 | 1–3 | Acto I → II → III | Acto I → II → III | ×1.25 → ×2.59 → ×4.64 | 1 |
+| 2 | 4–6 | Acto I → II → III con invitados | Acto II → II → III | ×6.76 → ×8.97 → ×11.25 | 1 |
+| 3 | 7–9 | Acto I → II → III con más invitados | Acto II → II → III | ×13.62 → ×16.06 → ×18.59 | 1 |
+| 4 en adelante | 10+ | Mezcla de los tres actos | Acto III | ×21.19, ×23.88, ×26.64… | 1 o 2 |
 
 Un tramo termina cuando se derrotan todos los bosses de su encuentro, no cuando se cumple solamente el tiempo. El siguiente tramo no comienza mientras quede un boss vivo.
 
@@ -67,11 +88,18 @@ Un tramo termina cuando se derrotan todos los bosses de su encuentro, no cuando 
 Para el tramo `n`, empezando en 1:
 
 ```text
-multiplicador(n) = 1, si n = 1
-multiplicador(n) = 3 × (n - 1), en los demás casos
-
+d = n - 1
+multiplicador(1) = 1.25
+multiplicador(n) = redondear_2_decimales(0.625 + 1.925 × d + 0.04 × d²), para n > 1
 vida final = vida base de la definición × multiplicador(n)
 ```
+
+Esta curva es el punto intermedio entre el salto lineal anterior `1, 3, 6, 9…`
+y la propuesta suave que permitía llegar al minuto 26 con demasiada facilidad.
+El primer tramo recibe una presión inicial moderada (`×1.25`), mientras que el
+cuarto queda en `×6.76`: exige una build desarrollada, pero evita el muro de
+`×9`. Con las entradas de boss actuales, el objetivo de calibración vuelve a
+ser una run de 15–20 minutos, sujeto a la build, daño real y ejecución humana.
 
 Reglas obligatorias:
 
@@ -203,6 +231,11 @@ Cuando ya no existan adquisiciones, niveles, evoluciones ni mejoras ordinarias e
 - **Potencia de [arma]:** +5 puntos porcentuales de daño de esa familia, acumulado aditivamente en un multiplicador independiente y válido para sus dos evoluciones y daños secundarios.
 - **Reparación:** recupera 25% de vida máxima; solamente elegible si falta vida.
 
+- **Conversión Overdrive:** si no quedan familias elegibles ni Reparación,
+  convierte la oferta en 25 NOVA. Se puede adquirir como máximo diez veces por
+  partida (`overdrive_nova`); el límite evita que una sesión larga convierta la
+  reserva en una fuente ilimitada de recompensa.
+
 Composición:
 
 - Con vida incompleta: dos familias elegibles y Reparación.
@@ -273,6 +306,12 @@ od-build=starter|three-evolved|six-evolved
 od-pair=core-warden|core-fracture|warden-fracture
 seed=<número>
 ```
+
+Cuando se usa `od-pair`, el reloj diagnóstico arranca en la ventana del boss
+del tramo solicitado para que la pareja pueda probarse directamente. El
+parámetro sólo tiene efecto junto con `debug=1`; una URL pública con
+`od-stage`, `od-pair` o `seed` no puede saltarse el desbloqueo ni alterar el
+tramo inicial.
 
 El flujo normal siempre debe respetar el desbloqueo. Los atajos de desarrollo no deben cambiar el guardado.
 

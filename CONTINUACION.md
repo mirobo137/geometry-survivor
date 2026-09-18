@@ -2,6 +2,17 @@
 
 ## Estado actual — EX-11.6/EX-11.7 implementados, validación final pendiente, 17-09-2026
 
+## Balance Overdrive recalibrado — 17-09-2026
+
+La curva de vida dejó de usar `1, 3, 6, 9…`, porque el salto a `×9` en el
+tramo 4 producía un muro alrededor de los 13 minutos, pero la propuesta suave
+permitía llegar al minuto 26 con demasiada facilidad. Ahora usa
+`×1.25, ×2.59, ×4.64, ×6.76, ×8.97, ×11.25…`, con fórmula intermedia
+`redondear(0.625 + 1.925 × d + 0.04 × d², 2)` desde el tramo 2. El primer
+tramo gana presión desde el inicio y el cuarto vuelve a exigir una build
+desarrollada sin saltar a `×9`. El objetivo queda en 15–20 minutos; falta
+validarlo con una run humana real antes de cerrar el balance.
+
 Base de trabajo: `b00fbdb`, publicada en `origin/main`. Se implementaron y
 regresaron OD-A01–OD-A08 de [AUDITORIA_OVERDRIVE.md](docs/design/AUDITORIA_OVERDRIVE.md):
 las rutas debug ya no liquidan NOVA/récords, la transición conserva pausa y
@@ -37,6 +48,10 @@ No declarar EX-11 completamente cerrado hasta registrar esa evidencia.
 Validacion browser local adicional: la ruta publica desbloqueada inicia
 Overdrive con build limpia y muestra `Retirarse y cobrar` en pausa. Quedan las
 tres parejas y la sesion continua de diez minutos en PC/movil.
+La tarjeta de entrada ahora vive dentro de `Actos`: bloqueada se muestra
+deshabilitada y, tras vencer Acto III, permite iniciar Overdrive.
+La pantalla de victoria del Acto III tambien ofrece `Continuar al Overdrive`
+directamente; la navegacion abre la ruta publica con build limpia.
 
 Siguiente paso operativo: ejecutar las rutas de prueba de abajo en local o
 Pages, empezando por `od-pair=core-warden`, y devolver consola, calidad,

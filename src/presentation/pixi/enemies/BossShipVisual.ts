@@ -98,7 +98,11 @@ export class BossShipVisual {
   }
 
   public reset(): void {
-    this.setBossId('core-sentinel');
+    // A reset clears transient defeat animation only. The visual instance is
+    // permanently assigned to its boss family by CombatEntitiesView; falling
+    // back to Core Sentinel here made later Overdrive stages render the wrong
+    // hull after a stage transition.
+    this.setBossId(this.bossId);
     this.root.rotation = 0;
     this.defeatAge = -1;
     this.root.visible = false;

@@ -37,6 +37,7 @@ export { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
 export class EnemySystem {
   private contactCooldown = 0;
   private spawnIndex = 0;
+  private reservedSlotsCount = 0;
   private readonly orbiterBehavior = new OrbiterBehavior();
   private readonly chargerBehavior = new ChargerBehavior();
   private readonly prismWeaverBehavior = new PrismWeaverBehavior();
@@ -50,6 +51,23 @@ export class EnemySystem {
 
   public get states(): readonly EnemyState[] {
     return this.pool.states;
+  }
+
+  /** Capacity held for an announced boss replica volley. */
+  public get reservedSlots(): number {
+    return this.reservedSlotsCount;
+  }
+
+  public reserveSlots(count: number): boolean {
+    const requested = Math.max(0, Math.floor(count));
+    if (requested === 0) return true;
+    if (this.pool.activeCount + this.reservedSlotsCount + requested > this.pool.capacity) return false;
+    this.reservedSlotsCount += requested;
+    return true;
+  }
+
+  public releaseReservedSlots(count: number): void {
+    this.reservedSlotsCount = Math.max(0, this.reservedSlotsCount - Math.max(0, Math.floor(count)));
   }
 
   public spawn(elapsedSeconds: number, arenaRadius: number): EnemyState | null {
@@ -280,13 +298,16 @@ export class EnemySystem {
     leftY: number,
     rightX: number,
     rightY: number,
-    arenaRadius: number
+    arenaRadius: number,
+    reservedCount = 0
   ): number {
     let spawned = 0;
-    const left = this.spawnWardenReplica(leftX, leftY, arenaRadius);
-    if (left) spawned += 1;
-    const right = this.spawnWardenReplica(rightX, rightY, arenaRadius);
-    if (right) spawned += 1;
+    let reservedRemaining = Math.max(0, Math.floor(reservedCount));
+    const left = this.spawnWardenReplica(leftX, leftY, arenaRadius, reservedRemaining > 0);
+    if (left) { spawned += 1; reservedRemaining = Math.max(0, reservedRemaining - 1); }
+    const right = this.spawnWardenReplica(rightX, rightY, arenaRadius, reservedRemaining > 0);
+    if (right) { spawned += 1; reservedRemaining = Math.max(0, reservedRemaining - 1); }
+    this.releaseReservedSlots(reservedRemaining);
     return spawned;
   }
 
@@ -447,6 +468,7 @@ export class EnemySystem {
     this.grid.clear();
     this.contactCooldown = 0;
     this.spawnIndex = 0;
+    this.reservedSlotsCount = 0;
   }
 
   private configureEnemy(state: EnemyState, arenaRadius: number, index: number, kind: EnemyKind, splitterDepth = 0): void {
@@ -545,9 +567,15 @@ export class EnemySystem {
     this.resetFractureState(state, 'boss');
   }
 
-  private spawnWardenReplica(x: number, y: number, arenaRadius: number): EnemyState | null {
+  private spawnWardenReplica(
+    x: number,
+    y: number,
+    arenaRadius: number,
+    consumeReservation = false
+  ): EnemyState | null {
     const state = this.pool.acquire();
     if (!state) return null;
+    if (consumeReservation) this.releaseReservedSlots(1);
     const index = this.spawnIndex;
     this.spawnIndex += 1;
     this.configureEnemy(state, arenaRadius, index, 'warden-replica');

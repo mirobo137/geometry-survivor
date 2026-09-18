@@ -46,6 +46,10 @@ export class BossSystem {
   private replicaRightX = ARENA_CENTER.x;
   private replicaRightY = ARENA_CENTER.y;
   private enabled = true;
+  private retryPattern = false;
+  private reservedProjectiles = 0;
+  private reservedMines = 0;
+  private reservedReplicaSlots = 0;
 
   public constructor(
     private readonly enemies: EnemySystem,
@@ -182,6 +186,7 @@ export class BossSystem {
 
   /** Marks the dedicated boss as defeated when a weapon releases its pooled state. */
   public markDefeated(): void {
+    this.releasePatternReservations();
     this.boss = null;
     this.phase = 'defeated';
     this.phaseTimer = 0;
@@ -197,6 +202,7 @@ export class BossSystem {
   }
 
   public reset(): void {
+    this.releasePatternReservations();
     this.boss = null;
     this.phase = 'inactive';
     this.phaseTimer = 0;
@@ -212,6 +218,7 @@ export class BossSystem {
     this.replicaLeftY = ARENA_CENTER.y;
     this.replicaRightX = ARENA_CENTER.x;
     this.replicaRightY = ARENA_CENTER.y;
+    this.retryPattern = false;
     if (this.definition.id === 'orbital-warden') this.enemies.clearWardenReplicas();
     this.state.active = false;
     this.state.bossId = this.definition.id;
@@ -348,8 +355,10 @@ export class BossSystem {
         this.replicaLeftY,
         this.replicaRightX,
         this.replicaRightY,
-        this.arenaRadius
+        this.arenaRadius,
+        this.reservedReplicaSlots
       );
+      this.reservedReplicaSlots = 0;
     } else if (this.phase === 'sweep-active') {
       this.phase = 'recovery';
       this.attackGate?.onComplete(this.instanceId, this.state.pattern);
@@ -373,7 +382,11 @@ export class BossSystem {
       this.phase = 'recovery';
       this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else {
-      this.attackIndex += 1;
+      if (this.retryPattern) {
+        this.retryPattern = false;
+      } else {
+        this.attackIndex += 1;
+      }
       this.startPattern(player);
     }
   }
@@ -389,6 +402,14 @@ export class BossSystem {
       this.phase = 'recovery';
       this.phaseTimer = 0;
       this.hitApplied = true;
+      this.retryPattern = true;
+      return;
+    }
+    if (!this.reservePatternResources(pattern)) {
+      this.phase = 'recovery';
+      this.phaseTimer = 0;
+      this.hitApplied = true;
+      this.retryPattern = true;
       return;
     }
     this.attackGate?.onStart(this.instanceId, pattern);
@@ -649,7 +670,8 @@ export class BossSystem {
 
   private fireFractureBattery(player: PlayerState): void {
     if (this.definition.id !== 'fracture-engine') return;
-    this.fractureThreats?.fireProjectile(
+    const reserved = this.reservedProjectiles;
+    const created = this.fractureThreats?.fireProjectile(
       this.boss?.x ?? ARENA_CENTER.x,
       this.boss?.y ?? ARENA_CENTER.y,
       player.x,
@@ -657,24 +679,67 @@ export class BossSystem {
       245,
       13,
       0.92,
-      5
-    );
+      5,
+      reserved > 0
+    ) ?? 0;
+    if (reserved > created) this.fractureThreats?.releaseProjectiles?.(reserved - created);
+    this.reservedProjectiles = 0;
   }
 
   private deployFractureMines(): void {
     if (this.definition.id !== 'fracture-engine') return;
+    const reserved = this.reservedMines;
+    let created = 0;
     const originX = this.boss?.x ?? ARENA_CENTER.x;
     const originY = this.boss?.y ?? ARENA_CENTER.y;
     for (let index = 0; index < 4; index += 1) {
       const angle = this.attackIndex * 0.73 + index * Math.PI / 2;
       const radius = Math.min(this.arenaRadius - 60, 148);
-      this.fractureThreats?.deployMine(
+      created += this.fractureThreats?.deployMine(
         originX, originY,
         ARENA_CENTER.x + Math.cos(angle) * Math.max(40, radius),
         ARENA_CENTER.y + Math.sin(angle) * Math.max(40, radius),
-        21
-      );
+        21,
+        reserved > 0
+      ) ?? 0;
     }
+    if (reserved > created) this.fractureThreats?.releaseMines?.(reserved - created);
+    this.reservedMines = 0;
+  }
+
+  private reservePatternResources(pattern: BossPattern): boolean {
+    if (pattern === 'replicas' && this.definition.id === 'orbital-warden') {
+      const requested = Math.max(0, Math.floor(this.definition.replicaCount));
+      if (!this.enemies.reserveSlots(requested)) return false;
+      this.reservedReplicaSlots = requested;
+      return true;
+    }
+    if (pattern === 'battery' && this.definition.id === 'fracture-engine' && this.fractureThreats) {
+      const requested = 5;
+      if (!(this.fractureThreats.reserveProjectiles?.(requested) ?? true)) return false;
+      this.reservedProjectiles = requested;
+    }
+    if (pattern === 'mines' && this.definition.id === 'fracture-engine' && this.fractureThreats) {
+      const requested = 4;
+      if (!(this.fractureThreats.reserveMines?.(requested) ?? true)) {
+        if (this.reservedProjectiles > 0) {
+          this.fractureThreats.releaseProjectiles?.(this.reservedProjectiles);
+          this.reservedProjectiles = 0;
+        }
+        return false;
+      }
+      this.reservedMines = requested;
+    }
+    return true;
+  }
+
+  private releasePatternReservations(): void {
+    if (this.reservedProjectiles > 0) this.fractureThreats?.releaseProjectiles?.(this.reservedProjectiles);
+    if (this.reservedMines > 0) this.fractureThreats?.releaseMines?.(this.reservedMines);
+    if (this.reservedReplicaSlots > 0) this.enemies.releaseReservedSlots(this.reservedReplicaSlots);
+    this.reservedProjectiles = 0;
+    this.reservedMines = 0;
+    this.reservedReplicaSlots = 0;
   }
 
   private distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {

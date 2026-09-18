@@ -46,15 +46,21 @@ export interface FractureThreatEmitter {
     speed: number,
     damage: number,
     spreadRadians?: number,
-    count?: number
+    count?: number,
+    consumeReservation?: boolean
   ): number;
   deployMine(
     originX: number,
     originY: number,
     targetX: number,
     targetY: number,
-    damage?: number
+    damage?: number,
+    consumeReservation?: boolean
   ): number;
+  reserveProjectiles?(count: number): boolean;
+  releaseProjectiles?(count: number): void;
+  reserveMines?(count: number): boolean;
+  releaseMines?(count: number): void;
 }
 
 const PROJECTILE_CAPACITY = 48;
@@ -83,6 +89,8 @@ export class FractureThreatSystem implements FractureThreatEmitter {
   private projectileCursor = 0;
   private mineCursor = 0;
   private sequence = 0;
+  private reservedProjectiles = 0;
+  private reservedMines = 0;
 
   public fireProjectile(
     originX: number,
@@ -92,10 +100,15 @@ export class FractureThreatSystem implements FractureThreatEmitter {
     speed: number,
     damage: number,
     spreadRadians = 0,
-    count = 1
+    count = 1,
+    consumeReservation = false
   ): number {
     let created = 0;
     const total = Math.max(1, Math.floor(count));
+    const reservedForCall = consumeReservation
+      ? Math.min(total, this.reservedProjectiles)
+      : 0;
+    if (reservedForCall > 0) this.reservedProjectiles -= reservedForCall;
     const baseAngle = Math.atan2(targetY - originY, targetX - originX);
     for (let index = 0; index < total; index += 1) {
       const state = this.acquireProjectile();
@@ -114,6 +127,7 @@ export class FractureThreatSystem implements FractureThreatEmitter {
       state.sequence = ++this.sequence;
       created += 1;
     }
+    if (created < reservedForCall) this.reservedProjectiles += reservedForCall - created;
     return created;
   }
 
@@ -122,10 +136,16 @@ export class FractureThreatSystem implements FractureThreatEmitter {
     originY: number,
     targetX: number,
     targetY: number,
-    damage = 18
+    damage = 18,
+    consumeReservation = false
   ): number {
+    const reservedForCall = consumeReservation && this.reservedMines > 0 ? 1 : 0;
+    if (reservedForCall > 0) this.reservedMines -= reservedForCall;
     const state = this.acquireMine();
-    if (!state) return 0;
+    if (!state) {
+      if (reservedForCall > 0) this.reservedMines += reservedForCall;
+      return 0;
+    }
     state.x = targetX;
     state.y = targetY;
     state.radius = 11;
@@ -202,9 +222,37 @@ export class FractureThreatSystem implements FractureThreatEmitter {
     this.projectileCursor = 0;
     this.mineCursor = 0;
     this.sequence = 0;
+    this.reservedProjectiles = 0;
+    this.reservedMines = 0;
+  }
+
+  public reserveProjectiles(count: number): boolean {
+    const requested = Math.max(0, Math.floor(count));
+    const active = this.projectiles.reduce((total, projectile) => total + (projectile.active ? 1 : 0), 0);
+    if (active + this.reservedProjectiles + requested > this.projectiles.length) return false;
+    this.reservedProjectiles += requested;
+    return true;
+  }
+
+  public releaseProjectiles(count: number): void {
+    this.reservedProjectiles = Math.max(0, this.reservedProjectiles - Math.max(0, Math.floor(count)));
+  }
+
+  public reserveMines(count: number): boolean {
+    const requested = Math.max(0, Math.floor(count));
+    const active = this.mines.reduce((total, mine) => total + (mine.active ? 1 : 0), 0);
+    if (active + this.reservedMines + requested > this.mines.length) return false;
+    this.reservedMines += requested;
+    return true;
+  }
+
+  public releaseMines(count: number): void {
+    this.reservedMines = Math.max(0, this.reservedMines - Math.max(0, Math.floor(count)));
   }
 
   private acquireProjectile(): FractureProjectileState | null {
+    const active = this.projectiles.reduce((total, projectile) => total + (projectile.active ? 1 : 0), 0);
+    if (active >= this.projectiles.length - this.reservedProjectiles) return null;
     for (let offset = 0; offset < this.projectiles.length; offset += 1) {
       const index = (this.projectileCursor + offset) % this.projectiles.length;
       const state = this.projectiles[index];
@@ -217,6 +265,8 @@ export class FractureThreatSystem implements FractureThreatEmitter {
   }
 
   private acquireMine(): FractureMineState | null {
+    const active = this.mines.reduce((total, mine) => total + (mine.active ? 1 : 0), 0);
+    if (active >= this.mines.length - this.reservedMines) return null;
     for (let offset = 0; offset < this.mines.length; offset += 1) {
       const index = (this.mineCursor + offset) % this.mines.length;
       const state = this.mines[index];

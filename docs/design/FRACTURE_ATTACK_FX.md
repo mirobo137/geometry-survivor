@@ -37,7 +37,11 @@ guías canónicas de rendering/SVG. No modifica daño, cadencias ni dificultad.
    Float64: Float32 puede redondear 0.32 hacia abajo y dejar visible el residuo
    indefinidamente. Reset limpia marcas y edades. Reutilizar una mina puede
    reemplazar su residuo anterior; no ampliar el pool sólo para conservarlo.
-6. El boss toma posición angular/radio desde el final del zigzag al recuperar
+6. Un proyectil hostil que pierda velocidad, reciba coordenadas no finitas o
+   deje de avanzar se retira mediante un watchdog de 0.25 s. La presentación
+   también limpia la geometría del slot al liberarlo. Es una protección contra
+   balas congeladas y no modifica el TTL, daño ni trayectoria authored válida.
+7. El boss toma posición angular/radio desde el final del zigzag al recuperar
    movimiento libre. No proyectarlo de nuevo sobre su órbita de entrada.
 
 ## Verificación y rutas

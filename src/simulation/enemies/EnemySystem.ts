@@ -20,6 +20,8 @@ import { ChargerBehavior } from './ChargerBehavior';
 import { PrismWeaverBehavior } from './PrismWeaverBehavior';
 import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
+import { capOverdriveHealth } from '../../content/run/OverdriveDefinitions';
+import type { BossDefinition } from '../../content/bosses/BossDefinition';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -70,11 +72,14 @@ export class EnemySystem {
     return state;
   }
 
-  public spawnBoss(arenaRadius: number, spawnDistance: number): EnemyState | null {
-    if (this.pool.states.some((state) => state.active && state.kind === 'boss')) return null;
+  public spawnBoss(
+    arenaRadius: number,
+    spawnDistance: number,
+    bossDefinition: BossDefinition = this.actDirector.bossDefinition
+  ): EnemyState | null {
     const state = this.pool.acquire();
     if (!state) return null;
-    this.configureBoss(state, arenaRadius, spawnDistance);
+    this.configureBoss(state, arenaRadius, spawnDistance, bossDefinition);
     return state;
   }
 
@@ -449,6 +454,7 @@ export class EnemySystem {
     const angle = index * SPAWN_ANGLE_STEP;
     const distance = Math.max(arenaRadius + SPAWN_RADIUS_PADDING + (index % 4) * 24, 380);
     state.kind = kind;
+    state.bossId = undefined;
     state.x = ARENA_CENTER.x + Math.cos(angle) * distance;
     state.y = ARENA_CENTER.y + Math.sin(angle) * distance;
     state.vx = 0;
@@ -456,9 +462,11 @@ export class EnemySystem {
     const isSplitterChild = kind === 'splitter' && splitterDepth > 0;
     state.radius = definition.radius * (isSplitterChild ? SPLITTER_DEFINITION.childRadiusScale : 1);
     state.speed = definition.speed * (isSplitterChild ? SPLITTER_DEFINITION.childSpeedScale : 1);
-    state.maxHealth = definition.maxHealth
-      * this.actDirector.enemyHealthMultiplier
-      * (isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1);
+    state.maxHealth = capOverdriveHealth(
+      definition.maxHealth,
+      this.actDirector.enemyHealthMultiplier,
+      isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1
+    );
     state.health = state.maxHealth;
     state.contactDamage = definition.contactDamage * (isSplitterChild ? SPLITTER_DEFINITION.childContactDamageScale : 1);
     state.contactEnabled = kind !== 'orbiter';
@@ -487,17 +495,24 @@ export class EnemySystem {
     if (kind === 'prism-weaver') this.prismWeaverBehavior.configure(state, index, arenaRadius);
   }
 
-  private configureBoss(state: EnemyState, arenaRadius: number, spawnDistance: number): void {
+  private configureBoss(
+    state: EnemyState,
+    arenaRadius: number,
+    spawnDistance: number,
+    bossDefinition: BossDefinition = this.actDirector.bossDefinition
+  ): void {
     const definition = ENEMY_DEFINITIONS.boss;
-    const bossDefinition = this.actDirector.bossDefinition;
     const bossRadius = bossDefinition.bossRadius ?? definition.radius;
-    const bossHealth = (bossDefinition.maxHealth ?? definition.maxHealth)
-      * this.actDirector.enemyHealthMultiplier;
+    const bossHealth = capOverdriveHealth(
+      bossDefinition.maxHealth ?? definition.maxHealth,
+      this.actDirector.enemyHealthMultiplier
+    );
     const distance = Math.min(
       Math.max(0, spawnDistance),
       Math.max(0, arenaRadius - bossRadius - 16)
     );
     state.kind = definition.kind;
+    state.bossId = bossDefinition.id;
     state.x = ARENA_CENTER.x;
     state.y = ARENA_CENTER.y - distance;
     state.vx = 0;

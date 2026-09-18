@@ -96,6 +96,9 @@ describe('OverdriveActDirector', () => {
   it('keeps boss timing owned by the rotated boss definition', () => {
     expect(new OverdriveActDirector(4, 0x1).bossStartSeconds).toBe(260);
     expect(new OverdriveActDirector(6, 0x1).bossStartSeconds).toBe(250);
+    expect(new OverdriveActDirector(10, 0x1).bossStartSeconds).toBe(250);
+    expect(new OverdriveActDirector(11, 0x1).bossDefinition.startSeconds).toBe(250);
+    expect(new OverdriveActDirector(12, 0x1).bossDefinition.startSeconds).toBe(250);
   });
 
   it('rebinds the stage profile without replacing the director instance', () => {
@@ -108,5 +111,17 @@ describe('OverdriveActDirector', () => {
     expect(director.stageState).toMatchObject({ stage: 4, healthMultiplier: 9, pressureMultiplier: 1.15 });
     expect(director.definition.id).toBe('angular');
     expect(director.enemyHealthMultiplier).toBe(9);
+  });
+
+  it('keeps paired boss selection bounded, deterministic and duplicate-free', () => {
+    const forced = new OverdriveActDirector(10, 0x1234).getBossEncounter('core-fracture');
+    expect(forced.map((definition) => definition.id)).toEqual(['core-sentinel', 'fracture-engine']);
+    expect(forced.every((definition) => definition.startSeconds === 250)).toBe(true);
+
+    const first = new OverdriveActDirector(24, 0xdecafbad).getBossEncounter();
+    const second = new OverdriveActDirector(24, 0xdecafbad).getBossEncounter();
+    expect(first.map((definition) => definition.id)).toEqual(second.map((definition) => definition.id));
+    expect(new Set(first.map((definition) => definition.id)).size).toBe(first.length);
+    expect(first.length).toBeLessThanOrEqual(2);
   });
 });

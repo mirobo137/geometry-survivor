@@ -7,6 +7,7 @@ import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
+import type { BossInstanceId } from '../bosses/BossSystem';
 import type { FractureMineState, FractureProjectileState } from '../fracture/FractureThreatSystem';
 
 export type { BoomerangPhase } from './EntityPools';
@@ -37,6 +38,8 @@ export type BossPhase =
 
 export interface BossRenderState {
   bossId: BossId;
+  /** Present on runtime states; optional keeps isolated visual fixtures backwards-compatible. */
+  instanceId?: BossInstanceId;
   active: boolean;
   x: number;
   y: number;
@@ -175,6 +178,7 @@ export interface MagneticChargeState {
 export interface EnemyRenderState {
   readonly active: boolean;
   readonly kind: EnemyKind;
+  readonly bossId?: BossId;
   readonly x: number;
   readonly y: number;
   readonly vx: number;
@@ -269,6 +273,8 @@ export interface CombatRenderState {
   readonly pulseRing: Readonly<PulseRingState>;
   readonly angularSweep: Readonly<AngularSweepState>;
   readonly boss: Readonly<BossRenderState>;
+  /** Both slots are always present; inactive slots keep the render contract stable. */
+  readonly bosses?: readonly Readonly<BossRenderState>[];
   readonly fractureProjectiles: readonly FractureProjectileState[];
   readonly fractureMines: readonly FractureMineState[];
   readonly shot: Readonly<ShotRenderState>;

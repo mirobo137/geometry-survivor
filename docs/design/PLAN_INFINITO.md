@@ -1,15 +1,42 @@
 # EX-11 — Plan de implementación del modo Infinito
 
-Estado: **EX-11.1–EX-11.5 implementados; auditoría requiere correcciones antes de EX-11.6**
+Estado: **EX-11.1–EX-11.7 y OD-A01–OD-A08 implementados; validación integral pendiente**
 Última actualización: 2026-09-17
 
-Puerta vigente: resolver [auditoría de Overdrive](AUDITORIA_OVERDRIVE.md),
-OD-A01–OD-A08 y sus regresiones. La suite existente pasa, pero no demuestra
-cumplimiento de los casos descubiertos; la validación humana sigue pendiente.
+Puerta vigente: la auditoría OD-A01–OD-A08 está corregida y cubierta por
+regresiones. EX-11.6 ya soporta dos instancias de boss, slots reservados,
+arbitraje y finalización conjunta; EX-11.7 añade la entrada pública después
+del Acto III, retirada y liquidación única. Falta probar el flujo público en
+browser/Pages y completar la validación humana de sesiones largas.
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
 
+## Estado de implementación de esta entrega
+
+- Overdrive sigue siendo `campaign | overdrive`, nunca un cuarto `ActId`.
+- El director selecciona un único boss hasta el tramo 9; desde el tramo 10
+  puede añadir uno de los otros dos modelos con semilla, sin duplicar tipo.
+  `?od-pair=core-warden|core-fracture|warden-fracture` fuerza una pareja sólo
+  en rutas debug.
+- Cada boss tiene instancia, barra, nave y estado de derrota propios. El tramo
+  sólo avanza cuando la colección completa queda derrotada. Las réplicas del
+  Warden sólo las limpia su propio boss.
+- En una pareja se reservan dos slots del pool enemigo, se bloquean nuevos
+  hazards de arena y se alternan ataques especiales con cola de lectura de
+  0,35 s; los peligros ya activos terminan normalmente.
+- El menú desbloquea **Infinito** al vencer el Acto III. La ruta pública es
+  `?mode=overdrive`; las rutas `?debug=1&mode=overdrive...` siguen siendo
+  diagnósticas y no escriben NOVA, récords ni desbloqueos.
+- La retirada está disponible en pausa sólo en Overdrive y pide confirmación.
+  Muerte o retirada liquidan una sola recompensa; el récord de Overdrive se
+  guarda separado del récord de campaña y no se ofrece doble NOVA.
+
 ## 1. Decisiones cerradas
+
+> Validacion local adicional (17-09-2026): el smoke browser comprobo la ruta
+> publica desbloqueada `?mode=overdrive`, el inicio con build limpia y la
+> retirada visible desde pausa. Sigue pendiente la validacion humana de las
+> tres parejas y de una sesion continua de diez minutos en PC y movil.
 
 - Infinito se desbloquea al derrotar al boss del Acto III.
 - Es una partida independiente que comienza con **build limpia**. Conserva únicamente las mejoras permanentes que ya aplican a una partida normal.
@@ -256,10 +283,10 @@ El flujo normal siempre debe respetar el desbloqueo. Los atajos de desarrollo no
 3. Implementar la transición segura sin borrar build, XP ni modificadores.
 4. Ampliar la política de cartas de tres a seis armas después de las tres evoluciones.
 5. Implementar cartas de reserva post-evolución y sus límites.
-6. Migrar bosses, eventos, amenazas y presentación a un máximo de dos instancias.
-7. Añadir retirada, recompensa única y protección de contadores.
-8. Añadir rutas de depuración y documentación.
-9. Ejecutar las pruebas y corregir regresiones antes de declarar EX-11 terminado.
+6. Migrar bosses, eventos, amenazas y presentación a un máximo de dos instancias. **Implementado.**
+7. Añadir retirada, recompensa única y protección de contadores. **Implementado.**
+8. Añadir rutas de depuración y documentación. **Implementado; falta prueba browser pública.**
+9. Ejecutar las pruebas y corregir regresiones antes de declarar EX-11 terminado. **En curso: falta validación humana integral.**
 
 No declarar terminado el modo si solamente funcionan los primeros tres tramos.
 
@@ -272,6 +299,8 @@ No declarar terminado el modo si solamente funcionan los primeros tres tramos.
 - Comparar la primera vuelta con las cronologías actuales de los tres actos.
 - Confirmar invitados y arenas correctos en vueltas 2 y 3.
 - Confirmar que no hay dos bosses antes del tramo 10.
+- Confirmar parejas deterministas desde el tramo 10, sin tipos repetidos y con
+  alternancia de especiales.
 - Confirmar que el siguiente tramo espera a todos los bosses.
 - Confirmar conservación de build, XP, nivel, modificadores y recargas.
 - Confirmar bloqueo inicial en tres armas y ampliación permanente a seis.

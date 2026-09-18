@@ -140,7 +140,16 @@ describe('UpgradeApplier', () => {
         reserveHand = hand;
         break;
       }
-      for (const choice of authored) expect(applier.apply(choice.id)).toBe(true);
+      expect(hand.some((choice) => choice.id.startsWith('overdrive_'))).toBe(false);
+      for (const choice of authored) {
+        if (choice.id === 'universal_weapon_mastery') {
+          const target = applier.getUniversalMasteryChoices()[0];
+          expect(target).toBeDefined();
+          expect(applier.applyUniversalMastery(target!.id)).toBe(true);
+        } else {
+          expect(applier.apply(choice.id)).toBe(true);
+        }
+      }
     }
 
     expect(reserveHand.length).toBeGreaterThan(0);
@@ -171,6 +180,39 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('overdrive_repair')).toBe(true);
     expect(player.state.health).toBe(player.state.maxHealth);
     expect(applier.canApply('overdrive_repair')).toBe(false);
+  });
+
+  it('keeps universal mastery eligible after Overdrive expands to six families', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x600d, 'overdrive');
+    const families = [
+      { base: undefined, path: 'projectile' as const, evolution: 'rail_lance' as const },
+      { base: 'orbit_blade' as const, path: 'orbit' as const, evolution: 'solar_crown' as const },
+      { base: 'chain_lightning' as const, path: 'chain' as const, evolution: 'closed_circuit' as const },
+      { base: 'vector_boomerang' as const, path: 'boomerang' as const, evolution: 'twin_comet' as const },
+      { base: 'pulse_ring' as const, path: 'pulse_ring' as const, evolution: 'echo_shock' as const },
+      { base: 'magnetic_charge' as const, path: 'magnetic_charge' as const, evolution: 'event_horizon' as const }
+    ];
+    for (const family of families) {
+      if (family.base !== undefined) expect(applier.apply(family.base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`${family.path}_rank_${rank}`)).toBe(true);
+      expect(applier.apply(family.evolution)).toBe(true);
+    }
+
+    expect(applier.isOverdriveArsenalExpanded).toBe(true);
+    expect(applier.canApply('universal_weapon_mastery')).toBe(true);
+    expect(applier.getUniversalMasteryChoices()).toHaveLength(6);
+  });
+
+  it('bounds the acquisition history without changing stack totals', () => {
+    const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1234, 'overdrive');
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    expect(applier.apply('rail_lance')).toBe(true);
+    for (let index = 0; index < 300; index += 1) {
+      expect(applier.apply('overdrive_power_projectile')).toBe(true);
+    }
+    expect(applier.snapshot()).toHaveLength(256);
+    expect(applier.getStacks('overdrive_power_projectile')).toBe(300);
   });
 
   it('applies independent Overdrive power to every weapon family and clears it on reset', () => {

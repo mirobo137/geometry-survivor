@@ -9,6 +9,7 @@ import {
   getOverdriveStageInLap,
   normalizeOverdriveSeed,
   normalizeOverdriveStage,
+  capOverdriveHealth,
   OVERDRIVE_HEALTH_MULTIPLIER_CAP,
   OVERDRIVE_MAX_PRESSURE_MULTIPLIER
 } from './OverdriveDefinitions';
@@ -21,6 +22,7 @@ describe('OverdriveDefinitions', () => {
     expect(normalizeOverdriveSeed(0)).toBe(DEFAULT_OVERDRIVE_SEED);
     expect(normalizeOverdriveSeed('42')).toBe(DEFAULT_OVERDRIVE_SEED);
     expect(normalizeOverdriveSeed(0x1234)).toBe(0x1234);
+    expect(normalizeOverdriveStage(Number.MAX_VALUE)).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it('maps stages to laps and the three authored positions', () => {
@@ -54,5 +56,12 @@ describe('OverdriveDefinitions', () => {
       healthMultiplier: 9,
       pressureMultiplier: 1.15
     });
+  });
+
+  it('caps the final health value without allowing invalid arithmetic', () => {
+    expect(capOverdriveHealth(520, 1_000_000_000)).toBe(1_000_000_000);
+    expect(capOverdriveHealth(100, 3, 0.5)).toBe(150);
+    expect(capOverdriveHealth(Number.POSITIVE_INFINITY, 3)).toBe(1_000_000_000);
+    expect(capOverdriveHealth(Number.NaN, 3)).toBe(0);
   });
 });

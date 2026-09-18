@@ -18,7 +18,7 @@ import { AngularSweepHazard } from '../hazards/AngularSweepHazard';
 import type { CombatRenderState } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
-import { BossSystem } from '../bosses/BossSystem';
+import { BossSystem, type BossAttackGate, type BossInstanceId } from '../bosses/BossSystem';
 import { ORBITAL_WARDEN_DEFINITION } from '../../content/bosses/BossDefinition';
 import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
 import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
@@ -32,6 +32,8 @@ import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/w
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 import { OVERDRIVE_POWER_INCREMENT } from '../../content/run/OverdriveDefinitions';
 import { FractureThreatSystem } from '../fracture/FractureThreatSystem';
+import { OverdriveActDirector, type OverdriveBossPair } from '../acts/OverdriveActDirector';
+import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -41,6 +43,8 @@ export interface CombatSimulationOptions {
   readonly initialElapsedSeconds?: number;
   readonly permanentBonuses?: PermanentCombatBonuses;
   readonly actDirector?: RadialActDirector;
+  /** Optional seeded pair used by public Overdrive and its reproducible QA routes. */
+  readonly overdriveBossPair?: OverdriveBossPair;
   /** Explicit development-only cadence profile; authored is the default. */
   readonly hazardCadenceMode?: HazardCadenceMode;
   /** Isolated first-family scenario; never changes the normal Radial run. */
@@ -78,7 +82,14 @@ export type CombatEvent =
     readonly kind: EnemyKind;
     readonly experience: number;
   }
-  | { readonly type: 'bossDefeated' }
+  | {
+    readonly type: 'bossDefeated';
+    readonly bossId?: BossId;
+    readonly instanceId?: BossInstanceId;
+    readonly x?: number;
+    readonly y?: number;
+    readonly radius?: number;
+  }
   | {
     readonly type: 'playerDamaged';
     readonly amount: number;
@@ -93,6 +104,56 @@ export interface CombatStats {
   damageTaken: number;
 }
 
+/**
+ * Serializes special attacks for a paired encounter without changing any
+ * authored BossDefinition. The lock includes the persistent projectile/mine
+ * tail and a short readability gap before the other boss gets priority.
+ */
+class PairedBossAttackGate implements BossAttackGate {
+  private activeOwner: BossInstanceId | null = null;
+  private cooldownSeconds = 0;
+  private nextPriority: BossInstanceId = 'primary';
+
+  public constructor(private paired: boolean) {}
+
+  public configure(paired: boolean): void {
+    this.paired = paired;
+    this.activeOwner = null;
+    this.cooldownSeconds = 0;
+    this.nextPriority = 'primary';
+  }
+
+  public update(dtSeconds: number): void {
+    this.cooldownSeconds = Math.max(0, this.cooldownSeconds - Math.max(0, dtSeconds));
+  }
+
+  public canStart(instanceId: BossInstanceId, _pattern: BossPattern): boolean {
+    if (!this.paired) return true;
+    return this.activeOwner === null
+      && this.cooldownSeconds <= 0
+      && this.nextPriority === instanceId;
+  }
+
+  public onStart(instanceId: BossInstanceId, _pattern: BossPattern): void {
+    if (!this.paired) return;
+    this.activeOwner = instanceId;
+    this.nextPriority = instanceId === 'primary' ? 'secondary' : 'primary';
+  }
+
+  public onComplete(instanceId: BossInstanceId, pattern: BossPattern): void {
+    if (!this.paired || this.activeOwner !== instanceId) return;
+    this.activeOwner = null;
+    const persistentTail = pattern === 'battery' ? 3.1 : pattern === 'mines' ? 2.45 : 0;
+    this.cooldownSeconds = persistentTail + 0.35;
+  }
+
+  public skip(instanceId: BossInstanceId): void {
+    if (!this.paired) return;
+    if (this.activeOwner === instanceId) this.activeOwner = null;
+    if (this.nextPriority === instanceId) this.nextPriority = instanceId === 'primary' ? 'secondary' : 'primary';
+  }
+}
+
 export class CombatSimulation {
   public readonly enemies = new EnemyPool(ENEMY_POOL_CAPACITY);
   public readonly stats: CombatStats = {
@@ -105,6 +166,8 @@ export class CombatSimulation {
   private readonly actDirector: RadialActDirector;
   private readonly enemySystem: EnemySystem;
   public readonly boss: BossSystem;
+  public readonly secondaryBoss: BossSystem;
+  public readonly bosses: readonly BossSystem[];
   private readonly weaponSystem: CombatWeaponSystem;
   public readonly projectiles: ProjectilePool;
   public readonly boomerangs: CombatWeaponSystem['boomerangs'];
@@ -146,9 +209,13 @@ export class CombatSimulation {
   private stageElapsedSeconds = 0;
   private stressInitialized = false;
   private currentArenaRadius = 270;
+  private readonly overdriveBossPair: OverdriveBossPair | undefined;
+  private readonly bossAttackGate: PairedBossAttackGate | undefined;
+  private doubleBossEncounter = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.actDirector = options.actDirector ?? new RadialActDirector();
+    this.overdriveBossPair = options.overdriveBossPair;
     this.stressMode = options.stress === true;
     this.orbiterDrill = options.orbiterDrill === true;
     this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
@@ -194,11 +261,27 @@ export class CombatSimulation {
       this.actDirector,
       this.fractureThreats
     );
+    const initialBosses = this.getOverdriveBossEncounter();
+    this.bossAttackGate = this.actDirector instanceof OverdriveActDirector
+      ? new PairedBossAttackGate(initialBosses.length > 1)
+      : undefined;
+    this.doubleBossEncounter = initialBosses.length > 1;
     this.boss = new BossSystem(
       this.enemySystem,
-      this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition,
-      this.fractureThreats
+      initialBosses[0] ?? (this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition),
+      this.fractureThreats,
+      'primary',
+      this.bossAttackGate
     );
+    this.secondaryBoss = new BossSystem(
+      this.enemySystem,
+      initialBosses[1] ?? initialBosses[0] ?? this.actDirector.bossDefinition,
+      this.fractureThreats,
+      'secondary',
+      this.bossAttackGate
+    );
+    this.secondaryBoss.setEnabled(initialBosses.length > 1);
+    this.bosses = [this.boss, this.secondaryBoss];
     this.laser = new LaserHazard(
       LASER_DEFINITION,
       this.actDirector,
@@ -249,6 +332,7 @@ export class CombatSimulation {
       pulseRing: this.pulseRing.state,
       angularSweep: this.angularSweep.state,
       boss: this.boss.state,
+      bosses: this.bosses.map((system) => system.state),
       fractureProjectiles: this.fractureThreats.projectiles,
       fractureMines: this.fractureThreats.mines,
       shot: this.weaponSystem.lastShot
@@ -265,8 +349,24 @@ export class CombatSimulation {
     return this.stressMode;
   }
 
+  public get allBossesDefeated(): boolean {
+    return this.bosses.some((system) => system.state.phase !== 'inactive')
+      && this.bosses.every((system) => !system.state.active);
+  }
+
+  public get activeBossCount(): number {
+    return this.bosses.reduce((count, system) => count + (system.state.active ? 1 : 0), 0);
+  }
+
   public get currentProjectileDamage(): number {
     return this.weaponSystem.currentProjectileDamage;
+  }
+
+  private getOverdriveBossEncounter(): readonly import('../../content/bosses/BossDefinition').BossDefinition[] {
+    if (this.actDirector instanceof OverdriveActDirector) {
+      return this.actDirector.getBossEncounter(this.overdriveBossPair);
+    }
+    return [this.wardenDrill ? ORBITAL_WARDEN_DEFINITION : this.actDirector.bossDefinition];
   }
 
   public get currentProjectileCooldown(): number {
@@ -592,7 +692,7 @@ export class CombatSimulation {
       this.stageElapsedSeconds,
       player,
       arenaBoundary,
-      this.radialPulse.state.phase === 'idle'
+      !this.doubleBossEncounter && this.radialPulse.state.phase === 'idle'
     )) {
       this.stats.damageTaken += LASER_DEFINITION.damage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: LASER_DEFINITION.damage, source: 'laser' });
@@ -602,8 +702,8 @@ export class CombatSimulation {
       this.stageElapsedSeconds,
       player,
       arenaBoundary,
-      this.laser.state.phase === 'idle',
-      this.boss.state.active
+      !this.doubleBossEncounter && this.laser.state.phase === 'idle',
+      this.activeBossCount > 0
     )) {
       this.stats.damageTaken += this.actDirector.radialPulseDefinition.damage;
       this.pendingEvents.push({
@@ -619,8 +719,8 @@ export class CombatSimulation {
         this.stageElapsedSeconds,
         player,
         arenaBoundary,
-        !this.boss.state.active,
-        this.boss.state.active
+        !this.doubleBossEncounter && !this.boss.state.active,
+        this.activeBossCount > 0
       );
       if (pulse.pushX !== 0 || pulse.pushY !== 0) applyHazardPush(player, pulse.pushX, pulse.pushY, arenaBoundary);
       if (pulse.damaged) {
@@ -640,7 +740,7 @@ export class CombatSimulation {
         player,
         arenaBoundary,
           angularAct || fractureAct
-            ? !this.boss.state.active
+            ? !this.doubleBossEncounter && !this.boss.state.active
           : !this.wardenDrill || this.boss.state.phase === 'recovery' || !this.boss.state.active
       );
       if (sector.damaged) {
@@ -691,7 +791,10 @@ export class CombatSimulation {
       // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
       const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stageElapsedSeconds);
-      const normalEnemyCapacity = this.stressMode ? this.enemies.capacity : Math.max(0, this.enemies.capacity - 1);
+      const reservedBossSlots = this.stressMode
+        ? 0
+        : this.actDirector instanceof OverdriveActDirector ? this.bosses.length : 1;
+      const normalEnemyCapacity = Math.max(0, this.enemies.capacity - reservedBossSlots);
       while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
         this.spawnAccumulator -= spawnInterval;
         this.enemySystem.spawn(this.stageElapsedSeconds, arenaRadius);
@@ -702,10 +805,13 @@ export class CombatSimulation {
     }
 
     if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill)) {
-      const bossDamage = this.boss.update(dt, this.stageElapsedSeconds, player, arenaRadius);
-      if (bossDamage > 0) {
-        this.stats.damageTaken += bossDamage;
-        this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage, source: 'boss' });
+      this.bossAttackGate?.update(dt);
+      for (const bossSystem of this.bosses) {
+        const bossDamage = bossSystem.update(dt, this.stageElapsedSeconds, player, arenaRadius);
+        if (bossDamage > 0) {
+          this.stats.damageTaken += bossDamage;
+          this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage, source: 'boss' });
+        }
       }
     }
 
@@ -765,6 +871,7 @@ export class CombatSimulation {
   public reset(): void {
     this.enemySystem.reset();
     this.boss.reset();
+    this.secondaryBoss.reset();
     this.weaponSystem.reset();
     // Development drills must remain directly playable after restart/pause.
     // `CombatWeaponSystem.reset()` correctly clears run-owned unlocks, so
@@ -798,7 +905,12 @@ export class CombatSimulation {
    */
   public reconfigureOverdriveStage(): void {
     this.enemySystem.reset();
-    this.boss.reconfigure(this.actDirector.bossDefinition);
+    const encounter = this.getOverdriveBossEncounter();
+    this.doubleBossEncounter = encounter.length > 1;
+    this.bossAttackGate?.configure(encounter.length > 1);
+    this.boss.reconfigure(encounter[0] ?? this.actDirector.bossDefinition);
+    this.secondaryBoss.reconfigure(encounter[1] ?? encounter[0] ?? this.actDirector.bossDefinition);
+    this.secondaryBoss.setEnabled(encounter.length > 1);
     this.weaponSystem.clearTransientState();
     this.laser.reset();
     this.radialPulse.reconfigure(this.createRadialPulseDefinition());
@@ -856,8 +968,17 @@ export class CombatSimulation {
     this.stats.kills += 1;
     this.stats.experience += experience;
     if (kind === 'boss') {
-      this.boss.markDefeated();
-      this.pendingEvents.push({ type: 'bossDefeated' });
+      const owner = this.bosses.find((system) => system.ownsEnemy(enemy)) ?? this.boss;
+      owner.markDefeated();
+      if (owner?.instanceId !== undefined) this.bossAttackGate?.skip(owner.instanceId);
+      this.pendingEvents.push({
+        type: 'bossDefeated',
+        bossId: enemy.bossId,
+        instanceId: owner?.instanceId,
+        x,
+        y,
+        radius: enemy.radius
+      });
       return;
     }
     if (kind === 'splitter') {

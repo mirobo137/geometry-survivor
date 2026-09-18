@@ -14,6 +14,8 @@ export interface FractureProjectileState {
   damage: number;
   ageSeconds: number;
   lifetimeSeconds: number;
+  /** Safety watchdog for malformed/stalled ordnance; never affects authored motion. */
+  stalledSeconds: number;
   sequence: number;
 }
 
@@ -58,10 +60,12 @@ export interface FractureThreatEmitter {
 const PROJECTILE_CAPACITY = 48;
 const MINE_CAPACITY = 12;
 const EPSILON = 0.000001;
+const PROJECTILE_MIN_SPEED = 0.5;
+const PROJECTILE_MAX_STALLED_SECONDS = 0.25;
 
 const createProjectile = (): FractureProjectileState => ({
   active: false, x: 0, y: 0, vx: 0, vy: 0, radius: 6, damage: 0,
-  ageSeconds: 0, lifetimeSeconds: 3, sequence: 0
+  ageSeconds: 0, lifetimeSeconds: 3, stalledSeconds: 0, sequence: 0
 });
 
 const createMine = (): FractureMineState => ({
@@ -106,6 +110,7 @@ export class FractureThreatSystem implements FractureThreatEmitter {
       state.damage = Math.max(0, damage);
       state.ageSeconds = 0;
       state.lifetimeSeconds = 3.1;
+      state.stalledSeconds = 0;
       state.sequence = ++this.sequence;
       created += 1;
     }
@@ -146,9 +151,21 @@ export class FractureThreatSystem implements FractureThreatEmitter {
     let source: FractureThreatUpdate['source'] = 'fracture-projectile';
     for (const state of this.projectiles) {
       if (!state.active) continue;
+      const speed = Math.hypot(state.vx, state.vy);
+      if (!Number.isFinite(state.x + state.y + state.vx + state.vy + state.ageSeconds
+        + state.lifetimeSeconds + state.damage) || speed < PROJECTILE_MIN_SPEED) {
+        // A hostile projectile must never become a non-damaging ornament. This
+        // also protects the pool if a malformed target/stat enters a debug run.
+        state.active = false;
+        continue;
+      }
+      const previousX = state.x;
+      const previousY = state.y;
       state.ageSeconds += dt;
       state.x += state.vx * dt;
       state.y += state.vy * dt;
+      const moved = Math.hypot(state.x - previousX, state.y - previousY);
+      state.stalledSeconds = moved > EPSILON ? 0 : state.stalledSeconds + dt;
       const distance = Math.hypot(player.x - state.x, player.y - state.y);
       if (distance <= player.radius + state.radius) {
         amount += state.damage;
@@ -157,7 +174,8 @@ export class FractureThreatSystem implements FractureThreatEmitter {
         continue;
       }
       const angle = Math.atan2(state.y - ARENA_CENTER.y, state.x - ARENA_CENTER.x);
-      if (state.ageSeconds >= state.lifetimeSeconds
+      if (state.stalledSeconds >= PROJECTILE_MAX_STALLED_SECONDS
+        || state.ageSeconds >= state.lifetimeSeconds
         || Math.hypot(state.x - ARENA_CENTER.x, state.y - ARENA_CENTER.y)
           > getArenaRadiusAtAngle(arena, angle) + 80) {
         state.active = false;

@@ -28,6 +28,7 @@ import {
   normalizeOverdriveStage,
   type RunMode
 } from './content/run/OverdriveDefinitions';
+import type { OverdriveBossPair } from './simulation/acts/OverdriveActDirector';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -43,6 +44,10 @@ const reportBootError = (error: unknown): void => {
   }
   console.error('Geometry Survivor could not start:', error);
 };
+
+const isOverdriveBossPair = (value: string | null): value is OverdriveBossPair => (
+  value === 'core-warden' || value === 'core-fracture' || value === 'warden-fracture'
+);
 
 const mountInlineIcon = (host: HTMLElement, svg: string, replaceChildren: boolean): void => {
   if (replaceChildren) host.replaceChildren();
@@ -178,12 +183,17 @@ const bootstrap = async (): Promise<void> => {
     : undefined;
   const requestedAct = searchParams.get('act');
   const actId: ActId = requestedAct === 'angular' ? 'angular' : requestedAct === 'fracture' ? 'fracture' : 'radial';
-  const overdriveMode = searchParams.get('debug') === '1' && searchParams.get('mode') === 'overdrive';
+  const requestedOverdrive = searchParams.get('mode') === 'overdrive';
+  const overdriveMode = requestedOverdrive;
+  const diagnosticOverdrive = overdriveMode && searchParams.get('debug') === '1';
   const runMode: RunMode = overdriveMode ? 'overdrive' : 'campaign';
   const overdriveStage = normalizeOverdriveStage(Number(searchParams.get('od-stage') ?? 1));
   const overdriveSeed = normalizeOverdriveSeed(Number(searchParams.get('seed') ?? NaN));
+  const overdriveBossPair = diagnosticOverdrive && isOverdriveBossPair(searchParams.get('od-pair'))
+    ? searchParams.get('od-pair') as OverdriveBossPair
+    : undefined;
   const requestedOverdriveBuild = searchParams.get('od-build');
-  const overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved' = overdriveMode
+  const overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved' = diagnosticOverdrive
     && (requestedOverdriveBuild === 'three-evolved' || requestedOverdriveBuild === 'six-evolved')
     ? requestedOverdriveBuild
     : 'starter';
@@ -272,16 +282,19 @@ const bootstrap = async (): Promise<void> => {
     mode: runMode,
     overdriveStage: overdriveMode ? overdriveStage : undefined,
     overdriveSeed: overdriveMode ? overdriveSeed : undefined,
+    overdriveBossPair: overdriveMode ? overdriveBossPair : undefined,
     overdriveBuild: overdriveMode ? overdriveBuild : undefined,
+    diagnosticOverdrive,
     allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
     initialElapsedSeconds: bossDebugMode
       ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds
       : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: !overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
+    startOnMenu: (overdriveMode && !diagnosticOverdrive)
+      || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
       && !magneticChargeWeaponDrill && !fractureDrill && weaponCardId === undefined && evolutionId === undefined
-      && weaponPath === undefined && campaignBuild === undefined,
+      && weaponPath === undefined && campaignBuild === undefined),
     platform: new LocalPlatform()
   });
   await game.start();

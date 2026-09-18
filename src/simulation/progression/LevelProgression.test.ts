@@ -57,4 +57,15 @@ describe('LevelProgression', () => {
       pendingLevelUps: 0
     });
   });
+
+  it('normalizes non-finite and very large XP without looping forever', () => {
+    const progression = new LevelProgression();
+
+    progression.sync(Number.POSITIVE_INFINITY);
+
+    expect(Number.isFinite(progression.state.level)).toBe(true);
+    expect(Number.isFinite(progression.state.pendingLevelUps)).toBe(true);
+    expect(Number.isFinite(progression.state.nextLevelExperience)).toBe(true);
+    expect(progression.state.totalExperience).toBe(Number.MAX_SAFE_INTEGER);
+  });
 });

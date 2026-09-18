@@ -527,6 +527,23 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.boss.experience);
   });
 
+  it('spawns two independent bosses for the reproducible Overdrive pair route', () => {
+    const director = new OverdriveActDirector(10, 0x1234);
+    const combat = new CombatSimulation({
+      actDirector: director,
+      overdriveBossPair: 'core-warden',
+      initialElapsedSeconds: 250
+    });
+    const player = new PlayerModel();
+
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.activeBossCount).toBe(2);
+    expect(combat.renderState.bosses?.filter((boss) => boss.active).map((boss) => boss.bossId))
+      .toEqual(['core-sentinel', 'orbital-warden']);
+    expect(combat.enemies.states.filter((enemy) => enemy.active && enemy.kind === 'boss')).toHaveLength(2);
+  });
+
   it('resets stats, pools and weapon state without reallocating systems', () => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();

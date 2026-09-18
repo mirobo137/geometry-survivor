@@ -64,7 +64,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
 | EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
 | EX-10 | 9 | Acto III Fracture | IMPLEMENTADO; QA humana del acto pendiente |
-| EX-11 | 10 | Overdrive y producción | en curso por EX-11.2, después de EX-10 |
+| EX-11 | 10 | Overdrive y producción | EX-11.1–EX-11.7 implementados; validación browser/humana integral pendiente |
 | EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; consumido por EX-11.2 |
 | EX-11.2 | 10 | Director de composición y ruta de inspección | AUTOMÁTICO OK; transición pendiente |
 
@@ -1051,10 +1051,12 @@ enemigos/proyectiles para aparentar progresión.
 
 ### EX-11 — Overdrive y preparación de lanzamiento
 
-**Puerta vigente, 17-09-2026:** antes de EX-11.6, ejecutar las correcciones
-OD-A01–OD-A08 de [la auditoría](design/AUDITORIA_OVERDRIVE.md) y completar sus
-regresiones. EX-11.1–5 están implementados, pero no cerrados frente a todos los
-casos del contrato. Entrada para Luna: OD-A01 y orden de trabajo del informe.
+**Puerta vigente, 17-09-2026:** OD-A01–OD-A08 de [la auditoría](design/AUDITORIA_OVERDRIVE.md)
+están corregidos y cubiertos por regresiones. EX-11.1–7 quedan cerrados en
+automático y la validación manual previa de Overdrive en Pages/móvil fue
+aprobada por el usuario; el watchdog del proyectil congelado también quedó
+cubierto. Falta validar el nuevo flujo público y la sesión larga con bosses
+dobles.
 
 Entrada: tres actos y sus puertas cerrados. Es una continuación opcional tras
 III, con partida independiente y build limpia; Expedition fue eliminado.
@@ -1180,8 +1182,45 @@ La conversión a NOVA queda para EX-11.7.
 Definition of Done: pruebas focalizadas de agotamiento, exclusión de campaña,
 las seis aplicaciones/cap/reset y reparación condicionada; `npm run typecheck`;
 suite Vitest con un worker; builds `local`, `poki` y `crazygames` sin sourcemaps.
-La inspección humana de la mano en Pages permanece pendiente y el acceso
-público de Infinito sigue cerrado.
+La inspección humana de la mano en Pages permanece pendiente; EX-11.7 abre ya
+el acceso público y su comprobación queda registrada abajo.
+
+### EX-11.6 — Dos bosses, arbitraje y presupuestos
+
+`OverdriveActDirector.getBossEncounter()` conserva la rotación principal y
+añade, desde el tramo 10, una segunda definición con selección determinista;
+`od-pair` fuerza las tres parejas para QA. `CombatSimulation` mantiene dos
+`BossSystem` acotados, reserva dos posiciones del pool, conserva el alias de
+campaña de un solo boss y sólo emite la transición cuando todos los bosses del
+encuentro fueron derrotados. Cada entidad lleva `bossId`, `instanceId`, barra,
+nave y estado independientes. Las réplicas del Warden sólo se limpian al
+retirar su propia instancia.
+
+Durante una pareja, `PairedBossAttackGate` serializa telegraph/attack,
+alterna prioridad y espera 0,35 s más la cola de proyectiles/minas antes del
+siguiente especial. Los hazards de arena no inician nuevos ciclos mientras
+la pareja está activa, pero las amenazas ya anunciadas continúan y conservan
+su daño. `FractureThreatView`, `BossView` y `CombatEntitiesView` representan
+ambos slots sin duplicar pools ni crear otro loop.
+
+### EX-11.7 — Entrada pública, retirada y liquidación única
+
+La victoria real del Acto III llama a `unlockOverdrive()` y habilita el botón
+Infinito del menú. `?mode=overdrive` abre el flujo público con build limpia y
+las mejoras permanentes guardadas; las rutas `?debug=1&mode=overdrive...`
+siguen siendo diagnósticas y no escriben guardado. Pausa ofrece
+`Retirarse y cobrar` sólo en Overdrive, con confirmación.
+
+Muerte o retirada liquidan una sola vez: no hay victoria terminal por boss,
+no se ofrece doble NOVA, no se reinician revive/contadores entre tramos y los
+récords de tiempo, tramos y bajas se guardan en `SaveData.overdrive`. La
+campaña mantiene su límite de tres armas y su flujo de intermisión.
+
+Validación automática de esta entrega: `npm run typecheck`; suite Vitest
+completa en un worker, 107 archivos / 462 tests; y prueba de integración que
+spawnea la pareja `core-sentinel + orbital-warden`. Falta ejecutar el smoke
+browser público, probar las tres parejas y medir la sesión continua de diez
+minutos en PC y móvil; esos resultados no deben inferirse desde la suite.
 
 ## 6. Fichas visuales y estado de ejecución
 

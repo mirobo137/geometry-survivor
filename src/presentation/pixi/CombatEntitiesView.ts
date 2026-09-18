@@ -219,7 +219,12 @@ class EnemyVisual {
   private readonly ship: EnemyShipVisual;
   private hitAtSeconds = Number.NEGATIVE_INFINITY;
 
-  public constructor(textures: EnemyTextureSet, phaseSeed: number, quality: FxQuality, private readonly boss: BossShipVisual) {
+  public constructor(
+    textures: EnemyTextureSet,
+    phaseSeed: number,
+    quality: FxQuality,
+    private readonly bosses: Readonly<Record<BossId, BossShipVisual>>
+  ) {
     this.ship = new EnemyShipVisual(textures.ships, phaseSeed, quality);
     this.root.addChild(this.ship.root);
   }
@@ -237,7 +242,8 @@ class EnemyVisual {
     this.root.scale.set(punch);
     if (state.kind === 'boss') {
       this.root.visible = false;
-      this.boss.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
+      const boss = this.bosses[state.bossId ?? 'core-sentinel'];
+      boss?.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
       return;
     }
     this.ship.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
@@ -260,7 +266,7 @@ export class CombatEntitiesView {
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
   private readonly enemyTextures: EnemyTextureSet;
-  private readonly boss: BossShipVisual;
+  private readonly bosses: Readonly<Record<BossId, BossShipVisual>>;
   private readonly enemyVisuals: EnemyVisual[] = [];
   private readonly projectileSprites: Sprite[] = [];
   private readonly projectileGlows: Sprite[] = [];
@@ -296,8 +302,15 @@ export class CombatEntitiesView {
     if (cannonSkin === 'smoke') this.loadSmokeTexture();
     if (cannonSkin === 'bloom') this.loadBloomTexture();
     this.enemyTextures = createEnemyTextures(renderer);
-    this.boss = new BossShipVisual(this.enemyTextures.boss, quality);
-    this.enemyLayer.addChild(this.boss.root);
+    this.bosses = {
+      'core-sentinel': new BossShipVisual(this.enemyTextures.boss, quality),
+      'orbital-warden': new BossShipVisual(this.enemyTextures.boss, quality),
+      'fracture-engine': new BossShipVisual(this.enemyTextures.boss, quality)
+    };
+    this.bosses['core-sentinel'].setBossId('core-sentinel');
+    this.bosses['orbital-warden'].setBossId('orbital-warden');
+    this.bosses['fracture-engine'].setBossId('fracture-engine');
+    for (const boss of Object.values(this.bosses)) this.enemyLayer.addChild(boss.root);
     this.enemyDefeatFx = new EnemyDefeatFxView(this.enemyTextures.ships, quality);
     this.orbiterTelegraphs = new OrbiterTelegraphView(quality);
     this.chargerTelegraphs = new ChargerTelegraphView(quality);
@@ -326,7 +339,7 @@ export class CombatEntitiesView {
       bloom: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.bloom, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
-      const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.boss);
+      const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.bosses);
       this.enemyVisuals.push(visual);
       this.enemyLayer.addChild(visual.root);
     }
@@ -405,8 +418,8 @@ export class CombatEntitiesView {
     animationSeconds = 0,
     bossId: BossId = 'core-sentinel'
   ): void {
-    this.boss.setBossId(bossId);
-    this.boss.beginFrame();
+    void bossId;
+    for (const boss of Object.values(this.bosses)) boss.beginFrame();
     this.projectileTrails.render(combat.projectiles);
     this.orbiterTelegraphs.render(combat.enemies);
     this.chargerTelegraphs.render(combat.enemies);
@@ -470,12 +483,12 @@ export class CombatEntitiesView {
     if (kind !== 'boss') this.enemyDefeatFx.play(x, y, kind);
   }
 
-  public playBossDefeat(x: number, y: number): void {
-    this.boss.playDefeat(x, y);
+  public playBossDefeat(x: number, y: number, bossId: BossId = 'core-sentinel'): void {
+    this.bosses[bossId].playDefeat(x, y);
   }
 
   public updateBossDefeat(deltaSeconds: number): void {
-    this.boss.update(deltaSeconds);
+    for (const boss of Object.values(this.bosses)) boss.update(deltaSeconds);
   }
 
   public updateFx(deltaSeconds: number): void {
@@ -485,7 +498,7 @@ export class CombatEntitiesView {
   }
 
   public reset(): void {
-    this.boss.reset();
+    for (const boss of Object.values(this.bosses)) boss.reset();
     this.enemyImpactFx.clear();
     this.enemyDefeatFx.clear();
     this.orbiterTelegraphs.reset();

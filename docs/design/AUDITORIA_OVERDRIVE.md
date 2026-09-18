@@ -1,11 +1,21 @@
 # Auditoría de Overdrive — 17-09-2026
 
-Base auditada: `cdd3fa5` (EX-11.1–EX-11.5). Solicitud: revisar y documentar
-correcciones para Luna antes de avanzar. Esta entrega no corrige runtime.
+Base auditada: `cdd3fa5` (EX-11.1–EX-11.5). Correcciones aplicadas después de
+la auditoría en la rama actual `b00fbdb` y en esta sesión. Esta sección conserva
+la evidencia histórica de los hallazgos y sus criterios.
 
-**Resultado: REQUIERE CORRECCIONES antes de EX-11.6.** La suite actual pasa,
-pero no cubre varios incumplimientos del contrato. No repetir las cinco
-subtareas desde cero: reparar los puntos siguientes y añadir regresiones.
+**Estado de cierre OD-A01–OD-A08: CORREGIDOS.** La suite focalizada y la suite
+completa cubren las regresiones; no repetir EX-11.1–EX-11.5. La validación
+manual de Overdrive en Pages/móvil fue aprobada por el usuario. El único
+hallazgo posterior —un proyectil hostil que podía quedar visualmente congelado—
+quedó protegido con watchdog y regresión; EX-11.6 permanece como siguiente
+puerta técnica.
+
+Correcciones verificadas: aislamiento de recompensas en rutas debug, pausa
+reanudable durante transiciones, prioridad determinista de daño letal frente a
+derrota de boss, agotamiento real antes de cartas de reserva, maestría universal
+con seis familias, cronología de 250 s desde el tramo 10, cap de vida final,
+reinicio reproducible de etapa/preset e historiales/XP acotados.
 
 Fuentes: [plan vigente](../../PLAN_DESARROLLO.md),
 [contrato Infinito](PLAN_INFINITO.md),
@@ -201,16 +211,12 @@ tres presets; comprobar dificultad inicial, build, XP, recargas y etiquetas.
 
 ## Pendientes adicionales de estabilidad y cobertura
 
-- `UpgradeApplier.acquisitionOrder` añade una entrada por selección sin limitar
-  el historial. Reparación es repetible indefinidamente. Aplicar el presupuesto
-  de últimos 256 registros de §7, conservando totales/stacks independientes.
-  `LevelProgression.sync` también usa un bucle por nivel sin validar finitud:
-  tratar lotes enormes/Infinity antes del cierre de estabilidad de EX-11.
-- Revisar limpieza de FX en transición: `beginOverdriveStageTransition` limpia
-  simulación pero no llama a una limpieza de presentación; `presentationDelta`
-  vale cero durante transición. Falta verificar visualmente que no congela ni
-  arrastra FX de impacto/muerte al nuevo tramo. Es una comprobación pendiente,
-  no un parpadeo observado en un teléfono.
+- `UpgradeApplier.acquisitionOrder` queda limitado a los últimos 256 elementos;
+  los stacks siguen siendo la fuente de verdad. `LevelProgression.sync` usa
+  una fórmula cerrada y normaliza Infinity/valores enormes sin bucle abierto.
+- `beginOverdriveStageTransition` limpia también la presentación. Falta la
+  comprobación visual manual de que no arrastra FX en Pages/móvil; no se ha
+  observado un parpadeo concreto en teléfono.
 - Las pruebas de EX-11.5 verifican getters para seis armas y una rama por familia,
   pero no impactos reales de las doce evoluciones y fuentes secundarias.
   Añadir casos representativos de daño, potencia repetida aditiva, conservación

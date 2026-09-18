@@ -12,6 +12,9 @@ import { FractureActDirector } from './FractureActDirector';
 import { RadialActDirector } from './RadialActDirector';
 
 const ACT_ORDER: readonly ActId[] = ['radial', 'angular', 'fracture'];
+const BOSS_ORDER = ['core-sentinel', 'orbital-warden', 'fracture-engine'] as const;
+
+export type OverdriveBossPair = 'core-warden' | 'core-fracture' | 'warden-fracture';
 const ACT_DIRECTORS: Readonly<Record<ActId, RadialActDirector>> = {
   radial: new RadialActDirector(),
   angular: new AngularActDirector(),
@@ -58,6 +61,12 @@ const normalizeSpawnIndex = (spawnIndex: number): number => (
   Number.isFinite(spawnIndex) ? Math.max(0, Math.floor(spawnIndex)) : 0
 );
 
+const pairToBossIds = (pair: OverdriveBossPair): readonly BossDefinition['id'][] => {
+  if (pair === 'core-warden') return ['core-sentinel', 'orbital-warden'];
+  if (pair === 'core-fracture') return ['core-sentinel', 'fracture-engine'];
+  return ['orbital-warden', 'fracture-engine'];
+};
+
 /**
  * Composes authored act directors for an Overdrive stage. It deliberately
  * extends the existing director contract so EnemySystem, ArenaModel and the
@@ -97,11 +106,62 @@ export class OverdriveActDirector extends RadialActDirector {
   }
 
   public override get bossDefinition(): BossDefinition {
-    return ACT_DIRECTORS[this.bossActId].bossDefinition;
+    const definition = ACT_DIRECTORS[this.bossActId].bossDefinition;
+    // The fourth stage onward uses the Fracture boss window for every
+    // rotated boss. Keep campaign definitions immutable and override only
+    // the stage-owned entry time consumed by BossSystem.
+    return this.stageState.stage >= 10
+      ? { ...definition, startSeconds: 250 }
+      : definition;
   }
 
   public override get bossStartSeconds(): number {
-    return ACT_DIRECTORS[this.bossActId].bossStartSeconds;
+    return this.stageState.stage >= 10
+      ? 250
+      : ACT_DIRECTORS[this.bossActId].bossStartSeconds;
+  }
+
+  /**
+   * Returns the bounded boss encounter for the current stage. The first nine
+   * stages remain single-boss authored content; from stage ten onward the
+   * seeded 50% roll can add one of the other two models. A pair override is
+   * intentionally available to the reproducible QA routes only.
+   */
+  public getBossEncounter(pairOverride?: OverdriveBossPair): readonly BossDefinition[] {
+    const primary = ACT_DIRECTORS[this.bossActId].bossDefinition;
+    const pair = pairOverride === undefined ? this.shouldUseDoubleBoss() : pairOverride;
+    const ids = pair === false
+      ? [primary.id]
+      : pair === true
+        ? [primary.id, this.pickSecondaryBossId(primary.id)]
+        : pairToBossIds(pair);
+    return ids.map((id) => {
+      const authored = id === 'core-sentinel'
+        ? ACT_DIRECTORS.radial.bossDefinition
+        : id === 'orbital-warden'
+          ? ACT_DIRECTORS.angular.bossDefinition
+          : ACT_DIRECTORS.fracture.bossDefinition;
+      return this.stageState.stage >= 10 ? { ...authored, startSeconds: 250 } : authored;
+    });
+  }
+
+  private pickSecondaryBossId(primary: BossDefinition['id']): BossDefinition['id'] {
+    const alternatives = BOSS_ORDER.filter((id) => id !== primary);
+    return alternatives[Math.floor(sample(this.stageState.seed, this.stageState.stage, 0x51ed270b) * alternatives.length)]
+      ?? alternatives[0] ?? 'orbital-warden';
+  }
+
+  private shouldUseDoubleBoss(): boolean {
+    if (this.stageState.stage < 10) return false;
+    const previous: boolean[] = [];
+    for (let stage = 10; stage <= this.stageState.stage; stage += 1) {
+      const forced = previous.length >= 2
+        && previous[previous.length - 1] === false
+        && previous[previous.length - 2] === false;
+      const double = forced || sample(this.stageState.seed, stage, 0x4c1f0a2d) < 0.5;
+      previous.push(double);
+    }
+    return previous[previous.length - 1] ?? false;
   }
 
   /**

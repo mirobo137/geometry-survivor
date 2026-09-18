@@ -47,4 +47,17 @@ describe('FractureThreatSystem', () => {
     expect(threats.projectiles.filter((projectile) => projectile.active)).toHaveLength(48);
     expect(threats.mines.filter((mine) => mine.active)).toHaveLength(12);
   });
+
+  it('retires a stalled hostile projectile instead of leaving a frozen non-damaging slot', () => {
+    const threats = new FractureThreatSystem();
+    expect(threats.fireProjectile(400, 300, 600, 360, 240, 5)).toBe(1);
+    const projectile = threats.projectiles[0];
+    projectile.vx = 0;
+    projectile.vy = 0;
+
+    threats.update(1 / 60, new PlayerModel().state, ARENA_RADIUS);
+
+    expect(projectile.active).toBe(false);
+    expect(threats.projectiles.filter((candidate) => candidate.active)).toHaveLength(0);
+  });
 });

@@ -38,7 +38,7 @@ export class FractureThreatView {
     return graphic;
   }
 
-  public render(combat: Pick<CombatRenderState, 'fractureProjectiles' | 'fractureMines' | 'enemies' | 'boss'>,
+  public render(combat: Pick<CombatRenderState, 'fractureProjectiles' | 'fractureMines' | 'enemies' | 'boss' | 'bosses'>,
     _arenaRadius: number, deltaSeconds = 0): void {
     let visible = false;
     const dt = Math.min(0.1, Math.max(0, deltaSeconds));
@@ -46,7 +46,13 @@ export class FractureThreatView {
       const state = combat.fractureProjectiles[index];
       const g = this.projectiles[index];
       g.visible = !!state?.active;
-      if (!state?.active) continue;
+      if (!state?.active) {
+        // Clear pooled geometry as well as visibility. This is defensive
+        // against a renderer retaining a previous command list during a
+        // context restore or a rapid slot recycle.
+        g.clear();
+        continue;
+      }
       visible = true;
       g.clear();
       g.position.set(state.x, state.y);
@@ -111,10 +117,12 @@ export class FractureThreatView {
       if (this.renderEnemySignal(enemy)) visible = true;
     }
     this.bossSignal.clear();
-    if (combat.boss.active && combat.boss.bossId === 'fracture-engine'
-      && (combat.boss.phase.endsWith('-telegraph') || combat.boss.phase.endsWith('-active'))) {
-      this.renderBossSignal(combat.boss);
-      visible = true;
+    for (const boss of combat.bosses ?? [combat.boss]) {
+      if (boss.active && boss.bossId === 'fracture-engine'
+        && (boss.phase.endsWith('-telegraph') || boss.phase.endsWith('-active'))) {
+        this.renderBossSignal(boss);
+        visible = true;
+      }
     }
     this.root.visible = visible;
   }

@@ -52,6 +52,8 @@ export interface StartScreenOptions {
   readonly onMetaUpgradesChange: (upgrades: MetaUpgradeSaveData) => void;
   readonly cosmeticUnlockAvailable: boolean;
   readonly onCosmeticUnlock: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
+  readonly overdriveUnlocked?: boolean;
+  readonly onOverdrivePlay?: () => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -65,6 +67,7 @@ const formatTime = (seconds: number): string => {
 export class StartScreen {
   private readonly root: HTMLElement;
   private readonly playButton: HTMLButtonElement;
+  private readonly overdriveButton: HTMLButtonElement | null;
   private readonly settingsToggle: HTMLButtonElement;
   private readonly levelToggle: HTMLButtonElement;
   private readonly settingsPanel: HTMLElement;
@@ -127,6 +130,7 @@ export class StartScreen {
   private cosmeticRequestToken = 0;
   private activeSkinTab: 'player' | 'cannon' | 'background' = 'player';
   private cosmeticTarget: CosmeticUnlockTarget | null = null;
+  private overdrivePlayHandler: (() => void) | null = null;
 
   private readonly onSkinStateChange = (state: SkinSaveData): void => {
     this.skinState = state;
@@ -151,6 +155,7 @@ export class StartScreen {
 
   public constructor(root: HTMLElement) {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
+    const overdriveButton = root.querySelector<HTMLButtonElement>('#start-overdrive');
     const settingsToggle = root.querySelector<HTMLButtonElement>('#start-settings-toggle');
     const levelToggle = root.querySelector<HTMLButtonElement>('#start-level');
     const settingsPanel = root.querySelector<HTMLElement>('#start-settings');
@@ -194,6 +199,7 @@ export class StartScreen {
     }
     this.root = root;
     this.playButton = playButton;
+    this.overdriveButton = overdriveButton;
     this.settingsToggle = settingsToggle;
     this.levelToggle = levelToggle;
     this.settingsPanel = settingsPanel;
@@ -248,6 +254,7 @@ export class StartScreen {
     this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.handlePlay());
+    this.overdriveButton?.addEventListener('click', () => this.overdrivePlayHandler?.());
     this.settingsToggle.addEventListener('click', () => this.toggleSettings());
     this.levelToggle.addEventListener('click', () => this.openActSelector());
     this.actBack.addEventListener('click', () => this.closeActSelector());
@@ -277,6 +284,7 @@ export class StartScreen {
 
   public open(options: StartScreenOptions): void {
     this.playHandler = options.onPlay;
+    this.overdrivePlayHandler = options.onOverdrivePlay ?? null;
     this.actChangeHandler = options.onActChange;
     this.settingsHandler = options.onSettingsChange;
     this.controlSchemeHandler = options.onControlSchemeChange;
@@ -292,6 +300,16 @@ export class StartScreen {
     this.metaUpgrades = options.metaUpgrades;
     this.unlockedActs = options.unlockedActs;
     this.selectedAct = options.selectedAct;
+    if (this.overdriveButton) {
+      this.overdriveButton.hidden = this.overdrivePlayHandler === null;
+      this.overdriveButton.disabled = options.overdriveUnlocked !== true;
+      this.overdriveButton.setAttribute('aria-label', options.overdriveUnlocked === true
+        ? 'Iniciar modo Infinito Overdrive'
+        : 'Modo Infinito bloqueado: vence el Acto III');
+      this.overdriveButton.title = options.overdriveUnlocked === true
+        ? 'Iniciar Overdrive'
+        : 'Derrota al boss del Acto III para desbloquearlo';
+    }
     this.cosmeticUnlockAvailable = options.cosmeticUnlockAvailable;
     this.cosmeticUnlockHandler = options.onCosmeticUnlock;
     this.cosmeticOfferConsumed = false;
@@ -316,6 +334,7 @@ export class StartScreen {
   public close(): void {
     this.root.hidden = true;
     this.playHandler = null;
+    this.overdrivePlayHandler = null;
     this.actChangeHandler = null;
     this.settingsHandler = null;
     this.controlSchemeHandler = null;

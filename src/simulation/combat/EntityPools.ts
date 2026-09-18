@@ -1,12 +1,15 @@
 import type { ChargerPhase, EnemyKind, FractureEnemyPhase, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { BossId } from '../../content/bosses/BossDefinition';
 
 export type BoomerangPhase = 'outbound' | 'holding' | 'returning';
 
 export interface EnemyState {
   active: boolean;
   kind: EnemyKind;
+  /** Boss identity is kept on the pooled entity so paired bosses render independently. */
+  bossId?: BossId;
   x: number;
   y: number;
   vx: number;
@@ -120,6 +123,7 @@ export interface BoomerangState {
 const createEnemyState = (): EnemyState => ({
   active: false,
   kind: 'chaser',
+  bossId: undefined,
   x: 0,
   y: 0,
   vx: 0,

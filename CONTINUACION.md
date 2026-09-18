@@ -1,21 +1,56 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual — auditoría de Overdrive, 17-09-2026
+## Estado actual — EX-11.6/EX-11.7 implementados, validación final pendiente, 17-09-2026
 
-Base revisada: `cdd3fa5`, ya publicada en `origin/main`. Antes de EX-11.6,
-resolver [AUDITORIA_OVERDRIVE.md](docs/design/AUDITORIA_OVERDRIVE.md).
-Contiene ocho hallazgos con evidencia, archivos, orden de corrección y pruebas
-de aceptación para Luna. Prioridad: la ruta debug guarda NOVA reales; la
-transición ignora pérdida de foco; la prioridad de muerte depende del orden de
-eventos. También corregir reinicio, reservas prematuras, maestría universal
-con más de tres armas, cronología del boss y cap final de vida.
+Base de trabajo: `b00fbdb`, publicada en `origin/main`. Se implementaron y
+regresaron OD-A01–OD-A08 de [AUDITORIA_OVERDRIVE.md](docs/design/AUDITORIA_OVERDRIVE.md):
+las rutas debug ya no liquidan NOVA/récords, la transición conserva pausa y
+tiempo restante, daño letal gana a boss en el mismo tick, las reservas esperan
+agotamiento real, la maestría universal funciona con seis familias, el boss usa
+250 s desde el tramo 10, la vida final respeta el cap y el reinicio reconstruye
+etapa/preset. También se acotaron historial de adquisiciones, XP no finita y FX
+de transición.
 
-Esta sesión sólo audita y documenta. Código de producción sin cambios.
-Typecheck y suite existente: 107 archivos / 451 tests OK. Sondas temporales
-confirmaron varios defectos y fueron retiradas; ver resultados en el informe.
-No se certificó navegador ni móvil. Los tests verdes anteriores no cierran
-los casos que faltan. Siguiente tarea: OD-A01, seguido del orden del informe;
-EX-11.6 queda pospuesto hasta reparar y validar los hallazgos.
+Validación automática de esta sesión: `npm run typecheck` OK; suite completa
+Vitest en un worker: 107 archivos / 460 tests OK. La validación manual de
+Overdrive en Pages/móvil fue aprobada por el usuario. El único hallazgo fue un
+proyectil hostil que en una ocasión quedó congelado sin daño; el pool ahora
+retira proyectiles inmóviles/inválidos tras 0.25 s y la vista limpia su slot.
+La regresión correspondiente está en `FractureThreatSystem.test.ts`.
+
+Se implementaron EX-11.6 y EX-11.7. Overdrive tiene dos slots de boss con
+identidad/vida/FX/eventos independientes; reserva dos posiciones del pool,
+coordina especiales y sólo cambia de tramo al derrotar a todos. En parejas no
+se inician nuevos hazards de arena y las amenazas ya anunciadas terminan.
+La victoria real del Acto III desbloquea el botón Infinito; `?mode=overdrive`
+abre la partida pública con build limpia, mientras que las rutas
+`?debug=1&mode=overdrive&od-stage=1|4|7|10` y `od-pair=core-warden|core-fracture|warden-fracture`
+son diagnósticas y no liquidan guardado. Pausa ofrece retirada confirmada y
+la muerte/retirada liquida NOVA y récord Overdrive una sola vez, sin doble-NOVA.
+
+Validación automática de esta entrega: `npm run typecheck` OK; suite completa
+Vitest en un worker: 107 archivos / 462 tests OK; integración de pareja
+`core-sentinel + orbital-warden` OK. Falta probar en browser el menú/desbloqueo,
+las tres parejas, retirada y una sesión continua de diez minutos en PC/móvil.
+No declarar EX-11 completamente cerrado hasta registrar esa evidencia.
+
+Validacion browser local adicional: la ruta publica desbloqueada inicia
+Overdrive con build limpia y muestra `Retirarse y cobrar` en pausa. Quedan las
+tres parejas y la sesion continua de diez minutos en PC/movil.
+
+Siguiente paso operativo: ejecutar las rutas de prueba de abajo en local o
+Pages, empezando por `od-pair=core-warden`, y devolver consola, calidad,
+duración, FPS/frame time y cualquier fallo visual o de reglas.
+
+## Historial — cierre técnico EX-11.6/EX-11.7, 17-09-2026
+
+`BossSystem` ahora admite instancia primaria/secundaria, definición explícita,
+gate de ataques y ownership de réplicas; `CombatSimulation` mantiene ambos
+estados, reserva slots, no termina con el primer boss y reconfigura el par por
+tramo. La presentación dibuja hasta dos naves, barras y telegraphs sin ampliar
+los pools. `StartScreen`, `PauseOverlay`, `SaveStore` y `Game` conectan el
+desbloqueo real de Acto III, la entrada pública, retirada y récord separado.
+El balance global y el reinicio del laboratorio siguen fuera de esta entrega.
 
 ## Historial — implementación EX-11.5, 17-09-2026
 

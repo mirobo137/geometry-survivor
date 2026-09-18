@@ -4,6 +4,7 @@ import { type FxQuality, type PlayerSkinId } from '../content/visual/VisualToken
 import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import type { CombatRenderState, ShotRenderState } from '../simulation/combat/CombatRenderState';
+import type { BossId } from '../content/bosses/BossDefinition';
 import type { PlayerState } from '../simulation/PlayerModel';
 import type { ArenaBoundaryInput } from '../simulation/ArenaBoundary';
 import type { ArenaState } from '../simulation/ArenaModel';
@@ -31,7 +32,7 @@ export class PixiGameView {
   private readonly backgroundView: BackgroundView;
   private readonly world = new Container();
   private readonly arenaView = new ArenaView();
-  private readonly bossView: BossView;
+  private readonly bossViews: readonly [BossView, BossView];
   private readonly entitiesView: CombatEntitiesView;
   private readonly weaponView: WeaponView;
   private readonly hazardView: HazardView;
@@ -61,7 +62,7 @@ export class PixiGameView {
     this.fracturePulseRingView = new RadialPulseView(quality);
     this.angularSweepView = new AngularSweepView(quality);
     this.fractureThreatView = new FractureThreatView(quality);
-    this.bossView = new BossView(quality);
+    this.bossViews = [new BossView(quality), new BossView(quality)];
     this.root.addChild(this.backgroundView.root, this.world);
     this.screenFxView = new ScreenFxView(quality);
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
@@ -79,7 +80,8 @@ export class PixiGameView {
       this.fracturePulseRingView.root,
       this.angularSweepView.root,
       this.fractureThreatView.root,
-      this.bossView.root,
+      this.bossViews[0].root,
+      this.bossViews[1].root,
       this.playerView.root,
       this.impactFxView.root,
       this.terminalFxView.root
@@ -139,8 +141,17 @@ export class PixiGameView {
     this.angularSweepView.render(state, arena);
   }
 
-  public renderBoss(state: CombatRenderState['boss'], arenaRadius: number): void {
-    this.bossView.render(state, arenaRadius);
+  public renderBoss(
+    state: CombatRenderState['boss'] | readonly CombatRenderState['boss'][],
+    arenaRadius: number
+  ): void {
+    const states = Array.isArray(state) ? state : [state];
+    this.bossViews[0].render(states[0] ?? state as CombatRenderState['boss'], arenaRadius);
+    this.bossViews[1].render(states[1] ?? this.createInactiveBossState(states[0] ?? state as CombatRenderState['boss']), arenaRadius);
+  }
+
+  private createInactiveBossState(state: CombatRenderState['boss']): CombatRenderState['boss'] {
+    return { ...state, active: false, phase: 'inactive', progress: 0, health: 0, maxHealth: 0 };
   }
 
   public renderPlayer(state: PlayerState, animationSeconds = 0, shieldChargeProgress = 0): void {
@@ -186,8 +197,8 @@ export class PixiGameView {
     this.terminalFxView.clear();
   }
 
-  public playBossDefeat(x: number, y: number, radius: number): void {
-    this.entitiesView.playBossDefeat(x, y);
+  public playBossDefeat(x: number, y: number, radius: number, bossId?: BossId): void {
+    this.entitiesView.playBossDefeat(x, y, bossId);
     this.terminalFxView.playBossDefeat(x, y, radius);
     this.screenFxView.play('boss-defeat');
   }

@@ -16,6 +16,7 @@ import {
 import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
 import {
   OVERDRIVE_AUTHORED_STACK_CAPS,
+  OVERDRIVE_ACQUISITION_HISTORY_LIMIT,
   OVERDRIVE_POWER_MULTIPLIER_CAP,
   type RunMode
 } from '../../content/run/OverdriveDefinitions';
@@ -124,7 +125,7 @@ export class UpgradeApplier {
     if (target?.effect.type !== 'weaponMastery' || target.effect.channel !== 'power' || !this.canApply(target)) return false;
     if (!this.apply(targetUpgradeId)) return false;
     this.stacks.set(marker.id, this.getStacks(marker.id) + 1);
-    this.acquisitionOrder.push(marker.id);
+    this.recordAcquisition(marker.id);
     return true;
   }
 
@@ -146,6 +147,9 @@ export class UpgradeApplier {
     // weight and the fill phase never receives this pool, so a hand cannot
     // contain a second acquisition.
     const weaponOffers = this.getAvailableWeaponOfferDefinitions();
+    const ordinaryContentAvailableAtHandStart = this.runMode === 'overdrive'
+      ? this.hasOrdinaryEligibleContent()
+      : true;
     takeRandom(weaponOffers);
 
     const evolution = this.getRotatedFamilyChoice(this.getCampaignEvolutionDefinitions(), excluded, selected);
@@ -179,18 +183,7 @@ export class UpgradeApplier {
     // They are deliberately outside the campaign pools and never leak into a
     // normal run or its rerolls.
     if (this.runMode === 'overdrive' && selected.length < 3) {
-      const selectedIds = new Set([
-        ...excluded,
-        ...selected.map((choice) => choice.id)
-      ]);
-      const ordinaryRemaining = [
-        ...weaponOffers,
-        ...this.getCampaignEvolutionDefinitions(),
-        ...this.getCampaignRankDefinitions(),
-        ...this.getCampaignMasteryDefinitions(),
-        ...this.getCampaignPassiveDefinitions()
-      ].some((definition) => !selectedIds.has(definition.id) && this.canApply(definition));
-      if (!ordinaryRemaining && this.getScheduledUniversalMastery() === null) {
+      if (!ordinaryContentAvailableAtHandStart) {
         const reserves = this.getOverdriveReserveDefinitions();
         const repair = reserves.find((definition) => definition.effect.type === 'overdriveRepair');
         const powerReserves = reserves.filter((definition) => definition.effect.type === 'overdrivePower');
@@ -275,10 +268,23 @@ export class UpgradeApplier {
       .filter((definition): definition is UpgradeDefinition => definition !== undefined && this.canApply(definition));
   }
 
-  private getScheduledUniversalMastery(): UpgradeDefinition | null {
-    if (!this.hasThreeEvolvedFamilies() || this.campaignHandIndex % 3 !== 0) return null;
+  private getUniversalMasteryDefinition(): UpgradeDefinition | null {
     const marker = WEAPON_MASTERY_DEFINITIONS.find((definition) => definition.effect.type === 'universalWeaponMastery');
     return marker !== undefined && this.canApply(marker) ? marker : null;
+  }
+
+  private getScheduledUniversalMastery(): UpgradeDefinition | null {
+    if (!this.hasThreeEvolvedFamilies() || this.campaignHandIndex % 3 !== 0) return null;
+    return this.getUniversalMasteryDefinition();
+  }
+
+  private hasOrdinaryEligibleContent(): boolean {
+    return this.getAvailableWeaponOfferDefinitions().length > 0
+      || this.getCampaignEvolutionDefinitions().length > 0
+      || this.getCampaignRankDefinitions().length > 0
+      || this.getCampaignMasteryDefinitions().length > 0
+      || this.getCampaignPassiveDefinitions().length > 0
+      || this.getUniversalMasteryDefinition() !== null;
   }
 
   private getRotatedFamilyChoice(
@@ -306,8 +312,11 @@ export class UpgradeApplier {
 
   private hasThreeEvolvedFamilies(): boolean {
     const activeFamilies = RANKABLE_FAMILIES.filter((family) => this.isFamilyActive(family));
-    return activeFamilies.length === CAMPAIGN_MAX_ACTIVE_WEAPONS
-      && activeFamilies.every((family) => this.hasEvolution(family));
+    const evolvedFamilies = activeFamilies.filter((family) => this.hasEvolution(family));
+    return this.runMode === 'overdrive'
+      ? evolvedFamilies.length >= OVERDRIVE_INITIAL_ACTIVE_WEAPONS
+      : activeFamilies.length === CAMPAIGN_MAX_ACTIVE_WEAPONS
+        && evolvedFamilies.length === CAMPAIGN_MAX_ACTIVE_WEAPONS;
   }
 
   private getOverdriveReserveDefinitions(): readonly UpgradeDefinition[] {
@@ -454,6 +463,13 @@ export class UpgradeApplier {
   /** Ordered snapshot kept for diagnostics; Act II entry intentionally does not consume it. */
   public snapshot(): readonly UpgradeId[] {
     return [...this.acquisitionOrder];
+  }
+
+  private recordAcquisition(upgradeId: UpgradeId): void {
+    if (this.acquisitionOrder.length >= OVERDRIVE_ACQUISITION_HISTORY_LIMIT) {
+      this.acquisitionOrder.splice(0, this.acquisitionOrder.length - OVERDRIVE_ACQUISITION_HISTORY_LIMIT + 1);
+    }
+    this.acquisitionOrder.push(upgradeId);
   }
 
   public getPreview(upgrade: UpgradeDefinition | UpgradeId): UpgradePreview | null {
@@ -767,7 +783,7 @@ export class UpgradeApplier {
     }
     if (!applied) return false;
     this.stacks.set(upgradeId, this.getStacks(upgradeId) + 1);
-    this.acquisitionOrder.push(upgradeId);
+    this.recordAcquisition(upgradeId);
     this.syncOverdriveArsenal();
     return true;
   }

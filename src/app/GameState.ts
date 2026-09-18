@@ -2,6 +2,7 @@ export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over'
 
 export class GameState {
   public phase: GamePhase;
+  private pausedPhase: 'playing' | 'overdrive-transition' | null = null;
 
   public constructor(initialPhase: 'menu' | 'playing' = 'playing') {
     this.phase = initialPhase;
@@ -38,15 +39,21 @@ export class GameState {
   }
 
   public enterPause(): boolean {
-    if (this.phase !== 'playing') return false;
+    if (this.phase !== 'playing' && this.phase !== 'overdrive-transition') return false;
+    this.pausedPhase = this.phase;
     this.phase = 'paused';
     return true;
   }
 
   public resume(): boolean {
     if (this.phase !== 'paused') return false;
-    this.phase = 'playing';
+    this.phase = this.pausedPhase ?? 'playing';
+    this.pausedPhase = null;
     return true;
+  }
+
+  public get isPausedFromTransition(): boolean {
+    return this.phase === 'paused' && this.pausedPhase === 'overdrive-transition';
   }
 
   public endRun(): boolean {
@@ -90,6 +97,7 @@ export class GameState {
   public completeOverdriveTransition(): boolean {
     if (this.phase !== 'overdrive-transition') return false;
     this.phase = 'playing';
+    this.pausedPhase = null;
     return true;
   }
 
@@ -103,6 +111,7 @@ export class GameState {
   public restart(): boolean {
     if (!this.isTerminal) return false;
     this.phase = 'playing';
+    this.pausedPhase = null;
     return true;
   }
 
@@ -114,6 +123,15 @@ export class GameState {
   public restartFromPause(): boolean {
     if (this.phase !== 'paused') return false;
     this.phase = 'playing';
+    this.pausedPhase = null;
+    return true;
+  }
+
+  /** Converts an explicit Overdrive withdrawal into the normal terminal path. */
+  public withdrawFromPause(): boolean {
+    if (this.phase !== 'paused' || this.pausedPhase !== 'playing') return false;
+    this.phase = 'playing';
+    this.pausedPhase = null;
     return true;
   }
 
@@ -121,6 +139,7 @@ export class GameState {
   public returnToMenuFromPause(): boolean {
     if (this.phase !== 'paused') return false;
     this.phase = 'menu';
+    this.pausedPhase = null;
     return true;
   }
 
@@ -128,6 +147,7 @@ export class GameState {
   public returnToMenuFromIntermission(): boolean {
     if (this.phase !== 'act-intermission') return false;
     this.phase = 'menu';
+    this.pausedPhase = null;
     return true;
   }
 }

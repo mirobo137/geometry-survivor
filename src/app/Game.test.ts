@@ -22,6 +22,11 @@ vi.mock('../presentation/PixiGameView', () => ({
     public resetPresentation = vi.fn();
     public playPlayerRevive = vi.fn();
     public playPlayerShot = mocks.playerShot;
+    public playPlayerDamage = vi.fn();
+    public playPlayerGuard = vi.fn();
+    public playPlayerDefeat = vi.fn();
+    public playEnemyDefeat = vi.fn();
+    public playBossDefeat = vi.fn();
   }
 }));
 
@@ -36,6 +41,7 @@ vi.mock('../ui/level-up/LevelUpOverlay', () => ({
 vi.mock('../ui/PauseOverlay', () => ({
   PauseOverlay: class {
     public close = vi.fn();
+    public open = vi.fn();
   }
 }));
 
@@ -156,6 +162,104 @@ describe('Game', () => {
     expect(runtime.actDirector.definition.id).toBe('angular');
     expect(runtime.actDirector.bossDefinition.id).toBe('core-sentinel');
     expect(runtime.actDirector.stageState).toMatchObject({ stage: 4, lap: 2 });
+  });
+
+  it('does not settle diagnostic Overdrive rewards or records', () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const game = new Game({
+      ...createOptions({
+        saveStore: { load: () => saved, save, clear: vi.fn() }
+      }),
+      mode: 'overdrive',
+      overdriveStage: 4
+    });
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'game-over') => void;
+      settleTerminalRun: (token: number) => boolean;
+      requestDoubleNova: (token: number) => Promise<void>;
+      terminalTotalNova: number;
+    };
+
+    runtime.finishRun.call(game, 'game-over');
+    expect(runtime.settleTerminalRun.call(game, 1)).toBe(true);
+    expect(saved.wallet.nova).toBe(0);
+    expect(save).not.toHaveBeenCalled();
+    expect(runtime.terminalTotalNova).toBe(0);
+    void runtime.requestDoubleNova.call(game, 1);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('pauses an Overdrive transition and resumes its remaining handoff time', () => {
+    vi.useFakeTimers();
+    const game = new Game({ ...createOptions(), mode: 'overdrive', overdriveStage: 4 });
+    const runtime = game as unknown as {
+      beginOverdriveStageTransition: () => void;
+      pauseForLifecycle: () => void;
+      resumeFromLifecycle: () => void;
+      gameState: { phase: string; isPausedFromTransition: boolean };
+    };
+
+    runtime.beginOverdriveStageTransition.call(game);
+    vi.advanceTimersByTime(1_000);
+    runtime.pauseForLifecycle.call(game);
+    expect(runtime.gameState.phase).toBe('paused');
+    expect(runtime.gameState.isPausedFromTransition).toBe(true);
+    vi.advanceTimersByTime(5_000);
+    expect(runtime.gameState.phase).toBe('paused');
+
+    runtime.resumeFromLifecycle.call(game);
+    expect(runtime.gameState.phase).toBe('overdrive-transition');
+    vi.advanceTimersByTime(1_999);
+    expect(runtime.gameState.phase).toBe('overdrive-transition');
+    vi.advanceTimersByTime(1);
+    expect(runtime.gameState.phase).toBe('playing');
+  });
+
+  it('resolves lethal damage before a same-tick boss defeat', () => {
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      combat: {
+        update: () => void;
+        events: Array<{ type: 'bossDefeated' } | { type: 'playerDamaged'; amount: number; source: 'boss' }>;
+      };
+      updateSimulation: () => void;
+      gameState: { phase: string };
+    };
+    runtime.combat.update = () => {
+      runtime.combat.events.push(
+        { type: 'bossDefeated' },
+        { type: 'playerDamaged', amount: 999_999, source: 'boss' }
+      );
+    };
+
+    runtime.updateSimulation.call(game);
+
+    expect(runtime.gameState.phase).toBe('game-over');
+  });
+
+  it('rebuilds the initial Overdrive stage and debug build after restart', () => {
+    const game = new Game({
+      ...createOptions(),
+      mode: 'overdrive',
+      overdriveStage: 4,
+      overdriveBuild: 'three-evolved'
+    });
+    const runtime = game as unknown as {
+      actDirector: { setStage: (stage: number) => void; stageState: { stage: number } };
+      resetRunState: () => void;
+      upgradeApplier: { snapshot: () => readonly string[] };
+    };
+
+    runtime.actDirector.setStage(7);
+    runtime.resetRunState.call(game);
+
+    expect(runtime.actDirector.stageState.stage).toBe(4);
+    expect(runtime.upgradeApplier.snapshot()).toContain('orbit_blade');
+    expect(runtime.upgradeApplier.snapshot()).toContain('rail_lance');
   });
 
   it('waits for terminal presentation before opening the victory summary', async () => {

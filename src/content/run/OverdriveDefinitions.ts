@@ -14,6 +14,8 @@ export const OVERDRIVE_POWER_MULTIPLIER_CAP = 1_000 as const;
 export const OVERDRIVE_POWER_MAX_STACKS = Math.floor(
   (OVERDRIVE_POWER_MULTIPLIER_CAP - 1) / OVERDRIVE_POWER_INCREMENT
 );
+/** Diagnostic history is bounded; stack counters remain authoritative. */
+export const OVERDRIVE_ACQUISITION_HISTORY_LIMIT = 256 as const;
 /**
  * Campaign keeps its authored repeatables untouched. Overdrive gives the two
  * uncapped starter passives a finite authored runway so reserve cards have a
@@ -42,7 +44,9 @@ export interface OverdriveStageState {
 }
 
 export const normalizeOverdriveStage = (value: number): number => (
-  Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1
+  Number.isFinite(value)
+    ? Math.min(Number.MAX_SAFE_INTEGER, Math.max(1, Math.floor(value)))
+    : 1
 );
 
 /** Xorshift cannot make progress from zero, so reserve a non-zero fallback. */
@@ -72,6 +76,23 @@ export const getOverdriveHealthMultiplier = (stage: number): number => (
       : 3 * (normalizeOverdriveStage(stage) - 1)
   )
 );
+
+/**
+ * Applies the stage multiplier to one authored health value and caps the
+ * final result. Children/replicas pass their local authored scale here so the
+ * stage factor is never compounded through a recycled entity.
+ */
+export const capOverdriveHealth = (
+  baseHealth: number,
+  healthMultiplier: number,
+  localScale = 1
+): number => {
+  if (Number.isNaN(baseHealth) || Number.isNaN(healthMultiplier) || Number.isNaN(localScale)) return 0;
+  if (baseHealth <= 0 || localScale <= 0 || healthMultiplier <= 0) return 0;
+  const result = baseHealth * healthMultiplier * localScale;
+  if (!Number.isFinite(result)) return OVERDRIVE_HEALTH_MULTIPLIER_CAP;
+  return Math.min(OVERDRIVE_HEALTH_MULTIPLIER_CAP, Math.max(0, result));
+};
 
 export const getOverdrivePressureMultiplier = (lap: number): number => {
   const normalizedLap = Number.isFinite(lap) ? Math.max(1, Math.floor(lap)) : 1;

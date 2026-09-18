@@ -7,6 +7,14 @@ import { EnemySystem } from '../enemies/EnemySystem';
 import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
 
 export type BossPhase = BossRenderState['phase'];
+export type BossInstanceId = 'primary' | 'secondary';
+
+/** Small simulation-side arbiter used only when an Overdrive encounter is paired. */
+export interface BossAttackGate {
+  canStart(instanceId: BossInstanceId, pattern: BossPattern): boolean;
+  onStart(instanceId: BossInstanceId, pattern: BossPattern): void;
+  onComplete(instanceId: BossInstanceId, pattern: BossPattern): void;
+}
 
 const FULL_CIRCLE = Math.PI * 2;
 const SWEEP_ANGLE_STEP = 0.741;
@@ -37,14 +45,18 @@ export class BossSystem {
   private replicaLeftY = ARENA_CENTER.y;
   private replicaRightX = ARENA_CENTER.x;
   private replicaRightY = ARENA_CENTER.y;
+  private enabled = true;
 
   public constructor(
     private readonly enemies: EnemySystem,
     private definition: BossDefinition = BOSS_DEFINITION,
-    private readonly fractureThreats?: FractureThreatEmitter
+    private readonly fractureThreats?: FractureThreatEmitter,
+    public readonly instanceId: BossInstanceId = 'primary',
+    private readonly attackGate?: BossAttackGate
   ) {
     this.state = {
       bossId: definition.id,
+      instanceId,
       active: false,
       x: ARENA_CENTER.x,
       y: ARENA_CENTER.y - definition.spawnDistance,
@@ -81,6 +93,16 @@ export class BossSystem {
     this.reset();
   }
 
+  public setEnabled(enabled: boolean): void {
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    if (!enabled) this.reset();
+  }
+
+  public ownsEnemy(enemy: EnemyState): boolean {
+    return this.boss === enemy;
+  }
+
   /** Advances the boss and returns damage dealt to the player this step. */
   public update(
     dtSeconds: number,
@@ -88,11 +110,11 @@ export class BossSystem {
     player: PlayerState,
     arenaRadius: number
   ): number {
-    if (this.phase === 'defeated') return 0;
+    if (!this.enabled || this.phase === 'defeated') return 0;
     this.arenaRadius = Math.max(0, arenaRadius);
     if (!this.boss) {
       if (elapsedSeconds + EPSILON < this.definition.startSeconds) return 0;
-      this.boss = this.enemies.spawnBoss(arenaRadius, this.definition.spawnDistance);
+      this.boss = this.enemies.spawnBoss(arenaRadius, this.definition.spawnDistance, this.definition);
       if (!this.boss) return 0;
       this.phase = 'intro';
       this.phaseTimer = 0;
@@ -166,11 +188,12 @@ export class BossSystem {
     this.hitApplied = true;
     this.state.active = false;
     this.state.bossId = this.definition.id;
+    this.state.instanceId = this.instanceId;
     this.state.health = 0;
     this.state.phase = 'defeated';
     this.state.progress = 0;
     this.state.pattern = 'sweep';
-    this.enemies.clearWardenReplicas();
+    if (this.definition.id === 'orbital-warden') this.enemies.clearWardenReplicas();
   }
 
   public reset(): void {
@@ -189,9 +212,10 @@ export class BossSystem {
     this.replicaLeftY = ARENA_CENTER.y;
     this.replicaRightX = ARENA_CENTER.x;
     this.replicaRightY = ARENA_CENTER.y;
-    this.enemies.clearWardenReplicas();
+    if (this.definition.id === 'orbital-warden') this.enemies.clearWardenReplicas();
     this.state.active = false;
     this.state.bossId = this.definition.id;
+    this.state.instanceId = this.instanceId;
     this.state.x = ARENA_CENTER.x;
     this.state.y = ARENA_CENTER.y - this.definition.spawnDistance;
     this.state.radius = 0;
@@ -328,20 +352,26 @@ export class BossSystem {
       );
     } else if (this.phase === 'sweep-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else if (this.phase === 'charge-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else if (this.phase === 'curve-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else if (this.phase === 'battery-active' || this.phase === 'spikes-active'
       || this.phase === 'zigzag-active' || this.phase === 'mines-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else if (this.phase === 'replicas-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else if (this.phase === 'ring-telegraph') {
       this.phase = 'ring-active';
       this.hitApplied = false;
     } else if (this.phase === 'ring-active') {
       this.phase = 'recovery';
+      this.attackGate?.onComplete(this.instanceId, this.state.pattern);
     } else {
       this.attackIndex += 1;
       this.startPattern(player);
@@ -355,6 +385,13 @@ export class BossSystem {
       ? this.definition.patternOrder
       : ['sweep', 'ring'] as const;
     const pattern: BossPattern = order[this.attackIndex % order.length] ?? 'sweep';
+    if (this.attackGate && !this.attackGate.canStart(this.instanceId, pattern)) {
+      this.phase = 'recovery';
+      this.phaseTimer = 0;
+      this.hitApplied = true;
+      return;
+    }
+    this.attackGate?.onStart(this.instanceId, pattern);
     this.state.pattern = pattern;
     if (pattern === 'battery') {
       this.phase = 'battery-telegraph';

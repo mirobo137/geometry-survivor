@@ -9,7 +9,7 @@ import { JoystickView } from '../ui/JoystickView';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
-import { MAX_NOVA, mergeBestRun, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -51,8 +51,8 @@ import { FractureActDirector } from '../simulation/acts/FractureActDirector';
 import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
-import type { RunMode } from '../content/run/OverdriveDefinitions';
-import { OverdriveActDirector } from '../simulation/acts/OverdriveActDirector';
+import { normalizeOverdriveStage, type RunMode } from '../content/run/OverdriveDefinitions';
+import { OverdriveActDirector, type OverdriveBossPair } from '../simulation/acts/OverdriveActDirector';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -111,8 +111,11 @@ export interface GameOptions {
   readonly mode?: RunMode;
   readonly overdriveStage?: number;
   readonly overdriveSeed?: number;
+  readonly overdriveBossPair?: OverdriveBossPair;
   /** Developer-only Overdrive build preset; never affects persistent state. */
   readonly overdriveBuild?: 'starter' | 'three-evolved' | 'six-evolved';
+  /** Diagnostic routes never settle rewards or records. Public Overdrive will set false. */
+  readonly diagnosticOverdrive?: boolean;
   /** Development-only direct act entry; never exposed by the campaign menu. */
   readonly allowLockedAct?: boolean;
   /** Isolated Angular family drill, intentionally outside the normal Act I run. */
@@ -175,8 +178,11 @@ export class Game {
   private readonly startOnMenu: boolean;
   private readonly runMode: RunMode;
   private overdriveStage: number;
+  private readonly initialOverdriveStage: number;
   private readonly overdriveSeed: number | undefined;
+  private readonly overdriveBossPair: OverdriveBossPair | undefined;
   private readonly overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved';
+  private readonly diagnosticOverdrive: boolean;
   private readonly playerSkin: PlayerSkinId;
   private readonly cannonSkin: CannonSkinId;
   private readonly background: BackgroundId;
@@ -225,6 +231,8 @@ export class Game {
   private stopped = false;
   private terminalSummaryTimer: ReturnType<typeof setTimeout> | null = null;
   private overdriveTransitionTimer: ReturnType<typeof setTimeout> | null = null;
+  private overdriveTransitionRemainingMs = 0;
+  private overdriveTransitionStartedAt = 0;
   private terminalRunToken = 0;
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
@@ -258,7 +266,8 @@ export class Game {
   };
 
   private readonly onStartPlay = (calibrationId?: CalibrationId): void => {
-    if (this.stopped || !this.gameState.startRun()) return;
+    if (this.stopped || (this.runMode === 'overdrive' && !this.diagnosticOverdrive
+      && !this.saveStore.load().overdrive.unlocked) || !this.gameState.startRun()) return;
     if (calibrationId !== undefined) {
       this.calibrationId = calibrationId;
       this.calibrationApplied = false;
@@ -269,6 +278,13 @@ export class Game {
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
     this.activateRun(true);
+  };
+
+  private readonly onStartOverdrivePlay = (): void => {
+    if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.search = '?mode=overdrive';
+    window.location.assign(url.toString());
   };
 
   private readonly onStartActChange = (actId: ActId): void => {
@@ -350,6 +366,15 @@ export class Game {
     this.returnToMenuState();
   };
 
+  private readonly onPauseWithdraw = (): void => {
+    if (this.runMode !== 'overdrive' || this.contextLost || !this.gameState.withdrawFromPause()) return;
+    if (typeof window !== 'undefined' && !window.confirm('¿Retirarte y cobrar esta run de Overdrive?')) {
+      this.gameState.enterPause();
+      return;
+    }
+    this.finishRun('game-over');
+  };
+
   private readonly onActIntermissionReturnToMenu = (): void => {
     if (this.contextLost || !this.startScreen) return;
     if (!this.gameState.returnToMenuFromIntermission()) return;
@@ -385,7 +410,8 @@ export class Game {
 
   private readonly onWebglContextLost = (event: Event): void => {
     event.preventDefault();
-    if (this.stopped || this.lifecyclePaused || !this.gameState.isSimulationRunning) return;
+    if (this.stopped || this.lifecyclePaused
+      || (!this.gameState.isSimulationRunning && !this.gameState.isTransitioning)) return;
     this.contextLost = true;
     this.pauseForLifecycle('El renderizador se está recuperando. La partida se pausó; espera y pulsa Continuar.');
   };
@@ -400,12 +426,14 @@ export class Game {
 
   private readonly resumeFromLifecycle = (): void => {
     if (this.contextLost) return;
+    const resumingTransition = this.gameState.isPausedFromTransition;
     this.input.reset();
     this.lifecyclePaused = false;
-    this.gameState.resume();
+    if (!this.gameState.resume()) return;
     this.pause.close();
     this.audio.resume();
     this.lifecycle.onGameResume();
+    if (resumingTransition) this.scheduleOverdriveTransitionTimer();
   };
 
   private readonly onTick = (ticker: Ticker): void => {
@@ -468,10 +496,11 @@ export class Game {
     this.weaponPath = options.weaponPath ?? null;
     this.campaignBuild = options.campaignBuild ?? null;
     this.runMode = options.mode ?? 'campaign';
-    this.overdriveStage = Number.isFinite(options.overdriveStage)
-      ? Math.max(1, Math.floor(options.overdriveStage ?? 1))
-      : 1;
+    this.diagnosticOverdrive = this.runMode === 'overdrive' && options.diagnosticOverdrive !== false;
+    this.overdriveStage = normalizeOverdriveStage(options.overdriveStage ?? 1);
+    this.initialOverdriveStage = this.overdriveStage;
     this.overdriveSeed = options.overdriveSeed;
+    this.overdriveBossPair = options.overdriveBossPair;
     this.overdriveBuild = options.overdriveBuild ?? 'starter';
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
     this.saveStore = options.platform.saveStore;
@@ -502,7 +531,7 @@ export class Game {
       options.elements.debug,
       this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled
         || this.evolutionScenario !== null || this.weaponPath !== null || this.campaignBuild !== null
-        || this.runMode === 'overdrive'
+        || this.diagnosticOverdrive
     );
     this.baseline = new BaselineRunRecorder(this.baselineMode);
     this.baselinePanel = this.baselineMode && options.elements.baseline
@@ -537,6 +566,7 @@ export class Game {
       initialElapsedSeconds: this.initialElapsedSeconds,
       permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
       actDirector: this.actDirector,
+      overdriveBossPair: this.overdriveBossPair,
       hazardCadenceMode: this.hazardCadenceMode,
       orbiterDrill: this.orbiterDrill,
       chargerDrill: this.chargerDrill,
@@ -616,48 +646,70 @@ export class Game {
     this.arena.update(FIXED_STEP_SECONDS);
     this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state);
-    for (const event of this.combat.events) {
-      if (event.type === 'enemyDefeated') {
-        this.player.applyVampirism();
-        this.audio.playCue('enemy-defeated');
-        this.view.playEnemyDefeat(event.x, event.y, event.kind);
-        if (event.kind === 'tank' || event.kind === 'elite') {
-          this.triggerHitStop(HIT_STOP_SECONDS.enemyDefeat);
+    const events = this.combat.events;
+
+    // Resolve presentation-only enemy defeats first, then all damage packets,
+    // and only then commit a boss transition. This makes a boss defeat and a
+    // lethal hazard in the same fixed tick independent of event insertion
+    // order inside CombatSimulation.
+    for (const event of events) {
+      if (event.type !== 'enemyDefeated') continue;
+      this.player.applyVampirism();
+      this.audio.playCue('enemy-defeated');
+      this.view.playEnemyDefeat(event.x, event.y, event.kind);
+      if (event.kind === 'tank' || event.kind === 'elite') {
+        this.triggerHitStop(HIT_STOP_SECONDS.enemyDefeat);
+      }
+    }
+
+    let playerDefeated = false;
+    for (const event of events) {
+      if (event.type !== 'playerDamaged') continue;
+      const resolution = this.player.resolveDamage(event.amount);
+      if (resolution.outcome === 'damaged') this.baseline.noteDamageSource(event.source);
+      if (resolution.outcome === 'shielded') {
+        this.view.playPlayerGuard(this.presentationTime);
+        this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
+      } else if (resolution.outcome === 'damaged') {
+        this.audio.playCue('damage');
+        this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
+        this.triggerHitStop(this.player.isAlive ? HIT_STOP_SECONDS.playerDamage : HIT_STOP_SECONDS.terminal);
+        if (!this.player.isAlive && !playerDefeated) {
+          playerDefeated = true;
+          this.audio.playCue('player-defeated');
+          this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
         }
       }
-      if (event.type === 'playerDamaged') {
-        const resolution = this.player.resolveDamage(event.amount);
-        if (resolution.outcome === 'damaged') this.baseline.noteDamageSource(event.source);
-        if (resolution.outcome === 'shielded') {
-          this.view.playPlayerGuard(this.presentationTime);
-          this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
-        } else if (resolution.outcome === 'damaged') {
-          this.audio.playCue('damage');
-          this.view.playPlayerDamage(this.player.state.x, this.player.state.y, event.amount, this.presentationTime);
-          this.triggerHitStop(this.player.isAlive ? HIT_STOP_SECONDS.playerDamage : HIT_STOP_SECONDS.terminal);
-          if (!this.player.isAlive) {
-            this.audio.playCue('player-defeated');
-            this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
-            this.finishRun('game-over');
-            return;
-          }
-        }
-      }
-      if (event.type === 'bossDefeated') {
+    }
+
+    if (playerDefeated) {
+      this.finishRun('game-over');
+      return;
+    }
+
+    const defeatedBosses = events.filter((event) => event.type === 'bossDefeated');
+    if (defeatedBosses.length > 0) {
+      for (const event of defeatedBosses) {
         this.audio.playCue('boss-defeated');
         this.view.playBossDefeat(
-          this.combat.renderState.boss.x,
-          this.combat.renderState.boss.y,
-          this.combat.renderState.boss.radius || 48,
+          event.x ?? this.combat.renderState.boss.x,
+          event.y ?? this.combat.renderState.boss.y,
+          event.radius ?? (this.combat.renderState.boss.radius || 48),
+          event.bossId
         );
-        this.triggerHitStop(HIT_STOP_SECONDS.terminal);
-        if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
-          this.beginOverdriveStageTransition();
-          return;
-        }
-        this.finishRun('victory');
+      }
+      this.triggerHitStop(HIT_STOP_SECONDS.terminal);
+      if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector
+        && !this.combat.allBossesDefeated) {
+        // A paired encounter remains live after the first boss falls.
         return;
       }
+      if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
+        this.beginOverdriveStageTransition();
+        return;
+      }
+      this.finishRun('victory');
+      return;
     }
     if (this.stressMode) return;
     this.progression.sync(this.combat.stats.experience);
@@ -688,7 +740,7 @@ export class Game {
         radius: 0
       });
     this.view.renderAngularSweep(this.combat.renderState.angularSweep, this.arena.state);
-    this.view.renderBoss(this.combat.renderState.boss, this.arena.state.radius);
+    this.view.renderBoss(this.combat.renderState.bosses ?? [this.combat.renderState.boss], this.arena.state.radius);
     this.view.renderCombat(this.combat.renderState, this.presentationTime);
     this.view.renderFractureThreats(this.combat.renderState, this.arena.state.radius, presentationDelta);
     this.syncShotFeedback();
@@ -944,7 +996,9 @@ export class Game {
   }
 
   private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
+    const wasTransitioning = this.gameState.isTransitioning;
     if (this.lifecyclePaused || !this.gameState.enterPause()) return;
+    if (wasTransitioning) this.pauseOverdriveTransitionTimer();
     this.lifecyclePaused = true;
     this.hitStopSeconds = 0;
     this.input.reset();
@@ -1045,7 +1099,8 @@ export class Game {
       onSettingsChange: this.onPauseSettingsChange,
       onControlSchemeChange: this.onPauseControlSchemeChange,
       onRestart: this.onPauseRestart,
-      onReturnToMenu: this.startScreen ? this.onPauseReturnToMenu : undefined
+      onReturnToMenu: this.startScreen ? this.onPauseReturnToMenu : undefined,
+      onWithdraw: this.runMode === 'overdrive' ? this.onPauseWithdraw : undefined
     });
   }
 
@@ -1067,6 +1122,8 @@ export class Game {
       unlockedActs: saved.unlockedActs,
       selectedAct: this.actId,
       onPlay: this.onStartPlay,
+      onOverdrivePlay: this.runMode === 'campaign' ? this.onStartOverdrivePlay : undefined,
+      overdriveUnlocked: saved.overdrive.unlocked,
       onActChange: this.onStartActChange,
       onSettingsChange: this.onStartSettingsChange,
       controlScheme: saved.settings.controlScheme,
@@ -1092,6 +1149,7 @@ export class Game {
     this.actDirector.setStage(nextStage, this.overdriveSeed);
     this.actId = this.actDirector.definition.id;
     this.combat.reconfigureOverdriveStage();
+    this.view.resetPresentation();
     this.arena.reset();
     this.arena.update(0);
     this.player.heal(this.player.state.maxHealth * 0.25);
@@ -1099,12 +1157,33 @@ export class Game {
     this.overdriveStage = nextStage;
     this.overdriveTransition?.open(this.actDirector.stageState);
     this.clearOverdriveTransitionTimer();
+    this.overdriveTransitionRemainingMs = 3_000;
+    this.scheduleOverdriveTransitionTimer();
+  }
+
+  private scheduleOverdriveTransitionTimer(): void {
+    if (this.overdriveTransitionTimer !== null || this.overdriveTransitionRemainingMs < 0) return;
+    const delay = Math.max(0, this.overdriveTransitionRemainingMs);
+    this.overdriveTransitionStartedAt = Date.now();
     this.overdriveTransitionTimer = setTimeout(() => {
       this.overdriveTransitionTimer = null;
+      this.overdriveTransitionRemainingMs = 0;
+      // A backgrounded tab may still deliver a delayed timer. Leave the
+      // transition state intact and let the lifecycle resume schedule it.
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       if (this.stopped || !this.gameState.completeOverdriveTransition()) return;
       this.overdriveTransition?.close();
       if (!this.lifecyclePaused && this.progression.state.pendingLevelUps > 0) this.openLevelUp();
-    }, 3_000);
+    }, delay);
+  }
+
+  private pauseOverdriveTransitionTimer(): void {
+    if (this.overdriveTransitionTimer === null) return;
+    const elapsed = Math.max(0, Date.now() - this.overdriveTransitionStartedAt);
+    this.overdriveTransitionRemainingMs = Math.max(0, this.overdriveTransitionRemainingMs - elapsed);
+    clearTimeout(this.overdriveTransitionTimer);
+    this.overdriveTransitionTimer = null;
+    this.overdriveTransitionStartedAt = 0;
   }
 
   private finishRun(outcome: RunOutcome): void {
@@ -1150,6 +1229,18 @@ export class Game {
     if (pending.settled) return true;
 
     const saved = this.saveStore.load();
+    if (this.diagnosticOverdrive) {
+      this.baseline.finish({
+        outcome: pending.summary.outcome,
+        elapsedSeconds: pending.summary.elapsedSeconds,
+        nova: 0,
+        frameProfile: pending.frameProfile
+      });
+      this.baselinePanel?.render(this.baseline);
+      pending.settled = true;
+      this.terminalTotalNova = saved.wallet.nova;
+      return true;
+    }
     if (this.weaponPath !== null) {
       this.baseline.finish({
         outcome: pending.summary.outcome,
@@ -1164,7 +1255,26 @@ export class Game {
     }
     const wallet = { nova: Math.min(MAX_NOVA, saved.wallet.nova + pending.novaReward) };
     const unlockedActs = this.nextUnlockedActs(saved.unlockedActs, pending.summary.outcome);
-    if (!this.saveStore.save({ ...saved, best: pending.best, wallet, unlockedActs })) return false;
+    const isPublicOverdrive = this.runMode === 'overdrive';
+    const baseData = {
+      ...saved,
+      best: isPublicOverdrive ? saved.best : pending.best,
+      wallet,
+      unlockedActs
+    };
+    const progressed = isPublicOverdrive
+      ? {
+        ...baseData,
+        overdrive: mergeOverdriveRecord(saved.overdrive, {
+          bestTotalTimeSeconds: pending.summary.elapsedSeconds,
+          maxStages: Math.max(0, this.overdriveStage - 1),
+          bestKills: this.combat.stats.kills
+        })
+      }
+      : this.runMode === 'campaign' && this.actId === 'fracture' && pending.summary.outcome === 'victory'
+        ? unlockOverdrive(baseData)
+        : baseData;
+    if (!this.saveStore.save(progressed)) return false;
     this.baseline.finish({
       outcome: pending.summary.outcome,
       elapsedSeconds: pending.summary.elapsedSeconds,
@@ -1206,7 +1316,9 @@ export class Game {
     if (summary.outcome === 'game-over' && !canRevive) this.settleTerminalRun(terminalToken);
     const settled = this.pendingTerminalRun?.token === terminalToken
       && this.pendingTerminalRun.settled;
-    const canDoubleNova = this.weaponPath === null
+    const canDoubleNova = this.runMode !== 'overdrive'
+      && !this.diagnosticOverdrive
+      && this.weaponPath === null
       && settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
       && this.rewardedOffers.canOffer('double-nova')
       && await this.rewardedAds.isAvailable('double-nova');
@@ -1228,7 +1340,7 @@ export class Game {
     }, isActVictory ? {
       actName,
       message: this.actId === 'fracture'
-        ? 'El Acto III queda registrado. Fracture cierra la campaña authored; el modo infinito queda pendiente.'
+        ? 'El Acto III queda registrado. Overdrive ya está disponible desde el menú principal.'
         : `El ${actName} queda registrado. ${nextActName} inicia con una build limpia durante esta validación.`,
       restartLabel: this.actId === 'angular' ? 'Repetir Acto II' : this.actId === 'fracture' ? 'Repetir Acto III' : 'Repetir Acto I',
       continueLabel: this.canContinueToNextAct() ? `Continuar al ${nextActName}` : undefined,
@@ -1276,7 +1388,7 @@ export class Game {
   }
 
   private async requestDoubleNova(terminalToken: number): Promise<void> {
-    if (terminalToken !== this.terminalRunToken || !this.gameState.isTerminal
+    if (this.diagnosticOverdrive || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal
       || this.pendingTerminalRun?.token !== terminalToken
       || !this.pendingTerminalRun.settled) return;
     const offerToken = this.rewardedOffers.begin('double-nova');
@@ -1340,7 +1452,15 @@ export class Game {
   }
 
   private resetRunState(): void {
+    if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
+      this.overdriveStage = this.initialOverdriveStage;
+      this.actDirector.setStage(this.initialOverdriveStage, this.overdriveSeed);
+      this.actId = this.actDirector.definition.id;
+    }
     this.clearRunPresentation();
+    if (this.runMode === 'overdrive' && this.overdriveBuild !== 'starter') {
+      this.prepareOverdriveDebugBuild(this.overdriveBuild);
+    }
     if (this.evolutionId !== null && this.evolutionScenario !== null) this.prepareDirectEvolution();
     this.baseline.beginRun(this.fxQuality);
     this.audio.resume();
@@ -1459,9 +1579,10 @@ export class Game {
   }
 
   private clearOverdriveTransitionTimer(): void {
-    if (this.overdriveTransitionTimer === null) return;
-    clearTimeout(this.overdriveTransitionTimer);
+    if (this.overdriveTransitionTimer !== null) clearTimeout(this.overdriveTransitionTimer);
     this.overdriveTransitionTimer = null;
+    this.overdriveTransitionRemainingMs = 0;
+    this.overdriveTransitionStartedAt = 0;
   }
 
   private triggerHitStop(seconds: number): void {

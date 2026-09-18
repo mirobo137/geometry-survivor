@@ -112,7 +112,10 @@ describe('GameState', () => {
     expect(state.isSimulationRunning).toBe(false);
     expect(state.isTransitioning).toBe(true);
     expect(state.isTerminal).toBe(false);
-    expect(state.enterPause()).toBe(false);
+    expect(state.enterPause()).toBe(true);
+    expect(state.isPausedFromTransition).toBe(true);
+    expect(state.resume()).toBe(true);
+    expect(state.phase).toBe('overdrive-transition');
     expect(state.completeOverdriveTransition()).toBe(true);
     expect(state.phase).toBe('playing');
   });

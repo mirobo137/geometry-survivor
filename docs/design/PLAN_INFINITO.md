@@ -24,9 +24,11 @@ Este documento es el contrato de trabajo para implementar el modo Infinito despu
 - En una pareja se reservan dos slots del pool enemigo, se bloquean nuevos
   hazards de arena y se alternan ataques especiales con cola de lectura de
   0,35 s; los peligros ya activos terminan normalmente.
-- El menú desbloquea **Infinito** al vencer el Acto III. La ruta pública es
-  `?mode=overdrive`; las rutas `?debug=1&mode=overdrive...` siguen siendo
-  diagnósticas y no escriben NOVA, récords ni desbloqueos.
+- El menú desbloquea **Infinito** al vencer el Acto III. La ruta pública manual
+  es `?mode=overdrive`; el clic explícito sobre la tarjeta usa
+  `?mode=overdrive&autostart=1` para entrar directamente al combate. Las rutas
+  `?debug=1&mode=overdrive...` siguen siendo diagnósticas y no escriben NOVA,
+  récords ni desbloqueos.
 - La retirada está disponible en pausa sólo en Overdrive y pide confirmación.
   Muerte o retirada liquidan una sola recompensa; el récord de Overdrive se
   guarda separado del récord de campaña y no se ofrece doble NOVA.
@@ -57,7 +59,11 @@ unitarias.
 > queda habilitada y conserva la misma ruta publica.
 >
 > Al cerrar una victoria real del Acto III, la intermisión ofrece
-> `Continuar al Overdrive` y abre la ruta publica directamente con build limpia.
+> `Continuar al Overdrive` y abre la ruta pública directamente con build limpia.
+
+> El selector de Actos usa la misma entrada directa (`autostart=1`) al pulsar
+> la tarjeta de Overdrive. Abrir manualmente `?mode=overdrive` sin ese parámetro
+> conserva el menú para revisar configuración antes de pulsar **Jugar**.
 
 - Infinito se desbloquea al derrotar al boss del Acto III.
 - Es una partida independiente que comienza con **build limpia**. Conserva únicamente las mejoras permanentes que ya aplican a una partida normal.

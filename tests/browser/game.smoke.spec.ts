@@ -332,13 +332,11 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await expect(page.locator('#start-overdrive')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeEnabled();
   await page.locator('#start-overdrive').click();
-  await expect(page).toHaveURL(/mode=overdrive/);
-  // The public mode route intentionally returns to the normal start menu so
-  // settings can be reviewed before the run. It must not reopen the campaign
-  // selector or expose the campaign's Overdrive launcher a second time.
-  await expect(page.locator('#start-screen')).toBeVisible();
-  await expect(page.locator('#start-play')).toBeVisible();
-  await expect(page.locator('#start-overdrive')).toBeHidden();
+  await expect(page).toHaveURL(/mode=overdrive&autostart=1/);
+  // Choosing the card is an explicit play action. The unlocked run starts
+  // directly and cannot reopen the campaign selector in Overdrive mode.
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#game-hud')).toBeVisible();
   expect(failures).toEqual([]);
 });
 

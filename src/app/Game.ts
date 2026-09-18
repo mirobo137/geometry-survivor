@@ -285,7 +285,11 @@ export class Game {
   private readonly onStartOverdrivePlay = (): void => {
     if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
     const url = new URL(window.location.href);
-    url.search = '?mode=overdrive';
+    // Selecting Overdrive from the acts screen is an explicit play action.
+    // Start the unlocked run directly so the new page cannot reopen the
+    // campaign selector with its own launcher disabled. The bare public URL
+    // remains available for a manual menu/deep-link entry.
+    url.search = '?mode=overdrive&autostart=1';
     window.location.assign(url.toString());
   };
 

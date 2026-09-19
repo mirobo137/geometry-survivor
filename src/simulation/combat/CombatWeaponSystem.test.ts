@@ -34,8 +34,8 @@ describe('CombatWeaponSystem', () => {
     }
 
     expect(casts).toHaveLength(2);
-    // Event Horizon: travel .42 + attract 1.6 + collapse .2 + recovery .36,
-    // then its authored 6.24-second idle cooldown.
-    expect(casts[1] - casts[0]).toBeCloseTo(8.82, 1);
+    // Event Horizon: travel .42 + 3.4-second hold + recovery .36, then its
+    // authored 6.24-second idle cooldown. It intentionally has no collapse.
+    expect(casts[1] - casts[0]).toBeCloseTo(10.42, 1);
   });
 });

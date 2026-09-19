@@ -40,6 +40,7 @@ export interface StartScreenOptions {
   readonly metaUpgrades: MetaUpgradeSaveData;
   readonly unlockedActs: readonly CampaignActId[];
   readonly selectedAct: ActId;
+  readonly selectedMode?: 'campaign' | 'overdrive';
   readonly onPlay: (calibrationId?: CalibrationId) => void;
   readonly onActChange: (actId: ActId) => void;
   readonly onSettingsChange: (settings: AudioSettings) => void;
@@ -123,6 +124,7 @@ export class StartScreen {
   private metaUpgrades: MetaUpgradeSaveData = { levels: {} };
   private unlockedActs: readonly CampaignActId[] = ['radial'];
   private selectedAct: ActId = 'radial';
+  private selectedMode: 'campaign' | 'overdrive' = 'campaign';
   private cosmeticUnlockAvailable = false;
   private cosmeticUnlockHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private cosmeticOfferConsumed = false;
@@ -255,7 +257,14 @@ export class StartScreen {
     this.mountScene();
     this.mountMark();
     this.playButton.addEventListener('click', () => this.handlePlay());
-    this.overdriveButton?.addEventListener('click', () => this.overdrivePlayHandler?.());
+    this.overdriveButton?.addEventListener('click', () => {
+      if (!this.overdriveUnlocked || !this.overdrivePlayHandler) return;
+      this.overdrivePlayHandler();
+      this.selectedMode = 'overdrive';
+      this.updateActSelector();
+    });
+    root.querySelector<HTMLButtonElement>('#start-act-play')
+      ?.addEventListener('click', () => this.handlePlay());
     this.settingsToggle.addEventListener('click', () => this.toggleSettings());
     this.levelToggle.addEventListener('click', () => this.openActSelector());
     this.actBack.addEventListener('click', () => this.closeActSelector());
@@ -302,14 +311,15 @@ export class StartScreen {
     this.metaUpgrades = options.metaUpgrades;
     this.unlockedActs = options.unlockedActs;
     this.selectedAct = options.selectedAct;
+    this.selectedMode = options.selectedMode ?? 'campaign';
     if (this.overdriveButton) {
       this.overdriveButton.hidden = this.overdrivePlayHandler === null;
       this.overdriveButton.disabled = options.overdriveUnlocked !== true;
       this.overdriveButton.setAttribute('aria-label', options.overdriveUnlocked === true
-        ? 'Iniciar modo Infinito Overdrive'
+        ? 'Seleccionar modo Infinito Overdrive'
         : 'Modo Infinito bloqueado: vence el Acto III');
       this.overdriveButton.title = options.overdriveUnlocked === true
-        ? 'Iniciar Overdrive'
+        ? 'Seleccionar Overdrive'
         : 'Derrota al boss del Acto III para desbloquearlo';
     }
     this.cosmeticUnlockAvailable = options.cosmeticUnlockAvailable;
@@ -429,6 +439,7 @@ export class StartScreen {
 
   private selectAct(actId: ActId): void {
     if (!this.unlockedActs.includes(actId)) return;
+    this.selectedMode = 'campaign';
     this.selectedAct = actId;
     this.actChangeHandler?.(actId);
     this.updateActSelector();
@@ -452,10 +463,10 @@ export class StartScreen {
       this.overdriveButton.hidden = this.overdrivePlayHandler === null;
       this.overdriveButton.disabled = !overdriveAvailable;
       this.overdriveButton.setAttribute('aria-label', overdriveAvailable
-        ? 'Iniciar modo Infinito Overdrive'
+        ? 'Seleccionar modo Infinito Overdrive'
         : 'Modo Infinito bloqueado: vence el Acto III');
       this.overdriveButton.title = overdriveAvailable
-        ? 'Iniciar Overdrive'
+        ? 'Seleccionar Overdrive'
         : 'Derrota al boss del Acto III para desbloquearlo';
     }
     const actName = this.selectedAct === 'angular'
@@ -465,6 +476,21 @@ export class StartScreen {
       ? ' · Angular se desbloquea al vencer Acto I'
       : !fractureUnlocked ? ' · Fracture se desbloquea al vencer Acto II' : '';
     this.actStatus.textContent = `${actName}${lockMessage}`;
+    const overdriveSelected = this.selectedMode === 'overdrive';
+    if (overdriveSelected) {
+      for (const button of [this.radialActButton, this.angularActButton, this.fractureActButton]) {
+        button.classList.remove('is-selected');
+        button.setAttribute('aria-pressed', 'false');
+      }
+      this.actStatus.textContent = 'Infinito · Overdrive';
+    }
+    this.overdriveButton?.classList.toggle('is-selected', overdriveSelected);
+    this.overdriveButton?.setAttribute('aria-pressed', String(overdriveSelected));
+    const start = this.root.querySelector<HTMLButtonElement>('#start-act-play');
+    if (start) {
+      start.textContent = overdriveSelected ? 'INICIAR INFINITO' : `INICIAR ${actName}`;
+      start.disabled = overdriveSelected && !this.overdriveUnlocked;
+    }
   }
 
   private openSkins(): void {

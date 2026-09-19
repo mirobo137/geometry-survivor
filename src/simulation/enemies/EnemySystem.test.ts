@@ -40,6 +40,32 @@ describe('EnemySystem', () => {
     expect(cooldownResults).toContain(enemy.contactDamage);
   });
 
+  it('honors temporary slow and stun control without changing an enemy base speed', () => {
+    const pool = new EnemyPool(1);
+    const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const enemy = pool.acquire();
+    if (!enemy) throw new Error('No se pudo preparar el enemigo controlado');
+    enemy.kind = 'chaser';
+    enemy.x = player.state.x - 100;
+    enemy.y = player.state.y;
+    enemy.speed = 100;
+    enemy.radius = 10;
+    enemy.contactEnabled = false;
+    enemy.slowSeconds = 1;
+    enemy.slowMultiplier = 0.4;
+
+    system.update(0.1, player.state);
+    expect(enemy.x).toBeCloseTo(player.state.x - 96);
+    expect(enemy.speed).toBe(100);
+
+    enemy.stunSeconds = 1;
+    const beforeStun = enemy.x;
+    system.update(0.1, player.state);
+    expect(enemy.x).toBe(beforeStun);
+    expect(enemy.vx).toBe(0);
+  });
+
   it('keeps the Orbiter drill family under its authored cap', () => {
     const pool = new EnemyPool(8);
     const system = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));

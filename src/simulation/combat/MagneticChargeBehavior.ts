@@ -13,6 +13,14 @@ const EPSILON = 0.000001;
 const RANDOM_SEED = 0x4d61_676e;
 const EVENT_CORE_RADIUS = 64;
 const EVENT_FINAL_RADIUS = 110;
+const EVENT_HORIZON_HOLD_SECONDS = 3.4;
+const EVENT_HORIZON_TICK_SECONDS = 0.2;
+const EVENT_HORIZON_TICK_DAMAGE_MULTIPLIER = 0.14;
+const EVENT_HORIZON_PULL_RADIUS = 210;
+const EVENT_HORIZON_PULL_STRENGTH = 145;
+const EVENT_HORIZON_HOLD_RADIUS = 18;
+const EVENT_HORIZON_SLOW_SECONDS = 2.25;
+const EVENT_HORIZON_SLOW_MULTIPLIER = 0.38;
 const POLAR_TRIANGLE_RADIUS_FACTOR = 0.61;
 // Keep the three fronts narrow enough to read as blades, but give their
 // collision a stable authored width so a visible front cannot miss an enemy
@@ -21,10 +29,14 @@ const POLAR_TRIANGLE_RADIUS_FACTOR = 0.61;
 // damage beat when an enemy reaches the convergence point.
 const POLAR_FINAL_RADIUS_FACTOR = 0.43;
 const POLAR_FRONT_WIDTH = 24;
-const POLAR_FINAL_FIRST_TICK_PROGRESS = 0.18;
-const POLAR_FINAL_SECOND_TICK_PROGRESS = 0.68;
+const POLAR_FINAL_TICK_PROGRESS = 0.32;
 const POLAR_COLLAPSE_SECONDS = 0.42;
-const POLAR_PULL_STRENGTH = 165;
+const POLAR_PULL_STRENGTH = 230;
+const POLAR_PULL_SECONDS = 0.55;
+const POLAR_HIT_STUN_SECONDS = 1.1;
+const POLAR_FRONT_DAMAGE_MULTIPLIER = 0.6;
+const POLAR_FINAL_DAMAGE_MULTIPLIER = 0.45;
+const POLAR_STUNNED_FINAL_DAMAGE_MULTIPLIER = 1.4;
 
 export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'collapse' | 'recovery';
 
@@ -218,8 +230,7 @@ export class MagneticChargeBehavior {
       if (this.evolution === 'event_horizon' && this.phase === 'attract') this.hitEventCore();
       else if (this.evolution === 'polar_collapse' && this.phase === 'detonate') this.hitPolarFronts();
       else if (this.phase === 'detonate') this.hitDetonationBand();
-      if (this.evolution === 'event_horizon' && this.phase === 'collapse') this.hitEventFinal();
-      else if (this.evolution === 'polar_collapse' && this.phase === 'collapse') this.hitPolarFinal();
+      if (this.evolution === 'polar_collapse' && this.phase === 'collapse') this.hitPolarFinal();
       else if (this.phase === 'collapse') this.hitDetonationBand(0.55, true);
 
       if (this.phaseTimer + EPSILON < duration) continue;
@@ -227,7 +238,12 @@ export class MagneticChargeBehavior {
       if (this.phase === 'travel') {
         this.phase = 'attract';
       } else if (this.phase === 'attract') {
-        this.phase = this.evolution === 'event_horizon' ? 'collapse' : 'detonate';
+        if (this.evolution === 'event_horizon') {
+          this.applyEventHorizonSlow();
+          this.phase = 'recovery';
+        } else {
+          this.phase = 'detonate';
+        }
       } else if (this.phase === 'detonate') {
         this.phase = this.evolution === 'polar_collapse' || this.evolution === 'event_horizon'
           ? 'collapse' : 'recovery';
@@ -369,12 +385,13 @@ export class MagneticChargeBehavior {
       const dy = this.state.targetY - enemy.y;
       const distance = Math.hypot(dx, dy);
       if (distance <= 0.001 || distance > this.state.pullRadius + enemy.radius) continue;
-      // Base/Event Horizon stop short of their damaging centre. Polar Collapse
-      // is the deliberate exception: its remote core needs to retain targets
-      // long enough to deliver both collapse pulses, away from the player.
-      const safeDistance = this.evolution === 'polar_collapse'
-        ? this.effectivePolarFinalRadius() + 8
-        : this.state.innerRadius + enemy.radius + 8;
+      // Both evolutions are remote traps, so enemies can be held inside their
+      // real damage zones. The base weapon remains an annulus with a safe core.
+      const safeDistance = this.evolution === 'event_horizon'
+        ? EVENT_HORIZON_HOLD_RADIUS
+        : this.evolution === 'polar_collapse'
+          ? this.effectivePolarFinalRadius() + 2
+          : this.state.innerRadius + enemy.radius + 8;
       if (distance <= safeDistance) {
         enemy.vx = 0;
         enemy.vy = 0;
@@ -429,24 +446,21 @@ export class MagneticChargeBehavior {
       if (Math.hypot(enemy.x - this.state.targetX, enemy.y - this.state.targetY)
         > EVENT_CORE_RADIUS + enemy.radius) continue;
       this.hitGenerations[index] = enemy.generation;
-      this.hitCooldowns[index] = Math.max(0.12, 0.25 * this.permanentCadenceMultiplier);
-      enemy.health -= this.context.rollCriticalDamage(this.damage * 0.65 / 6.4);
+      this.hitCooldowns[index] = Math.max(0.12, EVENT_HORIZON_TICK_SECONDS * this.permanentCadenceMultiplier);
+      enemy.health -= this.context.rollCriticalDamage(this.damage * EVENT_HORIZON_TICK_DAMAGE_MULTIPLIER);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
     }
   }
 
-  private hitEventFinal(): void {
-    const radius = this.eventHorizonRadius;
-    const candidates = this.context.enemies.queryCircle(this.state.targetX, this.state.targetY, radius + 48);
+  /** Slows only survivors that were actually held and damaged by the core. */
+  private applyEventHorizonSlow(): void {
+    const candidates = this.context.enemies.queryCircle(this.state.targetX, this.state.targetY, EVENT_CORE_RADIUS + 48);
     for (const index of candidates) {
       const enemy = this.context.enemies.getState(index);
-      if (!enemy.active || enemy.health <= 0) continue;
-      if (this.collapseHitGenerations[index] === enemy.generation) continue;
-      if (Math.hypot(enemy.x - this.state.targetX, enemy.y - this.state.targetY)
-        > radius + enemy.radius) continue;
-      this.collapseHitGenerations[index] = enemy.generation;
-      enemy.health -= this.context.rollCriticalDamage(this.damage * 0.35);
-      if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
+      if (!enemy.active || enemy.health <= 0 || enemy.kind === 'boss') continue;
+      if (this.hitGenerations[index] !== enemy.generation) continue;
+      enemy.slowSeconds = Math.max(enemy.slowSeconds, EVENT_HORIZON_SLOW_SECONDS);
+      enemy.slowMultiplier = Math.min(enemy.slowMultiplier, EVENT_HORIZON_SLOW_MULTIPLIER);
     }
   }
 
@@ -471,7 +485,8 @@ export class MagneticChargeBehavior {
         if (distanceToSegmentSquared(enemy.x, enemy.y, startX, startY, dx, dy)
           > (POLAR_FRONT_WIDTH * 0.5 + enemy.radius) ** 2) continue;
         this.collapseHitGenerations[index] = enemy.generation;
-        enemy.health -= this.context.rollCriticalDamage(this.damage * 0.2);
+        if (enemy.kind !== 'boss') enemy.stunSeconds = Math.max(enemy.stunSeconds, POLAR_HIT_STUN_SECONDS);
+        enemy.health -= this.context.rollCriticalDamage(this.damage * POLAR_FRONT_DAMAGE_MULTIPLIER);
         if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
       }
     }
@@ -491,7 +506,10 @@ export class MagneticChargeBehavior {
       if (Math.hypot(enemy.x - this.state.targetX, enemy.y - this.state.targetY) > radius + enemy.radius) continue;
       while (this.polarFinalHitCounts[index] < targetHitCount) {
         this.polarFinalHitCounts[index] += 1;
-        enemy.health -= this.context.rollCriticalDamage(this.damage * 0.2);
+        const damageMultiplier = enemy.kind !== 'boss' && enemy.stunSeconds > 0
+          ? POLAR_STUNNED_FINAL_DAMAGE_MULTIPLIER
+          : POLAR_FINAL_DAMAGE_MULTIPLIER;
+        enemy.health -= this.context.rollCriticalDamage(this.damage * damageMultiplier);
         if (enemy.health <= 0) {
           this.context.onEnemyDefeated(enemy);
           break;
@@ -513,10 +531,10 @@ export class MagneticChargeBehavior {
   private phaseDuration(): number {
     if (this.phase === 'travel') return this.travelSeconds;
     if (this.phase === 'attract') return this.evolution === 'event_horizon'
-      ? 1.6
-      : this.evolution === 'polar_collapse' ? 0.3 : DEFINITION.attractSeconds;
+      ? EVENT_HORIZON_HOLD_SECONDS
+      : this.evolution === 'polar_collapse' ? POLAR_PULL_SECONDS : DEFINITION.attractSeconds;
     if (this.phase === 'detonate') return this.evolution === 'polar_collapse' ? 0.45 : this.detonateSeconds;
-    if (this.phase === 'collapse') return this.evolution === 'event_horizon' ? 0.2 : this.evolution === 'polar_collapse' ? POLAR_COLLAPSE_SECONDS : 0.55;
+    if (this.phase === 'collapse') return this.evolution === 'polar_collapse' ? POLAR_COLLAPSE_SECONDS : 0.55;
     return DEFINITION.recoverySeconds;
   }
 
@@ -551,7 +569,6 @@ export class MagneticChargeBehavior {
 
   private applyEvolutionTuning(): void {
     if (this.evolution === 'event_horizon') {
-      this.damage *= 0.85;
       this.cooldownSeconds *= 1.2;
     } else if (this.evolution === 'polar_collapse') {
       this.cooldownSeconds *= 1.25;
@@ -559,9 +576,7 @@ export class MagneticChargeBehavior {
   }
 
   private getPolarFinalPulseCount(progress: number): number {
-    if (progress >= POLAR_FINAL_SECOND_TICK_PROGRESS) return 2;
-    if (progress >= POLAR_FINAL_FIRST_TICK_PROGRESS) return 1;
-    return 0;
+    return progress >= POLAR_FINAL_TICK_PROGRESS ? 1 : 0;
   }
 
   private applyRankTuning(): void {
@@ -580,12 +595,14 @@ export class MagneticChargeBehavior {
   }
 
   private effectivePullRadius(): number {
-    return this.pullRadius;
+    return this.evolution === 'event_horizon'
+      ? Math.max(this.pullRadius, EVENT_HORIZON_PULL_RADIUS)
+      : this.pullRadius;
   }
 
   private effectivePullStrength(): number {
     return this.evolution === 'event_horizon'
-      ? 110
+      ? EVENT_HORIZON_PULL_STRENGTH
       : this.evolution === 'polar_collapse' ? POLAR_PULL_STRENGTH : DEFINITION.pullStrength;
   }
 

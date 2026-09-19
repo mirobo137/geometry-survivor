@@ -331,12 +331,29 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await expect(page.locator('#start-act-view')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeEnabled();
+  await page.evaluate(() => { (window as unknown as { menuIdentity: string }).menuIdentity = 'same-document'; });
   await page.locator('#start-overdrive').click();
-  await expect(page).toHaveURL(/mode=overdrive&autostart=1/);
-  // Choosing the card is an explicit play action. The unlocked run starts
-  // directly and cannot reopen the campaign selector in Overdrive mode.
+  await expect(page.locator('#start-overdrive')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-overdrive')).toBeEnabled();
+  await expect(page.locator('#start-act-radial')).not.toHaveClass(/is-selected/);
+  await expect(page.locator('#start-act-status')).toContainText('Infinito');
+  await expect(page.locator('#start-act-play')).toHaveText('INICIAR INFINITO');
+  await page.locator('#start-act-angular').click();
+  await expect(page.locator('#start-overdrive')).not.toHaveClass(/is-selected/);
+  await page.locator('#start-overdrive').click();
+  await page.locator('#start-act-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
   await expect(page.locator('#game-hud')).toBeVisible();
+  await expect(page.locator('#debug-panel')).toContainText('mode: overdrive-stage-1');
+  expect(await page.evaluate(() => (window as unknown as { menuIdentity: string }).menuIdentity)).toBe('same-document');
+  await page.locator('#pause-toggle').click();
+  await page.locator('#pause-menu').click();
+  await page.locator('#start-level').click();
+  await expect(page.locator('#start-overdrive')).toBeEnabled();
+  await expect(page.locator('#start-overdrive')).toHaveClass(/is-selected/);
+  await page.locator('#start-act-angular').click();
+  await page.locator('#start-act-play').click();
+  await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
 });
 

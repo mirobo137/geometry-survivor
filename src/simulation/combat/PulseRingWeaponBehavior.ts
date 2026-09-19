@@ -9,6 +9,8 @@ import type { PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDe
 const DEFINITION = WEAPON_DEFINITIONS.pulseRing;
 const EPSILON = 0.000001;
 const COMPRESSION_WAVE_END_RADIUS = 320;
+const ECHO_SHOCK_END_RADIUS = 280;
+const COMPRESSION_WAVE_BURSTS = 3;
 
 export interface PulseRingWeaponBehaviorContext {
   readonly enemies: EnemySystem;
@@ -37,14 +39,12 @@ export class PulseRingWeaponBehavior {
     wave: 0,
     directionX: 0,
     directionY: -1,
-    secondaryOriginX: 0,
-    secondaryOriginY: 0,
     evolution: null
   };
 
   private readonly hitCastMarkers: Uint32Array;
   private readonly hitEnemyGenerations: Uint32Array;
-  /** Wave marker per cast/pooled enemy slot. Echo may hit once per wave. */
+  /** Wave marker per cast/pooled enemy slot. Evolutions may hit once per burst. */
   private readonly hitWaveMarkers: Uint8Array;
   private phaseTimer = 0;
   private phase: PulseRingWeaponState['phase'] = 'idle';
@@ -145,8 +145,6 @@ export class PulseRingWeaponBehavior {
     this.state.endRadius = this.effectiveEndRadius();
     this.state.width = DEFINITION.width;
     this.state.wave = 0;
-    this.state.secondaryOriginX = player.x;
-    this.state.secondaryOriginY = player.y;
     // The telegraph and the damaging front share one captured axis. Player
     // movement can aim the next cast, but cannot rotate an already announced
     // wave away from the hitbox the player just read.
@@ -186,12 +184,17 @@ export class PulseRingWeaponBehavior {
       } else if (this.phase === 'recovery' && this.evolution === 'echo_shock' && this.state.wave === 0) {
         this.phase = 'active';
         this.state.wave = 1;
-        this.state.secondaryOriginX = this.lastPlayerX ?? this.state.originX;
-        this.state.secondaryOriginY = this.lastPlayerY ?? this.state.originY;
-        this.state.originX = this.state.secondaryOriginX;
-        this.state.originY = this.state.secondaryOriginY;
-        // A new Echo Shock origin starts from the authored inner radius. Do
-        // not sweep the completed radius of wave 0 around this new point.
+        // Echo is one long wave: it leaves the captured player position and
+        // crosses the same corridor on its way back. Keep the origin frozen;
+        // moving the player must never create a second, unrelated hit zone.
+        this.state.radius = this.effectiveEndRadius();
+      } else if (this.phase === 'recovery'
+        && this.evolution === 'compression_wave'
+        && (this.state.wave ?? 0) < COMPRESSION_WAVE_BURSTS - 1) {
+        // Each front gets its own hit marker. This is a three-hit control
+        // burst, not one long invisible damage-over-time field.
+        this.phase = 'active';
+        this.state.wave = (this.state.wave ?? 0) + 1;
         this.state.radius = DEFINITION.startRadius;
       } else {
         this.phase = 'idle';
@@ -235,8 +238,6 @@ export class PulseRingWeaponBehavior {
       wave: 0,
       directionX: 0,
       directionY: -1,
-      secondaryOriginX: 0,
-      secondaryOriginY: 0,
       evolution: null
     });
   }
@@ -282,14 +283,13 @@ export class PulseRingWeaponBehavior {
       this.hitCastMarkers[index] = cast;
       this.hitEnemyGenerations[index] = enemy.generation;
       this.hitWaveMarkers[index] = waveMarker;
-      const waveMultiplier = this.evolution === 'echo_shock' && this.state.wave === 1 ? 0.45 : 1;
-      const damageMultiplier = this.evolution === 'compression_wave' ? 1 : waveMultiplier;
-      enemy.health -= this.context.rollCriticalDamage(this.damage * damageMultiplier);
+      enemy.health -= this.context.rollCriticalDamage(this.damage);
       if (enemy.health <= 0) {
         this.context.onEnemyDefeated(enemy);
         continue;
       }
-      if (enemy.kind !== 'boss') this.pushEnemy(enemy, distance);
+      // Echo Shock is a returning damage lane, not a displacement tool.
+      if (enemy.kind !== 'boss' && this.evolution !== 'echo_shock') this.pushEnemy(enemy, distance);
     }
   }
 
@@ -299,7 +299,7 @@ export class PulseRingWeaponBehavior {
     // frame dt makes the response readable at 30/60/144 Hz and avoids the
     // old 1.5-unit nudge that was technically correct but imperceptible.
     const push = this.evolution === 'compression_wave'
-      ? 32
+      ? this.pushDistance * 3
       : Math.min(24, Math.max(0, this.pushDistance));
     enemy.x += ((enemy.x - this.state.originX) / distance) * push;
     enemy.y += ((enemy.y - this.state.originY) / distance) * push;
@@ -322,8 +322,9 @@ export class PulseRingWeaponBehavior {
 
   private phaseDuration(): number {
     if (this.phase === 'telegraph') return this.evolution === 'compression_wave' ? 0.35 : this.telegraphSeconds;
-    if (this.phase === 'active') return this.evolution === 'compression_wave' ? 0.55 : DEFINITION.attackSeconds;
-    return this.state.wave === 0 && this.evolution === 'echo_shock' ? 0.45 : DEFINITION.recoverySeconds;
+    if (this.phase === 'active') return this.evolution === 'compression_wave' ? 0.28 : DEFINITION.attackSeconds;
+    if (this.evolution === 'compression_wave' && (this.state.wave ?? 0) < COMPRESSION_WAVE_BURSTS - 1) return 0.1;
+    return this.state.wave === 0 && this.evolution === 'echo_shock' ? 0.16 : DEFINITION.recoverySeconds;
   }
 
   private syncState(): void {
@@ -344,9 +345,10 @@ export class PulseRingWeaponBehavior {
       return;
     }
     const travelProgress = this.phase === 'active' ? this.state.progress : 1;
-    this.state.radius = DEFINITION.startRadius
-      + (this.effectiveEndRadius() - DEFINITION.startRadius)
-        * smoothstep(travelProgress);
+    const travelDistance = (this.effectiveEndRadius() - DEFINITION.startRadius) * smoothstep(travelProgress);
+    this.state.radius = this.evolution === 'echo_shock' && this.state.wave === 1 && this.phase === 'active'
+      ? this.effectiveEndRadius() - travelDistance
+      : DEFINITION.startRadius + travelDistance;
   }
 
   private applyEvolutionTuning(): void {
@@ -365,9 +367,11 @@ export class PulseRingWeaponBehavior {
   }
 
   private effectiveEndRadius(): number {
-    return this.evolution === 'compression_wave'
-      ? Math.max(this.endRadius, COMPRESSION_WAVE_END_RADIUS + this.compressionCoverageBonus)
-      : this.endRadius;
+    if (this.evolution === 'compression_wave') {
+      return Math.max(this.endRadius, COMPRESSION_WAVE_END_RADIUS + this.compressionCoverageBonus);
+    }
+    if (this.evolution === 'echo_shock') return Math.max(this.endRadius, ECHO_SHOCK_END_RADIUS);
+    return this.endRadius;
   }
 
   private updateMovementDirection(player: PlayerState): void {

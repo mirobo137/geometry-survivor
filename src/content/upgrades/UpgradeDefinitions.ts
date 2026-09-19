@@ -345,7 +345,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'echo_shock',
     title: 'Echo Shock',
-    description: 'Una segunda onda llega 0.45 s despues con el 45% del dano.',
+    description: 'Una onda de mayor alcance vuelve a tu nave: ida y regreso hacen dano sin desplazar.',
     effect: { type: 'weaponEvolution', evolution: 'echo_shock' },
     maxStacks: 1,
     requires: ['pulse_ring']
@@ -353,7 +353,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'compression_wave',
     title: 'Compression Wave',
-    description: 'Atrae durante la carga y libera un impacto al 165% con mayor empuje.',
+    description: 'Tres frentes direccionales rapidos empujan con triple fuerza y abren paso.',
     effect: { type: 'weaponEvolution', evolution: 'compression_wave' },
     maxStacks: 1,
     requires: ['pulse_ring']
@@ -361,7 +361,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'event_horizon',
     title: 'Event Horizon',
-    description: 'Amplia duracion, radio y atraccion; reduce dano y cadencia para controlar el espacio.',
+    description: 'Retiene y dana un nucleo remoto por mas tiempo; los supervivientes salen ralentizados.',
     effect: { type: 'weaponEvolution', evolution: 'event_horizon' },
     maxStacks: 1,
     requires: ['magnetic_charge']
@@ -369,7 +369,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'polar_collapse',
     title: 'Polar Collapse',
-    description: 'Acorta la atraccion y anade una segunda contraccion con dano parcial.',
+    description: 'Los filos arrastran y aturden; la implosion final castiga con fuerza a los objetivos aturdidos.',
     effect: { type: 'weaponEvolution', evolution: 'polar_collapse' },
     maxStacks: 1,
     requires: ['magnetic_charge']

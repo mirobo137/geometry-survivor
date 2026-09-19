@@ -17,18 +17,27 @@ hay una diferencia.
   tres cuchillas a la formacion y fija el total en seis, todas orbitando a
   radio authored fijo de 94u. El contacto de las seis cuchillas es el dano
   real; no existe fase de salida, desaparicion ni hit fantasma en el centro.
+- `echo_shock`: una sola cresta alcanza 280u (o el alcance de rango si fuera
+  mayor) y retorna al mismo origen capturado. Ida y vuelta hacen el dano
+  completo una vez por objetivo y nunca desplazan; el movimiento posterior
+  del player no crea un segundo centro ni puede cambiar la zona anunciada.
 - `compression_wave`: el frente conserva el eje capturado al iniciar el
   telegraph, aunque el player se mueva durante el cast. La simulacion y la
   vista usan ese mismo eje; la vista ya no dibuja un aro completo para no
   prometer dano detras del player. El radio final es 320u y el borde fisico
   considera el radio del enemigo, por lo que un hull que roza el frente no se
-  pierde por comprobar solo su centro.
-- `polar_collapse`: los tres frentes convergentes conservan ancho fisico24u,
-  pero la evolucion ahora activa una atraccion remota segura durante0.3 s.
-  El nucleo final usa0.43 del radio exterior (aprox.64u en base) y permanece
-  0.42 s: entrega dos pulsos de0.2 del dano base, en progreso0.18 y0.68. El
-  frente aplica otro0.2; el presupuesto total sigue en60% por cast. La vista
-  muestra el triangulo, las tres cuchillas y el doble pulso del nucleo.
+  pierde por comprobar solo su centro. Libera tres frentes de 0.28s, con una
+  pausa visual de 0.10s, y cada impacto empuja tres veces el empuje base del
+  rango actual; no atrae en ninguna fase.
+- `event_horizon`: retiene durante3.4s en un núcleo remoto radio64, con
+  atracción radio210 y ticks de14% del daño base cada0.2s. No hay explosión
+  final: los supervivientes que recibieron ticks salen ralentizados a38% por
+  2.25s; quien no entró al núcleo nunca recibe ese control.
+- `polar_collapse`: atrae durante0.55s a230u/s. Sus tres frentes conservan
+  ancho físico24u, infligen60% y aturden1.1s a enemigos no-boss; la única
+  implosión final de radio43% inflige140% a esos aturdidos o45% a un objetivo
+  que llegara sin aturdimiento. La vista muestra triángulo, filos y un remate,
+  no dos pulsos pequeños.
 - La auditoria automatica exige que las doce ramas (`rail_lance`,
   `pulse_volley`, `solar_crown`, `graviton_halo`, `closed_circuit`,
   `thunderhead`, `twin_comet`, `singularity_return`, `echo_shock`,
@@ -296,44 +305,43 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - Prueba: player puede moverse junto al extremo sin ser atravesado por fuerzas;
   ningún pulso al recoger; enemigo intermedio recibe retorno real.
 
-### E. Pulse Ring: sembrar dos posiciones o abrir un frente
+### E. Pulse Ring: regresar por un corredor o abrir un frente
 
-#### Echo Shock / Eco de desplazamiento — `echo_shock`
+#### Echo Shock / Eco de retorno — `echo_shock`
 
-- **Verbo:** una onda nace en posición A y otra sigue tu desplazamiento hasta B.
-  Capturar A al primer disparo; 0.45 s después capturar B = posición actual.
-  Anunciar segundo emisor mediante dos pequeñas marcas junto a la nave hasta
-  fijarse B. Después ambas ondas permanecen ancladas a sus propios orígenes.
-- Cada onda usa expansión/barrido base; máximo dos ondas y un cast activo.
-  Presupuesto 60% A, 40% B. Un hit por onda/target y tope total por cast.
-  No exigir distancia mínima, quieto repite en A sin bonus oculto.
-- Ventaja: cubrir dos lugares mientras esquivas. Pérdida: menos golpe inicial,
-  duplicar espacio exige moverse; no atrae ni añade inmunidad.
-- Arte: primera cresta violeta/ámbar; segundo núcleo con doble muesca y eco
-  más fino de igual borde físico. Mostrar identidad compartida sin una línea
-  dañina entre A y B. Nunca color/cúpula del escudo ni hazard enemigo.
-- Carta: «Una segunda onda nace donde estés un instante después. Muévete para
-  cubrir dos zonas; el primer impacto concentra menos fuerza».
-- Prueba: al moverse >100 u se ven y dañan dos centros diferentes; no arrastrar A
-  con player; movimiento durante pausa no cambia la posición simulada.
+- **Verbo:** una cresta larga sale del origen capturado y vuelve por el mismo
+  corredor. No sigue al player, no crea un segundo emisor y no requiere apuntado.
+- Alcanza al menos 280u; cada objetivo puede recibir un impacto completo en ida
+  y otro en vuelta. Un solo cast, dos cruces, sin desplazamiento ni atracción.
+- Ventaja: duplica el daño en una ruta legible y castiga al grupo que permanece
+  en ella. Pérdida: no abre espacio ni cubre el nuevo lugar del jugador.
+- Arte: la vuelta reutiliza la cresta violeta/ámbar, invierte su recorrido y
+  contrae sus segmentos hacia el núcleo; nunca dibuja otro centro ni una línea
+  dañina ajena a la banda física.
+- Carta: «Una onda de largo alcance regresa a tu nave. Ida y vuelta golpean;
+  no empuja enemigos».
+- Prueba: un objetivo a 240u recibe dos impactos y no se mueve; mover al player
+  durante el cast no cambia el origen ni crea otra zona de daño.
 
 #### Compression Wave / Ariete de presión — `compression_wave`
 
 - **Verbo:** convertir el aro completo en un frente direccional que abre paso.
   Orientación último movimiento, fallback arriba; mostrarla durante carga base
   y fijar eje 0.15 s antes del disparo. Sin apuntado extra ni target requerido.
-- Frente de arco de 110°, espesor28, radio desde30 hasta320 en0.55 s, alrededor
-  del origen capturado. Un hit/target/cast y empuje radial saliente máximo32 u
-  limitado por arena; bosses reciben daño sin desplazamiento. **Cero atracción**.
+- Frente de arco de 110°, espesor28, radio desde30 hasta320 en0.28 s, alrededor
+  del origen capturado. Repetir tres veces, separadas por0.10 s. Cada frente
+  puede golpear una vez al mismo objetivo y lo empuja radialmente tres veces el
+  empuje base de su rango; bosses reciben daño sin desplazamiento. **Cero atracción**.
 - Presupuesto 100% frente. Ventaja alcance y corredor despejado; pérdida total
-  de cobertura trasera. El interior ya barrido no sigue haciendo daño.
+  de cobertura trasera. El interior ya barrido no sigue haciendo daño entre
+  frentes, por lo que las tres bandas son legibles y no un DOT oculto.
 - Arte: dos mordazas en V cargan frente a nave, cavidad oscura, cresta gruesa
   marfil/violeta y puntas ámbar; estela corta que desvanece hacia atrás.
   No renderizar círculo completo, cono relleno sólido ni indicador hasta borde.
-- Carta: «Proyecta una onda frontal que empuja y abre camino. Llega más lejos;
-  no golpea detrás de ti».
-- Prueba: daña un enemigo a200 u delante y no otro detrás; trayectoria inducida
-  aumenta separación de nave; sin atracción en ninguna fase.
+- Carta: «Tres ondas frontales rápidas empujan con fuerza triple y abren camino.
+  Llegan más lejos; no golpean detrás de ti».
+- Prueba: un enemigo a200u delante recibe tres impactos y se aleja en cada uno;
+  otro detrás no recibe daño; sin atracción en ninguna fase.
 
 ### F. Magnetic: sostener un núcleo remoto o cerrar una trampa geométrica
 
@@ -344,52 +352,52 @@ estas ramas cambian expresamente sus zonas de daño.
 
 #### Event Horizon / Núcleo de acreción — `event_horizon`
 
-- **Verbo:** mantener un pozo remoto con centro dañino, seguido de implosión.
-  Viaje base; apertura0.25 s; sostener1.6 s con atracción radio180 y velocidad
-  máxima110 u/s. Centro disco radio64 daña cada0.25 s. Cierre0.2 s y golpe
-  final en disco radio110. Seguridad de §3 siempre activa.
-- Un pozo. Presupuesto 65% repartido entre ticks del núcleo,35% golpe final.
-  No mantener banda base adicional ni centro sin daño. Cadencia no solapa pozos.
+- **Verbo:** mantener un pozo remoto que captura, daña progresivamente y deja
+  lentos a los supervivientes. Viaje base; sostener3.4s con atracción radio210
+  a145u/s. Centro disco radio64 daña14% cada0.2s. Al cierre no hay explosión.
+- Un pozo. Todo el daño pertenece a ticks del núcleo; no mantener banda base,
+  centro sin daño ni golpe final. Cadencia no solapa pozos.
 - Ventaja: retener una concentración y dañarla en su destino. Pérdida: zona
   inmóvil pequeña, tarda en concentrar daño; enemigos fuera no reciben nada.
 - Arte: cápsula abre tres placas orientadas al centro, filamentos finitos de
   acreción, cavidad oscura con núcleo luminoso de daño claramente visible;
   el radio de atracción lleva solo motas, el de daño tiene cresta definida.
-  Implosión contrae placas y produce destello breve en disco final, sin cubrir
-  pantalla con relleno. Un núcleo oscuro no debe confundirse con zona sin efecto.
+  Al cierre las placas se apagan hacia dentro y dejan una estela fría en cada
+  superviviente ralentizado, sin destello explosivo ni relleno de pantalla.
 - Carta: «Deja un núcleo que atrae y daña a los enemigos concentrados en él.
-  Control duradero; el daño tarda y permanece en una zona fija».
-- Prueba: enemigo en el centro pierde vida durante sostén; fuera del64 recibe
-  control pero no ticks; golpe final respeta110, incluidas colisiones de borde.
+  Control duradero; al salir, los supervivientes quedan lentos».
+- Prueba: enemigo en el centro pierde vida durante todo el sostén y al salir
+  conserva ralentización; fuera del64 recibe arrastre pero nunca ticks ni slow.
 
 #### Polar Collapse / Prensa polar — `polar_collapse`
 
 - **Verbo:** la bomba abre tres satélites, atrae con seguridad a los enemigos
   hacia su destino remoto y tres frentes convergen hacia el centro. Viaje base,
-  atracción0.3 s, apertura visual hacia vértices de un triángulo radio90 y
-  frentes durante0.45 s; el núcleo final permanece0.42 s, recuperación base.
+  atracción0.55s a230u/s, apertura visual hacia vértices de un triángulo radio90
+  y frentes durante0.45s; el núcleo final permanece0.42s, recuperación base.
 - Los frentes son tres segmentos finitos de ancho24; extremos interpolan de
   vértices originales al centro. Barrer su desplazamiento. En el instante
   degenerado no dibujar segmentos de longitud cero; usar disco final.
-- Máximo tres satélites, tres segmentos y un centro por cast. Un hit de
-  frentes por enemigo, más dos pulsos finales por objetivo que permanezca en
-  el núcleo; cada pulso final es20% del daño authored y el frente20%, para
-  conservar el presupuesto60% por cast. El control no afecta bosses.
+- Máximo tres satélites, tres segmentos y un centro por cast. Un hit de frentes
+  por enemigo aplica60% y aturde1.1s; una única implosión final aplica140% a
+  los aturdidos que sigan en el núcleo o45% a objetivos no preparados. El
+  control no afecta bosses.
 - Elegir centro lejano con margen para triángulo completo usando ArenaBoundary;
   intentos limitados (8), luego reducir uniformemente radio hasta caber. Si
   no cabe radio32, usar solo final de55 recortado al área disponible, sin
   ampliar daño. No clamp independiente de vértices que deforme colisión/arte.
-- Ventaja: concentrar enemigos en un destino remoto y castigarlos dos veces
-  mientras el núcleo permanece; pérdida: el centro debe estar dentro del área
-  y los objetivos fuera del radio de atracción no reciben el pulso final.
+- Ventaja: concentrar enemigos en un destino remoto, inmovilizarlos y rematarlos
+  con una implosión severa; pérdida: perder los filos o salir del núcleo reduce
+  el remate y el centro debe estar dentro del área.
 - Arte: cápsula se divide en tres polos angulares cian/lavanda/ámbar, cables
   tenues de preparación; al activar aparecen tres filos materiales que cierran
   una prensa. Desvanecer detrás, punta sólida delante. Centro explota en gema
   compacta, no una segunda banda igual a Magnetic base.
-- Carta: «Despliega tres polos que cierran una trampa explosiva. Golpe remoto
-  rápido; no retiene a los enemigos que escapan».
+- Carta: «Tres filos arrastran y aturden; la implosión final castiga al objetivo
+  preparado. Golpe remoto de alto daño».
 - Prueba: tres frentes físicos coinciden con lo visible; target alcanzado por
-  dos frentes no duplica daño; funciona sin enemigos y en hexágono/cuadrado.
+  un filo queda aturdido y recibe el remate140%; sin filo sólo recibe45%;
+  funciona sin enemigos y en hexágono/cuadrado.
 
 ## 5. Procedimiento visual premium para Luna
 

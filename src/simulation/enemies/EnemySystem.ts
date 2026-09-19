@@ -360,28 +360,36 @@ export class EnemySystem {
     for (const enemy of this.pool.states) {
       if (!enemy.active) continue;
       enemy.orbitHitCooldown = Math.max(0, enemy.orbitHitCooldown - dt);
+      enemy.stunSeconds = Math.max(0, enemy.stunSeconds - dt);
+      enemy.slowSeconds = Math.max(0, enemy.slowSeconds - dt);
       if (enemy.kind === 'boss') continue;
-      if (enemy.kind === 'orbiter') {
+      const movementDt = enemy.stunSeconds > 0
+        ? 0
+        : dt * (enemy.slowSeconds > 0 ? enemy.slowMultiplier : 1);
+      if (movementDt === 0) {
+        enemy.vx = 0;
+        enemy.vy = 0;
+      } else if (enemy.kind === 'orbiter') {
         const wasCommit = enemy.orbiterPhase === 'commit';
         this.orbiterBehavior.update(
           enemy,
-          dt,
+          movementDt,
           player,
           wasCommit || orbiterCommits < ORBITER_DEFINITION.commitCap
         );
         if (!wasCommit && enemy.orbiterPhase === 'commit') orbiterCommits += 1;
       } else if (enemy.kind === 'charger') {
         const wasCharge = enemy.chargerPhase === 'charge';
-        this.chargerBehavior.update(enemy, dt, player, arenaRadius, wasCharge || chargerCharges < CHARGER_DEFINITION.chargeCap);
+        this.chargerBehavior.update(enemy, movementDt, player, arenaRadius, wasCharge || chargerCharges < CHARGER_DEFINITION.chargeCap);
         if (!wasCharge && enemy.chargerPhase === 'charge') chargerCharges += 1;
       } else if (enemy.kind === 'prism-weaver') {
-        const prismResult = this.prismWeaverBehavior.update(enemy, dt, arenaRadius, player);
+        const prismResult = this.prismWeaverBehavior.update(enemy, movementDt, arenaRadius, player);
         if (prismResult.damaged && contactDamage === null && this.contactCooldown <= 0) {
           this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
           contactDamage = PRISM_WEAVER_DEFINITION.attackDamage;
         }
       } else if (isFractureKind(enemy.kind)) {
-        const fractureDamage = this.updateFractureEnemy(enemy, dt, player, arenaRadius);
+        const fractureDamage = this.updateFractureEnemy(enemy, movementDt, player, arenaRadius);
         if (fractureDamage !== null && contactDamage === null && this.contactCooldown <= 0) {
           this.contactCooldown = CONTACT_COOLDOWN_SECONDS;
           contactDamage = fractureDamage;
@@ -391,7 +399,7 @@ export class EnemySystem {
       const dy = player.y - enemy.y;
       const distance = Math.hypot(dx, dy);
       if (distance > 0.001) {
-        const step = Math.min(distance, enemy.speed * dt);
+        const step = Math.min(distance, enemy.speed * movementDt);
         enemy.vx = (dx / distance) * (step / dt);
         enemy.vy = (dy / distance) * (step / dt);
         enemy.x += enemy.vx * dt;
@@ -492,6 +500,9 @@ export class EnemySystem {
     state.health = state.maxHealth;
     state.contactDamage = definition.contactDamage * (isSplitterChild ? SPLITTER_DEFINITION.childContactDamageScale : 1);
     state.contactEnabled = kind !== 'orbiter';
+    state.stunSeconds = 0;
+    state.slowSeconds = 0;
+    state.slowMultiplier = 1;
     state.orbitHitCooldown = 0;
     state.orbiterPhase = 'inactive';
     state.orbiterDirection = 1;
@@ -545,6 +556,9 @@ export class EnemySystem {
     state.health = bossHealth;
     state.contactDamage = definition.contactDamage;
     state.contactEnabled = false;
+    state.stunSeconds = 0;
+    state.slowSeconds = 0;
+    state.slowMultiplier = 1;
     state.orbitHitCooldown = 0;
     state.orbiterPhase = 'inactive';
     state.orbiterDirection = 1;

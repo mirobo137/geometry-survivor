@@ -25,8 +25,8 @@ Este documento es el contrato de trabajo para implementar el modo Infinito despu
   hazards de arena y se alternan ataques especiales con cola de lectura de
   0,35 s; los peligros ya activos terminan normalmente.
 - El menú desbloquea **Infinito** al vencer el Acto III. La ruta pública manual
-  es `?mode=overdrive`; el clic explícito sobre la tarjeta usa
-  `?mode=overdrive&autostart=1` para entrar directamente al combate. Las rutas
+  es `?mode=overdrive`; la tarjeta selecciona el modo dentro del runtime, sin
+  navegar ni recargar. El botón **Iniciar** del selector comienza la ruta elegida. Las rutas
   `?debug=1&mode=overdrive...` siguen siendo diagnósticas y no escriben NOVA,
   récords ni desbloqueos.
 - La retirada está disponible en pausa sólo en Overdrive y pide confirmación.
@@ -61,9 +61,12 @@ unitarias.
 > Al cerrar una victoria real del Acto III, la intermisión ofrece
 > `Continuar al Overdrive` y abre la ruta pública directamente con build limpia.
 
-> El selector de Actos usa la misma entrada directa (`autostart=1`) al pulsar
-> la tarjeta de Overdrive. Abrir manualmente `?mode=overdrive` sin ese parámetro
-> conserva el menú para revisar configuración antes de pulsar **Jugar**.
+> Las cuatro tarjetas seleccionan una ruta; **Iniciar** y **Jugar** arrancan la
+> selección actual. Infinito permanece visible, habilitado si está desbloqueado,
+> y marcado con `aria-pressed` cuando está seleccionado. Cambiar a un acto
+> restaura el modo campaña y su política de tres armas. No se recarga la página.
+> Abrir manualmente `?mode=overdrive` conserva el menú; `autostart=1` sigue
+> disponible para la continuación directa desde la victoria del Acto III.
 
 - Infinito se desbloquea al derrotar al boss del Acto III.
 - Es una partida independiente que comienza con **build limpia**. Conserva únicamente las mejoras permanentes que ya aplican a una partida normal.

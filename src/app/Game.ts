@@ -177,7 +177,7 @@ export class Game {
   private readonly campaignBuild: 'three-evolved' | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
-  private readonly runMode: RunMode;
+  private runMode: RunMode;
   private overdriveStage: number;
   private readonly initialOverdriveStage: number;
   private readonly overdriveSeed: number | undefined;
@@ -283,14 +283,14 @@ export class Game {
   };
 
   private readonly onStartOverdrivePlay = (): void => {
-    if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
-    const url = new URL(window.location.href);
-    // Selecting Overdrive from the acts screen is an explicit play action.
-    // Start the unlocked run directly so the new page cannot reopen the
-    // campaign selector with its own launcher disabled. The bare public URL
-    // remains available for a manual menu/deep-link entry.
-    url.search = '?mode=overdrive&autostart=1';
-    window.location.assign(url.toString());
+    if (this.stopped || this.gameState.phase !== 'menu'
+      || !this.saveStore.load().overdrive.unlocked) return;
+    this.runMode = 'overdrive';
+    this.overdriveStage = this.initialOverdriveStage;
+    this.calibrationId = null;
+    this.calibrationApplied = false;
+    this.configureActRuntime(this.saveStore.load());
+    this.arena.update(this.initialElapsedSeconds);
   };
 
   private readonly onStartOverdriveDirect = (): void => {
@@ -302,6 +302,7 @@ export class Game {
 
   private readonly onStartActChange = (actId: ActId): void => {
     if (this.stopped || this.gameState.phase !== 'menu' || !this.isActUnlocked(actId)) return;
+    this.runMode = 'campaign';
     this.actId = actId;
     this.calibrationId = null;
     this.calibrationApplied = false;
@@ -1147,8 +1148,9 @@ export class Game {
       metaUpgrades: saved.metaUpgrades,
       unlockedActs: saved.unlockedActs,
       selectedAct: this.actId,
+      selectedMode: this.runMode,
       onPlay: this.onStartPlay,
-      onOverdrivePlay: this.runMode === 'campaign' ? this.onStartOverdrivePlay : undefined,
+      onOverdrivePlay: this.onStartOverdrivePlay,
       overdriveUnlocked: saved.overdrive.unlocked,
       onActChange: this.onStartActChange,
       onSettingsChange: this.onStartSettingsChange,
@@ -1562,6 +1564,11 @@ export class Game {
   }
 
   private returnToMenuState(): void {
+    if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
+      this.overdriveStage = this.initialOverdriveStage;
+      this.actDirector.setStage(this.initialOverdriveStage, this.overdriveSeed);
+      this.actId = this.actDirector.definition.id;
+    }
     this.clearRunPresentation();
     this.baseline.cancelRun();
     this.input.detach();

@@ -134,9 +134,6 @@ export interface PulseRingWeaponState {
   /** Captured movement axis used by Compression Wave. */
   directionX?: number;
   directionY?: number;
-  /** Second anchored origin used by Echo Shock diagnostics/presentation. */
-  secondaryOriginX?: number;
-  secondaryOriginY?: number;
   wave?: number;
   evolution?: PulseRingEvolution | null;
 }

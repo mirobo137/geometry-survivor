@@ -34,7 +34,10 @@ identidad/vida/FX/eventos independientes; reserva dos posiciones del pool,
 coordina especiales y sólo cambia de tramo al derrotar a todos. En parejas no
 se inician nuevos hazards de arena y las amenazas ya anunciadas terminan.
 La victoria real del Acto III desbloquea el botón Infinito; el clic de la tarjeta
-usa `?mode=overdrive&autostart=1` y abre el combate público con build limpia.
+selecciona el modo sin recargar. El selector incluye **Iniciar** para cualquiera
+de las cuatro rutas. Infinito conserva su selección y desbloqueo al volver al
+menú; elegir un acto restaura campaña. Corregido el uso de `location.assign`
+en la tarjeta y la ocultación del botón cuando el runtime ya era Overdrive.
 La ruta manual `?mode=overdrive` conserva el menú antes de jugar, mientras que las rutas
 `?debug=1&mode=overdrive&od-stage=1|4|7|10` y `od-pair=core-warden|core-fracture|warden-fracture`
 son diagnósticas y no liquidan guardado. Pausa ofrece retirada confirmada y

@@ -21,6 +21,10 @@ export interface EnemyState {
   contactDamage: number;
   /** Explicit per-phase contact switch; an Orbiter hull keeps contact enabled. */
   contactEnabled: boolean;
+  /** Short, simulation-owned control effects. They never affect bosses. */
+  stunSeconds: number;
+  slowSeconds: number;
+  slowMultiplier: number;
   orbitHitCooldown: number;
   orbiterPhase: OrbiterPhase;
   orbiterDirection: OrbiterDirection;
@@ -134,6 +138,9 @@ const createEnemyState = (): EnemyState => ({
   maxHealth: 0,
   contactDamage: 0,
   contactEnabled: true,
+  stunSeconds: 0,
+  slowSeconds: 0,
+  slowMultiplier: 1,
   orbitHitCooldown: 0,
   orbiterPhase: 'inactive',
   orbiterDirection: 1,

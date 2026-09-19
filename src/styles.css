@@ -2686,6 +2686,17 @@ body {
   color: #ffe39a;
 }
 
+.act-card-button.start-overdrive-button.is-selected {
+  background: linear-gradient(135deg, #fff0bb, #e5b76e);
+  border-color: #fff5dc;
+  color: #231a10;
+}
+
+.act-card-button.start-overdrive-button.is-selected span,
+.act-card-button.start-overdrive-button.is-selected .home-action-icon {
+  color: #48301b;
+}
+
 .act-status {
   min-height: 1.3rem;
   margin: 0;

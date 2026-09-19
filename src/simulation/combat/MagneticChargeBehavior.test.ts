@@ -114,7 +114,7 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.setEvolution('polar_collapse')).toBe(true);
   });
 
-  it('Event Horizon damages its remote core before a single final collapse', () => {
+  it('Event Horizon holds and damages its remote core, then slows survivors without an explosion', () => {
     const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
@@ -126,14 +126,21 @@ describe('MagneticChargeBehavior', () => {
     enemies.rebuildGrid();
     const before = target.health;
     advance(weapon, player, 1.8);
-    expect(weapon.state.pullRadius).toBe(180);
+    expect(weapon.state.phase).toBe('attract');
+    expect(weapon.state.pullRadius).toBe(210);
     expect(weapon.state.innerRadius).toBe(64);
     expect(weapon.state.outerRadius).toBe(110);
     expect(weapon.currentCooldown).toBeCloseTo(6.24);
     expect(target.health).toBeLessThan(before);
+    // The 3.4s hold ends directly in recovery; it does not create the old
+    // damaging collapse. Only enemies that the core actually damaged slow.
+    advance(weapon, player, 2.1);
+    expect(weapon.state.phase).toBe('recovery');
+    expect(target.slowSeconds).toBeGreaterThan(2);
+    expect(target.slowMultiplier).toBeCloseTo(0.38);
   });
 
-  it('Polar Collapse pulls safely and delivers two delayed pulses in its final core', () => {
+  it('Polar Collapse pulls harder, stuns with its fronts, then critically punishes stunned survivors', () => {
     const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
@@ -161,12 +168,37 @@ describe('MagneticChargeBehavior', () => {
     expect(sawCollapse).toBe(true);
     expect(weapon.state.evolution).toBe('polar_collapse');
     expect(target.health).toBeLessThan(before);
-    expect(Math.hypot(target.x - weapon.state.targetX, target.y - weapon.state.targetY)).toBeLessThan(82);
+    expect(Math.hypot(target.x - weapon.state.targetX, target.y - weapon.state.targetY)).toBeLessThan(76);
+    expect(target.stunSeconds).toBeGreaterThan(0);
     const collapseHits = damages.filter((hit) => hit.phase === 'collapse');
     expect(collapseHits).toEqual([
-      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 0.2 },
-      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 0.2 }
+      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 1.4 }
     ]);
+  });
+
+  it('does not stun or amplify Polar Collapse against a boss', () => {
+    const pool = new EnemyPool(2);
+    const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const damages: number[] = [];
+    let weapon: MagneticChargeBehavior;
+    weapon = new MagneticChargeBehavior({
+      enemies,
+      rollCriticalDamage: (damage) => {
+        if (weapon.state.phase === 'collapse') damages.push(damage);
+        return damage;
+      },
+      onEnemyDefeated: () => undefined
+    });
+    weapon.unlock();
+    weapon.setEvolution('polar_collapse');
+    advance(weapon, player, 1 / 60);
+    const boss = createTarget(pool, weapon.state.targetX, weapon.state.targetY, 'boss');
+    enemies.rebuildGrid();
+    advance(weapon, player, 3);
+
+    expect(boss.stunSeconds).toBe(0);
+    expect(damages).toEqual([WEAPON_DEFINITIONS.magneticCharge.damage * 0.45]);
   });
 });
 

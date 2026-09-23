@@ -18,6 +18,21 @@ La prueba original pasó localmente incluso antes del parche de scroll. Ese
 parche volvió a fallar en Actions y se retiró el scroll asíncrono a SFX.
 Se conserva el retorno al inicio del panel al salir de Skins/Meta.
 
+## Incidente de Pages — 22-09-2026
+
+El run de Actions procesó 62 casos durante 12.3 minutos y falló con 61/62.
+La prueba de pausa buscaba `#pause-overlay button svg` y contaba también el
+icono de `#pause-withdraw`, que permanece montado pero tiene `[hidden]` en
+campaña. La expectativa de cuatro iconos era para botones visibles. El selector
+y la comprobación de hit areas ahora excluyen controles ocultos.
+
+La suite se ejecutaba serialmente. Playwright ahora corre las pruebas
+independientes en dos workers, manteniendo el reintento único, las trazas y los
+62 casos. La corrida completa de verificación terminó 62/62 en 6.0 minutos con
+`--workers=2 --fully-parallel` en este entorno Windows. El tiempo de Actions
+puede variar; la corrida confirma la suite completa en paralelo, no un tiempo
+garantizado de despliegue.
+
 ## Contrato de pruebas
 
 - Compras de skins, cañones, fondos, mejora permanente y configuración son
@@ -26,10 +41,15 @@ Se conserva el retorno al inicio del panel al salir de Skins/Meta.
   → Jugar. La cobertura de gameplay, calidad y móvil continúa activa.
 - Cada caso mantiene 60 s. Las acciones tienen 15 s y navegación 30 s para
   distinguir una espera puntual del agotamiento del caso completo.
-- Un worker y un reintento en CI. No aumentar reintentos para tapar fallos.
+- Dos workers aislados en CI (`fullyParallel`) para dividir las pruebas
+  independientes con concurrencia acotada. Local conserva un worker para
+  depuración reproducible.
+  Se mantiene un reintento; no aumentarlo para tapar fallos.
 - CI graba traza en el primer reintento. `retain-on-failure` graba todos los
   casos antes de descartar los exitosos; resulta costoso con DOM SVG extenso.
   Local mantiene `retain-on-failure` para diagnóstico sin reintento.
+- Las pruebas de pausa cuentan solo controles visibles; acciones exclusivas de
+  Overdrive pueden seguir montadas en el DOM bajo el atributo `[hidden]`.
 - El workflow conserva HTML, capturas, contexto y trazas por siete días,
   incluso si el reintento pasa. Revisar la clasificación flaky en el HTML.
 - Límite de job: build 20 minutos y deploy 10 minutos. No son objetivos de

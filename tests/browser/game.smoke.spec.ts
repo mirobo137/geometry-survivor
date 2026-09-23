@@ -461,9 +461,9 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   await expect(page.locator('#pause-toggle')).toBeHidden();
   await expect(page.locator('#pause-overlay')).toHaveAttribute('aria-describedby', 'pause-message');
   await expect(page.locator('#pause-panel-frame svg')).toBeVisible();
-  await expect(page.locator('#pause-overlay button svg')).toHaveCount(4);
+  await expect(page.locator('#pause-overlay button:not([hidden]) svg')).toHaveCount(4);
   const pauseLayout = await page.locator('#pause-overlay').evaluate((overlay) => {
-    const buttons = [...overlay.querySelectorAll<HTMLButtonElement>('button')];
+    const buttons = [...overlay.querySelectorAll<HTMLButtonElement>('button:not([hidden])')];
     const panel = overlay.querySelector<HTMLElement>('.pause-panel');
     return {
       buttonsHaveTouchTarget: buttons.every((button) => {

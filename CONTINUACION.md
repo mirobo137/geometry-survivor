@@ -12,6 +12,15 @@ EX-09, SDKs reales y QA por portal; y la preparación de publicación una vez
 cerrados balance y plataforma. El balance de Overdrive permanece incluido en
 EX-02c y no se considera cerrado sólo por tener la implementación funcionando.
 
+## GitHub Pages — corrección de smoke — 22-09-2026
+
+El log de Actions mostraba 61/62 tests y 12.3 min. La prueba de pausa contaba
+el SVG del botón de retirada aunque ese botón está oculto fuera de Overdrive;
+ahora mide iconos y hit areas de botones visibles. La configuración de
+Playwright usa `fullyParallel` y dos workers en CI, conserva retry, traza y
+cobertura íntegra. Suite completa: 62/62, 6.0 min en verificación local con
+dos workers. Puede variar en Actions. Detalle en `docs/CI_DEPLOY.md`.
+
 ## UI de inicio — consolas premium — 22-09-2026
 
 Skins, Mejoras y Actos usan consolas con cabecera persistente y un cuerpo

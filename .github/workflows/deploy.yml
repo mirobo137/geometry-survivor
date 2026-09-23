@@ -36,8 +36,8 @@ jobs:
         run: npm run typecheck && npm test
       - name: Build local artifact
         run: npx vite build --mode development
-      # Playwright uses bounded parallelism; the full suite remains a required
-      # gate before any platform build or deploy.
+      # The WebGL/canvas smoke suite is serialized to avoid starving Chromium
+      # on the shared runner; every test remains a required deploy gate.
       - name: Browser smoke
         run: npx playwright test
       - name: Build Poki

@@ -26,12 +26,16 @@ icono de `#pause-withdraw`, que permanece montado pero tiene `[hidden]` en
 campaña. La expectativa de cuatro iconos era para botones visibles. El selector
 y la comprobación de hit areas ahora excluyen controles ocultos.
 
-La suite se ejecutaba serialmente. Playwright ahora corre las pruebas
-independientes en dos workers, manteniendo el reintento único, las trazas y los
-62 casos. La corrida completa de verificación terminó 62/62 en 6.0 minutos con
-`--workers=2 --fully-parallel` en este entorno Windows. El tiempo de Actions
-puede variar; la corrida confirma la suite completa en paralelo, no un tiempo
-garantizado de despliegue.
+Se ensayó dividir la suite en dos workers con `fullyParallel`. En Windows pasó
+62/62 en 6.0 minutos, pero el siguiente run de Actions se degradó severamente:
+Chromium registró 2–3 FPS, cerró sesiones y varios tests agotaron sus 35–60 s.
+Los errores en cascada muestran que ese paralelismo sobrepasa el presupuesto
+real del runner compartido. Se revirtió a un worker
+y ejecución por archivo (`fullyParallel: false`); se conserva toda la cobertura,
+el retry único y las trazas. Con esa configuración, la suite volvió a pasar
+62/62 en 5.5 minutos localmente. Typecheck y 466/466 tests unitarios también
+pasaron. La duración real de Actions debe confirmarse en el siguiente run; el
+resultado local en Windows no predice el rendimiento Ubuntu.
 
 ## Contrato de pruebas
 
@@ -41,10 +45,10 @@ garantizado de despliegue.
   → Jugar. La cobertura de gameplay, calidad y móvil continúa activa.
 - Cada caso mantiene 60 s. Las acciones tienen 15 s y navegación 30 s para
   distinguir una espera puntual del agotamiento del caso completo.
-- Dos workers aislados en CI (`fullyParallel`) para dividir las pruebas
-  independientes con concurrencia acotada. Local conserva un worker para
-  depuración reproducible.
-  Se mantiene un reintento; no aumentarlo para tapar fallos.
+- Un worker y ejecución por archivo en CI para evitar que boots WebGL,
+  screenshots y pruebas de UI compitan por CPU/memoria del runner. Local también
+  usa un worker para depuración reproducible. Se mantiene un reintento; no
+  aumentarlo para tapar fallos.
 - CI graba traza en el primer reintento. `retain-on-failure` graba todos los
   casos antes de descartar los exitosos; resulta costoso con DOM SVG extenso.
   Local mantiene `retain-on-failure` para diagnóstico sin reintento.

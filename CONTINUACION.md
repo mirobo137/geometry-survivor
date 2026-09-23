@@ -17,9 +17,13 @@ EX-02c y no se considera cerrado sólo por tener la implementación funcionando.
 El log de Actions mostraba 61/62 tests y 12.3 min. La prueba de pausa contaba
 el SVG del botón de retirada aunque ese botón está oculto fuera de Overdrive;
 ahora mide iconos y hit areas de botones visibles. La configuración de
-Playwright usa `fullyParallel` y dos workers en CI, conserva retry, traza y
-cobertura íntegra. Suite completa: 62/62, 6.0 min en verificación local con
-dos workers. Puede variar en Actions. Detalle en `docs/CI_DEPLOY.md`.
+Playwright se probó con `fullyParallel` y dos workers; en Actions saturó
+Chromium (2–3 FPS), provocó sesiones cerradas y múltiples timeouts. Esa
+estrategia queda revertida: CI corre un worker por archivo, con toda la
+cobertura, retry único y trazas intactos. Con la reversión, la suite pasó
+62/62 en 5.5 min; typecheck y los 466 tests unitarios también pasaron. Falta
+confirmar el tiempo y resultado del siguiente run de Actions. Detalle en
+`docs/CI_DEPLOY.md`.
 
 ## UI de inicio — consolas premium — 22-09-2026
 

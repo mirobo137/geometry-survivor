@@ -46,7 +46,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK, EX-02c pendiente diferida |
+| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK, EX-02c balance pendiente |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |
@@ -59,12 +59,12 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
-| EX-06 | 6 | Acto I Radial y contrato de actos | EN CURSO; EX-06a/b/c AUTOMÁTICO OK, EX-06d con validación reducida aprobada; ocho runs extendidas pendientes |
+| EX-06 | 6 | Acto I Radial y contrato de actos | VALIDADO en móvil; EX-02c conserva el balance final pendiente |
 | EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante y EX-02c conserva el balance final pendiente |
-| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | IMPLEMENTADO en campaña; QA humano de cartas pendiente |
-| EX-09 | 8 | adaptadores reales y QA por portal | pendiente, después de EX-07 |
-| EX-10 | 9 | Acto III Fracture | IMPLEMENTADO; QA humana del acto pendiente |
-| EX-11 | 10 | Overdrive y producción | EX-11.1–EX-11.7 implementados; validación browser/humana integral pendiente |
+| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | VALIDADO por el usuario; mantener balance separado |
+| EX-09 | 8 | adaptadores reales y QA por portal | PENDIENTE; incluye preparación de publicación |
+| EX-10 | 9 | Acto III Fracture | VALIDADO en móvil; EX-02c conserva el balance final pendiente |
+| EX-11 | 10 | Overdrive y producción | VALIDADO por el usuario; balance y EX-09 siguen separados |
 | EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; consumido por EX-11.2 |
 | EX-11.2 | 10 | Director de composición y ruta de inspección | AUTOMÁTICO OK; transición pendiente |
 

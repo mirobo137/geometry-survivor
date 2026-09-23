@@ -409,6 +409,7 @@ export class StartScreen {
     this.closeEntrySelector();
     this.mainView.hidden = true;
     this.actView.hidden = false;
+    this.actView.querySelector<HTMLElement>('.console-body')?.scrollTo(0, 0);
     this.root.classList.add('is-act-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-act-open');
     this.updateActSelector();
@@ -525,6 +526,7 @@ export class StartScreen {
     this.closeSkins();
     this.mainView.hidden = true;
     this.metaView.hidden = false;
+    this.metaView.querySelector<HTMLElement>('.console-body')?.scrollTo(0, 0);
     this.root.classList.add('is-meta-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-meta-open');
     this.metaPanel.open({
@@ -580,6 +582,10 @@ export class StartScreen {
   }
 
   private applySkinTab(tab: 'player' | 'cannon' | 'background'): void {
+    const body = this.skinsView.querySelector<HTMLElement>('.console-body');
+    if (body) body.scrollTop = 0;
+    const offerDetails = this.cosmeticRewarded.querySelector('details');
+    if (offerDetails) offerDetails.open = false;
     const cannon = tab === 'cannon';
     const background = tab === 'background';
     this.playerSkinsTab.classList.toggle('is-active', !cannon && !background);
@@ -628,10 +634,10 @@ export class StartScreen {
     this.cosmeticRewarded.dataset.state = 'ready';
     this.cosmeticRewarded.hidden = false;
     this.cosmeticRewardedName.textContent = target.name;
-    this.cosmeticRewardedMessage.textContent = `Desbloquea y equipa este cosmÃ©tico gratis, o cÃ³mpralo por ${formatNova(target.priceNova)} NOVA.`;
+    this.cosmeticRewardedMessage.textContent = `Mira un anuncio para desbloquear y equipar este cosmético, o cómpralo por ${formatNova(target.priceNova)} NOVA.`;
     this.cosmeticRewardedButton.hidden = false;
     this.cosmeticRewardedButton.disabled = false;
-    this.cosmeticRewardedButton.textContent = 'Ver anuncio Â· desbloquear';
+    this.cosmeticRewardedButton.textContent = 'Ver anuncio · desbloquear';
   }
 
   private findCosmeticTarget(): CosmeticUnlockTarget | null {
@@ -675,11 +681,11 @@ export class StartScreen {
     this.cosmeticRewardedMessage.textContent = result === 'dismissed'
       ? 'Anuncio cancelado. Puedes intentarlo otra vez o comprar con NOVA.'
       : result === 'unavailable'
-        ? 'Anuncio no disponible. Compra el cosmÃ©tico con NOVA.'
+        ? 'Anuncio no disponible. Compra el cosmético con NOVA.'
         : 'No se pudo completar el anuncio. Puedes reintentarlo o comprar con NOVA.';
     this.cosmeticRewardedButton.hidden = result === 'unavailable';
     this.cosmeticRewardedButton.disabled = result === 'unavailable';
-    this.cosmeticRewardedButton.textContent = 'Reintentar Â· desbloquear';
+    this.cosmeticRewardedButton.textContent = 'Reintentar · desbloquear';
   }
 
   private applyCosmeticUnlock(target: CosmeticUnlockTarget): void {

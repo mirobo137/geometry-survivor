@@ -1,4 +1,6 @@
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
+import impactSymbol from '../../assets/svg/ui/start/radial.svg?url';
+import cadenceSymbol from '../../assets/svg/ui/start/angular.svg?url';
 import {
   formatNova
 } from '../../content/meta/EconomyDefinitions';
@@ -19,6 +21,7 @@ interface CardEntry {
   readonly level: HTMLElement;
   readonly effect: HTMLElement;
   readonly action: HTMLButtonElement;
+  readonly progress: HTMLElement;
 }
 
 /** DOM-only meta shop. It never mutates the active run or simulation. */
@@ -72,6 +75,17 @@ export class MetaProgressionPanel {
       card.className = 'meta-upgrade-card';
       card.dataset.upgrade = definition.id;
 
+      const symbol = document.createElement('img');
+      symbol.className = 'meta-upgrade-symbol';
+      symbol.alt = '';
+      symbol.src = definition.id === 'weapon_damage' ? impactSymbol : cadenceSymbol;
+      const progress = document.createElement('div');
+      progress.className = 'meta-upgrade-progress';
+      progress.setAttribute('aria-hidden', 'true');
+      for (let index = 0; index < definition.maxLevel; index++) {
+        progress.append(document.createElement('span'));
+      }
+
       const header = document.createElement('div');
       header.className = 'meta-upgrade-header';
       const title = document.createElement('strong');
@@ -88,9 +102,9 @@ export class MetaProgressionPanel {
       action.type = 'button';
       action.className = 'meta-upgrade-buy';
       action.addEventListener('click', () => this.purchase(definition.id));
-      card.append(header, description, effect, action);
+      card.append(symbol, header, progress, description, effect, action);
       this.cards.append(card);
-      this.cardEntries.set(definition.id, { card, level, effect, action });
+      this.cardEntries.set(definition.id, { card, level, effect, action, progress });
     }
   }
 
@@ -106,6 +120,9 @@ export class MetaProgressionPanel {
       entry.card.classList.toggle('is-maxed', maxed);
       entry.card.classList.toggle('is-affordable', canBuy);
       entry.level.textContent = `NIVEL ${level}/${definition.maxLevel}`;
+      Array.from(entry.progress.children).forEach((segment, index) => {
+        segment.classList.toggle('is-filled', index < level);
+      });
       entry.effect.textContent = definition.effectLabel(level);
       entry.action.disabled = maxed || !canBuy;
       entry.action.setAttribute('aria-label', maxed

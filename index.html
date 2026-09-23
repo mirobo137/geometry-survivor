@@ -65,23 +65,25 @@
           </div>
           <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
           </div>
-          <section id="start-act-view" class="start-act-view" hidden aria-labelledby="start-act-title">
-            <div class="act-header">
+          <section id="start-act-view" class="start-act-view console-screen" hidden aria-labelledby="start-act-title">
+            <div class="act-header console-header">
               <button id="start-act-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
                 <p class="start-kicker">CAMPAÑA / RUTAS ESPACIALES</p>
                 <h2 id="start-act-title">Selecciona tu ruta</h2>
-                <p>Selecciona una ruta desbloqueada. Los actos posteriores comienzan con una build limpia para que la arena y sus amenazas importen desde el primer minuto.</p>
+                <p>Cada ruta comienza con una build limpia. Elige tu próximo desafío.</p>
               </div>
             </div>
+            <div class="console-body" tabindex="0" role="region" aria-label="Rutas disponibles">
             <div class="act-options" role="group" aria-label="Actos y modos disponibles">
-              <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></button>
-              <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></button>
-              <button id="start-act-fracture" class="act-card-button" type="button" aria-pressed="false"><strong>III · FRACTURE</strong><small>Caos, munición y geometría rota</small><span>FRACTURE ENGINE</span></button>
-              <button id="start-overdrive" class="act-card-button start-overdrive-button" type="button" data-feature="overdrive"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 12l7 1-1 9 8-11-7-1Z" fill="currentColor"/><path d="M4 12h16" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/></svg><strong>INFINITO</strong><small>Tramos, vueltas y caos creciente</small><span>OVERDRIVE</span></button>
+              <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><img class="act-emblem" src="/src/assets/svg/ui/start/radial.svg" alt="" /><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></button>
+              <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/svg/ui/start/angular.svg" alt="" /><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></button>
+              <button id="start-act-fracture" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/svg/ui/start/fracture.svg" alt="" /><strong>III · FRACTURE</strong><small>Caos, munición y geometría rota</small><span>FRACTURE ENGINE</span></button>
+              <button id="start-overdrive" class="act-card-button start-overdrive-button" type="button" data-feature="overdrive"><img class="act-emblem" src="/src/assets/svg/ui/start/overdrive.svg" alt="" /><strong>INFINITO</strong><small>Tramos, vueltas y caos creciente</small><span>OVERDRIVE</span></button>
             </div>
             <p id="start-act-status" class="act-status" role="status" aria-live="polite"></p>
             <button id="start-act-play" class="start-primary" type="button">INICIAR ACTO I</button>
+            </div>
           </section>
           <section id="start-entry-view" class="start-entry-view" hidden aria-labelledby="start-entry-title">
             <div class="act-header">
@@ -98,40 +100,44 @@
               <button class="entry-template-button" type="button" data-start-calibration="chain"><strong>RESONANT LINK</strong><small>Cadena, sobrecarga y resonancia.</small><span>CHAIN</span></button>
             </div>
           </section>
-          <section id="start-meta-view" class="start-meta-view" hidden aria-labelledby="start-meta-title">
-            <div class="meta-header">
+          <section id="start-meta-view" class="start-meta-view console-screen" hidden aria-labelledby="start-meta-title">
+            <div class="meta-header console-header">
               <button id="start-meta-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
                 <p class="start-kicker">META / PODER PERMANENTE</p>
-                <h2 id="start-meta-title">Laboratorio meta</h2>
+                <h2 id="start-meta-title">Laboratorio</h2>
                 <p>Invierte NOVA entre partidas. Estas mejoras no reemplazan las cartas de cada run.</p>
               </div>
             </div>
+            <div class="console-body" tabindex="0" role="region" aria-label="Mejoras permanentes">
             <div class="meta-wallet"><span id="start-meta-nova-icon" class="nova-icon" aria-hidden="true"></span><strong id="start-meta-nova-value" data-nova-value>0</strong><span>NOVA disponible</span></div>
             <div id="start-meta-cards" class="meta-upgrade-cards" aria-label="Mejoras permanentes"></div>
-            <p class="skins-footnote">Las nuevas armas y niveles llegarán después de validar esta economía.</p>
+            <p class="skins-footnote">Las mejoras compradas se conservan entre partidas.</p>
+            </div>
           </section>
-          <section id="start-skins-view" class="start-skins-view" hidden aria-labelledby="start-skins-title">
-            <div class="skins-header">
+          <section id="start-skins-view" class="start-skins-view console-screen" hidden aria-labelledby="start-skins-title">
+            <div class="skins-header console-header">
               <button id="start-skins-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
-                <p class="start-kicker">LOADOUT / VISUAL IDENTITY</p>
-                <h2 id="start-skins-title">Laboratorio de skins</h2>
-                <p>Adquiere una silueta, visualízala y equípala antes de entrar a la arena.</p>
+                <p class="start-kicker">HANGAR / IDENTIDAD VISUAL</p>
+                <h2 id="start-skins-title">Tu firma en la arena</h2>
+                <p>Naves, disparos y atmósferas. Elige cómo entrar en combate.</p>
               </div>
             </div>
             <div class="skin-tabs" role="tablist" aria-label="Colecciones visuales">
-              <button id="start-player-skins-tab" class="skin-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="start-player-skins-panel">Nucleo</button>
-              <button id="start-cannon-skins-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-cannon-skins-panel">Canones y balas</button>
+              <button id="start-player-skins-tab" class="skin-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="start-player-skins-panel">Naves</button>
+              <button id="start-cannon-skins-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-cannon-skins-panel">Disparos</button>
               <button id="start-backgrounds-tab" class="skin-tab" type="button" role="tab" aria-selected="false" aria-controls="start-backgrounds-panel">Fondos</button>
             </div>
-            <section id="start-cosmetic-rewarded" class="cosmetic-rewarded" hidden aria-live="polite">
-              <div class="cosmetic-rewarded-copy">
-                <span class="cosmetic-rewarded-label">OFERTA DESTACADA · REWARDED</span>
-                <strong id="start-cosmetic-rewarded-name"></strong>
+            <div class="console-body" tabindex="0" role="region" aria-label="Colección visual">
+            <section id="start-cosmetic-rewarded" class="cosmetic-rewarded" hidden>
+              <details>
+                <summary><span class="cosmetic-rewarded-label">ANUNCIO · DESBLOQUEO</span><strong id="start-cosmetic-rewarded-name"></strong><span class="rewarded-disclosure" aria-hidden="true">+</span></summary>
+                <div class="cosmetic-rewarded-copy" aria-live="polite">
                 <span id="start-cosmetic-rewarded-message"></span>
-              </div>
-              <button id="start-cosmetic-rewarded-button" type="button">Ver anuncio · desbloquear</button>
+                <button id="start-cosmetic-rewarded-button" type="button">Ver anuncio · desbloquear</button>
+                </div>
+              </details>
             </section>
             <section id="start-player-skins-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-player-skins-tab">
               <div class="skin-preview-stage player-skin-preview-stage" aria-live="polite">
@@ -169,6 +175,7 @@
               <div id="start-background-cards" class="background-cards" aria-label="Colección de fondos"></div>
               <p class="skins-footnote">Los fondos son cosméticos: solo cambian la atmósfera visual y no alteran el juego.</p>
             </section>
+            </div>
           </section>
         </div>
       </section>

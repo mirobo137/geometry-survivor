@@ -387,6 +387,7 @@ test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) =
   await expect(page.locator('#start-cosmetic-rewarded-name')).toContainText('Tormenta');
   await page.locator('#start-player-skins-tab').click();
   await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Eclipse Prism');
+  await page.locator('#start-cosmetic-rewarded summary').click();
   await page.locator('#start-cosmetic-rewarded-button').click();
   await expect(page.locator('#start-cosmetic-rewarded-button')).toHaveText('Anuncio en curso');
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/, { timeout: 5_000 });

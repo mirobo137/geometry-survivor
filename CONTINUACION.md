@@ -1,6 +1,35 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual — EX-11.6/EX-11.7 implementados, validación final pendiente, 17-09-2026
+## Estado actual — Overdrive, evoluciones y Actos I–III validados, 22-09-2026
+
+Validación humana reportada por el usuario: las evoluciones quedaron aprobadas,
+Overdrive funciona correctamente y los Actos I, II y III fueron probados en
+móvil. Estas áreas quedan validadas para continuar el proyecto; no se reabre su
+implementación salvo que aparezca un fallo concreto.
+
+Pendientes vigentes: EX-02c, balance final de daño/vida/spawn/recompensas;
+EX-09, SDKs reales y QA por portal; y la preparación de publicación una vez
+cerrados balance y plataforma. El balance de Overdrive permanece incluido en
+EX-02c y no se considera cerrado sólo por tener la implementación funcionando.
+
+## UI de inicio — consolas premium — 22-09-2026
+
+Skins, Mejoras y Actos usan consolas con cabecera persistente y un cuerpo
+desplazable. Anuncios de cosméticos desplegables, emblemas de rutas, progreso
+del Laboratorio y catálogos con altura natural. Contrato en
+`skills/geometry-survivor-svg/references/ui-art-direction.md`, sección
+Consolas de inicio. Revisar visualmente en móvil físico antes de aprobar
+esta presentación; las aprobaciones de gameplay anteriores se conservan.
+
+Comprobado: typecheck, 466 tests / 107 archivos y builds local/Poki/CrazyGames.
+Smoke dirigido final: 19/19, incluyendo compras, anuncios, selección de actos,
+Overdrive, navegación y crecimiento de catálogos en desktop/móvil emulado.
+Capturas inspeccionadas en `test-results/`; matriz 320×568, 390×844, 640×360
+y 1280×720. SVGs estructuralmente válidos (594–636 bytes por emblema), sin
+filtros ni recursos externos. Persiste el aviso conocido de bundle >500 kB.
+La prueba responsive se divide por viewport para evitar un único test largo
+en CI; las capturas de referencia sólo se generan localmente. Sin medición
+nueva de FPS ni prueba física del teléfono en esta entrega.
 
 ## Balance Overdrive recalibrado — 17-09-2026
 
@@ -45,9 +74,9 @@ la muerte/retirada liquida NOVA y récord Overdrive una sola vez, sin doble-NOVA
 
 Validación automática de esta entrega: `npm run typecheck` OK; suite completa
 Vitest en un worker: 107 archivos / 462 tests OK; integración de pareja
-`core-sentinel + orbital-warden` OK. Falta probar en browser el menú/desbloqueo,
-las tres parejas, retirada y una sesión continua de diez minutos en PC/móvil.
-No declarar EX-11 completamente cerrado hasta registrar esa evidencia.
+`core-sentinel + orbital-warden` OK. La validación humana posterior del usuario
+confirma que Overdrive funciona correctamente; quedan como deuda separada las
+pruebas de portal de EX-09 y el balance EX-02c.
 
 Validacion browser local adicional: la ruta publica desbloqueada inicia
 Overdrive con build limpia y muestra `Retirarse y cobrar` en pausa. Quedan las
@@ -57,9 +86,8 @@ deshabilitada y, tras vencer Acto III, permite iniciar Overdrive.
 La pantalla de victoria del Acto III tambien ofrece `Continuar al Overdrive`
 directamente; la navegacion abre la ruta publica con build limpia.
 
-Siguiente paso operativo: ejecutar las rutas de prueba de abajo en local o
-Pages, empezando por `od-pair=core-warden`, y devolver consola, calidad,
-duración, FPS/frame time y cualquier fallo visual o de reglas.
+Siguiente paso operativo: abordar EX-02c o EX-09 según la decisión del usuario;
+no reabrir Overdrive ni los Actos I–III sin un defecto reproducible.
 
 ## Historial — cierre técnico EX-11.6/EX-11.7, 17-09-2026
 

@@ -1,13 +1,14 @@
 # EX-11 — Plan de implementación del modo Infinito
 
-Estado: **EX-11.1–EX-11.7 y OD-A01–OD-A08 implementados; validación integral pendiente**
-Última actualización: 2026-09-17
+Estado: **EX-11.1–EX-11.7 y OD-A01–OD-A08 implementados y validados por el usuario**
+Última actualización: 2026-09-22
 
 Puerta vigente: la auditoría OD-A01–OD-A08 está corregida y cubierta por
 regresiones. EX-11.6 ya soporta dos instancias de boss, slots reservados,
 arbitraje y finalización conjunta; EX-11.7 añade la entrada pública después
-del Acto III, retirada y liquidación única. Falta probar el flujo público en
-browser/Pages y completar la validación humana de sesiones largas.
+del Acto III, retirada y liquidación única. El usuario confirma que Overdrive
+funciona correctamente. EX-09 y el balance EX-02c siguen pendientes como
+trabajos separados.
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
 
@@ -43,16 +44,22 @@ terminal sin revive, reservas previas de recursos, conversión final de NOVA,
 entrada `od-pair` en la ventana correcta, continuación directa desde Acto III y
 selección acotada de encuentros dobles sin historial creciente.
 
-La validación humana de parejas, sesiones largas y dispositivos móviles sigue
-siendo una puerta de cierre; estos puntos no se consideran medidos por pruebas
-unitarias.
+La validación humana reportada por el usuario confirma que Overdrive funciona
+correctamente, por lo que esta entrega queda validada funcionalmente. Las
+métricas exhaustivas de sesiones largas y el QA específico de portales no se
+infieren desde pruebas unitarias ni desde esta aprobación; cualquier comprobación
+de publicación permanece en EX-09.
 
 ## 1. Decisiones cerradas
 
+> Validación humana vigente (22-09-2026): el usuario confirma Overdrive
+> funcionando correctamente. También confirma que las evoluciones y los tres
+> actos fueron probados en móvil. EX-09 y EX-02c no quedan cerrados por esta
+> aprobación.
+>
 > Validacion local adicional (17-09-2026): el smoke browser comprobo la ruta
 > publica desbloqueada `?mode=overdrive`, el inicio con build limpia y la
-> retirada visible desde pausa. Sigue pendiente la validacion humana de las
-> tres parejas y de una sesion continua de diez minutos en PC y movil.
+> retirada visible desde pausa.
 >
 > La entrada de Overdrive se presenta dentro del selector `Actos` como cuarta
 > tarjeta. Bloqueada permanece visible y deshabilitada; tras vencer Acto III

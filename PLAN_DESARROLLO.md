@@ -3564,3 +3564,14 @@ exclusión en campaña, aplicación/cap/reset de potencia, reparación condicion
 typecheck, suite completa y los tres builds sin sourcemaps. La inspección
 manual de cartas en Pages sigue siendo necesaria; no se habilita la entrada
 pública de Infinito ni se implementan bosses dobles en esta subtarea.
+
+## 22.15 Estado vigente — validación de contenido y siguiente bloque — 22-09-2026
+
+El usuario confirma que las seis evoluciones, Overdrive y los Actos I, II y III
+funcionan correctamente; además, los tres actos fueron probados en móvil. Esta
+aprobación cierra la validación humana de contenido para continuar el proyecto
+y no reabre esas entregas sin un defecto reproducible.
+
+Quedan explícitamente pendientes EX-02c, para el balance global de daño, vida,
+spawn y recompensas, y EX-09, para SDKs reales, QA de portales y preparación de
+publicación. La publicación no se declara lista hasta completar esas puertas.

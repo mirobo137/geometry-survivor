@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js';
 import './styles.css';
 import './ui/home.css';
+import './ui/start-panels.css';
 import { Game } from './app/Game';
 import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import pauseActionIcons from './assets/svg/ui/pause-icons.svg?raw';

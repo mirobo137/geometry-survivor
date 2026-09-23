@@ -158,6 +158,36 @@ Conservar la próxima tarea EX documentada; arte no cierra balance ni plataforma
 
 ## Puerta visual y encargo reutilizable
 
+### Consolas de inicio — Skins, Mejoras y Actos (22-09-2026)
+
+Consumidores: `index.html`, `src/ui/start-panels.css`, `StartScreen.ts` y
+`MetaProgressionPanel.ts`. Comparten placa/bisel/cavidad con la pausa. El marco
+es CSS estático adaptable; no estirar el SVG de pausa sobre un catálogo largo.
+
+- `.console-screen` mantiene cabecera y, en Skins, tabs fuera del scroll.
+  `.console-body` es el único scroll del contenido: preview, oferta, catálogo
+  y notas participan en flujo normal. No volver a fijar todos esos bloques
+  mientras la lista se encoge hasta desaparecer en un móvil bajo.
+- Catálogos en grid con `minmax(0, 1fr)`, filas de altura natural, sin máximos
+  internos ni scroll anidado. Probar crecimiento y nombres largos.
+- Anuncio opcional en `details` cerrado inicialmente. El resumen identifica
+  anuncio y cosmético; abrir revela recompensa, alternativa NOVA y acción.
+  Nunca fijarlo sobre tarjetas. Cambiar de tab lo cierra y vuelve arriba.
+- Volver y tabs permanecen accesibles; controles de 44 px, foco visible.
+  Abrir Laboratorio/Actos reinicia su scroll para mostrar saldo/selección.
+- Emblemas `ui/start/{radial,angular,fracture,overdrive}.svg`: frame 96×96,
+  centro (48,48), uso 48–72 px, 6–7 primitivas cada uno. Anillo, rombo,
+  placas fracturadas y bucle infinito distinguen rutas. SVG externos vía
+  `img`, decorativos con `alt=""`; sin filtros, IDs ni animación.
+  Núcleo/rombo se reutilizan para impacto/cadencia en el Laboratorio a 48 px.
+- Progreso del Laboratorio se obtiene de niveles reales; las barras son
+  decorativas y el texto NIVEL sigue siendo la fuente accesible.
+
+Regresión: `tests/browser/home.checks.ts`, compartida por desktop y móvil:
+320×568, 390×844, 640×360, 1280×720, anuncio abierto/cerrado, tres tabs,
+doce tarjetas adicionales y títulos largos. Capturas en `test-results/`.
+Las capturas y emulación no sustituyen aprobación artística en móvil físico.
+
 Ejecutar la lámina con fuentes reales, tomar capturas oscuro/claro y móvil,
 inspeccionar 24/32/48/64 px, todos los iconos y estados de controles. Probar el
 overlay real con texto y preview; un catálogo de iconos solos no demuestra

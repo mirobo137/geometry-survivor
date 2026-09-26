@@ -1,8 +1,8 @@
-export type GamePhase = 'menu' | 'playing' | 'level-up' | 'paused' | 'game-over' | 'victory' | 'act-intermission' | 'overdrive-transition';
+export type GamePhase = 'menu' | 'playing' | 'run-intro' | 'level-up' | 'paused' | 'game-over' | 'victory' | 'act-intermission' | 'overdrive-transition';
 
 export class GameState {
   public phase: GamePhase;
-  private pausedPhase: 'playing' | 'overdrive-transition' | null = null;
+  private pausedPhase: 'playing' | 'run-intro' | 'overdrive-transition' | null = null;
 
   public constructor(initialPhase: 'menu' | 'playing' = 'playing') {
     this.phase = initialPhase;
@@ -20,8 +20,25 @@ export class GameState {
     return this.phase === 'overdrive-transition';
   }
 
+  public get isRunIntro(): boolean {
+    return this.phase === 'run-intro';
+  }
+
   public startRun(): boolean {
     if (this.phase !== 'menu') return false;
+    this.phase = 'playing';
+    return true;
+  }
+
+  /** Holds a fresh run while its presentation announces the route. */
+  public enterRunIntro(): boolean {
+    if (this.phase !== 'playing') return false;
+    this.phase = 'run-intro';
+    return true;
+  }
+
+  public completeRunIntro(): boolean {
+    if (this.phase !== 'run-intro') return false;
     this.phase = 'playing';
     return true;
   }
@@ -39,7 +56,7 @@ export class GameState {
   }
 
   public enterPause(): boolean {
-    if (this.phase !== 'playing' && this.phase !== 'overdrive-transition') return false;
+    if (this.phase !== 'playing' && this.phase !== 'run-intro' && this.phase !== 'overdrive-transition') return false;
     this.pausedPhase = this.phase;
     this.phase = 'paused';
     return true;
@@ -54,6 +71,10 @@ export class GameState {
 
   public get isPausedFromTransition(): boolean {
     return this.phase === 'paused' && this.pausedPhase === 'overdrive-transition';
+  }
+
+  public get isPausedFromRunIntro(): boolean {
+    return this.phase === 'paused' && this.pausedPhase === 'run-intro';
   }
 
   public endRun(): boolean {

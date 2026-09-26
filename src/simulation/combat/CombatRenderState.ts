@@ -174,6 +174,8 @@ export interface MagneticChargeState {
  */
 export interface EnemyRenderState {
   readonly active: boolean;
+  /** Pooled entity identity used by presentation-only hit feedback bookkeeping. */
+  readonly generation?: number;
   readonly kind: EnemyKind;
   readonly bossId?: BossId;
   readonly x: number;

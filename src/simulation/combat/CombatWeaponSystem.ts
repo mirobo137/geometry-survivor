@@ -100,6 +100,7 @@ export class CombatWeaponSystem {
   private pulseRingCooldown = PULSE_RING_DEFINITION.cooldownSeconds;
   private projectileRank = 1;
   private criticalChance = 0;
+  public criticalHitSequence = 0;
   private randomState = CRITICAL_RANDOM_SEED;
   private twinEmitters = false;
   private projectileEvolution: ProjectileEvolution | null = null;
@@ -368,6 +369,7 @@ export class CombatWeaponSystem {
     this.boomerangCooldown = Math.max(0.35, BOOMERANG_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.pulseRingCooldown = Math.max(0.5, PULSE_RING_DEFINITION.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.criticalChance = 0;
+    this.criticalHitSequence = 0;
     this.randomState = CRITICAL_RANDOM_SEED;
     this.twinEmitters = false;
     this.projectileEvolution = null;
@@ -668,6 +670,7 @@ export class CombatWeaponSystem {
   private rollCriticalDamage(baseDamage: number): number {
     if (this.criticalChance <= 0) return baseDamage;
     if (this.nextRandom() >= this.criticalChance) return baseDamage;
+    this.criticalHitSequence = this.criticalHitSequence >= 2_000_000_000 ? 1 : this.criticalHitSequence + 1;
     return baseDamage * CRITICAL_MULTIPLIER;
   }
 

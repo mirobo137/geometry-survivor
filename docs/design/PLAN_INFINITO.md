@@ -31,8 +31,10 @@ Este documento es el contrato de trabajo para implementar el modo Infinito despu
   `?debug=1&mode=overdrive...` siguen siendo diagnósticas y no escriben NOVA,
   récords ni desbloqueos.
 - La retirada está disponible en pausa sólo en Overdrive y pide confirmación.
-  Muerte o retirada liquidan una sola recompensa; el récord de Overdrive se
-  guarda separado del récord de campaña y no se ofrece doble NOVA.
+  Muerte o retirada liquidan una sola vez; tras una derrota definitiva puede
+  ofrecerse una duplicación de NOVA por run, incluso si ya se usó el revive.
+  La retirada confirmada liquida sin revive ni duplicación. El récord de
+  Overdrive se guarda separado del récord de campaña.
 
 ## Correcciones de la auditoría OD-B01–OD-B10
 

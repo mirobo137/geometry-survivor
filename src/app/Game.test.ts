@@ -12,7 +12,11 @@ const mocks = vi.hoisted(() => ({
   doubleNovaPending: vi.fn(),
   doubleNovaResult: vi.fn(),
   gameOverUpdateNova: vi.fn(),
-  playerShot: vi.fn()
+  playerShot: vi.fn(),
+  transitionOpenRoute: vi.fn(() => 2.6),
+  transitionOpenStage: vi.fn(),
+  transitionClose: vi.fn(),
+  transitionPaused: vi.fn()
 }));
 
 vi.mock('../presentation/PixiGameView', () => ({
@@ -58,6 +62,15 @@ vi.mock('../ui/GameOverOverlay', () => ({
     public setDoubleNovaPending = mocks.doubleNovaPending;
     public setDoubleNovaResult = mocks.doubleNovaResult;
     public updateNova = mocks.gameOverUpdateNova;
+  }
+}));
+
+vi.mock('../ui/RunTransitionOverlay', () => ({
+  RunTransitionOverlay: class {
+    public openRoute = mocks.transitionOpenRoute;
+    public openOverdriveStage = mocks.transitionOpenStage;
+    public close = mocks.transitionClose;
+    public setPaused = mocks.transitionPaused;
   }
 }));
 
@@ -133,6 +146,11 @@ describe('Game', () => {
     mocks.doubleNovaResult.mockReset();
     mocks.gameOverUpdateNova.mockReset();
     mocks.playerShot.mockReset();
+    mocks.transitionOpenRoute.mockReset();
+    mocks.transitionOpenRoute.mockReturnValue(2.6);
+    mocks.transitionOpenStage.mockReset();
+    mocks.transitionClose.mockReset();
+    mocks.transitionPaused.mockReset();
     vi.stubGlobal('window', {
       location: { search: '' },
       addEventListener: vi.fn(),
@@ -142,6 +160,31 @@ describe('Game', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('announces a continued campaign act without advancing combat behind the card', () => {
+    const saved = { ...createDefaultSaveData(), unlockedActs: ['radial', 'angular'] as const };
+    const options = createOptions({
+      saveStore: { load: () => saved, save: vi.fn(() => true), clear: vi.fn() }
+    });
+    const game = new Game({
+      ...options,
+      elements: { ...options.elements, runTransition: {} as HTMLElement }
+    });
+    const runtime = game as unknown as {
+      gameState: { phase: string; winRun: () => boolean; enterActIntermission: () => boolean };
+      onActIntermissionContinue: () => void;
+      completeRunIntro: () => void;
+    };
+
+    expect(runtime.gameState.winRun()).toBe(true);
+    expect(runtime.gameState.enterActIntermission()).toBe(true);
+    runtime.onActIntermissionContinue();
+    expect(runtime.gameState.phase).toBe('run-intro');
+    expect(mocks.transitionOpenRoute).toHaveBeenCalledWith('angular', 'basic');
+    runtime.completeRunIntro();
+    expect(runtime.gameState.phase).toBe('playing');
+    expect(mocks.transitionClose).toHaveBeenCalled();
   });
 
   it('connects the developer Overdrive route to the composed director', () => {
@@ -195,7 +238,13 @@ describe('Game', () => {
 
   it('pauses an Overdrive transition and resumes its remaining handoff time', () => {
     vi.useFakeTimers();
-    const game = new Game({ ...createOptions(), mode: 'overdrive', overdriveStage: 4 });
+    const options = createOptions();
+    const game = new Game({
+      ...options,
+      elements: { ...options.elements, runTransition: {} as HTMLElement },
+      mode: 'overdrive',
+      overdriveStage: 4
+    });
     const runtime = game as unknown as {
       beginOverdriveStageTransition: () => void;
       pauseForLifecycle: () => void;
@@ -204,6 +253,7 @@ describe('Game', () => {
     };
 
     runtime.beginOverdriveStageTransition.call(game);
+    expect(mocks.transitionOpenStage).toHaveBeenCalledOnce();
     vi.advanceTimersByTime(1_000);
     runtime.pauseForLifecycle.call(game);
     expect(runtime.gameState.phase).toBe('paused');
@@ -578,6 +628,103 @@ describe('Game', () => {
     expect(saved.wallet.nova).toBe(66);
     expect(save).toHaveBeenCalledTimes(2);
     expect(showRewarded).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers one Overdrive double-NOVA after the run ends even if its revive was already used', async () => {
+    vi.useFakeTimers();
+    let saved = {
+      ...createDefaultSaveData(),
+      overdrive: { ...createDefaultSaveData().overdrive, unlocked: true }
+    };
+    const save = vi.fn((next: typeof saved) => {
+      saved = next;
+      return true;
+    });
+    const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
+    const game = new Game({
+      ...createOptions({
+        ads: {
+          isRewardedAvailable: vi.fn(async () => true),
+          showRewarded
+        },
+        saveStore: { load: () => saved, save, clear: vi.fn() }
+      }),
+      mode: 'overdrive',
+      diagnosticOverdrive: false
+    });
+    const runtime = game as unknown as {
+      finishRun: (outcome: 'game-over') => void;
+      requestRevive: (terminalToken: number) => Promise<void>;
+      requestDoubleNova: (terminalToken: number) => Promise<void>;
+      openGameOverSummary: (...args: unknown[]) => Promise<void>;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
+      player: { state: { health: number } };
+      pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+    };
+
+    runtime.combat.stats.elapsedSeconds = 90;
+    runtime.combat.stats.kills = 30;
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+    await runtime.requestRevive.call(game, 1);
+    expect(showRewarded).toHaveBeenCalledTimes(1);
+
+    runtime.combat.stats.elapsedSeconds = 180;
+    runtime.combat.stats.kills = 55;
+    runtime.player.state.health = 0;
+    runtime.finishRun.call(game, 'game-over');
+    const pending = runtime.pendingTerminalRun;
+    if (!pending) throw new Error('Expected final Overdrive settlement');
+    await runtime.openGameOverSummary.call(
+      game, pending.summary, pending.best, pending.novaReward, pending.novaReward, pending.token
+    );
+
+    const rewardedOptions = mocks.gameOverOpen.mock.calls.at(-1)?.[5];
+    expect(rewardedOptions).toMatchObject({ doubleNovaAvailable: true, reviveAvailable: false });
+    await runtime.requestDoubleNova.call(game, pending.token);
+    await runtime.requestDoubleNova.call(game, pending.token);
+    expect(saved.wallet.nova).toBe(pending.novaReward * 2);
+    expect(showRewarded).toHaveBeenCalledTimes(2);
+  });
+
+  it('settles an Overdrive withdrawal without revive or double-NOVA offers', async () => {
+    vi.useFakeTimers();
+    const saved = {
+      ...createDefaultSaveData(),
+      overdrive: { ...createDefaultSaveData().overdrive, unlocked: true }
+    };
+    const showRewarded = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
+    const game = new Game({
+      ...createOptions({
+        ads: { isRewardedAvailable: vi.fn(async () => true), showRewarded },
+        saveStore: { load: () => saved, save: vi.fn(() => true), clear: vi.fn() }
+      }),
+      mode: 'overdrive',
+      diagnosticOverdrive: false
+    });
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal('window', { confirm, location: { search: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    const runtime = game as unknown as {
+      gameState: { enterPause: () => boolean };
+      onPauseWithdraw: () => void;
+      openGameOverSummary: (...args: unknown[]) => Promise<void>;
+      pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+    };
+
+    expect(runtime.gameState.enterPause()).toBe(true);
+    runtime.onPauseWithdraw();
+    const pending = runtime.pendingTerminalRun;
+    if (!pending) throw new Error('Expected a withdrawal settlement');
+    await runtime.openGameOverSummary.call(
+      game, pending.summary, pending.best, pending.novaReward, pending.novaReward, pending.token
+    );
+
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(mocks.gameOverOpen.mock.calls.at(-1)?.[5]).toMatchObject({
+      reviveAvailable: false,
+      doubleNovaAvailable: false
+    });
+    expect(showRewarded).not.toHaveBeenCalled();
   });
 
   it('reloads a settled wallet without granting the terminal reward again', () => {

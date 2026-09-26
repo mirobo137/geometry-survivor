@@ -1,5 +1,100 @@
 # Geometry Survivor — estado y continuación
 
+## Audio de combate e interfaz con ZzFX — 26-09-2026
+
+Howler queda reservado para música. El backend SFX usa la síntesis completa de
+ZzFXMicro 1.3.2, adaptada al `AudioContext` ya desbloqueado por Howler para no
+crear un contexto prematuro en móvil. Los `AudioBuffer` se generan al primer
+uso y quedan cacheados; se conserva el máximo de ocho voces y cooldown por cue.
+Los cues están categorizados como gameplay/UI: al pausar no entran sonidos de
+combate nuevos, los sonidos UI sí funcionan y las voces cortas ya iniciadas
+terminan sin corte. El menú sólo solicita música al entrar a una run.
+
+Cobertura: disparos e impactos, críticos, bajas, daño/escudo del player,
+telegraphs de enemigos/boss/arena, transformaciones, armas activas, nivel,
+entradas y cambios de tramo, botones/cartas/ajustes, compras y recompensas.
+No hay pickup físico de XP; no se inventa un cue para un evento inexistente.
+Contrato de recetas y categorías: `docs/design/AUDIO_SFX_ZZFX.md`; la sección
+10 de `PLAN_DESARROLLO.md` enlaza el documento. Aviso MIT de ZzFX incluido en
+`public/third-party-licenses/zzfx.txt`.
+
+Typecheck aprobado. Builds Vite `local`, `poki` y `crazygames` aprobados; la
+licencia aparece copiada a los tres directorios `dist`. Los tres builds
+conservan la advertencia del bundle principal: ~1.031 MB minificado / 268 kB
+gzip en esta máquina; es un asunto de presupuesto pendiente, no se atribuye a
+ZzFX sin comparar perfiles. No se ejecutaron tests en esta sesión. Falta
+validación auditiva humana (volumen y separación de cues), especialmente en
+móvil; no se midió rendimiento ni se hicieron commit/push.
+
+## Refinamiento de entradas — compuerta geométrica — 25-09-2026
+
+Las entradas premium ahora ensamblan cuatro placas con bisel, alinean una firma
+distinta por ruta y abren dos hojas para revelar la partida. Radial: arcos;
+Angular: rombos; Fracture: facetas separadas; Overdrive: circuito infinito.
+Duraciones y coordinación intactas: 2,6 s premium omisible, 1,3 s continuación,
+3 s entre tramos. La versión breve usa una placa de título sobre la escena.
+Los tramos muestran familia entrante en lugar del multiplicador interno.
+
+Contrato para iterar: `docs/design/TRANSICIONES_ENTRADA.md`, enlazado desde la
+guía UI. CSS propio en `src/ui/run-transition.css`; un master SVG de 4.660 bytes,
+montado una vez, sin filtros ni bucles de animación. Low conserva el acabado.
+Referencia para repetir todas las variantes con Vite:
+`http://127.0.0.1:5173/docs/visual/transitions-reference.html`.
+
+Comprobado en este refinamiento: typecheck, 32 tests focalizados Game/GameState,
+4 smokes de entradas en juego (desktop/móvil emulado), builds local/Poki/CrazyGames,
+9 capturas de referencia y movimiento reducido sin animaciones. Inspeccionadas
+capturas de producción y móvil horizontal/portrait; corregido solapamiento del
+botón Omitir en landscape bajo. Medición DOM aislada en Chromium headless,
+1280×720: 169 intervalos por preset; p95 16,7 ms High y 16,8 ms Low. No es una
+medición del juego en teléfono físico. Sigue pendiente aprobación visual del
+usuario y continúa el warning conocido de chunk >500 kB.
+
+## Auditoría funcional y rewarded — 25-09-2026
+
+Corregidos dos defectos encontrados antes de retomar Laboratorio/balance:
+la regla CSS de botones de pausa anulaba el atributo `hidden`, por lo que
+`Retirarse y cobrar` se veía también en campaña; ahora cualquier botón oculto
+de la pausa queda fuera del layout. En Overdrive público, la oferta de duplicar
+NOVA estaba bloqueada por una condición de modo; ahora puede aparecer una vez
+al liquidar una derrota definitiva, aunque el revive ya se haya usado. Respeta
+el ledger de una sola oferta por run; los tramos no reinician contadores. Una
+retirada confirmada liquida sin revive ni duplicación. Las rutas diagnósticas no
+reciben recompensas.
+
+Revisé liquidación, callbacks rewarded, pause/lifecycle, guardado, selección de
+ruta, límites de pools, builds y cobertura de regresión. No salió otro defecto
+bloqueante nuevo de esa pasada. Siguen abiertos los trabajos conocidos EX-02c
+(balance y laboratorio), EX-09 (SDK/QA de portales), verificación de entrada en
+móvil físico y el aviso de bundle local >500 kB; esta auditoría no los declara
+resueltos.
+
+Regresiones automatizadas añadidas para ocultación real del botón por CSS,
+visibilidad sólo durante pausa de Overdrive, duplicación tras revive agotado y
+retirada sin ofertas rewarded. `npm run typecheck` pasó; `npm run build:local`
+ejecutó 470 tests en 107 archivos y compiló correctamente. También pasaron los
+builds `poki` y `crazygames`. Playwright tuvo 61/64 en la corrida completa: los
+tres fallos eran smokes que enviaban input durante la entrada premium; tras
+hacer que esos smokes la omitan, los tres pasaron por separado. No repetí la
+suite browser completa en una sola corrida. Sigue el aviso de chunk JS local
+mayor a 500 kB; no medí teléfono físico ni portales reales.
+
+## Presentación de entrada por ruta — 25-09-2026
+
+Contrato de UX implementado: iniciar directamente Acto I, II, III o Infinito
+desde el menú muestra una entrada premium de 2,6 s con emblema y nombre grande;
+puede omitirse. Continuar I→II o II→III muestra sólo la tarjeta breve del acto
+(1,3 s). Continuar III→Overdrive abre la ruta pública con esa misma entrada
+breve. Dentro de Overdrive, cada tramo conserva un anuncio básico de 3 s,
+sin repetir la cinemática premium. La simulación no avanza durante estas
+presentaciones; pausa por lifecycle conserva el estado. Movimiento reducido
+acorta la entrada de ruta.
+
+Verificado: typecheck; 468 tests unitarios/107 archivos; build local; 3 smokes
+desktop de selección/continuación y un smoke móvil emulado con captura visual
+revisada y botón Omitir dentro del viewport. Pendiente: sensación y legibilidad
+en teléfono físico; no se midieron FPS nuevos ni se validaron portales.
+
 ## Estado actual — Overdrive, evoluciones y Actos I–III validados, 22-09-2026
 
 Validación humana reportada por el usuario: las evoluciones quedaron aprobadas,
@@ -83,7 +178,9 @@ en la tarjeta y la ocultación del botón cuando el runtime ya era Overdrive.
 La ruta manual `?mode=overdrive` conserva el menú antes de jugar, mientras que las rutas
 `?debug=1&mode=overdrive&od-stage=1|4|7|10` y `od-pair=core-warden|core-fracture|warden-fracture`
 son diagnósticas y no liquidan guardado. Pausa ofrece retirada confirmada y
-la muerte/retirada liquida NOVA y récord Overdrive una sola vez, sin doble-NOVA.
+la derrota definitiva liquida NOVA y récord Overdrive una sola vez y puede
+ofrecer doble-NOVA; una retirada liquida sin revive ni duplicación. Los
+placements rewarded no se reinician por tramo.
 
 Validación automática de esta entrega: `npm run typecheck` OK; suite completa
 Vitest en un worker: 107 archivos / 462 tests OK; integración de pareja

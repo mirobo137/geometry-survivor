@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entradas de ruta — referencia de producción</title>
+<style>
+  body{margin:0;background:#080e1d;color:#d1e2ec;font:14px system-ui}
+  #preview{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,#1b3044,#080e1d 70%)}
+  nav{position:fixed;z-index:30;top:8px;left:8px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 16px)}
+  nav button,nav select{min-height:36px;background:#0b1829;color:#d1e2ec;border:1px solid #456578;padding:5px 8px}
+  .hide-controls nav{display:none}
+</style>
+<div id="preview"></div>
+<nav aria-label="Referencia visual">
+  <select id="route" aria-label="Ruta"><option value="radial">Radial</option><option value="angular">Angular</option><option value="fracture">Fracture</option><option value="overdrive">Overdrive</option></select>
+  <select id="variant" aria-label="Entrada"><option value="premium">Inicio</option><option value="basic">Continuación</option><option value="stage">Tramo 4</option></select>
+  <select id="quality" aria-label="Calidad"><option>high</option><option>medium</option><option>low</option></select>
+  <button id="replay">Repetir</button>
+</nav>
+<script type="module">
+  import '../../src/styles.css';
+  import markup from '../../index.html?raw';
+  import { RunTransitionOverlay } from '../../src/ui/RunTransitionOverlay.ts';
+  import { createOverdriveStageState } from '../../src/content/run/OverdriveDefinitions.ts';
+  const root = new DOMParser().parseFromString(markup, 'text/html').querySelector('#run-transition');
+  document.querySelector('#preview').append(root);
+  const overlay = new RunTransitionOverlay(root, () => overlay.close(), 'high');
+  const route = document.querySelector('#route');
+  const variant = document.querySelector('#variant');
+  const quality = document.querySelector('#quality');
+  function replay() {
+    overlay.close();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      root.dataset.quality = quality.value;
+      if (variant.value === 'stage') overlay.openOverdriveStage(createOverdriveStageState(4, 1));
+      else overlay.openRoute(route.value, variant.value);
+    }));
+  }
+  document.querySelector('#replay').addEventListener('click', replay);
+  for (const input of [route, variant, quality]) input.addEventListener('change', replay);
+  replay();
+</script>
+</html>

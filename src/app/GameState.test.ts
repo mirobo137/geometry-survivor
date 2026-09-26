@@ -120,6 +120,21 @@ describe('GameState', () => {
     expect(state.phase).toBe('playing');
   });
 
+  it('holds a fresh run during its chapter intro and resumes it after a lifecycle pause', () => {
+    const state = new GameState('menu');
+    expect(state.startRun()).toBe(true);
+    expect(state.enterRunIntro()).toBe(true);
+    expect(state.isSimulationRunning).toBe(false);
+    expect(state.enterPause()).toBe(true);
+    expect(state.isPausedFromRunIntro).toBe(true);
+    expect(state.completeRunIntro()).toBe(false);
+    expect(state.resume()).toBe(true);
+    expect(state.phase).toBe('run-intro');
+    expect(state.completeRunIntro()).toBe(true);
+    expect(state.isSimulationRunning).toBe(true);
+    expect(state.completeRunIntro()).toBe(false);
+  });
+
   it('allows returning to the menu from manual pause only', () => {
     const state = new GameState();
 

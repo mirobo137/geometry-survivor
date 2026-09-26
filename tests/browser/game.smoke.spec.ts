@@ -115,6 +115,9 @@ const openGame = async (page: Page): Promise<string[]> => {
   await expect(page.locator('#start-play')).toBeVisible();
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
+  await page.locator('[data-run-transition-skip]').click();
+  await expect(page.locator('#run-transition')).toBeHidden();
   await expect(page.locator('#game-hud')).toBeVisible();
   return failures;
 };
@@ -312,6 +315,12 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   await page.locator('#start-play').click();
   await expect(page.locator('#start-entry-view')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
+  await expect(page.locator('#run-transition')).toContainText('ANGULAR');
+  await expect(page.locator('#pause-toggle')).toBeHidden();
+  await page.locator('[data-run-transition-skip]').click();
+  await expect(page.locator('#run-transition')).toBeHidden();
+  await expect(page.locator('#pause-toggle')).toBeVisible();
   await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
 });
@@ -343,18 +352,43 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await page.locator('#start-overdrive').click();
   await page.locator('#start-act-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
+  await expect(page.locator('#run-transition')).toContainText('OVERDRIVE');
+  await page.locator('[data-run-transition-skip]').click();
   await expect(page.locator('#game-hud')).toBeVisible();
   await expect(page.locator('#debug-panel')).toContainText('mode: overdrive-stage-1');
   expect(await page.evaluate(() => (window as unknown as { menuIdentity: string }).menuIdentity)).toBe('same-document');
   await page.locator('#pause-toggle').click();
+  await expect(page.locator('#pause-withdraw')).toBeVisible();
+  await expect(page.locator('#pause-withdraw')).toContainText('Retirarse y cobrar');
   await page.locator('#pause-menu').click();
   await page.locator('#start-level').click();
   await expect(page.locator('#start-overdrive')).toBeEnabled();
   await expect(page.locator('#start-overdrive')).toHaveClass(/is-selected/);
   await page.locator('#start-act-angular').click();
   await page.locator('#start-act-play').click();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
+  await page.locator('[data-run-transition-skip]').click();
   await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
+});
+
+test('al continuar del Acto III anuncia Overdrive con la entrada breve', async ({ page }, testInfo) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 7,
+      unlockedActs: ['radial', 'angular', 'fracture'],
+      overdrive: { unlocked: true }
+    }));
+  });
+  await page.goto('/?mode=overdrive&autostart=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-screen')).toBeHidden();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'basic');
+  await expect(page.locator('#run-transition')).toContainText('OVERDRIVE');
+  await page.screenshot({ path: testInfo.outputPath('run-intro-basic-desktop.png') });
+  await expect(page.locator('#run-transition')).toBeHidden({ timeout: 5_000 });
+  await expect(page.locator('#pause-toggle')).toBeVisible();
 });
 
 test('muestra y conserva el reporte local de linea base con ?baseline=1', async ({ page }) => {
@@ -458,6 +492,7 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   await expect(page.locator('#pause-toggle svg')).toBeVisible();
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-overlay')).toBeVisible();
+  await expect(page.locator('#pause-withdraw')).toBeHidden();
   await expect(page.locator('#pause-toggle')).toBeHidden();
   await expect(page.locator('#pause-overlay')).toHaveAttribute('aria-describedby', 'pause-message');
   await expect(page.locator('#pause-panel-frame svg')).toBeVisible();

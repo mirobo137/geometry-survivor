@@ -3,6 +3,29 @@ import { registerHomeChecks } from './home.checks';
 
 registerHomeChecks();
 
+test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-play').click();
+  await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
+  await expect(page.locator('[data-run-transition-name]')).toHaveText('RADIAL');
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: testInfo.outputPath('run-intro-mobile.png') });
+  const skip = await page.locator('[data-run-transition-skip]').boundingBox();
+  const viewport = page.viewportSize();
+  expect(skip).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(skip!.x).toBeGreaterThanOrEqual(0);
+  expect(skip!.y).toBeGreaterThanOrEqual(0);
+  expect(skip!.x + skip!.width).toBeLessThanOrEqual(viewport!.width);
+  expect(skip!.y + skip!.height).toBeLessThanOrEqual(viewport!.height);
+  await page.locator('[data-run-transition-skip]').click();
+  await expect(page.locator('#run-transition')).toBeHidden();
+  await expect(page.locator('#pause-toggle')).toBeVisible();
+  expect(failures).toEqual([]);
+});
+
 test('joystick opcional persiste y se cancela en pausa, cambio y rotación', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
   await page.goto('/?debug=1');
@@ -14,6 +37,8 @@ test('joystick opcional persiste y se cancela en pausa, cambio y rotación', asy
   await expect(page.locator('#start-control-scheme')).toHaveValue('joystick');
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
+  await page.locator('[data-run-transition-skip]').click();
+  await expect(page.locator('#run-transition')).toBeHidden();
   const gesture = async (type: string, x: number, y: number) => page.evaluate(({ type, x, y }) => {
     document.querySelector('#game-container')!.dispatchEvent(new PointerEvent(type, {
       bubbles: true, cancelable: true, pointerId: 71, pointerType: 'touch',
@@ -178,6 +203,8 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
   await page.locator('#start-control-scheme').selectOption('joystick');
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
+  await page.locator('[data-run-transition-skip]').click();
+  await expect(page.locator('#run-transition')).toBeHidden();
 
   const canvas = page.locator('#game-container canvas');
   const canvasBox = await canvas.boundingBox();

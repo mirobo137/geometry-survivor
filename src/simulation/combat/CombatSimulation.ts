@@ -383,6 +383,11 @@ export class CombatSimulation {
     return this.weaponSystem.currentProjectileDamage;
   }
 
+  /** Presentation feedback for one or more critical procs authored this run. */
+  public get criticalHitSequence(): number {
+    return this.weaponSystem.criticalHitSequence;
+  }
+
   private getOverdriveBossEncounter(): readonly import('../../content/bosses/BossDefinition').BossDefinition[] {
     if (this.actDirector instanceof OverdriveActDirector) {
       return this.actDirector.getBossEncounter(this.overdriveBossPair);

@@ -297,11 +297,21 @@
         <button id="game-over-restart" type="button">Jugar de nuevo</button>
         <button id="game-over-menu" type="button" hidden>Volver al menú</button>
       </section>
-      <section id="overdrive-transition" class="overdrive-transition" aria-live="polite" aria-labelledby="overdrive-transition-title" hidden>
-        <p class="overdrive-transition-kicker">OVERDRIVE / STAGE SHIFT</p>
-        <h1 id="overdrive-transition-title" data-overdrive-transition-title>Vuelta 1 · Tramo 1</h1>
-        <p data-overdrive-transition-subtitle>La arena se reconfigura</p>
-        <span class="overdrive-transition-line" aria-hidden="true"></span>
+      <section id="run-transition" class="run-transition" role="status" aria-live="polite" aria-labelledby="run-transition-title" hidden>
+        <div class="run-transition-shutter run-transition-shutter-left" aria-hidden="true"></div>
+        <div class="run-transition-shutter run-transition-shutter-right" aria-hidden="true"></div>
+        <div class="run-transition-horizon" aria-hidden="true"></div>
+        <div class="run-transition-field" aria-hidden="true">
+          <div class="run-transition-gate" data-run-transition-gate></div>
+          <span class="run-transition-emblem"><img data-run-transition-icon alt="" /></span>
+        </div>
+        <div class="run-transition-copy">
+          <p class="run-transition-chapter" data-run-transition-chapter>ACTO I</p>
+          <h2 id="run-transition-title" class="run-transition-name" data-run-transition-name>RADIAL</h2>
+          <p class="run-transition-detail" data-run-transition-detail>EL NÚCLEO DESPIERTA</p>
+          <span class="run-transition-line" aria-hidden="true"></span>
+        </div>
+        <button class="run-transition-skip" data-run-transition-skip type="button" hidden>Omitir intro</button>
       </section>
       <div id="debug-panel" hidden></div>
       <aside id="baseline-panel" hidden aria-labelledby="baseline-title">

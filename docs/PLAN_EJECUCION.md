@@ -1211,16 +1211,22 @@ las mejoras permanentes guardadas; las rutas `?debug=1&mode=overdrive...`
 siguen siendo diagnósticas y no escriben guardado. Pausa ofrece
 `Retirarse y cobrar` sólo en Overdrive, con confirmación.
 
-Muerte o retirada liquidan una sola vez: no hay victoria terminal por boss,
-no se ofrece doble NOVA, no se reinician revive/contadores entre tramos y los
-récords de tiempo, tramos y bajas se guardan en `SaveData.overdrive`. La
-campaña mantiene su límite de tres armas y su flujo de intermisión.
+Muerte o retirada liquidan una sola vez: no hay victoria terminal por boss ni
+se reinician revive/contadores entre tramos. Una derrota definitiva puede
+ofrecer doble NOVA una vez por run, incluso después de haber usado el revive;
+retirarse liquida sin revive ni duplicación. Los récords de tiempo, tramos y
+bajas se guardan en `SaveData.overdrive`. La campaña mantiene su límite de tres
+armas y su flujo de intermisión.
 
-Validación automática de esta entrega: `npm run typecheck`; suite Vitest
-completa en un worker, 107 archivos / 462 tests; y prueba de integración que
-spawnea la pareja `core-sentinel + orbital-warden`. Falta ejecutar el smoke
-browser público, probar las tres parejas y medir la sesión continua de diez
-minutos en PC y móvil; esos resultados no deben inferirse desde la suite.
+Validación automática registrada: `npm run typecheck`; `npm run build:local`
+con suite Vitest, 107 archivos / 470 tests; y builds `poki` y `crazygames`.
+Playwright ejecutó 64 tests: 61 pasaron en la corrida completa; los tres fallos
+fueron smokes que intentaban mover durante la entrada premium, y pasaron en
+reintento focalizado después de enseñar al helper a omitirla. La suite browser
+completa no se repitió junta tras ese ajuste. La prueba pública de entrada y
+retirada de Overdrive está cubierta; la cobertura automatizada de parejas de
+bosses y estos resultados no sustituyen validación física ni mediciones de
+sesión larga en PC/móvil. Los builds no son QA dentro de portales reales.
 
 ## 6. Fichas visuales y estado de ejecución
 

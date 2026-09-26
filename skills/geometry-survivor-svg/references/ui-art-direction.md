@@ -140,6 +140,13 @@ Conservar las etiquetas existentes y la fuente real de stats/preview.
 
 ## Cómo extender toda la UI sin perder dirección
 
+Para entradas de actos y cambios de tramo, seguir el contrato de
+[compuerta geométrica](../../../docs/design/TRANSICIONES_ENTRADA.md).
+Referencia ejecutable: `docs/visual/transitions-reference.html`; consume el
+markup y arte reales. La entrada premium ensambla placas, alinea una firma de
+ruta y abre hacia la partida; la transición básica conserva sólo la placa del
+título. No repetir la cinemática completa dentro de Overdrive.
+
 Trabajar la familia pedida con su consumidor real y revisar junto al lote de
 referencia. Orden sugerido para una migración completa:
 

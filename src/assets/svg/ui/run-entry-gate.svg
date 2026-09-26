@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+  <!-- One presentation-only gate. All layers share anchor (280,280). -->
+  <g class="entry-calibration" stroke="currentColor">
+    <circle cx="280" cy="280" r="251" opacity=".18"/>
+    <circle cx="280" cy="280" r="244" stroke-width="4" stroke-dasharray="1 18.16" opacity=".35"/>
+    <path d="M280 9v16m0 510v16M9 280h16m510 0h16M93 93l11 11m352 352 11 11M93 467l11-11m352-352 11-11" opacity=".6"/>
+  </g>
+  <g class="entry-armor">
+    <g class="entry-panel entry-panel-north">
+      <path d="m109 110 65-56 74-24h64l74 24 65 56-22 20-59-49-64-20h-52l-64 20-59 49Z" fill="#0b1422" stroke="#345267" stroke-width="2"/>
+      <path d="m112 109 63-53 73-24h64l73 24 63 53-11-2-56-44-71-22h-60l-71 22-56 44Z" fill="#98adbb"/>
+      <path d="m136 115 55-45 62-19h54l62 19 55 45-8-1-50-37-62-19h-48l-62 19-50 37Z" fill="#20384b"/>
+      <path d="m159 110 37-29 59-17h50l59 17 37 29" stroke="currentColor" stroke-width="2"/>
+      <path d="m267 31 13-12 13 12-4 22h-18Z" fill="#17283b" stroke="#a6bdc9"/>
+      <path d="M280 29v16" stroke="currentColor" stroke-width="3"/>
+    </g>
+    <g class="entry-panel entry-panel-south">
+      <path d="m109 450 65 56 74 24h64l74-24 65-56-22-20-59 49-64 20h-52l-64-20-59-49Z" fill="#0b1422" stroke="#345267" stroke-width="2"/>
+      <path d="m130 433 61 48 63 20h52l63-20 61-48-4 10-55 44-64 21h-54l-64-21-55-44Z" fill="#657f93"/>
+      <path d="m159 450 37 29 59 17h50l59-17 37-29" stroke="currentColor" stroke-width="2"/>
+      <path d="m267 529 13 12 13-12-4-22h-18Z" fill="#17283b" stroke="#a6bdc9"/>
+      <path d="M280 515v16" stroke="currentColor" stroke-width="3"/>
+    </g>
+    <g class="entry-panel entry-panel-west">
+      <path d="m96 123-47 68-24 67v44l24 67 47 68 19-20-40-60-21-59v-36l21-59 40-60Z" fill="#17283b" stroke="#345267" stroke-width="2"/>
+      <path d="m96 123-47 68-24 67v44l6-6v-36l25-66 43-63Z" fill="#a6bdc9"/>
+      <path d="m103 151-34 54-20 59v32l20 59 34 54" stroke="currentColor" stroke-width="2"/>
+      <path d="m28 267-13 13 13 13h32l10-13-10-13Z" fill="#0b1422" stroke="#657f93"/>
+      <path d="M30 280h24" stroke="currentColor" stroke-width="3"/>
+    </g>
+    <g class="entry-panel entry-panel-east">
+      <path d="m464 123 47 68 24 67v44l-24 67-47 68-19-20 40-60 21-59v-36l-21-59-40-60Z" fill="#17283b" stroke="#345267" stroke-width="2"/>
+      <path d="m453 145 35 56 21 62v34l-6-5v-27l-22-61-30-50Z" fill="#a6bdc9"/>
+      <path d="m457 151 34 54 20 59v32l-20 59-34 54" stroke="currentColor" stroke-width="2"/>
+      <path d="m532 267 13 13-13 13h-32l-10-13 10-13Z" fill="#0b1422" stroke="#657f93"/>
+      <path d="M506 280h24" stroke="currentColor" stroke-width="3"/>
+    </g>
+  </g>
+  <g class="entry-signature entry-signature-radial" stroke="currentColor">
+    <circle cx="280" cy="280" r="163" opacity=".22" stroke-width="12" stroke-dasharray="230 26"/>
+    <path d="M280 117a163 163 0 0 1 163 163M280 443a163 163 0 0 1-163-163" stroke-width="2"/>
+    <circle cx="280" cy="280" r="137" stroke-dasharray="54 17.73" opacity=".65"/>
+    <path d="M280 105v24m0 302v24M105 280h24m302 0h24" stroke-width="3"/>
+  </g>
+  <g class="entry-signature entry-signature-angular" stroke="currentColor">
+    <path d="m280 90 190 190-190 190L90 280Z" stroke-width="12" opacity=".13"/>
+    <path d="m280 90 190 190-190 190L90 280Zm0 41 149 149-149 149-149-149Z" opacity=".65"/>
+    <path d="m266 108 14-14 14 14m158 158 14 14-14 14M108 266l-14 14 14 14m158 158 14 14 14-14" stroke-width="3"/>
+    <path d="M178 178h204v204H178Z" opacity=".2"/>
+  </g>
+  <g class="entry-signature entry-signature-fracture" stroke="currentColor">
+    <path d="m263 104-135 92 9 125 62-90Zm37 15 131 78-49 53-70-26ZM425 275l-14 110-117 70 18-83 57-40ZM257 440l-112-69 66-41 56 49Z" fill="currentColor" fill-opacity=".045" stroke-width="2"/>
+    <path d="m143 214 10 95m160-174 100 63M394 368l-82 54m-65 2-83-52" stroke-width="6" opacity=".35"/>
+    <path d="m219 160 19 28-23 44m155 40 27 15-8 29M267 380l-12-29 20-22" opacity=".55"/>
+  </g>
+  <g class="entry-signature entry-signature-overdrive" stroke="currentColor">
+    <path d="M280 280c-46-76-142-115-152-26-13 111 103 79 152 26s132-133 152-26c22 118-107 106-152 26Z" stroke-width="14" opacity=".12"/>
+    <path d="M280 280c-46-76-142-115-152-26-13 111 103 79 152 26s132-133 152-26c22 118-107 106-152 26Z" stroke-width="2"/>
+    <path d="m266 106 14-11 14 11m153 73 12 19-1 13M111 179l-12 19 1 13m166 243 14 11 14-11" stroke-width="3"/>
+    <circle cx="280" cy="280" r="177" stroke-dasharray="155 30" opacity=".32"/>
+  </g>
+</svg>

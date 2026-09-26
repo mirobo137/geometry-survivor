@@ -93,7 +93,7 @@ const bootstrap = async (): Promise<void> => {
   const levelUpElement = document.querySelector<HTMLElement>('#level-up');
   const pauseElement = document.querySelector<HTMLElement>('#pause-overlay');
   const gameOverElement = document.querySelector<HTMLElement>('#game-over');
-  const overdriveTransitionElement = document.querySelector<HTMLElement>('#overdrive-transition');
+  const runTransitionElement = document.querySelector<HTMLElement>('#run-transition');
   if (!container || !debugElement || !bootStatus || !startScreenElement || !hudElement || !pauseButton || !levelUpElement || !pauseElement || !gameOverElement) {
     throw new Error('Faltan elementos de la interfaz');
   }
@@ -264,7 +264,7 @@ const bootstrap = async (): Promise<void> => {
       levelUp: levelUpElement,
       pause: pauseElement,
       gameOver: gameOverElement,
-      overdriveTransition: overdriveTransitionElement ?? undefined,
+      runTransition: runTransitionElement ?? undefined,
       baseline: baselineElement ?? undefined
     },
     stressMode,
@@ -299,6 +299,7 @@ const bootstrap = async (): Promise<void> => {
     overdriveBossPair: overdriveMode ? overdriveBossPair : undefined,
     overdriveBuild: overdriveMode ? overdriveBuild : undefined,
     diagnosticOverdrive,
+    startWithBasicIntro: overdriveMode && overdriveAutostart && !diagnosticOverdrive && publicOverdriveUnlocked,
     allowLockedAct: searchParams.get('debug') === '1' && requestedAct !== null,
     initialElapsedSeconds: bossDebugMode
       ? actId === 'fracture' ? 250 : actId === 'angular' ? 260 : RADIAL_ACT_DIRECTOR.bossStartSeconds

@@ -1,6 +1,6 @@
 import { HowlerMusicBackend } from './HowlerMusicBackend';
 import { ZzfxSfxBackend } from './ZzfxSfxBackend';
-import { type AudioCue } from '../content/audio/AudioCueDefinitions';
+import { AUDIO_CUE_DEFINITIONS, type AudioCue } from '../content/audio/AudioCueDefinitions';
 
 export type { AudioCue } from '../content/audio/AudioCueDefinitions';
 
@@ -34,8 +34,10 @@ export class AudioManager implements AudioService {
   private sfx: ZzfxSfxBackend | null = null;
   private unlocked = false;
   private lifecyclePaused = false;
-  // A new run begins with music desired; stopMusic() disables it only at run end.
-  private musicRequested = true;
+  // Music begins only when Game activates a run, never while browsing the menu.
+  private musicRequested = false;
+  private unlockPromise: Promise<void> | null = null;
+  private shutdownRequested = false;
 
   public configure(settings: AudioSettings): void {
     this.settings = {
@@ -46,14 +48,25 @@ export class AudioManager implements AudioService {
     this.applySettings();
   }
 
-  public async unlock(): Promise<void> {
+  public unlock(): Promise<void> {
+    if (this.shutdownRequested) return Promise.resolve();
     if (this.unlocked) {
-      this.resume();
-      return;
+      // A click in the pause panel may unlock UI SFX, but must not resume the
+      // gameplay bus or music until the user explicitly resumes the run.
+      if (!this.lifecyclePaused) this.resume();
+      return Promise.resolve();
     }
+    if (this.unlockPromise) return this.unlockPromise;
+    this.unlockPromise = this.unlockFromGesture().finally(() => { this.unlockPromise = null; });
+    return this.unlockPromise;
+  }
+
+  private async unlockFromGesture(): Promise<void> {
     try {
       const context = await this.music.unlock();
+      if (this.shutdownRequested) return;
       this.sfx = context ? new ZzfxSfxBackend(context) : null;
+      if (this.lifecyclePaused) this.sfx?.pause();
       this.unlocked = true;
       this.applySettings();
       if (this.musicRequested && !this.lifecyclePaused) this.music.play();
@@ -86,11 +99,14 @@ export class AudioManager implements AudioService {
   }
 
   public playCue(cue: AudioCue): void {
-    if (!this.unlocked || this.lifecyclePaused || this.settings.muted || this.settings.sfxVolume <= 0) return;
+    const definition = AUDIO_CUE_DEFINITIONS[cue];
+    if (!this.unlocked || (this.lifecyclePaused && definition.category !== 'ui')
+      || this.settings.muted || this.settings.sfxVolume <= 0) return;
     this.sfx?.play(cue);
   }
 
   public shutdown(): void {
+    this.shutdownRequested = true;
     this.musicRequested = false;
     this.lifecyclePaused = false;
     this.sfx?.shutdown();

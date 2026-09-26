@@ -15,6 +15,7 @@ import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUp
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
 import { CombatSimulation } from '../simulation/combat/CombatSimulation';
+import type { EnemyRenderState } from '../simulation/combat/CombatRenderState';
 import { PlayerModel } from '../simulation/PlayerModel';
 import {
   getWeaponPathBaseUpgradeId,
@@ -39,7 +40,8 @@ import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/Le
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
-import { OverdriveTransitionOverlay } from '../ui/OverdriveTransitionOverlay';
+import { RunTransitionOverlay, type RunTransitionVariant } from '../ui/RunTransitionOverlay';
+import type { AudioCue } from '../content/audio/AudioCueDefinitions';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
@@ -83,7 +85,7 @@ export interface GameElements {
   readonly levelUp: HTMLElement;
   readonly pause: HTMLElement;
   readonly gameOver: HTMLElement;
-  readonly overdriveTransition?: HTMLElement;
+  readonly runTransition?: HTMLElement;
   readonly startScreen?: HTMLElement;
   readonly pauseButton?: HTMLButtonElement;
   readonly baseline?: HTMLElement;
@@ -97,6 +99,8 @@ export interface GameOptions {
   readonly buildTarget: string;
   readonly platform: PlatformAdapter;
   readonly startOnMenu?: boolean;
+  /** Public Act III continuation reloads into Overdrive with a brief chapter card. */
+  readonly startWithBasicIntro?: boolean;
   readonly playerSkin?: PlayerSkinId;
   readonly cannonSkin?: CannonSkinId;
   readonly background?: BackgroundId;
@@ -177,6 +181,7 @@ export class Game {
   private readonly campaignBuild: 'three-evolved' | null;
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
+  private readonly startWithBasicIntro: boolean;
   private runMode: RunMode;
   private overdriveStage: number;
   private readonly initialOverdriveStage: number;
@@ -212,8 +217,28 @@ export class Game {
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
   private readonly gameOver: GameOverOverlay;
-  private readonly overdriveTransition: OverdriveTransitionOverlay | null;
+  private readonly runTransition: RunTransitionOverlay | null;
   private readonly startScreen: StartScreen | null;
+  private readonly uiAudioRoots: readonly HTMLElement[];
+  private readonly audioEnemyHealth: Float32Array;
+  private readonly audioEnemyGenerations: Uint32Array;
+  private readonly audioEnemySequences: Uint32Array;
+  private readonly audioEnemyWasActive: Uint8Array;
+  private readonly audioBoomerangWasActive: Uint8Array;
+  private readonly audioChainSegmentWasActive: Uint8Array;
+  private readonly lastBossAudioPhases: string[] = [];
+  private readonly lastAudioHazardPhases = {
+    laser: 'idle',
+    radialPulse: 'idle',
+    pulseRing: 'idle',
+    angularSweep: 'idle'
+  };
+  private lastAudioArenaShapeIndex = 0;
+  private lastAudioCriticalHitSequence = 0;
+  private lastAudioOrbitPulseActive = false;
+  private lastAudioBoomerangPulseActive = false;
+  private lastAudioPulseRingSequence = 0;
+  private lastAudioMagneticSequence = 0;
   private readonly input: InputManager;
   private readonly joystick: JoystickView;
   private upgradeApplier!: UpgradeApplier;
@@ -234,6 +259,7 @@ export class Game {
   private overdriveTransitionTimer: ReturnType<typeof setTimeout> | null = null;
   private overdriveTransitionRemainingMs = 0;
   private overdriveTransitionStartedAt = 0;
+  private runIntroRemainingSeconds = 0;
   private terminalRunToken = 0;
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
@@ -267,6 +293,32 @@ export class Game {
     this.view.handleLevelUpInteraction(interaction.kind, interaction.index);
   };
 
+  private readonly onUiButtonClick = (event: Event): void => {
+    const source = event.target;
+    if (!(source instanceof Element)) return;
+    const button = source.closest<HTMLElement>('button, [role="button"]');
+    if (!button || button.closest('[hidden]') || button.getAttribute('aria-disabled') === 'true'
+      || (button instanceof HTMLButtonElement && button.disabled)) return;
+    const cue = getUiAudioCue(button);
+    // This listener runs in the same user gesture as the click, so Howler can
+    // unlock its shared context before the first menu sound is synthesized.
+    void this.audio.unlock().then(() => this.audio.playCue(cue));
+  };
+
+  private readonly onUiControlChange = (event: Event): void => {
+    const source = event.target;
+    if (!(source instanceof HTMLInputElement || source instanceof HTMLSelectElement)
+      || source.disabled || source.closest('[hidden]')) return;
+    void this.audio.unlock().then(() => this.audio.playCue('ui-adjust'));
+  };
+
+  private readonly completeRunIntro = (): void => {
+    if (!this.gameState.completeRunIntro()) return;
+    this.runIntroRemainingSeconds = 0;
+    this.runTransition?.close();
+    this.audio.playCue('run-entry');
+  };
+
   private readonly onStartPlay = (calibrationId?: CalibrationId): void => {
     if (this.stopped || (this.runMode === 'overdrive' && !this.diagnosticOverdrive
       && !this.saveStore.load().overdrive.unlocked) || !this.gameState.startRun()) return;
@@ -280,6 +332,7 @@ export class Game {
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
     this.startScreen?.close();
     this.activateRun(true);
+    this.beginRunIntro('premium');
   };
 
   private readonly onStartOverdrivePlay = (): void => {
@@ -291,6 +344,7 @@ export class Game {
     this.calibrationApplied = false;
     this.configureActRuntime(this.saveStore.load());
     this.arena.update(this.initialElapsedSeconds);
+    this.resetAudioFeedbackTrackers();
   };
 
   private readonly onStartOverdriveDirect = (): void => {
@@ -308,6 +362,7 @@ export class Game {
     this.calibrationApplied = false;
     this.configureActRuntime(this.saveStore.load());
     this.arena.update(this.initialElapsedSeconds);
+    this.resetAudioFeedbackTrackers();
   };
 
   private readonly onPauseButton = (): void => {
@@ -355,12 +410,14 @@ export class Game {
 
   private readonly onStartWalletChange = (wallet: WalletSaveData): void => {
     const saved = this.saveStore.load();
-    this.saveStore.save({ ...saved, wallet });
+    if (this.saveStore.save({ ...saved, wallet }) && wallet.nova < saved.wallet.nova) {
+      this.audio.playCue('purchase');
+    }
   };
 
   private readonly onStartMetaUpgradesChange = (metaUpgrades: MetaUpgradeSaveData): void => {
     const saved = this.saveStore.load();
-    this.saveStore.save({ ...saved, metaUpgrades });
+    if (this.saveStore.save({ ...saved, metaUpgrades })) this.audio.playCue('purchase');
     this.combat.setPermanentBonuses(getPermanentCombatBonuses(metaUpgrades.levels));
   };
 
@@ -433,12 +490,13 @@ export class Game {
     this.progression.reset();
     this.arena.update(0);
     this.activateRun(false);
+    this.beginRunIntro('basic');
   };
 
   private readonly onWebglContextLost = (event: Event): void => {
     event.preventDefault();
     if (this.stopped || this.lifecyclePaused
-      || (!this.gameState.isSimulationRunning && !this.gameState.isTransitioning)) return;
+      || (!this.gameState.isSimulationRunning && !this.gameState.isTransitioning && !this.gameState.isRunIntro)) return;
     this.contextLost = true;
     this.pauseForLifecycle('El renderizador se está recuperando. La partida se pausó; espera y pulsa Continuar.');
   };
@@ -454,6 +512,7 @@ export class Game {
   private readonly resumeFromLifecycle = (): void => {
     if (this.contextLost) return;
     const resumingTransition = this.gameState.isPausedFromTransition;
+    const resumingIntro = this.gameState.isPausedFromRunIntro;
     this.input.reset();
     this.lifecyclePaused = false;
     if (!this.gameState.resume()) return;
@@ -461,11 +520,18 @@ export class Game {
     this.audio.resume();
     this.lifecycle.onGameResume();
     if (resumingTransition) this.scheduleOverdriveTransitionTimer();
+    if (resumingTransition || resumingIntro) this.runTransition?.setPaused(false);
   };
 
   private readonly onTick = (ticker: Ticker): void => {
     this.profiler.record(ticker.deltaMS);
     const frameDeltaSeconds = Math.min(ticker.deltaMS / 1000, 0.1);
+    if (this.gameState.isRunIntro && !this.lifecyclePaused) {
+      // Presentation time is allowed to catch up further than the fixed-step
+      // simulation so a weak phone does not turn a short intro into a wait.
+      this.runIntroRemainingSeconds = Math.max(0, this.runIntroRemainingSeconds - Math.min(ticker.deltaMS / 1000, 0.5));
+      if (this.runIntroRemainingSeconds === 0) this.completeRunIntro();
+    }
     this.accumulator += frameDeltaSeconds;
     while (this.accumulator >= FIXED_STEP_SECONDS) {
       if (this.gameState.isSimulationRunning) {
@@ -530,6 +596,7 @@ export class Game {
     this.overdriveBossPair = options.overdriveBossPair;
     this.overdriveBuild = options.overdriveBuild ?? 'starter';
     this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
+    this.startWithBasicIntro = options.startWithBasicIntro === true;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
     this.playerSkin = options.playerSkin ?? saved.skins.selected;
@@ -553,6 +620,22 @@ export class Game {
     this.audio = options.platform.audio;
     this.audio.configure(saved.settings);
     this.configureActRuntime(saved);
+    const renderAudioState = this.combat.renderState;
+    this.audioEnemyHealth = new Float32Array(renderAudioState.enemies.length);
+    this.audioEnemyGenerations = new Uint32Array(renderAudioState.enemies.length);
+    this.audioEnemySequences = new Uint32Array(renderAudioState.enemies.length);
+    this.audioEnemyWasActive = new Uint8Array(renderAudioState.enemies.length);
+    this.audioBoomerangWasActive = new Uint8Array(renderAudioState.boomerangs.length);
+    this.audioChainSegmentWasActive = new Uint8Array(renderAudioState.chainSegments.length);
+    this.uiAudioRoots = Array.from(new Set([
+      options.elements.startScreen,
+      options.elements.pause,
+      options.elements.levelUp,
+      options.elements.gameOver,
+      options.elements.runTransition,
+      options.elements.pauseButton
+    ].filter((element): element is HTMLElement => element !== undefined)));
+    this.resetAudioFeedbackTrackers();
     this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
     this.debug = new DebugPanel(
       options.elements.debug,
@@ -568,8 +651,8 @@ export class Game {
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
-    this.overdriveTransition = options.elements.overdriveTransition
-      ? new OverdriveTransitionOverlay(options.elements.overdriveTransition)
+    this.runTransition = options.elements.runTransition
+      ? new RunTransitionOverlay(options.elements.runTransition, this.completeRunIntro, this.fxQuality)
       : null;
     this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
     this.joystick = new JoystickView();
@@ -624,6 +707,10 @@ export class Game {
     this.app.canvas.addEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.addEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.addEventListener('click', this.onPauseButton);
+    for (const root of this.uiAudioRoots) {
+      root.addEventListener('click', this.onUiButtonClick, true);
+      root.addEventListener('change', this.onUiControlChange);
+    }
     if (this.pauseButton) this.pauseButton.hidden = false;
     this.arena.update(this.initialElapsedSeconds);
     this.resizeNow();
@@ -634,6 +721,7 @@ export class Game {
       if (this.pauseButton) this.pauseButton.hidden = true;
     } else {
       this.activateRun(false);
+      if (this.startWithBasicIntro) this.beginRunIntro('basic');
     }
     this.app.ticker.add(this.onTick);
   }
@@ -654,7 +742,12 @@ export class Game {
     this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.removeEventListener('click', this.onPauseButton);
+    for (const root of this.uiAudioRoots) {
+      root.removeEventListener('click', this.onUiButtonClick, true);
+      root.removeEventListener('change', this.onUiControlChange);
+    }
     this.startScreen?.close();
+    this.runTransition?.close();
     this.view.closeLevelUpFx();
     this.audio.shutdown();
     this.lifecycle.onGamePause();
@@ -673,6 +766,7 @@ export class Game {
     this.arena.update(FIXED_STEP_SECONDS);
     this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state);
+    this.syncCombatAudioFeedback();
     const events = this.combat.events;
 
     // Resolve presentation-only enemy defeats first, then all damage packets,
@@ -695,6 +789,7 @@ export class Game {
       const resolution = this.player.resolveDamage(event.amount);
       if (resolution.outcome === 'damaged') this.baseline.noteDamageSource(event.source);
       if (resolution.outcome === 'shielded') {
+        this.audio.playCue('player-guard');
         this.view.playPlayerGuard(this.presentationTime);
         this.triggerHitStop(HIT_STOP_SECONDS.playerGuard);
       } else if (resolution.outcome === 'damaged') {
@@ -748,6 +843,7 @@ export class Game {
     const presentationDelta = this.gameState.phase === 'paused'
       || this.gameState.phase === 'level-up'
       || this.gameState.phase === 'menu'
+      || this.gameState.isRunIntro
       || this.gameState.isTransitioning
       ? 0
       : deltaSeconds;
@@ -1024,8 +1120,10 @@ export class Game {
 
   private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
     const wasTransitioning = this.gameState.isTransitioning;
+    const wasIntro = this.gameState.isRunIntro;
     if (this.lifecyclePaused || !this.gameState.enterPause()) return;
     if (wasTransitioning) this.pauseOverdriveTransitionTimer();
+    if (wasTransitioning || wasIntro) this.runTransition?.setPaused(true);
     this.lifecyclePaused = true;
     this.hitStopSeconds = 0;
     this.input.reset();
@@ -1065,6 +1163,16 @@ export class Game {
     } else if (this.campaignBuild === 'three-evolved') {
       this.openLevelUp(null, undefined, 20);
     }
+  }
+
+  private beginRunIntro(variant: RunTransitionVariant): void {
+    if (!this.runTransition || !this.gameState.enterRunIntro()) return;
+    this.input.reset();
+    this.runIntroRemainingSeconds = this.runTransition.openRoute(
+      this.runMode === 'overdrive' ? 'overdrive' : this.actId,
+      variant
+    );
+    this.audio.playCue('transition-rise');
   }
 
   private getWeaponPathChoices(): readonly UpgradeDefinition[] {
@@ -1180,10 +1288,12 @@ export class Game {
     this.view.resetPresentation();
     this.arena.reset();
     this.arena.update(0);
+    this.resetAudioFeedbackTrackers();
     this.player.heal(this.player.state.maxHealth * 0.25);
     this.player.update({ x: 0, y: 0 }, 0, this.arena.state);
     this.overdriveStage = nextStage;
-    this.overdriveTransition?.open(this.actDirector.stageState);
+    this.runTransition?.openOverdriveStage(this.actDirector.stageState);
+    this.audio.playCue('transition-rise');
     this.clearOverdriveTransitionTimer();
     this.overdriveTransitionRemainingMs = 3_000;
     this.scheduleOverdriveTransitionTimer();
@@ -1200,7 +1310,8 @@ export class Game {
       // transition state intact and let the lifecycle resume schedule it.
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       if (this.stopped || !this.gameState.completeOverdriveTransition()) return;
-      this.overdriveTransition?.close();
+      this.runTransition?.close();
+      this.audio.playCue('stage-entry');
       if (!this.lifecyclePaused && this.progression.state.pendingLevelUps > 0) this.openLevelUp();
     }, delay);
   }
@@ -1349,8 +1460,8 @@ export class Game {
     if (summary.outcome === 'game-over' && !canRevive) this.settleTerminalRun(terminalToken);
     const settled = this.pendingTerminalRun?.token === terminalToken
       && this.pendingTerminalRun.settled;
-    const canDoubleNova = this.runMode !== 'overdrive'
-      && !this.diagnosticOverdrive
+    const canDoubleNova = !this.diagnosticOverdrive
+      && this.pendingTerminalRun?.terminalCause !== 'withdrawal'
       && this.weaponPath === null
       && settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
       && this.rewardedOffers.canOffer('double-nova')
@@ -1414,6 +1525,7 @@ export class Game {
     this.pendingTerminalRun = null;
     this.gameOver.close();
     this.view.playPlayerRevive();
+    this.audio.playCue('reward-claimed');
     // Game over only resets input state; listeners remain attached for an
     // in-place revive, so attaching again would duplicate pointer handlers.
     this.lifecyclePaused = false;
@@ -1433,6 +1545,7 @@ export class Game {
     this.rewardedOffers.settle('double-nova', offerToken, result);
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
     if (result === 'rewarded') {
+      this.audio.playCue('reward-claimed');
       const saved = this.saveStore.load();
       const extraNova = Math.min(MAX_NOVA - saved.wallet.nova, this.terminalNovaReward);
       if (extraNova > 0) {
@@ -1459,6 +1572,7 @@ export class Game {
     const result = await this.rewardedAds.request('cosmetic-unlock');
     this.rewardedOffers.settle('cosmetic-unlock', offerToken, result);
     if (result !== 'rewarded') return result;
+    this.audio.playCue('reward-claimed');
 
     const current = this.saveStore.load();
     if (target.kind === 'player' && isPlayerSkinId(target.id)) {
@@ -1596,6 +1710,7 @@ export class Game {
     this.weaponPathEvolutionOfferChoices = null;
     this.calibrationApplied = false;
     this.view.resetPresentation();
+    this.resetAudioFeedbackTrackers();
     this.lifecyclePaused = false;
     this.accumulator = 0;
     this.frames = 0;
@@ -1609,7 +1724,8 @@ export class Game {
     this.gameOver.close();
     this.startScreen?.close();
     this.view.closeLevelUpFx();
-    this.overdriveTransition?.close();
+    this.runIntroRemainingSeconds = 0;
+    this.runTransition?.close();
   }
 
   private clearTerminalSummaryTimer(): void {
@@ -1627,6 +1743,133 @@ export class Game {
 
   private triggerHitStop(seconds: number): void {
     this.hitStopSeconds = Math.max(this.hitStopSeconds, Math.max(0, seconds));
+  }
+
+  private resetAudioFeedbackTrackers(): void {
+    const state = this.combat.renderState;
+    this.audioEnemyHealth.fill(0);
+    this.audioEnemyGenerations.fill(0);
+    this.audioEnemySequences.fill(0);
+    this.audioEnemyWasActive.fill(0);
+    for (let index = 0; index < state.enemies.length; index += 1) {
+      const enemy = state.enemies[index];
+      if (!enemy.active) continue;
+      this.audioEnemyWasActive[index] = 1;
+      this.audioEnemyHealth[index] = enemy.health;
+      this.audioEnemyGenerations[index] = enemy.generation ?? 0;
+      this.audioEnemySequences[index] = getEnemyAttackSequence(enemy);
+    }
+    for (let index = 0; index < this.audioBoomerangWasActive.length; index += 1) {
+      this.audioBoomerangWasActive[index] = state.boomerangs[index]?.active ? 1 : 0;
+    }
+    for (let index = 0; index < this.audioChainSegmentWasActive.length; index += 1) {
+      this.audioChainSegmentWasActive[index] = state.chainSegments[index]?.active ? 1 : 0;
+    }
+    this.lastAudioHazardPhases.laser = state.laser.phase;
+    this.lastAudioHazardPhases.radialPulse = state.radialPulse.phase;
+    this.lastAudioHazardPhases.pulseRing = state.pulseRing.phase;
+    this.lastAudioHazardPhases.angularSweep = state.angularSweep.phase;
+    this.lastBossAudioPhases.length = 0;
+    if (state.bosses) {
+      for (const boss of state.bosses) this.lastBossAudioPhases.push(boss.phase);
+    } else {
+      this.lastBossAudioPhases.push(state.boss.phase);
+    }
+    this.lastAudioArenaShapeIndex = this.arena.state.shapeIndex;
+    this.lastAudioCriticalHitSequence = this.combat.criticalHitSequence;
+    this.lastAudioOrbitPulseActive = state.orbitPulse.active;
+    this.lastAudioBoomerangPulseActive = state.boomerangPulse.active;
+    this.lastAudioPulseRingSequence = state.pulseRingWeapon.sequence;
+    this.lastAudioMagneticSequence = state.magneticCharge.sequence;
+  }
+
+  /** Reads snapshots/events only; no audio work or allocation enters simulation. */
+  private syncCombatAudioFeedback(): void {
+    const state = this.combat.renderState;
+    let enemyHit = false;
+    let enemyWarning = false;
+    let chainTriggered = false;
+    let boomerangTriggered = false;
+
+    for (let index = 0; index < state.enemies.length; index += 1) {
+      const enemy = state.enemies[index];
+      if (!enemy.active) {
+        this.audioEnemyWasActive[index] = 0;
+        continue;
+      }
+      const generation = enemy.generation ?? 0;
+      const sequence = getEnemyAttackSequence(enemy);
+      const sameEntity = this.audioEnemyWasActive[index] === 1
+        && this.audioEnemyGenerations[index] === generation;
+      if (sameEntity && enemy.health + 0.001 < this.audioEnemyHealth[index]) enemyHit = true;
+      if (sameEntity && isEnemyAttackTelegraph(enemy)
+        && sequence !== this.audioEnemySequences[index]) {
+        enemyWarning = true;
+      }
+      this.audioEnemyWasActive[index] = 1;
+      this.audioEnemyHealth[index] = enemy.health;
+      this.audioEnemyGenerations[index] = generation;
+      this.audioEnemySequences[index] = sequence;
+    }
+
+    const arena = this.arena.state;
+    if (arena.shapePhase === 'telegraph' && arena.shapeIndex !== this.lastAudioArenaShapeIndex) {
+      this.audio.playCue('arena-shift');
+    }
+    this.lastAudioArenaShapeIndex = arena.shapeIndex;
+
+    let hazardWarning = false;
+    if (state.laser.phase === 'telegraph' && this.lastAudioHazardPhases.laser !== 'telegraph') hazardWarning = true;
+    if (state.radialPulse.phase === 'telegraph' && this.lastAudioHazardPhases.radialPulse !== 'telegraph') hazardWarning = true;
+    if (state.pulseRing.phase === 'telegraph' && this.lastAudioHazardPhases.pulseRing !== 'telegraph') hazardWarning = true;
+    if (state.angularSweep.phase === 'telegraph' && this.lastAudioHazardPhases.angularSweep !== 'telegraph') hazardWarning = true;
+    this.lastAudioHazardPhases.laser = state.laser.phase;
+    this.lastAudioHazardPhases.radialPulse = state.radialPulse.phase;
+    this.lastAudioHazardPhases.pulseRing = state.pulseRing.phase;
+    this.lastAudioHazardPhases.angularSweep = state.angularSweep.phase;
+
+    const bosses = state.bosses;
+    if (bosses) {
+      for (let index = 0; index < bosses.length; index += 1) {
+        const boss = bosses[index];
+        const previousPhase = this.lastBossAudioPhases[index] ?? 'inactive';
+        if (boss.phase === 'intro' && previousPhase !== 'intro') this.audio.playCue('boss-arrival');
+        if (boss.phase.endsWith('-telegraph') && previousPhase !== boss.phase) {
+          this.audio.playCue('boss-warning');
+        }
+        this.lastBossAudioPhases[index] = boss.phase;
+      }
+    }
+
+    for (let index = 0; index < state.chainSegments.length; index += 1) {
+      const active = state.chainSegments[index].active;
+      if (active && this.audioChainSegmentWasActive[index] === 0) chainTriggered = true;
+      this.audioChainSegmentWasActive[index] = active ? 1 : 0;
+    }
+    for (let index = 0; index < state.boomerangs.length; index += 1) {
+      const active = state.boomerangs[index].active;
+      if (active && this.audioBoomerangWasActive[index] === 0) boomerangTriggered = true;
+      this.audioBoomerangWasActive[index] = active ? 1 : 0;
+    }
+
+    if (state.orbitPulse.active && !this.lastAudioOrbitPulseActive) this.audio.playCue('orbit-fire');
+    if (state.boomerangPulse.active && !this.lastAudioBoomerangPulseActive) {
+      this.audio.playCue('boomerang-return');
+    }
+    if (state.pulseRingWeapon.sequence !== this.lastAudioPulseRingSequence) this.audio.playCue('pulse-ring-fire');
+    if (state.magneticCharge.sequence !== this.lastAudioMagneticSequence) this.audio.playCue('magnetic-fire');
+    if (chainTriggered) this.audio.playCue('chain-fire');
+    if (boomerangTriggered) this.audio.playCue('boomerang-fire');
+    if (this.combat.criticalHitSequence !== this.lastAudioCriticalHitSequence) this.audio.playCue('critical-hit');
+    if (enemyHit) this.audio.playCue('enemy-hit');
+    if (enemyWarning) this.audio.playCue('enemy-warning');
+    if (hazardWarning) this.audio.playCue('hazard-warning');
+
+    this.lastAudioOrbitPulseActive = state.orbitPulse.active;
+    this.lastAudioBoomerangPulseActive = state.boomerangPulse.active;
+    this.lastAudioPulseRingSequence = state.pulseRingWeapon.sequence;
+    this.lastAudioMagneticSequence = state.magneticCharge.sequence;
+    this.lastAudioCriticalHitSequence = this.combat.criticalHitSequence;
   }
 
   private syncShotFeedback(): void {
@@ -1665,4 +1908,32 @@ const getEvolutionBaseUpgrade = (evolution: WeaponEvolutionId): UpgradeId | unde
     case 'polar_collapse':
       return 'magnetic_charge';
   }
+};
+
+const getUiAudioCue = (button: HTMLElement): AudioCue => {
+  const identity = `${button.id} ${typeof button.className === 'string' ? button.className : ''}`.toLowerCase();
+  if (button.matches('.upgrade-card')) return 'ui-select';
+  if (/back|resume|return|close|skip|pause-menu/.test(identity)) return 'ui-back';
+  if (/play|continue|restart|revive|double-nova|purchase|buy|rewarded-button/.test(identity)) return 'ui-confirm';
+  if (button.matches('[role="tab"]')
+    || /act-card|skin|cannon|background|meta-upgrade|calibration|evolution/.test(identity)) return 'ui-select';
+  return 'ui-click';
+};
+
+const getEnemyAttackSequence = (enemy: EnemyRenderState): number => {
+  if (enemy.kind === 'orbiter') return enemy.orbiterSequence ?? 0;
+  if (enemy.kind === 'charger') return enemy.chargerSequence ?? 0;
+  if (enemy.kind === 'prism-weaver') return enemy.prismWeaverSequence ?? 0;
+  if (enemy.kind === 'fracture-gunner' || enemy.kind === 'thorn-bastion'
+    || enemy.kind === 'zigzag-reaver' || enemy.kind === 'rift-miner') return enemy.fractureSequence ?? 0;
+  return 0;
+};
+
+const isEnemyAttackTelegraph = (enemy: EnemyRenderState): boolean => {
+  if (enemy.kind === 'orbiter') return enemy.orbiterPhase === 'telegraph';
+  if (enemy.kind === 'charger') return enemy.chargerPhase === 'telegraph';
+  if (enemy.kind === 'prism-weaver') return enemy.prismWeaverPhase === 'telegraph';
+  if (enemy.kind === 'fracture-gunner' || enemy.kind === 'thorn-bastion'
+    || enemy.kind === 'zigzag-reaver' || enemy.kind === 'rift-miner') return enemy.fracturePhase === 'telegraph';
+  return false;
 };

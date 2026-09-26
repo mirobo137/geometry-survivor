@@ -631,6 +631,10 @@ Fase posterior:
 - restaurar audio ante `touchend`, retorno de background y fin/error de anuncio;
 - no iniciar música automática antes de interacción.
 
+La matriz vigente de efectos, categorías, pausa y contrato de recetas ZzFX está
+en [Audio SFX con ZzFX](docs/design/AUDIO_SFX_ZZFX.md). Howler conserva en
+exclusiva la música de fondo.
+
 ---
 
 # 11. GUARDADO

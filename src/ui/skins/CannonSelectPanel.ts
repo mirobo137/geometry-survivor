@@ -8,6 +8,7 @@ import type { WalletSaveData } from '../../platform/save/SaveStore';
 import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
+import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
 
 export interface CannonSelectPanelOptions {
   readonly state: CannonSkinSaveData;
@@ -25,27 +26,20 @@ interface CannonCardEntry {
 /** DOM-only locker for complete cannon + projectile + trail cosmetic packages. */
 export class CannonSelectPanel {
   private readonly cards: HTMLElement;
-  private readonly preview: HTMLElement;
-  private readonly selectedName: HTMLElement;
-  private readonly selectedStatus: HTMLElement;
+  private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<CannonSkinId, CannonCardEntry>();
   private state: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
 
-  public constructor(root: HTMLElement) {
+  public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-cannon-cards');
-    const preview = root.querySelector<HTMLElement>('#start-cannon-preview');
-    const selectedName = root.querySelector<HTMLElement>('#start-cannon-selected-name');
-    const selectedStatus = root.querySelector<HTMLElement>('#start-cannon-selected-status');
-    if (!cards || !preview || !selectedName || !selectedStatus) {
+    if (!cards) {
       throw new Error('Faltan elementos del panel de canones');
     }
     this.cards = cards;
-    this.preview = preview;
-    this.selectedName = selectedName;
-    this.selectedStatus = selectedStatus;
+    this.dialog = dialog;
   }
 
   public open(options: CannonSelectPanelOptions): void {
@@ -69,14 +63,6 @@ export class CannonSelectPanel {
   }
 
   private render(): void {
-    const definition = getCannonSkinDefinition(this.state.selected);
-    this.preview.replaceChildren();
-    const reducedMotion = typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.preview.insertAdjacentHTML('afterbegin', createCannonPreviewSvg(this.state.selected, { animated: !reducedMotion }));
-    this.selectedName.textContent = definition.name;
-    this.selectedStatus.textContent = `EQUIPADO · ${definition.subtitle}`;
     if (this.cardEntries.size === 0) this.mountCards();
     this.updateCards();
   }
@@ -90,7 +76,7 @@ export class CannonSelectPanel {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'cannon-card-hitarea';
-      button.addEventListener('click', () => this.select(cannon.id, this.state.unlocked.includes(cannon.id)));
+      button.addEventListener('click', () => this.inspect(cannon.id, button));
 
       const art = document.createElement('span');
       art.className = 'cannon-card-art';
@@ -125,12 +111,11 @@ export class CannonSelectPanel {
       const selected = this.state.selected === cannon.id;
       entry.card.classList.toggle('is-selected', selected);
       entry.card.classList.toggle('is-locked', !unlocked);
-      entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
-        ? `${selected ? 'Equipado: ' : 'Equipar: '}${cannon.name}`
-        : `Adquirir ${cannon.name} por ${formatNova(cannon.priceNova)} NOVA`);
+        ? `Ver ${cannon.name}, ${selected ? 'equipado' : 'disponible'}`
+        : `Ver ${cannon.name}, ${formatNova(cannon.priceNova)} NOVA`);
       if (selected || unlocked) {
-        entry.action.textContent = selected ? 'EQUIPADO' : 'EQUIPAR';
+        entry.action.textContent = selected ? 'EQUIPADO · VER' : 'VER Y EQUIPAR';
       } else {
         const amount = this.wallet.nova >= cannon.priceNova
           ? formatNova(cannon.priceNova)
@@ -140,13 +125,35 @@ export class CannonSelectPanel {
         const icon = entry.action.querySelector('svg');
         icon?.setAttribute('aria-hidden', 'true');
         icon?.setAttribute('focusable', 'false');
-        entry.action.append(document.createTextNode(` ${amount}`));
+        entry.action.append(document.createTextNode(` ${amount} · VER`));
       }
     }
   }
 
-  private select(id: CannonSkinId, unlocked: boolean): void {
+  private inspect(id: CannonSkinId, button: HTMLButtonElement): void {
     const definition = getCannonSkinDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
+    const selected = this.state.selected === id;
+    const affordable = this.wallet.nova >= definition.priceNova;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const preview = document.createElement('div');
+    preview.className = 'cannon-preview';
+    preview.insertAdjacentHTML('afterbegin', createCannonPreviewSvg(id, { animated: !reducedMotion }));
+    this.dialog.open({
+      kind: 'DISPARO / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
+      subtitle: definition.subtitle, description: definition.description, preview,
+      actionLabel: selected ? 'Equipado' : unlocked ? 'Equipar disparo'
+        : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
+      actionDisabled: selected || (!unlocked && !affordable),
+      status: selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
+        : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      onAction: () => this.select(id)
+    }, button);
+  }
+
+  private select(id: CannonSkinId): void {
+    const definition = getCannonSkinDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
     if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: CannonSkinSaveData = unlocked
       ? { ...this.state, selected: id }

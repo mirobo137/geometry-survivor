@@ -8,6 +8,7 @@ import type { WalletSaveData } from '../../platform/save/SaveStore';
 import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
+import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
 
 export interface SkinSelectPanelOptions {
   readonly state: SkinSaveData;
@@ -25,27 +26,20 @@ interface SkinCardEntry {
 /** DOM-only locker: accessible cards and shared SVG/hybrid presentation. */
 export class SkinSelectPanel {
   private readonly cards: HTMLElement;
-  private readonly preview: HTMLElement;
-  private readonly selectedName: HTMLElement;
-  private readonly selectedStatus: HTMLElement;
+  private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<PlayerSkinId, SkinCardEntry>();
   private state: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: SkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
 
-  public constructor(root: HTMLElement) {
+  public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-skin-cards');
-    const preview = root.querySelector<HTMLElement>('#start-skin-preview');
-    const selectedName = root.querySelector<HTMLElement>('#start-skin-selected-name');
-    const selectedStatus = root.querySelector<HTMLElement>('#start-skin-selected-status');
-    if (!cards || !preview || !selectedName || !selectedStatus) {
+    if (!cards) {
       throw new Error('Faltan elementos del panel de skins');
     }
     this.cards = cards;
-    this.preview = preview;
-    this.selectedName = selectedName;
-    this.selectedStatus = selectedStatus;
+    this.dialog = dialog;
   }
 
   public open(options: SkinSelectPanelOptions): void {
@@ -69,15 +63,6 @@ export class SkinSelectPanel {
   }
 
   private render(): void {
-    const definition = getPlayerSkinDefinition(this.state.selected);
-    this.preview.replaceChildren();
-    this.preview.insertAdjacentHTML(
-      'afterbegin',
-      createPlayerSkinPreviewSvg(this.state.selected, { animated: this.shouldAnimatePreview() })
-    );
-    this.selectedName.textContent = definition.name;
-    this.selectedStatus.textContent = `EQUIPADA \u00b7 ${definition.subtitle}`;
-
     // Cards and their SVGs are mounted once. Replacing the whole collection on
     // every selection made mobile browsers rerasterize four animated SVGs in
     // the same frame, which can flash the panel on GPU-constrained devices.
@@ -97,7 +82,7 @@ export class SkinSelectPanel {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'skin-card-hitarea';
-      button.addEventListener('click', () => this.select(skin.id, this.state.unlocked.includes(skin.id)));
+      button.addEventListener('click', () => this.inspect(skin.id, button));
 
       const art = document.createElement('span');
       art.className = 'skin-card-art';
@@ -132,15 +117,13 @@ export class SkinSelectPanel {
       const selected = this.state.selected === skin.id;
       entry.card.classList.toggle('is-selected', selected);
       entry.card.classList.toggle('is-locked', !unlocked);
-      entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
-        ? `${selected ? 'Equipada: ' : 'Equipar: '}${skin.name}`
-        : `Adquirir ${skin.name} por ${formatNova(skin.priceNova)} NOVA`);
+        ? `Ver ${skin.name}, ${selected ? 'equipada' : 'disponible'}`
+        : `Ver ${skin.name}, ${skin.priceNova === 0 ? 'gratis' : `${formatNova(skin.priceNova)} NOVA`}`);
       if (!unlocked && skin.priceNova === 0) {
-        entry.action.textContent = 'PROBAR GRATIS';
-        entry.button.setAttribute('aria-label', `Probar gratis: ${skin.name}`);
+        entry.action.textContent = 'GRATIS · VER';
       } else if (selected || unlocked) {
-        entry.action.textContent = selected ? 'EQUIPADA' : 'EQUIPAR';
+        entry.action.textContent = selected ? 'EQUIPADA · VER' : 'VER Y EQUIPAR';
       } else {
         const amount = this.wallet.nova >= skin.priceNova
           ? formatNova(skin.priceNova)
@@ -150,7 +133,7 @@ export class SkinSelectPanel {
         const icon = entry.action.querySelector('svg');
         icon?.setAttribute('aria-hidden', 'true');
         icon?.setAttribute('focusable', 'false');
-        entry.action.append(document.createTextNode(` ${amount}`));
+        entry.action.append(document.createTextNode(` ${amount} · VER`));
       }
     }
   }
@@ -161,8 +144,30 @@ export class SkinSelectPanel {
       || !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  private select(id: PlayerSkinId, unlocked: boolean): void {
+  private inspect(id: PlayerSkinId, button: HTMLButtonElement): void {
     const definition = getPlayerSkinDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
+    const selected = this.state.selected === id;
+    const affordable = this.wallet.nova >= definition.priceNova;
+    const preview = document.createElement('div');
+    preview.className = 'skin-preview';
+    preview.insertAdjacentHTML('afterbegin', createPlayerSkinPreviewSvg(id, { animated: this.shouldAnimatePreview() }));
+    this.dialog.open({
+      kind: 'NAVE / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
+      subtitle: definition.subtitle, description: definition.description, preview,
+      actionLabel: selected ? 'Equipada' : unlocked ? 'Equipar nave'
+        : definition.priceNova === 0 ? 'Desbloquear gratis y equipar'
+          : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
+      actionDisabled: selected || (!unlocked && !affordable),
+      status: selected ? 'Equipada actualmente' : unlocked ? 'Desbloqueada'
+        : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      onAction: () => this.select(id)
+    }, button);
+  }
+
+  private select(id: PlayerSkinId): void {
+    const definition = getPlayerSkinDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
     if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: SkinSaveData = unlocked
       ? { ...this.state, selected: id }

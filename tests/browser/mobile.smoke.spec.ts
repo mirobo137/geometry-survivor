@@ -99,22 +99,25 @@ const getPlayerX = async (page: Page): Promise<number> => {
   return Number(match[1]);
 };
 
-test('permite desplazarse por el locker de skins en portrait', async ({ page }) => {
+test('permite desplazarse por el locker de skins en portrait', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
-  await page.goto('/?debug=1');
+  await page.goto('/?debug=1&quality=medium');
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#start-screen')).toBeVisible();
   await page.locator('#start-skins').click();
   await expect(page.locator('#start-skins-view')).toBeVisible();
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
+  await expect(page.locator('.skin-preview-stage')).toHaveCount(0);
+  await page.locator('.skin-card[data-skin="cyan"] button').click();
+  await expect(page.locator('#start-cosmetic-dialog')).toBeVisible();
 
   const lockerMotion = await page.evaluate(() => {
     const screen = document.querySelector<HTMLElement>('#start-screen');
     const panel = document.querySelector<HTMLElement>('.start-screen-panel');
     const scene = document.querySelector<HTMLElement>('.start-scene');
-    const preview = document.querySelector<SVGElement>('.skin-preview svg');
-    const previewCore = document.querySelector<SVGElement>('.skin-preview svg .skin-art-core');
+    const preview = document.querySelector<SVGElement>('#start-cosmetic-preview .skin-preview svg');
+    const previewCore = document.querySelector<SVGElement>('#start-cosmetic-preview .skin-preview svg .skin-art-core');
     const cardSignature = document.querySelector<SVGElement>('.skin-card-art svg .skin-art-orbit');
     const cardArt = document.querySelector<SVGElement>('.skin-card-art svg');
     if (!screen || !panel || !scene || !preview || !previewCore || !cardSignature || !cardArt) {
@@ -147,6 +150,15 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     cardHasSmil: false,
     cardHasEmitters: false
   });
+  const modalBounds = await page.locator('#start-cosmetic-dialog').evaluate(dialog => {
+    const rect = dialog.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+  });
+  expect(modalBounds).toBe(true);
+  await expect(page.locator('#start-cosmetic-action')).toBeVisible();
+  if (!process.env.CI) await page.screenshot({ path: testInfo.outputPath('cosmetic-nave-portrait.png') });
+  await page.locator('#start-cosmetic-close').click();
+  await expect(page.locator('#start-cosmetic-preview')).toBeEmpty();
 
   const scrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
@@ -162,7 +174,9 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await page.locator('#start-cannon-skins-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
-  await expect(page.locator('#start-cannon-preview svg')).toBeVisible();
+  await page.locator('.cannon-card[data-cannon="basic"] button').click();
+  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg')).toBeVisible();
+  await page.locator('#start-cosmetic-close').click();
   await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(7);
   const cannonScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
@@ -176,7 +190,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await page.locator('#start-player-skins-tab').click();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
-  await expect(page.locator('#start-skin-preview')).toBeVisible();
+  await expect(page.locator('#start-skin-cards')).toBeVisible();
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
@@ -184,6 +198,23 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await expect(backgroundCards).toHaveCount(BACKGROUND_DEFINITIONS.length);
   expect(await backgroundCards.evaluateAll(cards => cards.map(card => card.getAttribute('data-background'))))
     .toEqual(BACKGROUND_DEFINITIONS.map(background => background.id));
+  await page.locator('.background-card[data-background="vesper-bloom"] button').click();
+  const backgroundPreview = page.locator('#start-cosmetic-preview .background-preview');
+  await expect(backgroundPreview).toHaveAttribute('data-background', 'vesper-bloom');
+  expect(await backgroundPreview.evaluate(element => getComputedStyle(element).animationName)).toBe('cosmetic-plate-drift');
+  const currents = page.locator('#start-cosmetic-preview .cosmetic-background-current');
+  await expect(currents).toHaveCount(4);
+  expect(await currents.evaluateAll(elements => elements.map(element => getComputedStyle(element).animationName)))
+    .toEqual(Array(4).fill('cosmetic-current-drift'));
+  expect(await currents.evaluateAll(elements => elements.map(element => getComputedStyle(element).backgroundImage)))
+    .toEqual([
+      expect.stringContaining('tidal-veil-current-a'),
+      expect.stringContaining('tidal-veil-current-b'),
+      expect.stringContaining('tidal-veil-current-a'),
+      expect.stringContaining('tidal-veil-current-b')
+    ]);
+  if (!process.env.CI) await page.screenshot({ path: testInfo.outputPath('cosmetic-fondo-portrait.png') });
+  await page.locator('#start-cosmetic-close').click();
   const backgroundScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight
@@ -193,7 +224,47 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
     element.scrollTop = element.scrollHeight;
   });
   await expect.poll(async () => page.locator('#start-skins-view .console-body').evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.locator('.background-card[data-background="ion-storm"] button').click();
+  await expect(page.locator('#start-cosmetic-action')).toBeDisabled();
+  await expect(page.locator('#start-cosmetic-status')).toContainText('Faltan');
+  await page.touchscreen.tap(3, 3);
+  await expect(page.locator('#start-cosmetic-dialog')).toBeHidden();
+  await page.locator('.background-card[data-background="nacre-orbit"] button').click();
+  expect(await page.locator('#start-cosmetic-dialog').evaluate(dialog => {
+    const rect = dialog.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
+  })).toBe(true);
+  await page.locator('#start-cosmetic-action').click();
+  await expect(page.locator('.background-card[data-background="nacre-orbit"]')).toHaveClass(/is-selected/);
   expect(failures).toEqual([]);
+});
+
+test('mantiene estática la vista previa de fondo en calidad low', async ({ page }) => {
+  await page.goto('/?quality=low');
+  await page.locator('#start-skins').click();
+  await page.locator('#start-backgrounds-tab').click();
+  await page.locator('.background-card[data-background="deep-space"] button').click();
+  await expect(page.locator('#start-cosmetic-dialog')).toBeVisible();
+  expect(await page.locator('#start-cosmetic-preview .background-preview').evaluate(element =>
+    getComputedStyle(element).animationName)).toBe('none');
+  expect(await page.locator('#start-cosmetic-preview .cosmetic-background-current').first().evaluate(element =>
+    getComputedStyle(element).animationName)).toBe('none');
+});
+
+test('mantiene alineada Manta híbrida en la vista previa móvil', async ({ page }, testInfo) => {
+  await page.goto('/?quality=medium');
+  await page.locator('#start-skins').click();
+  await page.locator('.skin-card[data-skin="manta"] button').click();
+  await expect(page.locator('#start-cosmetic-preview .manta-fin img')).toHaveCount(2);
+  const alignment = await page.locator('#start-cosmetic-preview .manta-preview').evaluate(element => {
+    const frame = element.getBoundingClientRect();
+    const hull = element.querySelector('svg')!.getBoundingClientRect();
+    return { x: Math.abs(frame.x - hull.x), width: Math.abs(frame.width - hull.width) };
+  });
+  expect(alignment.x).toBeLessThan(1);
+  expect(alignment.width).toBeLessThan(1);
+  if (!process.env.CI) await page.locator('#start-cosmetic-preview').screenshot({ path: testInfo.outputPath('manta-modal-mobile.png') });
 });
 
 test('mantiene el control touch en portrait móvil', async ({ page }) => {

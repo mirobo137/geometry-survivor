@@ -1249,6 +1249,7 @@ export class Game {
     const saved = this.saveStore.load();
     this.startScreen.open({
       settings: saved.settings,
+      quality: this.fxQuality,
       best: saved.best,
       skins: saved.skins,
       cannonSkins: saved.cannonSkins,

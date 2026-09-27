@@ -7,6 +7,7 @@ import type { BackgroundSaveData } from '../../platform/save/SaveStore';
 import type { WalletSaveData } from '../../platform/save/SaveStore';
 import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
+import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
 
 export interface BackgroundSelectPanelOptions {
   readonly state: BackgroundSaveData;
@@ -24,27 +25,20 @@ interface BackgroundCardEntry {
 /** DOM-only locker for selectable, presentation-only arena atmospheres. */
 export class BackgroundSelectPanel {
   private readonly cards: HTMLElement;
-  private readonly preview: HTMLElement;
-  private readonly selectedName: HTMLElement;
-  private readonly selectedStatus: HTMLElement;
+  private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<BackgroundId, BackgroundCardEntry>();
   private state: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: BackgroundSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
 
-  public constructor(root: HTMLElement) {
+  public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-background-cards');
-    const preview = root.querySelector<HTMLElement>('#start-background-preview');
-    const selectedName = root.querySelector<HTMLElement>('#start-background-selected-name');
-    const selectedStatus = root.querySelector<HTMLElement>('#start-background-selected-status');
-    if (!cards || !preview || !selectedName || !selectedStatus) {
+    if (!cards) {
       throw new Error('Faltan elementos del panel de fondos');
     }
     this.cards = cards;
-    this.preview = preview;
-    this.selectedName = selectedName;
-    this.selectedStatus = selectedStatus;
+    this.dialog = dialog;
   }
 
   public open(options: BackgroundSelectPanelOptions): void {
@@ -68,10 +62,6 @@ export class BackgroundSelectPanel {
   }
 
   private render(): void {
-    const definition = getBackgroundDefinition(this.state.selected);
-    this.preview.dataset.background = definition.id;
-    this.selectedName.textContent = definition.name;
-    this.selectedStatus.textContent = `EQUIPADO · ${definition.subtitle}`;
     if (this.cardEntries.size === 0) this.mountCards();
     this.updateCards();
   }
@@ -86,7 +76,7 @@ export class BackgroundSelectPanel {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'background-card-hitarea';
-      button.addEventListener('click', () => this.select(background.id, this.state.unlocked.includes(background.id)));
+      button.addEventListener('click', () => this.inspect(background.id, button));
 
       const art = document.createElement('span');
       art.className = 'background-card-art';
@@ -121,12 +111,11 @@ export class BackgroundSelectPanel {
       entry.card.classList.toggle('is-selected', selected);
       const free = background.priceNova === 0;
       entry.card.classList.toggle('is-locked', !unlocked && !free);
-      entry.button.setAttribute('aria-pressed', String(selected));
       entry.button.setAttribute('aria-label', unlocked
-        ? `${selected ? 'Equipado: ' : 'Equipar: '}${background.name}`
-        : free ? `Equipar gratis: ${background.name}` : `Adquirir ${background.name} por ${formatNova(background.priceNova)} NOVA`);
+        ? `Ver ${background.name}, ${selected ? 'equipado' : 'disponible'}`
+        : free ? `Ver ${background.name}, gratis` : `Ver ${background.name}, ${formatNova(background.priceNova)} NOVA`);
       if (selected || unlocked || free) {
-        entry.action.textContent = selected ? 'EQUIPADO' : free && !unlocked ? 'GRATIS · EQUIPAR' : 'EQUIPAR';
+        entry.action.textContent = selected ? 'EQUIPADO · VER' : free && !unlocked ? 'GRATIS · VER' : 'VER Y EQUIPAR';
       } else {
         const amount = this.wallet.nova >= background.priceNova
           ? formatNova(background.priceNova)
@@ -136,13 +125,50 @@ export class BackgroundSelectPanel {
         const icon = entry.action.querySelector('svg');
         icon?.setAttribute('aria-hidden', 'true');
         icon?.setAttribute('focusable', 'false');
-        entry.action.append(document.createTextNode(` ${amount}`));
+        entry.action.append(document.createTextNode(` ${amount} · VER`));
       }
     }
   }
 
-  private select(id: BackgroundId, unlocked: boolean): void {
+  private inspect(id: BackgroundId, button: HTMLButtonElement): void {
     const definition = getBackgroundDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
+    const selected = this.state.selected === id;
+    const affordable = this.wallet.nova >= definition.priceNova;
+    const preview = document.createElement('div');
+    preview.className = 'cosmetic-background-frame';
+    preview.dataset.background = id;
+    preview.setAttribute('role', 'img');
+    preview.setAttribute('aria-label', `Vista previa de ${definition.name}`);
+    const plate = document.createElement('div');
+    plate.className = 'background-preview';
+    plate.dataset.background = id;
+    plate.setAttribute('aria-hidden', 'true');
+    const atmosphere = document.createElement('div');
+    atmosphere.className = 'cosmetic-background-atmosphere';
+    atmosphere.setAttribute('aria-hidden', 'true');
+    for (let index = 0; index < 4; index++) {
+      const current = document.createElement('span');
+      current.className = 'cosmetic-background-current';
+      atmosphere.append(current);
+    }
+    preview.append(plate, atmosphere);
+    this.dialog.open({
+      kind: 'FONDO / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
+      subtitle: definition.subtitle, description: definition.description, preview,
+      actionLabel: selected ? 'Equipado' : unlocked ? 'Equipar fondo'
+        : definition.priceNova === 0 ? 'Desbloquear gratis y equipar'
+          : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
+      actionDisabled: selected || (!unlocked && !affordable),
+      status: selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
+        : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      onAction: () => this.select(id)
+    }, button);
+  }
+
+  private select(id: BackgroundId): void {
+    const definition = getBackgroundDefinition(id);
+    const unlocked = this.state.unlocked.includes(id);
     if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: BackgroundSaveData = unlocked
       ? { ...this.state, selected: id }

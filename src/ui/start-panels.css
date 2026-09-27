@@ -126,13 +126,6 @@
   box-shadow: inset 3px 0 #75e6ff, inset 0 1px #d1e2ec66, inset 0 -3px #060d19;
 }
 .console-body :is(.skin-card-copy, .cannon-card-copy, .background-card-copy) { overflow-wrap: anywhere; }
-.console-body .skin-preview-stage {
-  min-height: 9rem;
-  background: radial-gradient(ellipse at 15% 50%, #75e6ff14, transparent 65%), #060d19;
-  border-radius: .5rem;
-  border-color: #324d60;
-}
-
 #start-screen .cosmetic-rewarded {
   display: block;
   padding: 0;
@@ -236,8 +229,6 @@
   #start-screen .console-header h2 { font-size: 1.2rem; }
   #start-screen .console-header p:not(.start-kicker) { font-size: .72rem; }
   #start-screen .console-body :is(.skin-cards, .cannon-cards, .background-cards, .meta-upgrade-cards) { grid-template-columns: minmax(0, 1fr); }
-  .console-body .skin-preview-stage { grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); padding: .65rem; gap: .65rem; min-height: 7rem; }
-  .console-body :is(.skin-preview, .cannon-preview, .background-preview) { height: 6rem; }
   .console-body .act-options { gap: .65rem; }
   .console-body .act-card-button { padding: .85rem; font-size: .8rem; }
   .console-body .act-card-button span { font-size: .57rem; letter-spacing: .04em; }
@@ -249,3 +240,169 @@
   #start-screen .console-screen { gap: .5rem; }
   #start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel { padding: .8rem; }
 }
+
+/* The collection remains compact; animated art is mounted only in this dialog. */
+#start-screen .cosmetic-dialog {
+  width: min(34rem, calc(100vw - 1.5rem));
+  max-height: min(92dvh, 45rem);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #82b7c7;
+  border-radius: 1rem;
+  color: #edf8ff;
+  background: linear-gradient(145deg, #1b3544, #0b1424 24%, #0c1429 80%, #28203b);
+  box-shadow: inset 0 2px #d1e2ec55, 0 1.5rem 5rem #000c, 0 0 2rem #75e6ff25;
+}
+
+#start-screen .cosmetic-dialog::backdrop {
+  background: rgba(2, 7, 20, .8);
+}
+
+.cosmetic-dialog-shell {
+  display: grid;
+  gap: .85rem;
+  max-height: min(92dvh, 45rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: clamp(.8rem, 3vw, 1.3rem);
+}
+
+.cosmetic-dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.cosmetic-dialog-top > span,
+#start-cosmetic-rarity {
+  color: #75e6ff;
+  font: 800 .62rem/1.3 ui-monospace, monospace;
+  letter-spacing: .14em;
+}
+.cosmetic-dialog-top button {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #668ba0;
+  border-radius: .45rem;
+  color: #e7f7ff;
+  background: #172b3c;
+  font: 1.4rem/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.cosmetic-dialog-top button:hover { background: #234359; }
+.cosmetic-dialog button:focus-visible { outline: 3px solid #ffe39a; outline-offset: 2px; }
+
+.cosmetic-dialog-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: clamp(9rem, 30dvh, 15rem);
+  overflow: hidden;
+  border: 1px solid #4b7185;
+  border-radius: .7rem;
+  background: radial-gradient(circle at 50% 55%, #20445a99, #0b1628 65%, #080e1c);
+  box-shadow: inset 0 0 2.5rem #050b18, inset 0 1px #d1e2ec33;
+}
+.cosmetic-dialog-stage .skin-preview,
+.cosmetic-dialog-stage .cannon-preview,
+.cosmetic-dialog-stage .cosmetic-background-frame { width: 100%; height: 100%; }
+.cosmetic-dialog-stage .skin-preview > svg { width: min(72%, 13rem); }
+.cosmetic-dialog-stage .manta-preview > svg { width: 100%; height: 100%; }
+.cosmetic-dialog-stage .cannon-preview svg { width: min(94%, 30rem); }
+
+.cosmetic-dialog-copy { display: grid; gap: .28rem; min-width: 0; }
+.cosmetic-dialog-copy h3 { margin: 0; font-size: clamp(1.35rem, 5vw, 1.85rem); line-height: 1.1; }
+.cosmetic-dialog-copy p { margin: 0; color: #bdcfe4; font-size: .85rem; line-height: 1.4; }
+.cosmetic-dialog-copy #start-cosmetic-description { margin-top: .35rem; }
+.cosmetic-dialog-copy #start-cosmetic-status { margin-top: .35rem; color: #9cebdc; font-weight: 700; }
+#start-cosmetic-action {
+  min-height: 48px;
+  padding: .65rem .9rem;
+  border: 1px solid #a5f1ea;
+  border-radius: .5rem;
+  color: #071523;
+  background: linear-gradient(115deg, #b7f7f2, #75e6ff 68%, #52b9d0);
+  box-shadow: inset 0 2px #f1ffff, inset 0 -4px #17435766;
+  font: 800 .78rem/1.3 ui-monospace, monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+#start-cosmetic-action:disabled { border-color: #506577; color: #b4c4d5; background: #203044; box-shadow: none; cursor: default; }
+
+/* Match the game's square plate and four independently drifting current sprites. */
+.cosmetic-background-frame { position: relative; overflow: hidden; isolation: isolate; }
+.cosmetic-background-frame .background-preview {
+  position: absolute;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  border: 0;
+  border-radius: 0;
+  animation: cosmetic-plate-drift 32s ease-in-out infinite alternate;
+}
+.cosmetic-background-frame .background-preview::before,
+.cosmetic-background-frame .background-preview::after { content: none; }
+.cosmetic-background-atmosphere {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  --current-opacity: 1;
+  --current-tint: none;
+  filter: var(--current-tint);
+  opacity: var(--current-opacity);
+}
+.cosmetic-background-frame[data-background="deep-space"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(5deg) saturate(.9); --current-opacity: .88; }
+.cosmetic-background-frame[data-background="ion-storm"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(-22deg) saturate(1.1); --current-opacity: .94; }
+.cosmetic-background-frame[data-background="solar-drift"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(160deg) saturate(1.05); --current-opacity: .86; }
+.cosmetic-background-frame[data-background="crystal-field"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(55deg) saturate(1.05); --current-opacity: .9; }
+.cosmetic-background-frame[data-background="nacre-orbit"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(-12deg) saturate(.72); --current-opacity: .8; }
+.cosmetic-background-frame[data-background="vesper-bloom"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(75deg) saturate(.78); --current-opacity: .88; }
+.cosmetic-background-current {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: var(--current-alpha);
+  animation: cosmetic-current-drift var(--current-period) ease-in-out infinite alternate;
+}
+.cosmetic-background-current:nth-child(1) {
+  left: 0; top: 0; width: 65.4%; height: 65.4%;
+  background-image: url('../assets/images/backgrounds/tidal-veil-current-a.webp');
+  --current-alpha: .24; --current-period: 18s;
+}
+.cosmetic-background-current:nth-child(2) {
+  left: 51.8%; top: 47.8%; width: 48.2%; height: 52.2%;
+  background-image: url('../assets/images/backgrounds/tidal-veil-current-b.webp');
+  --current-alpha: .22; --current-period: 23s;
+  animation-direction: alternate-reverse;
+}
+.cosmetic-background-current:nth-child(3) {
+  left: 34.6%; top: 0; width: 65.4%; height: 65.4%;
+  background-image: url('../assets/images/backgrounds/tidal-veil-current-a.webp');
+  transform: scaleX(-1);
+  --current-alpha: .2; --current-period: 20s;
+  animation-direction: alternate-reverse;
+}
+.cosmetic-background-current:nth-child(4) {
+  left: 0; top: 47.8%; width: 48.2%; height: 52.2%;
+  background-image: url('../assets/images/backgrounds/tidal-veil-current-b.webp');
+  transform: scaleX(-1);
+  --current-alpha: .18; --current-period: 21s;
+}
+@keyframes cosmetic-plate-drift { from { transform: scale(1.01) translate(-.6%, .5%); } to { transform: scale(1.035) translate(.6%, -.5%); } }
+@keyframes cosmetic-current-drift { from { translate: -2.5% 1.5%; } to { translate: 2.5% -1.5%; } }
+
+@media (max-height: 560px) {
+  .cosmetic-dialog-shell { gap: .5rem; }
+  .cosmetic-dialog-stage { height: clamp(6.5rem, 22dvh, 9rem); }
+  .cosmetic-dialog-copy #start-cosmetic-description { margin-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cosmetic-background-frame .background-preview,
+  .cosmetic-background-current { animation: none; }
+}
+#start-screen[data-quality="low"] .cosmetic-background-frame .background-preview,
+#start-screen[data-quality="low"] .cosmetic-background-current { animation: none; }

@@ -185,7 +185,8 @@ La placa opaca se comparte como una sola textura. El SVG
 code-first anterior y referencia de identidad, no se carga en runtime.
 
 ID `vesper-bloom`, precio `0`, etiqueta `PREMIUM · GRATIS`. Se añade al locker
-sin cobrar NOVA ni mostrar anuncio. La preview CSS y Pixi usan el mismo WebP.
+sin cobrar NOVA ni mostrar anuncio. La preview CSS usa una derivación WebP de
+menor resolución del mismo arte que carga Pixi en partida.
 La prueba debe verificar equipar, persistencia, wallet en cero, carga tardía,
 destrucción, portrait, boss y contraste del láser.
 Procedencia y prompts completos de generación:
@@ -235,12 +236,15 @@ Los WebP runtime de las dos corrientes suman 136,796 bytes y ~1.83 MiB RGBA8
 decodificados. La escena usa cinco sprites en total (lámina + cuatro esquinas),
 pero conserva dos texturas transparentes; las copias reflejadas no duplican la
 memoria de bitmap. Los recursos se cargan sólo al equipar Tidal Veil y se
-comparten durante la vida de la aplicación. La preview del locker utiliza una
-composición estática WebP de 55,128 bytes (~1 MiB RGBA8 decodificado si el
-navegador la conserva), reflejada en CSS para mostrar las cuatro esquinas; no
-anima fuera de partida. Fallos de las capas conservan la lámina/fallback y no
-afectan gameplay. Low y `prefers-reduced-motion` dejan las corrientes visibles,
-pero inmóviles.
+comparten durante la vida de la aplicación. La composición estática WebP de
+55,128 bytes fue la primera preview del locker. El modal actual monta solamente
+al abrirse la placa y cuatro capas CSS basadas en los mismos dos WebP de
+corrientes que usa la partida (A/B/A reflejada/B reflejada). Cada esquina
+deriva de forma independiente; el tinte CSS aproxima la paleta de Pixi, no
+promete una coincidencia píxel a píxel. Las tarjetas del catálogo permanecen
+estáticas. Fallos de las capas conservan la lámina/fallback y no afectan
+gameplay. Low y `prefers-reduced-motion` dejan las corrientes visibles, pero
+inmóviles también en el modal.
 
 Es una capa cosmética independiente de DPR y estado de gameplay: no modifica
 arena, colisiones ni lectura de telegraphs. Los bytes y la memoria se midieron
@@ -318,8 +322,9 @@ intensidad se siente mejor en juego.
 
 Medium y High animan con transformaciones y alpha de sprites existentes, sin
 recrear Graphics, emitir particulas, aplicar filtros ni ejecutar shaders. Low y
-`prefers-reduced-motion` dejan la capa visible pero inmovil; los previews del
-locker permanecen estaticos. Tests cubren carga bajo demanda, reutilizacion de
+`prefers-reduced-motion` dejan la capa visible pero inmovil; las tarjetas del
+locker permanecen estaticas y el modal solo monta sus cuatro corrientes al
+abrirse. Tests cubren carga bajo demanda, reutilizacion de
 texturas, tintes por tema, deriva independiente perceptible en cuatro segundos y
 congelacion estatica.
 

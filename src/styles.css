@@ -865,10 +865,6 @@ body {
   display: none;
 }
 
-.cannon-preview-stage {
-  grid-template-columns: minmax(13rem, 1fr) minmax(8rem, 0.72fr);
-}
-
 .cannon-preview {
   display: grid;
   place-items: center;
@@ -1048,31 +1044,6 @@ body {
   outline-offset: 3px;
 }
 
-.skin-preview-stage {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(8rem, 12rem) 1fr;
-  gap: 1rem;
-  align-items: center;
-  min-height: 10rem;
-  padding: 0.85rem 1rem;
-  overflow: hidden;
-  border: 1px solid rgba(117, 230, 255, 0.28);
-  border-radius: 0.85rem;
-  background:
-    radial-gradient(circle at 25% 45%, rgba(117, 230, 255, 0.14), transparent 35%),
-    linear-gradient(145deg, rgba(4, 12, 28, 0.88), rgba(19, 14, 40, 0.8));
-}
-
-.skin-preview-stage::after {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: inherit;
-  content: "";
-  pointer-events: none;
-}
-
 .skin-preview {
   display: grid;
   place-items: center;
@@ -1088,29 +1059,10 @@ body {
   overflow: visible;
 }
 
-.skin-preview-copy {
-  display: grid;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.skin-preview-label,
 .skin-card-meta {
   color: #75e6ff;
   font: 800 0.63rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.16em;
-}
-
-.skin-preview-copy strong {
-  color: #f1f5ff;
-  font-size: clamp(1.2rem, 4vw, 1.65rem);
-  line-height: 1.05;
-}
-
-.skin-preview-copy span:last-child {
-  color: #aebfdd;
-  font-size: 0.78rem;
-  line-height: 1.35;
 }
 
 .skin-cards {
@@ -1268,10 +1220,6 @@ body {
 }
 
 /* The locker uses small CSS thumbnails; gameplay lazily decodes one Pixi plate. */
-.background-preview-stage {
-  grid-template-columns: minmax(13rem, 1.2fr) minmax(8rem, 0.8fr);
-}
-
 .background-preview,
 .background-card-art {
   position: relative;
@@ -1799,7 +1747,7 @@ body {
     opacity: 0.66;
   }
 
-  /* Keep a single, small animated surface: the equipped skin preview. */
+  /* Animate only the inspected skin while its dialog is open. */
   #start-screen.is-skins-mode .skin-preview svg.is-animated {
     animation: skin-preview-float-mobile 5.6s ease-in-out infinite;
   }
@@ -2710,24 +2658,7 @@ body {
     justify-self: start;
   }
 
-  .skin-preview-stage {
-    grid-template-columns: 7.5rem minmax(0, 1fr);
-    min-height: 8.6rem;
-  }
-
-  .skin-preview {
-    height: 7rem;
-  }
-
   .skin-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .cannon-preview-stage {
-    grid-template-columns: 1fr;
-  }
-
-  .background-preview-stage {
     grid-template-columns: 1fr;
   }
 

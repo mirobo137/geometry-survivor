@@ -8,12 +8,13 @@ import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
 import { CANNON_SKIN_DEFINITIONS } from '../content/visual/CannonSkinDefinitions';
 import { BACKGROUND_DEFINITIONS } from '../content/visual/BackgroundDefinitions';
-import type { PlayerSkinId } from '../content/visual/VisualTokens';
+import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
 import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
+import { CosmeticPreviewDialog } from './skins/CosmeticPreviewDialog';
 import { MetaProgressionPanel } from './meta/MetaProgressionPanel';
 import type { ActId } from '../content/run/ActDefinitions';
 import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationDefinitions';
@@ -32,6 +33,7 @@ export type CosmeticUnlockTarget =
 
 export interface StartScreenOptions {
   readonly settings: AudioSettings;
+  readonly quality: FxQuality;
   readonly best: StartScreenBest;
   readonly skins: SkinSaveData;
   readonly cannonSkins: CannonSkinSaveData;
@@ -96,6 +98,7 @@ export class StartScreen {
   private readonly skinsPanel: SkinSelectPanel;
   private readonly cannonPanel: CannonSelectPanel;
   private readonly backgroundPanel: BackgroundSelectPanel;
+  private readonly cosmeticDialog: CosmeticPreviewDialog;
   private readonly metaPanel: MetaProgressionPanel;
   private readonly skinsView: HTMLElement;
   private readonly metaView: HTMLElement;
@@ -238,9 +241,10 @@ export class StartScreen {
     this.cosmeticRewardedName = cosmeticRewardedName;
     this.cosmeticRewardedMessage = cosmeticRewardedMessage;
     this.cosmeticRewardedButton = cosmeticRewardedButton;
-    this.skinsPanel = new SkinSelectPanel(playerSkinsView);
-    this.cannonPanel = new CannonSelectPanel(cannonSkinsView);
-    this.backgroundPanel = new BackgroundSelectPanel(backgroundsView);
+    this.cosmeticDialog = new CosmeticPreviewDialog(root);
+    this.skinsPanel = new SkinSelectPanel(playerSkinsView, this.cosmeticDialog);
+    this.cannonPanel = new CannonSelectPanel(cannonSkinsView, this.cosmeticDialog);
+    this.backgroundPanel = new BackgroundSelectPanel(backgroundsView, this.cosmeticDialog);
     this.metaPanel = new MetaProgressionPanel(metaView);
     for (const hostId of ['start-nova-icon', 'start-meta-nova-icon']) {
       const host = root.querySelector<HTMLElement>(`#${hostId}`);
@@ -293,6 +297,7 @@ export class StartScreen {
   }
 
   public open(options: StartScreenOptions): void {
+    this.root.dataset.quality = options.quality;
     this.playHandler = options.onPlay;
     this.overdrivePlayHandler = options.onOverdrivePlay ?? null;
     this.overdriveUnlocked = options.overdriveUnlocked === true;
@@ -506,6 +511,7 @@ export class StartScreen {
   }
 
   private closeSkins(): void {
+    this.cosmeticDialog.close();
     this.skinsPanel.close();
     this.cannonPanel.close();
     this.backgroundPanel.close();
@@ -548,6 +554,7 @@ export class StartScreen {
   }
 
   private selectSkinTab(tab: 'player' | 'cannon' | 'background'): void {
+    this.cosmeticDialog.close();
     this.activeSkinTab = tab;
     this.applySkinTab(tab);
     if (tab === 'cannon') {

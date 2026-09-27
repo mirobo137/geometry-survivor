@@ -140,43 +140,33 @@
               </details>
             </section>
             <section id="start-player-skins-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-player-skins-tab">
-              <div class="skin-preview-stage player-skin-preview-stage" aria-live="polite">
-                <div id="start-skin-preview" class="skin-preview" aria-hidden="true"></div>
-                <div class="skin-preview-copy">
-                  <span class="skin-preview-label">NÚCLEO EQUIPADO</span>
-                  <strong id="start-skin-selected-name">Aurora Strider</strong>
-                  <span id="start-skin-selected-status">EQUIPADA · La señal original</span>
-                </div>
-              </div>
               <div id="start-skin-cards" class="skin-cards" aria-label="Colección de skins"></div>
-              <p class="skins-footnote">Las skins son cosméticas. Las adquisiciones son gratuitas en este prototipo para probar el flujo.</p>
+              <p class="skins-footnote">Las skins solo cambian la apariencia. Algunas se desbloquean gratis y otras con NOVA.</p>
             </section>
             <section id="start-cannon-skins-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-cannon-skins-tab" hidden>
-              <div class="skin-preview-stage cannon-preview-stage" aria-live="polite">
-                <div id="start-cannon-preview" class="cannon-preview" aria-hidden="true"></div>
-                <div class="skin-preview-copy">
-                  <span class="skin-preview-label">PAQUETE DE DISPARO EQUIPADO</span>
-                  <strong id="start-cannon-selected-name">Pulse Standard</strong>
-                  <span id="start-cannon-selected-status">EQUIPADO</span>
-                </div>
-              </div>
               <div id="start-cannon-cards" class="cannon-cards" aria-label="Coleccion de canones y balas"></div>
               <p class="skins-footnote">Cada paquete incluye canones, bala y estela. Todo es cosmetico: no cambia dano, fisica ni cadencia.</p>
             </section>
             <section id="start-backgrounds-panel" class="skin-tab-panel" role="tabpanel" aria-labelledby="start-backgrounds-tab" hidden>
-              <div class="skin-preview-stage background-preview-stage" aria-live="polite">
-                <div id="start-background-preview" class="background-preview" data-background="deep-space" aria-hidden="true"></div>
-                <div class="skin-preview-copy">
-                  <span class="skin-preview-label">ATMÓSFERA EQUIPADA</span>
-                  <strong id="start-background-selected-name">Vacío profundo</strong>
-                  <span id="start-background-selected-status">EQUIPADO · La señal original</span>
-                </div>
-              </div>
               <div id="start-background-cards" class="background-cards" aria-label="Colección de fondos"></div>
               <p class="skins-footnote">Los fondos son cosméticos: solo cambian la atmósfera visual y no alteran el juego.</p>
             </section>
             </div>
           </section>
+          <dialog id="start-cosmetic-dialog" class="cosmetic-dialog" aria-labelledby="start-cosmetic-title" aria-describedby="start-cosmetic-description">
+            <div class="cosmetic-dialog-shell">
+              <div class="cosmetic-dialog-top"><span id="start-cosmetic-kind">VISTA PREVIA</span><button id="start-cosmetic-close" type="button" aria-label="Cerrar vista previa">×</button></div>
+              <div id="start-cosmetic-preview" class="cosmetic-dialog-stage"></div>
+              <div class="cosmetic-dialog-copy">
+                <span id="start-cosmetic-rarity"></span>
+                <h3 id="start-cosmetic-title"></h3>
+                <p id="start-cosmetic-subtitle"></p>
+                <p id="start-cosmetic-description"></p>
+                <p id="start-cosmetic-status" role="status"></p>
+              </div>
+              <button id="start-cosmetic-action" type="button"></button>
+            </div>
+          </dialog>
         </div>
       </section>
       <div id="game-hud" aria-label="Estado de la partida" hidden>

@@ -1,5 +1,29 @@
 # Geometry Survivor — estado y continuación
 
+## Locker cosmético en modal — 27-09-2026
+
+Las pestañas de Naves, Disparos y Fondos muestran directamente sus tarjetas;
+la vista previa animada ya no ocupa la cabecera. Tocar cualquier tarjeta abre
+un único modal con arte, descripción, estado y acción de equipar o desbloquear.
+Explorar no gasta NOVA; el débito ocurre al confirmar. Se cierra con botón,
+Escape o toque fuera, devuelve el foco a la tarjeta y retira el arte animado al
+cerrar. Las naves y disparos reutilizan sus SVG animados. Manta Veil conserva
+su SVG y dos aletas PNG sobre un mismo cuadro de referencia; el modal debe
+dimensionar el SVG interior al 100% de ese cuadro. Los fondos reutilizan la
+placa y las dos texturas transparentes A/B en cuatro esquinas, con deriva
+independiente. El tinte del modal es una aproximación CSS de la paleta de cada
+tema; la partida conserva el tinte exacto de Pixi. Low y movimiento reducido congelan
+el fondo del modal. La regla para nuevos cosméticos es conservar las tarjetas
+estáticas y montar su vista animada solo durante la inspección.
+
+Comprobado: typecheck, 493 pruebas Vitest y build local; cinco pruebas browser
+de equipamiento/guardado, matriz de layout 320×568/390×844/640×360/1280×720,
+flujo móvil de compra gratuita y bloqueo sin saldo, cierre táctil y modo Low.
+Se inspeccionaron capturas portrait de nave y fondo: Manta mantiene alineados
+SVG y PNG en escritorio y móvil, y los cuatro humos se animan en Medium/High
+pero quedan inmóviles en Low. Pendiente la valoración
+visual y táctil en el Samsung S25+ del usuario; no se midió FPS físico.
+
 ## Estabilidad de browser smoke / Pages — 27-09-2026
 
 El run más reciente de 64 casos reportó cuatro errores. Se actualizó la

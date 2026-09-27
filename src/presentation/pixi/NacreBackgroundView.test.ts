@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Texture } from 'pixi.js';
+import { Sprite, Texture } from 'pixi.js';
 import { NacreBackgroundView } from './NacreBackgroundView';
 
 describe('Nacre background', () => {
@@ -15,10 +15,12 @@ describe('Nacre background', () => {
     view.render(true, 720, 1280);
     expect(calls).toBe(1);
     expect(view.root.visible).toBe(true);
-    expect(view.root.width).toBe(1280);
-    expect(view.root.height).toBe(1280);
-    expect(view.root.x).toBe(360);
-    expect(view.root.texture).toBe(Texture.WHITE);
+    const plate = view.root.children[0] as Sprite;
+    expect(plate.width).toBeCloseTo(1280 * 1.025);
+    expect(plate.height).toBeCloseTo(1280 * 1.025);
+    expect(plate.x).toBe(360);
+    expect(plate.y).toBe(640);
+    expect(plate.texture).toBe(Texture.WHITE);
     view.root.destroy();
   });
 

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geometry Survivor · Audición ZzFX</title>
+<style>
+  :root { color-scheme: dark; font: 16px system-ui; background: #080f20; color: #dceafa }
+  body { max-width: 980px; margin: auto; padding: 24px }
+  h1 { color: #8af3eb } p { line-height: 1.6; max-width: 75ch }
+  button { background: #132940; color: #dceafa; border: 1px solid #436b85; padding: 14px; border-radius: 9px; cursor: pointer; font: inherit }
+  button:hover,button:focus-visible { background: #22475b; outline: 2px solid #8af3eb }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 10px; margin: 20px 0 }
+  label { display: inline-flex; align-items: center; gap: 12px; margin: 12px 0 }
+  #status { color: #94e8cc; min-height: 2em } small { opacity: .7; display: block }
+</style>
+<h1>Audición ZzFX</h1>
+<p>Referencia local de efectos. Los botones usan las mismas recetas y mezcla que el juego.
+No reproduce música. Prueba primero a volumen moderado y después dentro de una partida.</p>
+<label>Volumen SFX <input id="volume" type="range" min="0" max="100" value="60"><output id="value">60%</output></label>
+<div class="grid" id="scenes"></div>
+<button id="stop">Detener sonidos</button>
+<p id="status" role="status">Pulsa una secuencia o un efecto para habilitar audio.</p>
+<h2>Efectos individuales</h2><div class="grid" id="cues"></div>
+<script type="module">
+  import { AudioManager } from '/src/audio/AudioService.ts';
+  import { AUDIO_CUE_DEFINITIONS } from '/src/content/audio/AudioCueDefinitions.ts';
+  const audio = new AudioManager();
+  const volume = document.querySelector('#volume');
+  const status = document.querySelector('#status');
+  let timers = [];
+  let serial = 0;
+  function stop() { serial++; timers.forEach(clearTimeout); timers = []; audio.pause(); }
+  function configure() {
+    document.querySelector('#value').textContent = volume.value + '%';
+    audio.configure({ musicVolume: 0, sfxVolume: Number(volume.value) / 100, muted: false });
+  }
+  configure();
+  volume.addEventListener('input', configure);
+  async function play(name, events) {
+    stop(); const token = serial;
+    await audio.unlock();
+    if (token !== serial) return;
+    audio.resume(); status.textContent = name;
+    for (const [time, cue] of events) timers.push(setTimeout(() => audio.playCue(cue), time * 1000));
+  }
+  const laser = [[0, 'laser-charge'], [.7, 'laser-ignite'],
+    ...Array.from({length: 10}, (_,i) => [.72 + i * .16, 'laser-sustain']), [2.4, 'laser-release']];
+  const scenes = {
+    'Entrada de acto: ascenso y llegada': [[0, 'transition-rise'], [2.6, 'run-entry']],
+    'Láser: carga, disparo y barrido': laser,
+    'Pulse: ida y regreso': [[0, 'pulse-ring-fire'], [.85, 'pulse-return']],
+    'Compression: tres frentes': [[0, 'pulse-ring-fire'], [.38, 'pulse-ring-fire'], [.76, 'pulse-ring-fire']],
+    'Polar: lanzar, atraer y colapsar': [[0, 'magnetic-fire'], [.4, 'magnetic-capture'], [.66, 'magnetic-capture'], [.92, 'magnetic-capture'], [1.3, 'magnetic-collapse'], [1.75, 'magnetic-collapse']],
+    'Enemigo: aviso y embestida': [[0, 'enemy-warning'], [.65, 'enemy-dash']],
+    'Combate bajo presión': [...laser,
+      ...Array.from({length: 18}, (_,i) => [i*.13, 'player-shot']),
+      ...Array.from({length: 18}, (_,i) => [i*.13+.04, 'enemy-hit']),
+      [.55, 'chain-fire'], [.8, 'damage'], [1.1, 'pulse-ring-fire'], [1.8, 'boss-warning']]
+  };
+  function button(parent, text, callback) {
+    const el = document.createElement('button'); el.textContent = text;
+    el.addEventListener('click', callback); parent.append(el);
+  }
+  for (const [name, events] of Object.entries(scenes)) button(document.querySelector('#scenes'), name, () => play(name, events));
+  for (const name of Object.keys(AUDIO_CUE_DEFINITIONS)) button(document.querySelector('#cues'), name, () => play(name, [[0, name]]));
+  document.querySelector('#stop').addEventListener('click', () => { stop(); status.textContent = 'Detenido'; });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+  window.addEventListener('pagehide', () => { stop(); audio.shutdown(); });
+</script>
+</html>

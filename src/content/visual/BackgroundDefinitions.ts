@@ -1,4 +1,4 @@
-export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom';
+export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil';
 export type BackgroundPattern = 'constellation' | 'nebula' | 'solar' | 'crystal';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -47,10 +47,21 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     tokens: { base: 0x080b17, glow: 0x3d315a, accent: 0x9b8aac, secondary: 0x79aaa5, pattern: 'crystal' }
   },
   {
+    id: 'tidal-veil',
+    name: 'Velo de Marea',
+    subtitle: 'Corrientes bajo el vacío',
+    description: 'Nebulosas pintadas en los bordes y un centro sereno. Gratis para probar.',
+    rarity: 'PREMIUM · GRATIS',
+    tier: 'epic',
+    priceNova: 0,
+    acquisition: 'nova',
+    tokens: { base: 0x080b17, glow: 0x243742, accent: 0x668d91, secondary: 0x93816b, pattern: 'nebula' }
+  },
+  {
     id: 'deep-space',
     name: 'Vacío profundo',
     subtitle: 'La señal original',
-    description: 'Un campo estelar sobrio para leer cada amenaza sin ruido.',
+    description: 'Nubes azules e índigo en un vacío profundo, con el centro despejado.',
     rarity: 'INICIAL',
     tier: 'starter',
     priceNova: 0,
@@ -61,7 +72,7 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'ion-storm',
     name: 'Tormenta iónica',
     subtitle: 'Nubes de carga',
-    description: 'Nebulosas frías y pulsos mint para una arena más eléctrica.',
+    description: 'Velos de vapor iónico teal y cian alrededor de una zona central oscura.',
     rarity: 'DESBLOQUEABLE',
     acquisition: 'nova',
     tier: 'common',
@@ -72,7 +83,7 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'solar-drift',
     name: 'Deriva solar',
     subtitle: 'Ruta de forja',
-    description: 'Arcos cálidos y polvo solar para cambiar el ritmo visual.',
+    description: 'Corrientes pictóricas de cobre y ámbar, contenidas en los bordes.',
     rarity: 'NUEVA · DEMO',
     acquisition: 'nova',
     tier: 'rare',
@@ -83,7 +94,7 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'crystal-field',
     name: 'Campo cristal',
     subtitle: 'Geometría suspendida',
-    description: 'Una retícula violeta que hace eco de la identidad geométrica.',
+    description: 'Estratos de geoda violeta y teal que enmarcan el espacio de combate.',
     rarity: 'NUEVA · DEMO',
     acquisition: 'nova',
     tier: 'epic',
@@ -93,7 +104,8 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
 ] as const;
 
 export const isBackgroundId = (value: unknown): value is BackgroundId => (
-  value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field' || value === 'nacre-orbit' || value === 'vesper-bloom'
+  value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field'
+  || value === 'nacre-orbit' || value === 'vesper-bloom' || value === 'tidal-veil'
 );
 
 export const getBackgroundDefinition = (id: BackgroundId): BackgroundDefinition => (

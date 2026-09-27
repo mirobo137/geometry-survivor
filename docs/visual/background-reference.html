@@ -1,19 +1,25 @@
 <!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nacre + Vesper · Fondos</title>
-<style>body{margin:0;padding:24px;background:#080e18;color:#dbe4e8;font:15px system-ui}h1{font-size:28px;letter-spacing:.08em}p{color:#9eaeb7;max-width:800px;line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}article{border:1px solid #263a4c;border-radius:8px;overflow:hidden;background:#0e1928}h2{font-size:14px;padding:0 18px;font-weight:500}canvas{display:block;width:100%}</style>
-<h1>FONDOS / NACRE + VESPER</h1><p>Dos familias premium gratuitas: planeta anillado y flor astral facetada. Cada fuente SVG se comparte con el locker y se rasteriza una vez a 768 × 768. El centro conserva la lectura del combate. Renderers reales del juego.</p><div class="grid"></div>
+<title>Fondos pictóricos · Geometry Survivor</title>
+<style>body{margin:0;padding:24px;background:#080e18;color:#dbe4e8;font:15px system-ui}h1{font-size:28px;letter-spacing:.08em}p{color:#9eaeb7;max-width:900px;line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));align-items:start;gap:18px}article{border:1px solid #263a4c;border-radius:8px;overflow:hidden;background:#0e1928}h2{font-size:14px;padding:0 18px;font-weight:500}canvas{display:block;width:100%;height:auto}</style>
+<h1>FONDOS PICTÓRICOS / SIETE IDENTIDADES</h1><p>Los siete fondos usan un micro paneo y una respiración de escala compartidos en su placa; los seis temas añadidos además animan corrientes periféricas en las cuatro esquinas, con paleta y ritmo adaptados. El movimiento de placa es mínimo y no añade imágenes ni filtros; el centro de combate sigue despejado. Medium/High animan; Low y reduced-motion dejan todo estático. Se muestran composiciones del juego con distintos encuadres y la arena real.</p><div class="grid"></div>
 <script type="module">
 import {Application} from 'pixi.js';
 import {BackgroundView} from '../../src/presentation/pixi/BackgroundView.ts';
 import {ArenaView} from '../../src/presentation/pixi/ArenaView.ts';
+import {loadDeepSpaceBackground,loadIonStormBackground,loadSolarDriftBackground,loadCrystalFieldBackground} from '../../src/presentation/pixi/PainterlyBackgroundViews.ts';
 import {loadNacreBackground} from '../../src/presentation/pixi/NacreBackgroundView.ts';
 import {loadVesperBackground} from '../../src/presentation/pixi/VesperBackgroundView.ts';
+import {loadTidalVeilBackground,loadTidalVeilCurrents} from '../../src/presentation/pixi/TidalVeilBackgroundView.ts';
+await Promise.all([loadDeepSpaceBackground(),loadIonStormBackground(),loadSolarDriftBackground(),loadCrystalFieldBackground()]);
 await loadNacreBackground();
 await loadVesperBackground();
-for(const [title,id,w,h,arena,quality] of [['Nacre · Paisaje Low','nacre-orbit',1280,720,false,'low'],['Vesper · Paisaje High','vesper-bloom',1280,720,false,'high'],['Nacre · Borde y combate','nacre-orbit',1280,720,true,'high'],['Vesper · Portrait y boss','vesper-bloom',720,1280,true,'low']]){
+await loadTidalVeilBackground();
+await loadTidalVeilCurrents();
+for(const [title,id,w,h,arena,quality] of [['Vacío profundo · Low','deep-space',1280,720,false,'low'],['Tormenta iónica · Medium','ion-storm',1280,720,false,'medium'],['Deriva solar · High','solar-drift',1280,720,false,'high'],['Campo cristal · Paisaje','crystal-field',1280,720,true,'high'],['Órbita de Nacre · Combate','nacre-orbit',1280,720,true,'high'],['Flor del Ocaso · Landscape','vesper-bloom',1280,720,false,'high'],['Flor del Ocaso · Portrait','vesper-bloom',720,1280,true,'low'],['Velo de Marea · Paisaje','tidal-veil',1280,720,false,'medium'],['Vacío profundo · Portrait','deep-space',720,1280,true,'medium'],['Velo de Marea · Portrait Low','tidal-veil',720,1280,true,'low']]){
  const el=document.createElement('article');el.innerHTML='<h2>'+title+'</h2>';document.querySelector('.grid').append(el);
  const app=new Application();await app.init({width:w,height:h,resolution:1,antialias:true});el.append(app.canvas);
  const bg=new BackgroundView(app.renderer,id,quality);bg.resize(w,h);app.stage.addChild(bg.root);
+ let seconds=0;app.ticker.add(ticker=>{const delta=Math.min(ticker.deltaMS/1000,.1);seconds+=delta;bg.update(delta,seconds);});
  if(arena){const view=new ArenaView();view.root.position.set(w/2-640,h/2-360);app.stage.addChild(view.root);}
  await new Promise(requestAnimationFrame);app.render();
 }

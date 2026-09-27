@@ -1,5 +1,114 @@
 # Geometry Survivor — estado y continuación
 
+## Movimiento compartido de placas y atmósfera — 27-09-2026
+
+Los seis fondos pintados aparte de Velo de Marea ahora reutilizan sus dos
+texturas transparentes de corrientes, con tinte, opacidad, ritmo y fase propios
+por tema. Además, los siete fondos raster reciben paneo común (±12×10 px) y
+respiración de zoom (0–1.5%, ciclos de 28–38 s) en el mismo Sprite; no carga
+recursos adicionales. Se amplificó porque la primera receta era imperceptible.
+El centro de juego permanece despejado. Medium/High animan; Low y
+`prefers-reduced-motion` congelan placa y overlays.
+
+Implementación y contrato: `src/presentation/pixi/StaticRasterBackgroundView.ts`,
+`src/presentation/pixi/PainterlyBackgroundMotionView.ts` y
+`docs/design/FONDOS_PREMIUM.md`. Pasaron `npm run typecheck` y la suite completa
+de Vitest (113 archivos / 493 tests), incluidas pruebas de límites del paneo,
+zoom, congelación por Low/reduced-motion y restauración del encuadre. Falta
+revisar visualmente los seis temas en gameplay,
+portrait/landscape y Low/High; no se ha medido rendimiento en móvil físico.
+
+Iteracion de prueba pedida despues: nubes un poco mas visibles y recorrido mas
+amplio. Opacidad configurada +0.10, deriva hasta ±35-44 px por eje horizontal y
+±25-39 px vertical, ciclo ~5% mas rapido. Pendiente de revision humana.
+
+## Acabado pictórico consistente para fondos — 26-09-2026
+
+El locker conserva sus siete identidades y su economía. Los seis temas estáticos
+ahora tienen placas pintadas distintas: Deep Space, Ion Storm, Solar Drift,
+Crystal Field, Nacre Orbit y Vesper Bloom. Se generaron masters PNG cuadrados y
+derivaciones WebP: 1254 px para Pixi, 512 px para previews CSS. Cada tema se carga
+bajo demanda; Tidal Veil conserva su motion de cuatro esquinas, y las otras
+placas son quietas en todas las calidades. No se alteran armas, arena ni gameplay.
+
+Dirección de arte, medidas, prompts resumidos y límites: `docs/design/FONDOS_PREMIUM.md`
+y `src/assets/images/backgrounds/README.md`. Referencia real con BackgroundView
+y ArenaView: `/docs/visual/background-reference.html`. La aprobación visual
+manual del nuevo conjunto y la revisión de lectura/rendimiento en móvil siguen
+pendientes hasta que el usuario lo pruebe. Comprobado en esta sesión: typecheck;
+suite completa Vitest (111 archivos / 487 tests); build local Vite en directorio
+temporal (sin tocar `dist`); captura Playwright de la referencia, locker, Low
+desktop y High portrait boss sin errores de página ni HTTP. Se inspeccionó la
+referencia y se reencuadraron Nacre/Vesper tras descubrir que los motivos se
+perdían en landscape.
+El build mantiene el warning preexistente de chunk principal (~1,046 kB min / 273
+kB gzip). No se midieron FPS ni memoria en móvil físico.
+
+## Movimiento atmosférico de Velo de Marea — 26-09-2026
+
+La primera prueba manual indicó que el movimiento era prácticamente
+imperceptible; al aumentar intensidad quedó bien, pero se pidió movimiento en
+las cuatro esquinas. El reloj sí avanzaba. La receta ahora mantiene fija la
+placa y anima cuatro sprites independientes: dos texturas WebP fuente y dos
+instancias reflejadas, con fases propias y alpha 0.24/0.22/0.20/0.18. Medium/High
+animan las capas; Low y `prefers-reduced-motion` siguen estáticos. Locker muestra
+la composición de cuatro esquinas también en reposo. Sin filtros ni partículas.
+
+Tests actualizados para exigir deriva medible en las cuatro esquinas dentro de
+4 segundos, reutilización/espejo de textura, placa fija y movimiento desactivado.
+Pendiente: confirmar visualmente esta extensión en partida a calidad Medium/High
+y comprobar legibilidad/rendimiento en móvil físico. La estrategia común para
+fondos pintados y la excepción animada viven en `docs/design/FONDOS_PREMIUM.md`
+y `src/assets/images/backgrounds/README.md`.
+
+Nota histórica: antes de la dirección pictórica del 26-09-2026, los cuatro
+temas base se componían con Graphics/estrellas/nebula. Esa implementación se
+conserva sólo bajo la placa opaca como fallback de carga; su diseño de runtime
+vigente y los nuevos masters están documentados en la sección superior.
+
+Antes de extender a cuatro esquinas, la iteración previa pasó typecheck, suite
+completa Vitest (110 archivos / 486 tests) y build Vite local aislado; el build
+tenía el warning previo del chunk principal (~1,046 kB minificado), no atribuido
+a las corrientes. Para esta extensión pasaron `npm run typecheck` y 5 pruebas
+focalizadas de Tidal Veil/BackgroundView. No se levantó servidor ni se hizo
+captura visual, build ni perfil en móvil de esta última extensión. Falta que el
+usuario confirme la composición completa y legibilidad en Medium/High, y medir
+rendimiento en móvil físico; sigue sin aprobación final.
+
+## Revisión sonora premium ZzFX — 26-09-2026
+
+48 cues con cuerpo tonal, transitorio y resonancia mezclados offline a una
+sola voz. Corregido el uso de filtros positivos que adelgazaba las recetas.
+Láseres de arena/boss/Prism tienen encendido, sostenido durante barrido y
+caída; ataques Charger/Orbiter/Fracture, minas y réplicas ya tienen señal
+activa. Pulse/Echo/Compression y Magnetic/Event Horizon/Polar respetan cada
+fase real; Rail y Volley tienen firma propia. Howler sigue encargado de música.
+
+Contrato y guía para iterar: `docs/design/AUDIO_SFX_ZZFX.md`. El nuevo observador
+`src/audio/AttackAudioFeedback.ts` sólo lee snapshots; no cambia gameplay.
+Caché con precalentamiento idle opcional, hasta ocho voces, dos plazas
+reservadas para señales importantes, prioridades y compresión sólo de SFX.
+Pausa detiene voces de combate; UI sigue utilizable. Recursos desconectados
+al terminar, fallar, pausar o cerrar.
+
+Probar con Vite en `http://127.0.0.1:5173/docs/audio/sound-lab.html` (48 sonidos y
+seis secuencias sin música), o `/?boss=1&debug=1&quality=low` para integración.
+La página de audición es local de desarrollo y no se publica en Pages.
+
+Comprobado: typecheck; suite completa 482 tests y 17 tests de audio en la
+pasada focalizada final (incluye dos regresiones añadidas después); tres
+smokes de producción de menú/audio/entrada móvil; builds local/Poki/CrazyGames.
+Web Audio en Chromium desktop/móvil emulado: 53 sonidos en secuencia, pico
+de cinco voces, cero restantes al detener y cero excepciones. Partida real
+del boss emite láser sostenido y anillo. Caché PCM 2,30 MB para las 48 recetas
+a 48 kHz; esto no es una medición de FPS. Se conserva warning del bundle
+principal (~1.041 kB minificado / 271 kB gzip). Pendiente escucha humana,
+mezcla en altavoz móvil físico y coste de primera síntesis en ese dispositivo.
+Sin commit/push de esta revisión. No queda implementación a medias: para Luna,
+seguir la sección «Entrega para Luna y siguientes iteraciones» de la guía.
+Mezcla adicional comprobada en OfflineAudioContext de Chromium: ocho efectos
+fuertes simultáneos, pico 0,814, sin muestras saturadas en ese escenario.
+
 ## Audio de combate e interfaz con ZzFX — 26-09-2026
 
 Howler queda reservado para música. El backend SFX usa la síntesis completa de

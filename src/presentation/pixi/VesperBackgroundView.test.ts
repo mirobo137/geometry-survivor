@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Texture } from 'pixi.js';
+import { Sprite, Texture } from 'pixi.js';
 import { VesperBackgroundView } from './VesperBackgroundView';
 
 describe('Vesper Bloom background', () => {
@@ -12,8 +12,9 @@ describe('Vesper Bloom background', () => {
     await Promise.resolve();
     expect(calls).toBe(1);
     expect(view.root.visible).toBe(true);
-    expect(view.root.width).toBe(844);
-    expect(view.root.height).toBe(844);
+    const plate = view.root.children[0] as Sprite;
+    expect(plate.width).toBeCloseTo(844 * 1.025);
+    expect(plate.height).toBeCloseTo(844 * 1.025);
     view.render(false, 1280, 720);
     view.render(true, 1280, 720);
     expect(calls).toBe(1);

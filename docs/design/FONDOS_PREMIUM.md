@@ -1,6 +1,12 @@
 # Fondos premium — composición, legibilidad y presupuesto
 
-Referencia implementada: **Órbita de Nacre**, 09-09-2026.
+Referencias originales: **Órbita de Nacre** y **Flor del Ocaso**, creadas como
+SVG code-first el 09-09-2026. El 26-09-2026 los seis fondos pintados
+(Deep Space, Ion Storm, Solar Drift, Crystal Field, Nacre Orbit y Vesper Bloom)
+pasaron a placas pictóricas creadas con el generador integrado, con motivos y
+paletas propios. Desde el 27-09-2026 los seis reciben movimiento atmosférico
+periférico, reutilizando la técnica de Tidal Veil. Másteres, conversiones,
+direcciones de generación y tamaños: `src/assets/images/backgrounds/README.md`.
 Leer junto a [Arte híbrido](ARTE_HIBRIDO.md), la skill de rendering y la de
 rendimiento móvil. Esta guía es independiente del modelo; Luna puede seguirla
 con los mismos archivos, herramientas y criterios de revisión.
@@ -9,20 +15,20 @@ con los mismos archivos, herramientas y criterios de revisión.
 
 | Necesidad del fondo | Fuente preferida | Representación en partida |
 | --- | --- | --- |
-| Planetas, anillos, capas suaves y geometría editable | SVG con gradientes simples | Rasterizar una vez y compartir textura |
-| Nebulosa pintada, textura mineral u orgánica difícil de expresar con pocas formas | PNG/WebP producido con herramienta de imágenes | Sprite a resolución de uso, con procedencia y bytes medidos |
+| Geometría editable o piezas limpias de pocas masas | SVG con gradientes simples | Rasterizar una vez y compartir textura |
+| Profundidad pictórica, nubes minerales, planetas/materiales complejos o atmósfera orgánica | PNG/WebP producido con herramienta de imágenes | Sprite a resolución de uso, preview optimizada y bytes medidos |
 | Constelación discreta o pocas facetas estáticas | Graphics existente | Dibujar sólo al cambiar tema o viewport |
 | Fenómeno dinámico que comunica daño o frontera | Renderer de hazard/arena | No implementarlo como fondo cosmético |
 
-SVG no es universalmente más barato que PNG. En runtime importa el área
-dibujada, texturas, resolución, solapamientos y filtros. Nacre elige SVG porque
-su silueta planetaria y capas de polvo se expresan con pocas formas editables:
-5,503 bytes fuente, aproximadamente 1.70 kB gzip en este build. No necesita
-una superficie pintada por IA ni una imagen de varios megapíxeles.
-
-El navegador rasteriza el SVG a canvas 768×768 una vez y Pixi usa la textura
-resultante. Así se conservan los gradientes sin depender de Graphics.svg().
-No se hace parseo, rasterización ni dibujo de paths en cada frame.
+SVG no es universalmente más barato que PNG. En runtime importan el área
+dibujada, texturas, resolución, solapamientos y filtros. Las placas pictóricas
+dan profundidad consistente a los seis temas; el movimiento reutiliza dos
+texturas de overlay compartidas por cuatro sprites. Los SVG de Nacre y
+Vesper siguen preservados como antecedentes editables, pero no se usan en
+runtime. Las texturas de juego son WebP cuadradas 1254×1254 (aprox. 6 MiB RGBA8
+cada una, estimado), cargadas de forma diferida. Las miniaturas WebP de 512 px
+separan su transferencia/decodificación de las texturas de Pixi. Esto eleva el
+acabado y mantiene acotado el coste, pero no prueba una ganancia de FPS.
 
 ## Contrato de composición antes de dibujar
 
@@ -59,32 +65,33 @@ imagen en X/Y por separado ni mover cámara, simulación o arena para encajarla.
 5. Si se usan gradientes, justificar cada uno: curvatura planetaria,
    terminador, profundidad atmosférica o caída de luz. No añadir filtros para
    tapar una silueta plana. Nacre no usa filter, mask, clipPath ni imagen embebida.
-6. Usar la misma fuente en catálogo, preview y partida. En Nacre el CSS usa el
-   mismo SVG con cover; se suprimen las estrellas/anillo CSS genéricos. Nunca
-   mostrar una miniatura espectacular que el runtime no reproduce.
+6. Mantener la misma composición entre catálogo y partida: derivar preview
+   pequeña y runtime desde el mismo máster. Ocultar estrellas/anillo CSS
+   genéricos al mostrar arte generado. La compresión/escala puede cambiar, no
+   la identidad ni el encuadre de la ilustración.
 7. Diseñar Low completo. Nacre es estático en todas las calidades: su identidad
    no depende de partículas, parallax ni de un preset alto.
 8. Inspeccionar el arte dentro de una partida con boss/láser, no sólo aislado.
    La arena ahora es más transparente: contrastar con Aster Loom actual en
    lugar de confiar en la antigua opacidad de 0.84.
 
-## Presupuesto de Nacre y ciclo de vida
+## Presupuesto y ciclo de vida de placas pintadas
 
-- Una textura de 768×768, 2.25 MiB de imagen base RGBA8; no es una medición de
-  memoria total. El canvas retenido, la imagen decodificada y el backend tienen
-  costes adicionales. El tamaño de la textura no aumenta con DPR ni resize.
-- Un Sprite inmóvil para la lámina. Se mantienen debajo el fondo base/fallback
-  y los recursos ya existentes de BackgroundView; las nubes, estrellas y
-  partículas de otros temas quedan ocultas y dejan de actualizarse con Nacre.
+- Una textura activa de 1254×1254, ~6.0 MiB RGBA8 estimados. No es una medición de
+  memoria total: navegador y GPU tienen overhead. El tamaño no aumenta con DPR
+  ni resize.
+- Un Sprite inmóvil para la lámina. El fondo base permanece debajo como
+  fallback; estrellas, patrones vectoriales y partículas decorativas quedan
+  ocultos para cualquier placa pictórica.
 - Carga Pixi sólo al equipar. La URL también puede descargarse antes por la
   miniatura CSS; caché de navegador y textura GPU no son lo mismo.
 - Promise/textura compartida durante la vida de la aplicación. Cambiar tema
-  oculta el Sprite, no destruye la textura compartida. Root.destroy libera el
-  objeto, no una textura que otra vista puede utilizar.
+  oculta el Sprite, no destruye la textura compartida. Por ello, una sesión que
+  equipe varios temas puede retener varias texturas aunque sólo dibuje una.
 - Carga fallida: conservar la base oscura con constelación discreta. La carga
   puede reintentarse al volver a equipar. Una respuesta tardía no vuelve a
   mostrar un fondo deseleccionado ni adjunta nada a una vista destruida.
-- Pausa y reduced-motion: la lámina permanece inmóvil siempre.
+- Pausa y reduced-motion: las placas estáticas permanecen inmóviles siempre.
 - No añadir animación porque haya presupuesto. Si una futura familia necesita
   dos capas, justificar la mejora y medir fill-rate antes de ampliarlo.
 
@@ -131,20 +138,186 @@ materiales son placas violetas apagadas, biseles nacarados, núcleo rosado
 concentrado y trazos teal mínimos. No usa partículas animadas ni líneas que
 puedan confundirse con un láser.
 
-Fuente: `src/assets/svg/backgrounds/vesper-bloom.svg`; consumidor:
-`VesperBackgroundView` a través de `StaticSvgBackgroundView`. Es un SVG de
-5.143 bytes de fuente, 5.14 kB en build y 1.69 kB gzip, rasterizado una vez a
-768×768 y compartido como una única textura RGBA8 de 2.25 MiB base. El archivo
-es deliberadamente pequeño; Low/Medium/High comparten el mismo Sprite estático; el fondo
-se carga sólo al equiparlo y falla a la base oscura.
+Máster: `src/assets/images/backgrounds/vesper-bloom.png` (1254×1254,
+1,767,441 bytes); runtime: `vesper-bloom.webp` (115,120 bytes), cargado
+selectivamente por `VesperBackgroundView` mediante `StaticRasterBackgroundView`.
+La placa opaca se comparte como una sola textura. El SVG
+`src/assets/svg/backgrounds/vesper-bloom.svg` queda preservado como versión
+code-first anterior y referencia de identidad, no se carga en runtime.
 
 ID `vesper-bloom`, precio `0`, etiqueta `PREMIUM · GRATIS`. Se añade al locker
-sin cobrar NOVA ni mostrar anuncio. La preview CSS y Pixi usan el mismo SVG.
+sin cobrar NOVA ni mostrar anuncio. La preview CSS y Pixi usan el mismo WebP.
 La prueba debe verificar equipar, persistencia, wallet en cero, carga tardía,
 destrucción, portrait, boss y contraste del láser.
+Procedencia y prompts completos de generación:
+`src/assets/images/backgrounds/README.md`.
 
-Para crear una tercera familia, repetir el contrato de Nacre/Vesper: comparar
-masas, escoger un verbo y un material distintos, escribir el centro de lectura,
-usar una textura compartida, ocultar movimiento decorativo en Low y medir el
-área cubierta. No crear un cargador específico nuevo: reutilizar
-`StaticSvgBackgroundView` y sus loaders por URL.
+Para una nueva familia, repetir el contrato de Nacre/Vesper: comparar masas,
+escoger un verbo y un material distintos, escribir el centro de lectura,
+seleccionar SVG/Graphics para geometría editable o raster para superficies
+pintadas, ocultar movimiento decorativo en Low y medir el área cubierta. No
+crear una clase de loader por cada fondo: reutilizar `StaticSvgBackgroundView`
+para SVG y `StaticRasterBackgroundView` para imágenes rasterizadas.
+
+## Tercera referencia — Velo de Marea / Tidal Veil
+
+Velo de Marea prueba una superficie pictórica generada, distinta de los
+planetas y siluetas facetadas anteriores. Su verbo es **derivar**: corrientes
+minerales de vapor azul petróleo, índigo y bronce apagado rodean un centro casi
+negro. No hay un motivo central ni elementos finos que puedan confundirse con
+proyectiles, rayos o pickups. La textura única conserva la misma composición en
+Low y en portrait/landscape mediante cover uniforme; la silueta secundaria
+puede recortarse de forma distinta según la orientación.
+
+Fuente de trabajo y prompt: `src/assets/images/backgrounds/README.md`.
+Se generó una lámina cuadrada y se convirtió a WebP para runtime. Máster PNG:
+1,707,898 bytes. WebP base: 98,632 bytes, 1254×1254; RGBA8 ocupa ~6.0 MiB
+decodificado, aparte de overhead/caché. La compresión reduce descarga, no la
+memoria de textura.
+
+### Corrientes en movimiento — iteración 26-09-2026
+
+La pintura base queda fija para que no parezca que la cámara o la arena flotan.
+Se añadió una lámina transparente generada en la paleta del fondo y recortada
+en dos corrientes periféricas. Para cubrir las cuatro esquinas se crean cuatro
+sprites, reutilizando esas dos texturas: A en arriba-izquierda; B en
+abajo-derecha; A reflejada horizontalmente en arriba-derecha; B reflejada en
+abajo-izquierda. Las fases y ritmos de las copias son independientes para que
+no se lean como una repetición sincronizada. La primera iteración quedó
+demasiado sutil al probarla; el ritmo actual usa A ±38×22 unidades lógicas
+(18/24 s), B ±30×34 (23/17 s), A reflejada ±33×25 (20/19 s) y B reflejada
+±34×30 (21/25 s). La respiración es de ±7% relativo y el alpha base por esquina
+es 0.24/0.22/0.20/0.18. Esto hace perceptible el desplazamiento en pocos
+segundos sin mover el centro de la arena ni la placa base. No hay partículas,
+reconstrucción de geometría, filtros ni shaders.
+
+Los WebP runtime de las dos corrientes suman 136,796 bytes y ~1.83 MiB RGBA8
+decodificados. La escena usa cinco sprites en total (lámina + cuatro esquinas),
+pero conserva dos texturas transparentes; las copias reflejadas no duplican la
+memoria de bitmap. Los recursos se cargan sólo al equipar Tidal Veil y se
+comparten durante la vida de la aplicación. La preview del locker utiliza una
+composición estática WebP de 55,128 bytes (~1 MiB RGBA8 decodificado si el
+navegador la conserva), reflejada en CSS para mostrar las cuatro esquinas; no
+anima fuera de partida. Fallos de las capas conservan la lámina/fallback y no
+afectan gameplay. Low y `prefers-reduced-motion` dejan las corrientes visibles,
+pero inmóviles.
+
+Es una capa cosmética independiente de DPR y estado de gameplay: no modifica
+arena, colisiones ni lectura de telegraphs. Los bytes y la memoria se midieron
+desde archivos/dimensiones; no equivalen a una medición de FPS o memoria GPU.
+La validación automatizada cubre carga diferida, uso compartido de las dos
+texturas, espejo de las esquinas opuestas, deriva independiente en las cuatro
+esquinas, base fija, desplazamiento medible a los cuatro segundos y movimiento
+desactivado. Medium/High muestran el movimiento; Low y
+`prefers-reduced-motion` permanecen estáticos por diseño. Sigue pendiente la
+inspección humana dentro de una run y en móvil físico; no declarar aprobado el
+coste visual/rendimiento hasta realizarla.
+
+### Receta reutilizable para elevar fondos existentes con ImageGen
+
+Aplicar cuando un fondo procedural o SVG no alcance el acabado de las placas
+pictóricas actuales. Se conserva su ID y contrato de producto; se reemplaza sólo
+la representación visual. No producir únicamente una capa de adorno encima de
+un fondo que ya quedó por debajo en riqueza de materiales.
+
+1. Leer la identidad vigente (motivo, paleta, nombre, precio y requisitos) y
+   conservarla. Enumerar qué rasgos visuales no se deben perder; no convertir
+   seis fondos en variaciones cromáticas de la misma nebulosa.
+2. Antes de generar, especificar la silueta/material único, masas periféricas,
+   orientación de luz, encuadre cuadrado y área segura central. Reservar al
+   menos 55% de bajo detalle en el centro, evitar puntos brillantes pequeños y
+   líneas finas que puedan confundirse con enemigos, pickups o telegraphs.
+3. Generar una placa original opaca con ImageGen. Inspeccionar el resultado y
+   retocar por iteración si se pierde la identidad, el centro se llena o una
+   forma parece gameplay. No usar capturas de usuarios como referencia sin
+   autorización explícita.
+4. Guardar el PNG master y documentar identidad, prompt/dirección, fecha y
+   procedencia. Derivar WebP de runtime cuadrado de hasta 1254 px y una preview
+   de 512 px desde el mismo master. Medir bytes y estimar memoria RGBA; WebP no
+   reduce el tamaño ya decodificado en GPU.
+5. Usar la misma estrategia de cover uniforme en retrato y paisaje, sin estirar
+   ejes. Actualizar miniatura de CSS y sprite Pixi con las derivaciones del
+   mismo master; retirar estrellas/anillo genéricos que contradigan la pintura.
+6. Cargar textura Pixi sólo al equipar ese fondo. Reutilizar el loader raster
+   compartido, dejar la base oscura existente debajo como fallback y no instanciar
+   texturas de todos los temas en cada partida.
+7. Mantener la placa inmóvil en todas las calidades. Añadir movimiento opcional
+   sólo si mejora la identidad: overlay periférico, textura compartida, fases
+   lentas; nunca animar cámara ni usar shader/filtro/partículas por defecto.
+   Reduced-motion y Low deben seguir teniendo una composición terminada.
+8. Añadir cada tema a la referencia real con `BackgroundView` y `ArenaView`.
+   Revisar una run con player/enemigos, láser, boss, todas las formas de arena,
+   portrait/landscape y Low/High. Medir rendimiento en hardware real antes de
+   afirmar que no hay coste perceptible.
+9. No cerrar la puerta visual por tests unitarios: pedir confirmación humana del
+   encuadre y legibilidad. Los tests cubren carga diferida, selección, fallback,
+   resize y persistencia, no calidad artística.
+
+## Politica vigente: movimiento para todas las pinturas — 27-09-2026
+
+La peticion de producto cambia la excepcion anterior: los seis fondos pintados
+deben sentirse vivos como Velo de Marea. Deep Space, Ion Storm, Solar Drift,
+Crystal Field, Orbita de Nacre y Flor del Ocaso conservan sus placas fijas y
+ahora comparten una capa atmosferica periferica de cuatro esquinas. No se mueve
+la camara ni la ilustracion base; tampoco se cubre el centro de juego.
+
+Implementacion: `PainterlyBackgroundMotionView` reutiliza las dos texturas WebP
+transparentes de corrientes ya incluidas para Tidal Veil; no genera ni descarga
+seis juegos de overlays. Las cuatro instancias espejadas conservan deriva y
+fases independientes. Cada fondo define su propio tinte, opacidad, velocidad y
+fase en `PAINTERLY_MOTION_STYLES`, para respetar su paleta y evitar que el
+movimiento se perciba sincronizado o repetido. Las texturas solo se piden al
+seleccionar uno de esos seis temas y se comparten mediante el loader cacheado.
+
+Iteracion de prueba solicitada el 27-09: se elevo 0.10 la opacidad configurada
+por tema, se aumento el recorrido hasta ±35-44 px en X y ±25-39 px en Y, y se
+acelero el ciclo aproximadamente un 5%. La silueta y el centro transparente de
+las texturas no cambian; queda pendiente que el usuario confirme si esta
+intensidad se siente mejor en juego.
+
+Medium y High animan con transformaciones y alpha de sprites existentes, sin
+recrear Graphics, emitir particulas, aplicar filtros ni ejecutar shaders. Low y
+`prefers-reduced-motion` dejan la capa visible pero inmovil; los previews del
+locker permanecen estaticos. Tests cubren carga bajo demanda, reutilizacion de
+texturas, tintes por tema, deriva independiente perceptible en cuatro segundos y
+congelacion estatica.
+
+Regla reutilizable añadida el 27-09: todas las placas raster (los seis fondos
+pictóricos y Velo de Marea) reciben además movimiento compartido desde
+`StaticRasterBackgroundView`: paneo de hasta ±12 px en X y ±10 px en Y, más una
+respiración de escala de 0 a +1.5% (28–38 s). La primera receta de ±2.5 px,
+±2 px y +0.4% resultó imperceptible al probarla, por lo que se elevó el recorrido
+más de cuatro veces y se acortaron los ciclos. Solo transforma el Sprite ya
+existente; no duplica imágenes, crea texturas ni añade filtros. El overscan de
+2.5% conserva cobertura en portrait/landscape incluso en los extremos del paneo.
+Low y
+`prefers-reduced-motion` mantienen la placa quieta. Las nubes periféricas siguen
+siendo una capa separada y más visible; el centro de combate conserva su lectura.
+Esta receta común es el default para nuevos fondos raster, salvo que una prueba
+de recorte, legibilidad o accesibilidad justifique desactivarla.
+
+Esta politica sustituye la regla historica de que Tidal Veil era el unico fondo
+animado. La equivalencia tecnica no garantiza paridad artistica: comprobar
+manualmente los seis temas en gameplay, paisaje/retrato, Low/High y con hazards
+activos. Validar legibilidad central y que cada tinte combine con su pintura;
+medir FPS/memoria solo en hardware real antes de declarar el rendimiento
+aprobado.
+
+#### Movimiento especial de Velo de Marea
+
+Los dos overlays periféricos compartidos de Tidal Veil cubren cuatro esquinas
+mediante espejo y deriva independiente. Este registro describe su capa de
+corrientes original; la regla global de micro movimiento de placa se añadió
+después y está especificada en la sección superior.
+
+El movimiento de Velo de Marea ya fue aprobado visualmente por el usuario. La
+inspección humana de las seis placas con la nueva capa requiere revisar el
+locker y una run en paisaje y retrato; los tests automatizados no sustituyen
+esa puerta.
+
+ID `tidal-veil`, nombre `Velo de Marea`, precio `0 NOVA`, etiqueta
+`PREMIUM · GRATIS`. La elección añade el ID al guardado y no abre rewarded ad.
+Validación de referencia: `/docs/visual/background-reference.html`; el script
+`docs/visual/capture-background.mjs` incluye locker sin coste, Low desktop,
+High portrait y combate con boss. Falta la aprobación visual del usuario y la
+comprobación de rendimiento en su móvil físico.

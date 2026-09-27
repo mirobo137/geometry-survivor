@@ -42,6 +42,7 @@ import { PauseOverlay } from '../ui/PauseOverlay';
 import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
 import { RunTransitionOverlay, type RunTransitionVariant } from '../ui/RunTransitionOverlay';
 import type { AudioCue } from '../content/audio/AudioCueDefinitions';
+import { AttackAudioFeedback } from '../audio/AttackAudioFeedback';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
@@ -220,6 +221,7 @@ export class Game {
   private readonly runTransition: RunTransitionOverlay | null;
   private readonly startScreen: StartScreen | null;
   private readonly uiAudioRoots: readonly HTMLElement[];
+  private readonly attackAudio = new AttackAudioFeedback(cue => this.audio.playCue(cue));
   private readonly audioEnemyHealth: Float32Array;
   private readonly audioEnemyGenerations: Uint32Array;
   private readonly audioEnemySequences: Uint32Array;
@@ -237,7 +239,6 @@ export class Game {
   private lastAudioCriticalHitSequence = 0;
   private lastAudioOrbitPulseActive = false;
   private lastAudioBoomerangPulseActive = false;
-  private lastAudioPulseRingSequence = 0;
   private lastAudioMagneticSequence = 0;
   private readonly input: InputManager;
   private readonly joystick: JoystickView;
@@ -1687,6 +1688,10 @@ export class Game {
     this.baseline.cancelRun();
     this.input.detach();
     this.audio.stopMusic();
+    // Leaving a paused run is a lifecycle transition, not a final pause. Clear
+    // the SFX backend's pause gate so the next run can emit gameplay cues.
+    // stopMusic() above keeps the menu silent until a new run is activated.
+    this.audio.resume();
     this.lifecycle.onGamePause();
     this.hudElement.hidden = true;
     if (this.pauseButton) this.pauseButton.hidden = true;
@@ -1747,6 +1752,7 @@ export class Game {
 
   private resetAudioFeedbackTrackers(): void {
     const state = this.combat.renderState;
+    this.attackAudio.reset(state);
     this.audioEnemyHealth.fill(0);
     this.audioEnemyGenerations.fill(0);
     this.audioEnemySequences.fill(0);
@@ -1779,13 +1785,13 @@ export class Game {
     this.lastAudioCriticalHitSequence = this.combat.criticalHitSequence;
     this.lastAudioOrbitPulseActive = state.orbitPulse.active;
     this.lastAudioBoomerangPulseActive = state.boomerangPulse.active;
-    this.lastAudioPulseRingSequence = state.pulseRingWeapon.sequence;
     this.lastAudioMagneticSequence = state.magneticCharge.sequence;
   }
 
   /** Reads snapshots/events only; no audio work or allocation enters simulation. */
   private syncCombatAudioFeedback(): void {
     const state = this.combat.renderState;
+    this.attackAudio.update(state, FIXED_STEP_SECONDS);
     let enemyHit = false;
     let enemyWarning = false;
     let chainTriggered = false;
@@ -1819,7 +1825,7 @@ export class Game {
     this.lastAudioArenaShapeIndex = arena.shapeIndex;
 
     let hazardWarning = false;
-    if (state.laser.phase === 'telegraph' && this.lastAudioHazardPhases.laser !== 'telegraph') hazardWarning = true;
+    if (state.laser.phase === 'telegraph' && this.lastAudioHazardPhases.laser !== 'telegraph') this.audio.playCue('laser-charge');
     if (state.radialPulse.phase === 'telegraph' && this.lastAudioHazardPhases.radialPulse !== 'telegraph') hazardWarning = true;
     if (state.pulseRing.phase === 'telegraph' && this.lastAudioHazardPhases.pulseRing !== 'telegraph') hazardWarning = true;
     if (state.angularSweep.phase === 'telegraph' && this.lastAudioHazardPhases.angularSweep !== 'telegraph') hazardWarning = true;
@@ -1856,7 +1862,6 @@ export class Game {
     if (state.boomerangPulse.active && !this.lastAudioBoomerangPulseActive) {
       this.audio.playCue('boomerang-return');
     }
-    if (state.pulseRingWeapon.sequence !== this.lastAudioPulseRingSequence) this.audio.playCue('pulse-ring-fire');
     if (state.magneticCharge.sequence !== this.lastAudioMagneticSequence) this.audio.playCue('magnetic-fire');
     if (chainTriggered) this.audio.playCue('chain-fire');
     if (boomerangTriggered) this.audio.playCue('boomerang-fire');
@@ -1867,7 +1872,6 @@ export class Game {
 
     this.lastAudioOrbitPulseActive = state.orbitPulse.active;
     this.lastAudioBoomerangPulseActive = state.boomerangPulse.active;
-    this.lastAudioPulseRingSequence = state.pulseRingWeapon.sequence;
     this.lastAudioMagneticSequence = state.magneticCharge.sequence;
     this.lastAudioCriticalHitSequence = this.combat.criticalHitSequence;
   }
@@ -1882,7 +1886,9 @@ export class Game {
     // Collapse several fixed-step shots into one presentation pulse per frame.
     // This prevents stress mode from flooding the audio bus or the player view.
     this.view.playPlayerShot(this.presentationTime, shot);
-    this.audio.playCue('player-shot');
+    const evolution = this.combat.currentProjectileEvolution;
+    this.audio.playCue(evolution === 'rail_lance' ? 'rail-fire'
+      : evolution === 'pulse_volley' ? 'volley-fire' : 'player-shot');
     this.presentedShotsFired = shot.sequence;
   }
 }

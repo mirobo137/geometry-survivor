@@ -1267,8 +1267,7 @@ body {
   line-height: 1.35;
 }
 
-/* Background locker: previews use CSS only; gameplay uses one cached Pixi
-   Graphics, so adding themes does not add a per-frame texture or asset fetch. */
+/* The locker uses small CSS thumbnails; gameplay lazily decodes one Pixi plate. */
 .background-preview-stage {
   grid-template-columns: minmax(13rem, 1.2fr) minmax(8rem, 0.8fr);
 }
@@ -1280,6 +1279,8 @@ body {
   isolation: isolate;
   background-color: #080b17;
   background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 .background-preview {
@@ -1318,45 +1319,31 @@ body {
 [data-background="deep-space"] {
   --background-accent: #75e6ff;
   --background-line: rgba(117, 230, 255, 0.45);
-  background-image:
-    radial-gradient(circle at 24% 28%, rgba(117, 230, 255, 0.35), transparent 25%),
-    radial-gradient(circle at 82% 72%, rgba(72, 103, 183, 0.28), transparent 32%),
-    linear-gradient(145deg, #080b17, #101b38);
+  background-color: #080b17;
 }
 
 [data-background="ion-storm"] {
   --background-accent: #65f2c2;
   --background-line: rgba(101, 242, 194, 0.48);
-  background-image:
-    radial-gradient(ellipse at 28% 60%, rgba(101, 242, 194, 0.38), transparent 34%),
-    radial-gradient(ellipse at 76% 30%, rgba(117, 230, 255, 0.28), transparent 31%),
-    linear-gradient(145deg, #071321, #0d2a3a);
+  background-color: #071321;
 }
 
 [data-background="solar-drift"] {
   --background-accent: #ffb86b;
   --background-line: rgba(255, 184, 107, 0.5);
-  background-image:
-    radial-gradient(circle at 74% 48%, rgba(255, 227, 154, 0.42), transparent 16%),
-    radial-gradient(ellipse at 78% 50%, rgba(255, 184, 107, 0.28), transparent 45%),
-    linear-gradient(145deg, #170d0d, #3a1c19);
+  background-color: #170d0d;
 }
 
 [data-background="crystal-field"] {
   --background-accent: #d2a8ff;
   --background-line: rgba(210, 168, 255, 0.5);
-  background-image:
-    linear-gradient(135deg, transparent 0 46%, rgba(210, 168, 255, 0.14) 47% 48%, transparent 49%),
-    linear-gradient(45deg, transparent 0 46%, rgba(117, 230, 255, 0.12) 47% 48%, transparent 49%),
-    radial-gradient(circle at 28% 24%, rgba(210, 168, 255, 0.32), transparent 30%),
-    linear-gradient(145deg, #100b20, #24153e);
-  background-size: auto, auto, auto, auto;
+  background-color: #100b20;
 }
 
 [data-background="nacre-orbit"] {
   --background-accent: #9db7b3;
   --background-line: rgba(135, 163, 163, 0.4);
-  background-image: url('./assets/svg/backgrounds/nacre-orbit.svg');
+  background-image: url('./assets/images/backgrounds/nacre-orbit.webp');
   background-size: cover;
   background-position: center;
 }
@@ -1401,9 +1388,47 @@ body {
 [data-background="vesper-bloom"] {
   --background-accent: #c6b4c6;
   --background-line: rgba(155, 138, 172, 0.42);
-  background-image: url('./assets/svg/backgrounds/vesper-bloom.svg');
+  background-image: url('./assets/images/backgrounds/vesper-bloom.webp');
   background-size: cover;
   background-position: center;
+}
+
+[data-background="tidal-veil"] {
+  --background-accent: #8bb3aa;
+  --background-line: rgba(139, 179, 170, 0.42);
+  background-image: url('./assets/images/backgrounds/tidal-veil.webp');
+  background-size: cover;
+  background-position: center;
+}
+
+.background-preview[data-background="nacre-orbit"],
+.background-card-art[data-background="nacre-orbit"] {
+  background-image: url('./assets/images/backgrounds/nacre-orbit-preview.webp');
+}
+
+.background-preview[data-background="vesper-bloom"],
+.background-card-art[data-background="vesper-bloom"] {
+  background-image: url('./assets/images/backgrounds/vesper-bloom-preview.webp');
+}
+
+.background-preview[data-background="deep-space"],
+.background-card-art[data-background="deep-space"] {
+  background-image: url('./assets/images/backgrounds/deep-space-preview.webp');
+}
+
+.background-preview[data-background="ion-storm"],
+.background-card-art[data-background="ion-storm"] {
+  background-image: url('./assets/images/backgrounds/ion-storm-preview.webp');
+}
+
+.background-preview[data-background="solar-drift"],
+.background-card-art[data-background="solar-drift"] {
+  background-image: url('./assets/images/backgrounds/solar-drift-preview.webp');
+}
+
+.background-preview[data-background="crystal-field"],
+.background-card-art[data-background="crystal-field"] {
+  background-image: url('./assets/images/backgrounds/crystal-field-preview.webp');
 }
 
 .background-preview[data-background="nacre-orbit"]::before,
@@ -1418,6 +1443,43 @@ body {
 .background-card-art[data-background="vesper-bloom"]::before,
 .background-card-art[data-background="vesper-bloom"]::after {
   content: none;
+}
+
+.background-preview[data-background="deep-space"]::before,
+.background-preview[data-background="deep-space"]::after,
+.background-card-art[data-background="deep-space"]::before,
+.background-card-art[data-background="deep-space"]::after,
+.background-preview[data-background="ion-storm"]::before,
+.background-preview[data-background="ion-storm"]::after,
+.background-card-art[data-background="ion-storm"]::before,
+.background-card-art[data-background="ion-storm"]::after,
+.background-preview[data-background="solar-drift"]::before,
+.background-preview[data-background="solar-drift"]::after,
+.background-card-art[data-background="solar-drift"]::before,
+.background-card-art[data-background="solar-drift"]::after,
+.background-preview[data-background="crystal-field"]::before,
+.background-preview[data-background="crystal-field"]::after,
+.background-card-art[data-background="crystal-field"]::before,
+.background-card-art[data-background="crystal-field"]::after {
+  content: none;
+}
+
+.background-preview[data-background="tidal-veil"]::before,
+.background-card-art[data-background="tidal-veil"]::before {
+  content: "";
+  background: url('./assets/images/backgrounds/tidal-veil-currents-preview.webp') center / cover no-repeat;
+  opacity: 0.12;
+}
+
+.background-preview[data-background="tidal-veil"]::after,
+.background-card-art[data-background="tidal-veil"]::after {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  content: "";
+  background: url('./assets/images/backgrounds/tidal-veil-currents-preview.webp') center / cover no-repeat;
+  opacity: 0.12;
+  transform: scaleX(-1);
 }
 
 .background-cards {

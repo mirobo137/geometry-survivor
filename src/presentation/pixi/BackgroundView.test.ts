@@ -7,20 +7,21 @@ const fakeRenderer = {
 } as unknown as ConstructorParameters<typeof BackgroundView>[0];
 
 describe('BackgroundView', () => {
-  it('retains static atmosphere in Low without per-frame motion or accumulating sprites', () => {
+  it('uses a quiet static art plate for each painterly theme at every quality', () => {
     const view = new BackgroundView(fakeRenderer, 'ion-storm', 'low');
-    const nebula = view.root.children[1];
-    expect(nebula.children).toHaveLength(2);
-    expect(view.root.children[2].children).toHaveLength(12);
-    expect(view.root.children[3].children).toHaveLength(0);
-    const sprite = nebula.children[0];
-    const before = [sprite.x, sprite.y, sprite.scale.x, sprite.alpha];
+    const [nebulaLayer, starLayer, ambientLayer] = view.root.children.slice(1, 4);
+    expect(nebulaLayer.visible).toBe(false);
+    expect(starLayer.visible).toBe(false);
+    expect(ambientLayer.visible).toBe(false);
     view.setPlayerPosition(300, 200);
     view.update(0.1, 9);
-    expect([sprite.x, sprite.y, sprite.scale.x, sprite.alpha]).toEqual(before);
-    for (const theme of ['solar-drift', 'crystal-field', 'deep-space', 'ion-storm'] as const) view.setBackground(theme);
-    expect(nebula.children).toHaveLength(2);
-    expect(nebula.children[0]).toBe(sprite);
+    for (const theme of ['solar-drift', 'crystal-field', 'deep-space', 'ion-storm'] as const) {
+      view.setBackground(theme);
+      expect(view.backgroundId).toBe(theme);
+      expect(nebulaLayer.visible).toBe(false);
+      expect(starLayer.visible).toBe(false);
+      expect(ambientLayer.visible).toBe(false);
+    }
     expect(view.backgroundId).toBe('ion-storm');
   });
   it('exposes the selected background id', () => {
@@ -30,14 +31,27 @@ describe('BackgroundView', () => {
     expect(typeof BackgroundView).toBe('function');
   });
 
-  it('rescales existing nebula sprites when the presentation viewport changes', () => {
+  it('selects the common atmospheric motion layer for all six other painted themes', () => {
+    const view = new BackgroundView(fakeRenderer, 'deep-space', 'high');
+    const motionLayer = view.root.children.at(-1)!;
+    const paintedThemes = [
+      'deep-space', 'ion-storm', 'solar-drift', 'crystal-field', 'nacre-orbit', 'vesper-bloom'
+    ] as const;
+
+    for (const theme of paintedThemes) {
+      view.setBackground(theme);
+      expect(motionLayer.visible).toBe(true);
+      expect(() => view.update(1 / 60, 4)).not.toThrow();
+    }
+
+    view.setBackground('tidal-veil');
+    expect(motionLayer.visible).toBe(false);
+  });
+
+  it('updates the selected art plate cover crop when the viewport changes', () => {
     const view = new BackgroundView(fakeRenderer, 'deep-space', 'medium');
-    const nebulaLayer = view.root.children[1];
-    const firstNebula = nebulaLayer.children[0];
-    const initialScale = firstNebula.scale.x;
-
     view.resize(640, 1280);
-
-    expect(firstNebula.scale.x).toBeCloseTo(initialScale / 2);
+    expect(view.backgroundId).toBe('deep-space');
+    expect(() => view.update(0.1, 1)).not.toThrow();
   });
 });

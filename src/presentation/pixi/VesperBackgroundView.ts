@@ -1,10 +1,10 @@
-import vesperUrl from '../../assets/svg/backgrounds/vesper-bloom.svg?url';
-import { createSvgBackgroundLoader, StaticSvgBackgroundView } from './StaticSvgBackgroundView';
+import vesperUrl from '../../assets/images/backgrounds/vesper-bloom.webp?url';
+import { createRasterBackgroundLoader, StaticRasterBackgroundView } from './StaticRasterBackgroundView';
 
-export const loadVesperBackground = createSvgBackgroundLoader(vesperUrl);
+export const loadVesperBackground = createRasterBackgroundLoader(vesperUrl);
 
-/** Compatibility wrapper for the Vesper Bloom atmosphere. */
-export class VesperBackgroundView extends StaticSvgBackgroundView {
+/** Painterly Vesper plate, lazily loaded and cached like other raster skies. */
+export class VesperBackgroundView extends StaticRasterBackgroundView {
   public constructor(load = loadVesperBackground) {
     super(load);
   }

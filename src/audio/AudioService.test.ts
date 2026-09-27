@@ -19,11 +19,16 @@ class FakeNode {
 }
 
 class FakeAudioContext {
+  public readonly sampleRate = 48000;
   public state: AudioContextState = 'suspended';
   public currentTime = 0;
   public readonly destination = new FakeNode() as unknown as AudioDestinationNode;
   public readonly resume = vi.fn(async () => { this.state = 'running'; });
   public readonly createGain = vi.fn(() => new FakeNode() as unknown as GainNode);
+  public readonly createDynamicsCompressor = vi.fn(() => Object.assign(new FakeNode(), {
+    threshold: { value: 0 }, knee: { value: 0 }, ratio: { value: 0 },
+    attack: { value: 0 }, release: { value: 0 }
+  }) as unknown as DynamicsCompressorNode);
   public readonly createBuffer = vi.fn((_channels: number, length: number) => ({
     getChannelData: vi.fn(() => new Float32Array(length))
   }) as unknown as AudioBuffer);
@@ -33,6 +38,7 @@ class FakeAudioContext {
     source.playbackRate = { value: 1 };
     source.onended = null;
     source.start = vi.fn();
+    Object.assign(source, { stop: vi.fn() });
     return source as unknown as AudioBufferSourceNode;
   });
 }
@@ -110,5 +116,71 @@ describe('AudioManager', () => {
       service.playCue('damage');
       service.shutdown();
     }).not.toThrow();
+  });
+
+  it('caches layered synthesis and disposes finished sources', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    const ctx = mocks.context!;
+    service.playCue('laser-ignite');
+    const first = ctx.createBufferSource.mock.results[0].value;
+    first.onended?.(new Event('ended'));
+    ctx.currentTime = 1;
+    service.playCue('laser-ignite');
+    expect(ctx.createBuffer).toHaveBeenCalledTimes(1);
+    expect(ctx.createBufferSource).toHaveBeenCalledTimes(2);
+    expect(first.disconnect).toHaveBeenCalled();
+    service.shutdown();
+  });
+
+  it('reserves danger slots and preempts detail without exceeding eight voices', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    const ctx = mocks.context!;
+    for (let i = 0; i < 8; i += 1) {
+      ctx.currentTime = i;
+      service.playCue('enemy-hit');
+    }
+    expect(ctx.createBufferSource).toHaveBeenCalledTimes(6);
+    service.playCue('laser-ignite');
+    service.playCue('boss-warning');
+    service.playCue('damage');
+    const sources = ctx.createBufferSource.mock.results.map(result => result.value);
+    expect(sources.length).toBe(9);
+    expect(sources.filter(source => vi.mocked(source.stop).mock.calls.length === 0)).toHaveLength(8);
+    expect(sources[0].stop).toHaveBeenCalledOnce();
+    service.shutdown();
+    expect(sources.every(source => vi.mocked(source.disconnect).mock.calls.length > 0)).toBe(true);
+  });
+
+  it('stops combat tails on pause while allowing UI without starting music', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    service.playCue('laser-sustain');
+    const ctx = mocks.context!;
+    const source = ctx.createBufferSource.mock.results[0].value;
+    service.pause();
+    expect(source.stop).toHaveBeenCalledOnce();
+    await service.unlock();
+    service.playCue('laser-sustain');
+    service.playCue('ui-click');
+    expect(ctx.createBufferSource).toHaveBeenCalledTimes(2);
+    expect(mocks.howlPlay).not.toHaveBeenCalled();
+    service.shutdown();
+  });
+
+  it('a rejected source start neither consumes a voice nor silences its retry', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    const ctx = mocks.context!;
+    const failed = ctx.createBufferSource();
+    vi.mocked(failed.start).mockImplementation(() => { throw new Error('context interrupted'); });
+    ctx.createBufferSource.mockReturnValueOnce(failed);
+    service.playCue('laser-ignite');
+    expect(failed.disconnect).toHaveBeenCalled();
+    const count = ctx.createBufferSource.mock.calls.length;
+    service.playCue('laser-ignite');
+    expect(ctx.createBufferSource.mock.calls.length).toBe(count + 1);
+    service.shutdown();
   });
 });

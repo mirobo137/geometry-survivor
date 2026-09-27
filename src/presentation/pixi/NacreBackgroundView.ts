@@ -1,10 +1,10 @@
-import nacreUrl from '../../assets/svg/backgrounds/nacre-orbit.svg?url';
-import { createSvgBackgroundLoader, StaticSvgBackgroundView } from './StaticSvgBackgroundView';
+import nacreUrl from '../../assets/images/backgrounds/nacre-orbit.webp?url';
+import { createRasterBackgroundLoader, StaticRasterBackgroundView } from './StaticRasterBackgroundView';
 
-export const loadNacreBackground = createSvgBackgroundLoader(nacreUrl);
+export const loadNacreBackground = createRasterBackgroundLoader(nacreUrl);
 
-/** Compatibility name for the first approved static SVG atmosphere. */
-export class NacreBackgroundView extends StaticSvgBackgroundView {
+/** Painterly Nacre plate, lazily loaded and cached like other raster skies. */
+export class NacreBackgroundView extends StaticRasterBackgroundView {
   public constructor(load = loadNacreBackground) {
     super(load);
   }

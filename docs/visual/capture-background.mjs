@@ -15,9 +15,10 @@ try {
  await page.locator('#start-skins').click();await page.locator('#start-backgrounds-tab').click();
  await page.locator('.background-card[data-background="nacre-orbit"] button').click();
  await page.locator('.background-card[data-background="vesper-bloom"] button').click();
+ await page.locator('.background-card[data-background="tidal-veil"] button').click();
  await page.screenshot({path:'test-results/background-reference/locker.png'});
  const save=await page.evaluate(()=>JSON.parse(localStorage.getItem('geometry-survivor:save')));
- assert.equal(save.wallet.nova,0);assert.equal(save.backgrounds.selected,'vesper-bloom');
+ assert.equal(save.wallet.nova,0);assert.equal(save.backgrounds.selected,'tidal-veil');
  for(const [quality,w,h] of [['low',1280,720],['high',390,844]]){
    await page.setViewportSize({width:w,height:h});
    await page.goto(base+'/?boss=1&quality='+quality);
@@ -27,5 +28,5 @@ try {
    await page.screenshot({path:`test-results/background-reference/boss-${quality}.png`});
  }
  assert.deepEqual(errors,[]);
- console.log('Nacre + Vesper: reference, free locker, Low desktop and High portrait Vesper boss captured; no runtime/HTTP errors.');
+ console.log('All seven painted backgrounds: reference, free locker, Low desktop and High portrait boss captured; no runtime/HTTP errors.');
 } finally {await browser.close();}

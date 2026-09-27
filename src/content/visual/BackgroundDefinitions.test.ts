@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { BACKGROUND_DEFINITIONS, getBackgroundDefinition, isBackgroundId } from './BackgroundDefinitions';
 
 describe('BackgroundDefinitions', () => {
-  it('keeps five bounded, presentation-only atmosphere presets', () => {
-    expect(BACKGROUND_DEFINITIONS).toHaveLength(6);
-    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(6);
+  it('keeps seven bounded, presentation-only background identities', () => {
+    expect(BACKGROUND_DEFINITIONS).toHaveLength(7);
+    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(7);
     for (const definition of BACKGROUND_DEFINITIONS) {
       expect(definition.name.length).toBeGreaterThan(0);
       expect(definition.tokens.pattern).toMatch(/^(constellation|nebula|solar|crystal)$/);

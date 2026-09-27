@@ -11,6 +11,9 @@ import type { FxQuality } from '../../content/visual/VisualTokens';
 import { createTexture } from './TextureFactory';
 import { NacreBackgroundView } from './NacreBackgroundView';
 import { VesperBackgroundView } from './VesperBackgroundView';
+import { TidalVeilBackgroundView } from './TidalVeilBackgroundView';
+import { createPainterlyBackgroundViews, type PainterlyBackgroundId } from './PainterlyBackgroundViews';
+import { PainterlyBackgroundMotionView, PAINTERLY_MOTION_STYLES } from './PainterlyBackgroundMotionView';
 
 const STAR_POINTS = [
   [0.08, 0.16, 1.2], [0.17, 0.74, 1.6], [0.25, 0.29, 0.9], [0.32, 0.86, 1.3],
@@ -85,13 +88,12 @@ const PATTERN_BEHAVIOR: Readonly<Record<BackgroundPattern, AmbientBehavior>> = {
   crystal: 'rotate'
 };
 
-const isStaticSvgBackground = (id: BackgroundId): boolean => id === 'nacre-orbit' || id === 'vesper-bloom';
+const isStaticArtworkBackground = (id: BackgroundId): boolean => (
+  id === 'deep-space' || id === 'ion-storm' || id === 'solar-drift' || id === 'crystal-field'
+  || id === 'nacre-orbit' || id === 'vesper-bloom' || id === 'tidal-veil'
+);
 
-/**
- * Atmospheric background with animated layers. The static base is redrawn only
- * on theme/viewport changes. Stars twinkle, nebulae breathe and ambient
- * particles drift — all using pooled sprites, no allocations in the ticker.
- */
+/** Selects a lazy painted plate with a shared, low-cost atmospheric motion layer. */
 export class BackgroundView {
   public readonly root = new Container();
   private readonly staticArt = new Graphics();
@@ -100,11 +102,15 @@ export class BackgroundView {
   private readonly ambientLayer = new Container();
   private readonly nacre = new NacreBackgroundView();
   private readonly vesper = new VesperBackgroundView();
+  private readonly tidalVeil = new TidalVeilBackgroundView();
+  private readonly painterlyMotion = new PainterlyBackgroundMotionView();
+  private readonly painterlyBackgrounds = createPainterlyBackgroundViews();
   private readonly quality: FxQuality;
   private readonly renderer: Renderer;
   private width = LOGICAL_WIDTH;
   private height = LOGICAL_HEIGHT;
   private _backgroundId: BackgroundId = 'deep-space';
+  private hasRenderedBackground = false;
   private stars: StarSlot[] = [];
   private ambientParticles: AmbientParticle[] = [];
   private nebulae: NebulaSlot[] = [];
@@ -119,9 +125,11 @@ export class BackgroundView {
     this.quality = quality;
     this.root.eventMode = 'none';
     this.root.addChild(this.staticArt, this.nebulaLayer, this.starLayer, this.ambientLayer);
+    this.root.addChild(...Object.values(this.painterlyBackgrounds).map(view => view.root));
     this.root.addChild(this.nacre.root);
     this.root.addChild(this.vesper.root);
-    this.ensureTextures();
+    this.root.addChild(this.tidalVeil.root);
+    this.root.addChild(this.painterlyMotion.root);
     this.setBackground(backgroundId);
   }
 
@@ -139,9 +147,10 @@ export class BackgroundView {
   }
 
   public setBackground(backgroundId: BackgroundId): void {
-    if (this._backgroundId === backgroundId && (this.stars.length > 0 || isStaticSvgBackground(backgroundId))) return;
+    if (this.hasRenderedBackground && this._backgroundId === backgroundId) return;
     this._backgroundId = backgroundId;
     this.rebuild();
+    this.hasRenderedBackground = true;
   }
 
   /** Call once per frame with the player world position for parallax. */
@@ -152,8 +161,18 @@ export class BackgroundView {
 
   /** Advances all animated layers. Call every frame with presentation delta. */
   public update(deltaSeconds: number, animationSeconds: number): void {
+    if (this._backgroundId === 'tidal-veil') {
+      this.tidalVeil.update(animationSeconds, this.quality !== 'low');
+      return;
+    }
+    this.updateBasePlate(animationSeconds, this.quality !== 'low');
+    const motionStyle = PAINTERLY_MOTION_STYLES[this._backgroundId as keyof typeof PAINTERLY_MOTION_STYLES];
+    if (motionStyle) {
+      this.painterlyMotion.update(animationSeconds, this.quality !== 'low');
+      return;
+    }
     // Low retains the composition, but no ambient motion or twinkle work.
-    if (this.quality === 'low' || isStaticSvgBackground(this._backgroundId)) return;
+    if (this.quality === 'low' || isStaticArtworkBackground(this._backgroundId)) return;
     const delta = Math.min(Math.max(deltaSeconds, 0), 0.1);
 
     // Parallax offset based on player position
@@ -188,6 +207,19 @@ export class BackgroundView {
     }
   }
 
+  private updateBasePlate(animationSeconds: number, animate: boolean): void {
+    if (this._backgroundId === 'nacre-orbit') {
+      this.nacre.update(animationSeconds, animate);
+      return;
+    }
+    if (this._backgroundId === 'vesper-bloom') {
+      this.vesper.update(animationSeconds, animate);
+      return;
+    }
+    const rasterView = this.painterlyBackgrounds[this._backgroundId as PainterlyBackgroundId];
+    rasterView?.update(animationSeconds, animate);
+  }
+
   private ensureTextures(): void {
     if (this.dotTexture) return;
     this.dotTexture = createTexture(this.renderer, (graphics) => {
@@ -206,11 +238,20 @@ export class BackgroundView {
     this.renderStaticBase(definition);
     const isNacre = this._backgroundId === 'nacre-orbit';
     const isVesper = this._backgroundId === 'vesper-bloom';
-    const isStaticSvg = isNacre || isVesper;
+    const isTidalVeil = this._backgroundId === 'tidal-veil';
+    const isStaticArtwork = isStaticArtworkBackground(this._backgroundId);
+    for (const [id, view] of Object.entries(this.painterlyBackgrounds)) {
+      view.render(this._backgroundId === id, this.width, this.height);
+    }
     this.nacre.render(isNacre, this.width, this.height);
     this.vesper.render(isVesper, this.width, this.height);
-    this.nebulaLayer.visible = this.starLayer.visible = this.ambientLayer.visible = !isStaticSvg;
-    if (isStaticSvg) return;
+    this.tidalVeil.render(isTidalVeil, this.width, this.height);
+    const painterlyMotionStyle = PAINTERLY_MOTION_STYLES[
+      this._backgroundId as keyof typeof PAINTERLY_MOTION_STYLES
+    ];
+    this.painterlyMotion.render(Boolean(painterlyMotionStyle), this.width, this.height, painterlyMotionStyle);
+    this.nebulaLayer.visible = this.starLayer.visible = this.ambientLayer.visible = !isStaticArtwork;
+    if (isStaticArtwork) return;
     this.rebuildStars(definition);
     this.rebuildNebulae(definition);
     this.rebuildAmbientParticles(definition);

@@ -527,6 +527,20 @@ prueba es gratuita y seleccionable en el locker; no modifica daño, física ni
 el cosmético de cañones. Contrato y prompt: [Manta README](src/assets/skins/manta/README.md).
 Pendiente aprobación visual humana; no cierra las puertas EX ni VIS previas.
 
+### Contrato vigente de fondos — 27-09-2026
+
+Todos los fondos nuevos y existentes heredan el movimiento de placa compartido:
+paneo lento ±12×10 unidades lógicas y respiración de escala 0–1.5%,
+implementados sobre el Sprite existente. Medium/High animan; Low y
+`prefers-reduced-motion` congelan. No añadir filtros, shaders, partículas ni
+otra textura sólo para mover la placa. Los fondos nuevos generados con imágenes
+GPT deben diferenciarse del catálogo por motivo/composición y al menos dos ejes
+visuales adicionales; una variación sólo cromática no es una identidad nueva.
+Si un futuro fondo no es raster, aplicar el mismo movimiento al root decorativo
+compartido, nunca a la cámara, arena ni espacio de juego.
+El contrato detallado de movimiento, composición y matriz comparativa está en
+[Fondos premium](docs/design/FONDOS_PREMIUM.md).
+
 | Caso | Representación inicial |
 |---|---|
 | cientos de enemigos/proyectiles repetidos | textura + Sprite |

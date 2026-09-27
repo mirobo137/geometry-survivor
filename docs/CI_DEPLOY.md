@@ -5,6 +5,23 @@ después de typecheck, unit tests, tres builds y toda la suite browser. Un
 fallo sigue bloqueando la publicación. `npm ci` usa el lockfile y Chromium se
 instala con la versión de Playwright de ese lockfile.
 
+## Incidente de Pages — 27-09-2026
+
+El run más reciente falló en cuatro de 64 pruebas browser. Dos esperaban un
+catálogo de seis fondos aunque `BackgroundDefinitions` ya declara siete; ahora
+comparan cantidad e IDs/orden directamente con esa fuente, evitando que el test
+se desactualice cuando crece el catálogo. Una prueba móvil de entrada tomaba
+captura y luego intentaba omitir una intro premium de 2.6 s. Ahora comprueba y
+pulsa el botón tan pronto es visible; la captura manual queda solo para ejecución
+local (Playwright conserva sus artefactos automáticos de CI). La matriz móvil
+duplicaba además el viewport 1280×720, ya cubierto por el proyecto desktop; se
+quitó solo esa repetición, conservando 320×568, 390×844 y 640×360 en mobile.
+
+Validación local del arreglo: build local, typecheck y 493 tests Vitest pasan;
+los dos casos desktop y cinco casos móviles enfocados pasan con `CI=true`.
+Falta confirmar el workflow completo en GitHub Actions; el resultado local no
+certifica el rendimiento del runner Ubuntu.
+
 ## Incidente de septiembre de 2026
 
 Actions informó `Test timeout of 60000ms exceeded` en un caso que recorría

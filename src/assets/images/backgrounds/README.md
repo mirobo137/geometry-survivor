@@ -1,5 +1,16 @@
 # Velo de Marea / Tidal Veil
 
+## Regla para nuevos fondos generados con imágenes GPT
+
+Antes de generar, comparar la idea con los siete fondos del catálogo y anotar
+qué la distingue. Debe cambiar el motivo principal o la composición y al menos
+dos ejes adicionales (paleta, material/textura, dirección de luz o ritmo de las
+masas); no aceptar un mero cambio cromático, más brillo o un halo añadido.
+Proponer tres conceptos distintos, elegir uno por identidad y conservar centro
+de combate oscuro con ≥55% de bajo detalle. El procedimiento canónico completo,
+incluido el movimiento compartido obligatorio, está en
+`docs/design/FONDOS_PREMIUM.md`.
+
 - ID del juego: `tidal-veil`. Rol: atmósfera cosmética pintada detrás de arena
   y entidades; no es geometría de gameplay.
 - Máster base: `tidal-veil.png`, generado con el generador de imágenes

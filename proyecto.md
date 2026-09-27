@@ -1667,6 +1667,14 @@ No utilizar fondos enormes innecesariamente.
 
 El fondo debe proporcionar sensación de movimiento sin competir con enemigos y proyectiles.
 
+Todo fondo reutiliza el movimiento de placa común documentado en
+[Fondos premium](docs/design/FONDOS_PREMIUM.md): paneo/respiración sobre el
+Sprite o root decorativo existente, con Low y `prefers-reduced-motion`
+estáticos. Cada nueva imagen de fondo generada debe tener motivo o composición
+claramente distintos del catálogo vigente y diferenciarse además en al menos
+dos ejes entre material/textura, paleta y dirección de luz; cambiar únicamente
+el color, brillo o niebla no cuenta como una identidad nueva.
+
 ---
 
 # 50. MOBILE FIRST

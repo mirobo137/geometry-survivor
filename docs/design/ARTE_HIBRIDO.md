@@ -4,8 +4,13 @@ Decisión de producto, 09-09-2026. Entrada canónica: PLAN_DESARROLLO.md §8.
 Aplicable a Luna, Codex, Grok y cualquier agente con herramientas de repositorio.
 Referencia implementada: [Manta Veil](../../src/assets/skins/manta/README.md).
 Para elegir PNG, SVG o Graphics en atmósferas, leer
-[Fondos premium](FONDOS_PREMIUM.md): Nacre y Vesper usan SVG rasterizado una
-vez porque sus masas y materiales no requieren una superficie pintada.
+[Fondos premium](FONDOS_PREMIUM.md): los SVG previos de Nacre y Vesper se
+conservan como referencia editable, pero el runtime usa sus placas pictóricas
+WebP generadas y cargadas como texturas.
+Para cualquier nueva placa de fondo generada con imágenes GPT, esa guía también
+es el contrato obligatorio de movimiento compartido y de diferenciación frente
+al catálogo: motivo/composición propios y al menos dos ejes adicionales, no
+sólo un recolor.
 Para cañones, consultar [Bloomwake](../../src/assets/skins/cannons/bloom/README.md):
 ensamblaje lateral, slots de boca, pétalos nacarados y límites del paquete híbrido.
 El híbrido puede combinar cañón SVG y estela PNG; no obliga a añadir un bitmap

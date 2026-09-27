@@ -1,5 +1,15 @@
 # Geometry Survivor — estado y continuación
 
+## Estabilidad de browser smoke / Pages — 27-09-2026
+
+El run más reciente de 64 casos reportó cuatro errores. Se actualizó la
+expectativa del locker para tomar las siete identidades desde
+`BACKGROUND_DEFINITIONS`, se eliminó la repetición móvil de 1280×720 (sigue en
+desktop), y la prueba de intro ahora omite inmediatamente cuando el botón está
+visible en vez de capturar antes de que cierre la animación. Build local,
+typecheck, 493 tests Vitest y siete pruebas Playwright dirigidas pasaron. Falta
+confirmar el run completo en Actions; detalles en `docs/CI_DEPLOY.md`.
+
 ## Movimiento compartido de placas y atmósfera — 27-09-2026
 
 Los seis fondos pintados aparte de Velo de Marea ahora reutilizan sus dos
@@ -9,6 +19,12 @@ respiración de zoom (0–1.5%, ciclos de 28–38 s) en el mismo Sprite; no carg
 recursos adicionales. Se amplificó porque la primera receta era imperceptible.
 El centro de juego permanece despejado. Medium/High animan; Low y
 `prefers-reduced-motion` congelan placa y overlays.
+
+Regla permanente para cualquier fondo futuro: heredar este mismo movimiento
+base; si la placa se genera con imágenes GPT, diferenciar motivo/composición y
+al menos dos ejes visuales adicionales respecto al catálogo. Un recolor no
+cuenta como fondo nuevo. Ver el contrato/matriz en
+`docs/design/FONDOS_PREMIUM.md`.
 
 Implementación y contrato: `src/presentation/pixi/StaticRasterBackgroundView.ts`,
 `src/presentation/pixi/PainterlyBackgroundMotionView.ts` y
@@ -24,12 +40,16 @@ amplio. Opacidad configurada +0.10, deriva hasta ±35-44 px por eje horizontal y
 
 ## Acabado pictórico consistente para fondos — 26-09-2026
 
+Registro histórico de la primera entrega: en ese corte las nuevas placas,
+excepto Tidal Veil, todavía no tenían movimiento. La regla actual está arriba:
+las siete heredan movimiento de placa y las corrientes adicionales tienen
+identidad/ritmo por tema.
+
 El locker conserva sus siete identidades y su economía. Los seis temas estáticos
 ahora tienen placas pintadas distintas: Deep Space, Ion Storm, Solar Drift,
 Crystal Field, Nacre Orbit y Vesper Bloom. Se generaron masters PNG cuadrados y
 derivaciones WebP: 1254 px para Pixi, 512 px para previews CSS. Cada tema se carga
-bajo demanda; Tidal Veil conserva su motion de cuatro esquinas, y las otras
-placas son quietas en todas las calidades. No se alteran armas, arena ni gameplay.
+bajo demanda. No se alteran armas, arena ni gameplay.
 
 Dirección de arte, medidas, prompts resumidos y límites: `docs/design/FONDOS_PREMIUM.md`
 y `src/assets/images/backgrounds/README.md`. Referencia real con BackgroundView
@@ -46,6 +66,9 @@ kB gzip). No se midieron FPS ni memoria en móvil físico.
 
 ## Movimiento atmosférico de Velo de Marea — 26-09-2026
 
+Registro de la primera iteración: entonces se mantenía fija la placa base. La
+regla vigente ahora suma el paneo/zoom compartidos documentados arriba.
+
 La primera prueba manual indicó que el movimiento era prácticamente
 imperceptible; al aumentar intensidad quedó bien, pero se pidió movimiento en
 las cuatro esquinas. El reloj sí avanzaba. La receta ahora mantiene fija la
@@ -55,7 +78,8 @@ animan las capas; Low y `prefers-reduced-motion` siguen estáticos. Locker muest
 la composición de cuatro esquinas también en reposo. Sin filtros ni partículas.
 
 Tests actualizados para exigir deriva medible en las cuatro esquinas dentro de
-4 segundos, reutilización/espejo de textura, placa fija y movimiento desactivado.
+4 segundos, reutilización/espejo de textura y congelación del movimiento cuando
+se desactiva.
 Pendiente: confirmar visualmente esta extensión en partida a calidad Medium/High
 y comprobar legibilidad/rendimiento en móvil físico. La estrategia común para
 fondos pintados y la excepción animada viven en `docs/design/FONDOS_PREMIUM.md`

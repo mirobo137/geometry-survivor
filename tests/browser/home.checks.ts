@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-export const registerHomeChecks = (): void => {
-  for (const [width, height] of [[320, 568], [390, 844], [640, 360], [1280, 720]] as const) {
+export const registerHomeChecks = (options: { includeDesktopViewport?: boolean } = {}): void => {
+  const viewports = options.includeDesktopViewport === false
+    ? [[320, 568], [390, 844], [640, 360]] as const
+    : [[320, 568], [390, 844], [640, 360], [1280, 720]] as const;
+  for (const [width, height] of viewports)
   test(`consolas premium sin solaparse a ${width}x${height}`, async ({ page }, testInfo) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -75,8 +78,6 @@ export const registerHomeChecks = (): void => {
       }
     expect(errors).toEqual([]);
   });
-  }
-
   test('cubre la carga desde HTML y entrega el menú sin textos recortados', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));

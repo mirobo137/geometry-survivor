@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
 
-registerHomeChecks();
+registerHomeChecks({ includeDesktopViewport: false });
 
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
@@ -10,9 +11,9 @@ test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ pag
   await page.locator('#start-play').click();
   await expect(page.locator('#run-transition')).toHaveAttribute('data-variant', 'premium');
   await expect(page.locator('[data-run-transition-name]')).toHaveText('RADIAL');
-  await page.waitForTimeout(900);
-  await page.screenshot({ path: testInfo.outputPath('run-intro-mobile.png') });
-  const skip = await page.locator('[data-run-transition-skip]').boundingBox();
+  const skipButton = page.locator('[data-run-transition-skip]');
+  await expect(skipButton).toBeVisible();
+  const skip = await skipButton.boundingBox();
   const viewport = page.viewportSize();
   expect(skip).not.toBeNull();
   expect(viewport).not.toBeNull();
@@ -20,7 +21,8 @@ test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ pag
   expect(skip!.y).toBeGreaterThanOrEqual(0);
   expect(skip!.x + skip!.width).toBeLessThanOrEqual(viewport!.width);
   expect(skip!.y + skip!.height).toBeLessThanOrEqual(viewport!.height);
-  await page.locator('[data-run-transition-skip]').click();
+  if (!process.env.CI) await page.screenshot({ path: testInfo.outputPath('run-intro-mobile.png') });
+  await skipButton.click();
   await expect(page.locator('#run-transition')).toBeHidden();
   await expect(page.locator('#pause-toggle')).toBeVisible();
   expect(failures).toEqual([]);
@@ -178,7 +180,10 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }) 
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
-  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(6);
+  const backgroundCards = page.locator('#start-background-cards .background-card');
+  await expect(backgroundCards).toHaveCount(BACKGROUND_DEFINITIONS.length);
+  expect(await backgroundCards.evaluateAll(cards => cards.map(card => card.getAttribute('data-background'))))
+    .toEqual(BACKGROUND_DEFINITIONS.map(background => background.id));
   const backgroundScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

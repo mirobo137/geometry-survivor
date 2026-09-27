@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
 
 registerHomeChecks();
@@ -196,7 +197,10 @@ test('compra y equipa fondos desde el menu y conserva la seleccion', async ({ pa
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('#start-backgrounds-panel')).toBeVisible();
   await expect(page.locator('#start-background-preview')).toBeVisible();
-  await expect(page.locator('#start-background-cards .background-card')).toHaveCount(6);
+  const backgroundCards = page.locator('#start-background-cards .background-card');
+  await expect(backgroundCards).toHaveCount(BACKGROUND_DEFINITIONS.length);
+  expect(await backgroundCards.evaluateAll(cards => cards.map(card => card.getAttribute('data-background'))))
+    .toEqual(BACKGROUND_DEFINITIONS.map(background => background.id));
   await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-locked/);
   await page.locator('.background-card[data-background="ion-storm"] button').click();
   await expect(page.locator('.background-card[data-background="ion-storm"]')).toHaveClass(/is-selected/);

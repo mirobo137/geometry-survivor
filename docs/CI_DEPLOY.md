@@ -9,7 +9,7 @@ instala con la versión de Playwright de ese lockfile.
 
 El job `build` verifica TypeScript, lógica y los tres destinos. Ocho jobs
 `browser` arrancan a la vez, cada uno construye `dist/local` desde el mismo
-commit y ejecuta una octava parte de los 70 casos Playwright. La división es
+commit y ejecuta una octava parte de los 69 casos Playwright. La división es
 por **caso**, porque tres archivos desiguales no se repartirían bien por
 archivo. Cada runner mantiene **un solo worker**: el experimento anterior con
 dos workers en un runner agotaba Chromium/WebGL. `deploy` depende del éxito de
@@ -30,6 +30,16 @@ Fuentes oficiales: [Playwright CI](https://playwright.dev/docs/ci),
 [sharding](https://playwright.dev/docs/test-sharding) y
 [jobs dependientes de GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs),
 [facturación de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+
+## Smoke 4: duplicado de progresión Projectile — 28-09-2026
+
+El shard 4 agotó el timeout de 35 s mientras esperaba la primera subida de
+nivel en la ruta de Projectile. En ese mismo shard ya se ejecutaba otro caso
+que inicia la misma ruta, espera `projectile_rank_2`, la elige y comprueba el
+rango 2/6; ese caso pasó. Se eliminó únicamente el duplicado con timeout
+reducido. El comportamiento del juego y la cobertura de progresión se conservan
+con el caso restante, cuyo presupuesto de CI es 120 s. No se ha repetido el
+workflow completo de GitHub desde este cambio.
 
 ## Incidente de Pages — 27-09-2026
 

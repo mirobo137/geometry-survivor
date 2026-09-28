@@ -661,33 +661,6 @@ for (const weaponCard of [
   });
 }
 
-test('ofrece la ruta real de Projectile rango por rango', async ({ page }) => {
-  test.setTimeout(35_000);
-  const failures = captureRuntimeFailures(page);
-  await page.goto('/?weapon-path=projectile&debug=1&quality=low');
-  await expect(page.locator('#boot-status')).toBeHidden();
-  await expect(page.locator('#start-screen')).toBeHidden();
-  await expect(page.locator('#debug-panel')).toContainText('mode: weapon-path-projectile');
-  await expect(page.locator('#debug-panel')).toContainText('rank 1/6');
-
-  const levelUp = page.locator('#level-up');
-  const movementKeys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'];
-  for (let index = 0; index < 24 && !(await levelUp.isVisible()); index += 1) {
-    const key = movementKeys[index % movementKeys.length];
-    await page.keyboard.down(key);
-    await page.waitForTimeout(450);
-    await page.keyboard.up(key);
-  }
-
-  await expect(levelUp).toBeVisible({ timeout: 20_000 });
-  await expect(levelUp.locator('#level-up-options button')).toHaveCount(1);
-  await expect(levelUp.locator('#level-up-options button')).toHaveAttribute('data-upgrade-id', 'projectile_rank_2');
-  await levelUp.locator('#level-up-options button').click();
-  await expect(levelUp).toBeHidden({ timeout: 5_000 });
-  await expect(page.locator('#debug-panel')).toContainText('rank 2/6');
-  expect(failures).toEqual([]);
-});
-
 for (const weaponPath of [
   { query: 'projectile', label: 'projectile' },
   { query: 'orbit', label: 'orbit' },

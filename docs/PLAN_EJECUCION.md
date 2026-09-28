@@ -46,7 +46,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK, EX-02c balance pendiente |
+| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK; EX-02c prueba manual +20% HP en enemigos normales I/II |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |

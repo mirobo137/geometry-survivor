@@ -90,12 +90,15 @@ export interface EnemyDefinition {
   readonly color: number;
 }
 
+/** Temporary EX-02c trial: tougher normal rosters for Acts I and II. */
+const ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER = 1.2;
+
 export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
   chaser: {
     kind: 'chaser',
     radius: 18,
     speed: 72,
-    maxHealth: 24,
+    maxHealth: 24 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 8,
     experience: 1,
     spawnCost: 1,
@@ -105,7 +108,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'fast',
     radius: 14,
     speed: 126,
-    maxHealth: 12,
+    maxHealth: 12 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 6,
     experience: 2,
     spawnCost: 1,
@@ -115,7 +118,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'tank',
     radius: 28,
     speed: 42,
-    maxHealth: 72,
+    maxHealth: 72 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 16,
     experience: 5,
     spawnCost: 3,
@@ -125,7 +128,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'elite',
     radius: 24,
     speed: 84,
-    maxHealth: 132,
+    maxHealth: 132 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 20,
     experience: 8,
     spawnCost: 5,
@@ -135,22 +138,22 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'orbiter',
     radius: 17,
     speed: 94,
-    maxHealth: 32,
+    maxHealth: 32 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 9,
     experience: 3,
     spawnCost: 2,
     color: 0x65e6ff
   },
   charger: {
-    kind: 'charger', radius: 19, speed: 108, maxHealth: 38, contactDamage: 11,
+    kind: 'charger', radius: 19, speed: 108, maxHealth: 38 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER, contactDamage: 11,
     experience: 3, spawnCost: 2, color: 0xffb45b
   },
   splitter: {
-    kind: 'splitter', radius: 21, speed: 62, maxHealth: 46, contactDamage: 12,
+    kind: 'splitter', radius: 21, speed: 62, maxHealth: 46 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER, contactDamage: 12,
     experience: 4, spawnCost: 3, color: 0xd27cff
   },
   'prism-weaver': {
-    kind: 'prism-weaver', radius: 20, speed: 44, maxHealth: 52, contactDamage: 8,
+    kind: 'prism-weaver', radius: 20, speed: 44, maxHealth: 52 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER, contactDamage: 8,
     experience: 5, spawnCost: 3, color: 0x76e5d2
   },
   'warden-replica': {

@@ -1,5 +1,14 @@
 # Geometry Survivor — estado y continuación
 
+## Prueba inicial de balance de resistencia — 27-09-2026
+
+EX-02c inicia con +20% de vida base para las ocho familias normales de Actos I
+y II. Acto III, bosses y réplicas permanecen iguales; daño, movimiento, XP,
+frecuencias y recompensas no cambian. Splitter conserva la escala de vida de
+sus hijos. Overdrive reutiliza estas vidas base y aplica después su curva por
+tramo. Ajuste provisional pendiente de prueba humana antes de decidir si se
+conserva; tabla de valores en `docs/balance/EX-02c-health-trial-actos-1-2.md`.
+
 ## CI de Pages distribuido — 27-09-2026
 
 El deploy de Pages ahora exige `build` y ocho shards Playwright en runners

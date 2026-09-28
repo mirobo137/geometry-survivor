@@ -19,6 +19,8 @@ export class BossShipVisual {
   private defeatAge = -1;
   private bossId: BossId = 'core-sentinel';
   private readonly textures: BossShipTextureMap;
+  private readonly motionReduced = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   public constructor(
     textures: BossShipTextureMap | BossShipTextures,
@@ -54,21 +56,37 @@ export class BossShipVisual {
     if (this.defeatAge < 0) this.root.visible = false;
   }
 
-  public render(state: EnemyRenderState, seconds: number, hitPulse = 0): void {
+  public render(state: EnemyRenderState, seconds: number, hitPulse = 0, introProgress = 1): void {
     if (!state.active || state.kind !== 'boss' || this.defeatAge >= 0) return;
+    const progress = Math.max(0, Math.min(1, introProgress));
+    const assembly = this.motionReduced ? 1 : progress * progress * (3 - 2 * progress);
     this.root.visible = true;
     this.root.position.set(state.x, state.y);
-    this.root.alpha = Math.max(0.7, state.health / state.maxHealth);
-    this.root.scale.set(1 + hitPulse * 0.025);
-    if (this.bossId === 'orbital-warden' && Math.hypot(state.vx,state.vy)>1) {
+    this.root.alpha = Math.max(0.7, state.health / state.maxHealth) * (0.35 + 0.65 * progress);
+    this.root.scale.set((this.motionReduced ? 1 : 0.8 + 0.2 * assembly) * (1 + hitPulse * 0.025));
+    if (progress < 1) this.root.rotation = 0;
+    else if (this.bossId === 'orbital-warden' && Math.hypot(state.vx,state.vy)>1) {
       this.root.rotation = Math.atan2(state.vy,state.vx)+Math.PI/2;
     }
     if (this.quality === 'low') return;
-    // Heavy machinery: minute axial shifts, not an organic flapping motion.
-    this.pieces[0].position.y = Math.sin(seconds * 1.8) * 0.45;
+    // Four cached ship layers dock from distinct directions during the existing
+    // non-attacking intro; normal idle transforms resume at progress 1.
+    const remaining = 1 - assembly;
+    this.pieces[0].position.set(0, Math.sin(seconds * 1.8) * 0.45 + remaining * 44);
+    this.pieces[1].position.set(-remaining * 52, 0);
+    this.pieces[2].position.set(remaining * 46, 0);
+    this.pieces[3].position.set(0, -remaining * 54);
+    for (let index = 0; index < this.pieces.length; index += 1) {
+      this.pieces[index].alpha = progress >= 1 ? 1
+        : Math.max(0.14, Math.min(1, (progress - index * 0.075) / 0.6));
+    }
     this.pieces[1].scale.x = 1 + Math.sin(seconds * 1.2) * 0.009;
     this.pieces[3].scale.set(1 + Math.sin(seconds * 2.1) * 0.012);
-    this.pieces[1].rotation = this.bossId === 'orbital-warden' ? Math.sin(seconds*1.2)*0.055 : 0;
+    this.pieces[0].rotation = remaining * -0.12;
+    this.pieces[1].rotation = remaining * 0.18
+      + (this.bossId === 'orbital-warden' ? Math.sin(seconds*1.2)*0.055 : 0);
+    this.pieces[2].rotation = remaining * -0.16;
+    this.pieces[3].rotation = remaining * 0.1;
   }
 
   public playDefeat(x: number, y: number): void {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_CENTER, ARENA_RADIUS } from '../../config/constants';
 import { BOSS_DEFINITION, ORBITAL_WARDEN_DEFINITION } from '../../content/bosses/BossDefinition';
+import { FRACTURE_ENGINE_DEFINITION } from '../../content/bosses/BossDefinition';
 import { PlayerModel } from '../PlayerModel';
 import { EnemyPool } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
@@ -35,6 +36,22 @@ const advanceToRing = (boss: BossSystem, player: PlayerModel): void => {
 };
 
 describe('BossSystem', () => {
+  it.each([BOSS_DEFINITION, ORBITAL_WARDEN_DEFINITION, FRACTURE_ENGINE_DEFINITION])(
+    'keeps $id non-attacking throughout its authored assembly window', definition => {
+      const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(1280, 720));
+      const player = new PlayerModel();
+      const boss = new BossSystem(enemies, { ...definition, startSeconds: 0 });
+      expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
+      expect(boss.state.phase).toBe('intro');
+      player.state.x = boss.state.x;
+      player.state.y = boss.state.y;
+      for (let index = 0; index < Math.floor(definition.introSeconds * 60) - 1; index += 1) {
+        expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
+        expect(boss.state.phase).toBe('intro');
+      }
+    }
+  );
+
   it.each(['charge','curve'] as const)('keeps the %s endpoint at the recovery boundary and starts the next attack there', (pattern) => {
     const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(1280,720));
     const player = new PlayerModel();

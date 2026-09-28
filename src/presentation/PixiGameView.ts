@@ -96,6 +96,12 @@ export class PixiGameView {
     this.backgroundView.resize(viewport.logicalWidth, viewport.logicalHeight);
     this.worldOffsetX = viewport.worldOffsetX;
     this.worldOffsetY = viewport.worldOffsetY;
+    this.entitiesView.setVisibleWorldBounds(
+      -viewport.worldOffsetX,
+      -viewport.worldOffsetY,
+      viewport.logicalWidth - viewport.worldOffsetX,
+      viewport.logicalHeight - viewport.worldOffsetY
+    );
     this.applyWorldOffset();
     this.root.hitArea = undefined;
   }

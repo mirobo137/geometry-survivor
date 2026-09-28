@@ -1,5 +1,20 @@
 # Geometry Survivor — estado y continuación
 
+## Portales de aparición — 27-09-2026
+
+Los enemigos normales reciben un portal breve generado desde una sola textura
+Pixi compartida; la vista limita simultaneidad por calidad y solo gasta slots
+en nacimientos cercanos al viewport. Los bosses aprovechan su intro existente
+de 1,1–1,3 s: portal grande y ensamblaje de sus cuatro piezas antes del primer
+ataque. No se modifican daño, colisiones ni tiempos de simulación. Contrato,
+presupuestos y pendiente de validación humana en
+[PORTALES_APARICION.md](docs/design/PORTALES_APARICION.md).
+Comprobado: `npm run build:local` (502 pruebas unitarias) y cinco smoke browser
+dirigidos (familias de enemigos/boss High, atajo del boss, touch portrait,
+Orbital Warden y Fracture Engine).
+Se inspeccionó una captura Pixel 5 emulada; aún no hay medición de FPS en
+teléfono físico ni aprobación estética humana. Los cambios siguen locales.
+
 ## Fondos portrait y estabilidad de smoke CI — 27-09-2026
 
 En juego, las cuatro corrientes transparentes de los fondos pintados se

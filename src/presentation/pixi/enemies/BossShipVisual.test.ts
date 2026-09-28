@@ -7,6 +7,20 @@ const textures: BossShipTextures = { flat: Texture.EMPTY, parts: [Texture.WHITE,
 const state: EnemyRenderState = { active: true, kind: 'boss', x: 300, y: 200, vx: 0, vy: 0, health: 100, maxHealth: 100, radius: 48 };
 
 describe('BossShipVisual', () => {
+  it('assembles all four pieces through intro and finishes in its normal pose', () => {
+    const view = new BossShipVisual(textures, 'high');
+    view.render(state, 0, 0, 0);
+    const pieces = view.root.children as Sprite[];
+    expect(pieces.map(piece => Math.hypot(piece.x, piece.y)).every(distance => distance > 40)).toBe(true);
+    const startScale = view.root.scale.x;
+    view.render(state, 0.6, 0, 0.5);
+    expect(view.root.scale.x).toBeGreaterThan(startScale);
+    view.render(state, 1.2, 0, 1);
+    expect(pieces.every(piece => Math.abs(piece.x) < 1 && Math.abs(piece.y) < 1)).toBe(true);
+    expect(pieces.every(piece => piece.alpha === 1)).toBe(true);
+    expect(view.root.scale.x).toBe(1);
+  });
+
   it('animates four cached parts and disperses them without changing state', () => {
     const view = new BossShipVisual(textures, 'high');
     view.render(Object.freeze(state), 1);

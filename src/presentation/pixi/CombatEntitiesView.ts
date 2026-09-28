@@ -74,6 +74,7 @@ import { getProjectileCurveOffset, getProjectileCurveVelocity } from './fx/Proje
 import { OrbiterTelegraphView } from './OrbiterTelegraphView';
 import { ChargerTelegraphView } from './ChargerTelegraphView';
 import { PrismWeaverTelegraphView } from './PrismWeaverTelegraphView';
+import { SpawnPortalView } from './enemies/SpawnPortalView';
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
@@ -218,6 +219,8 @@ class EnemyVisual {
   public readonly root = new Container();
   private readonly ship: EnemyShipVisual;
   private hitAtSeconds = Number.NEGATIVE_INFINITY;
+  private readonly motionReduced = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   public constructor(
     textures: EnemyTextureSet,
@@ -229,7 +232,12 @@ class EnemyVisual {
     this.root.addChild(this.ship.root);
   }
 
-  public render(state: EnemyRenderState, animationSeconds: number): void {
+  public render(
+    state: EnemyRenderState,
+    animationSeconds: number,
+    entranceProgress = 1,
+    bossIntroProgress = 1
+  ): void {
     this.root.visible = state.active;
     if (!state.active) {
       this.root.scale.set(1);
@@ -239,11 +247,13 @@ class EnemyVisual {
     const hitAge = animationSeconds - this.hitAtSeconds;
     const hitProgress = hitAge >= 0 ? Math.min(1, hitAge / 0.12) : 1;
     const punch = hitProgress < 1 ? 1 + Math.sin(hitProgress * Math.PI) * 0.045 : 1;
-    this.root.scale.set(punch);
+    this.root.scale.set(punch * (this.motionReduced ? 1 : 0.55 + 0.45 * entranceProgress));
+    this.root.alpha = this.motionReduced ? 1 : 0.4 + 0.6 * entranceProgress;
     if (state.kind === 'boss') {
       this.root.visible = false;
       const boss = this.bosses[state.bossId ?? 'core-sentinel'];
-      boss?.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
+      boss?.render(state, animationSeconds,
+        hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0, bossIntroProgress);
       return;
     }
     this.ship.render(state, animationSeconds, hitProgress < 1 ? Math.sin(hitProgress * Math.PI) : 0);
@@ -272,6 +282,7 @@ export class CombatEntitiesView {
   private readonly projectileGlows: Sprite[] = [];
   private readonly enemyImpactFx: EnemyImpactFxView;
   private readonly enemyDefeatFx: EnemyDefeatFxView;
+  private readonly spawnPortals: SpawnPortalView;
   private readonly orbiterTelegraphs: OrbiterTelegraphView;
   private readonly chargerTelegraphs: ChargerTelegraphView;
   private readonly prismWeaverTelegraphs: PrismWeaverTelegraphView;
@@ -288,6 +299,8 @@ export class CombatEntitiesView {
   private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
+  private readonly previousGeneration = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
+  private readonly entranceAt = Array.from({ length: ENEMY_POOL_CAPACITY }, () => Number.NEGATIVE_INFINITY);
 
   public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
     this.quality = quality;
@@ -312,12 +325,14 @@ export class CombatEntitiesView {
     this.bosses['fracture-engine'].setBossId('fracture-engine');
     for (const boss of Object.values(this.bosses)) this.enemyLayer.addChild(boss.root);
     this.enemyDefeatFx = new EnemyDefeatFxView(this.enemyTextures.ships, quality);
+    this.spawnPortals = new SpawnPortalView(renderer, quality);
     this.orbiterTelegraphs = new OrbiterTelegraphView(quality);
     this.chargerTelegraphs = new ChargerTelegraphView(quality);
     this.prismWeaverTelegraphs = new PrismWeaverTelegraphView(quality);
     this.root.addChild(
       this.projectileLayer,
       this.projectileTrails.root,
+      this.spawnPortals.root,
       this.enemyLayer,
       this.orbiterTelegraphs.root,
       this.chargerTelegraphs.root,
@@ -409,12 +424,13 @@ export class CombatEntitiesView {
     return this.enemyImpactFx.activeParticleCount
       + this.enemyImpactFx.activeBurstCount
       + this.enemyDefeatFx.activeCount
+      + this.spawnPortals.activeCount
       + this.damageNumbers.activeCount
       + this.projectileTrails.activeSegmentCount;
   }
 
   public render(
-    combat: Pick<CombatRenderState, 'enemies' | 'projectiles'>,
+    combat: Pick<CombatRenderState, 'enemies' | 'projectiles' | 'boss' | 'bosses'>,
     animationSeconds = 0,
     bossId: BossId = 'core-sentinel'
   ): void {
@@ -428,7 +444,13 @@ export class CombatEntitiesView {
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       const state = combat.enemies[index];
       const wasActive = this.previousActive[index];
+      const generation = state.generation ?? 0;
       if (state.active) {
+        if (!wasActive || this.previousGeneration[index] !== generation) {
+          this.entranceAt[index] = state.kind !== 'boss'
+            && this.spawnPortals.playEnemy(state.x, state.y, state.radius, state.kind, animationSeconds)
+            ? animationSeconds : Number.NEGATIVE_INFINITY;
+        }
         if (wasActive && state.health < this.previousHealth[index] - 0.001) {
           const amount = this.previousHealth[index] - state.health;
           this.enemyImpactFx.playHit(state.x, state.y, state.radius, state.kind);
@@ -437,10 +459,20 @@ export class CombatEntitiesView {
           this.enemyVisuals[index].playHit(animationSeconds);
         }
       }
-      this.enemyVisuals[index].render(state, animationSeconds);
+      const entranceAge = animationSeconds - this.entranceAt[index];
+      const entranceProgress = Number.isFinite(entranceAge)
+        ? Math.max(0, Math.min(1, entranceAge / 0.26)) : 1;
+      const bossIntro = state.kind === 'boss'
+        ? combat.bosses?.find(candidate => candidate.active && candidate.bossId === state.bossId)
+          ?? combat.boss
+        : undefined;
+      this.enemyVisuals[index].render(state, animationSeconds, entranceProgress,
+        bossIntro?.phase === 'intro' ? bossIntro.progress : 1);
       this.previousActive[index] = state.active;
       this.previousHealth[index] = state.health;
+      this.previousGeneration[index] = generation;
     }
+    this.spawnPortals.render(animationSeconds, combat.boss, combat.bosses);
     this.healthBars.render(combat.enemies, animationSeconds);
 
     for (let index = 0; index < this.projectileSprites.length; index += 1) {
@@ -487,6 +519,10 @@ export class CombatEntitiesView {
     this.bosses[bossId].playDefeat(x, y);
   }
 
+  public setVisibleWorldBounds(left: number, top: number, right: number, bottom: number): void {
+    this.spawnPortals.setVisibleWorldBounds(left, top, right, bottom);
+  }
+
   public updateBossDefeat(deltaSeconds: number): void {
     for (const boss of Object.values(this.bosses)) boss.update(deltaSeconds);
   }
@@ -501,6 +537,7 @@ export class CombatEntitiesView {
     for (const boss of Object.values(this.bosses)) boss.reset();
     this.enemyImpactFx.clear();
     this.enemyDefeatFx.clear();
+    this.spawnPortals.reset();
     this.orbiterTelegraphs.reset();
     this.chargerTelegraphs.reset();
     this.prismWeaverTelegraphs.reset();
@@ -510,6 +547,8 @@ export class CombatEntitiesView {
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       this.previousActive[index] = false;
       this.previousHealth[index] = 0;
+      this.previousGeneration[index] = 0;
+      this.entranceAt[index] = Number.NEGATIVE_INFINITY;
       this.enemyVisuals[index].reset();
     }
     for (const sprite of this.projectileSprites) sprite.visible = false;

@@ -194,6 +194,9 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(7);
+  expect(await page.locator('#start-cannon-cards .cannon-card-art').evaluateAll((artworks) =>
+    artworks.every((artwork) => getComputedStyle(artwork).overflowX === 'hidden' && getComputedStyle(artwork).overflowY === 'hidden')
+  )).toBe(true);
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Arc Needle');

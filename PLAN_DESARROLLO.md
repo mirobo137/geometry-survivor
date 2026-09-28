@@ -3593,3 +3593,17 @@ y no reabre esas entregas sin un defecto reproducible.
 Quedan explícitamente pendientes EX-02c, para el balance global de daño, vida,
 spawn y recompensas, y EX-09, para SDKs reales, QA de portales y preparación de
 publicación. La publicación no se declara lista hasta completar esas puertas.
+
+### 22.16 Cierre de EX-02c — aprobación del baseline de balance — 28-09-2026
+
+Por validación humana explícita del usuario, el baseline actual de balance de
+combate para Actos I–III y Overdrive queda **APROBADO**. EX-02c se cierra con
+las vidas de enemigos y bosses consignadas en `docs/balance/EX-02c-health-trial-actos-1-2.md`
+y `docs/balance/EX-02c-boss-health-trial.md`. No se declara una medición nueva
+de la matriz de diez runs ni la verificación numérica del objetivo histórico
+10–15% del Laboratorio: la aceptación corresponde al game feel observado por
+el usuario. Si surge una discrepancia durante una run, se hará un ajuste
+puntual; no se mantiene abierta una recalibración global.
+
+EX-02d queda como diagnóstico cuantitativo opcional, no como puerta para usar
+el baseline aprobado. EX-09 sigue pendiente y no queda aprobado por este cierre.

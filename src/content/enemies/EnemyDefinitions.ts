@@ -1,3 +1,5 @@
+import { BOSS_HEALTH_TRIAL_MULTIPLIER, DEFAULT_BOSS_BASE_HEALTH } from '../bosses/BossDefinition';
+
 export type EnemyKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica' | 'fracture-gunner' | 'thorn-bastion' | 'zigzag-reaver' | 'rift-miner' | 'boss';
 
 export type OrbiterPhase = 'inactive' | 'approach' | 'telegraph' | 'commit' | 'recovery';
@@ -92,13 +94,15 @@ export interface EnemyDefinition {
 
 /** Temporary EX-02c trial: tougher normal rosters for Acts I and II. */
 const ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER = 1.2;
+/** Follow-up trial: Chaser gets 30% more health than the initial EX-02c trial. */
+const CHASER_HEALTH_FOLLOW_UP_MULTIPLIER = 1.3;
 
 export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
   chaser: {
     kind: 'chaser',
     radius: 18,
     speed: 72,
-    maxHealth: 24 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER,
+    maxHealth: 24 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER * CHASER_HEALTH_FOLLOW_UP_MULTIPLIER,
     contactDamage: 8,
     experience: 1,
     spawnCost: 1,
@@ -180,7 +184,7 @@ export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
     kind: 'boss',
     radius: 48,
     speed: 0,
-    maxHealth: 520,
+    maxHealth: DEFAULT_BOSS_BASE_HEALTH * BOSS_HEALTH_TRIAL_MULTIPLIER,
     contactDamage: 0,
     experience: 40,
     spawnCost: 0,

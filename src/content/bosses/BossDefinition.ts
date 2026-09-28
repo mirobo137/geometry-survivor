@@ -1,6 +1,10 @@
 export type BossId = 'core-sentinel' | 'orbital-warden' | 'fracture-engine';
 export type BossPattern = 'sweep' | 'ring' | 'charge' | 'curve' | 'replicas' | 'battery' | 'spikes' | 'zigzag' | 'mines';
 
+/** EX-02c trial: bosses get 10% more than double their authored base health. */
+export const BOSS_HEALTH_TRIAL_MULTIPLIER = 2.2;
+export const DEFAULT_BOSS_BASE_HEALTH = 520;
+
 export interface BossDefinition {
   readonly id: BossId;
   readonly startSeconds: number;
@@ -148,7 +152,7 @@ export const FRACTURE_ENGINE_DEFINITION = {
   replicasTelegraphSeconds: 0.72,
   replicasActiveSeconds: 0.5,
   bossRadius: 56,
-  maxHealth: 900,
+  maxHealth: 900 * BOSS_HEALTH_TRIAL_MULTIPLIER,
   spikeRadius: 84,
   spikeWidth: 22
 } satisfies BossDefinition;

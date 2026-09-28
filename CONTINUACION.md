@@ -1,13 +1,58 @@
 # Geometry Survivor — estado y continuación
 
+## Aprobación del baseline de balance — 28-09-2026
+
+El usuario aprueba el balance jugable actual de Actos I–III y Overdrive con los
+valores documentados en las fichas EX-02c: +20% de vida en enemigos normales de
+Actos I/II, +30% adicional al Chaser sobre esa prueba y ×2.2 de vida para los
+tres bosses. Acto III normal conserva sus valores base. EX-02c queda cerrado
+por validación humana; futuras correcciones serán puntuales y motivadas por un
+problema observado durante una run. No se inventan métricas ni una matriz nueva
+de diez partidas. EX-02d queda opcional y no bloquea este baseline. Ver
+`docs/PLAN_EJECUCION.md` y `PLAN_DESARROLLO.md` §22.16.
+
+## Recorte de cañones en tarjetas de Skins — 28-09-2026
+
+Las estelas horizontales del SVG de vista previa se salían de `.cannon-card-art`
+en escritorio. La ventana de arte ahora recorta su contenido con
+`overflow: hidden`, sin reducir la vista grande del modal. El smoke de compra y
+equipamiento de cañones en Playwright desktop pasó (1/1) y comprobó el recorte
+en las siete tarjetas. También pasaron `npm run typecheck` y `vite build` con
+`--configLoader runner`. El flujo `test:browser` normal y el build Vite normal
+fallaron al leer la configuración desde OneDrive (`Access is denied`); se usó
+el config loader alternativo para el build y preview local.
+
+## Prueba de vida de bosses — 28-09-2026
+
+Core Sentinel y Orbital Warden pasan de 520 a 1,144 HP; Fracture Engine, de
+900 a 1,980 HP: multiplicador común ×2.2 (10% por encima de duplicar). Daño,
+patrones, fases y tiempos no cambian. Overdrive parte de estas vidas base y
+después aplica su multiplicador de tramo. El usuario aprueba este valor como
+parte del baseline actual; la vida adicional alarga el combate, pero no añade
+por sí sola complejidad mecánica. Ficha: `docs/balance/EX-02c-boss-health-trial.md`.
+Conservar también la iteración local previa de Chaser (+30% sobre su prueba
+inicial); no se hizo commit/push.
+
+## Iteración de vida de Chaser — 27-09-2026
+
+Sobre la prueba EX-02c de +20% para enemigos normales de Actos I/II, Chaser
+recibe un +30% adicional respecto de aquella prueba: su vida pasa de 28.8 a
+37.44 (`24 × 1.2 × 1.3`), equivalente a +56% sobre la base original. Los otros
+siete enemigos conservan los valores de la primera prueba; Acto III, bosses y
+réplicas siguen sin cambios. Overdrive hereda el nuevo valor base de Chaser y
+aplica su multiplicador de tramo. Al registrarse era un ajuste provisional;
+la aprobación humana vigente está arriba. Registro y valores:
+`docs/balance/EX-02c-health-trial-actos-1-2.md`.
+
 ## Prueba inicial de balance de resistencia — 27-09-2026
 
 EX-02c inicia con +20% de vida base para las ocho familias normales de Actos I
 y II. Acto III, bosses y réplicas permanecen iguales; daño, movimiento, XP,
 frecuencias y recompensas no cambian. Splitter conserva la escala de vida de
 sus hijos. Overdrive reutiliza estas vidas base y aplica después su curva por
-tramo. Ajuste provisional pendiente de prueba humana antes de decidir si se
-conserva; tabla de valores en `docs/balance/EX-02c-health-trial-actos-1-2.md`.
+tramo. La ficha conserva el registro histórico de la prueba inicial; su
+aprobación y el valor vigente se detallan en
+`docs/balance/EX-02c-health-trial-actos-1-2.md`.
 
 ## CI de Pages distribuido — 27-09-2026
 

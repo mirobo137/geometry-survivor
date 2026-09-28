@@ -46,7 +46,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | EN CURSO; EX-02a/EX-02b OK; EX-02c prueba manual +20% HP en enemigos normales I/II |
+| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; mediciones detalladas EX-02d opcionales, no bloquean el baseline |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |
@@ -59,12 +59,12 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
 | EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
 | EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
-| EX-06 | 6 | Acto I Radial y contrato de actos | VALIDADO en móvil; EX-02c conserva el balance final pendiente |
-| EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante y EX-02c conserva el balance final pendiente |
-| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | VALIDADO por el usuario; mantener balance separado |
+| EX-06 | 6 | Acto I Radial y contrato de actos | VALIDADO en móvil; baseline EX-02 aprobado, ajustes futuros solo puntuales |
+| EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante; baseline EX-02 aprobado |
+| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | VALIDADO por el usuario; baseline de balance aprobado, ajustes futuros solo puntuales |
 | EX-09 | 8 | adaptadores reales y QA por portal | PENDIENTE; incluye preparación de publicación |
-| EX-10 | 9 | Acto III Fracture | VALIDADO en móvil; EX-02c conserva el balance final pendiente |
-| EX-11 | 10 | Overdrive y producción | VALIDADO por el usuario; balance y EX-09 siguen separados |
+| EX-10 | 9 | Acto III Fracture | VALIDADO en móvil; baseline EX-02 aprobado, ajustes futuros solo puntuales |
+| EX-11 | 10 | Overdrive y producción | VALIDADO por el usuario; baseline de balance aprobado; EX-09 sigue separado |
 | EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; consumido por EX-11.2 |
 | EX-11.2 | 10 | Director de composición y ruta de inspección | AUTOMÁTICO OK; transición pendiente |
 
@@ -179,18 +179,22 @@ architecture sólo si aparece una frontera compartida necesaria.
    no extender los porcentajes actuales a todas las armas sin recalibrar.
    Cadencia debe tener una semántica explícita por arma (disparo o tick), sin
    acelerar rotación ni duplicar aplicación. Fórmula y preview usan una fuente.
-3. **EX-02c — PENDIENTE POR DECISIÓN DE PRODUCTO:** ajustar porcentajes,
-   conservando IDs, cinco niveles y compras existentes, junto con el balance
-   integral de vida de enemigos y daño general. No ejecutar esta recalibración
-   ahora ni presentar los valores actuales como aceptación del objetivo.
-4. **EX-02d:** guardar resultado y casos en `docs/balance/` al producir evidencia
-   real. Comparar también cartas que acerquen cooldown/tick a su mínimo.
+3. **EX-02c — CERRADO POR APROBACIÓN HUMANA (28-09-2026):** el usuario aprueba
+   el balance jugable actual de actos y Overdrive. Las vidas aceptadas están
+   registradas en [`EX-02c-health-trial-actos-1-2.md`](balance/EX-02c-health-trial-actos-1-2.md)
+   y [`EX-02c-boss-health-trial.md`](balance/EX-02c-boss-health-trial.md).
+   Cualquier ajuste posterior debe responder a un caso concreto observado en
+   una run, no reabrir una recalibración global por defecto.
+4. **EX-02d — OPCIONAL:** conservar mediciones comparables adicionales cuando
+   ayuden a diagnosticar un problema concreto; no bloquean la aprobación humana
+   del baseline. No se afirma que el umbral numérico de ventaja haya sido
+   medido de nuevo en una matriz completa.
 
-**Aceptación:** ventaja efectiva dentro del máximo objetivo 10–15% del plan
-(sin forzar un mínimo en escenarios donde una mejora no aporta). Las mejoras
-son monotónicas, el nivel máximo no rompe límites y el save conserva propiedad,
-saldo y niveles. Explicar las diferencias entre DPS teórico, aplicado y tiempo
-de eliminación; no reducir todo a una fórmula aislada.
+**Aceptación vigente:** el usuario aprueba el baseline jugable actual mediante
+pruebas manuales. Esto sustituye la puerta de aceptación global pendiente; no
+presenta el objetivo histórico de ventaja efectiva 10–15% como medición
+verificada. Las fórmulas del Laboratorio siguen centralizadas y acotadas; una
+futura discrepancia se medirá con la ficha EX-02d si resulta necesaria.
 
 **No hacer:** borrar saves, regalar/reembolsar NOVA sin decisión, cambiar precios
 o añadir vida, crítico, vampirismo, XP o escudo permanentes. Si conservar compras

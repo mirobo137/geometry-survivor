@@ -978,6 +978,7 @@ body {
   place-items: center;
   min-width: 0;
   height: 6.9rem;
+  overflow: hidden;
   border-radius: 0.55rem;
   background: radial-gradient(circle, color-mix(in srgb, var(--cannon-accent) 15%, transparent), transparent 68%);
 }

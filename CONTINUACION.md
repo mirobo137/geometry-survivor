@@ -1,5 +1,14 @@
 # Geometry Survivor — estado y continuación
 
+## OD-F01 — propuesta futura de ritmo por puntos en Overdrive — 27-09-2026
+
+El usuario pidió estudiar una ruta más rápida para jugadores con Laboratorio
+avanzado, sin implementarla todavía. El plan opcional Normal/Asalto, cuotas
+de bajas medidas por tramo, spawns más frecuentes, arena/hazards seguros,
+récords separados y puerta de balance está en
+[OVERDRIVE_RITMO_POR_PUNTOS.md](docs/design/OVERDRIVE_RITMO_POR_PUNTOS.md).
+Depende de EX-02c; la jugabilidad actual de Overdrive no cambió.
+
 ## Portales de aparición — 27-09-2026
 
 Los enemigos normales reciben un portal breve generado desde una sola textura

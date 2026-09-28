@@ -1051,6 +1051,11 @@ enemigos/proyectiles para aparentar progresión.
 
 ### EX-11 — Overdrive y preparación de lanzamiento
 
+**Futuro, sin implementar:** [OD-F01 — Ritmo por puntos](design/OVERDRIVE_RITMO_POR_PUNTOS.md)
+define un perfil opcional de Overdrive con boss por cuota de bajas y spawns
+más frecuentes. Depende de cerrar EX-02c y medir las bajas al boss por tramo;
+no cambia el contrato Normal vigente de EX-11.
+
 **Puerta vigente, 17-09-2026:** OD-A01–OD-A08 de [la auditoría](design/AUDITORIA_OVERDRIVE.md)
 están corregidos y cubiertos por regresiones. EX-11.1–7 quedan cerrados en
 automático y la validación manual previa de Overdrive en Pages/móvil fue

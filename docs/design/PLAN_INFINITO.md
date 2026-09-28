@@ -12,6 +12,11 @@ trabajos separados.
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
 
+**Extensión futura, aún no implementada:** [OD-F01 — Ritmo por puntos](OVERDRIVE_RITMO_POR_PUNTOS.md)
+propone un Asalto opcional para llegar antes al boss por bajas tras calibrar
+Laboratorio y balance EX-02c. Las cadencias y entradas por tiempo descritas
+aquí siguen vigentes para Overdrive Normal.
+
 ## Estado de implementación de esta entrega
 
 - Overdrive sigue siendo `campaign | overdrive`, nunca un cuarto `ActId`.

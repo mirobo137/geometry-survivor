@@ -91,4 +91,32 @@ describe('painterly background atmosphere', () => {
     expect(requests).toBe(0);
     view.root.destroy({ children: true });
   });
+
+  it('keeps all four currents inside the visible portrait corners', async () => {
+    const view = new PainterlyBackgroundMotionView(
+      async () => Texture.WHITE,
+      async () => Texture.WHITE
+    );
+    view.render(true, 720, 1280, STILL_STYLE);
+    await Promise.resolve();
+    const currents = view.root.children as Sprite[];
+    for (const [index, current] of currents.entries()) {
+      expect(current.x + current.width / 2).toBeGreaterThan(100);
+      expect(current.x - current.width / 2).toBeLessThan(620);
+      if (index === 0 || index === 2) {
+        expect(current.y - current.height / 2).toBeLessThan(0);
+        expect(current.y + current.height / 2).toBeGreaterThan(300);
+      } else {
+        expect(current.y + current.height / 2).toBeGreaterThan(1280);
+        expect(current.y - current.height / 2).toBeLessThan(1000);
+      }
+    }
+    view.update(0, true);
+    const startingX = currents.map(current => current.x);
+    view.update(4, true);
+    currents.forEach((current, index) => {
+      expect(Math.abs(current.x - startingX[index])).toBeGreaterThan(20);
+    });
+    view.root.destroy({ children: true });
+  });
 });

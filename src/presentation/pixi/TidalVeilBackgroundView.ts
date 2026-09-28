@@ -135,13 +135,18 @@ export class TidalVeilBackgroundView extends StaticRasterBackgroundView {
   }
 
   private layoutCurrents(): void {
-    const coverSize = Math.max(this.layoutWidth, this.layoutHeight) * 1.025;
+    const portrait = this.layoutHeight > this.layoutWidth;
+    const coverSize = (portrait ? this.layoutWidth : Math.max(this.layoutWidth, this.layoutHeight)) * 1.025;
     const pixelScale = coverSize / SOURCE_SIZE;
     const left = this.layoutWidth / 2 - coverSize / 2;
     const top = this.layoutHeight / 2 - coverSize / 2;
     for (const current of this.currents) {
       current.baseX = left + (current.sourceX + current.sourceWidth / 2) * pixelScale;
-      current.baseY = top + (current.sourceY + current.sourceHeight / 2) * pixelScale;
+      current.baseY = portrait
+        ? current.sourceY === 0
+          ? -coverSize * 0.0125 + current.sourceHeight * pixelScale / 2
+          : this.layoutHeight + coverSize * 0.0125 - current.sourceHeight * pixelScale / 2
+        : top + (current.sourceY + current.sourceHeight / 2) * pixelScale;
       current.sprite.width = current.sourceWidth * pixelScale;
       current.sprite.height = current.sourceHeight * pixelScale;
       current.sprite.scale.x = current.flipX

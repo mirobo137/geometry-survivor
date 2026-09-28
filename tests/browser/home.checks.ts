@@ -6,6 +6,9 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     : [[320, 568], [390, 844], [640, 360], [1280, 720]] as const;
   for (const [width, height] of viewports)
   test(`consolas premium sin solaparse a ${width}x${height}`, async ({ page }, testInfo) => {
+    // Three complete catalog-growth passes are expensive under CI software
+    // rendering; preserve the layout assertions without racing the global 60s.
+    if (width === 1280) test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });

@@ -737,27 +737,29 @@ const WEAPON_EVOLUTION_DRILLS = [
   { query: 'polar-collapse', ids: ['event_horizon', 'polar_collapse'] }
 ] as const;
 
-test('expone cada familia de evoluciones como una decision de dos cartas', async ({ page }) => {
-  test.setTimeout(60_000);
-  const failures = captureRuntimeFailures(page);
-  const levelUp = page.locator('#level-up');
-  const choices = page.locator('#level-up-options button');
+for (let index = 0; index < WEAPON_EVOLUTION_DRILLS.length; index += 2) {
+  const familyDrills = WEAPON_EVOLUTION_DRILLS.slice(index, index + 2);
+  test(`expone evoluciones ${familyDrills[0].ids.join(' / ')} como dos cartas`, async ({ page }) => {
+    const failures = captureRuntimeFailures(page);
+    const levelUp = page.locator('#level-up');
+    const choices = page.locator('#level-up-options button');
 
-  for (const drill of WEAPON_EVOLUTION_DRILLS) {
-    await page.goto(`/?evolution=${drill.query}&debug=1&quality=low`);
-    await expect(page.locator('#boot-status')).toBeHidden();
-    await expect(page.locator('#start-screen')).toBeHidden();
-    await expect(levelUp).toBeVisible({ timeout: 10_000 });
-    await expect(levelUp).toHaveAttribute('data-offer-kind', 'evolution');
-    await expect(choices).toHaveCount(2);
-    await expect(page.locator('#level-up-reroll')).toBeHidden();
-    expect(await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.upgradeId))).toEqual(drill.ids);
-    await choices.first().click();
-    await expect(levelUp).toBeHidden({ timeout: 5_000 });
-  }
+    for (const drill of familyDrills) {
+      await page.goto(`/?evolution=${drill.query}&debug=1&quality=low`);
+      await expect(page.locator('#boot-status')).toBeHidden();
+      await expect(page.locator('#start-screen')).toBeHidden();
+      await expect(levelUp).toBeVisible({ timeout: 10_000 });
+      await expect(levelUp).toHaveAttribute('data-offer-kind', 'evolution');
+      await expect(choices).toHaveCount(2);
+      await expect(page.locator('#level-up-reroll')).toBeHidden();
+      expect(await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.upgradeId))).toEqual(drill.ids);
+      await choices.first().click();
+      await expect(levelUp).toBeHidden({ timeout: 5_000 });
+    }
 
-  expect(failures).toEqual([]);
-});
+    expect(failures).toEqual([]);
+  });
+}
 
 test('permite probar cada evolucion aplicada contra un objetivo o una masa', async ({ page }) => {
   test.setTimeout(120_000);

@@ -232,6 +232,14 @@ es 0.24/0.22/0.20/0.18. Esto hace perceptible el desplazamiento en pocos
 segundos sin mover el centro de la arena ni la placa base. No hay partículas,
 reconstrucción de geometría, filtros ni shaders.
 
+En portrait, posicionar esas corrientes usando el cuadrado `cover` de la placa
+recorta la mayor parte del humo fuera del viewport. El runtime escala las cuatro
+capas al ancho visible y ancla la pareja inferior al borde inferior visible;
+en landscape conserva la composición cuadrada previa. El ajuste es solo de
+presentación: misma textura, cuatro sprites, alpha y deriva, sin cambiar arena
+ni simulación. La comprobación mínima es 720×1280 con intersección visible en
+las cuatro esquinas, además del paisaje 1280×720.
+
 Los WebP runtime de las dos corrientes suman 136,796 bytes y ~1.83 MiB RGBA8
 decodificados. La escena usa cinco sprites en total (lámina + cuatro esquinas),
 pero conserva dos texturas transparentes; las copias reflejadas no duplican la

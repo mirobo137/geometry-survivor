@@ -1,5 +1,26 @@
 # Geometry Survivor — estado y continuación
 
+## Fondos portrait y estabilidad de smoke CI — 27-09-2026
+
+En juego, las cuatro corrientes transparentes de los fondos pintados se
+posicionaban respecto a un cuadrado `cover` de 1280 unidades: en portrait gran
+parte quedaba fuera del viewport aunque la placa base sí se movía. Ahora las
+dos corrientes A/B se escalan al ancho visible y se anclan a las cuatro
+esquinas en portrait; landscape conserva su composición anterior. Se aplica a
+Velo de Marea y a los otros seis fondos pictóricos sin añadir texturas ni
+sprites. Low y movimiento reducido siguen inmóviles. Las pruebas unitarias
+comprueban las cuatro esquinas visibles y la deriva en cuatro segundos a
+720×1280. Capturas Pixel 5 emulado de Velo de Marea y Espacio Profundo muestran
+nubes periféricas sin cubrir la arena; falta comprobarlo en el S25+ físico.
+
+El smoke de las doce rutas de evolución se dividió en seis pruebas por familia,
+sin omitir ninguna rama, para que un solo timeout no cancele doce recargas. La
+prueba de crecimiento del catálogo a 1280×720 conserva sus aserciones y tiene
+90 s de margen en CI, donde el renderizado WebGL por software puede tardar más.
+Comprobado en local con `npm run build:local` (495 unitarias) y la suite browser
+completa en modo CI (70/70, 8,6 min). El runner de GitHub aún no se ha repetido
+con este cambio, por lo que el deploy de Pages queda pendiente de esa corrida.
+
 ## Locker cosmético en modal — 27-09-2026
 
 Las pestañas de Naves, Disparos y Fondos muestran directamente sus tarjetas;

@@ -41,6 +41,18 @@ reducido. El comportamiento del juego y la cobertura de progresión se conservan
 con el caso restante, cuyo presupuesto de CI es 120 s. No se ha repetido el
 workflow completo de GitHub desde este cambio.
 
+## Smoke 3: XP insuficiente antes de morir — 28-09-2026
+
+`abre y resuelve un level-up en gameplay normal` no era solo lento: la captura
+local terminó en game over con 6 bajas/6 XP, antes del umbral de 8. El bot
+recorría un cuadrado corto alrededor del centro y luego quedaba quieto mientras
+esperaba el level-up. El caso ahora usa, dentro del contexto aislado de
+Playwright, las mejoras permanentes máximas de daño/cadencia y un recorrido más
+amplio; sigue ganando XP mediante bajas reales y conserva las aserciones de las
+tres cartas y el reroll. Timeout total: 90 s, sin ampliar reintentos. Pasó tres
+veces en la validación local dirigida; el workflow de Actions aún debe confirmar
+el arreglo.
+
 ## Incidente de Pages — 27-09-2026
 
 El run más reciente falló en cuatro de 64 pruebas browser. Dos esperaban un

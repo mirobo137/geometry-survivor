@@ -583,20 +583,30 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   expect(failures).toEqual([]);
 });
 
-test('abre y resuelve un level-up en gameplay normal', async ({ page }) => {
-  test.setTimeout(45_000);
+test('abre y resuelve un level-up con reroll en gameplay normal', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 7,
+      metaUpgrades: { levels: { weapon_damage: 5, weapon_cadence: 5 } }
+    }));
+  });
   const failures = await openGame(page);
   const levelUp = page.locator('#level-up');
+  const gameOver = page.locator('#game-over');
   const movementKeys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'];
 
-  for (let index = 0; index < 20 && !(await levelUp.isVisible()); index += 1) {
+  for (let index = 0; index < 45 && !(await levelUp.isVisible()) && !(await gameOver.isVisible()); index += 1) {
     const key = movementKeys[index % movementKeys.length];
     await page.keyboard.down(key);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(1_000);
     await page.keyboard.up(key);
   }
 
-  await expect(levelUp).toBeVisible({ timeout: 20_000 });
+  // Keep moving while combat generates XP: standing still during the old
+  // post-loop wait let enemies defeat the player before the 8 XP threshold.
+  await expect(gameOver).toBeHidden({ timeout: 1_000 });
+  await expect(levelUp).toBeVisible({ timeout: 5_000 });
   const choices = page.locator('#level-up-options button');
   await expect(choices).toHaveCount(3);
   const initialChoiceIds = await choices.evaluateAll((buttons) => buttons.map((button) => button.getAttribute('data-upgrade-id')));

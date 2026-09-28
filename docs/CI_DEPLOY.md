@@ -5,6 +5,28 @@ después de typecheck, unit tests, tres builds y toda la suite browser. Un
 fallo sigue bloqueando la publicación. `npm ci` usa el lockfile y Chromium se
 instala con la versión de Playwright de ese lockfile.
 
+## Ejecución paralela entre runners — 27-09-2026
+
+El job `build` verifica TypeScript, lógica y los tres destinos. Cuatro jobs
+`browser` arrancan a la vez, cada uno construye `dist/local` desde el mismo
+commit y ejecuta una cuarta parte de los 70 casos Playwright. La división es
+por **caso**, porque tres archivos desiguales no se repartirían bien por
+archivo. Cada runner mantiene **un solo worker**: el experimento anterior con
+dos workers en un runner agotaba Chromium/WebGL. `deploy` depende del éxito de
+`build` y de los cuatro shards; ningún fallo publica Pages.
+
+Cada shard sube su HTML, capturas y trazas como
+`playwright-report-1`…`playwright-report-4`. En un fallo, abrir el artefacto del
+shard que falló. La carga local de referencia anterior fue 70/70 en 10,5 min
+en serie; **el tiempo de GitHub con shards aún debe medirse en un run real**.
+El reparto cambia tiempo de espera por minutos de runner adicionales, pues
+`npm ci`, Chromium y el build local se ejecutan en cada shard. No se quitan
+pruebas ni se aumenta el número de reintentos.
+
+Fuentes oficiales: [Playwright CI](https://playwright.dev/docs/ci),
+[sharding](https://playwright.dev/docs/test-sharding) y
+[jobs dependientes de GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs).
+
 ## Incidente de Pages — 27-09-2026
 
 El run más reciente falló en cuatro de 64 pruebas browser. Dos esperaban un
@@ -62,28 +84,30 @@ resultado local en Windows no predice el rendimiento Ubuntu.
   → Jugar. La cobertura de gameplay, calidad y móvil continúa activa.
 - Cada caso mantiene 60 s. Las acciones tienen 15 s y navegación 30 s para
   distinguir una espera puntual del agotamiento del caso completo.
-- Un worker y ejecución por archivo en CI para evitar que boots WebGL,
-  screenshots y pruebas de UI compitan por CPU/memoria del runner. Local también
-  usa un worker para depuración reproducible. Se mantiene un reintento; no
-  aumentarlo para tapar fallos.
+- Un worker por runner para evitar que boots WebGL, screenshots y pruebas de UI
+  compitan por CPU/memoria. CI reparte los casos entre cuatro runners; local
+  sigue con un worker para depuración reproducible. Se mantiene un reintento;
+  no aumentarlo para tapar fallos.
 - CI graba traza en el primer reintento. `retain-on-failure` graba todos los
   casos antes de descartar los exitosos; resulta costoso con DOM SVG extenso.
   Local mantiene `retain-on-failure` para diagnóstico sin reintento.
 - Las pruebas de pausa cuentan solo controles visibles; acciones exclusivas de
   Overdrive pueden seguir montadas en el DOM bajo el atributo `[hidden]`.
-- El workflow conserva HTML, capturas, contexto y trazas por siete días,
-  incluso si el reintento pasa. Revisar la clasificación flaky en el HTML.
-- Límite de job: build 20 minutos y deploy 10 minutos. No son objetivos de
-  rendimiento ni sustituyen los timeouts por acción.
+- El workflow conserva HTML, capturas, contexto y trazas por siete días para
+  cada shard, incluso si el reintento pasa. Revisar la clasificación flaky en
+  el HTML.
+- Límite de job: build 20 minutos, cada shard browser 25 minutos y deploy 10
+  minutos. No son objetivos de rendimiento ni sustituyen los timeouts por acción.
 
 ## Reproducir y diagnosticar
 
 1. Ejecutar `npm run build:local` para que preview sirva el código actual.
 2. En PowerShell: `$env:CI='true'` y después `npx playwright test`.
    En bash: `CI=true npx playwright test`.
-3. Para un caso: `npx playwright test --project=desktop --grep "presenta el menu inicial"`.
-4. Descargar el artifact `playwright-report` del run fallido o flaky. Abrir
-   su carpeta HTML con `npx playwright show-report <carpeta>` y la traza con
+3. Para un shard: `npx playwright test --shard=1/4`; para un caso:
+   `npx playwright test --project=desktop --grep "presenta el menu inicial"`.
+4. Descargar `playwright-report-<shard>` del run fallido o flaky. Abrir su
+   carpeta HTML con `npx playwright show-report <carpeta>` y la traza con
    `npx playwright show-trace <ruta/trace.zip>`.
 5. Examinar duración de acciones anteriores, DOM, consola, red y punto exacto
    de desconexión. Un pase en Windows no certifica el runner Ubuntu.

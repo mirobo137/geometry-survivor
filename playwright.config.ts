@@ -2,10 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/browser',
-  // The browser scenarios boot WebGL, capture canvases, and exercise the full
-  // start-screen UI. Running several at once starves Chromium on the shared
-  // GitHub runner and causes cascading timeouts/disconnected sessions.
-  fullyParallel: false,
+  // CI shards individual tests across separate runners. Each runner still uses
+  // one worker so WebGL scenarios never compete for the same CPU budget.
+  fullyParallel: Boolean(process.env.CI),
   // The resize matrix and WebGL boot can be slower on a shared GitHub runner
   // than on a local workstation. Keep the assertions strict while allowing
   // one complete smoke scenario to finish before Playwright aborts it.
@@ -13,8 +12,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  // Keep browser work serialized in CI; the two-worker experiment saturated
-  // the runner. A longer stable run is preferable to cascading retries.
+  // Two workers on one GitHub runner previously starved Chromium.
   workers: 1,
   reporter: process.env.CI
     ? [['github'], ['html', { open: 'never' }]]

@@ -28,32 +28,16 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
       # Verify TypeScript and deterministic logic once. The three platform
       # bundles below do not need to rerun the same suite.
       - name: Typecheck and unit tests
         run: npm run typecheck && npm test
       - name: Build local artifact
         run: npx vite build --mode development
-      # The WebGL/canvas smoke suite is serialized to avoid starving Chromium
-      # on the shared runner; every test remains a required deploy gate.
-      - name: Browser smoke
-        run: npx playwright test
       - name: Build Poki
         run: npx vite build --mode poki
       - name: Build CrazyGames
         run: npx vite build --mode crazygames
-      - name: Upload Playwright diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
-          if-no-files-found: ignore
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload artifact
@@ -61,13 +45,48 @@ jobs:
         with:
           path: dist/local
 
+  browser:
+    name: Browser smoke (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Build local artifact for browser
+        run: npx vite build --mode development
+      - name: Browser smoke
+        run: npx playwright test --shard=${{ matrix.shard }}/4
+      - name: Upload Playwright diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.shard }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
   deploy:
     timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, browser]
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

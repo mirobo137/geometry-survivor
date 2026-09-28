@@ -2,11 +2,12 @@
 
 ## CI de Pages distribuido — 27-09-2026
 
-El deploy de Pages ahora exige `build` y cuatro shards Playwright en runners
+El deploy de Pages ahora exige `build` y ocho shards Playwright en runners
 separados. Los 70 casos siguen siendo puerta obligatoria, un worker por runner;
 cada shard conserva su HTML y diagnósticos por separado. Browser ya no comparte
-el límite global de 20 minutos del antiguo job monolítico. Pendiente medir el
-primer run real de Actions y confirmar que Pages publica; contrato en
+el límite global de 20 minutos del antiguo job monolítico. El primer run con
+cuatro shards aprobó build, pruebas y deploy en casi 10 minutos; se aumentó a
+ocho para reducir la espera. Pendiente medir esa segunda corrida; contrato en
 `docs/CI_DEPLOY.md`.
 
 ## OD-F01 — propuesta futura de ritmo por puntos en Overdrive — 27-09-2026

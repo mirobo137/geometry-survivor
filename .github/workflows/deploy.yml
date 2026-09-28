@@ -46,13 +46,13 @@ jobs:
           path: dist/local
 
   browser:
-    name: Browser smoke (${{ matrix.shard }}/4)
+    name: Browser smoke (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -68,7 +68,7 @@ jobs:
       - name: Build local artifact for browser
         run: npx vite build --mode development
       - name: Browser smoke
-        run: npx playwright test --shard=${{ matrix.shard }}/4
+        run: npx playwright test --shard=${{ matrix.shard }}/8
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@v4

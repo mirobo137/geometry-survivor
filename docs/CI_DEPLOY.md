@@ -7,25 +7,29 @@ instala con la versión de Playwright de ese lockfile.
 
 ## Ejecución paralela entre runners — 27-09-2026
 
-El job `build` verifica TypeScript, lógica y los tres destinos. Cuatro jobs
+El job `build` verifica TypeScript, lógica y los tres destinos. Ocho jobs
 `browser` arrancan a la vez, cada uno construye `dist/local` desde el mismo
-commit y ejecuta una cuarta parte de los 70 casos Playwright. La división es
+commit y ejecuta una octava parte de los 70 casos Playwright. La división es
 por **caso**, porque tres archivos desiguales no se repartirían bien por
 archivo. Cada runner mantiene **un solo worker**: el experimento anterior con
 dos workers en un runner agotaba Chromium/WebGL. `deploy` depende del éxito de
-`build` y de los cuatro shards; ningún fallo publica Pages.
+`build` y de los ocho shards; ningún fallo publica Pages.
 
 Cada shard sube su HTML, capturas y trazas como
-`playwright-report-1`…`playwright-report-4`. En un fallo, abrir el artefacto del
+`playwright-report-1`…`playwright-report-8`. En un fallo, abrir el artefacto del
 shard que falló. La carga local de referencia anterior fue 70/70 en 10,5 min
-en serie; **el tiempo de GitHub con shards aún debe medirse en un run real**.
+en serie. La primera corrida con cuatro shards aprobó Pages en casi 10 min;
+sus jobs browser terminaron en aproximadamente 4, 6, 8 y 10 min. Falta medir
+el resultado con ocho shards.
 El reparto cambia tiempo de espera por minutos de runner adicionales, pues
 `npm ci`, Chromium y el build local se ejecutan en cada shard. No se quitan
-pruebas ni se aumenta el número de reintentos.
+pruebas ni se aumenta el número de reintentos. Los runners estándar del
+repositorio público no generan cargos de Actions según GitHub.
 
 Fuentes oficiales: [Playwright CI](https://playwright.dev/docs/ci),
 [sharding](https://playwright.dev/docs/test-sharding) y
-[jobs dependientes de GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs).
+[jobs dependientes de GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs),
+[facturación de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
 ## Incidente de Pages — 27-09-2026
 
@@ -85,7 +89,7 @@ resultado local en Windows no predice el rendimiento Ubuntu.
 - Cada caso mantiene 60 s. Las acciones tienen 15 s y navegación 30 s para
   distinguir una espera puntual del agotamiento del caso completo.
 - Un worker por runner para evitar que boots WebGL, screenshots y pruebas de UI
-  compitan por CPU/memoria. CI reparte los casos entre cuatro runners; local
+  compitan por CPU/memoria. CI reparte los casos entre ocho runners; local
   sigue con un worker para depuración reproducible. Se mantiene un reintento;
   no aumentarlo para tapar fallos.
 - CI graba traza en el primer reintento. `retain-on-failure` graba todos los
@@ -104,7 +108,7 @@ resultado local en Windows no predice el rendimiento Ubuntu.
 1. Ejecutar `npm run build:local` para que preview sirva el código actual.
 2. En PowerShell: `$env:CI='true'` y después `npx playwright test`.
    En bash: `CI=true npx playwright test`.
-3. Para un shard: `npx playwright test --shard=1/4`; para un caso:
+3. Para un shard: `npx playwright test --shard=1/8`; para un caso:
    `npx playwright test --project=desktop --grep "presenta el menu inicial"`.
 4. Descargar `playwright-report-<shard>` del run fallido o flaky. Abrir su
    carpeta HTML con `npx playwright show-report <carpeta>` y la traza con

@@ -1,3 +1,5 @@
+import type { WeaponPathId } from '../upgrades/UpgradeDefinitions';
+
 /** Shared logical muzzle slot used by simulation and presentation. */
 export type ProjectileMuzzle = 0 | 1;
 
@@ -136,6 +138,33 @@ export const WEAPON_DEFINITIONS = {
     maxLaunchDistance: 255
   } satisfies MagneticChargeWeaponDefinition
 } as const;
+
+/** Authored projectile ranks shared by combat and level-up damage previews. */
+export const PROJECTILE_RANK_STATS = [
+  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 18, speed: 460, cooldownSeconds: 0.55 },
+  { damage: 18, speed: 460, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 460, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 540, cooldownSeconds: 0.47 },
+  { damage: 22, speed: 540, cooldownSeconds: 0.39 }
+] as const;
+
+/** One authored damage value per displayed rank, before permanent/run multipliers. */
+export const WEAPON_DAMAGE_BY_RANK: Readonly<Record<WeaponPathId, readonly number[]>> = {
+  projectile: PROJECTILE_RANK_STATS.map((stats) => stats.damage),
+  orbit: [18, 18, 18, 22, 22, 22, 22],
+  chain: [10, 16, 16, 16, 16, 18, 18],
+  boomerang: [13, 16, 16, 16, 16, 16, 19],
+  pulse_ring: [26, 26, 26, 26, 32, 32, 32],
+  magnetic_charge: [18, 18, 18, 18, 22, 22, 22]
+};
+
+export const getWeaponDamageAtRank = (family: WeaponPathId, rank: number): number => (
+  WEAPON_DAMAGE_BY_RANK[family][Math.min(7, Math.max(1, Math.floor(rank))) - 1]
+    ?? WEAPON_DAMAGE_BY_RANK[family][0]
+    ?? 0
+);
 
 /** Faster cadence used only by the isolated weapon drill. */
 export const PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS = 1.6;

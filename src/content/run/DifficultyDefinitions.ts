@@ -4,6 +4,17 @@ export interface DifficultyPhase {
 }
 
 export const DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
+  { startSeconds: 0, spawnIntervalSeconds: 1.0 },
+  { startSeconds: 30, spawnIntervalSeconds: 0.85 },
+  { startSeconds: 60, spawnIntervalSeconds: 0.7 },
+  { startSeconds: 120, spawnIntervalSeconds: 0.56 },
+  { startSeconds: 180, spawnIntervalSeconds: 0.44 },
+  { startSeconds: 240, spawnIntervalSeconds: 0.34 },
+  { startSeconds: 300, spawnIntervalSeconds: 0.28 }
+];
+
+/** Overdrive keeps its authored radial cadence isolated from this campaign-only opening adjustment. */
+export const OVERDRIVE_ACT_I_DIFFICULTY_PHASES: readonly DifficultyPhase[] = [
   { startSeconds: 0, spawnIntervalSeconds: 0.85 },
   { startSeconds: 60, spawnIntervalSeconds: 0.7 },
   { startSeconds: 120, spawnIntervalSeconds: 0.56 },

@@ -1,5 +1,5 @@
 import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getWeaponDamageAtRank, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { ChainSegmentState } from './CombatRenderState';
 import type { ChainExplosionState } from './CombatRenderState';
@@ -345,7 +345,7 @@ export class ChainBehavior {
   }
 
   private applyRankTuning(): void {
-    this.damage = (this.rank >= 6 ? 18 : this.rank >= 2 ? 16 : CHAIN_DEFINITION.damage)
+    this.damage = getWeaponDamageAtRank('chain', this.rank)
       * this.permanentDamageMultiplier
       * this.overdrivePowerMultiplier;
     this.maxTargets = this.rank >= 7 ? 5 : this.rank >= 3 ? 4 : CHAIN_DEFINITION.maxTargets;

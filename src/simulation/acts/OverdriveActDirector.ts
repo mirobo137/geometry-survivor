@@ -1,6 +1,7 @@
 import type { BossDefinition } from '../../content/bosses/BossDefinition';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
-import type { ActId } from '../../content/run/ActDefinitions';
+import { RADIAL_ACT_DEFINITION, type ActId } from '../../content/run/ActDefinitions';
+import { OVERDRIVE_ACT_I_DIFFICULTY_PHASES } from '../../content/run/DifficultyDefinitions';
 import {
   createOverdriveStageState,
   getFirstLapActId,
@@ -13,10 +14,14 @@ import { RadialActDirector } from './RadialActDirector';
 
 const ACT_ORDER: readonly ActId[] = ['radial', 'angular', 'fracture'];
 const BOSS_ORDER = ['core-sentinel', 'orbital-warden', 'fracture-engine'] as const;
+const OVERDRIVE_RADIAL_DEFINITION = {
+  ...RADIAL_ACT_DEFINITION,
+  spawnPhases: OVERDRIVE_ACT_I_DIFFICULTY_PHASES
+} as const;
 
 export type OverdriveBossPair = 'core-warden' | 'core-fracture' | 'warden-fracture';
 const ACT_DIRECTORS: Readonly<Record<ActId, RadialActDirector>> = {
-  radial: new RadialActDirector(),
+  radial: new RadialActDirector(OVERDRIVE_RADIAL_DEFINITION),
   angular: new AngularActDirector(),
   fracture: new FractureActDirector()
 };

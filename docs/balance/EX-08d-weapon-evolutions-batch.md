@@ -60,7 +60,7 @@ tercera alternativa rompa la decision.
 | Projectile / Pulse Cannon | `rail_lance` | `pulse_volley` | Perforacion pesada hasta 5 objetivos frente a abanico estrecho de 3 proyectiles. |
 | Prism Aegis / Orbit | `solar_crown` | `graviton_halo` | Mas alcance y dano frente a pulsos periodicos de control. |
 | Chain Lightning | `closed_circuit` | `thunderhead` | Retorno condicionado al borde frente a explosiones retardadas por objetivo. |
-| Vector Boomerang | `twin_comet` | `singularity_return` | Dos piezas opuestas frente a pulso de captura al regresar. |
+| Vector Boomerang | `twin_comet` | `singularity_return` | Cinco cuchillas curvas de corto alcance frente a detonación remota que prioriza grupos y ralentiza. |
 | Pulse Ring | `echo_shock` | `compression_wave` | Segunda onda con ledger de dos golpes frente a atraccion previa e impacto pesado. |
 | Magnetic Charge | `event_horizon` | `polar_collapse` | Ventana/radio/fuerza de control frente a segunda contraccion con dano parcial. |
 
@@ -91,6 +91,11 @@ continua una run real con enemigos, arena y hazards del Acto II.
 - `/?evolution=thunderhead&debug=1&quality=high`
 
 ### Vector Boomerang
+
+Revisión de ambas ramas (28-09-2026): [EVOLUCIONES_V2 §4.D](../design/EVOLUCIONES_V2.md)
+describe las cinco cuchillas cortas y la detonación remota con ralentización.
+Estas rutas conservan los identificadores existentes para probar la nueva
+versión; el game feel queda pendiente de validación humana.
 
 - `/?evolution=twin-comet&debug=1&quality=high`
 - `/?evolution=singularity-return&debug=1&quality=high`

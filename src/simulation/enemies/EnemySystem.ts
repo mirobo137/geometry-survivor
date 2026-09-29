@@ -362,6 +362,7 @@ export class EnemySystem {
       enemy.orbitHitCooldown = Math.max(0, enemy.orbitHitCooldown - dt);
       enemy.stunSeconds = Math.max(0, enemy.stunSeconds - dt);
       enemy.slowSeconds = Math.max(0, enemy.slowSeconds - dt);
+      if (enemy.slowSeconds === 0) enemy.slowMultiplier = 1;
       if (enemy.kind === 'boss') continue;
       const movementDt = enemy.stunSeconds > 0
         ? 0

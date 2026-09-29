@@ -22,21 +22,26 @@ describe('OverdriveActDirector', () => {
     }
   });
 
-  it('matches authored enemy timelines and cadences during the first lap', () => {
+  it('matches authored enemy timelines and preserves Overdrive cadence outside the campaign opening exception', () => {
     const authored = [
       new RadialActDirector(),
       new AngularActDirector(),
       new FractureActDirector()
     ];
+    expect(authored[0].getSpawnIntervalSeconds(0)).toBe(1.0);
+    expect(new OverdriveActDirector(1, 0x1234).getSpawnIntervalSeconds(0)).toBe(0.85);
+
     for (const [index, director] of authored.entries()) {
       const overdrive = new OverdriveActDirector(index + 1, 0x1234);
-      for (const elapsed of [0, 60, 180, 240]) {
+      for (const elapsed of [0, 30, 60, 180, 240]) {
         for (const spawnIndex of [0, 1, 7, 14]) {
           expect(overdrive.selectEnemyKind(elapsed, spawnIndex))
             .toBe(director.selectEnemyKind(elapsed, spawnIndex));
         }
-        expect(overdrive.getSpawnIntervalSeconds(elapsed))
-          .toBe(director.getSpawnIntervalSeconds(elapsed));
+        if (index !== 0 || elapsed >= 30) {
+          expect(overdrive.getSpawnIntervalSeconds(elapsed))
+            .toBe(director.getSpawnIntervalSeconds(elapsed));
+        }
       }
     }
   });
@@ -85,8 +90,11 @@ describe('OverdriveActDirector', () => {
 
   it('raises pressure by interval without violating the hard minimum', () => {
     const director = new OverdriveActDirector(4, 0x1);
-    // Stage 4 has an Angular arena but an Act I primary family. The cadence
-    // follows that family; arena hazards remain owned by the Angular profile.
+    // Overdrive keeps its original radial opening; campaign-only Act I tuning
+    // must not leak into stage 1 or later Act I-family stages.
+    expect(new OverdriveActDirector(1, 0x1).getSpawnIntervalSeconds(0)).toBe(0.85);
+    // Stage 4 has an Angular arena but an Act I primary family. Its cadence
+    // still follows the Overdrive profile, independently of the arena profile.
     expect(director.getSpawnIntervalSeconds(0)).toBeCloseTo(0.85 / 1.15);
     const late = new OverdriveActDirector(10, 0x1);
     expect(late.getSpawnIntervalSeconds(0)).toBeCloseTo(0.78 / 1.4);

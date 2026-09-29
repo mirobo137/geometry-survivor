@@ -3,7 +3,7 @@ import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACI
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { BOSS_DEFINITION } from '../../content/bosses/BossDefinition';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
-import { getPermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
+import { getLaboratoryCombatBonuses } from '../../content/meta/LaboratoryDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 import { AngularActDirector } from '../acts/AngularActDirector';
@@ -77,7 +77,7 @@ describe('CombatSimulation', () => {
 
   it('applies permanent weapon bonuses to damage events and weapon intervals', () => {
     const combat = new CombatSimulation({
-      permanentBonuses: getPermanentCombatBonuses({ weapon_damage: 2, weapon_cadence: 1 })
+      permanentBonuses: getLaboratoryCombatBonuses({ global_damage: 2, weapon_cadence: 1 })
     });
 
     expect(combat.currentProjectileDamage).toBeCloseTo(WEAPON_DEFINITIONS.projectile.damage * 1.1);
@@ -540,6 +540,20 @@ describe('CombatSimulation', () => {
     expect(combat.boss.state.phase).toBe('defeated');
     expect(combat.stats.kills).toBe(1);
     expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.boss.experience);
+  });
+
+  it('projects authored weapon rank damage after permanent and family research modifiers', () => {
+    const combat = new CombatSimulation({
+      permanentBonuses: getLaboratoryCombatBonuses({
+        global_damage: 5,
+        weapon_damage_projectile: 5
+      })
+    });
+    combat.setProjectileRank(2);
+
+    const preview = combat.getWeaponRankDamagePreview('projectile', 3);
+    expect(preview.before).toBeCloseTo(14 * 1.25 * 1.1);
+    expect(preview.after).toBeCloseTo(18 * 1.25 * 1.1);
   });
 
   it('spawns two independent bosses for the reproducible Overdrive pair route', () => {

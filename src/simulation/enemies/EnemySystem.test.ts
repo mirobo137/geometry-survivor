@@ -64,6 +64,10 @@ describe('EnemySystem', () => {
     system.update(0.1, player.state);
     expect(enemy.x).toBe(beforeStun);
     expect(enemy.vx).toBe(0);
+
+    for (let index = 0; index < 9; index += 1) system.update(0.1, player.state);
+    expect(enemy.slowSeconds).toBe(0);
+    expect(enemy.slowMultiplier).toBe(1);
   });
 
   it('keeps the Orbiter drill family under its authored cap', () => {

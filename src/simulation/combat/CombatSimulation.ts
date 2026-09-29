@@ -20,7 +20,7 @@ import { EnemySystem } from '../enemies/EnemySystem';
 import { CombatWeaponSystem } from './CombatWeaponSystem';
 import { BossSystem, type BossAttackGate, type BossInstanceId } from '../bosses/BossSystem';
 import { ORBITAL_WARDEN_DEFINITION } from '../../content/bosses/BossDefinition';
-import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
+import type { LaboratoryCombatBonuses } from '../../content/meta/LaboratoryDefinitions';
 import { asArenaBoundary, type ArenaBoundaryInput } from '../ArenaBoundary';
 import { RadialActDirector } from '../acts/RadialActDirector';
 import {
@@ -41,7 +41,7 @@ export interface CombatSimulationOptions {
   readonly stress?: boolean;
   /** Optional simulation clock offset used by deterministic development scenarios. */
   readonly initialElapsedSeconds?: number;
-  readonly permanentBonuses?: PermanentCombatBonuses;
+  readonly permanentBonuses?: LaboratoryCombatBonuses;
   readonly actDirector?: RadialActDirector;
   /** Optional seeded pair used by public Overdrive and its reproducible QA routes. */
   readonly overdriveBossPair?: OverdriveBossPair;
@@ -560,8 +560,12 @@ export class CombatSimulation {
     return this.weaponSystem.getOverdrivePowerMultiplier(family);
   }
 
+  public getWeaponRankDamagePreview(family: WeaponPathId, rank: WeaponRank): { before: number; after: number } {
+    return this.weaponSystem.getWeaponRankDamagePreview(family, rank);
+  }
+
   /** Updates menu-owned modifiers; they take effect on the next run reset. */
-  public setPermanentBonuses(bonuses: PermanentCombatBonuses): void {
+  public setPermanentBonuses(bonuses: LaboratoryCombatBonuses): void {
     this.weaponSystem.setPermanentBonuses(bonuses);
   }
 

@@ -1,5 +1,5 @@
 import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getWeaponDamageAtRank, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { OrbitBladeState } from './CombatRenderState';
 import type { OrbitPulseState } from './CombatRenderState';
@@ -212,7 +212,7 @@ export class OrbitBehavior {
 
   private applyRankTuning(): void {
     this.radius = this.rank >= 6 ? 94 : this.rank >= 2 ? 76 : ORBIT_DEFINITION.orbitRadius;
-    this.damage = (this.rank >= 4 ? 22 : ORBIT_DEFINITION.damage)
+    this.damage = getWeaponDamageAtRank('orbit', this.rank)
       * this.permanentDamageMultiplier
       * this.overdrivePowerMultiplier;
     this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);

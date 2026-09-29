@@ -151,7 +151,8 @@ export class AttackAudioFeedback {
     }
     for (let index = 0; index < state.boomerangs.length; index += 1) {
       const b = state.boomerangs[index];
-      if (b.active && b.phase === 'returning' && this.boomerangPhases[index] !== 'returning') this.pending.add('boomerang-return');
+      if (b.active && b.phase === 'returning' && this.boomerangPhases[index] !== 'returning'
+        && b.evolution !== 'singularity_return') this.pending.add('boomerang-return');
       this.boomerangPhases[index] = b.active ? b.phase : 'inactive';
     }
     for (let index = 0; index < state.chainExplosions.length; index += 1) {

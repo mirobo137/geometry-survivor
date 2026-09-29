@@ -1,5 +1,5 @@
 import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getWeaponDamageAtRank, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { clampPointToArena, type ArenaBoundaryInput } from '../ArenaBoundary';
 import type { PlayerState } from '../PlayerModel';
 import type { MagneticChargeState } from './CombatRenderState';
@@ -580,7 +580,7 @@ export class MagneticChargeBehavior {
   }
 
   private applyRankTuning(): void {
-    this.damage = (this.rank >= 5 ? 22 : DEFINITION.damage)
+    this.damage = getWeaponDamageAtRank('magnetic_charge', this.rank)
       * this.permanentDamageMultiplier
       * this.overdrivePowerMultiplier;
     this.cooldownSeconds = Math.max(

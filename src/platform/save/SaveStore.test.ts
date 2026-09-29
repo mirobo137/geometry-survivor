@@ -53,7 +53,11 @@ describe('LocalSaveStore', () => {
       cannonSkins: defaults.cannonSkins,
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
-      metaUpgrades: { levels: { weapon_damage: 2 } },
+      laboratory: {
+        ...defaults.laboratory,
+        levels: { global_damage: 2 },
+        currentOfferIds: ['weapon_damage_projectile', 'weapon_cadence', 'movement_speed']
+      },
       unlockedActs: ['radial'],
       overdrive: defaults.overdrive
     })).toBe(true);
@@ -67,7 +71,11 @@ describe('LocalSaveStore', () => {
       cannonSkins: defaults.cannonSkins,
       backgrounds: defaults.backgrounds,
       wallet: { nova: 425 },
-      metaUpgrades: { levels: { weapon_damage: 2 } },
+      laboratory: {
+        ...defaults.laboratory,
+        levels: { global_damage: 2 },
+        currentOfferIds: ['weapon_damage_projectile', 'weapon_cadence', 'movement_speed']
+      },
       unlockedActs: ['radial'],
       overdrive: defaults.overdrive
     });
@@ -94,7 +102,7 @@ describe('LocalSaveStore', () => {
       cannonSkins: { selected: 'basic', unlocked: ['basic'] },
       backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
       wallet: { nova: 0 },
-      metaUpgrades: { levels: {} },
+      laboratory: createDefaultSaveData().laboratory,
       unlockedActs: ['radial'],
       overdrive: createDefaultSaveData().overdrive
     });
@@ -148,6 +156,23 @@ describe('LocalSaveStore', () => {
     });
   });
 
+  it('resets only the old laboratory on schema 7 while preserving the wallet and real Overdrive unlock', () => {
+    const defaults = createDefaultSaveData();
+    expect(migrateSaveData({
+      schemaVersion: 7,
+      wallet: { nova: 4_200 },
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 120, maxStages: 4, bestKills: 80 },
+      metaUpgrades: { levels: { weapon_damage: 5, weapon_cadence: 5 } },
+      backgrounds: { selected: 'nacre-orbit', unlocked: ['nacre-orbit'] }
+    })).toMatchObject({
+      schemaVersion: SAVE_SCHEMA_VERSION,
+      wallet: { nova: 4_200 },
+      laboratory: defaults.laboratory,
+      backgrounds: { selected: 'nacre-orbit', unlocked: ['deep-space', 'nacre-orbit'] },
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 120, maxStages: 4, bestKills: 80 }
+    });
+  });
+
   it('unlocks explicitly and merges only the best bounded Overdrive records', () => {
     const locked = createDefaultSaveData();
     const unlocked = unlockOverdrive(locked);
@@ -195,10 +220,24 @@ describe('LocalSaveStore', () => {
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       wallet: { nova: 12_345.9 },
-      metaUpgrades: { levels: { weapon_damage: 99, weapon_cadence: -2, unknown: 4 } }
+      laboratory: {
+        levels: { global_damage: 99, weapon_damage_projectile: -2, unknown: 4 },
+        currentOfferIds: ['global_damage', 'weapon_damage_projectile', 'weapon_cadence', 'unknown'],
+        deferredOffers: [{ upgradeId: 'weapon_damage_projectile', choicesRemaining: 2 }],
+        history: [{ upgradeId: 'global_damage', rank: 99, costNova: 999_999 }],
+        purchasesSinceVitalityAd: 99,
+        vitalityAdRank: 99,
+        offerStep: 99
+      }
     })).toMatchObject({
       wallet: { nova: 12_345 },
-      metaUpgrades: { levels: { weapon_damage: 5 } }
+      laboratory: {
+        levels: { global_damage: 5 },
+        currentOfferIds: ['weapon_damage_projectile', 'weapon_cadence'],
+        purchasesSinceVitalityAd: 3,
+        vitalityAdRank: 4,
+        offerStep: 99
+      }
     });
   });
 

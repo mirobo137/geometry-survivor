@@ -1,7 +1,12 @@
 # EX-08-R — Evoluciones con decisiones reales
 
-Fecha: 2026-09-14. Estado: **las seis rutas implementadas y aprobadas por
-validación humana; balance EX-02c pendiente**.
+Fecha: 2026-09-14. Estado: **seis parejas implementadas; la pareja de Búmeran
+está de nuevo en prueba humana tras el rediseño del 28-09-2026**. El baseline
+general de balance EX-02c fue aprobado por separado.
+
+Revisión puntual 28-09-2026: la pareja de Búmeran se reabrió por solicitud del
+usuario. La nueva mecánica de §4.D está implementada y pendiente de su prueba
+humana; la aprobación previa de esa pareja no se traslada automáticamente.
 
 Ampliación vigente: [PROGRESION_ARMAS_V2.md](PROGRESION_ARMAS_V2.md) define
 las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
@@ -264,46 +269,43 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - Prueba: objetivos secundarios reciben explosión real; uno que sale a tiempo
   no recibe daño; no aparece una cascada de nuevas explosiones.
 
-### D. Boomerang: cruzar alas o detenerse lejos para cargar el regreso
+### D. Boomerang: barrido cercano o detonación de grupos
 
-#### Twin Comet / Cometas cruzados — `twin_comet`
+#### Comet Quintet — `twin_comet`
 
-- **Verbo:** dos piezas recorren alas curvas opuestas y cruzan sus regresos.
-  Salida capturada, eje al target válido al lanzar (fallback dirección retenida).
-  Para cada pieza usar curva cuadrática: salida `P`, control
-  `P + forward*120 ± normal*100`, extremo `P + forward*250 ± normal*50`.
-- Retorno captura posición de player al iniciarse, con control al lado opuesto.
-  Después de la curva, captura final a velocidad limitada si player se movió;
-  nunca salto al player. Máximo dos piezas por cast y un cast simultáneo.
-- Ledger máximo un impacto por pieza/target/cast, presupuesto mitad por pieza.
-  Ventaja flancos y cruce por movimiento; pérdida de concentración frontal.
-- Arte: piezas gemelas con núcleo compartido y acentos distintos, estelas
-  afiladas que explican curvas opuestas. Cruce no crea explosión ni daño falso.
-- Carta: «Dos cometas barren tus flancos y cruzan al volver. Reposiciónate para
-  alinear el regreso; cada pieza concentra menos daño».
-- Prueba: curva y barrido reales en ambas piezas; sin daño adicional por
-  superposición de trails, ni duplicación de hits en el cruce.
+- **Verbo:** cinco cuchillas salen en un abanico de ±0.64 radianes, describen
+  curvas y regresan al jugador. El alcance de ida es el 85% del rango actual
+  (212.5 u en rango I, 238 u desde rango III); la maestría de cobertura sigue
+  ampliándolo. Cada cuchilla daña al salir y al volver.
+- Un solo lanzamiento puede estar activo. Las cinco piezas usan el pool actual
+  de ocho slots. Comparten un registro de impactos: cada enemigo recibe como
+  máximo un golpe de ida y uno de vuelta por lanzamiento, aunque varios filos
+  se superpongan. Cada golpe inflige 110% del daño actual del arma; el boss no
+  recibe cinco impactos por fase. No hay explosión ni empuje.
+- Presentación: filos dorados con giro visible, estelas cortas y vuelta curva.
+  Low conserva las cinco cuchillas y su colisión; puede omitir decoración.
+- Carta: «Cinco cuchillas de corto alcance barren en abanico y golpean al salir
+  y regresar». Probar cobertura lateral, retorno con player en movimiento,
+  daño único por fase y saturación del pool.
 
-#### Singularity Return / Retorno de acreción — `singularity_return`
+#### Singularity Return — `singularity_return`
 
-- **Verbo:** el boomerang se detiene en su extremo lejano, agrupa enemigos allí
-  y vuelve cargado. El vórtice **nunca nace al recogerse sobre el player**.
-- Salida base; extremo fijo, retención 0.65 s, radio de atracción100,
-  velocidad máxima90 u/s. Frenar mediante seguridad de §3. Si el extremo queda
-  demasiado cerca de player (`< radioPlayer + 100 + 24`), omitir atracción,
-  mantener carga/retorno; no cancelar el arma ni trasladar el punto de golpe.
-- Capturar dirección hacia player al acabar carga, retorno perforante con
-  captura final limitada. Boss recibe daño pero no movimiento. Una pieza y
-  un vórtice remoto. Carga garantizada por tiempo, no por cantidad de víctimas.
-- Presupuesto: 30% ida, 70% retorno; vórtice controla sin daño extra. Un impacto
-  por fase/target. Intervalo mayor por tiempo detenido, no mayor entidad.
-- Arte: pieza se abre en dos mordazas alrededor de núcleo remoto; filamentos
-  cortos convergen ahí; cierre súbito comprime su núcleo y libera retorno
-  ancho/afilado. Al recogerse: destello mínimo sin aro de daño.
-- Carta: «Agrupa enemigos en el extremo del lanzamiento y atraviesa el grupo
-  al regresar. Tarda más en volver; no atrae enemigos hacia tu nave».
-- Prueba: player puede moverse junto al extremo sin ser atravesado por fuerzas;
-  ningún pulso al recoger; enemigo intermedio recibe retorno real.
+- **Verbo:** escoge el grupo más denso cuyo centro esté dentro del alcance
+  actual del Búmeran. Fija la posición del objetivo al lanzar, viaja hasta
+  ese punto y detona allí. En empate elige el grupo más lejano del jugador.
+  Si no hay objetivo al alcance, conserva la última dirección y detona al
+  final del recorrido. La explosión no sigue al jugador.
+- Radio de daño 155 u más el radio físico de cada enemigo. Una sola detonación
+  inflige 180% del daño actual a todos los enemigos dentro; además se mantiene
+  el daño perforante de ida (50%) y regreso (80%). Supervivientes normales
+  quedan a 45% de velocidad durante 1.5 s; bosses reciben daño pero no control.
+  No atrae enemigos ni encadena explosiones.
+- Presentación: disco tenue y borde segmentado a radio completo desde el
+  instante del impacto, con una onda interior decorativa. El punto de daño y el
+  centro visual son el mismo; el retorno empieza inmediatamente después.
+- Carta: «Busca grupos compactos, detona en su posición y ralentiza a los
+  supervivientes». Probar grupo remoto frente a enemigo cercano aislado,
+  todos los blancos del radio, boss inmune al control y ausencia de atracción.
 
 ### E. Pulse Ring: regresar por un corredor o abrir un frente
 
@@ -630,7 +632,7 @@ carta de daño exclusiva del rayo.
 | R1 | Ruta normal enfocada, tablas I–VII, migración de cartas/calibración y selección | Projectile probado rango por rango; después inventario normal |
 | R2 | Pulse Ring: Echo + Ariete | Prueba humana de dos centros y frente útil sin atraer |
 | R3 | Magnetic: Núcleo + Prensa | Daño en centro visible y cierre geométrico distinto |
-| R4 | Boomerang: Cometas + Retorno | Cruces físicos y retención lejos de nave segura |
+| R4 | Boomerang: Comet Quintet + Singularity Return | Abanico corto con daño de ida/vuelta y detonación remota sobre grupos |
 | R5 | Orbit: Corona + Órbita de avance | Coberturas distintas observables y sin hits fantasma |
 | R6 | Chain: Circuito + Sobrecarga | Trampa de cruce frente a explosión diferida real |
 | R7 | Integración de tres armas / Acto II | Sinergias, caps, claridad y perfil PC/móvil |

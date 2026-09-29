@@ -46,7 +46,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; mediciones detalladas EX-02d opcionales, no bloquean el baseline |
+| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; árbol UI V2 automático OK, revisión visual/táctil física pendiente; EX-02d opcional |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |
@@ -195,6 +195,19 @@ pruebas manuales. Esto sustituye la puerta de aceptación global pendiente; no
 presenta el objetivo histórico de ventaja efectiva 10–15% como medición
 verificada. Las fórmulas del Laboratorio siguen centralizadas y acotadas; una
 futura discrepancia se medirá con la ficha EX-02d si resulta necesaria.
+
+**Presentación vigente del Laboratorio:** el contrato V2 y el árbol de nodos
+están en [`LABORATORIO_META_V2.md`](design/LABORATORIO_META_V2.md). El viejo
+`PermanentUpgradeDefinitions`/`MetaProgressionPanel` dejó de ser código activo;
+el catálogo actual reside en `src/content/meta/LaboratoryDefinitions.ts`, la
+rotación en `LaboratoryProgression.ts` y el árbol DOM/SVG en
+`src/ui/meta/LaboratoryPanel.ts`. En la iteración del 29-09 la rueda radial se
+reorganizó como dos redes laterales (Arsenal y Nave/Piloto); Vitalidad rewarded
+queda en una isla dorada aparte, visible al alejar/desplazar el mapa. No ejecutar
+las instrucciones V1 de abajo como trabajo pendiente: se conservan sólo como
+evidencia histórica. Typecheck, build, transacciones y layout desktop/móvil
+emulado pasan; queda aceptación visual/táctil humana en teléfono físico, no
+balance aprobado ni otra migración de save.
 
 **No hacer:** borrar saves, regalar/reembolsar NOVA sin decisión, cambiar precios
 o añadir vida, crítico, vampirismo, XP o escudo permanentes. Si conservar compras

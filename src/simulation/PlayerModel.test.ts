@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_CENTER, ARENA_MAX_RADIUS, ARENA_RADIUS, PLAYER_RADIUS, PLAYER_SPEED } from '../config/constants';
 import { PlayerModel } from './PlayerModel';
+import { getLaboratoryCombatBonuses } from '../content/meta/LaboratoryDefinitions';
 
 describe('PlayerModel', () => {
   it('moves at a fixed speed independent of frame chunking', () => {
@@ -63,6 +64,26 @@ describe('PlayerModel', () => {
     player.increaseArmor(2);
     expect(player.takeDamage(5)).toBe(true);
     expect(player.state.health).toBe(97);
+  });
+
+  it('applies capped persistent movement, max-health, and resistance bonuses across run resets', () => {
+    const player = new PlayerModel();
+    player.setPermanentBonuses(getLaboratoryCombatBonuses({
+      movement_speed: 5,
+      max_health: 5,
+      damage_resistance: 5
+    }, 4));
+
+    expect(player.state.maxHealth).toBeCloseTo(114.4);
+    expect(player.currentMovementSpeed).toBeCloseTo(PLAYER_SPEED * 1.1);
+    expect(player.resolveDamage(10).appliedAmount).toBeCloseTo(9.5);
+    expect(player.state.health).toBeCloseTo(104.9);
+
+    player.reset();
+
+    expect(player.state.maxHealth).toBeCloseTo(114.4);
+    expect(player.state.health).toBeCloseTo(114.4);
+    expect(player.currentMovementSpeed).toBeCloseTo(PLAYER_SPEED * 1.1);
   });
 
   it('recovers a percentage of max health on a deterministic pulse', () => {

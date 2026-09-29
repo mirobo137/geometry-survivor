@@ -3,7 +3,7 @@ import type { AdService, RewardedAdResult } from './Platform';
 import type { RewardedPlacement } from './Platform';
 import { RewardedAdController } from './RewardedAdController';
 
-const placements: readonly RewardedPlacement[] = ['revive', 'reroll', 'double-nova', 'cosmetic-unlock'];
+const placements: readonly RewardedPlacement[] = ['revive', 'reroll', 'double-nova', 'cosmetic-unlock', 'laboratory-vitality'];
 
 const service = (overrides: Partial<AdService> = {}): AdService => ({
   isRewardedAvailable: vi.fn(async () => true),

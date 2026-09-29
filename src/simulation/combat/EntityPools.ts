@@ -3,7 +3,7 @@ import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BossId } from '../../content/bosses/BossDefinition';
 
-export type BoomerangPhase = 'outbound' | 'holding' | 'returning';
+export type BoomerangPhase = 'outbound' | 'returning';
 
 export interface EnemyState {
   active: boolean;
@@ -106,7 +106,10 @@ export interface BoomerangState {
   directionX: number;
   directionY: number;
   distanceTravelled: number;
-  /** Quadratic path anchors used only by Twin Comet's physical trajectory. */
+  travelLimit: number;
+  /** Signed fan slot of Twin Comet; zero for the other casts. */
+  fanOffset: number;
+  /** Quadratic path anchors for Twin Comet and the fixed remote blast point. */
   curveStartX: number;
   curveStartY: number;
   curveControlX: number;
@@ -205,6 +208,8 @@ const createBoomerangState = (slotIndex: number): BoomerangState => ({
       directionX: 1,
       directionY: 0,
       distanceTravelled: 0,
+      travelLimit: 0,
+      fanOffset: 0,
       curveStartX: 0,
       curveStartY: 0,
       curveControlX: 0,

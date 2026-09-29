@@ -583,7 +583,7 @@ export class UpgradeApplier {
       case 'overdriveNova':
         return null;
       case 'weaponRank':
-        return null;
+        return this.getWeaponRankDamagePreview(definition.effect.family, definition.effect.rank);
       case 'evolutionOffer':
         return null;
       case 'weaponEvolution':
@@ -593,6 +593,17 @@ export class UpgradeApplier {
       case 'weaponMastery':
         return this.getWeaponMasteryPreview(definition);
     }
+  }
+
+  private getWeaponRankDamagePreview(family: WeaponPathId, rank: number): UpgradePreview | null {
+    const damage = this.combat.getWeaponRankDamagePreview(family, rank as 2 | 3 | 4 | 5 | 6 | 7);
+    if (Math.abs(damage.after - damage.before) < 0.0001) return null;
+    const stat = family === 'projectile' ? 'projectileDamage'
+      : family === 'orbit' ? 'orbitDamage'
+        : family === 'chain' ? 'chainDamage'
+          : family === 'boomerang' ? 'boomerangDamage'
+            : family === 'pulse_ring' ? 'pulseRingDamage' : 'magneticChargeDamage';
+    return { stat, before: damage.before, after: damage.after };
   }
 
   private getWeaponMasteryPreview(definition: UpgradeDefinition): UpgradePreview | null {

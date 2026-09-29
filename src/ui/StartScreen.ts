@@ -2,7 +2,7 @@ import type { AudioSettings } from '../audio/AudioService';
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
 import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
-import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, MetaUpgradeSaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
+import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, LaboratorySaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
@@ -15,7 +15,8 @@ import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
 import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
 import { CosmeticPreviewDialog } from './skins/CosmeticPreviewDialog';
-import { MetaProgressionPanel } from './meta/MetaProgressionPanel';
+import { LaboratoryPanel } from './meta/LaboratoryPanel';
+import type { RewardedAdResult } from '../platform/Platform';
 import type { ActId } from '../content/run/ActDefinitions';
 import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationDefinitions';
 
@@ -39,7 +40,7 @@ export interface StartScreenOptions {
   readonly cannonSkins: CannonSkinSaveData;
   readonly backgrounds: BackgroundSaveData;
   readonly wallet: WalletSaveData;
-  readonly metaUpgrades: MetaUpgradeSaveData;
+  readonly laboratory: LaboratorySaveData;
   readonly unlockedActs: readonly CampaignActId[];
   readonly selectedAct: ActId;
   readonly selectedMode?: 'campaign' | 'overdrive';
@@ -52,7 +53,9 @@ export interface StartScreenOptions {
   readonly onCannonSkinStateChange: (state: CannonSkinSaveData) => void;
   readonly onBackgroundStateChange: (state: BackgroundSaveData) => void;
   readonly onWalletChange: (wallet: WalletSaveData) => void;
-  readonly onMetaUpgradesChange: (upgrades: MetaUpgradeSaveData) => void;
+  readonly onLaboratoryChange: (laboratory: LaboratorySaveData, wallet: WalletSaveData) => boolean;
+  readonly laboratoryVitalityAdAvailable: boolean;
+  readonly onLaboratoryVitalityAd: () => Promise<{ readonly result: RewardedAdResult; readonly laboratory?: LaboratorySaveData }>;
   readonly cosmeticUnlockAvailable: boolean;
   readonly onCosmeticUnlock: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
   readonly overdriveUnlocked?: boolean;
@@ -99,7 +102,7 @@ export class StartScreen {
   private readonly cannonPanel: CannonSelectPanel;
   private readonly backgroundPanel: BackgroundSelectPanel;
   private readonly cosmeticDialog: CosmeticPreviewDialog;
-  private readonly metaPanel: MetaProgressionPanel;
+  private readonly metaPanel: LaboratoryPanel;
   private readonly skinsView: HTMLElement;
   private readonly metaView: HTMLElement;
   private readonly metaToggle: HTMLButtonElement;
@@ -124,7 +127,7 @@ export class StartScreen {
   private cannonSkinState: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
   private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
-  private metaUpgrades: MetaUpgradeSaveData = { levels: {} };
+  private laboratory: LaboratorySaveData = { levels: {}, currentOfferIds: [], deferredOffers: [], history: [], purchasesSinceVitalityAd: 0, vitalityAdRank: 0, offerStep: 0 };
   private unlockedActs: readonly CampaignActId[] = ['radial'];
   private selectedAct: ActId = 'radial';
   private selectedMode: 'campaign' | 'overdrive' = 'campaign';
@@ -157,7 +160,9 @@ export class StartScreen {
   private cannonSkinStateHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private backgroundStateHandler: ((state: BackgroundSaveData) => void) | null = null;
   private walletStateHandler: ((wallet: WalletSaveData) => void) | null = null;
-  private metaUpgradesHandler: ((upgrades: MetaUpgradeSaveData) => void) | null = null;
+  private laboratoryChangeHandler: ((laboratory: LaboratorySaveData, wallet: WalletSaveData) => boolean) | null = null;
+  private laboratoryVitalityAdHandler: (() => Promise<{ readonly result: RewardedAdResult; readonly laboratory?: LaboratorySaveData }>) | null = null;
+  private laboratoryVitalityAdAvailable = false;
 
   public constructor(root: HTMLElement) {
     const playButton = root.querySelector<HTMLButtonElement>('#start-play');
@@ -245,7 +250,7 @@ export class StartScreen {
     this.skinsPanel = new SkinSelectPanel(playerSkinsView, this.cosmeticDialog);
     this.cannonPanel = new CannonSelectPanel(cannonSkinsView, this.cosmeticDialog);
     this.backgroundPanel = new BackgroundSelectPanel(backgroundsView, this.cosmeticDialog);
-    this.metaPanel = new MetaProgressionPanel(metaView);
+    this.metaPanel = new LaboratoryPanel(metaView);
     for (const hostId of ['start-nova-icon', 'start-meta-nova-icon']) {
       const host = root.querySelector<HTMLElement>(`#${hostId}`);
       if (!host) continue;
@@ -308,12 +313,14 @@ export class StartScreen {
     this.cannonSkinStateHandler = options.onCannonSkinStateChange;
     this.backgroundStateHandler = options.onBackgroundStateChange;
     this.walletStateHandler = options.onWalletChange;
-    this.metaUpgradesHandler = options.onMetaUpgradesChange;
+    this.laboratoryChangeHandler = options.onLaboratoryChange;
+    this.laboratoryVitalityAdHandler = options.onLaboratoryVitalityAd;
+    this.laboratoryVitalityAdAvailable = options.laboratoryVitalityAdAvailable;
     this.skinState = options.skins;
     this.cannonSkinState = options.cannonSkins;
     this.backgroundState = options.backgrounds;
     this.wallet = options.wallet;
-    this.metaUpgrades = options.metaUpgrades;
+    this.laboratory = options.laboratory;
     this.unlockedActs = options.unlockedActs;
     this.selectedAct = options.selectedAct;
     this.selectedMode = options.selectedMode ?? 'campaign';
@@ -327,6 +334,13 @@ export class StartScreen {
         ? 'Seleccionar Overdrive'
         : 'Derrota al boss del Acto III para desbloquearlo';
     }
+    this.metaToggle.disabled = options.overdriveUnlocked !== true;
+    this.metaToggle.setAttribute('aria-label', options.overdriveUnlocked === true
+      ? 'Abrir Laboratorio de mejoras permanentes'
+      : 'Laboratorio bloqueado: vence el Acto III para desbloquear Overdrive');
+    this.metaToggle.title = options.overdriveUnlocked === true
+      ? 'Mejoras permanentes que aplican a todos los modos'
+      : 'Derrota al boss del Acto III para desbloquear el Laboratorio';
     this.cosmeticUnlockAvailable = options.cosmeticUnlockAvailable;
     this.cosmeticUnlockHandler = options.onCosmeticUnlock;
     this.cosmeticOfferConsumed = false;
@@ -360,7 +374,9 @@ export class StartScreen {
     this.cannonSkinStateHandler = null;
     this.backgroundStateHandler = null;
     this.walletStateHandler = null;
-    this.metaUpgradesHandler = null;
+    this.laboratoryChangeHandler = null;
+    this.laboratoryVitalityAdHandler = null;
+    this.laboratoryVitalityAdAvailable = false;
     this.cosmeticUnlockHandler = null;
     this.cosmeticOfferConsumed = false;
     this.cosmeticRequestPending = false;
@@ -528,6 +544,7 @@ export class StartScreen {
   }
 
   private openMeta(): void {
+    if (!this.overdriveUnlocked || !this.laboratoryChangeHandler || !this.laboratoryVitalityAdHandler) return;
     this.setSettingsExpanded(false);
     this.closeSkins();
     this.mainView.hidden = true;
@@ -537,9 +554,10 @@ export class StartScreen {
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-meta-open');
     this.metaPanel.open({
       wallet: this.wallet,
-      upgrades: this.metaUpgrades,
-      onWalletChange: (wallet) => this.onWalletChange(wallet),
-      onUpgradesChange: (upgrades) => this.onMetaUpgradesChange(upgrades)
+      laboratory: this.laboratory,
+      vitalityAdAvailable: this.laboratoryVitalityAdAvailable,
+      onPurchase: (laboratory, wallet) => this.onLaboratoryChange(laboratory, wallet),
+      onVitalityAd: () => this.onLaboratoryVitalityAd()
     });
     this.metaBack.focus({ preventScroll: true });
   }
@@ -622,9 +640,19 @@ export class StartScreen {
     this.updateCosmeticOffer();
   }
 
-  private onMetaUpgradesChange(upgrades: MetaUpgradeSaveData): void {
-    this.metaUpgrades = upgrades;
-    this.metaUpgradesHandler?.(upgrades);
+  private onLaboratoryChange(laboratory: LaboratorySaveData, wallet: WalletSaveData): boolean {
+    if (this.laboratoryChangeHandler?.(laboratory, wallet) !== true) return false;
+    this.laboratory = laboratory;
+    this.wallet = wallet;
+    const formatted = formatNova(wallet.nova);
+    for (const value of this.novaValues) value.textContent = formatted;
+    return true;
+  }
+
+  private async onLaboratoryVitalityAd(): Promise<{ readonly result: RewardedAdResult; readonly laboratory?: LaboratorySaveData }> {
+    const response = await this.laboratoryVitalityAdHandler?.();
+    if (response?.laboratory) this.laboratory = response.laboratory;
+    return response ?? { result: 'unavailable' };
   }
 
   private updateCosmeticOffer(): void {

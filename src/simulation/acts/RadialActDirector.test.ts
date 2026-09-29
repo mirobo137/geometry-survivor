@@ -38,7 +38,7 @@ describe('RadialActDirector', () => {
   it('preserves the exact authored boundary values around timeline transitions', () => {
     const director = new RadialActDirector();
 
-    for (const elapsedSeconds of [0, 59.999, 60, 119.999, 120, 179.999, 180, 239.999, 240, 300]) {
+    for (const elapsedSeconds of [0, 29.999, 30, 59.999, 60, 119.999, 120, 179.999, 180, 239.999, 240, 300]) {
       expect(director.getSpawnIntervalSeconds(elapsedSeconds)).toBe(
         getSpawnIntervalSeconds(elapsedSeconds)
       );

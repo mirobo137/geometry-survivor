@@ -2345,9 +2345,13 @@ función, visuales, cartas, límites y pruebas. **Solo plan, no código v2.**
 | Projectile | Rail Lance: conservar | Pulse Volley: conservar |
 | Orbit | Solar Crown: emisión espiral de blades | Graviton Halo: órbita elíptica orientada al movimiento |
 | Chain | Closed Circuit: cables estacionarios que dañan al cruzar | Thunderhead: sobrecargas fijadas y explosiones retardadas |
-| Boomerang | Twin Comet: alas curvas y regresos cruzados | Singularity Return: retención remota y regreso cargado |
+| Boomerang | Comet Quintet (`twin_comet`): cinco cuchillas de corto alcance, ida y vuelta | Singularity Return: detonación en grupo remoto y ralentización |
 | Pulse Ring | Echo Shock: ondas en dos posiciones del desplazamiento | Compression Wave: frente direccional saliente, cono visible y sin atracción |
 | Magnetic | Event Horizon: núcleo remoto con centro dañino | Polar Collapse: tres frentes convergentes, atracción remota y doble pulso final |
+
+**Ajuste puntual del 28-09-2026:** la pareja Boomerang de esta tabla prevalece
+sobre su prototipo histórico más abajo. Parámetros, lectura visual y prueba
+pendiente están en [EVOLUCIONES_V2 §4.D](docs/design/EVOLUCIONES_V2.md).
 
 Los IDs permanecen estables. R1 prepara laboratorio y progresión; R2–R6
 implementan una pareja por entrega con prueba humana antes de seguir. R7
@@ -2463,12 +2467,23 @@ Sumideros de NOVA:
 - alternativa al reroll rewarded;
 - desbloqueos de investigación de armas, cuando la nueva arma ya esté validada.
 
-El Laboratorio v1 ya existe con daño y cadencia, pero sus valores actuales son
-provisionales. **EX-02c queda pendiente por decisión del usuario** y se
-reabrirá junto con la vida de enemigos y el daño general, antes de congelar el
-balance de los actos. La ventaja combinada máxima objetivo continúa siendo
-10–15% de potencia efectiva; hasta esa medición no se presenta el Laboratorio
-como balanceado ni se cambian porcentajes por intuición.
+El Laboratorio V2 tiene once ramas permanentes con cinco rangos cada una:
+daño global, daño por familia de arma, cadencia, movimiento, vida y resistencia.
+Sus topes/precios están definidos en
+[`LABORATORIO_META_V2.md`](docs/design/LABORATORIO_META_V2.md); la interfaz
+presenta estas mismas ofertas en un árbol hexagonal con modal, zoom y paneo,
+sin agregar prerequisitos ni cambiar las transacciones. El árbol y el
+guardado persistente están implementados; falta la revisión visual/táctil del
+usuario. El poder permanente conserva sus topes actuales mientras las pruebas
+humanas determinan si hace falta recalibrar cifras. La presentación vigente es
+una red lateral por grupos (Arsenal y Nave/Piloto), no un menú circular; la
+bonificación Rewarded vive en un ramal independiente fuera del encuadre inicial.
+
+**EX-02c ya fue cerrado por aprobación humana el 28-09-2026** para el baseline
+de vida de enemigos y bosses de los tres actos y Overdrive. Ese cierre no es
+una aprobación numérica independiente de todos los rangos del Laboratorio: un
+problema específico que aparezca al jugar puede motivar un ajuste puntual, no
+una recalibración global por defecto.
 
 La meta de producto se divide en desbloqueo de actos, poder permanente pequeño,
 investigación de contenido y colección cosmética. Los actos se desbloquean por
@@ -2477,22 +2492,13 @@ alteran gameplay. Overdrive se desbloquea al completar la Expedition en el
 Acto III, conserva la build y liquida NOVA una sola vez al terminar la sesión,
 sin pago por ciclo.
 
-Ramas permitidas:
-
-- `Impact Matrix`: daño general pequeño y acotado;
-- `Fire Calibration`: cadencia pequeña con cooldown mínimo absoluto;
-- `Hull Integrity`: candidato posterior, máximo +5% de vida, sólo si las runs
-  demuestran que no elimina decisiones defensivas;
-- `Weapon Research`: desbloquea una arma/evolución en el pool, no añade daño
-  permanente a esa arma.
-
-Crítico, vampirismo, escudo, regeneración, experiencia y control espacial
-permanecen como decisiones de cartas dentro de la run. No se duplican como
-bonos permanentes porque reducirían variedad y harían obligatorio el grind.
-
-La economía no se balancea por intuición. Se registran NOVA por run, tiempo
-para primera compra, compra elegida y saldo después de cinco runs. Los precios
-actuales siguen data-driven y sólo cambian después de esa evidencia.
+El sistema mantiene críticas, vampirismo, escudo, regeneración, experiencia y
+control espacial como elecciones de cartas dentro de la run; no duplica esas
+ramas como mejoras permanentes. Las once definiciones, sus precios, topes,
+guardado, oferta, migración y el árbol visual se mantienen centralizados en la
+ficha canónica enlazada arriba. La economía no se ajusta por intuición: toda
+recalibración futura debe registrar NOVA por run, tiempo a primera compra,
+elecciones y saldo después de varias runs.
 
 ## 16.7 Rewarded ads y reglas exactas
 
@@ -2578,7 +2584,14 @@ producto documentada.
 - débito atómico: saldo insuficiente nunca desbloquea;
 - una compra repetida no vuelve a cobrar;
 - save migrado, reload y fallback de storage;
-- benchmark seeded con meta 0 y meta completa para comprobar el límite 10–15%.
+- árbol/modal: 3 ofertas señaladas, nombre y efecto en modal, futuras ocultas,
+  adquisición sólo dentro de la oferta, cierre por Escape/fondo, guardado y
+  rank-up visible;
+- paneo, rueda/pinch y zoom accesibles, hit-area móvil y encuadre de los cuatro
+  tamaños de la matriz de consolas;
+- ramal rewarded fuera del encuadre inicial: inaccesible hasta tres compras
+  NOVA, y concesión únicamente después del resultado `rewarded` confirmado;
+- revisar cambios de poder mediante runs antes de cambiar los topes vigentes.
 
 ### Armas y evoluciones
 
@@ -3590,9 +3603,10 @@ funcionan correctamente; además, los tres actos fueron probados en móvil. Esta
 aprobación cierra la validación humana de contenido para continuar el proyecto
 y no reabre esas entregas sin un defecto reproducible.
 
-Quedan explícitamente pendientes EX-02c, para el balance global de daño, vida,
-spawn y recompensas, y EX-09, para SDKs reales, QA de portales y preparación de
-publicación. La publicación no se declara lista hasta completar esas puertas.
+Queda explícitamente pendiente EX-09, para SDKs reales, QA de portales y
+preparación de publicación. EX-02c está cerrado por la aprobación registrada
+en §22.16; EX-02d conserva mediciones cuantitativas opcionales y no bloqueantes.
+La publicación no se declara lista hasta completar EX-09.
 
 ### 22.16 Cierre de EX-02c — aprobación del baseline de balance — 28-09-2026
 
@@ -3607,3 +3621,37 @@ puntual; no se mantiene abierta una recalibración global.
 
 EX-02d queda como diagnóstico cuantitativo opcional, no como puerta para usar
 el baseline aprobado. EX-09 sigue pendiente y no queda aprobado por este cierre.
+
+## 22.17 Árbol visual del Laboratorio V2 — 28-09-2026
+
+La cuadrícula de tarjetas fue reemplazada por un árbol hexagonal interactivo,
+conservando los once atributos, cinco rangos, topes, precios, ofertas rotativas,
+guardado y transacciones atómicas ya definidos en
+[`LABORATORIO_META_V2.md`](docs/design/LABORATORIO_META_V2.md). El árbol no
+añade prerequisitos: las líneas son guía visual y sólo las tres ofertas actuales
+pueden comprarse.
+
+El ajuste visual del 29-09-2026 deja atrás la constelación radial inicial:
+NOVA se bifurca en redes laterales de `ARSENAL` y `NAVE Y PILOTO`, con los
+hexágonos de rango en filas conectadas a una troncal; después de cada compra
+aparece solamente el rango siguiente a la derecha. Vitalidad rewarded es una
+red dorada autónoma más allá del borde inicial, localizable con paneo/zoom.
+Esto reorganiza presentación y cámara solamente; no cambia ofertas, precios,
+efectos, orden de guardado ni las tres compras NOVA que habilitan la recompensa.
+
+Por rama se muestran rangos adquiridos y un solo rango futuro. El hexágono lleva
+icono; el modal revela nombre, descripción, avance, efecto total, incremento y
+precio, y cierra con Escape, botón o fondo exterior. Zoom, arrastre, pinch,
+rueda y recentrado son presentation-only. La vitalidad rewarded está en un
+ramal dorado separado, inicialmente fuera de encuadre; conserva el requisito de
+tres compras NOVA y sólo concede tras resultado `rewarded`.
+
+**Archivos:** `src/ui/meta/LaboratoryPanel.ts`, `index.html`,
+`src/ui/start-panels.css`, pruebas browser en `game.smoke.spec.ts` y
+`home.checks.ts`. La revisión visual Playwright automática pasa en
+320×568, 390×844, 640×360 y 1280×720. Compra/persistencia, aparición de rango,
+rewarded tras tres compras, cierre por Escape/fondo, paneo y zoom pasan en
+desktop. Typecheck, pruebas unitarias dirigidas y build local pasan. El build
+conserva la advertencia preexistente de chunk principal >500 kB. Falta que el
+usuario revise el acabado y tacto en un móvil físico; no se midieron FPS ni se
+hizo commit/push.

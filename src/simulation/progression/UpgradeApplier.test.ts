@@ -3,6 +3,7 @@ import { CombatSimulation } from '../combat/CombatSimulation';
 import { PlayerModel } from '../PlayerModel';
 import type { UpgradeDefinition } from '../../content/upgrades/UpgradeDefinitions';
 import { UpgradeApplier } from './UpgradeApplier';
+import { getLaboratoryCombatBonuses } from '../../content/meta/LaboratoryDefinitions';
 
 describe('UpgradeApplier', () => {
   it('applies authored player and weapon effects without a UI dependency', () => {
@@ -301,6 +302,22 @@ describe('UpgradeApplier', () => {
       before: 275,
       after: 300
     });
+  });
+
+  it('shows authored weapon-card damage after Laboratory and Overdrive multipliers', () => {
+    const bonuses = getLaboratoryCombatBonuses({
+      global_damage: 5,
+      weapon_damage_projectile: 5
+    });
+    const combat = new CombatSimulation({ permanentBonuses: bonuses });
+    combat.applyOverdrivePower('projectile', 0.05);
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x1234, 'overdrive');
+
+    expect(applier.apply('projectile_rank_2')).toBe(true);
+    const preview = applier.getPreview('projectile_rank_3');
+    expect(preview?.stat).toBe('projectileDamage');
+    expect(preview?.before).toBeCloseTo(14 * 1.25 * 1.1 * 1.05);
+    expect(preview?.after).toBeCloseTo(18 * 1.25 * 1.1 * 1.05);
   });
 
   it('applies the first passive progression cards through their domain contracts', () => {

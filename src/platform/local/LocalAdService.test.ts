@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LocalAdService } from './LocalAdService';
 import type { RewardedPlacement } from '../Platform';
 
-const placements: readonly RewardedPlacement[] = ['revive', 'reroll', 'double-nova', 'cosmetic-unlock'];
+const placements: readonly RewardedPlacement[] = ['revive', 'reroll', 'double-nova', 'cosmetic-unlock', 'laboratory-vitality'];
 
 describe('LocalAdService', () => {
   afterEach(() => vi.unstubAllGlobals());

@@ -335,6 +335,10 @@ export class WeaponView {
       visual.wake.position.set(returning ? -3 : 0, 0);
       visual.wake.scale.set(baseScale * (returning ? 1.12 : 0.92), baseScale);
       visual.wake.alpha = this.quality === 'high' ? 0.82 : 0.58;
+      visual.body.rotation = this.reducedMotion ? 0 : twinComet
+        ? state.ageSeconds * (state.fanOffset < 0 ? -14 : 14)
+        : singularity ? state.ageSeconds * 5 : 0;
+      visual.body.tint = twinComet ? 0xffe3a2 : singularity ? 0xc6b4ff : 0xffffff;
       visual.body.scale.set(baseScale * 0.58 * pulse);
       visual.body.alpha = 1;
       visual.core.scale.set(baseScale * (returning ? 1.05 : 0.9) * pulse);
@@ -346,13 +350,31 @@ export class WeaponView {
     this.boomerangPulseLayer.visible = boomerangPulse?.active === true;
     if (boomerangPulse?.active) {
       const progress = clamp01(boomerangPulse.progress);
+      const intensity = 1 - progress;
+      this.boomerangPulseLayer.beginPath().circle(0, 0, boomerangPulse.radius)
+        .fill({ color: 0xa482ff, alpha: intensity * (this.quality === 'low' ? 0.06 : 0.1) });
       drawSegmentedPulse(
         this.boomerangPulseLayer,
-        boomerangPulse.radius * (0.45 + progress * 0.55),
-        (1 - progress) * (this.quality === 'high' ? 0.78 : 0.58),
+        boomerangPulse.radius,
+        intensity * (this.quality === 'high' ? 0.86 : 0.65),
         0x9b7cff,
         0xffd978
       );
+      this.boomerangPulseLayer.beginPath()
+        .circle(0, 0, boomerangPulse.radius * (0.22 + progress * 0.72))
+        .stroke({ color: 0xf4ffff, width: this.quality === 'high' ? 1.8 : 1.2, alpha: intensity * 0.62 });
+      this.boomerangPulseLayer.beginPath()
+        .regularPoly(0, 0, 17 + progress * 12, 6, Math.PI / 6)
+        .stroke({ color: 0xffd978, width: this.quality === 'low' ? 1.4 : 2.2, alpha: intensity * 0.82 });
+      if (this.quality === 'high') {
+        for (let spoke = 0; spoke < 6; spoke += 1) {
+          const angle = spoke * Math.PI / 3 + Math.PI / 6;
+          this.boomerangPulseLayer.beginPath()
+            .moveTo(Math.cos(angle) * boomerangPulse.radius * 0.32, Math.sin(angle) * boomerangPulse.radius * 0.32)
+            .lineTo(Math.cos(angle) * boomerangPulse.radius * 0.7, Math.sin(angle) * boomerangPulse.radius * 0.7)
+            .stroke({ color: 0xc7a3ff, width: 1.5, alpha: intensity * 0.42 });
+        }
+      }
       this.boomerangPulseLayer.position.set(boomerangPulse.x, boomerangPulse.y);
     }
 

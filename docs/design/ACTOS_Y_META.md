@@ -1,23 +1,25 @@
 # Geometry Survivor — actos, meta y Overdrive
 
-Fecha de decisión: 05-09-2026.
+Fecha de decisión original: 05-09-2026. Vigencia revisada: 28-09-2026.
 
 Este documento fija la dirección de producto que acompaña a
-`PLAN_DESARROLLO.md` §16. Define el contrato de experiencia de los actos y el
-modo infinito; el prototipo espacial del Acto I y su contrato `ActDefinition`
-ya están implementados. La composición de Acto II y su entrada por
-calibración ya tienen un consumidor real en EX-07e; Acto III y Overdrive siguen
-siendo entregas futuras.
+`PLAN_DESARROLLO.md` §16. Sus fichas de diseño conservan contexto histórico;
+el estado implementado actual y las decisiones posteriores registradas en
+`CONTINUACION.md`/§22 prevalecen sobre sus estados antiguos. Los Actos I–III,
+Overdrive y sus flujos ya tienen consumidores reales; EX-09 de portales sigue
+pendiente. El contrato vigente del Laboratorio es
+[`LABORATORIO_META_V2.md`](LABORATORIO_META_V2.md).
 
-## Estado de implementación — 12-09-2026
+## Estado de implementación — 28-09-2026
 
-EX-07e conecta el Acto II Angular a la campaña: perfiles de Orbiter, Charger,
-Splitter y Prism Weaver, hazards Pulse Ring y Angular Sweep, Orbital Warden a
-los 260 s y tres calibraciones de entrada sin heredar la build. La experiencia
-ya no expone `Quick Act`/`Expedition` como modos separados. La implementación
-automática está aprobada; falta validación humana en PC/móvil, las tres
-calidades, runs comparables y la liquidación tras reload. Los números siguen
-provisionales y EX-02c permanece diferido.
+Los tres actos y Overdrive fueron validados por el usuario. El baseline de vida
+de enemigos y bosses quedó aprobado en EX-02c; los ajustes futuros serán
+puntuales a partir de problemas observados. El balance numérico global no se
+declara como una nueva matriz medida. El Laboratorio V2 conserva el progreso y
+las reglas de compra existentes y presenta ahora las ramas en un árbol
+hexagonal; sus efectos y precios tienen su contrato canónico en la ficha
+enlazada arriba. La comprobación automática de UI pasó, pero falta la revisión
+visual/táctil final en un móvil físico.
 
 ## Decisión principal
 
@@ -33,9 +35,10 @@ modo infinito opcional posterior llamado **Overdrive**.
   mezcla las reglas ya aprendidas en ciclos cada vez más exigentes.
 - Ningún modo obliga a jugar infinito para terminar la experiencia principal.
 
-La vida de enemigos, el daño general y los porcentajes finales del Laboratorio
-se calibrarán después. Los números que aparecen en el código hoy son
-provisionales y no deben usarse como criterio de balance definitivo.
+El baseline de balance aceptado se conserva. No ampliar límites ni retocar
+porcentajes permanentes a partir de intuición: los topes y costes del
+Laboratorio actual están en su ficha V2, y cualquier ajuste debe responder a
+evidencia de juego concreta.
 
 ## Prototipo del Acto I — arena radial cambiante
 
@@ -196,7 +199,7 @@ El menú futuro se organiza en cuatro capas, sin crear una segunda moneda:
 | Capa | Función | Regla |
 | --- | --- | --- |
 | Desbloqueo | abrir actos, Calibration y Overdrive | depende de victorias, no de grind obligatorio |
-| Laboratorio | daño y cadencia permanentes actuales | poder pequeño, acotado y pendiente de recalibración |
+| Laboratorio | 11 ramas permanentes V2 en árbol lateral + rama Rewarded separada | topes/precios en `LABORATORIO_META_V2.md`; sin prerequisitos nuevos |
 | Investigación | habilitar armas/evoluciones futuras | desbloquea opciones; no regala daño permanente |
 | Locker | skins, cañones, balas, estelas y fondos | cosmético, sin colisión ni ventaja de gameplay |
 

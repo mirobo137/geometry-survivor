@@ -12,12 +12,15 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 8, wallet: { nova: 20_000 }, overdrive: { unlocked: true }
+    })));
     await page.goto('/?ad=success');
     await expect(page.locator('#start-screen')).toBeVisible();
       await page.setViewportSize({ width, height });
       for (const [trigger, view, collection, card] of [
         ['skins', 'skins', '#start-skin-cards', '.skin-card'],
-        ['meta', 'meta', '#start-meta-cards', '.meta-upgrade-card'],
+        ['meta', 'meta', '#start-meta-cards', '.lab-tree-node'],
         ['level', 'act', '.act-options', '.act-card-button']
       ]) {
         await page.locator(`#start-${trigger}`).click();
@@ -43,6 +46,48 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
         if (!process.env.CI && (width === 390 || width === 1280)) {
           await page.screenshot({ path: testInfo.outputPath(`${view}-${width}.png`) });
         }
+        if (view === 'meta') {
+          const treeStage = page.locator('#start-lab-tree-stage');
+          await expect(treeStage).toBeVisible();
+          await treeStage.scrollIntoViewIfNeeded();
+          await expect(page.locator('.lab-tree-node[data-tree-kind="permanent"][data-offered="true"]')).toHaveCount(3);
+          await expect(page.locator('.lab-tree-node[data-tree-kind="permanent"][data-rank="2"]')).toHaveCount(0);
+          await expect(page.locator('.lab-tree-group-label')).toHaveCount(3);
+          const rootRows = await page.locator('.lab-tree-node[data-tree-kind="permanent"][data-rank="1"]').evaluateAll(nodes => nodes.map(node => ({ x: node.getAttribute('data-world-x'), y: node.getAttribute('data-world-y') })));
+          expect(rootRows).toHaveLength(11);
+          expect(new Set(rootRows.map(point => point.x)).size).toBe(1);
+          expect(new Set(rootRows.map(point => point.y)).size).toBe(11);
+          const adRootX = await page.locator('#start-lab-vitality-core').evaluate(element => element.getBoundingClientRect().left + element.getBoundingClientRect().width / 2);
+          const stageBounds = await treeStage.boundingBox();
+          expect(stageBounds).not.toBeNull();
+          expect(adRootX).toBeGreaterThan(stageBounds!.x + stageBounds!.width);
+          const initialZoom = await page.locator('#start-lab-zoom-value').textContent();
+          await page.locator('#start-lab-zoom-in').click();
+          expect(await page.locator('#start-lab-zoom-value').textContent()).not.toBe(initialZoom);
+          await page.locator('#start-lab-zoom-reset').click();
+          expect(await page.locator('#start-lab-zoom-value').textContent()).toBe(initialZoom);
+          for (let step = 0; step < 5; step++) {
+            const zoomOut = page.locator('#start-lab-zoom-out');
+            if (await zoomOut.isDisabled()) break;
+            await zoomOut.click();
+          }
+          const smallestTouchNode = await page.locator('.lab-tree-node[data-tree-kind="permanent"]').first().boundingBox();
+          expect(smallestTouchNode).not.toBeNull();
+          expect(smallestTouchNode!.width).toBeGreaterThanOrEqual(44);
+          expect(smallestTouchNode!.height).toBeGreaterThanOrEqual(44);
+          await page.locator('#start-lab-zoom-reset').click();
+          const initialTransform = await page.locator('#start-lab-tree-world').evaluate(element => getComputedStyle(element).transform);
+          const stageBox = await treeStage.boundingBox();
+          expect(stageBox).not.toBeNull();
+          await page.mouse.move(stageBox!.x + stageBox!.width / 2, stageBox!.y + stageBox!.height / 2);
+          await page.mouse.down();
+          await page.mouse.move(stageBox!.x + stageBox!.width / 2 + 38, stageBox!.y + stageBox!.height / 2 + 17);
+          await page.mouse.up();
+          expect(await page.locator('#start-lab-tree-world').evaluate(element => getComputedStyle(element).transform)).not.toBe(initialTransform);
+          await page.locator('#start-lab-zoom-reset').click();
+          await page.locator('#start-meta-back').click();
+          continue;
+        }
         // Future catalog growth and long labels must remain in normal flow.
         await page.locator(collection!).evaluate((element, selector) => {
           const source = element.querySelector(selector)!;
@@ -50,7 +95,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
             const clone = source.cloneNode(true) as HTMLElement;
             clone.removeAttribute('id');
             clone.dataset.layoutProbe = 'true';
-            clone.querySelector('strong')!.textContent = 'Nombre largo de una futura mejora o colección';
+            clone.querySelector('strong, h4')!.textContent = 'Nombre largo de una futura mejora o colección';
             element.append(clone);
           }
         }, card!);
@@ -84,6 +129,9 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
   test('cubre la carga desde HTML y entrega el menú sin textos recortados', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 8, overdrive: { unlocked: true }
+    })));
     let releaseEntry!: () => void;
     const entryGate = new Promise<void>((resolve) => { releaseEntry = resolve; });
     await page.route(/\/assets\/index-[^/]+\.js$/, async (route) => {

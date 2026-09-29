@@ -1,5 +1,5 @@
 import { ENEMY_DEFINITIONS } from '../content/enemies/EnemyDefinitions';
-import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
+import { getLaboratoryCombatBonuses } from '../content/meta/LaboratoryDefinitions';
 import { WEAPON_DEFINITIONS } from '../content/weapons/WeaponDefinitions';
 import { PlayerModel } from '../simulation/PlayerModel';
 import { EnemyPool } from '../simulation/combat/EntityPools';
@@ -111,8 +111,8 @@ const runMeasurement = (
   layout: BalanceLayout,
   metaLevel: BalanceMetaLevel
 ): BalanceMeasurement => {
-  const permanentBonuses = getPermanentCombatBonuses({
-    weapon_damage: metaLevel,
+  const permanentBonuses = getLaboratoryCombatBonuses({
+    global_damage: metaLevel,
     weapon_cadence: metaLevel
   });
   const cardIds = getFixedCardIds(weapon);
@@ -151,7 +151,7 @@ const runMeasurement = (
 const runScenario = (
   weapon: BalanceWeapon,
   layout: BalanceLayout,
-  permanentBonuses: ReturnType<typeof getPermanentCombatBonuses>,
+  permanentBonuses: ReturnType<typeof getLaboratoryCombatBonuses>,
   targetHealth: number
 ): ScenarioRunResult => {
   const player = new PlayerModel();
@@ -240,7 +240,7 @@ const getFixedCardIds = (weapon: BalanceWeapon): readonly string[] => {
 
 const getConfiguredDamage = (
   weapon: BalanceWeapon,
-  permanentBonuses: ReturnType<typeof getPermanentCombatBonuses>
+  permanentBonuses: ReturnType<typeof getLaboratoryCombatBonuses>
 ): number => {
   if (weapon === 'projectile') return WEAPON_DEFINITIONS.projectile.damage * permanentBonuses.weaponDamageMultiplier;
   if (weapon === 'orbit') return WEAPON_DEFINITIONS.orbit.damage * permanentBonuses.weaponDamageMultiplier;
@@ -249,7 +249,7 @@ const getConfiguredDamage = (
 
 const getMinimumCooldown = (
   weapon: BalanceWeapon,
-  permanentBonuses: ReturnType<typeof getPermanentCombatBonuses>
+  permanentBonuses: ReturnType<typeof getLaboratoryCombatBonuses>
 ): number => {
   if (weapon === 'projectile') {
     return Math.max(0.18, WEAPON_DEFINITIONS.projectile.cooldownSeconds * permanentBonuses.weaponCadenceMultiplier);

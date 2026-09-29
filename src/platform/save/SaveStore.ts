@@ -8,9 +8,11 @@ import { isPlayerSkinId } from '../../content/visual/SkinDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from '../../content/visual/BackgroundDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
-import { PERMANENT_UPGRADE_DEFINITIONS, type PermanentUpgradeId } from '../../content/meta/PermanentUpgradeDefinitions';
+import { normalizeLaboratorySaveData, type LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 7 as const;
+export type { LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
+
+export const SAVE_SCHEMA_VERSION = 8 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -47,10 +49,6 @@ export interface WalletSaveData {
   readonly nova: number;
 }
 
-export interface MetaUpgradeSaveData {
-  readonly levels: Readonly<Partial<Record<PermanentUpgradeId, number>>>;
-}
-
 /** Persistent records for the optional Infinite/Overdrive mode. */
 export interface OverdriveSaveData {
   readonly unlocked: boolean;
@@ -70,7 +68,7 @@ export interface SaveData {
   readonly cannonSkins: CannonSkinSaveData;
   readonly backgrounds: BackgroundSaveData;
   readonly wallet: WalletSaveData;
-  readonly metaUpgrades: MetaUpgradeSaveData;
+  readonly laboratory: LaboratorySaveData;
   /** Acts with a real consumer that the player may start directly for validation. */
   readonly unlockedActs: readonly CampaignActId[];
   readonly overdrive: OverdriveSaveData;
@@ -139,9 +137,7 @@ export const createDefaultSaveData = (): SaveData => ({
   wallet: {
     nova: 0
   },
-  metaUpgrades: {
-    levels: {}
-  },
+  laboratory: normalizeLaboratorySaveData(null),
   unlockedActs: ['radial'],
   overdrive: {
     unlocked: false,
@@ -191,10 +187,9 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawCannonSkins = isRecord(value.cannonSkins) ? value.cannonSkins : {};
   const rawBackgrounds = isRecord(value.backgrounds) ? value.backgrounds : {};
   const rawWallet = isRecord(value.wallet) ? value.wallet : {};
-  const rawMetaUpgrades = isRecord(value.metaUpgrades) ? value.metaUpgrades : {};
+  const rawLaboratory = isRecord(value.laboratory) ? value.laboratory : {};
   const rawOverdrive = version >= 7 && isRecord(value.overdrive) ? value.overdrive : {};
   const rawUnlockedActs = Array.isArray(value.unlockedActs) ? value.unlockedActs : [];
-  const rawMetaLevels = isRecord(rawMetaUpgrades.levels) ? rawMetaUpgrades.levels : {};
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
   const unlocked = Array.isArray(rawSkins.unlocked)
@@ -222,11 +217,12 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const normalizedBackgroundUnlocked = Array.from(new Set<BackgroundId>(['deep-space', ...backgroundUnlocked]));
   const requestedBackground = isBackgroundId(rawBackgrounds.selected) ? rawBackgrounds.selected : 'deep-space';
   const selectedBackground = normalizedBackgroundUnlocked.includes(requestedBackground) ? requestedBackground : 'deep-space';
-  const metaLevels: Partial<Record<PermanentUpgradeId, number>> = {};
-  for (const definition of PERMANENT_UPGRADE_DEFINITIONS) {
-    const level = readNonNegativeInt(rawMetaLevels[definition.id], 0, definition.maxLevel);
-    if (level > 0) metaLevels[definition.id] = level;
-  }
+  // Schema 8 intentionally starts the redesigned Lab clean. Earlier test-save
+  // ranks used a smaller catalog and must not silently become new investments;
+  // wallet, unlocks, cosmetics and records are still preserved below.
+  const laboratory = version >= 8
+    ? normalizeLaboratorySaveData(rawLaboratory)
+    : normalizeLaboratorySaveData(null);
 
   return {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -257,9 +253,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
     wallet: {
       nova: readNonNegativeInt(rawWallet.nova, defaults.wallet.nova, MAX_NOVA)
     },
-    metaUpgrades: {
-      levels: metaLevels
-    },
+    laboratory,
     unlockedActs: normalizedUnlockedActs,
     overdrive: {
       unlocked: overdriveUnlocked,

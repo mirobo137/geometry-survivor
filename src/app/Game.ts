@@ -9,7 +9,7 @@ import { JoystickView } from '../ui/JoystickView';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
-import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type MetaUpgradeSaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type LaboratorySaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
@@ -47,7 +47,8 @@ import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 import { calculateRunNova } from '../content/meta/EconomyDefinitions';
-import { getPermanentCombatBonuses } from '../content/meta/PermanentUpgradeDefinitions';
+import { canClaimLaboratoryVitalityAd, claimLaboratoryVitalityAd } from '../content/meta/LaboratoryProgression';
+import { getLaboratoryCombatBonuses } from '../content/meta/LaboratoryDefinitions';
 import { AngularActDirector } from '../simulation/acts/AngularActDirector';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
 import { FractureActDirector } from '../simulation/acts/FractureActDirector';
@@ -330,7 +331,7 @@ export class Game {
     this.startScreenRequestToken += 1;
     this.rewardedOffers.reset();
     const saved = this.saveStore.load();
-    this.combat.setPermanentBonuses(getPermanentCombatBonuses(saved.metaUpgrades.levels));
+    this.applyLaboratoryBonuses(saved.laboratory);
     this.startScreen?.close();
     this.activateRun(true);
     this.beginRunIntro('premium');
@@ -416,10 +417,36 @@ export class Game {
     }
   };
 
-  private readonly onStartMetaUpgradesChange = (metaUpgrades: MetaUpgradeSaveData): void => {
+  private readonly onStartLaboratoryChange = (laboratory: LaboratorySaveData, wallet: WalletSaveData): boolean => {
+    if (this.gameState.phase !== 'menu') return false;
     const saved = this.saveStore.load();
-    if (this.saveStore.save({ ...saved, metaUpgrades })) this.audio.playCue('purchase');
-    this.combat.setPermanentBonuses(getPermanentCombatBonuses(metaUpgrades.levels));
+    if (!saved.overdrive.unlocked || !this.saveStore.save({ ...saved, laboratory, wallet })) return false;
+    if (wallet.nova < saved.wallet.nova) this.audio.playCue('purchase');
+    this.applyLaboratoryBonuses(laboratory);
+    return true;
+  };
+
+  private readonly onStartLaboratoryVitalityAd = async (): Promise<{
+    readonly result: RewardedAdResult;
+    readonly laboratory?: LaboratorySaveData;
+  }> => {
+    if (this.gameState.phase !== 'menu') return { result: 'unavailable' };
+    const before = this.saveStore.load();
+    if (!before.overdrive.unlocked || !canClaimLaboratoryVitalityAd(before.laboratory)) {
+      return { result: 'unavailable' };
+    }
+    const result = await this.rewardedAds.request('laboratory-vitality');
+    if (result !== 'rewarded') return { result };
+    if (this.stopped) return { result: 'error' };
+    const current = this.saveStore.load();
+    if (!current.overdrive.unlocked) return { result: 'error' };
+    const laboratory = claimLaboratoryVitalityAd(current.laboratory);
+    if (!laboratory || !this.saveStore.save({ ...current, laboratory })) return { result: 'error' };
+    this.audio.playCue('reward-claimed');
+    // If the player left the menu while a platform ad was resolving, persist
+    // the earned rank but defer its combat effect until the next run setup.
+    if (this.gameState.phase === 'menu') this.applyLaboratoryBonuses(laboratory);
+    return { result, laboratory };
   };
 
   private readonly onStartCosmeticUnlock = (target: CosmeticUnlockTarget): Promise<RewardedAdResult> => (
@@ -675,7 +702,7 @@ export class Game {
     this.combat = new CombatSimulation({
       stress: this.stressMode,
       initialElapsedSeconds: this.initialElapsedSeconds,
-      permanentBonuses: getPermanentCombatBonuses(saved.metaUpgrades.levels),
+      permanentBonuses: getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank),
       actDirector: this.actDirector,
       overdriveBossPair: this.overdriveBossPair,
       hazardCadenceMode: this.hazardCadenceMode,
@@ -693,7 +720,14 @@ export class Game {
       evolutionDrill: this.evolutionScenario ?? undefined,
       evolutionDrillWeapon: this.evolutionId ?? undefined
     });
+    this.player.setPermanentBonuses(getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank));
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat, undefined, this.runMode);
+  }
+
+  private applyLaboratoryBonuses(laboratory: LaboratorySaveData): void {
+    const bonuses = getLaboratoryCombatBonuses(laboratory.levels, laboratory.vitalityAdRank);
+    this.combat.setPermanentBonuses(bonuses);
+    this.player.setPermanentBonuses(bonuses);
   }
 
   public async start(): Promise<void> {
@@ -1243,8 +1277,15 @@ export class Game {
   private async openStartScreen(): Promise<void> {
     if (!this.startScreen) return;
     const requestToken = ++this.startScreenRequestToken;
-    const cosmeticUnlockAvailable = this.rewardedOffers.canOffer('cosmetic-unlock')
-      && await this.rewardedAds.isAvailable('cosmetic-unlock');
+    const initialSave = this.saveStore.load();
+    const [cosmeticUnlockAvailable, laboratoryVitalityAdAvailable] = await Promise.all([
+      this.rewardedOffers.canOffer('cosmetic-unlock')
+        ? this.rewardedAds.isAvailable('cosmetic-unlock')
+        : Promise.resolve(false),
+      initialSave.overdrive.unlocked
+        ? this.rewardedAds.isAvailable('laboratory-vitality')
+        : Promise.resolve(false)
+    ]);
     if (this.stopped || requestToken !== this.startScreenRequestToken || this.gameState.phase !== 'menu') return;
     const saved = this.saveStore.load();
     this.startScreen.open({
@@ -1255,7 +1296,7 @@ export class Game {
       cannonSkins: saved.cannonSkins,
       backgrounds: saved.backgrounds,
       wallet: saved.wallet,
-      metaUpgrades: saved.metaUpgrades,
+      laboratory: saved.laboratory,
       unlockedActs: saved.unlockedActs,
       selectedAct: this.actId,
       selectedMode: this.runMode,
@@ -1270,7 +1311,9 @@ export class Game {
       onCannonSkinStateChange: this.onStartCannonSkinStateChange,
       onBackgroundStateChange: this.onStartBackgroundStateChange,
       onWalletChange: this.onStartWalletChange,
-      onMetaUpgradesChange: this.onStartMetaUpgradesChange,
+      onLaboratoryChange: this.onStartLaboratoryChange,
+      laboratoryVitalityAdAvailable,
+      onLaboratoryVitalityAd: this.onStartLaboratoryVitalityAd,
       cosmeticUnlockAvailable,
       onCosmeticUnlock: this.onStartCosmeticUnlock
     });
@@ -1861,7 +1904,7 @@ export class Game {
 
     if (state.orbitPulse.active && !this.lastAudioOrbitPulseActive) this.audio.playCue('orbit-fire');
     if (state.boomerangPulse.active && !this.lastAudioBoomerangPulseActive) {
-      this.audio.playCue('boomerang-return');
+      this.audio.playCue('boomerang-blast');
     }
     if (state.magneticCharge.sequence !== this.lastAudioMagneticSequence) this.audio.playCue('magnetic-fire');
     if (chainTriggered) this.audio.playCue('chain-fire');
@@ -1923,7 +1966,7 @@ const getUiAudioCue = (button: HTMLElement): AudioCue => {
   if (/back|resume|return|close|skip|pause-menu/.test(identity)) return 'ui-back';
   if (/play|continue|restart|revive|double-nova|purchase|buy|rewarded-button/.test(identity)) return 'ui-confirm';
   if (button.matches('[role="tab"]')
-    || /act-card|skin|cannon|background|meta-upgrade|calibration|evolution/.test(identity)) return 'ui-select';
+    || /act-card|skin|cannon|background|lab-tree|lab-node|lab-offer|lab-buy|meta-upgrade|calibration|evolution/.test(identity)) return 'ui-select';
   return 'ui-click';
 };
 

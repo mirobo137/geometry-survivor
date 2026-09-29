@@ -36,7 +36,7 @@ export type AudioCue =
   | 'damage' | 'player-guard' | 'player-shot' | 'rail-fire' | 'volley-fire' | 'critical-hit' | 'enemy-hit' | 'enemy-defeated'
   | 'level-up' | 'run-entry' | 'transition-rise' | 'stage-entry' | 'arena-shift'
   | 'hazard-warning' | 'enemy-warning' | 'boss-arrival' | 'boss-warning'
-  | 'orbit-fire' | 'chain-fire' | 'chain-burst' | 'boomerang-fire' | 'boomerang-return'
+  | 'orbit-fire' | 'chain-fire' | 'chain-burst' | 'boomerang-fire' | 'boomerang-return' | 'boomerang-blast'
   | 'pulse-ring-fire' | 'pulse-return' | 'magnetic-fire' | 'magnetic-capture' | 'magnetic-collapse'
   | 'boss-defeated' | 'player-defeated'
   | 'laser-charge' | 'laser-ignite' | 'laser-sustain' | 'laser-release'
@@ -116,6 +116,8 @@ export const AUDIO_CUE_DEFINITIONS: Record<AudioCue, AudioCueDefinition> = {
     [air(0.09, 0.06), body(196, 0.13, 0.09)], 1, 0.2),
   'boomerang-return': cue({ hz: 880, gain: 0.22, shape: 1, attack: 0.002, hold: 0.004, release: 0.085, slide: -8, jump: -160, jumpAt: 0.03 },
     [body(294, 0.16, 0.075)], 1, 0.22),
+  'boomerang-blast': cue({ hz: 330, gain: 0.32, shape: 1, attack: 0.001, hold: 0.006, release: 0.18, slide: -8 },
+    [body(165, 0.25, 0.15), air(0.08, 0.045)], 1, 0.22),
   'pulse-ring-fire': cue({ hz: 196, gain: 0.42, shape: 1, attack: 0.003, hold: 0.008, release: 0.17, slide: -3 },
     [layer({ hz: 392, gain: 0.2, attack: 0.006, hold: 0.01, release: 0.14, slide: -6 }, 0.012), air(0.06, 0.06)], 1, 0.09),
   'pulse-return': cue({ hz: 523, gain: 0.22, shape: 1, attack: 0.018, hold: 0.006, release: 0.12, slide: 12 },

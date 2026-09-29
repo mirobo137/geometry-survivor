@@ -1,4 +1,4 @@
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getWeaponDamageAtRank, PROJECTILE_RANK_STATS, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { BOOMERANG_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { BoomerangPool, ProjectilePool, type EnemyState } from './EntityPools';
@@ -12,7 +12,7 @@ import type {
 } from './CombatRenderState';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
-import type { PermanentCombatBonuses } from '../../content/meta/PermanentUpgradeDefinitions';
+import type { LaboratoryCombatBonuses } from '../../content/meta/LaboratoryDefinitions';
 import type { ArenaBoundaryInput } from '../ArenaBoundary';
 import { WeaponScheduler } from './WeaponScheduler';
 import { ProjectileBehavior } from './ProjectileBehavior';
@@ -48,15 +48,14 @@ const createOverdrivePowerMultipliers = (): Record<WeaponPathId, number> => ({
   magnetic_charge: 1
 });
 
-const PROJECTILE_RANK_STATS = [
-  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
-  { damage: 14, speed: 460, cooldownSeconds: 0.55 },
-  { damage: 18, speed: 460, cooldownSeconds: 0.55 },
-  { damage: 18, speed: 460, cooldownSeconds: 0.47 },
-  { damage: 22, speed: 460, cooldownSeconds: 0.47 },
-  { damage: 22, speed: 540, cooldownSeconds: 0.47 },
-  { damage: 22, speed: 540, cooldownSeconds: 0.39 }
-] as const;
+const createDefaultLaboratoryBonuses = (): LaboratoryCombatBonuses => ({
+  weaponDamageMultiplier: 1,
+  weaponDamageByFamily: createOverdrivePowerMultipliers(),
+  weaponCadenceMultiplier: 1,
+  movementSpeedMultiplier: 1,
+  maxHealthMultiplier: 1,
+  incomingDamageMultiplier: 1
+});
 
 export interface CombatWeaponUpdateOptions {
   readonly projectileEnabled?: boolean;
@@ -106,16 +105,13 @@ export class CombatWeaponSystem {
   private projectileEvolution: ProjectileEvolution | null = null;
   public readonly lastShot: ShotRenderState;
   private readonly stressScenario: StressCombatScenario;
-  private permanentBonuses: PermanentCombatBonuses;
+  private permanentBonuses: LaboratoryCombatBonuses;
   private readonly overdrivePowerMultipliers = createOverdrivePowerMultipliers();
 
   public constructor(
     private readonly enemies: EnemySystem,
     private readonly onEnemyDefeated: (enemy: EnemyState) => void,
-    permanentBonuses: PermanentCombatBonuses = {
-      weaponDamageMultiplier: 1,
-      weaponCadenceMultiplier: 1
-    }
+    permanentBonuses: LaboratoryCombatBonuses = createDefaultLaboratoryBonuses()
   ) {
     this.permanentBonuses = permanentBonuses;
     this.projectileBehavior = new ProjectileBehavior({
@@ -308,6 +304,16 @@ export class CombatWeaponSystem {
     return this.overdrivePowerMultipliers[family];
   }
 
+  /** Exact per-hit projection consumed by level-up cards. */
+  public getWeaponRankDamagePreview(family: WeaponPathId, rank: WeaponRank): { before: number; after: number } {
+    return {
+      before: this.getCurrentDamageForFamily(family),
+      after: getWeaponDamageAtRank(family, rank)
+        * this.getPermanentDamageMultiplier(family)
+        * this.overdrivePowerMultipliers[family]
+    };
+  }
+
   /**
    * Adds one bounded five-point Overdrive power stack. The multiplier is kept
    * separate from permanent bonuses so authored rank/evolution tuning remains
@@ -390,18 +396,18 @@ export class CombatWeaponSystem {
     this.stressScenario.reset();
   }
 
-  public setPermanentBonuses(permanentBonuses: PermanentCombatBonuses): void {
+  public setPermanentBonuses(permanentBonuses: LaboratoryCombatBonuses): void {
     this.permanentBonuses = permanentBonuses;
     this.applyProjectileRankStats();
     this.orbitBehavior.setPermanentBonuses(
-      permanentBonuses.weaponDamageMultiplier,
+      this.getPermanentDamageMultiplier('orbit'),
       permanentBonuses.weaponCadenceMultiplier
     );
-    this.chainBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
-    this.boomerangBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
-    this.pulseRingBehavior.setPermanentDamageMultiplier(permanentBonuses.weaponDamageMultiplier);
+    this.chainBehavior.setPermanentDamageMultiplier(this.getPermanentDamageMultiplier('chain'));
+    this.boomerangBehavior.setPermanentDamageMultiplier(this.getPermanentDamageMultiplier('boomerang'));
+    this.pulseRingBehavior.setPermanentDamageMultiplier(this.getPermanentDamageMultiplier('pulse_ring'));
     this.magneticChargeBehavior.setPermanentBonuses(
-      permanentBonuses.weaponDamageMultiplier,
+      this.getPermanentDamageMultiplier('magnetic_charge'),
       permanentBonuses.weaponCadenceMultiplier
     );
     this.chainCooldown = this.getChainCooldownForRank();
@@ -625,11 +631,27 @@ export class CombatWeaponSystem {
   private applyProjectileRankStats(): void {
     const stats = PROJECTILE_RANK_STATS[this.projectileRank - 1] ?? PROJECTILE_RANK_STATS[0];
     this.projectileDamage = stats.damage
-      * this.permanentBonuses.weaponDamageMultiplier
+      * this.getPermanentDamageMultiplier('projectile')
       * this.overdrivePowerMultipliers.projectile;
     this.projectileSpeed = stats.speed;
     this.projectileCooldown = Math.max(0.18, stats.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
     this.twinEmitters = this.projectileRank >= 2;
+  }
+
+  private getPermanentDamageMultiplier(family: WeaponPathId): number {
+    return this.permanentBonuses.weaponDamageMultiplier
+      * (this.permanentBonuses.weaponDamageByFamily[family] ?? 1);
+  }
+
+  private getCurrentDamageForFamily(family: WeaponPathId): number {
+    switch (family) {
+      case 'projectile': return this.currentProjectileDamage;
+      case 'orbit': return this.currentOrbitDamage;
+      case 'chain': return this.currentChainDamage;
+      case 'boomerang': return this.currentBoomerangDamage;
+      case 'pulse_ring': return this.currentPulseRingDamage;
+      case 'magnetic_charge': return this.currentMagneticChargeDamage;
+    }
   }
 
   private getEffectiveBoomerangCooldown(): number {

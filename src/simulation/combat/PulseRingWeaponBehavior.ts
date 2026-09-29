@@ -1,5 +1,5 @@
 import { OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
-import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import { getWeaponDamageAtRank, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { PlayerState } from '../PlayerModel';
 import type { PulseRingWeaponState } from './CombatRenderState';
 import type { EnemyState } from './EntityPools';
@@ -357,7 +357,7 @@ export class PulseRingWeaponBehavior {
   }
 
   private applyRankTuning(): void {
-    this.damage = (this.rank >= 5 ? 32 : DEFINITION.damage)
+    this.damage = getWeaponDamageAtRank('pulse_ring', this.rank)
       * this.permanentDamageMultiplier
       * this.overdrivePowerMultiplier;
     this.telegraphSeconds = this.rank >= 2 ? 0.5 : DEFINITION.telegraphSeconds;

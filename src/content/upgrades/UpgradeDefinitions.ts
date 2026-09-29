@@ -328,8 +328,8 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   },
   {
     id: 'twin_comet',
-    title: 'Twin Comet',
-    description: 'Lanza dos piezas con apertura opuesta, cada una al 65% del dano.',
+    title: 'Comet Quintet',
+    description: 'Cinco cuchillas de corto alcance barren en abanico y golpean al salir y regresar.',
     effect: { type: 'weaponEvolution', evolution: 'twin_comet' },
     maxStacks: 1,
     requires: ['vector_boomerang']
@@ -337,7 +337,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'singularity_return',
     title: 'Singularity Return',
-    description: 'El retorno gana dano y libera un pulso que atrae y golpea al capturarse.',
+    description: 'Busca grupos compactos, detona en su posicion y ralentiza a los supervivientes.',
     effect: { type: 'weaponEvolution', evolution: 'singularity_return' },
     maxStacks: 1,
     requires: ['vector_boomerang']
@@ -677,7 +677,7 @@ export const WEAPON_EVOLUTION_OFFER_DEFINITIONS: readonly UpgradeDefinition[] = 
   {
     id: 'boomerang_evolution_offer',
     title: 'Evolución disponible',
-    description: 'Búmeran está calibrado. Compara Twin Comet y Singularity Return antes de confirmar.',
+    description: 'Búmeran está calibrado. Compara Comet Quintet y Singularity Return antes de confirmar.',
     effect: { type: 'evolutionOffer', family: 'boomerang' },
     maxStacks: 1
   },

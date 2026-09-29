@@ -37,7 +37,7 @@
               <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>
               <button id="start-level" class="start-secondary start-feature" type="button" aria-controls="start-act-view" data-feature="level-select"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 6-8 6 8 6-12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="16" r="2" fill="currentColor"/><circle cx="21" cy="4" r="2" fill="currentColor"/></svg><span class="home-action-copy"><strong>Actos</strong><small>SELECCIONAR</small></span></button>
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 17-9-4-9 4Z" fill="#17283b" stroke="currentColor" stroke-width="2"/><path d="m12 7 3 6h-6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Skins</strong><small>ABRIR</small></span></button>
-              <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Mejoras</strong><small>LABORATORIO</small></span></button>
+              <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Laboratorio</strong><small>MEJORAS PERMANENTES</small></span></button>
             </div>
             <p id="start-coming-soon-note" class="start-coming-soon-note">Elige una apariencia visual; no cambia las reglas ni las estadísticas.</p>
           </div>
@@ -104,15 +104,39 @@
             <div class="meta-header console-header">
               <button id="start-meta-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
-                <p class="start-kicker">META / PODER PERMANENTE</p>
+                <p class="start-kicker">META / INVESTIGACIÓN NOVA</p>
                 <h2 id="start-meta-title">Laboratorio</h2>
-                <p>Invierte NOVA entre partidas. Estas mejoras no reemplazan las cartas de cada run.</p>
+                <p>Una red de calibración para tu arsenal y tu nave. Las ofertas NOVA determinan qué puedes adquirir; el dibujo no impone prerequisitos.</p>
               </div>
             </div>
             <div class="console-body" tabindex="0" role="region" aria-label="Mejoras permanentes">
             <div class="meta-wallet"><span id="start-meta-nova-icon" class="nova-icon" aria-hidden="true"></span><strong id="start-meta-nova-value" data-nova-value>0</strong><span>NOVA disponible</span></div>
-            <div id="start-meta-cards" class="meta-upgrade-cards" aria-label="Mejoras permanentes"></div>
-            <p class="skins-footnote">Las mejoras compradas se conservan entre partidas.</p>
+            <div class="lab-tree-heading">
+              <div><span class="lab-eyebrow">RED DE CALIBRACIÓN</span><p>Arrastra para explorar. Solo aparece el siguiente rango; las ramas laterales guardan sus rangos futuros.</p></div>
+              <div class="lab-tree-legend" aria-label="Estados del árbol"><span><i class="is-offered"></i> Oferta actual</span><span><i class="is-acquired"></i> Adquirido</span></div>
+            </div>
+            <div class="lab-tree-toolbar" aria-label="Controles del mapa">
+              <span>ZOOM</span>
+              <button id="start-lab-zoom-out" type="button" aria-label="Alejar el árbol">−</button>
+              <output id="start-lab-zoom-value" aria-live="polite">78%</output>
+              <button id="start-lab-zoom-in" type="button" aria-label="Acercar el árbol">+</button>
+              <button id="start-lab-zoom-reset" type="button" aria-label="Centrar el árbol">Centrar</button>
+            </div>
+            <div id="start-lab-tree-stage" class="lab-tree-stage" tabindex="0" role="region" aria-label="Árbol de mejoras; arrastra para explorar, usa los controles o la rueda para cambiar el zoom">
+              <div id="start-lab-tree-world" class="lab-tree-world">
+                <svg id="start-lab-tree-links" class="lab-tree-links" aria-hidden="true" focusable="false"></svg>
+                <div id="start-lab-tree-core" class="lab-tree-core" aria-hidden="true"><span class="lab-tree-core-face"></span><small>NOVA CORE</small></div>
+                <div class="lab-tree-group-label lab-tree-group-arsenal" aria-hidden="true"><strong>ARSENAL</strong><small>8 SISTEMAS · DAÑO Y RITMO</small></div>
+                <div class="lab-tree-group-label lab-tree-group-pilot" aria-hidden="true"><strong>NAVE Y PILOTO</strong><small>3 SISTEMAS · MOVILIDAD Y DEFENSA</small></div>
+                <div class="lab-tree-group-label lab-tree-group-vitality" aria-hidden="true"><strong>PULSO DE VITALIDAD</strong><small>REWARDED · 3 COMPRAS NOVA</small></div>
+                <div id="start-lab-vitality-core" class="lab-tree-core lab-tree-vitality-core" aria-hidden="true"><span class="lab-tree-core-face"></span><small>REWARD · AD</small></div>
+                <div id="start-meta-cards" class="lab-tree-nodes" role="group" aria-label="Nodos de investigación permanente"></div>
+              </div>
+            </div>
+            <details id="start-lab-history" class="lab-history-details">
+              <summary>Historial de las últimas cuatro inversiones</summary>
+              <ol id="start-lab-history-list" class="lab-history-list"></ol>
+            </details>
             </div>
           </section>
           <section id="start-skins-view" class="start-skins-view console-screen" hidden aria-labelledby="start-skins-title">
@@ -165,6 +189,22 @@
                 <p id="start-cosmetic-status" role="status"></p>
               </div>
               <button id="start-cosmetic-action" type="button"></button>
+            </div>
+          </dialog>
+          <dialog id="start-lab-node-dialog" class="lab-node-dialog" aria-labelledby="start-lab-node-title" aria-describedby="start-lab-node-description">
+            <div class="lab-node-dialog-shell">
+              <div class="lab-node-dialog-top"><span id="start-lab-node-eyebrow">NOVA RESEARCH</span><button id="start-lab-node-close" type="button" aria-label="Cerrar detalles de mejora">×</button></div>
+              <div id="start-lab-node-icon" class="lab-node-dialog-icon" aria-hidden="true"></div>
+              <div class="lab-node-dialog-copy">
+                <h3 id="start-lab-node-title">Mejora permanente</h3>
+                <span id="start-lab-node-rank"></span>
+                <div id="start-lab-node-progress" class="lab-dialog-progress" aria-hidden="true"></div>
+                <p id="start-lab-node-description"></p>
+                <p id="start-lab-node-delta" class="lab-dialog-delta"></p>
+                <p id="start-lab-node-total" class="lab-dialog-total"></p>
+                <p id="start-lab-node-status" class="lab-dialog-status" role="status" aria-live="polite"></p>
+                <button id="start-lab-node-action" class="lab-dialog-action" type="button">Adquirir</button>
+              </div>
             </div>
           </dialog>
         </div>

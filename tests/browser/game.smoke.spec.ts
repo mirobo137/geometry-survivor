@@ -138,7 +138,13 @@ const openFundedMenu = async (page: Page): Promise<string[]> => {
   // scenario gets isolated storage and its own test timeout budget.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => {
-    localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 5, wallet: { nova: 20000 } }));
+    if (localStorage.getItem('geometry-survivor:save') === null) {
+      localStorage.setItem('geometry-survivor:save', JSON.stringify({
+        schemaVersion: 8,
+        wallet: { nova: 20000 },
+        overdrive: { unlocked: true }
+      }));
+    }
   });
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
@@ -150,6 +156,68 @@ const openFundedMenu = async (page: Page): Promise<string[]> => {
   await expect(page.locator('#start-level')).toBeEnabled();
   await expect(page.locator('#start-skins')).toBeEnabled();
   return failures;
+};
+
+const purchaseFirstLaboratoryOffer = async (page: Page): Promise<string> => {
+  const offeredNodes = page.locator('.lab-tree-node[data-tree-kind="permanent"][data-offered="true"]');
+  let visibleIndex = await offeredNodes.evaluateAll(nodes => {
+    const stage = document.querySelector('#start-lab-tree-stage')!.getBoundingClientRect();
+    return nodes.findIndex(node => {
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      return centerX >= stage.left && centerX <= stage.right && centerY >= stage.top && centerY <= stage.bottom;
+    });
+  });
+  if (visibleIndex < 0) {
+    const target = offeredNodes.first();
+    const offset = await target.evaluate(node => {
+      const stage = document.querySelector('#start-lab-tree-stage')!.getBoundingClientRect();
+      const rect = node.getBoundingClientRect();
+      return { x: stage.left + stage.width / 2 - (rect.left + rect.width / 2), y: stage.top + stage.height / 2 - (rect.top + rect.height / 2), startX: stage.left + stage.width / 2, startY: stage.top + stage.height / 2 };
+    });
+    await page.mouse.move(offset.startX, offset.startY);
+    await page.mouse.down();
+    await page.mouse.move(offset.startX + offset.x, offset.startY + offset.y, { steps: 8 });
+    await page.mouse.up();
+    visibleIndex = await offeredNodes.evaluateAll(nodes => {
+      const stage = document.querySelector('#start-lab-tree-stage')!.getBoundingClientRect();
+      return nodes.findIndex(node => {
+        const rect = node.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        return centerX >= stage.left && centerX <= stage.right && centerY >= stage.top && centerY <= stage.bottom;
+      });
+    });
+  }
+  expect(visibleIndex).toBeGreaterThanOrEqual(0);
+  const node = offeredNodes.nth(visibleIndex);
+  const id = (await node.getAttribute('data-upgrade'))!;
+  await node.click();
+  await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+  await node.click();
+  await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
+  await page.mouse.click(4, 4);
+  await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+  await node.click();
+  await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
+  await expect(page.locator('#start-lab-node-action')).toBeEnabled();
+  await page.locator('#start-lab-node-action').click();
+  await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+  return id;
+};
+
+const panLaboratoryTowardVitality = async (page: Page): Promise<void> => {
+  const stage = await page.locator('#start-lab-tree-stage').boundingBox();
+  expect(stage).not.toBeNull();
+  const x = stage!.x + stage!.width / 2;
+  const y = stage!.y + stage!.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - Math.min(420, stage!.width * 0.72), y);
+  await page.mouse.up();
 };
 
 test('compra y equipa skins desde el menu y conserva la seleccion', async ({ page }) => {
@@ -252,14 +320,22 @@ test('compra una mejora permanente y vuelve al menu', async ({ page }) => {
 
   await page.locator('#start-meta').click();
   await expect(page.locator('#start-meta-view')).toBeVisible();
-  await expect(page.locator('#start-meta-cards .meta-upgrade-card')).toHaveCount(2);
-  await page.locator('.meta-upgrade-card[data-upgrade="weapon_damage"] .meta-upgrade-buy').click();
-  await expect(page.locator('.meta-upgrade-card[data-upgrade="weapon_damage"] .meta-upgrade-level')).toHaveText('NIVEL 1/5');
+  await expect(page.locator('.lab-tree-node[data-tree-kind="permanent"][data-offered="true"]')).toHaveCount(3);
+  await expect(page.locator('.lab-tree-node[data-tree-kind="permanent"][data-rank="2"]')).toHaveCount(0);
+  const chosenUpgrade = await purchaseFirstLaboratoryOffer(page);
+  await expect(page.locator(`.lab-tree-node[data-upgrade="${chosenUpgrade}"][data-rank="2"]`)).toHaveCount(1);
+  await expect(page.locator(`.lab-tree-node[data-upgrade="${chosenUpgrade}"][data-rank="3"]`)).toHaveCount(0);
   await page.locator('#start-meta-back').click();
   await expect(page.locator('#start-meta-view')).toBeHidden();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.metaUpgrades.levels.weapon_damage).toBe(1);
+  expect(saved.laboratory.levels[chosenUpgrade]).toBe(1);
   expect(saved.wallet.nova).toBeLessThan(20000);
+  await page.reload();
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-meta').click();
+  await expect(page.locator('.lab-tree-node[data-tree-kind="permanent"][data-offered="true"]')).toHaveCount(3);
+  const savedAfterReload = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(savedAfterReload.laboratory.levels[chosenUpgrade]).toBe(1);
   expect(failures).toEqual([]);
 });
 
@@ -360,6 +436,46 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   await expect(page.locator('#pause-toggle')).toBeVisible();
   await expect(page.locator('#debug-panel')).toContainText('mode: angular-act');
   expect(failures).toEqual([]);
+});
+
+test('habilita vitalidad solo tras tres compras NOVA y persiste el rango del anuncio', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
+    schemaVersion: 8,
+    wallet: { nova: 20_000 },
+    overdrive: { unlocked: true }
+  })));
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-meta').click();
+  const vitalityNode = page.locator('.lab-tree-node[data-tree-kind="vitality"][data-rank="1"]');
+  await expect(vitalityNode).toHaveAttribute('data-offered', 'false');
+  await panLaboratoryTowardVitality(page);
+  await expect(vitalityNode).toBeVisible();
+  await vitalityNode.click();
+  await expect(page.locator('#start-lab-node-action')).toBeDisabled();
+  await expect(page.locator('#start-lab-node-status')).toContainText('3 mejoras');
+  await page.locator('#start-lab-node-close').click();
+  for (let purchase = 0; purchase < 3; purchase += 1) {
+    await purchaseFirstLaboratoryOffer(page);
+  }
+  const afterPurchases = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(afterPurchases.laboratory.purchasesSinceVitalityAd).toBe(3);
+  await panLaboratoryTowardVitality(page);
+  const availableVitalityNode = page.locator('.lab-tree-node[data-tree-kind="vitality"][data-rank="1"]');
+  await availableVitalityNode.click();
+  await expect(page.locator('#start-lab-node-action')).toBeEnabled();
+  await page.locator('#start-lab-node-action').click();
+  await expect(page.locator('#start-lab-node-dialog')).toBeHidden({ timeout: 5_000 });
+  const afterReward = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
+  expect(afterReward.laboratory.vitalityAdRank).toBe(1);
+  expect(afterReward.laboratory.purchasesSinceVitalityAd).toBe(0);
+});
+
+test('mantiene el Laboratorio bloqueado hasta desbloquear Overdrive', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-meta')).toBeDisabled();
+  await expect(page.locator('#start-meta')).toHaveAttribute('aria-label', /vence el Acto III/);
 });
 
 test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado', async ({ page }) => {
@@ -587,8 +703,13 @@ test('abre y resuelve un level-up con reroll en gameplay normal', async ({ page 
   test.setTimeout(90_000);
   await page.addInitScript(() => {
     localStorage.setItem('geometry-survivor:save', JSON.stringify({
-      schemaVersion: 7,
-      metaUpgrades: { levels: { weapon_damage: 5, weapon_cadence: 5 } }
+      schemaVersion: 8,
+      overdrive: { unlocked: true },
+      laboratory: {
+        levels: { global_damage: 5, weapon_damage_projectile: 5, weapon_cadence: 5 },
+        currentOfferIds: [], deferredOffers: [], history: [],
+        purchasesSinceVitalityAd: 0, vitalityAdRank: 0, offerStep: 0
+      }
     }));
   });
   const failures = await openGame(page);

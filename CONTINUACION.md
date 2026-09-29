@@ -1,5 +1,54 @@
 # Geometry Survivor — estado y continuación
 
+## Reorganización visual del Laboratorio — 29-09-2026
+
+El feedback indicó que la primera vista radial no se sentía como el árbol de
+habilidades de las referencias. Se reemplazó por una red lateral: el núcleo
+NOVA se bifurca en `ARSENAL` (8 ramas) y `NAVE Y PILOTO` (3 ramas), con
+conectores y nodos hexagonales de icono. Cada rama renderiza lo adquirido y
+como máximo el siguiente rango; las tres ofertas actuales son las comprables.
+La isla dorada `PULSO DE VITALIDAD` permanece separada, fuera del encuadre
+inicial, para descubrirla al desplazar o alejar el mapa. Todo esto es
+presentación: no cambia catálogo, rotación, precio, efecto, guardado ni el
+requisito de tres compras NOVA antes de reclamar Rewarded.
+
+Pasaron `npm run typecheck`, los tests unitarios dirigidos, build local y seis
+smokes de escritorio: layout en 320×568, 390×844, 640×360 y 1280×720; compra
+persistente; y Vitalidad tras tres compras NOVA. La prueba también comprueba
+que las once raíces formen filas, no una rueda radial, y que el árbol rewarded
+empiece fuera de vista, y que los nodos con el zoom mínimo mantengan targets de
+al menos 44 px. Sigue pendiente inspección táctil/visual humana en móvil físico.
+No se hizo commit/push. Contrato canónico:
+`docs/design/LABORATORIO_META_V2.md`.
+
+## Rediseño puntual de las evoluciones de Búmeran — 28-09-2026
+
+Por feedback de juego, `twin_comet` se presenta como Comet Quintet: cinco filos
+con alcance de ida del 85% del rango vigente (212.5 u en rango I y 238 u desde
+rango III), abanico curvo e impactos de ida y vuelta compartidos por objetivo.
+`singularity_return` elige el grupo más denso al lanzar, detona allí
+en radio 155 y ralentiza a los supervivientes normales; ya no atrae enemigos.
+Los IDs de guardado permanecen. La especificación actual está en
+`docs/design/EVOLUCIONES_V2.md` §4.D. Accesos directos:
+`/?evolution=twin-comet&scenario=single|mass&debug=1&quality=high` y
+`/?evolution=singularity-return&scenario=single|mass&debug=1&quality=high`
+(`single` o `mass` como valor, no la barra literal). Pasaron `npm run typecheck`,
+504 pruebas unitarias, build local y el smoke desktop de las dos cartas. Se
+inspeccionaron escenarios `mass` en High de escritorio y Low móvil emulado;
+sin errores de página observados. Pendientes: prueba humana de ambas ramas,
+medición de FPS en teléfono real y balance fino si las runs lo requieren.
+
+## Ajuste puntual de ritmo inicial del Acto I — 28-09-2026
+
+Por solicitud del usuario, los ciclos de aparición del Acto I pasan de 0.85 s a
+1.00 s durante los primeros 30 segundos; a los 30 s vuelven a 0.85 s y desde
+el minuto 1 en adelante se conserva la curva aprobada. La referencia de 0.34 s
+correspondía aproximadamente al minuto 4, no a la apertura. El ajuste afecta
+solo la campaña del Acto I: Actos II/III y Overdrive permanecen intactos.
+Pasaron 15 tests dirigidos, `npm run typecheck` y `git diff --check`; queda
+pendiente la prueba manual del usuario. Ficha:
+`docs/balance/ACT-I-OPENING-SPAWN.md`.
+
 ## Aprobación del baseline de balance — 28-09-2026
 
 El usuario aprueba el balance jugable actual de Actos I–III y Overdrive con los

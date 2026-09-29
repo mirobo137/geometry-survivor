@@ -21,6 +21,19 @@ al menos 44 px. Sigue pendiente inspección táctil/visual humana en móvil fís
 No se hizo commit/push. Contrato canónico:
 `docs/design/LABORATORIO_META_V2.md`.
 
+## Ajuste de duración del smoke de Vitalidad — 29-09-2026
+
+El shard 2 de GitHub agotó el timeout de 60 s en la prueba que desbloquea la
+Vitalidad Rewarded tras tres compras NOVA. No se observó un fallo funcional: la
+prueba repetía tres veces las comprobaciones de cerrar el modal por Escape y
+clic exterior, ya cubiertas por el smoke dedicado de compra. Esas
+comprobaciones siguen activas en la prueba dedicada; el flujo de compra se
+ejecuta en cada iteración y la prueba de Vitalidad emula `prefers-reduced-motion`
+para evitar trabajo visual innecesario en CI. Pasaron `npm run typecheck` y los
+dos smokes dirigidos en desktop (2/2; compra persistente 14.5 s y Vitalidad
+19.0 s local). El shard de GitHub aún debe repetirse para confirmar el resultado
+en el runner; no se hizo commit/push.
+
 ## Rediseño puntual de las evoluciones de Búmeran — 28-09-2026
 
 Por feedback de juego, `twin_comet` se presenta como Comet Quintet: cinco filos

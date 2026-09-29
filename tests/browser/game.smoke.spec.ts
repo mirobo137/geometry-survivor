@@ -158,7 +158,7 @@ const openFundedMenu = async (page: Page): Promise<string[]> => {
   return failures;
 };
 
-const purchaseFirstLaboratoryOffer = async (page: Page): Promise<string> => {
+const purchaseFirstLaboratoryOffer = async (page: Page, verifyDismissal = true): Promise<string> => {
   const offeredNodes = page.locator('.lab-tree-node[data-tree-kind="permanent"][data-offered="true"]');
   let visibleIndex = await offeredNodes.evaluateAll(nodes => {
     const stage = document.querySelector('#start-lab-tree-stage')!.getBoundingClientRect();
@@ -193,14 +193,16 @@ const purchaseFirstLaboratoryOffer = async (page: Page): Promise<string> => {
   expect(visibleIndex).toBeGreaterThanOrEqual(0);
   const node = offeredNodes.nth(visibleIndex);
   const id = (await node.getAttribute('data-upgrade'))!;
-  await node.click();
-  await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
-  await node.click();
-  await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
-  await page.mouse.click(4, 4);
-  await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+  if (verifyDismissal) {
+    await node.click();
+    await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+    await node.click();
+    await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
+    await page.mouse.click(4, 4);
+    await expect(page.locator('#start-lab-node-dialog')).toBeHidden();
+  }
   await node.click();
   await expect(page.locator('#start-lab-node-dialog')).toBeVisible();
   await expect(page.locator('#start-lab-node-action')).toBeEnabled();
@@ -439,6 +441,7 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
 });
 
 test('habilita vitalidad solo tras tres compras NOVA y persiste el rango del anuncio', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
     schemaVersion: 8,
     wallet: { nova: 20_000 },
@@ -456,7 +459,7 @@ test('habilita vitalidad solo tras tres compras NOVA y persiste el rango del anu
   await expect(page.locator('#start-lab-node-status')).toContainText('3 mejoras');
   await page.locator('#start-lab-node-close').click();
   for (let purchase = 0; purchase < 3; purchase += 1) {
-    await purchaseFirstLaboratoryOffer(page);
+    await purchaseFirstLaboratoryOffer(page, false);
   }
   const afterPurchases = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
   expect(afterPurchases.laboratory.purchasesSinceVitalityAd).toBe(3);

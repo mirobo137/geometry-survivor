@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Graphics, Texture } from 'pixi.js';
+import { Graphics, Sprite, Texture } from 'pixi.js';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { WeaponView } from './WeaponView';
 
@@ -216,9 +216,13 @@ describe('WeaponView', () => {
     lowView.render(combat);
     const lowLayer = lowView.root.children[6];
     expect(lowLayer.visible).toBe(true);
-    expect(lowLayer.children).toHaveLength(8);
-    expect(lowLayer.children[4].visible).toBe(true); // damage band remains readable in Low.
+    expect(lowLayer.children).toHaveLength(12);
+    expect(lowLayer.children[4].visible).toBe(true); // the complete vector detonation remains available as fallback.
     expect(lowLayer.children[2].visible).toBe(false); // attraction ornaments are decorative in Low.
+    expect(lowLayer.children[6]).toBeInstanceOf(Graphics); // vector core is used until the complete image pack loads.
+    expect(lowLayer.children[11]).toBeInstanceOf(Sprite);
+    expect(lowLayer.children[6].visible).toBe(true); // no browser Image exists in this unit test.
+    for (const index of [8, 9, 10, 11]) expect(lowLayer.children[index].visible).toBe(false);
 
     const highView = new WeaponView(fakeRenderer, undefined, 'high');
     highView.render(combat);

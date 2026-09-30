@@ -1,5 +1,5 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
-import type { Renderer, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import type { Renderer } from 'pixi.js';
 import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import type { FxQuality } from '../../content/visual/VisualTokens';
 import type { CombatRenderState } from '../../simulation/combat/CombatRenderState';
@@ -7,6 +7,10 @@ import { createTexture } from './TextureFactory';
 import { createSvgTexture } from './SvgTextureFactory';
 import vectorBoomerangSvg from '../../assets/svg/weapons/vector-boomerang.svg?raw';
 import { BOOMERANG_POOL_CAPACITY, CHAIN_SEGMENT_POOL_CAPACITY } from '../../config/constants';
+import magneticChargeCoreUrl from '../../assets/fx/magnetic-singularity-core.png';
+import magneticChargeFieldUrl from '../../assets/fx/magnetic-charge-field.png';
+import magneticChargeTravelUrl from '../../assets/fx/magnetic-charge-travel.png';
+import magneticChargeDetonationUrl from '../../assets/fx/magnetic-charge-detonation.png';
 
 const PRISM_INK = 0x0d1025;
 const PRISM_ARMOR = 0x51456f;
@@ -33,7 +37,18 @@ const MAGNETIC_CHARGE_CYAN = 0x6fe7f2;
 const MAGNETIC_CHARGE_VIOLET = 0xb77cff;
 const MAGNETIC_CHARGE_GOLD = 0xffd478;
 const MAGNETIC_CHARGE_WHITE = 0xf1fbff;
+const MAGNETIC_CHARGE_CORE_SPRITE_SCALE = 0.85;
+const MAGNETIC_FIELD_ART_RADIUS = 110.5;
+const MAGNETIC_DETONATION_ART_RADIUS = 110.3;
 const FULL_CIRCLE = Math.PI * 2;
+
+const loadMagneticChargeImage = (url: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
+  const image = new Image();
+  image.decoding = 'async';
+  image.addEventListener('load', () => resolve(image), { once: true });
+  image.addEventListener('error', () => reject(new Error(`Unable to load Magnetic Charge image: ${url}`)), { once: true });
+  image.src = url;
+});
 
 interface OrbitBladeVisual {
   readonly root: Container;
@@ -132,6 +147,10 @@ export class WeaponView {
   private readonly magneticChargeBand = new Graphics();
   private readonly magneticChargeRails = new Graphics();
   private readonly magneticChargeCore = new Graphics();
+  private readonly magneticChargeTravelSprite = new Sprite(Texture.EMPTY);
+  private readonly magneticChargeFieldSprite = new Sprite(Texture.EMPTY);
+  private readonly magneticChargeDetonationSprite = new Sprite(Texture.EMPTY);
+  private readonly magneticChargeCoreSprite = new Sprite(Texture.EMPTY);
   private readonly magneticChargeResidue = new Graphics();
   private readonly boomerangPulseLayer = new Graphics();
   private readonly orbitVisuals: OrbitBladeVisual[] = [];
@@ -142,6 +161,8 @@ export class WeaponView {
   private pulseRingSequence = -1;
   private pulseRingBaseRadius = 1;
   private magneticChargeSequence = -1;
+  private magneticChargeImagePackRequested = false;
+  private magneticChargeImagePackReady = false;
   private readonly reducedMotion: boolean;
 
   public constructor(
@@ -161,6 +182,15 @@ export class WeaponView {
       this.pulseRingLayer,
       this.magneticChargeLayer
     );
+    for (const sprite of [
+      this.magneticChargeTravelSprite,
+      this.magneticChargeFieldSprite,
+      this.magneticChargeDetonationSprite,
+      this.magneticChargeCoreSprite
+    ]) {
+      sprite.anchor.set(0.5);
+      sprite.visible = false;
+    }
     this.pulseRingLayer.addChild(
       this.pulseRingTrack,
       this.pulseRingActiveShell,
@@ -179,7 +209,11 @@ export class WeaponView {
       this.magneticChargeBand,
       this.magneticChargeRails,
       this.magneticChargeCore,
-      this.magneticChargeResidue
+      this.magneticChargeResidue,
+      this.magneticChargeTravelSprite,
+      this.magneticChargeFieldSprite,
+      this.magneticChargeDetonationSprite,
+      this.magneticChargeCoreSprite
     );
     const textures = createOrbitTextures(renderer);
     for (let index = 0; index < WEAPON_DEFINITIONS.orbit.maxBlades; index += 1) {
@@ -478,9 +512,15 @@ export class WeaponView {
     this.magneticChargeBand.clear();
     this.magneticChargeRails.clear();
     this.magneticChargeCore.clear();
+    this.hideMagneticChargeSprites();
     this.magneticChargeCore.position.set(0, 0);
     this.magneticChargeCore.scale.set(1);
     this.magneticChargeCore.alpha = 1;
+    this.magneticChargeCoreSprite.visible = false;
+    this.magneticChargeCoreSprite.position.set(0, 0);
+    this.magneticChargeCoreSprite.scale.set(MAGNETIC_CHARGE_CORE_SPRITE_SCALE);
+    this.magneticChargeCoreSprite.rotation = 0;
+    this.magneticChargeCoreSprite.alpha = 1;
     this.magneticChargeResidue.clear();
     this.magneticChargeBackplate.scale.set(1);
     this.magneticChargeBand.scale.set(1);
@@ -573,9 +613,76 @@ export class WeaponView {
       return;
     }
     if (state.sequence !== this.magneticChargeSequence) this.buildMagneticChargeSequence(state);
+    // The image prototype covers the base weapon only. Evolutions retain their
+    // current Graphics rendering until the base visuals pass human review.
+    if (!state.evolution) this.requestMagneticChargeImagePack();
 
     this.magneticChargeLayer.visible = true;
     this.magneticChargeLayer.position.set(0, 0);
+    if (!state.evolution && this.magneticChargeImagePackReady) {
+      this.renderMagneticChargeImages(state);
+      return;
+    }
+    this.hideMagneticChargeSprites();
+    this.renderMagneticChargeGeometry(state);
+  }
+
+  /** Complete image path. If any required image is unavailable, renderMagneticCharge uses the whole vector path. */
+  private renderMagneticChargeImages(state: NonNullable<CombatRenderState['magneticCharge']>): void {
+    const progress = clamp01(state.progress);
+    const rhythm = Math.sin(progress * Math.PI);
+    const intensity = this.quality === 'high' ? 0.9 : this.quality === 'medium' ? 0.74 : 0.56;
+    const inFlight = state.phase === 'travel';
+    const attracting = state.phase === 'attract';
+    const detonating = state.phase === 'detonate' || state.phase === 'collapse';
+    const collapsing = state.phase === 'collapse';
+    const recovering = state.phase === 'recovery';
+    const lift = inFlight && !this.reducedMotion ? Math.sin(progress * Math.PI) * 62 : 0;
+
+    this.hideMagneticChargeGeometry();
+    this.magneticChargeTravelSprite.visible = inFlight;
+    this.magneticChargeFieldSprite.visible = inFlight || attracting;
+    this.magneticChargeDetonationSprite.visible = !inFlight && !attracting
+      && (detonating || recovering);
+
+    const trailStartX = state.x - (state.targetX - state.originX) * Math.min(progress, 0.16);
+    const trailStartY = state.y - (state.targetY - state.originY) * Math.min(progress, 0.16) - lift;
+    const trailEndX = state.x;
+    const trailEndY = state.y - lift;
+    const trailLength = Math.hypot(trailEndX - trailStartX, trailEndY - trailStartY);
+    this.magneticChargeTravelSprite.position.set((trailStartX + trailEndX) * 0.5, (trailStartY + trailEndY) * 0.5);
+    this.magneticChargeTravelSprite.rotation = Math.atan2(trailEndY - trailStartY, trailEndX - trailStartX);
+    this.magneticChargeTravelSprite.scale.set(Math.max(0.04, trailLength / 202), 0.68);
+    this.magneticChargeTravelSprite.alpha = intensity * (0.62 + progress * 0.28);
+
+    this.magneticChargeFieldSprite.position.set(state.targetX, state.targetY);
+    const fieldRadius = attracting
+      ? state.pullRadius * (1 - progress * 0.48)
+      : Math.max(42, state.pullRadius * 0.36);
+    this.magneticChargeFieldSprite.scale.set(fieldRadius / MAGNETIC_FIELD_ART_RADIUS);
+    this.magneticChargeFieldSprite.rotation = this.reducedMotion ? 0 : -state.rotation * 0.7;
+    this.magneticChargeFieldSprite.alpha = intensity * (attracting ? 0.62 + rhythm * 0.2 : 0.62 + progress * 0.28);
+
+    const collapseScale = collapsing ? 1 - Math.sin(progress * Math.PI) * 0.28 : 1;
+    this.magneticChargeDetonationSprite.position.set(state.targetX, state.targetY);
+    this.magneticChargeDetonationSprite.scale.set(state.outerRadius * collapseScale / MAGNETIC_DETONATION_ART_RADIUS);
+    this.magneticChargeDetonationSprite.rotation = this.reducedMotion ? 0 : state.rotation * 0.42;
+    this.magneticChargeDetonationSprite.alpha = intensity * (recovering
+      ? (1 - progress) ** 2
+      : 0.86 + rhythm * 0.14);
+
+    const coreScale = inFlight ? 0.65 + Math.sin(progress * Math.PI) * 0.9
+      : detonating ? 0.65 + Math.exp(-progress * (collapsing ? 4 : 14)) * 0.65 : 0.85 + progress * 0.15;
+    const coreVisible = !attracting && !recovering;
+    this.magneticChargeCoreSprite.visible = coreVisible;
+    this.magneticChargeCoreSprite.position.set(state.x, state.y - lift);
+    this.magneticChargeCoreSprite.scale.set(coreScale * MAGNETIC_CHARGE_CORE_SPRITE_SCALE);
+    this.magneticChargeCoreSprite.rotation = inFlight && !this.reducedMotion ? progress * Math.PI * 2 : 0;
+    this.magneticChargeCoreSprite.alpha = intensity * (0.92 + rhythm * 0.08);
+  }
+
+  /** Preserved fallback path: every Magnetic Charge layer remains vector when the PNG pack is incomplete. */
+  private renderMagneticChargeGeometry(state: NonNullable<CombatRenderState['magneticCharge']>): void {
     const progress = clamp01(state.progress);
     const rhythm = Math.sin(progress * Math.PI);
     const intensity = this.quality === 'high' ? 0.9 : this.quality === 'medium' ? 0.74 : 0.56;
@@ -585,8 +692,8 @@ export class WeaponView {
     const collapsing = state.phase === 'collapse';
     const recovering = state.phase === 'recovery';
     const polarCollapse = state.evolution === 'polar_collapse';
-
     const lift = inFlight && !this.reducedMotion ? Math.sin(progress * Math.PI) * 62 : 0;
+
     this.magneticChargeTrail.clear();
     if (inFlight) {
       drawMagneticTravelTrail(
@@ -633,12 +740,31 @@ export class WeaponView {
     this.magneticChargeRails.scale.set(polarCollapse ? polarFrontScale : collapseScale);
     this.magneticChargeResidue.scale.set(1 + progress * 0.12);
     this.magneticChargeCore.position.set(state.x, state.y - lift);
-    this.magneticChargeCore.scale.set(inFlight ? 0.65 + Math.sin(progress * Math.PI) * 0.9
+    const coreScale = inFlight ? 0.65 + Math.sin(progress * Math.PI) * 0.9
       : polarCollapse && collapsing ? 0.82 + Math.sin(progress * Math.PI * 2) * 0.13
-      : detonating ? 0.65 + Math.exp(-progress * (collapsing ? 4 : 14)) * 0.65 : 0.85 + progress * 0.15);
+      : detonating ? 0.65 + Math.exp(-progress * (collapsing ? 4 : 14)) * 0.65 : 0.85 + progress * 0.15;
+    this.magneticChargeCore.scale.set(coreScale);
     this.magneticChargeCore.rotation = inFlight && !this.reducedMotion ? progress * Math.PI * 2 : 0;
     this.magneticChargeCore.alpha = intensity * (recovering ? 0 : 0.92 + rhythm * 0.08);
     if (polarCollapse && detonating) this.renderPolarCollapseGeometry(state);
+  }
+
+  private hideMagneticChargeGeometry(): void {
+    this.magneticChargeTrail.visible = false;
+    this.magneticChargeBeacon.visible = false;
+    this.magneticChargeField.visible = false;
+    this.magneticChargeBackplate.visible = false;
+    this.magneticChargeBand.visible = false;
+    this.magneticChargeRails.visible = false;
+    this.magneticChargeCore.visible = false;
+    this.magneticChargeResidue.visible = false;
+  }
+
+  private hideMagneticChargeSprites(): void {
+    this.magneticChargeTravelSprite.visible = false;
+    this.magneticChargeFieldSprite.visible = false;
+    this.magneticChargeDetonationSprite.visible = false;
+    this.magneticChargeCoreSprite.visible = false;
   }
 
   /**
@@ -714,6 +840,35 @@ export class WeaponView {
       layer.pivot.set(0, 0);
     }
     this.magneticChargeSequence = state.sequence;
+  }
+
+  /** Load the base VFX as one unit, so no run can mix a partial PNG effect with vector layers. */
+  private requestMagneticChargeImagePack(): void {
+    if (this.magneticChargeImagePackRequested || typeof window === 'undefined') return;
+    this.magneticChargeImagePackRequested = true;
+    void Promise.all([
+      loadMagneticChargeImage(magneticChargeCoreUrl),
+      loadMagneticChargeImage(magneticChargeFieldUrl),
+      loadMagneticChargeImage(magneticChargeTravelUrl),
+      loadMagneticChargeImage(magneticChargeDetonationUrl)
+    ]).then(([coreImage, fieldImage, travelImage, detonationImage]) => {
+      if (this.root.destroyed) return;
+      try {
+        const coreTexture = Texture.from(coreImage);
+        const fieldTexture = Texture.from(fieldImage);
+        const travelTexture = Texture.from(travelImage);
+        const detonationTexture = Texture.from(detonationImage);
+        this.magneticChargeCoreSprite.texture = coreTexture;
+        this.magneticChargeFieldSprite.texture = fieldTexture;
+        this.magneticChargeTravelSprite.texture = travelTexture;
+        this.magneticChargeDetonationSprite.texture = detonationTexture;
+        this.magneticChargeImagePackReady = true;
+      } catch {
+        // Stay on the complete vector rendering path if a texture cannot be created.
+      }
+    }).catch(() => {
+      // Stay on the complete vector rendering path if any base image fails to load.
+    });
   }
 
   private buildPulseRingSequence(state: CombatRenderState['pulseRingWeapon']): void {

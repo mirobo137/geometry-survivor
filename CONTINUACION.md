@@ -4612,3 +4612,32 @@ está registrado en la sección 94. EX-02c sigue pendiente y EX-05e diferido.
   actualizado con pulso, boss, resultado e intermisión; incluir una victoria
   en desktop y otra en móvil si ambas plataformas están disponibles. EX-02c
   sigue pendiente; EX-05e continúa diferido.
+
+## 95. Prototipo visual PNG de Magnetic Charge — 30-09-2026
+
+En la rama `codex/magnetic-charge-png-prototype` se amplió el prototipo del
+núcleo a todo el ciclo base: núcleo en vuelo, estela, baliza/campo de atracción,
+anillo de detonación y residuo de recuperación. Las cuatro texturas RGBA se
+cargan juntas al primer cast; sólo se usa la ruta PNG cuando todo el conjunto
+está listo. Un error conserva el fallback vectorial completo. Low mantiene el
+mismo contenido funcional con menor opacidad. No se tocaron daño, colisiones,
+radios, cadencia ni movimiento de enemigos. Event Horizon y Polar Collapse
+siguen vectoriales y bloqueadas hasta aprobar el aspecto base.
+
+El inventario, bytes, estimación de memoria y notas de procedencia/prompts están
+en [`src/assets/fx/README.md`](src/assets/fx/README.md). Los tres prompts nuevos
+se registran como briefs de regeneración porque el generador no exportó sus
+transcripciones literales; el prompt del núcleo sí quedó conservado.
+
+Acceso humano rápido: abrir `/?weapon=magnetic-charge&debug=1&quality=high`
+(cambiar a `low` para comparar). Capturas automatizadas High/Low:
+`test-results/magnetic-charge-prototype/high.png` y
+`test-results/magnetic-charge-prototype/low.png`.
+
+Validado en este entorno: `npm run build:local` (typecheck, 115 archivos de
+test / 528 pruebas y build Vite); smoke Playwright del arma en Low/High (2/2),
+con las cuatro respuestas de imágenes comprobadas en cada preset. La captura de
+browser confirma el anillo de detonación y el uso del drill; no se midió FPS ni
+se certifica rendimiento en un teléfono físico. Revisión humana aprobada para
+probar esta versión desplegada; la siguiente decisión depende de validar el
+comportamiento visual en el juego publicado.

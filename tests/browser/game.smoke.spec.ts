@@ -1028,19 +1028,37 @@ test('carga el drill del arma Pulse Ring con blancos de prueba y vista premium',
   expect(failures).toEqual([]);
 });
 
-test('carga el drill del arma Magnetic Charge con atracción remota y banda premium', async ({ page }, testInfo) => {
-  const failures = captureRuntimeFailures(page);
-  await page.goto('/?weapon=magnetic-charge&debug=1&quality=high');
-  await expect(page.locator('#boot-status')).toBeHidden();
-  await expect(page.locator('#game-container canvas')).toBeVisible();
-  await expect(page.locator('#debug-panel')).toContainText('mode: magnetic-charge-drill');
-  await expect(page.locator('#debug-panel')).toContainText('enemies: 8/250');
-  await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 8_000 })
-    .toMatch(/magnetic: detonate \|/);
-  await page.locator('#pause-toggle').evaluate((button: HTMLElement) => button.click());
-  await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath('magnetic-charge-weapon-high.png') });
-  expect(failures).toEqual([]);
-});
+for (const quality of ['low', 'high'] as const) {
+  test(`carga el ciclo PNG completo de Magnetic Charge en ${quality}`, async ({ page }, testInfo) => {
+    const failures = captureRuntimeFailures(page);
+    const magneticImageResponses = new Set<string>();
+    const magneticBaseAssets = [
+      'magnetic-singularity-core',
+      'magnetic-charge-field',
+      'magnetic-charge-travel',
+      'magnetic-charge-detonation'
+    ];
+    page.on('response', response => {
+      if (response.ok() && magneticBaseAssets.some(asset => response.url().includes(asset))) {
+        magneticImageResponses.add(response.url());
+      }
+    });
+    await page.goto(`/?weapon=magnetic-charge&debug=1&quality=${quality}`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    await expect(page.locator('#debug-panel')).toContainText('mode: magnetic-charge-drill');
+    await expect(page.locator('#debug-panel')).toContainText('enemies: 8/250');
+    await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 8_000 })
+      .toMatch(/magnetic: detonate \|/);
+    await expect.poll(() => magneticImageResponses.size, { timeout: 8_000 }).toBe(4);
+    await page.locator('#pause-toggle').evaluate((button: HTMLElement) => button.click());
+    await page.locator('#game-container canvas').screenshot({
+      path: testInfo.outputPath(`magnetic-charge-weapon-${quality}.png`),
+      style: '#pause-overlay { visibility: hidden !important; } #debug-panel { visibility: hidden !important; }'
+    });
+    expect(failures).toEqual([]);
+  });
+}
 
 test('carga el drill Angular y mantiene el sector activo acotado', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);

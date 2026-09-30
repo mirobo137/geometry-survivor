@@ -165,24 +165,39 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
       screen.getAnimations({ subtree: true }).filter((animation) => animation.playState === 'running').map((animation) => {
         const target = (animation.effect as KeyframeEffect).target as Element;
         const bounds = target.getBoundingClientRect();
-        return { small: bounds.width < 210 && bounds.height < 210,
-          decorative: target.matches('.home-mark-image, .home-ambient-light') };
+        // Craft and two optional desktop cloud surfaces are bounded; the
+        // environment and viewport-sized exterior must stay static.
+        const limit = target.matches('.home-mark-image, .home-exterior-cloud') ? 340 : 12;
+        return { bounded: bounds.width <= limit && bounds.height <= limit,
+          decorative: target.matches('.home-mark-image, .home-ambient-light, .home-exterior-cloud') };
       }));
-    expect(await activeSurfaces()).toEqual(Array.from({ length: 5 }, () => ({ small: true, decorative: true })));
+    const motionCount = await page.evaluate(() => matchMedia('(min-width: 52rem) and (min-height: 32rem)').matches
+      && document.querySelector('#start-screen')?.getAttribute('data-quality') !== 'low' ? 7 : 5);
+    expect(await activeSurfaces()).toEqual(Array.from({ length: motionCount }, () => ({ bounded: true, decorative: true })));
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect.poll(activeSurfaces).toEqual([]);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    for (const section of ['skins', 'meta']) {
-      await page.locator(`#start-${section}`).click();
+    for (const [trigger, section] of [['skins', 'skins'], ['meta', 'meta'], ['level', 'act']]) {
+      await page.locator(`#start-${trigger}`).click();
       expect(await page.locator('.home-ambient-light').first().evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expect.poll(activeSurfaces).toEqual([]);
       await page.locator(`#start-${section}-back`).click();
-      await expect.poll(activeSurfaces).toHaveLength(5);
+      await expect.poll(activeSurfaces).toHaveLength(motionCount);
     }
     // Motion was asserted above. Freeze it while exercising every responsive
     // button so CI never waits for a moving target during scroll/click.
     await page.emulateMedia({ reducedMotion: 'reduce' });
     for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
       await page.setViewportSize({ width: width!, height: height! });
+      // Art direction follows the stacked layout, while both views reuse
+      // the same selected resource. In particular, portrait isn't a PC crop.
+      await expect.poll(() => page.locator('.home-scene-image').evaluate((node) => {
+        const image = node as HTMLImageElement;
+        const exterior = document.querySelector<HTMLImageElement>('.home-exterior-image')!;
+        const portrait = matchMedia('(max-width: 599px), (max-width: 831px) and (min-height: 541px)').matches;
+        return image.complete && image.naturalWidth > 0 && image.currentSrc === exterior.currentSrc
+          && image.currentSrc.includes('sanctuary-portrait') === portrait;
+      })).toBe(true);
       const buttonLayout = await page.locator('.start-actions button').evaluateAll((nodes) => (
         nodes.map((node) => {
           const bounds = node.getBoundingClientRect();
@@ -200,6 +215,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
       await page.locator('#start-settings-toggle').click();
       await expect(page.locator('#start-settings')).toBeHidden();
       await expect(page.locator('#start-play')).toBeVisible();
+      expect(await page.locator('#start-main-view').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     }
     await page.locator('#start-play').click();
     await expect(page.locator('#start-screen')).toBeHidden();

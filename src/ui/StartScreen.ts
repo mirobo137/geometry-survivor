@@ -1,7 +1,13 @@
 import type { AudioSettings } from '../audio/AudioService';
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
-import heroSceneUrl from '../assets/svg/ui/start/hero-scene.svg?url';
-import startMarkUrl from '../assets/svg/ui/start/mark.svg?url';
+import heroSceneUrl from '../assets/images/ui/home/orbital-sanctuary.webp?url';
+import heroPortraitUrl from '../assets/images/ui/home/orbital-sanctuary-portrait.webp?url';
+import startMarkUrl from '../assets/images/ui/home/survivor-core.png?url';
+import startMarkFallbackUrl from '../assets/svg/ui/start/mark.svg?url';
+import radialEmblemFallbackUrl from '../assets/svg/ui/start/radial.svg?url';
+import angularEmblemFallbackUrl from '../assets/svg/ui/start/angular.svg?url';
+import fractureEmblemFallbackUrl from '../assets/svg/ui/start/fracture.svg?url';
+import overdriveEmblemFallbackUrl from '../assets/svg/ui/start/overdrive.svg?url';
 import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, LaboratorySaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
@@ -68,6 +74,9 @@ const formatTime = (seconds: number): string => {
   const remainder = (wholeSeconds % 60).toString().padStart(2, '0');
   return `${minutes}:${remainder}`;
 };
+
+// Matches home's stacked layout, not a device/user-agent classification.
+const HOME_PORTRAIT_MEDIA = '(max-width: 599px), (max-width: 831px) and (min-height: 541px)';
 
 /** Presentation-only home screen. It owns no run or progression state. */
 export class StartScreen {
@@ -265,6 +274,18 @@ export class StartScreen {
     this.metaView = metaView;
     this.mountScene();
     this.mountMark();
+    for (const [button, fallbackUrl] of [
+      [radialActButton, radialEmblemFallbackUrl],
+      [angularActButton, angularEmblemFallbackUrl],
+      [fractureActButton, fractureEmblemFallbackUrl],
+      [this.overdriveButton, overdriveEmblemFallbackUrl]
+    ] as const) {
+      const emblem = button?.querySelector<HTMLImageElement>('.act-emblem');
+      if (!emblem) continue;
+      const restoreEmblem = (): void => { emblem.src = fallbackUrl; };
+      emblem.addEventListener('error', restoreEmblem, { once: true });
+      if (emblem.complete && emblem.naturalWidth === 0) restoreEmblem();
+    }
     this.playButton.addEventListener('click', () => this.handlePlay());
     this.overdriveButton?.addEventListener('click', () => {
       if (!this.overdriveUnlocked || !this.overdrivePlayHandler) return;
@@ -397,19 +418,43 @@ export class StartScreen {
     mark.src = startMarkUrl;
     mark.alt = '';
     mark.className = 'home-mark-image';
+    mark.width = 512;
+    mark.height = 512;
+    mark.decoding = 'async';
+    mark.addEventListener('error', () => { mark.src = startMarkFallbackUrl; }, { once: true });
+    if (mark.complete && mark.naturalWidth === 0) mark.src = startMarkFallbackUrl;
     host.append(mark);
   }
 
   private mountScene(): void {
     const host = this.root.querySelector<HTMLElement>('#start-scene');
     if (!host || host.firstElementChild) return;
-    // A static SVG image has no animated descendant paths in the page's DOM.
-    // Small independent lights carry motion without repainting the scene.
-    const scene = new Image();
-    scene.src = heroSceneUrl;
-    scene.alt = '';
-    scene.className = 'home-scene-image';
-    host.append(scene);
+    // Both static plates share URLs/cache. Picture chooses the appropriate
+    // composition before setting src: portrait never first downloads landscape.
+    // Only the craft, lights and bounded desktop clouds may move, not the plates.
+    for (const [target, imageClass] of [
+      [host, 'home-scene-image'],
+      [this.root.querySelector<HTMLElement>('#home-exterior'), 'home-exterior-image']
+    ] as const) {
+      if (!target) continue;
+      const picture = document.createElement('picture');
+      picture.className = 'home-scene-picture';
+      const portrait = document.createElement('source');
+      portrait.media = HOME_PORTRAIT_MEDIA;
+      portrait.srcset = heroPortraitUrl;
+      const scene = document.createElement('img');
+      scene.alt = '';
+      scene.className = imageClass;
+      scene.width = 1200;
+      scene.height = 800;
+      scene.decoding = 'async';
+      scene.addEventListener('error', () => { scene.hidden = true; });
+      // Resize may recover from a missing variant; don't leave the next one hidden.
+      scene.addEventListener('load', () => { scene.hidden = false; });
+      picture.append(portrait, scene);
+      target.append(picture);
+      scene.src = heroSceneUrl;
+    }
     for (let index = 0; index < 4; index += 1) {
       const light = document.createElement('span');
       light.className = 'home-ambient-light';
@@ -499,6 +544,8 @@ export class StartScreen {
       : !fractureUnlocked ? ' · Fracture se desbloquea al vencer Acto II' : '';
     this.actStatus.textContent = `${actName}${lockMessage}`;
     const overdriveSelected = this.selectedMode === 'overdrive';
+    const playRoute = this.root.querySelector<HTMLElement>('#start-play-route');
+    if (playRoute) playRoute.textContent = overdriveSelected ? 'Infinito · Overdrive' : actName;
     if (overdriveSelected) {
       for (const button of [this.radialActButton, this.angularActButton, this.fractureActButton]) {
         button.classList.remove('is-selected');

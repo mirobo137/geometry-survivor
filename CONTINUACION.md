@@ -1,5 +1,152 @@
 # Geometry Survivor — estado y continuación
 
+## Inicio: variante vertical y atmósfera exterior — 30-09-2026
+
+El usuario aprobó la propuesta de una composición específica para el menú
+vertical y aprovechar el espacio exterior. Generada orbital-sanctuary-portrait.webp:
+720×1440 RGB, 119,376 bytes; no es un recorte de la panorámica. Reutiliza la nave
+PNG existente. Picture elige según el layout apilado, no por user-agent. Interior
+y exterior usan la misma URL: seis sesiones limpias solicitaron sólo la variante
+correcta, una vez. Al rotar puede descargarse la otra y quedar ambas en caché.
+El arte ahora continúa por todo el panel y detrás de él. El exterior es estático;
+dos nubes de las corrientes existentes se mueven sólo en escritorio ≥832×512,
+máximo 300 px, Low estáticas y móvil ocultas. No hay filtro, shader ni RAF nuevo.
+Las corrientes sí se descargan al iniciar en móvil por la precarga existente
+del juego (iniciador img): ocultarlas en CSS no elimina ese coste previo.
+Prompts, presupuesto, ownership y fallback: [Portada README](src/assets/images/ui/home/README.md).
+
+Verificado: typecheck, 115 archivos/528 tests unitarios y builds local/Poki/CrazyGames.
+Tres smokes desktop pasaron: consolas 48.5 s, Inicio 19.2 s, ruta guardada 26.7 s.
+El mismo smoke de Inicio pasó en emulación Pixel 5 (29.0 s).
+Sin subir timeouts ni añadir otro arranque WebGL. Matriz de 18 tamaños sin overflow
+horizontal ni botones menores de 44 px; selección de variante correcta y cero
+pageerrors/HTTP errors. Fallo de imagen vertical conserva controles; al ampliar
+a escritorio vuelve a mostrar la panorámica correctamente y permite iniciar.
+Permanece el warning previo de JS >500 kB. No se certifican FPS/memoria real,
+CI ni móvil físico. Capturas ignoradas: test-results/home-portrait/.
+Pendiente aprobación visual humana. Sin commit/push; pruebas humanas del
+Laboratorio siguen aplazadas. El apartado anterior describe la primera entrega.
+
+## Inicio: portada de lanzamiento ilustrada — 30-09-2026
+
+Tras aprobar Actos y los emblemas PNG, el usuario autorizó rediseñar el menú
+principal libremente. Ahora el entorno forma parte visible de la portada, no
+un fondo oculto detrás de un panel opaco. Dos assets generados con image_gen:
+hangar orbital WebP 1200×800 (102,678 bytes) + nave PNG transparente 512×512
+(260,169 bytes). Son arte decorativo de Inicio, NO una skin nueva/equipada.
+Prompts, originales, alpha, tamaños, coste y fallback:
+[Portada README](src/assets/images/ui/home/README.md).
+
+PC usa arte a la izquierda y acciones a la derecha; portrait apila portada y
+consola, landscape corto conserva dos columnas compactas. Actos/Skins/Lab
+reutilizan arte aprobado en sus accesos; Configuración mantiene SVG/material CSS.
+Jugar muestra la última ruta elegida y mantiene el guardado vigente. Todos los
+textos, botones, estados y estadísticas siguen siendo DOM real. Nada de combate,
+balance, economía ni anuncios cambia. El escenario permanece estático; sólo
+derivan una nave de hasta 296 px y cuatro luces de 6 px. Reduced-motion y salir
+de Inicio detienen ese movimiento. Fallo PNG → SVG original; fallo WebP → fondo
+CSS, sin imagen rota ni bloqueo de Jugar. Los SVG antiguos no se borraron.
+
+Verificado: typecheck; 115 archivos/528 tests unitarios; builds local, Poki y
+CrazyGames; smoke de Inicio (20.8 s), ruta persistente/caption (25.8 s) y consolas
+1280×720 (41.1 s). Se ajustó el límite del antiguo badge al nuevo casco acotado,
+sin subir timeouts ni sumar otro test WebGL. Revisión Chromium en los 16 tamaños
+de §6.6 + 320×568 y 768×1024: 18 viewports sin overflow horizontal, botones
+≥44 px ni solapamientos. Se comprobó ajustes/cambio de control y abrir/cerrar
+las tres consolas a 390×844 y 640×360, Overdrive en Jugar, reduced-motion y
+decoración detenida al iniciar; cero pageerrors/HTTP errors. También pasó la
+prueba abortando ambos assets de portada y arrancando con fallback. A 320×568
+el panel tiene scroll vertical para conservar controles y pie, intencional.
+
+Los dos assets nuevos suman 362,847 bytes. Los accesos reutilizados descargaron
+404,892 + 53,256 + 64,894 bytes adicionales en la sesión observada; reusar una
+URL no significa coste inicial cero. Cálculo RGBA8 de las dos imágenes ≈4.66 MiB,
+no memoria real ni FPS medidos. Sigue el warning previo de chunk JS >500 kB.
+Capturas ignoradas: test-results/main-cover/ (Playwright puede limpiar esa ruta).
+Pendiente aprobación visual humana y prueba en móvil físico/Pages. No se ejecutó
+suite browser completa, Inspector, profiling ni CI. Sin commit/push.
+El Laboratorio sigue pendiente de pruebas humanas; no se cierra esa puerta.
+
+## Selector: iconos PNG con transparencia — 29-09-2026
+
+Nueva prueba pedida por el usuario: Radial, Angular, Fracture y Overdrive usan
+emblemas PNG RGBA generados (160×160, 127,724 bytes total), no rasterización de
+SVG. Se conserva la silueta simbólica con metal y energía, alfa real verificado
+(0–255) y huecos transparentes. Tamaño UI 56 px PC/48 px móvil. Iconos estáticos,
+sin filtros ni nuevo loop; JPG/rectángulo/damero pintados no son transparencia.
+StartScreen restaura el SVG original empaquetado si falla cada PNG. Esos SVG
+siguen intactos. En móvil estrecho el badge largo se convierte en candado para
+evitar invadir el icono. No modifica ruta elegida, guardado ni gameplay.
+
+Typecheck y build local verdes; review de 1280×720, 390×844, 320×568 y 640×360
+con cuatro PNG cargados, altura de botones igual, texto sin solapar y cabecera
+alineada. Volver/Jugar mantiene Overdrive y no hubo errores de página. Prueba
+abortando los cuatro PNG pasó con cuatro SVG fallback. Composición clara/oscura
+revisada; capturas ignoradas test-results/act-png-icons/. Sigue warning antiguo
+chunk >500 kB. No CI, suite completa, FPS/memoria ni móvil físico en esta prueba.
+Pendiente aceptación visual humana, sin commit/push. Prompts/procedencia:
+src/assets/images/ui/menus/icons/README.md. Laboratorio continúa aplazado.
+
+## Última ruta persistente del menú — 29-09-2026
+
+Por petición del usuario se guarda `lastSelectedRoute` en el SaveStore local:
+Radial, Angular, Fracture u Overdrive. Schema 9 conserva el guardado previo;
+la selección se persiste inmediatamente, incluso sin iniciar. Al entrar al
+menú normal tras recargar, Jugar arranca esa ruta; al volver desde pausa se
+mantiene. Continuar al siguiente acto también recuerda el destino. Overdrive
+siempre empieza una run nueva desde tramo 1, no guarda una partida activa.
+Una ruta desconocida/bloqueada cae a Radial; URL explícita/de pruebas prevalece
+sin cambiar automáticamente la preferencia. No se modifica balance ni economía.
+
+Pasaron typecheck, 115 archivos/528 tests unitarios y build local. El loader
+bundle de Vitest falló por permisos de OneDrive; con `--configLoader runner`
+la suite completa pasó. Se comprobó inicialmente en browser el ciclo de las
+cuatro rutas (selección, recarga, Jugar, pausa, menú, Jugar). El smoke persistido
+en CI se acotó a Angular y Overdrive para evitar repetir WebGL innecesariamente:
+pasó en 19 s locales. También pasó el smoke existente del selector Overdrive.
+Checks locales adicionales a 390×844: restauración Overdrive, fallback bloqueado
+y prioridad de URL de Angular, sin errores de página. No se probó móvil físico
+ni portales ni CI remoto. Sigue warning previo de chunk >500 kB. Sin commit/push.
+
+## Actos: botones ilustrados y anchos alineados — 29-09-2026
+
+El usuario aprobó continuar con imágenes en UI y pidió cuatro botones enteros
+ilustrados para Radial, Angular, Fracture y Overdrive. Se generan cuatro escenas
+diferenciadas, PNG RGB 640×426 (1,750,591 bytes total), como fondo estático del
+botón. Texto hijo HTML, emblemas SVG, selección/foco y bloqueo siguen adaptables.
+No cambia progreso, guardado, rutas ni gameplay. Overdrive seleccionado conserva
+texto claro, corrigiendo el contraste oscuro anterior.
+
+La cabecera ahora comparte gutter y padding del cuerpo mediante act-header-rail:
+bordes idénticos a la cuadrícula y al botón iniciar, en PC y móvil. Build local
+verde y revisión en 1280×720, 390×844, 320×568 y 640×360: alineación 0 px, sin
+overflow/solapamiento, textos dentro de sus botones y carga PNG sólo al abrir
+Actos en Chromium. Pasaron selección Overdrive, volver/reabrir/Radial/iniciar,
+bloqueos, Enter, resize y fallback de imágenes fallidas. Capturas ignoradas:
+test-results/act-buttons-art/. No se midió memoria/FPS ni móvil físico.
+Pendiente aprobación humana del arte completo; Laboratorio sigue aplazado.
+Sin commit/push ni CI. Prompts/procedencia/coste en el README de menús ilustrados.
+
+## Piloto de UI: cabecera ilustrada de Actos — 29-09-2026
+
+Por solicitud del usuario se integra una única ilustración nueva en la cabecera
+del selector de Actos para evaluar si conviene extender el arte a más UI.
+Portal orbital decorativo WebP 1200×400, 76,892 bytes; una placa CSS estática,
+sin cambios de reglas, navegación, guardado ni nuevas dependencias. Texto y
+controles conservan HTML/SVG. Se puede probar desde Menú → Actos.
+
+Build local verde y revisión de layout/volver/reabrir/seleccionar/iniciar en
+1280×720, 390×844, 320×568 y 640×360 sin errores de página ni solapamientos.
+Iniciar cabe en el frame inicial a 720p y 390×844; las ventanas menores usan
+scroll del cuerpo. Chromium no descargó el arte hasta abrir Actos. Permanece
+el warning anterior de chunk >500 kB; no se midió memoria/FPS ni móvil físico.
+No se ejecutó CI ni se hizo commit/push. Pendiente aprobación visual humana
+antes de extender el piloto. Laboratorio: pruebas humanas siguen aplazadas.
+
+Recurso, prompt y contrato:
+[`README de menús ilustrados`](src/assets/images/ui/menus/README.md).
+Capturas locales: `test-results/act-header-art/` (ignoradas).
+
 ## Catálogo ilustrado completo de cartas — 29-09-2026
 
 Por nueva autorización del usuario, el piloto de Rail Lance/Pulse Volley se

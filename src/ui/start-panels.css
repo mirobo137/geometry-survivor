@@ -68,6 +68,41 @@
   box-shadow: inset 0 1px #d1e2ec40, inset 0 -3px #060d19;
 }
 
+/* Act-selector art pilot: one static decorative plate, never a game texture.
+   Hidden consoles don't paint it; navigation and all copy remain live HTML. */
+#start-act-view .act-header-rail {
+  flex: 0 0 auto;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  padding: .25rem .5rem 0 .25rem;
+}
+#start-screen #start-act-view .console-header {
+  position: relative;
+  isolation: isolate;
+  min-height: 8.5rem;
+  padding: 1.15rem;
+  border: 1px solid #537a8b;
+  border-radius: .65rem;
+  background: #081421;
+  overflow: hidden;
+}
+#start-act-view .console-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, #081421f5 0%, #081421c7 38%, #08142120 72%),
+    url('../assets/images/ui/menus/orbital-gate.webp');
+  background-size: 100% 100%, auto 100%;
+  background-position: center, right center;
+  background-repeat: no-repeat;
+}
+#start-act-view .console-header > div { max-width: 29rem; }
+#start-act-view .console-header h2 { color: #eef8ff; }
+#start-act-view .console-header p:not(.start-kicker) { color: #c4d6e8; }
+
 #start-screen .console-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -274,11 +309,94 @@
   cursor: pointer;
 }
 
+/* Each route is a complete illustrated surface with child-owned live copy.
+   Background crops only; the button hit area, typography and frame stay DOM. */
+#start-act-view .act-card-button {
+  --route-accent: #75e6ff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 11rem;
+  padding: 1rem;
+  gap: .75rem;
+  background: #081421;
+  color: #eef8ff;
+}
+#start-act-radial { --route-art: url('../assets/images/ui/menus/act-radial.png'); }
+#start-act-view #start-act-angular {
+  --route-art: url('../assets/images/ui/menus/act-angular.png');
+  --route-accent: #b7c8ff;
+}
+#start-act-view #start-act-fracture {
+  --route-art: url('../assets/images/ui/menus/act-fracture.png');
+  --route-accent: #efb5ff;
+}
+#start-act-view #start-overdrive {
+  --route-art: url('../assets/images/ui/menus/act-overdrive.png');
+  --route-accent: #ffe39a;
+}
+#start-act-view .act-card-button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(180deg, #08142115 0%, #08142130 30%, #081421ed 72%, #081421fa), var(--route-art);
+  background-size: cover;
+  background-position: center 32%;
+  background-repeat: no-repeat;
+}
+#start-act-view .act-card-button .act-emblem {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+  flex: 0 0 auto;
+  margin: 0;
+}
+#start-act-view .act-card-button .act-route-copy {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+  width: 100%;
+  color: #eef8ff;
+  font: inherit;
+  letter-spacing: normal;
+}
+#start-act-view .act-route-copy strong { color: #eef8ff; font-size: .95rem; line-height: 1.2; }
+#start-act-view .act-route-copy small { color: #d2dfed; font-size: .72rem; line-height: 1.4; }
+#start-act-view .act-route-copy > span { color: var(--route-accent); font-size: .6rem; line-height: 1.3; }
+#start-act-view .act-card-button:is(.is-selected, :focus-visible) {
+  border-color: var(--route-accent);
+  box-shadow: inset 3px 0 var(--route-accent), inset 0 0 0 1px var(--route-accent);
+}
+#start-act-view .act-card-button:focus-visible { outline: 2px solid #eef8ff; outline-offset: -5px; }
+#start-act-view .act-card-button.is-selected::after { color: var(--route-accent); }
+#start-act-view .act-card-button:disabled { opacity: 1; }
+#start-act-view .act-card-button:disabled::before { opacity: .4; }
+#start-act-view .act-card-button:disabled::after {
+  content: 'BLOQUEADO';
+  position: absolute;
+  top: .65rem;
+  right: .65rem;
+  padding: .25rem .35rem;
+  border-radius: .25rem;
+  background: #081421e8;
+  color: #c4d6e8;
+  font: 700 .5rem/1.2 ui-monospace, monospace;
+}
+
 @media (max-width: 38rem) {
   #start-screen .console-header { gap: .6rem; }
   .console-header .skins-back { padding: .5rem; font-size: .65rem; }
   #start-screen .console-header h2 { font-size: 1.2rem; }
   #start-screen .console-header p:not(.start-kicker) { font-size: .72rem; }
+  #start-screen #start-act-view .console-header { min-height: 10rem; padding: .75rem; }
+  #start-act-view .console-header::before {
+    background-image: linear-gradient(90deg, #081421ed, #081421b8 58%, #08142145),
+      url('../assets/images/ui/menus/orbital-gate.webp');
+  }
   #start-screen.is-meta-mode #start-meta-view .console-header p:not(.start-kicker) { display: none; }
   #start-screen .console-body :is(.skin-cards, .cannon-cards, .background-cards) { grid-template-columns: minmax(0, 1fr); }
   .lab-tree-heading { align-items: start; flex-direction: column; }
@@ -292,9 +410,15 @@
   .console-body .act-options { gap: .65rem; }
   .console-body .act-card-button { padding: .85rem; font-size: .8rem; }
   .console-body .act-card-button span { font-size: .57rem; letter-spacing: .04em; }
+  #start-act-view .act-card-button { min-height: 11.75rem; padding: .75rem; }
+  #start-act-view .act-card-button .act-emblem { width: 3rem; height: 3rem; }
+  #start-act-view .act-route-copy strong { font-size: .8rem; }
+  #start-act-view .act-route-copy small { font-size: .69rem; }
+  #start-act-view .act-route-copy > span { font-size: .54rem; letter-spacing: .035em; }
 }
 
 @media (max-width: 25rem) {
+  #start-act-view .act-card-button:disabled::after { content: '🔒'; font-size: .7rem; }
   .lab-tree-toolbar { gap: .2rem; }
   .lab-tree-toolbar button { min-width: 44px; padding-inline: .45rem; }
   .lab-tree-toolbar #start-lab-zoom-reset { min-width: 56px; }
@@ -303,6 +427,7 @@
 @media (max-height: 450px) {
   #start-screen .console-header p:not(.start-kicker) { display: none; }
   #start-screen .console-header { padding-bottom: .5rem; }
+  #start-screen #start-act-view .console-header { min-height: 6rem; padding: .65rem .85rem; }
   #start-screen .console-screen { gap: .5rem; }
   #start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel { padding: .8rem; }
   .lab-tree-stage { height: 11.5rem; min-height: 184px; }

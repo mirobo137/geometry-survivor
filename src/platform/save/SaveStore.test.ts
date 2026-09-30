@@ -77,6 +77,7 @@ describe('LocalSaveStore', () => {
         currentOfferIds: ['weapon_damage_projectile', 'weapon_cadence', 'movement_speed']
       },
       unlockedActs: ['radial'],
+      lastSelectedRoute: 'radial',
       overdrive: defaults.overdrive
     });
   });
@@ -104,6 +105,7 @@ describe('LocalSaveStore', () => {
       wallet: { nova: 0 },
       laboratory: createDefaultSaveData().laboratory,
       unlockedActs: ['radial'],
+      lastSelectedRoute: 'radial',
       overdrive: createDefaultSaveData().overdrive
     });
   });
@@ -154,6 +156,28 @@ describe('LocalSaveStore', () => {
       maxStages: 6,
       bestKills: 1200
     });
+  });
+
+  it.each(['radial', 'angular', 'fracture', 'overdrive'] as const)('persists the last available route %s across store instances', route => {
+    const storage = new MemoryStorage();
+    const store = new LocalSaveStore(storage);
+    const defaults = createDefaultSaveData();
+    expect(store.save({ ...defaults, unlockedActs: ['radial', 'angular', 'fracture'],
+      overdrive: { ...defaults.overdrive, unlocked: true }, lastSelectedRoute: route })).toBe(true);
+    expect(new LocalSaveStore(storage).load().lastSelectedRoute).toBe(route);
+  });
+
+  it.each(['angular', 'fracture', 'overdrive', 'unknown', null])('rejects an unavailable or invalid saved route %s', route => {
+    expect(migrateSaveData({ schemaVersion: 9, lastSelectedRoute: route }).lastSelectedRoute).toBe('radial');
+  });
+
+  it('adds the route preference to schema 8 without losing laboratory, wallet or unlocks', () => {
+    const defaults = createDefaultSaveData();
+    const legacy = { ...defaults, schemaVersion: 8, wallet: { nova: 1234 },
+      laboratory: { ...defaults.laboratory, levels: { global_damage: 2 } },
+      unlockedActs: ['radial', 'angular'], overdrive: { ...defaults.overdrive, unlocked: true } };
+    expect(migrateSaveData(legacy)).toMatchObject({ schemaVersion: 9, lastSelectedRoute: 'radial',
+      wallet: legacy.wallet, laboratory: legacy.laboratory, unlockedActs: legacy.unlockedActs, overdrive: legacy.overdrive });
   });
 
   it('resets only the old laboratory on schema 7 while preserving the wallet and real Overdrive unlock', () => {

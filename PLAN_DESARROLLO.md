@@ -527,13 +527,21 @@ prueba es gratuita y seleccionable en el locker; no modifica daño, física ni
 el cosmético de cañones. Contrato y prompt: [Manta README](src/assets/skins/manta/README.md).
 Pendiente aprobación visual humana; no cierra las puertas EX ni VIS previas.
 
-Piloto UI autorizado el 29-09-2026: las cartas de evolución `rail_lance` y
-`pulse_volley` añaden ilustraciones generadas WebP, con título, descripción,
-icono, marco y acciones DOM. Se prueba sólo esta pareja antes de extender el
-catálogo. Producción, prompts, carga/fallback y comparación con SVG:
-[Evoluciones ilustradas](src/assets/images/ui/evolutions/README.md). No cambia
-la progresión ni el combate, y las pruebas humanas del Laboratorio siguen
-aplazadas.
+UI ilustrada autorizada el 29-09-2026: tras aprobar la pareja Rail Lance/Pulse
+Volley, el usuario extendió a las 29 cartas y luego a la cabecera de Actos y
+a cuatro botones completos de rutas. Las imágenes sólo aportan ilustración;
+título, descripción, iconos, marco y acciones conservan DOM/SVG. Catálogos,
+prompts, procedencia, costes, carga/fallback y pruebas:
+[Cartas ilustradas](src/assets/images/ui/cards/README.md) y
+[Selector de actos](src/assets/images/ui/menus/README.md). El usuario aprobó
+Actos y sus iconos transparentes y autorizó rediseñar Inicio como portada
+ilustrada: entorno WebP + nave PNG transparente, acciones HTML y movimiento
+acotado. Contrato y prompts: [Portada de Inicio](src/assets/images/ui/home/README.md).
+Ampliación autorizada el 30-09-2026: composición vertical propia para el layout
+apilado y atmósfera exterior usando la misma variante; placas estáticas y dos
+nubes pequeñas sólo en escritorio, sin cambiar controles ni combate.
+La nueva portada espera aprobación visual; esto no autoriza migrar toda la UI.
+No cambia progresión ni combate, y las pruebas humanas del Laboratorio siguen aplazadas.
 
 ### Contrato vigente de fondos — 27-09-2026
 
@@ -667,7 +675,15 @@ El vertical slice guarda:
 - ajustes de audio, controles y calidad;
 - mejor tiempo/puntuación;
 - tutorial visto;
+- última ruta elegida (Acto I/II/III u Overdrive), restaurada por Jugar desde
+  el menú; nunca reanuda una run ni un tramo avanzado de Overdrive;
 - metaprogresión solo cuando exista realmente.
+
+Schema 9 añade `lastSelectedRoute` con migración conservadora: sin elección,
+inválida o bloqueada → Radial; conserva Laboratorio, NOVA, desbloqueos, cosméticos
+y récords de schema 8. Se guarda al seleccionar una ruta o continuar al siguiente
+acto; las rutas explícitas por URL/de desarrollo tienen prioridad al arrancar
+y no sustituyen por sí solas esta preferencia.
 
 No se guardará una run activa inicialmente. El payload objetivo será menor de 20 KB y nunca se guardará cada frame.
 

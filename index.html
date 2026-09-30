@@ -22,24 +22,31 @@
         <span>Cargando juego…</span>
       </div>
       <section id="start-screen" aria-labelledby="start-title" hidden>
-        <div id="start-scene" class="start-scene" aria-hidden="true"></div>
+        <div id="home-exterior" class="home-exterior" aria-hidden="true">
+          <span class="home-exterior-cloud home-exterior-cloud-north"></span>
+          <span class="home-exterior-cloud home-exterior-cloud-south"></span>
+        </div>
         <div class="start-screen-panel">
           <div id="start-main-view">
+          <div id="start-scene" class="start-scene" aria-hidden="true"></div>
           <div class="start-brand">
+            <div class="home-cover-title">
+              <p class="start-kicker">GEOMETRY / SURVIVAL PROTOCOL</p>
+              <h1 id="start-title">GEOMETRY <span>SURVIVOR</span></h1>
+            </div>
             <div id="start-mark" aria-hidden="true"></div>
-            <p class="start-kicker">GEOMETRY / SURVIVAL PROTOCOL</p>
-            <h1 id="start-title">GEOMETRY <span>SURVIVOR</span></h1>
-            
+            <div class="home-cover-caption"><span>UN NÚCLEO. TODO UN ARSENAL.</span><p>Sobrevive. Evoluciona. Rompe el límite.</p></div>
           </div>
           <div class="start-actions" aria-label="Menu principal">
-            <button id="start-play" class="start-primary" type="button"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z" fill="currentColor"/><path d="M3 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>JUGAR</span><span class="home-play-arrow" aria-hidden="true">↗</span></button>
+            <p class="home-nav-kicker">TU PRÓXIMA EXPEDICIÓN</p>
+            <button id="start-play" class="start-primary" type="button"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z" fill="currentColor"/><path d="M3 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="home-play-copy"><strong>JUGAR</strong><small id="start-play-route">Acto I · Radial</small></span><span class="home-play-arrow" aria-hidden="true">↗</span></button>
             <div class="start-menu-grid">
               <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>
               <button id="start-level" class="start-secondary start-feature" type="button" aria-controls="start-act-view" data-feature="level-select"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 6-8 6 8 6-12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="16" r="2" fill="currentColor"/><circle cx="21" cy="4" r="2" fill="currentColor"/></svg><span class="home-action-copy"><strong>Actos</strong><small>SELECCIONAR</small></span></button>
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 17-9-4-9 4Z" fill="#17283b" stroke="currentColor" stroke-width="2"/><path d="m12 7 3 6h-6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Skins</strong><small>ABRIR</small></span></button>
               <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Laboratorio</strong><small>MEJORAS PERMANENTES</small></span></button>
             </div>
-            <p id="start-coming-soon-note" class="start-coming-soon-note">Elige una apariencia visual; no cambia las reglas ni las estadísticas.</p>
+            <p id="start-coming-soon-note" class="start-coming-soon-note">Jugar recuerda tu última ruta elegida.</p>
           </div>
           <div id="start-settings" class="start-settings" hidden>
             <h2>Configuración rápida</h2>
@@ -66,6 +73,7 @@
           <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
           </div>
           <section id="start-act-view" class="start-act-view console-screen" hidden aria-labelledby="start-act-title">
+            <div class="act-header-rail">
             <div class="act-header console-header">
               <button id="start-act-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
               <div>
@@ -74,12 +82,13 @@
                 <p>Cada ruta comienza con una build limpia. Elige tu próximo desafío.</p>
               </div>
             </div>
+            </div>
             <div class="console-body" tabindex="0" role="region" aria-label="Rutas disponibles">
             <div class="act-options" role="group" aria-label="Actos y modos disponibles">
-              <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><img class="act-emblem" src="/src/assets/svg/ui/start/radial.svg" alt="" /><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></button>
-              <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/svg/ui/start/angular.svg" alt="" /><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></button>
-              <button id="start-act-fracture" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/svg/ui/start/fracture.svg" alt="" /><strong>III · FRACTURE</strong><small>Caos, munición y geometría rota</small><span>FRACTURE ENGINE</span></button>
-              <button id="start-overdrive" class="act-card-button start-overdrive-button" type="button" data-feature="overdrive"><img class="act-emblem" src="/src/assets/svg/ui/start/overdrive.svg" alt="" /><strong>INFINITO</strong><small>Tramos, vueltas y caos creciente</small><span>OVERDRIVE</span></button>
+              <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/radial.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></span></button>
+              <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/angular.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></span></button>
+              <button id="start-act-fracture" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/fracture.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>III · FRACTURE</strong><small>Caos, munición y geometría rota</small><span>FRACTURE ENGINE</span></span></button>
+              <button id="start-overdrive" class="act-card-button start-overdrive-button" type="button" data-feature="overdrive"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/overdrive.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>INFINITO</strong><small>Tramos, vueltas y caos creciente</small><span>OVERDRIVE</span></span></button>
             </div>
             <p id="start-act-status" class="act-status" role="status" aria-live="polite"></p>
             <button id="start-act-play" class="start-primary" type="button">INICIAR ACTO I</button>

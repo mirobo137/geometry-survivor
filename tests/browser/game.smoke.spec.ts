@@ -529,6 +529,45 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   expect(failures).toEqual([]);
 });
 
+test('recuerda la ultima ruta al recargar y al jugar directo desde el menu', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('geometry-survivor:save')) localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 8, unlockedActs: ['radial', 'angular', 'fracture'], overdrive: { unlocked: true }
+    }));
+  });
+  await page.goto('/?debug=1&quality=low');
+  // Unit tests cover all four persisted IDs. Keep CI's WebGL smoke focused
+  // on the two distinct flows: a non-default campaign act and Overdrive.
+  for (const route of ['angular', 'overdrive']) {
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await page.locator('#start-level').click();
+    const selector = route === 'overdrive' ? '#start-overdrive' : `#start-act-${route}`;
+    await page.locator(selector).click();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save')!).lastSelectedRoute)).toBe(route);
+    await page.locator('#start-act-back').click();
+    await page.reload();
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#start-play-route')).toHaveText(route === 'overdrive' ? 'Infinito · Overdrive' : 'Acto II · Angular');
+    await page.locator('#start-level').click();
+    await expect(page.locator(selector)).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#start-act-back').click();
+    if (route === 'overdrive') {
+      await page.locator('#start-play').click();
+      await expect(page.locator('#run-transition')).toHaveAttribute('data-route', route);
+      await page.locator('[data-run-transition-skip]').click();
+      await page.locator('#pause-toggle').click();
+      await page.locator('#pause-menu').click();
+    }
+    await page.locator('#start-play').click();
+    await expect(page.locator('#run-transition')).toHaveAttribute('data-route', route);
+    await page.locator('[data-run-transition-skip]').click();
+    await page.locator('#pause-toggle').click();
+    await page.locator('#pause-menu').click();
+  }
+  expect(failures).toEqual([]);
+});
+
 test('al continuar del Acto III anuncia Overdrive con la entrada breve', async ({ page }, testInfo) => {
   await page.addInitScript(() => {
     localStorage.setItem('geometry-survivor:save', JSON.stringify({

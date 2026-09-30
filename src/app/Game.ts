@@ -115,7 +115,7 @@ export interface GameOptions {
   readonly calibrationId?: CalibrationId;
   /** Initial campaign act; the home selector can change this before play. */
   readonly actId?: ActId;
-  /** Developer-only Overdrive entry; the public menu remains campaign-only. */
+  /** Explicit route override; the plain menu otherwise restores its saved choice. */
   readonly mode?: RunMode;
   readonly overdriveStage?: number;
   readonly overdriveSeed?: number;
@@ -339,19 +339,23 @@ export class Game {
   };
 
   private readonly onStartOverdrivePlay = (): void => {
+    const saved = this.saveStore.load();
     if (this.stopped || this.gameState.phase !== 'menu'
-      || !this.saveStore.load().overdrive.unlocked) return;
+      || !saved.overdrive.unlocked) return;
+    this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive' });
     this.runMode = 'overdrive';
     this.overdriveStage = this.initialOverdriveStage;
     this.calibrationId = null;
     this.calibrationApplied = false;
-    this.configureActRuntime(this.saveStore.load());
+    this.configureActRuntime(saved);
     this.arena.update(this.initialElapsedSeconds);
     this.resetAudioFeedbackTrackers();
   };
 
   private readonly onStartOverdriveDirect = (): void => {
     if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
+    const saved = this.saveStore.load();
+    if (saved.overdrive.unlocked) this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive' });
     const url = new URL(window.location.href);
     url.search = '?mode=overdrive&autostart=1';
     window.location.assign(url.toString());
@@ -359,11 +363,13 @@ export class Game {
 
   private readonly onStartActChange = (actId: ActId): void => {
     if (this.stopped || this.gameState.phase !== 'menu' || !this.isActUnlocked(actId)) return;
+    const saved = this.saveStore.load();
+    this.saveStore.save({ ...saved, lastSelectedRoute: actId });
     this.runMode = 'campaign';
     this.actId = actId;
     this.calibrationId = null;
     this.calibrationApplied = false;
-    this.configureActRuntime(this.saveStore.load());
+    this.configureActRuntime(saved);
     this.arena.update(this.initialElapsedSeconds);
     this.resetAudioFeedbackTrackers();
   };
@@ -514,6 +520,7 @@ export class Game {
     this.calibrationId = null;
     this.calibrationApplied = false;
     if (!this.gameState.continueToNextAct()) return;
+    this.saveStore.save({ ...saved, lastSelectedRoute: nextAct });
     this.configureActRuntime(saved);
     this.player.reset();
     this.progression.reset();
@@ -618,7 +625,6 @@ export class Game {
     this.weaponPath = options.weaponPath ?? null;
     this.campaignBuild = options.campaignBuild ?? null;
     this.runMode = options.mode ?? 'campaign';
-    this.diagnosticOverdrive = this.runMode === 'overdrive' && options.diagnosticOverdrive !== false;
     this.overdriveStage = normalizeOverdriveStage(options.overdriveStage ?? 1);
     this.initialOverdriveStage = this.overdriveStage;
     this.overdriveSeed = options.overdriveSeed;
@@ -628,6 +634,14 @@ export class Game {
     this.startWithBasicIntro = options.startWithBasicIntro === true;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
+    // Explicit/developer routes take precedence. A plain menu remembers only
+    // the chosen route, always creating a fresh run (stage one for Overdrive).
+    const restoreLastRoute = this.startOnMenu && options.mode === undefined && options.actId === undefined;
+    if (restoreLastRoute) {
+      this.runMode = saved.lastSelectedRoute === 'overdrive' ? 'overdrive' : 'campaign';
+    }
+    this.diagnosticOverdrive = this.runMode === 'overdrive'
+      && !restoreLastRoute && options.diagnosticOverdrive !== false;
     this.playerSkin = options.playerSkin ?? saved.skins.selected;
     this.cannonSkin = options.cannonSkin ?? saved.cannonSkins.selected;
     this.background = options.background ?? saved.backgrounds.selected;
@@ -636,7 +650,8 @@ export class Game {
     this.calibrationId = options.calibrationId ?? null;
     this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
-    const requestedAct = options.actId ?? 'radial';
+    const requestedAct = options.actId
+      ?? (restoreLastRoute && saved.lastSelectedRoute !== 'overdrive' ? saved.lastSelectedRoute : 'radial');
     this.actId = requestedAct === 'radial' || options.allowLockedAct === true || saved.unlockedActs.includes(requestedAct)
       ? requestedAct
       : 'radial';

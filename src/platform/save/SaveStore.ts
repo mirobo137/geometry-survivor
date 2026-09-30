@@ -12,7 +12,7 @@ import { normalizeLaboratorySaveData, type LaboratorySaveData } from '../../cont
 
 export type { LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 8 as const;
+export const SAVE_SCHEMA_VERSION = 9 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -58,6 +58,7 @@ export interface OverdriveSaveData {
 }
 
 export type CampaignActId = 'radial' | 'angular' | 'fracture';
+export type StartRouteId = CampaignActId | 'overdrive';
 
 export interface SaveData {
   readonly schemaVersion: typeof SAVE_SCHEMA_VERSION;
@@ -72,6 +73,8 @@ export interface SaveData {
   /** Acts with a real consumer that the player may start directly for validation. */
   readonly unlockedActs: readonly CampaignActId[];
   readonly overdrive: OverdriveSaveData;
+  /** Menu preference only: never resumes an active run or an Overdrive stage. */
+  readonly lastSelectedRoute: StartRouteId;
 }
 
 export interface StorageAdapter {
@@ -139,6 +142,7 @@ export const createDefaultSaveData = (): SaveData => ({
   },
   laboratory: normalizeLaboratorySaveData(null),
   unlockedActs: ['radial'],
+  lastSelectedRoute: 'radial',
   overdrive: {
     unlocked: false,
     bestTotalTimeSeconds: 0,
@@ -255,6 +259,11 @@ export const migrateSaveData = (value: unknown): SaveData => {
     },
     laboratory,
     unlockedActs: normalizedUnlockedActs,
+    lastSelectedRoute: value.lastSelectedRoute === 'overdrive' && overdriveUnlocked
+      ? 'overdrive'
+      : isCampaignActId(value.lastSelectedRoute) && normalizedUnlockedActs.includes(value.lastSelectedRoute)
+        ? value.lastSelectedRoute
+        : 'radial',
     overdrive: {
       unlocked: overdriveUnlocked,
       bestTotalTimeSeconds: Math.max(0, finiteOr(rawOverdrive.bestTotalTimeSeconds, defaults.overdrive.bestTotalTimeSeconds)),

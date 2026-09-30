@@ -6,6 +6,13 @@ las cartas; el inventario canónico, asociaciones y contrato de mantenimiento
 están en [catálogo de cartas](../../src/assets/images/ui/cards/README.md).
 El [registro del piloto](../../src/assets/images/ui/evolutions/README.md)
 conserva la historia de la primera prueba Rail Lance/Pulse Volley.
+Nuevo piloto autorizado de UI: una cabecera ilustrada en el selector de Actos,
+con texto/controles HTML y una placa decorativa estática de 76,892 bytes.
+Procedencia, prompt y validación: [menús ilustrados](../../src/assets/images/ui/menus/README.md).
+Tras el feedback, el usuario pidió cuatro botones de ruta completamente
+ilustrados (PNG, ~1.75 MB entre los cuatro) y alinear los anchos de cabecera y
+cuadrícula. Prompts y comprobaciones en el mismo README. La aprobación de estos
+botones sigue pendiente; no autoriza migrar todas las pantallas.
 Leer junto a [Arte híbrido](ARTE_HIBRIDO.md) y [Fondos premium](FONDOS_PREMIUM.md).
 La implementación del Laboratorio permanece y sus pruebas humanas se aplazan
 según el [recordatorio](LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).

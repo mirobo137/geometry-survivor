@@ -549,19 +549,13 @@ test('recuerda la ultima ruta al recargar y al jugar directo desde el menu', asy
     await page.reload();
     await expect(page.locator('#boot-status')).toBeHidden();
     await expect(page.locator('#start-play-route')).toHaveText(route === 'overdrive' ? 'Infinito · Overdrive' : 'Acto II · Angular');
-    await page.locator('#start-level').click();
-    await expect(page.locator(selector)).toHaveAttribute('aria-pressed', 'true');
-    await page.locator('#start-act-back').click();
-    if (route === 'overdrive') {
-      await page.locator('#start-play').click();
-      await expect(page.locator('#run-transition')).toHaveAttribute('data-route', route);
-      await page.locator('[data-run-transition-skip]').click();
-      await page.locator('#pause-toggle').click();
-      await page.locator('#pause-menu').click();
-    }
+    // The persisted menu caption identifies the route selected before reload.
+    // Start one real run per route so this WebGL smoke doesn't repeat the
+    // expensive Overdrive stage initialization without adding route coverage.
     await page.locator('#start-play').click();
     await expect(page.locator('#run-transition')).toHaveAttribute('data-route', route);
     await page.locator('[data-run-transition-skip]').click();
+    await expect(page.locator('#pause-toggle')).toBeVisible();
     await page.locator('#pause-toggle').click();
     await page.locator('#pause-menu').click();
   }

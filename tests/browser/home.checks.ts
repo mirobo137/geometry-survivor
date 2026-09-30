@@ -61,6 +61,14 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
           const stageBounds = await treeStage.boundingBox();
           expect(stageBounds).not.toBeNull();
           expect(adRootX).toBeGreaterThan(stageBounds!.x + stageBounds!.width);
+          // The detailed zoom, touch-size and pan interactions are already
+          // exercised at compact desktop and mobile viewports. At 1280x720
+          // retain the full console/layout and growth checks above, without
+          // repeating the costly Pixi/WebGL interaction sequence.
+          if (width === 1280) {
+            await page.locator('#start-meta-back').click();
+            continue;
+          }
           const initialZoom = await page.locator('#start-lab-zoom-value').textContent();
           await page.locator('#start-lab-zoom-in').click();
           expect(await page.locator('#start-lab-zoom-value').textContent()).not.toBe(initialZoom);

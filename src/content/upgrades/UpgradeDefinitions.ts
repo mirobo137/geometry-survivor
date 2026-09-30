@@ -898,3 +898,17 @@ export const OVERDRIVE_RESERVE_DEFINITIONS: readonly UpgradeDefinition[] = [
     maxStacks: OVERDRIVE_NOVA_CONVERSION_MAX_STACKS
   }
 ];
+
+const ALL_UPGRADE_IDS: ReadonlySet<string> = new Set([
+  ...UPGRADE_DEFINITIONS,
+  ...Object.values(WEAPON_PATH_RANK_DEFINITIONS).flat(),
+  ...WEAPON_EVOLUTION_DEFINITIONS,
+  ...WEAPON_EVOLUTION_OFFER_DEFINITIONS,
+  ...WEAPON_MASTERY_DEFINITIONS,
+  ...OVERDRIVE_RESERVE_DEFINITIONS
+].map((definition) => definition.id));
+
+/** Guards developer-only card preview query params against the complete catalog. */
+export const isUpgradeId = (value: unknown): value is UpgradeId => (
+  typeof value === 'string' && ALL_UPGRADE_IDS.has(value)
+);

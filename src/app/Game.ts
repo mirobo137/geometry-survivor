@@ -37,6 +37,7 @@ import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
 import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/LevelUpOverlay';
+import { getUpgradeCardVisual } from '../ui/level-up/UpgradeCardVisual';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
 import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
@@ -146,7 +147,7 @@ export interface GameOptions {
   readonly fractureDrill?: boolean;
   readonly fractureEnemyKind?: import('../content/enemies/EnemyDefinitions').EnemyKind;
   /** Developer-only direct card entry; preserves the real level-up flow. */
-  readonly weaponCardId?: UpgradeId;
+  readonly debugUpgradeId?: UpgradeId;
   /** Developer-only direct evolution entry; opens the real two-card choice. */
   readonly evolutionId?: WeaponEvolutionId;
   /** Developer-only lab layout; auto-applies the selected evolution. */
@@ -176,7 +177,7 @@ export class Game {
   private readonly magneticChargeWeaponDrill: boolean;
   private readonly fractureDrill: boolean;
   private readonly fractureEnemyKind: import('../content/enemies/EnemyDefinitions').EnemyKind;
-  private readonly weaponCardId: UpgradeId | null;
+  private readonly debugUpgradeId: UpgradeId | null;
   private readonly evolutionId: WeaponEvolutionId | null;
   private readonly evolutionScenario: WeaponEvolutionScenario | null;
   private readonly weaponPath: WeaponPathId | null;
@@ -611,7 +612,7 @@ export class Game {
       && !this.prismWeaverDrill && !this.pulseRingDrill && !this.angularSweepDrill
       && !this.wardenDrill && !this.pulseRingWeaponDrill && !this.magneticChargeWeaponDrill;
     this.fractureEnemyKind = options.fractureEnemyKind ?? 'fracture-gunner';
-    this.weaponCardId = options.weaponCardId ?? null;
+    this.debugUpgradeId = options.debugUpgradeId ?? null;
     this.evolutionId = options.evolutionId ?? null;
     this.evolutionScenario = options.evolutionScenario ?? null;
     this.weaponPath = options.weaponPath ?? null;
@@ -1062,6 +1063,7 @@ export class Game {
     if (choices.some((choice) => choice.effect.type === 'evolutionOffer')) {
       this.weaponPathEvolutionOfferChoices = choices;
     }
+    const selectedEvolutions = this.getSelectedWeaponEvolutions();
     this.levelUp.open(level, choices, (upgradeId) => {
       this.view.closeLevelUpFx();
       this.input.reset();
@@ -1108,8 +1110,19 @@ export class Game {
     }, (upgrade) => this.upgradeApplier.getPreview(upgrade), this.onLevelUpInteraction, {
       rerollAvailable,
       onReroll: () => { void this.requestReroll(level, choices); }
-    }, navigation);
+    }, navigation, (choice) => getUpgradeCardVisual(choice.id, selectedEvolutions));
     this.syncLevelUpFx();
+  }
+
+  private getSelectedWeaponEvolutions(): Partial<Record<WeaponPathId, WeaponEvolutionId>> {
+    const selected: Partial<Record<WeaponPathId, WeaponEvolutionId>> = {};
+    if (this.combat.currentProjectileEvolution) selected.projectile = this.combat.currentProjectileEvolution;
+    if (this.combat.currentOrbitEvolution) selected.orbit = this.combat.currentOrbitEvolution;
+    if (this.combat.currentChainEvolution) selected.chain = this.combat.currentChainEvolution;
+    if (this.combat.currentBoomerangEvolution) selected.boomerang = this.combat.currentBoomerangEvolution;
+    if (this.combat.currentPulseRingEvolution) selected.pulse_ring = this.combat.currentPulseRingEvolution;
+    if (this.combat.currentMagneticChargeEvolution) selected.magnetic_charge = this.combat.currentMagneticChargeEvolution;
+    return selected;
   }
 
   private async requestReroll(level: number, currentChoices: readonly UpgradeDefinition[]): Promise<void> {
@@ -1193,8 +1206,8 @@ export class Game {
         const choices = this.upgradeApplier.getEvolutionChoices(7, this.evolutionId);
         this.openLevelUp(null, choices, 7);
       }
-    } else if (this.weaponCardId !== null) {
-      this.openLevelUp(this.weaponCardId);
+    } else if (this.debugUpgradeId !== null) {
+      this.openLevelUp(this.debugUpgradeId);
     } else if (this.campaignBuild === 'three-evolved') {
       this.openLevelUp(null, undefined, 20);
     }

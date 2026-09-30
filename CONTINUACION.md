@@ -1,5 +1,96 @@
 # Geometry Survivor — estado y continuación
 
+## Catálogo ilustrado completo de cartas — 29-09-2026
+
+Por nueva autorización del usuario, el piloto de Rail Lance/Pulse Volley se
+amplió a todas las cartas: 6 artes de arma base, dos imágenes distintas para
+cada una de las 6 familias (12 evoluciones) y 11 ilustraciones no armadas,
+incluyendo escudo, vampirismo, armadura, maestría y reservas de Overdrive.
+Total: 29 WebP 768×384, 1,959,074 bytes. Los rangos conservan el arte base;
+las maestrías y potencia de Overdrive conservan la ilustración de la evolución
+realmente elegida. No se alteraron ofertas, efectos, daño ni guardado.
+
+La carga sigue en HTML: sólo se crean las imágenes de hasta tres cartas al
+mostrar una oferta; marcos, texto, cifras, foco y selección siguen siendo
+DOM/SVG. Si falla una imagen, la carta vuelve a su icono SVG. El navegador
+controla caché/decodificación; no se midieron FPS ni memoria real.
+
+Pasaron typecheck, suite unitaria completa (115 archivos, 518 pruebas), build
+local de Vite con `--configLoader runner`, los 7 smokes de campaña/evoluciones
+y la prueba separada de escudo/vampirismo/armadura (todos verdes), y el guion
+visual contra preview: cinco tamaños de evolución y tres tamaños de oferta
+normal, imágenes decodificadas, selección, scroll móvil, comparación SVG y
+fallback de carga. El test combinado detectó inicialmente una aserción demasiado
+estricta sobre el sufijo de nombre de archivo con hash de Vite; se corrigió y la
+prueba afectada se repitió verde. Para este entorno el loader predeterminado del
+servidor de Playwright falla por permisos de OneDrive; el build y preview con
+`--configLoader runner` sí funcionaron. Vite mantiene su warning existente de
+chunk principal superior a 500 kB.
+
+Rutas: `/?debug=1&campaign=evolved&quality=low` muestra cartas normales y
+maestrías; `/?evolution=solar-crown&debug=1&quality=low` muestra la pareja de
+Órbita; `/?card=vampiric-core&debug=1&quality=low` permite revisar una mejora
+defensiva; añadir `&card-art=svg` compara el estilo anterior. Catálogo,
+asociaciones, prompts comunes, briefs y procedencia de los 29 recursos:
+[`README de cartas ilustradas`](src/assets/images/ui/cards/README.md).
+
+Pendiente de aprobación: mirar la entrega en el juego, especialmente tamaños y
+legibilidad en móvil físico. Laboratorio: sus pruebas manuales siguen aplazadas.
+No se hizo commit ni push.
+
+## Primera prueba de UI ilustrada — 29-09-2026
+
+Por autorización del usuario se prueba la opción A del estudio de arte con
+las dos cartas de evolución de Proyectil: Rail Lance y Pulse Volley. Usan
+ilustraciones reales creadas con el generador integrado, derivadas a WebP
+768×384 (119,030 bytes entre ambas). La base RGBA8 calculada es 2.25 MiB;
+no es una medición de memoria total. Las cartas conservan texto, iconos,
+marcos, foco y elección DOM. No cambia progresión, daño ni guardado.
+
+En Vite local:
+
+- `/?evolution=rail-lance&debug=1&quality=low` abre ambas cartas ilustradas.
+- La misma ruta con `&card-art=svg` compara la presentación anterior.
+- También aparecen al elegir las evoluciones de Proyectil en una run normal.
+
+La captura 320×568 detectó compresión del texto: se corrigió el sizing del
+overlay ilustrado para conservar altura de contenido y permitir scroll; las
+ventanas cortas también mantienen accesible el encabezado. Una imagen fallida
+devuelve esa carta al icono SVG y sigue permitiendo seleccionar.
+
+Pasaron typecheck, 515 pruebas unitarias, builds local/Poki/CrazyGames, el smoke
+desktop existente de las dos evoluciones (1/1) y la revisión reproducible en
+cinco viewports: 1280×720, 390×844, 320×568, 640×360 y 1280×360. Se comprobaron
+imágenes decodificadas, ausencia de solapamiento/overflow horizontal, scroll y
+selección, baseline SVG sin descarga de imágenes y fallback de carga. La
+revisión pasa contra preview y contra Vite dev; en dev los imports `?url` son
+JavaScript y no deben contarse/abortarse como imágenes. Sin errores HTTP ni de
+página observados. La carga bundle de config falló por permisos de OneDrive;
+se utilizó `--configLoader runner`. Sigue el warning previo de chunk >500 kB.
+
+Arte, prompts completos y contrato:
+[`README del piloto`](src/assets/images/ui/evolutions/README.md).
+Capturas ignoradas: `test-results/evolution-art/`; script:
+`node docs/visual/capture-evolution-art.mjs [URL]` (preview 4173 por defecto).
+Pendiente aprobación artística/táctil humana en móvil físico; no se midieron
+FPS ni se certificaron SDKs de portales. No extender el estilo al catálogo antes
+de esa decisión. Laboratorio: pruebas humanas siguen aplazadas. Sin commit/push.
+
+## Laboratorio: pruebas humanas aplazadas — 29-09-2026
+
+Por solicitud del usuario se hace una pausa en el Laboratorio para retomarlo
+después. La implementación y las comprobaciones automáticas se conservan;
+no marcar su aceptación manual ni los topes/costes como validados. El recordatorio
+y la lista para retomar están en
+[`LABORATORIO_META_V2.md`](docs/design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).
+Pendientes: acabado y controles en PC/móvil físico, compra/recarga, Vitalidad
+Rewarded y efecto real de las mejoras en cartas y partidas.
+
+La investigación solicitada sobre imágenes generadas frente a SVG está en
+[`ESTUDIO_ARTE_GENERADO.md`](docs/design/ESTUDIO_ARTE_GENERADO.md): datos del
+repositorio, coste de memoria, opciones y alcance de retrabajo. Es una evaluación,
+no una migración visual aprobada; en esta entrega sólo se actualiza documentación.
+
 ## Reorganización visual del Laboratorio — 29-09-2026
 
 El feedback indicó que la primera vista radial no se sentía como el árbol de

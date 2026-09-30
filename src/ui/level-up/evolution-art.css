@@ -1,0 +1,150 @@
+/* Illustrated upgrade catalog. Text, previews, focus and actions stay in DOM;
+   only the at-most-three visible cards decode a static image at offer time. */
+#level-up[data-card-art="illustrated"] {
+  /* The legacy last row can shrink to zero. Illustrated offers must scroll
+     vertically on short phones instead of squeezing text below their art. */
+  grid-template-rows: repeat(4, max-content);
+}
+
+@media (max-height: 40rem) {
+  #level-up[data-card-art="illustrated"] {
+    align-content: start;
+  }
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] {
+  min-height: 0;
+  background: linear-gradient(150deg, var(--card-surface), #08101f 85%);
+  border: 1px solid var(--card-line);
+  box-shadow: 0 0.8rem 2.8rem rgba(0, 0, 0, 0.25);
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-frame {
+  opacity: 0.55;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(2.5rem, 1fr) auto auto;
+  grid-template-areas: "meta" "art" "title" "description" "preview" "action";
+  height: auto;
+  padding: 1.15rem;
+  column-gap: 0;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-meta {
+  grid-area: meta;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-title {
+  grid-area: title;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-description {
+  grid-area: description;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-preview {
+  grid-area: preview;
+  align-self: end;
+  margin-top: 0.55rem;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-art {
+  grid-area: art;
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 1;
+  margin: 0.9rem 0 1rem;
+  overflow: hidden;
+  background: #070f1c;
+  border: 1px solid var(--card-line);
+  border-radius: 0.55rem;
+  isolation: isolate;
+}
+
+.upgrade-card-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.upgrade-card-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(transparent 65%, rgba(4, 9, 18, 0.88));
+}
+
+#level-up-options button.upgrade-card .upgrade-card-art-label {
+  position: absolute;
+  left: 0.65rem;
+  bottom: 0.6rem;
+  z-index: 2;
+  color: var(--card-accent);
+  font: 800 clamp(0.58rem, 1.2vw, 0.68rem)/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-art .upgrade-card-icon {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.4rem;
+  z-index: 2;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: 0;
+  color: var(--card-accent);
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-title {
+  grid-area: title;
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  letter-spacing: -0.015em;
+}
+
+#level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-description {
+  grid-area: description;
+  min-height: 2.7em;
+  padding-top: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+#level-up-options button.upgrade-card .upgrade-card-art-action {
+  grid-area: action;
+  display: block;
+  margin-top: 1.15rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--card-line);
+  color: var(--card-accent);
+  font: 800 0.7rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+@media (max-width: 48rem) {
+  #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-content {
+    padding: 0.85rem;
+  }
+
+  #level-up-options button.upgrade-card .upgrade-card-art {
+    margin: 0.6rem 0 0.65rem;
+  }
+
+  #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-description {
+    min-height: 0;
+    font-size: 0.82rem;
+    padding-top: 0.35rem;
+  }
+
+  #level-up-options button.upgrade-card .upgrade-card-art-action {
+    margin-top: 0.65rem;
+    padding-top: 0.6rem;
+    font-size: 0.64rem;
+  }
+}

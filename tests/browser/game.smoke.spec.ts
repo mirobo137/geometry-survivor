@@ -758,6 +758,13 @@ test('presenta el compositor de campaña y la pantalla de objetivo post-evoluci�
   const choices = levelUp.locator('#level-up-options button');
   await expect(levelUp).toBeVisible({ timeout: 10_000 });
   await expect(choices).toHaveCount(3);
+  const initialArt = levelUp.locator('.upgrade-card-art img');
+  await expect(initialArt).toHaveCount(3);
+  const initialDimensions = await initialArt.evaluateAll(images => Promise.all(images.map(async image => {
+    await (image as HTMLImageElement).decode();
+    return [(image as HTMLImageElement).naturalWidth, (image as HTMLImageElement).naturalHeight];
+  })));
+  expect(initialDimensions).toEqual([[768, 384], [768, 384], [768, 384]]);
   await expect(levelUp.locator('[data-upgrade-id="universal_weapon_mastery"]')).toBeVisible();
   await expect(levelUp).toHaveAttribute('data-offer-kind', 'standard');
 
@@ -767,8 +774,47 @@ test('presenta el compositor de campaña y la pantalla de objetivo post-evoluci�
   await expect(choices).toHaveCount(3);
   const cardKinds = await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.cardKind));
   expect(cardKinds.every((kind) => kind === 'mastery')).toBe(true);
+  const evolvedArt = levelUp.locator('.upgrade-card-art img');
+  await expect(evolvedArt).toHaveCount(3);
+  const evolvedLabels = await evolvedArt.evaluateAll(images => Promise.all(images.map(async image => {
+    await (image as HTMLImageElement).decode();
+    return image.closest('button')?.querySelector('.upgrade-card-art-label')?.textContent?.trim();
+  })));
+  expect(evolvedLabels.sort()).toEqual([
+    'FULGOR · ÓRBITA',
+    'PRECISIÓN · PERFORACIÓN',
+    'RED · CIRCUITO CERRADO'
+  ].sort());
   await choices.first().click();
   await expect(levelUp).toBeHidden({ timeout: 5_000 });
+  expect(failures).toEqual([]);
+});
+
+test('ilustra y deja elegir las cartas de escudo, vampirismo y armadura', async ({ page }) => {
+  const failures = captureRuntimeFailures(page);
+  for (const card of [
+    { id: 'recharging_shield', art: 'recharging-shield' },
+    { id: 'vampiric_core', art: 'vampiric-core' },
+    { id: 'hardened_shell', art: 'hardened-shell' }
+  ]) {
+    await page.goto(`/?card=${card.id.replaceAll('_', '-')}&debug=1&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    const levelUp = page.locator('#level-up');
+    await expect(levelUp).toBeVisible({ timeout: 10_000 });
+    const choice = page.locator(`#level-up-options button[data-upgrade-id="${card.id}"]`);
+    await expect(choice).toBeVisible();
+    const art = choice.locator('.upgrade-card-art img');
+    await expect(art).toHaveCount(1);
+    const loaded = await art.evaluate(async (image, { expectedArt }) => {
+      await (image as HTMLImageElement).decode();
+      return (image as HTMLImageElement).naturalWidth === 768
+        && (image as HTMLImageElement).naturalHeight === 384
+        && (image as HTMLImageElement).currentSrc.includes(expectedArt);
+    }, { expectedArt: card.art });
+    expect(loaded).toBe(true);
+    await choice.click();
+    await expect(levelUp).toBeHidden({ timeout: 5_000 });
+  }
   expect(failures).toEqual([]);
 });
 
@@ -863,6 +909,13 @@ for (let index = 0; index < WEAPON_EVOLUTION_DRILLS.length; index += 2) {
       await expect(choices).toHaveCount(2);
       await expect(page.locator('#level-up-reroll')).toBeHidden();
       expect(await choices.evaluateAll((buttons) => buttons.map((button) => button.dataset.upgradeId))).toEqual(drill.ids);
+      const art = choices.locator('.upgrade-card-art img');
+      await expect(art).toHaveCount(2);
+      const decodedArt = await art.evaluateAll(images => Promise.all(images.map(async image => {
+        await (image as HTMLImageElement).decode();
+        return [(image as HTMLImageElement).naturalWidth, (image as HTMLImageElement).naturalHeight];
+      })));
+      expect(decodedArt).toEqual([[768, 384], [768, 384]]);
       await choices.first().click();
       await expect(levelUp).toBeHidden({ timeout: 5_000 });
     }

@@ -46,7 +46,7 @@ un módulo equivalente. No crear registros, managers o carpetas vacías por adel
 | --- | --- | --- | --- |
 | EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
 | EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; árbol UI V2 automático OK, revisión visual/táctil física pendiente; EX-02d opcional |
+| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; árbol UI V2 automático OK; pruebas humanas del Laboratorio **APLAZADAS POR EL USUARIO — 29-09-2026** ([recordatorio](design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas)); EX-02d opcional |
 | META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
 | ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
 | ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |

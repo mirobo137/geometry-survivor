@@ -527,6 +527,14 @@ prueba es gratuita y seleccionable en el locker; no modifica daño, física ni
 el cosmético de cañones. Contrato y prompt: [Manta README](src/assets/skins/manta/README.md).
 Pendiente aprobación visual humana; no cierra las puertas EX ni VIS previas.
 
+Piloto UI autorizado el 29-09-2026: las cartas de evolución `rail_lance` y
+`pulse_volley` añaden ilustraciones generadas WebP, con título, descripción,
+icono, marco y acciones DOM. Se prueba sólo esta pareja antes de extender el
+catálogo. Producción, prompts, carga/fallback y comparación con SVG:
+[Evoluciones ilustradas](src/assets/images/ui/evolutions/README.md). No cambia
+la progresión ni el combate, y las pruebas humanas del Laboratorio siguen
+aplazadas.
+
 ### Contrato vigente de fondos — 27-09-2026
 
 Todos los fondos nuevos y existentes heredan el movimiento de placa compartido:
@@ -3655,3 +3663,8 @@ desktop. Typecheck, pruebas unitarias dirigidas y build local pasan. El build
 conserva la advertencia preexistente de chunk principal >500 kB. Falta que el
 usuario revise el acabado y tacto en un móvil físico; no se midieron FPS ni se
 hizo commit/push.
+
+El 29-09-2026 el usuario aplaza las pruebas humanas del Laboratorio para
+retomarlas después. Conservar implementación y resultados automáticos; la
+aceptación manual sigue pendiente según el
+[recordatorio del contrato V2](docs/design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).

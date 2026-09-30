@@ -17,7 +17,7 @@ import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/H
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
 import type { ActId } from './content/run/ActDefinitions';
 import type { EnemyKind } from './content/enemies/EnemyDefinitions';
-import { isWeaponPathId, type UpgradeId, type WeaponPathId } from './content/upgrades/UpgradeDefinitions';
+import { isUpgradeId, isWeaponPathId, type UpgradeId, type WeaponPathId } from './content/upgrades/UpgradeDefinitions';
 import {
   isWeaponEvolutionId,
   isWeaponEvolutionScenario,
@@ -109,13 +109,10 @@ const bootstrap = async (): Promise<void> => {
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
-  const requestedWeaponCard = searchParams.get('card');
-  const weaponCardId: UpgradeId | undefined = searchParams.get('debug') === '1'
-    ? requestedWeaponCard === 'pulse-ring'
-      ? 'pulse_ring'
-      : requestedWeaponCard === 'magnetic-charge'
-        ? 'magnetic_charge'
-        : undefined
+  const requestedCardId = searchParams.get('card')?.replaceAll('-', '_');
+  const debugUpgradeId: UpgradeId | undefined = searchParams.get('debug') === '1'
+    && isUpgradeId(requestedCardId)
+    ? requestedCardId
     : undefined;
   const requestedEvolution = searchParams.get('evolution')?.replaceAll('-', '_');
   const evolutionId: WeaponEvolutionId | undefined = searchParams.get('debug') === '1'
@@ -217,7 +214,7 @@ const bootstrap = async (): Promise<void> => {
     && !pulseRingDrill && !pulseRingWeaponDrill && !magneticChargeWeaponDrill && !fractureDrill;
   const weaponPath: WeaponPathId | undefined = searchParams.get('debug') === '1'
     && isWeaponPathId(requestedWeaponPath)
-    && weaponCardId === undefined
+    && debugUpgradeId === undefined
     && evolutionId === undefined
     && evolutionScenario === undefined
     && !stressMode
@@ -278,7 +275,7 @@ const bootstrap = async (): Promise<void> => {
     fractureDrill,
     fractureEnemyKind,
     campaignBuild,
-    weaponCardId,
+    debugUpgradeId,
     evolutionId,
     evolutionScenario,
     weaponPath,
@@ -310,7 +307,7 @@ const bootstrap = async (): Promise<void> => {
       && (!overdriveAutostart || !publicOverdriveUnlocked))
       || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
-      && !magneticChargeWeaponDrill && !fractureDrill && weaponCardId === undefined && evolutionId === undefined
+      && !magneticChargeWeaponDrill && !fractureDrill && debugUpgradeId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined),
     platform
   });

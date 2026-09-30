@@ -1,4 +1,35 @@
 import type { UpgradeId } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponPathId } from '../../content/upgrades/UpgradeDefinitions';
+import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
+import projectileWeaponArtUrl from '../../assets/images/ui/cards/weapons/projectile.webp?url';
+import orbitWeaponArtUrl from '../../assets/images/ui/cards/weapons/orbit.webp?url';
+import chainWeaponArtUrl from '../../assets/images/ui/cards/weapons/chain.webp?url';
+import boomerangWeaponArtUrl from '../../assets/images/ui/cards/weapons/boomerang.webp?url';
+import pulseWeaponArtUrl from '../../assets/images/ui/cards/weapons/pulse-ring.webp?url';
+import magneticWeaponArtUrl from '../../assets/images/ui/cards/weapons/magnetic-charge.webp?url';
+import swiftStepArtUrl from '../../assets/images/ui/cards/non-weapon/swift-step.webp?url';
+import reinforcedCoreArtUrl from '../../assets/images/ui/cards/non-weapon/reinforced-core.webp?url';
+import resonantCoreArtUrl from '../../assets/images/ui/cards/non-weapon/resonant-core.webp?url';
+import regenerativeReactorArtUrl from '../../assets/images/ui/cards/non-weapon/regenerative-reactor.webp?url';
+import vampiricCoreArtUrl from '../../assets/images/ui/cards/non-weapon/vampiric-core.webp?url';
+import criticalImpactArtUrl from '../../assets/images/ui/cards/non-weapon/critical-impact.webp?url';
+import rechargingShieldArtUrl from '../../assets/images/ui/cards/non-weapon/recharging-shield.webp?url';
+import hardenedShellArtUrl from '../../assets/images/ui/cards/non-weapon/hardened-shell.webp?url';
+import universalMasteryArtUrl from '../../assets/images/ui/cards/non-weapon/universal-mastery.webp?url';
+import overdriveRepairArtUrl from '../../assets/images/ui/cards/non-weapon/overdrive-repair.webp?url';
+import overdriveNovaArtUrl from '../../assets/images/ui/cards/non-weapon/overdrive-nova.webp?url';
+import railLanceArtUrl from '../../assets/images/ui/evolutions/rail-lance.webp?url';
+import pulseVolleyArtUrl from '../../assets/images/ui/evolutions/pulse-volley.webp?url';
+import solarCrownArtUrl from '../../assets/images/ui/evolutions/solar-crown.webp?url';
+import gravitonHaloArtUrl from '../../assets/images/ui/evolutions/graviton-halo.webp?url';
+import closedCircuitArtUrl from '../../assets/images/ui/evolutions/closed-circuit.webp?url';
+import thunderheadArtUrl from '../../assets/images/ui/evolutions/thunderhead.webp?url';
+import twinCometArtUrl from '../../assets/images/ui/evolutions/twin-comet.webp?url';
+import singularityReturnArtUrl from '../../assets/images/ui/evolutions/singularity-return.webp?url';
+import echoShockArtUrl from '../../assets/images/ui/evolutions/echo-shock.webp?url';
+import compressionWaveArtUrl from '../../assets/images/ui/evolutions/compression-wave.webp?url';
+import eventHorizonArtUrl from '../../assets/images/ui/evolutions/event-horizon.webp?url';
+import polarCollapseArtUrl from '../../assets/images/ui/evolutions/polar-collapse.webp?url';
 
 export type UpgradeCardIconId =
   | 'speed'
@@ -30,11 +61,60 @@ export type UpgradeCardIconId =
 
 export type UpgradeCardTone = 'cyan' | 'gold' | 'violet' | 'amber' | 'rose' | 'mint';
 
+export interface UpgradeCardIllustration {
+  readonly src: string;
+  readonly label: string;
+}
+
 export interface UpgradeCardVisual {
   readonly icon: UpgradeCardIconId;
   readonly tone: UpgradeCardTone;
   readonly category: string;
+  readonly illustration?: {
+    readonly src: string;
+    readonly label: string;
+  };
 }
+
+export type SelectedWeaponEvolutions = Readonly<Partial<Record<WeaponPathId, WeaponEvolutionId>>>;
+
+const WEAPON_ILLUSTRATIONS: Readonly<Record<WeaponPathId, UpgradeCardIllustration>> = {
+  projectile: { src: projectileWeaponArtUrl, label: 'PULSO · PROYECTIL' },
+  orbit: { src: orbitWeaponArtUrl, label: 'ÓRBITA · CONTACTO' },
+  chain: { src: chainWeaponArtUrl, label: 'ENLACES · RAYO' },
+  boomerang: { src: boomerangWeaponArtUrl, label: 'IDA · REGRESO' },
+  pulse_ring: { src: pulseWeaponArtUrl, label: 'ONDA · EMPUJE' },
+  magnetic_charge: { src: magneticWeaponArtUrl, label: 'ATRACCIÓN · DETONACIÓN' }
+};
+
+const EVOLUTION_ILLUSTRATIONS: Readonly<Record<WeaponEvolutionId, UpgradeCardIllustration>> = {
+  rail_lance: { src: railLanceArtUrl, label: 'PRECISIÓN · PERFORACIÓN' },
+  pulse_volley: { src: pulseVolleyArtUrl, label: 'ABANICO · COBERTURA' },
+  solar_crown: { src: solarCrownArtUrl, label: 'FULGOR · ÓRBITA' },
+  graviton_halo: { src: gravitonHaloArtUrl, label: 'GRAVEDAD · CONTROL' },
+  closed_circuit: { src: closedCircuitArtUrl, label: 'RED · CIRCUITO CERRADO' },
+  thunderhead: { src: thunderheadArtUrl, label: 'DESCARGA · EXPLOSIÓN' },
+  twin_comet: { src: twinCometArtUrl, label: 'QUINTETO · RETORNO' },
+  singularity_return: { src: singularityReturnArtUrl, label: 'GRUPO · COLAPSO' },
+  echo_shock: { src: echoShockArtUrl, label: 'ECO · IDA Y VUELTA' },
+  compression_wave: { src: compressionWaveArtUrl, label: 'FRENTE · EMPUJE' },
+  event_horizon: { src: eventHorizonArtUrl, label: 'ATRACCIÓN · DAÑO SOSTENIDO' },
+  polar_collapse: { src: polarCollapseArtUrl, label: 'ARRASTRE · DOBLE IMPACTO' }
+};
+
+const NON_WEAPON_ILLUSTRATIONS: Readonly<Partial<Record<UpgradeId, UpgradeCardIllustration>>> = {
+  swift_step: { src: swiftStepArtUrl, label: 'MOVILIDAD · IMPULSO' },
+  reinforced_core: { src: reinforcedCoreArtUrl, label: 'NÚCLEO · VIDA MÁXIMA' },
+  resonant_core: { src: resonantCoreArtUrl, label: 'EXPERIENCIA · RESONANCIA' },
+  regenerative_reactor: { src: regenerativeReactorArtUrl, label: 'RECUPERACIÓN · REGENERACIÓN' },
+  vampiric_core: { src: vampiricCoreArtUrl, label: 'SUPERVIVENCIA · VAMPIRISMO' },
+  critical_impact: { src: criticalImpactArtUrl, label: 'ARSENAL · IMPACTO CRÍTICO' },
+  recharging_shield: { src: rechargingShieldArtUrl, label: 'DEFENSA · ESCUDO' },
+  hardened_shell: { src: hardenedShellArtUrl, label: 'DEFENSA · ARMADURA' },
+  universal_weapon_mastery: { src: universalMasteryArtUrl, label: 'MAESTRÍA · CALIBRACIÓN' },
+  overdrive_repair: { src: overdriveRepairArtUrl, label: 'OVERDRIVE · REPARACIÓN' },
+  overdrive_nova: { src: overdriveNovaArtUrl, label: 'OVERDRIVE · NOVA' }
+};
 
 const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   swift_step: { icon: 'speed', tone: 'cyan', category: 'MOVILIDAD' },
@@ -124,8 +204,14 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   overdrive_power_magnetic_charge: { icon: 'horizon', tone: 'gold', category: 'OVERDRIVE · MAGNÉTICA' },
   overdrive_repair: { icon: 'repair', tone: 'mint', category: 'OVERDRIVE · RECUPERACIÓN' },
   overdrive_nova: { icon: 'core', tone: 'rose', category: 'OVERDRIVE CONVERSION' },
-  rail_lance: { icon: 'rail', tone: 'gold', category: 'EVOLUCION' },
-  pulse_volley: { icon: 'volley', tone: 'cyan', category: 'EVOLUCION' },
+  rail_lance: {
+    icon: 'rail', tone: 'gold', category: 'EVOLUCIÓN',
+    illustration: { src: railLanceArtUrl, label: 'PRECISIÓN · PERFORACIÓN' }
+  },
+  pulse_volley: {
+    icon: 'volley', tone: 'cyan', category: 'EVOLUCIÓN',
+    illustration: { src: pulseVolleyArtUrl, label: 'ABANICO · COBERTURA' }
+  },
   solar_crown: { icon: 'crown', tone: 'gold', category: 'EVOLUCION' },
   graviton_halo: { icon: 'gravity', tone: 'violet', category: 'EVOLUCION' },
   closed_circuit: { icon: 'circuit', tone: 'cyan', category: 'EVOLUCION' },
@@ -138,4 +224,50 @@ const UPGRADE_CARD_VISUALS: Record<UpgradeId, UpgradeCardVisual> = {
   polar_collapse: { icon: 'collapse', tone: 'gold', category: 'EVOLUCION' }
 };
 
-export const getUpgradeCardVisual = (upgradeId: UpgradeId): UpgradeCardVisual => UPGRADE_CARD_VISUALS[upgradeId];
+const getWeaponFamilyForUpgrade = (upgradeId: UpgradeId): WeaponPathId | null => {
+  if (upgradeId === 'focused_projectiles' || upgradeId === 'twin_emitters' || upgradeId === 'rapid_projectiles') {
+    return 'projectile';
+  }
+  if (upgradeId === 'orbit_blade' || upgradeId === 'orbit_reach') return 'orbit';
+  if (upgradeId === 'chain_lightning' || upgradeId === 'chain_overload') return 'chain';
+  if (upgradeId === 'vector_boomerang') return 'boomerang';
+  if (upgradeId === 'pulse_ring') return 'pulse_ring';
+  if (upgradeId === 'magnetic_charge') return 'magnetic_charge';
+
+  for (const family of ['projectile', 'orbit', 'chain', 'boomerang', 'pulse_ring', 'magnetic_charge'] as const) {
+    if (upgradeId.startsWith(`${family}_`)) return family;
+  }
+
+  if (upgradeId.startsWith('overdrive_power_')) {
+    const suffix = upgradeId.slice('overdrive_power_'.length);
+    if (suffix === 'projectile' || suffix === 'orbit' || suffix === 'chain' || suffix === 'boomerang'
+      || suffix === 'pulse_ring' || suffix === 'magnetic_charge') return suffix;
+  }
+  return null;
+};
+
+export const getUpgradeCardVisual = (
+  upgradeId: UpgradeId,
+  selectedEvolutions: SelectedWeaponEvolutions = {}
+): UpgradeCardVisual => {
+  const visual = UPGRADE_CARD_VISUALS[upgradeId];
+  const evolutionArt = EVOLUTION_ILLUSTRATIONS[upgradeId as WeaponEvolutionId];
+  if (evolutionArt) {
+    return { ...visual, illustration: evolutionArt };
+  }
+
+  const family = getWeaponFamilyForUpgrade(upgradeId);
+  if (family !== null) {
+    const isPostEvolutionMastery = upgradeId.includes('_mastery_') || upgradeId.startsWith('overdrive_power_');
+    const selectedEvolution = isPostEvolutionMastery ? selectedEvolutions[family] : undefined;
+    const illustration = selectedEvolution
+      ? EVOLUTION_ILLUSTRATIONS[selectedEvolution]
+      : WEAPON_ILLUSTRATIONS[family];
+    const evolvedIcon = selectedEvolution ? UPGRADE_CARD_VISUALS[selectedEvolution].icon : visual.icon;
+    return { ...visual, icon: evolvedIcon, illustration };
+  }
+
+  const illustration = NON_WEAPON_ILLUSTRATIONS[upgradeId];
+  if (!illustration) throw new Error(`Falta ilustración para la carta ${upgradeId}`);
+  return { ...visual, illustration };
+};

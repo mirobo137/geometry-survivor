@@ -3,12 +3,15 @@ import type { UpgradePreview, UpgradePreviewStat } from '../../simulation/progre
 import cardFrameSvg from '../../assets/svg/ui/level-up/premium-card-frame.svg?raw';
 import upgradeIconsSvg from '../../assets/svg/ui/level-up/premium-icons.svg?raw';
 import { getUpgradeCardVisual } from './UpgradeCardVisual';
+import type { UpgradeCardVisual } from './UpgradeCardVisual';
 import type { LevelUpCardInteraction, LevelUpCardLayout } from './LevelUpCardInteraction';
 import type { WeaponPathId } from '../../content/upgrades/UpgradeDefinitions';
 import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
+import './evolution-art.css';
 
 export type UpgradeSelectionHandler = (upgradeId: UpgradeId) => void;
 export type UpgradePreviewProvider = (upgrade: UpgradeDefinition) => UpgradePreview | null;
+export type UpgradeCardVisualProvider = (upgrade: UpgradeDefinition) => UpgradeCardVisual;
 export type LevelUpInteractionHandler = (interaction: LevelUpCardInteraction) => void;
 export type RerollHandler = () => void;
 
@@ -83,6 +86,8 @@ export class LevelUpOverlay {
   private selectionTimer: number | null = null;
   private rerollHandler: RerollHandler | null = null;
   private backHandler: (() => void) | null = null;
+  /** A presentation-only comparison URL; it never changes offers or combat. */
+  private readonly illustratedArtEnabled = new URLSearchParams(window.location.search).get('card-art') !== 'svg';
 
   public constructor(root: HTMLElement) {
     const title = root.querySelector<HTMLElement>('#level-up-title');
@@ -124,7 +129,8 @@ export class LevelUpOverlay {
     getPreview: UpgradePreviewProvider = () => null,
     onInteraction?: LevelUpInteractionHandler,
     rewarded: LevelUpRewardedOptions = {},
-    navigation: LevelUpNavigationOptions = {}
+    navigation: LevelUpNavigationOptions = {},
+    getCardVisual: UpgradeCardVisualProvider = (choice) => getUpgradeCardVisual(choice.id)
   ): void {
     this.cancelPendingSelection();
     const isEvolutionOffer = choices.length === 2
@@ -142,10 +148,14 @@ export class LevelUpOverlay {
         : null;
     const familyLabel = family === null ? 'arma' : getWeaponFamilyLabel(family);
     this.options.dataset.choiceCount = String(choices.length);
+    this.root.dataset.cardArt = this.illustratedArtEnabled
+      && choices.some(choice => getCardVisual(choice).illustration)
+      ? 'illustrated'
+      : 'svg';
     this.title.textContent = isEvolutionOffer
-      ? `Nivel ${level} Â· EVOLUCION`
+      ? `Nivel ${level} · EVOLUCIÓN`
       : isEvolutionGateOffer
-        ? `Nivel ${level} Â· EVOLUCION DISPONIBLE`
+        ? `Nivel ${level} · EVOLUCIÓN DISPONIBLE`
         : isMasteryTargetOffer
           ? `Nivel ${level} · MAESTRÍA`
           : `Nivel ${level}`;
@@ -170,7 +180,7 @@ export class LevelUpOverlay {
     }
     this.options.replaceChildren();
     choices.forEach((choice, index) => {
-      const visual = getUpgradeCardVisual(choice.id);
+      const visual = getCardVisual(choice);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'upgrade-card';
@@ -227,6 +237,43 @@ export class LevelUpOverlay {
       description.className = 'upgrade-card-description';
       description.textContent = choice.description;
       content.append(meta, icon, title, description);
+      if (this.illustratedArtEnabled && visual.illustration) {
+        button.dataset.presentation = 'illustrated';
+        const art = document.createElement('span');
+        art.className = 'upgrade-card-art';
+        art.setAttribute('aria-hidden', 'true');
+        const image = document.createElement('img');
+        image.alt = '';
+        image.width = 768;
+        image.height = 384;
+        image.decoding = 'async';
+        image.draggable = false;
+        const label = document.createElement('span');
+        label.className = 'upgrade-card-art-label';
+        label.textContent = visual.illustration.label;
+        const action = document.createElement('span');
+        action.className = 'upgrade-card-art-action';
+        action.textContent = choice.effect.type === 'weaponEvolution'
+          ? 'ELEGIR EVOLUCIÓN ↗'
+          : choice.effect.type === 'evolutionOffer'
+            ? 'VER EVOLUCIONES ↗'
+            : choice.effect.type === 'universalWeaponMastery'
+              ? 'ELEGIR ARMA ↗'
+              : 'ELEGIR MEJORA ↗';
+        action.setAttribute('aria-hidden', 'true');
+        // The original icon is also the fallback; a failed image never hides
+        // the description or prevents choosing an evolution.
+        art.append(image, label, icon);
+        content.insertBefore(art, title);
+        content.append(action);
+        image.addEventListener('error', () => {
+          delete button.dataset.presentation;
+          content.insertBefore(icon, title);
+          art.remove();
+          action.remove();
+        }, { once: true });
+        image.src = visual.illustration.src;
+      }
       const preview = getPreview(choice);
       if (preview) {
         const values = document.createElement('small');

@@ -1,7 +1,7 @@
 # Laboratorio de meta — contrato V2
 
 Estado: progresión implementada localmente; árbol UI automático OK, revisión
-visual/táctil del usuario pendiente.
+visual/táctil y pruebas humanas aplazadas por solicitud del usuario (29-09-2026).
 Última actualización: 29-09-2026.
 
 Este documento reemplaza el contrato de la tienda permanente V1. Es la fuente
@@ -198,3 +198,24 @@ rewarded y después los resultados con `?ad=dismissed` y `?ad=unavailable`.
 La aprobación final del equilibrio de los topes y costes requiere juego manual.
 El ritmo futuro de Overdrive por puntos debe medir NOVA/minuto antes de
 recalibrar estos precios; no duplicar ingresos por anticipado.
+
+### Recordatorio: pruebas manuales aplazadas
+
+El 29-09-2026 el usuario pide dejar el Laboratorio en pausa y probarlo después.
+Las pruebas automáticas ya registradas no sustituyen esta aceptación humana.
+Al retomar, comprobar:
+
+- [ ] PC y móvil físico: lectura de iconos y ofertas, arrastre, zoom, pinch,
+  recentrado y acceso a la isla de Vitalidad sin bloquear otros controles.
+- [ ] Modal: efecto y coste comprensibles; cerrar por botón, exterior y Escape
+  en teclado; comprar, mostrar el rango siguiente y respetar el saldo.
+- [ ] Recargar: conservar NOVA, rangos, ofertas y contador de compras.
+- [ ] Vitalidad: habilitar tras tres compras NOVA; conceder una sola vez por
+  anuncio exitoso y no conceder al cancelar o no disponer de anuncio.
+- [ ] Actos y Overdrive: aplicar las mejoras compradas y mostrar en las cartas
+  el daño que incluye las bonificaciones permanentes; revisar topes y costes
+  jugando antes de declararlos aprobados.
+
+No reiniciar el Laboratorio, cambiar sus precios ni ampliar topes al retomar
+sin una solicitud o evidencia nueva. El baseline aprobado de enemigos/bosses
+continúa vigente.

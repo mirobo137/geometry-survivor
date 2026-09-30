@@ -73,6 +73,7 @@ export class PixiGameView {
     this.terminalFxView = new TerminalFxView(renderer, quality);
     this.world.addChild(
       this.arenaView.root,
+      this.weaponView.magneticChargeUnderlay,
       this.entitiesView.root,
       this.weaponView.root,
       this.hazardView.root,

@@ -38,6 +38,9 @@ const MAGNETIC_CHARGE_VIOLET = 0xb77cff;
 const MAGNETIC_CHARGE_GOLD = 0xffd478;
 const MAGNETIC_CHARGE_WHITE = 0xf1fbff;
 const MAGNETIC_CHARGE_CORE_SPRITE_SCALE = 0.85;
+// Register each generated texture to its visual focal point instead of its canvas midpoint.
+const MAGNETIC_CHARGE_CORE_FOCAL_ANCHOR = { x: 0.4907, y: 0.4938 };
+const MAGNETIC_DETONATION_APERTURE_ANCHOR = { x: 0.5075, y: 0.5023 };
 const MAGNETIC_FIELD_ART_RADIUS = 110.5;
 const MAGNETIC_DETONATION_ART_RADIUS = 110.3;
 const FULL_CIRCLE = Math.PI * 2;
@@ -124,6 +127,8 @@ const createOrbitTextures = (renderer: Renderer): Readonly<Record<'wake' | 'aura
 
 export class WeaponView {
   public readonly root = new Container();
+  /** Rendered below combat entities so the effect does not obscure enemy sprites. */
+  public readonly magneticChargeUnderlay = new Container();
   private readonly orbitLayer = new Container();
   private readonly orbitPulseLayer = new Graphics();
   private readonly chainLayer = new Graphics();
@@ -139,7 +144,6 @@ export class WeaponView {
   private readonly pulseRingActiveEdge = new Graphics();
   private readonly pulseRingMarkers = new Graphics();
   private readonly pulseRingResidue = new Graphics();
-  private readonly magneticChargeLayer = new Container();
   private readonly magneticChargeTrail = new Graphics();
   private readonly magneticChargeBeacon = new Graphics();
   private readonly magneticChargeField = new Graphics();
@@ -179,8 +183,7 @@ export class WeaponView {
       this.chainImpactLayer,
       this.chainPulseLayer,
       this.boomerangLayer,
-      this.pulseRingLayer,
-      this.magneticChargeLayer
+      this.pulseRingLayer
     );
     for (const sprite of [
       this.magneticChargeTravelSprite,
@@ -191,6 +194,14 @@ export class WeaponView {
       sprite.anchor.set(0.5);
       sprite.visible = false;
     }
+    this.magneticChargeCoreSprite.anchor.set(
+      MAGNETIC_CHARGE_CORE_FOCAL_ANCHOR.x,
+      MAGNETIC_CHARGE_CORE_FOCAL_ANCHOR.y
+    );
+    this.magneticChargeDetonationSprite.anchor.set(
+      MAGNETIC_DETONATION_APERTURE_ANCHOR.x,
+      MAGNETIC_DETONATION_APERTURE_ANCHOR.y
+    );
     this.pulseRingLayer.addChild(
       this.pulseRingTrack,
       this.pulseRingActiveShell,
@@ -201,7 +212,7 @@ export class WeaponView {
       this.pulseRingMarkers,
       this.pulseRingResidue
     );
-    this.magneticChargeLayer.addChild(
+    this.magneticChargeUnderlay.addChild(
       this.magneticChargeTrail,
       this.magneticChargeBeacon,
       this.magneticChargeField,
@@ -490,7 +501,7 @@ export class WeaponView {
     this.chainImpactLayer.visible = false;
     this.chainPulseLayer.visible = false;
     this.pulseRingLayer.visible = false;
-    this.magneticChargeLayer.visible = false;
+    this.magneticChargeUnderlay.visible = false;
     this.orbitPulseLayer.visible = false;
     this.orbitPulseLayer.clear();
     this.boomerangPulseLayer.visible = false;
@@ -609,16 +620,16 @@ export class WeaponView {
     state: CombatRenderState['magneticCharge'] | undefined
   ): void {
     if (!state?.active) {
-      this.magneticChargeLayer.visible = false;
+      this.magneticChargeUnderlay.visible = false;
       return;
     }
     if (state.sequence !== this.magneticChargeSequence) this.buildMagneticChargeSequence(state);
-    // The image prototype covers the base weapon only. Evolutions retain their
-    // current Graphics rendering until the base visuals pass human review.
+    // The PNG art covers the base weapon only. Evolutions retain their current
+    // Graphics rendering pending a separate visual review.
     if (!state.evolution) this.requestMagneticChargeImagePack();
 
-    this.magneticChargeLayer.visible = true;
-    this.magneticChargeLayer.position.set(0, 0);
+    this.magneticChargeUnderlay.visible = true;
+    this.magneticChargeUnderlay.position.set(0, 0);
     if (!state.evolution && this.magneticChargeImagePackReady) {
       this.renderMagneticChargeImages(state);
       return;

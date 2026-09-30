@@ -214,7 +214,7 @@ describe('WeaponView', () => {
     };
     const lowView = new WeaponView(fakeRenderer, undefined, 'low');
     lowView.render(combat);
-    const lowLayer = lowView.root.children[6];
+    const lowLayer = lowView.magneticChargeUnderlay;
     expect(lowLayer.visible).toBe(true);
     expect(lowLayer.children).toHaveLength(12);
     expect(lowLayer.children[4].visible).toBe(true); // the complete vector detonation remains available as fallback.
@@ -226,7 +226,7 @@ describe('WeaponView', () => {
 
     const highView = new WeaponView(fakeRenderer, undefined, 'high');
     highView.render(combat);
-    const highLayer = highView.root.children[6];
+    const highLayer = highView.magneticChargeUnderlay;
     expect(highLayer.visible).toBe(true);
     expect(highLayer.children[4].visible).toBe(true);
     for (const index of [1, 2, 3, 4, 5, 7]) {
@@ -295,7 +295,7 @@ describe('WeaponView', () => {
 
     const pulseLayer = view.root.children[5];
     for (const index of [2, 3, 4, 5, 6]) expect(pulseLayer.children[index].rotation).toBe(0);
-    const magneticLayer = view.root.children[6];
+    const magneticLayer = view.magneticChargeUnderlay;
     const polarBand = magneticLayer.children[4];
     const polarRails = magneticLayer.children[5];
     expect(polarBand.rotation).toBe(0);

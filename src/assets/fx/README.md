@@ -27,7 +27,14 @@ renderer switches the whole base effect to its existing Graphics version; it
 does not combine an incomplete PNG set with vector layers. Low keeps every
 functional part of the image cycle with lower opacity. The separate Event
 Horizon and Polar Collapse evolutions remain on their existing vector path
-until this base prototype is reviewed.
+pending a separate visual review.
+
+The core and detonation sprites use anchors registered to the bright core and
+the center of the detonation aperture, respectively, so their focal points
+coincide despite small offsets inside the generated canvases: `(0.4907, 0.4938)`
+for the core and `(0.5075, 0.5023)` for the detonation. Magnetic Charge is
+rendered below combat entities, keeping enemy silhouettes in front of the
+field and detonation.
 
 | Runtime image | Size / bytes | Master | Use |
 |---|---:|---:|---|

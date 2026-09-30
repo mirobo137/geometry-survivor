@@ -4639,5 +4639,15 @@ test / 528 pruebas y build Vite); smoke Playwright del arma en Low/High (2/2),
 con las cuatro respuestas de imágenes comprobadas en cada preset. La captura de
 browser confirma el anillo de detonación y el uso del drill; no se midió FPS ni
 se certifica rendimiento en un teléfono físico. Revisión humana aprobada para
-probar esta versión desplegada; la siguiente decisión depende de validar el
-comportamiento visual en el juego publicado.
+probar esta versión desplegada. Event Horizon y Polar Collapse siguen
+vectoriales; la adaptación de sus efectos requiere una revisión separada.
+
+## 96. Corrección de registro y profundidad de Magnetic Charge — 30-09-2026
+
+La revisión de la versión desplegada encontró que el núcleo quedaba unos
+píxeles fuera del centro óptico de la abertura de detonación y que el efecto
+se dibujaba por encima de los enemigos. El núcleo y el anillo usan ahora
+anchors registrados a sus focos visibles, y el contenedor de Magnetic Charge
+se dibuja debajo de las entidades para mantener a los enemigos al frente.
+Vista previa local: `test-results/magnetic-charge-centering-fix-final.png`.
+Corrección aprobada por el usuario para publicar en `main`.

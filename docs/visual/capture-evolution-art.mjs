@@ -49,6 +49,13 @@ try {
         && (index === 0 || parts[index - 1].bottom <= part.top + 1));
     }));
     assert.ok(clearLayout, `${name}: illustrated card overlaps or clips text`);
+    if (name === 'mobile') {
+      const cardsFit = await page.locator('#level-up-options button').evaluateAll(buttons => buttons.every(button => {
+        const bounds = button.getBoundingClientRect();
+        return bounds.top >= 0 && bounds.bottom <= innerHeight;
+      }));
+      assert.ok(cardsFit, 'mobile evolution offer: both enlarged vertical cards should fit without scrolling');
+    }
     await page.screenshot({ path: `${output}/${name}-illustrated.png` });
     const secondChoice = page.locator('[data-upgrade-id="pulse_volley"]');
     await secondChoice.scrollIntoViewIfNeeded();
@@ -88,6 +95,22 @@ try {
         && (index === 0 || parts[index - 1].bottom <= part.top + 1));
     }));
     assert.ok(contentFits, `${name}: illustrated upgrade card content overlaps or clips`);
+    if (name === 'standard-mobile') {
+      const cardsFit = await page.locator('#level-up-options button').evaluateAll(buttons => buttons.every(button => {
+        const bounds = button.getBoundingClientRect();
+        return bounds.top >= 0 && bounds.bottom <= innerHeight;
+      }));
+      assert.ok(cardsFit, 'standard mobile: all three illustrated cards should fit without scrolling');
+      const categoriesOverlayArt = await page.locator('#level-up-options button').evaluateAll(buttons => buttons.every(button => {
+        const metaElement = button.querySelector('.upgrade-card-meta');
+        const artElement = button.querySelector('.upgrade-card-art');
+        if (!metaElement || !artElement) return false;
+        const meta = metaElement.getBoundingClientRect();
+        const art = artElement.getBoundingClientRect();
+        return meta.top >= art.top && meta.bottom <= art.bottom && meta.left >= art.left && meta.right <= art.right;
+      }));
+      assert.ok(categoriesOverlayArt, 'standard mobile: card category and index should be over the image');
+    }
     await page.screenshot({ path: `${output}/${name}.png` });
     if (name === 'standard-mobile-small') {
       const scrollable = await page.locator('#level-up-options button').last().evaluate(button => {

@@ -129,22 +129,103 @@
 
 @media (max-width: 48rem) {
   #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-content {
-    padding: 0.85rem;
+    position: relative;
+    grid-template-rows: auto auto auto auto auto;
+    grid-template-areas: "art" "title" "description" "preview" "action";
+    padding: 0.55rem;
+  }
+
+  #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-meta {
+    position: absolute;
+    grid-area: auto;
+    z-index: 3;
+    top: 0.85rem;
+    right: 0.82rem;
+    left: 0.82rem;
+    padding: 0.25rem 0.35rem;
+    border: 1px solid rgba(220, 241, 255, 0.14);
+    border-radius: 0.28rem;
+    background: linear-gradient(90deg, rgba(4, 9, 18, 0.82), rgba(4, 9, 18, 0.48));
+    text-shadow: 0 1px 4px #000;
+    pointer-events: none;
   }
 
   #level-up-options button.upgrade-card .upgrade-card-art {
-    margin: 0.6rem 0 0.65rem;
+    aspect-ratio: 4 / 1;
+    margin: 0.3rem 0 0.35rem;
+  }
+
+  #level-up-options button.upgrade-card .upgrade-card-art img {
+    width: 88%;
+    margin-inline: auto;
+    object-position: center center;
+  }
+
+  #level-up-options button.upgrade-card .upgrade-card-art-label {
+    display: none;
+  }
+
+  #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-title {
+    font-size: clamp(1.08rem, 4.6vw, 1.25rem);
   }
 
   #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-description {
     min-height: 0;
-    font-size: 0.82rem;
-    padding-top: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.28;
+    padding-top: 0.25rem;
+  }
+
+  #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-preview {
+    margin-top: 0.35rem;
   }
 
   #level-up-options button.upgrade-card .upgrade-card-art-action {
-    margin-top: 0.65rem;
-    padding-top: 0.6rem;
-    font-size: 0.64rem;
+    margin-top: 0.45rem;
+    padding-top: 0.4rem;
+    font-size: 0.62rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-content {
+    padding: 0.75rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card .upgrade-card-art {
+    aspect-ratio: 2.8 / 1;
+    margin: 0.45rem 0 0.55rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card .upgrade-card-art img {
+    width: 100%;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card .upgrade-card-art-label {
+    display: block;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-meta {
+    top: 1.2rem;
+    right: 1.02rem;
+    left: 1.02rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-title {
+    font-size: clamp(1.2rem, 5.1vw, 1.45rem);
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-description {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    padding-top: 0.35rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card[data-presentation="illustrated"] .upgrade-card-preview {
+    margin-top: 0.45rem;
+  }
+
+  #level-up[data-offer-kind="evolution"] #level-up-options button.upgrade-card .upgrade-card-art-action {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    font-size: 0.66rem;
   }
 }

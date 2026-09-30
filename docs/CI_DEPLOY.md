@@ -31,6 +31,50 @@ Fuentes oficiales: [Playwright CI](https://playwright.dev/docs/ci),
 [jobs dependientes de GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs),
 [facturación de Actions](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 
+## Smoke 8: presupuesto acumulado de Inicio — 30-09-2026
+
+El reporte aportado agota el límite global de 60 s en dos puntos distintos:
+después de pulsar Jugar y durante la espera de una imagen al redimensionar.
+Eso no demuestra que Jugar deje de funcionar ni que esa imagen tarde 60 s;
+falta la traza del runner para atribuir un bloqueo específico. El caso reunía
+boot retenido, carga de arte, movimiento, tres consolas, cuatro viewports,
+ocho clicks de ajustes e inicio de partida bajo un único presupuesto.
+
+Se separó en dos casos independientes por proyecto (dos casos adicionales
+en el total, no uno por tamaño). `cubre la carga desde HTML...` conserva
+boot, navegación, movimiento acotado/reduced-motion e inicio real;
+`adapta portada y controles al rotar...` conserva los cuatro tamaños,
+currentSrc interior/exterior, carga correcta de ambas imágenes, targets ≥44 px,
+texto/overflow, abrir/cerrar ajustes e inicio después de rotar a portrait.
+El segundo desactiva movimiento antes de cargar. Cada viewport aparece como
+test.step en HTML/traza para localizar dónde se consume el tiempo.
+No se eliminan aserciones, no se fuerza ningún click y no se amplían timeouts,
+reintentos ni la cantidad de workers. El workflow continúa bloqueando el deploy
+si falla cualquier shard; no hubo cambios de producción para tapar el test.
+
+Comparación local en Chromium Pixel 5, CPU ralentizada 8× mediante CDP:
+el caso original pasó en 49.4 s; separados pasaron dos veces cada uno,
+boot/navegación 24.2/24.1 s y responsive 33.9/33.8 s. La ralentización es
+un diagnóstico reproducible de margen, no una réplica de Ubuntu ni una medida
+de FPS/memoria del juego. El total incluye un boot extra por proyecto;
+el objetivo es limitar duración por caso y permitir su reparto entre shards,
+no prometer menos minutos acumulados de runner.
+
+El shard 8 completo pasó localmente con `CI=true`: 9/9 en 1.2 min, sin
+reintentos. Se usó la configuración de producción salvo el arranque de preview:
+se levantó manualmente con el loader runner por la restricción local de OneDrive.
+La suite vigente enumera 75 casos y el reparto sigue siendo de ocho shards.
+La configuración/copia temporal del diagnóstico no forma parte de la entrega.
+Los dos casos de Inicio pasaron también en desktop con CI=true (16.7 s en
+total); typecheck, build local y los 528 tests unitarios siguen correctos.
+Permanece el warning previo de chunk JS >500 kB, no causante de este timeout.
+GitHub debe confirmar el próximo run; este resultado no es un deploy remoto.
+
+Fuentes oficiales consultadas el 30-09-2026:
+[presupuesto completo por test](https://playwright.dev/docs/test-timeouts),
+[casos independientes](https://playwright.dev/docs/test-parameterize) y
+[sesiones CDP](https://playwright.dev/docs/api/class-cdpsession).
+
 ## Smoke 4: duplicado de progresión Projectile — 28-09-2026
 
 El shard 4 agotó el timeout de 35 s mientras esperaba la primera subida de

@@ -116,19 +116,22 @@ de OneDrive:
 npm run typecheck
 npx vite build --mode development --configLoader runner
 npx vite preview --mode development --host 127.0.0.1 --port 4173 --strictPort --configLoader runner
-npx playwright test --project=desktop --grep "cubre la carga desde HTML|recuerda la ultima ruta|consolas premium sin solaparse a 1280x720"
+npx playwright test --grep "cubre la carga desde HTML|adapta portada y controles"
 ```
 
-El smoke de Inicio mantiene la comprobación de movimiento bounded, pausa de
+Los smokes de Inicio mantienen la comprobación de movimiento bounded, pausa de
 decoración en consolas/reduced-motion, targets ≥44 px y texto dentro de botones.
-Comprueba también la variante correspondiente en cuatro viewports y que el
+Comprueban también la variante correspondiente en cuatro viewports y que el
 exterior/interior compartan currentSrc. Hay cinco superficies móviles acotadas
 (nave + luces), siete en escritorio Medium/High y cinco en Low; cero cuando
 se oculta Inicio o se activa reduced-motion.
 El límite de la nave sustituyó el viejo badge de <210 px: ahora ≤340 px contando
 rotación, manteniendo prohibida la animación de capas grandes. El smoke de ruta
 persistente comprueba también el nombre mostrado bajo Jugar. No se aumenta el
-timeout ni se añade un nuevo arranque WebGL sólo para esta portada.
+timeout. Desde el 30-09-2026, boot/movimiento y la matriz de tamaños tienen
+presupuestos independientes: un boot adicional por proyecto evita acumular
+toda la UI bajo un solo límite de 60 s. No se retira cobertura ni se añade
+un caso por tamaño. Diagnóstico y límites: [CI](../../../../../docs/CI_DEPLOY.md).
 
 Validaciones medidas y pendientes: consultar el snapshot vigente en
 [CONTINUACION.md](../../../../../CONTINUACION.md). No se certifican FPS, memoria

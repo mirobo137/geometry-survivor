@@ -1,5 +1,30 @@
 # Geometry Survivor — estado y continuación
 
+## Pages: smoke 8 de Inicio acotado — 30-09-2026
+
+El usuario aportó un fallo móvil que agotó los 60 s primero después de Jugar
+y en el retry al esperar la variante de imagen. No se dispone de la traza remota;
+no atribuir esos 60 s al botón ni afirmar un crash. El test juntaba boot,
+animaciones, tres consolas, cuatro tamaños, ajustes e inicio real.
+Se separó en dos casos por proyecto, manteniendo todas las comprobaciones y
+el timeout/retry vigentes. El caso responsive usa reduced-motion desde antes
+del boot y termina en portrait, iniciando después de rotar. Ahora comprueba
+también carga correcta de la imagen exterior. No se modificó producción ni el
+workflow, y ninguna prueba dejó de ser puerta para publicar.
+
+Comparación local Pixel 5 con CPU ralentizada 8×: original 49.4 s;
+boot/navegación 24.2/24.1 s y responsive 33.9/33.8 s, dos pases de cada uno.
+Shard 8 completo con CI=true: 9/9 en 1.2 min, sin reintentos. Preview manual
+con loader runner por OneDrive; el resto de configuración coincide con CI.
+Dos smokes desktop con CI=true: 2/2 en 16.7 s; typecheck, build local y 528
+tests unitarios correctos. Warning JS >500 kB previo, sin cambio. Suite browser
+vigente 75 casos. El coste total incorpora
+un boot extra por proyecto, repartible entre shards; no prometer menos minutos
+acumulados ni equiparar el diagnóstico 8× a Ubuntu. Contrato:
+[CI y deploy](docs/CI_DEPLOY.md#smoke-8-presupuesto-acumulado-de-inicio--30-09-2026).
+Falta confirmar el run real de GitHub. Sin commit/push; Laboratorio humano
+continúa aplazado.
+
 ## Inicio: variante vertical y atmósfera exterior — 30-09-2026
 
 El usuario aprobó la propuesta de una composición específica para el menú

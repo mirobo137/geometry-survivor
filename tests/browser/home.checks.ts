@@ -184,38 +184,62 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
       await page.locator(`#start-${section}-back`).click();
       await expect.poll(activeSurfaces).toHaveLength(motionCount);
     }
-    // Motion was asserted above. Freeze it while exercising every responsive
-    // button so CI never waits for a moving target during scroll/click.
+    // Boot/motion/navigation and the four-size matrix must not share one 60s
+    // budget on a software-rendered CI runner. Keep a real start in this case;
+    // the independent responsive case below also starts after rotating.
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    for (const [width, height] of [[320, 640], [390, 844], [640, 360], [1280, 720]]) {
-      await page.setViewportSize({ width: width!, height: height! });
-      // Art direction follows the stacked layout, while both views reuse
-      // the same selected resource. In particular, portrait isn't a PC crop.
-      await expect.poll(() => page.locator('.home-scene-image').evaluate((node) => {
-        const image = node as HTMLImageElement;
-        const exterior = document.querySelector<HTMLImageElement>('.home-exterior-image')!;
-        const portrait = matchMedia('(max-width: 599px), (max-width: 831px) and (min-height: 541px)').matches;
-        return image.complete && image.naturalWidth > 0 && image.currentSrc === exterior.currentSrc
-          && image.currentSrc.includes('sanctuary-portrait') === portrait;
-      })).toBe(true);
-      const buttonLayout = await page.locator('.start-actions button').evaluateAll((nodes) => (
-        nodes.map((node) => {
-          const bounds = node.getBoundingClientRect();
-          const text = document.createRange();
-          text.selectNodeContents(node);
-          return node.scrollWidth <= node.clientWidth + 1 && node.scrollHeight <= node.clientHeight + 1
-            && bounds.width >= 44 && bounds.height >= 44
-            && [...text.getClientRects()].every((rect) => rect.left >= bounds.left && rect.right <= bounds.right + 1);
-        })
-      ));
-      expect(buttonLayout).toHaveLength(5);
-      expect(buttonLayout.every(Boolean)).toBe(true);
-      await page.locator('#start-settings-toggle').click();
-      await expect(page.locator('#start-settings')).toBeVisible();
-      await page.locator('#start-settings-toggle').click();
-      await expect(page.locator('#start-settings')).toBeHidden();
-      await expect(page.locator('#start-play')).toBeVisible();
-      expect(await page.locator('#start-main-view').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    await page.locator('#start-play').click();
+    await expect(page.locator('#start-screen')).toBeHidden();
+    await expect(page.locator('#game-hud')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('adapta portada y controles al rotar sin textos recortados', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    // This case checks static layout, not animation. Reduce motion BEFORE boot
+    // and keep it reduced through every resize and native button click.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 8, overdrive: { unlocked: true }
+    })));
+    await page.goto('/');
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#start-screen')).toBeVisible();
+    // Both compositions, a short landscape and two narrow portraits. Finish
+    // in portrait so the mobile project also starts a run after a real rotation.
+    for (const [width, height] of [[320, 640], [640, 360], [1280, 720], [390, 844]]) {
+      await test.step(`portada y ajustes a ${width}x${height}`, async () => {
+        await page.setViewportSize({ width: width!, height: height! });
+        // Art direction follows the stacked layout, while both views reuse
+        // the same selected resource. In particular, portrait isn't a PC crop.
+        await expect.poll(() => page.locator('.home-scene-image').evaluate((node) => {
+          const image = node as HTMLImageElement;
+          const exterior = document.querySelector<HTMLImageElement>('.home-exterior-image')!;
+          const portrait = matchMedia('(max-width: 599px), (max-width: 831px) and (min-height: 541px)').matches;
+          return image.complete && image.naturalWidth > 0 && exterior.complete && exterior.naturalWidth > 0
+            && image.currentSrc === exterior.currentSrc
+            && image.currentSrc.includes('sanctuary-portrait') === portrait;
+        })).toBe(true);
+        const buttonLayout = await page.locator('.start-actions button').evaluateAll((nodes) => (
+          nodes.map((node) => {
+            const bounds = node.getBoundingClientRect();
+            const text = document.createRange();
+            text.selectNodeContents(node);
+            return node.scrollWidth <= node.clientWidth + 1 && node.scrollHeight <= node.clientHeight + 1
+              && bounds.width >= 44 && bounds.height >= 44
+              && [...text.getClientRects()].every((rect) => rect.left >= bounds.left && rect.right <= bounds.right + 1);
+          })
+        ));
+        expect(buttonLayout).toHaveLength(5);
+        expect(buttonLayout.every(Boolean)).toBe(true);
+        await page.locator('#start-settings-toggle').click();
+        await expect(page.locator('#start-settings')).toBeVisible();
+        await page.locator('#start-settings-toggle').click();
+        await expect(page.locator('#start-settings')).toBeHidden();
+        await expect(page.locator('#start-play')).toBeVisible();
+        expect(await page.locator('#start-main-view').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+      });
     }
     await page.locator('#start-play').click();
     await expect(page.locator('#start-screen')).toBeHidden();

@@ -233,7 +233,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('.skin-preview-stage')).toHaveCount(0);
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(7);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(8);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Eclipse Prism');

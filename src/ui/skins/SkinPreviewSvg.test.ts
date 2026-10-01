@@ -3,6 +3,18 @@ import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/characters/player/PlayerHullSvg';
 
 describe('SkinPreviewSvg', () => {
+  it('uses one intact ship PNG and two shared gun images in static and modal previews', () => {
+    const card = createPlayerSkinPreviewSvg('spearhead');
+    const selected = createPlayerSkinPreviewSvg('spearhead', { animated: true });
+    const images = [...card.matchAll(/<img[^>]*src="([^"]+)"/g)].map(match => match[1]);
+    expect(images).toHaveLength(3);
+    expect(images[0]).toContain('tether-ship');
+    expect(images[1]).toContain('tether-cannon');
+    expect(images[1]).toBe(images[2]);
+    expect(card).toContain('is-static');
+    expect(selected).toContain('is-animated');
+    expect(selected).not.toMatch(/tether-engine|tether-hull|<script/);
+  });
   it('shares the PNG between two fins and only animates the selected hybrid preview', () => {
     const card = createPlayerSkinPreviewSvg('manta');
     const selected = createPlayerSkinPreviewSvg('manta', { animated: true });

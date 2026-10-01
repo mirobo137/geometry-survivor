@@ -29,6 +29,7 @@ import type {
   ProjectileEvolution,
   PulseRingEvolution
 } from '../../content/weapons/WeaponEvolutionDefinitions';
+import { CHAIN_EVOLUTION_TUNING } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 import { OVERDRIVE_POWER_INCREMENT, OVERDRIVE_POWER_MULTIPLIER_CAP } from '../../content/run/OverdriveDefinitions';
 
@@ -245,6 +246,10 @@ export class CombatWeaponSystem {
 
   public get currentChainJumpRadius(): number {
     return this.chainBehavior.currentJumpRadius;
+  }
+
+  public get currentChainMaxTargets(): number {
+    return this.chainBehavior.currentMaxTargets;
   }
 
   public get currentBoomerangDamage(): number {
@@ -566,7 +571,10 @@ export class CombatWeaponSystem {
       case 'chain':
         if (channel === 'power') this.chainBehavior.increaseDamage(4);
         else if (channel === 'tempo') this.chainCooldown = Math.max(0.45, this.chainCooldown - 0.12);
-        else this.chainBehavior.increaseJumpRadius(30);
+        else {
+          this.chainBehavior.increaseJumpRadius(30);
+          this.chainBehavior.increaseMaxTargets(CHAIN_EVOLUTION_TUNING.coverageBonusTargets);
+        }
         return true;
       case 'boomerang':
         if (channel === 'power') this.boomerangBehavior.increaseDamage(4);

@@ -36,14 +36,26 @@ export const PLAYER_TEXTURE_FRAME: SvgTextureFrame = {
 const rasterizeSkinMap = (
   renderer: Renderer,
   pick: (hull: (typeof PLAYER_HULL_SVG)[PlayerSkinId]) => string
-): Record<PlayerSkinId, Texture> => (
-  Object.fromEntries(
-    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).map((skin) => [
+): Record<PlayerSkinId, Texture> => {
+  const textures = Object.fromEntries(
+    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).filter(skin => skin !== 'spearhead').map((skin) => [
       skin,
       createSvgTexture(renderer, pick(PLAYER_HULL_SVG[skin]), PLAYER_TEXTURE_FRAME)
     ])
-  ) as Record<PlayerSkinId, Texture>
-);
+  ) as Record<PlayerSkinId, Texture>;
+  textures.spearhead = textures.cyan;
+  return textures;
+};
+
+const rasterizeSignatures = (renderer: Renderer): Record<PlayerSkinId, Texture> => {
+  const textures = Object.fromEntries(
+    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).filter(skin => skin !== 'spearhead').map(skin => [
+      skin, createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME)
+    ])
+  ) as Record<PlayerSkinId, Texture>;
+  textures.spearhead = textures.cyan;
+  return textures;
+};
 
 /** Rasterizes each player piece once while retaining the SVG masters in src/. */
 export const createPlayerTextures = (renderer: Renderer): PlayerTextureSet => ({
@@ -82,10 +94,5 @@ export const createPlayerTextures = (renderer: Renderer): PlayerTextureSet => ({
   body: rasterizeSkinMap(renderer, (hull) => hull.body),
   core: rasterizeSkinMap(renderer, (hull) => hull.core),
   accent: createSvgTexture(renderer, playerAccentSvg, PLAYER_TEXTURE_FRAME),
-  signature: Object.fromEntries(
-    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).map((skin) => [
-      skin,
-      createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME)
-    ])
-  ) as Record<PlayerSkinId, Texture>
+  signature: rasterizeSignatures(renderer)
 });

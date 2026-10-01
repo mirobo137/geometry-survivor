@@ -95,7 +95,7 @@ const EVOLUTION_ILLUSTRATIONS: Readonly<Record<WeaponEvolutionId, UpgradeCardIll
   closed_circuit: { src: closedCircuitArtUrl, label: 'RED · CIRCUITO CERRADO' },
   thunderhead: { src: thunderheadArtUrl, label: 'DESCARGA · EXPLOSIÓN' },
   twin_comet: { src: twinCometArtUrl, label: 'QUINTETO · RETORNO' },
-  singularity_return: { src: singularityReturnArtUrl, label: 'GRUPO · COLAPSO' },
+  singularity_return: { src: singularityReturnArtUrl, label: 'FRAGMENTACIÓN · BÚSQUEDA' },
   echo_shock: { src: echoShockArtUrl, label: 'ECO · IDA Y VUELTA' },
   compression_wave: { src: compressionWaveArtUrl, label: 'FRENTE · EMPUJE' },
   event_horizon: { src: eventHorizonArtUrl, label: 'ATRACCIÓN · DAÑO SOSTENIDO' },

@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks({ includeDesktopViewport: false });
+registerTetheredShipChecks();
 
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);

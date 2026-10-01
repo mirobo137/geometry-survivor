@@ -109,6 +109,18 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     palette: PLAYER_SKINS.manta,
     acquisition: 'nova',
     signature: 'manta'
+  },
+  {
+    id: 'spearhead',
+    name: 'Ivory Spear',
+    subtitle: 'Punta de lanza de marfil',
+    description: 'Nave PNG completa con cañones vinculados. Gratis para probar; conserva el paquete de proyectil y estela elegido.',
+    rarity: 'NUEVA · PNG · GRATIS',
+    tier: 'epic',
+    priceNova: 0,
+    palette: PLAYER_SKINS.spearhead,
+    acquisition: 'nova',
+    signature: 'aurora'
   }
 ] as const;
 

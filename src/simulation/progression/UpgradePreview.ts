@@ -15,6 +15,7 @@ export type UpgradePreviewStat =
   | 'chainDamage'
   | 'chainCooldown'
   | 'chainJumpRadius'
+  | 'chainTargets'
   | 'boomerangDamage'
   | 'boomerangCooldown'
   | 'boomerangDistance'

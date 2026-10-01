@@ -12,6 +12,8 @@ import {
 } from '../../../../content/visual/VisualTokens';
 import type { PlayerTextureSet } from './PlayerVisualAssets';
 import { MantaWingView } from './MantaWingView';
+import { RechargeableShieldView } from './RechargeableShieldView';
+import { TetheredShipView } from './TetheredShipView';
 
 const BLOOM_SOCKET_X = [-27, 27] as const;
 
@@ -34,9 +36,11 @@ export class PlayerView {
   private readonly accent: Sprite;
   private readonly damageFlash: Sprite;
   private readonly guardFx: Graphics;
+  private readonly rechargeableShield: RechargeableShieldView;
   private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
   private mantaWings?: MantaWingView;
+  private tetheredShip?: TetheredShipView;
   private skin: PlayerSkinId = 'cyan';
   private cannonSkin: CannonSkinId = 'basic';
   private facing = 0;
@@ -64,7 +68,8 @@ export class PlayerView {
     textures: PlayerTextureSet,
     skin: PlayerSkinId = 'cyan',
     cannonSkin: CannonSkinId = 'basic',
-    quality: FxQuality = 'medium'
+    quality: FxQuality = 'medium',
+    private readonly tetheredPrototype = false
   ) {
     this.textures = textures;
     this.quality = quality;
@@ -81,6 +86,7 @@ export class PlayerView {
     this.damageFlash = new Sprite(textures.body[skin]);
     this.shotFlash = new Graphics();
     this.guardFx = new Graphics();
+    this.rechargeableShield = new RechargeableShieldView(quality);
     this.signature = new Sprite(textures.signature.cyan);
     this.damageFlash.tint = 0xffffff;
     this.damageFlash.alpha = 0;
@@ -88,13 +94,18 @@ export class PlayerView {
       part.anchor.set(0.5);
     }
     this.root.addChild(this.shadow, this.movementTrail, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash, this.guardFx);
+    this.root.addChild(this.rechargeableShield.root);
     this.setCannonSkin(cannonSkin);
     this.setSkin(skin);
   }
 
   public setSkin(skin: PlayerSkinId): void {
     this.skin = skin;
-    if (skin === 'manta' && !this.mantaWings) {
+    if ((skin === 'spearhead' || this.tetheredPrototype) && !this.tetheredShip) {
+      this.tetheredShip = new TetheredShipView(this.quality);
+      this.root.addChildAt(this.tetheredShip.root, 5);
+    }
+    if (skin === 'manta' && !this.mantaWings && !this.tetheredPrototype) {
       this.mantaWings = new MantaWingView();
       this.root.addChildAt(this.mantaWings.root, 4);
     }
@@ -241,6 +252,18 @@ export class PlayerView {
     this.renderMovementTrail(animationSeconds);
     this.renderCannonSocketFx(animationSeconds, shotPulse);
     this.renderShotFlash(shotPulse, state);
+    if (this.tetheredShip) {
+      const active = this.tetheredPrototype || this.skin === 'spearhead';
+      if (!active) this.tetheredShip.root.visible = false;
+      const ready = active && this.tetheredShip.render(animationSeconds, this.weapons.rotation,
+        this.movementStrength, defeat, damagePulse, leftKick, rightKick);
+      this.body.visible = this.core.visible = this.signature.visible = this.weapons.visible = !ready;
+      this.damageFlash.visible = !ready;
+      this.accent.visible = !ready && this.skin !== 'manta';
+      this.ring.visible = !ready && !hybridReady;
+      // The intact raster ship already carries the short engine plume.
+      if (ready) this.movementTrail.visible = false;
+    }
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
   }
 
@@ -267,6 +290,10 @@ export class PlayerView {
   }
 
   public reset(): void {
+    this.tetheredShip?.reset();
+    this.rechargeableShield.reset();
+    this.guardFx.clear();
+    this.guardFx.visible = false;
     this.lastX = null;
     this.lastY = null;
     this.lastAnimationSeconds = null;
@@ -486,6 +513,15 @@ export class PlayerView {
     this.guardFx.clear();
     const charge = Math.min(1, Math.max(0, shieldChargeProgress));
     const blockPulse = blockProgress < 1 ? Math.sin(blockProgress * Math.PI) : 0;
+    const rasterReady = this.rechargeableShield.render(charge, blockProgress, animationSeconds);
+    if (rasterReady) {
+      // Preserve the precise charge indicator, but material/impact are PNG.
+      if (charge > 0 && charge < 0.999) this.guardFx.beginPath()
+        .arc(0, 0, 33, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge)
+        .stroke({ color: 0xe6fdff, width: 1.4, alpha: 0.7 });
+      this.guardFx.visible = charge > 0 && charge < 0.999;
+      return;
+    }
     if (charge <= 0 && blockPulse <= 0) {
       this.guardFx.visible = false;
       return;

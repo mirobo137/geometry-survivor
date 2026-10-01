@@ -22,6 +22,8 @@ import violetCoreSvg from './skins/violet/core.svg?raw';
 import violetRingSvg from './skins/violet/ring.svg?raw';
 
 export const PLAYER_HULL_SVG: Readonly<Record<PlayerSkinId, { body: string; ring: string; core: string }>> = {
+  // Safe fallback only; the selected raster ship has no newly drawn SVG master.
+  spearhead: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   manta: { body: mantaBodySvg, ring: mantaRingSvg, core: mantaCoreSvg },
   cyan: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   violet: { body: violetBodySvg, ring: violetRingSvg, core: violetCoreSvg },

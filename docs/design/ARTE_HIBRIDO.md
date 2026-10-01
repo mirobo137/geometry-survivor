@@ -3,6 +3,9 @@
 Decisión de producto, 09-09-2026. Entrada canónica: PLAN_DESARROLLO.md §8.
 Aplicable a Luna, Codex, Grok y cualquier agente con herramientas de repositorio.
 Referencia implementada: [Manta Veil](../../src/assets/skins/manta/README.md).
+Decisión posterior aprobada para naves/cañones: [Naves PNG](NAVES_PNG.md).
+Una imagen completa por nave, cañones vinculados independientes; prevalece
+sobre el ensamblaje modular para la migración del catálogo solicitada.
 Para elegir PNG, SVG o Graphics en atmósferas, leer
 [Fondos premium](FONDOS_PREMIUM.md): los SVG previos de Nacre y Vesper se
 conservan como referencia editable, pero el runtime usa sus placas pictóricas
@@ -96,6 +99,15 @@ no cumple el encargo de identidad.
   que se congela en pausa y avanza durante muerte.
 - Si hay texturas independientes reutilizadas por muchas skins, considerar
   atlas después de medir. Dos sprites no requieren una infraestructura nueva.
+
+## Consumidor de combate — 30-09-2026
+
+El lote autorizado de seis armas, doce evoluciones y escudo recargable aplica
+este mismo contrato. Inventario, prompts, pivotes y coste:
+[Arsenal PNG](../../src/assets/fx/arsenal/README.md). Las texturas no sustituyen
+el snapshot físico: radios/frentes y efectos persistentes conservan los datos
+de simulación. Las líneas finas de información pueden seguir siendo Graphics.
+No eliminar cosméticos ni fallback vectorial para cumplir una migración raster.
 
 ## Entrega obligatoria para el siguiente agente
 

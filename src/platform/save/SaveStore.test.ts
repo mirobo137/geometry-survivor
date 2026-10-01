@@ -30,6 +30,15 @@ class MemoryStorage implements StorageAdapter {
 }
 
 describe('LocalSaveStore', () => {
+  it('persists the free Ivory Spear skin without spending Nova or changing cannon choice', () => {
+    const store = new LocalSaveStore(new MemoryStorage());
+    const defaults = createDefaultSaveData();
+    store.save({ ...defaults, wallet: { nova: 425 },
+      skins: { selected: 'spearhead', unlocked: ['cyan', 'manta', 'spearhead'] } });
+    expect(store.load().skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'manta', 'spearhead'] });
+    expect(store.load().wallet.nova).toBe(425);
+    expect(store.load().cannonSkins).toEqual(defaults.cannonSkins);
+  });
   it('round-trips the free Nacre background without changing wallet or other unlocks', () => {
     const store = new LocalSaveStore(new MemoryStorage());
     const defaults = createDefaultSaveData();

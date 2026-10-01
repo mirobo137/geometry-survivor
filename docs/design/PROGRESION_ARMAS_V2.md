@@ -249,8 +249,8 @@ de evolución son valores de referencia; este apartado concreta su herencia.
 | --- | --- |
 | Projectile | Damage22, intervalo0.39, velocidad540 y doble emisor entran a las reglas existentes de Rail/Volley una vez; preservar topes/reparto aprobados |
 | Orbit | 4 blades, daño22 y radio94. Solar sale desde94 hasta244; Graviton usa semiejes178.6/61.1; giro e hitCooldown conservados |
-| Chain | Daño18, intervalo1.05 y salto210 en ambas. Mantener cadena inicial de hasta5 targets. Circuito usa hasta3 de sus impactos como nodos; Thunderhead marca hasta2. No borrar los rangos de targets al elegir rama |
-| Boomerang | Daño19, alcance280, regreso500, radio13 e intervalo1.10. Twin sustituye250 por alcance efectivo y escala sus controles por280/250; Singularity retiene el extremo efectivo. Preservar cap y esperar slots libres |
+| Chain | Daño18, intervalo1.05 y salto210 en ambas. Thunderhead conserva5 blancos; Closed Circuit suma2 (7), usa hasta3 como nodos. Thunderhead marca hasta2 sin recortar enlaces. Cobertura suma +1 blanco/+30u por compra, máximo3: Circuito10/Thunder8. No borrar rangos al elegir rama |
+| Boomerang | Daño19, alcance280, regreso500, radio13 e intervalo1.10. Twin sustituye250 por alcance efectivo y escala sus controles por280/250; Singularity multiplica alcance por1.48 (414.4u) y divide al extremo en seis filos guiados. Cobertura suma59.2u efectivos. Preservar cap8 y reservar cinco slots extra por portador |
 | Pulse Ring | Daño32, carga0.50 e intervalo3.30. Echo usa radioFinal240 y empuje16 por onda con presupuesto total de daño; Compression alcance=`radioFinal+80`=320, empuje=`base+16`=32, ancho28, sin atracción |
 | Magnetic | Daño22/tick, vuelo0.34 e intervalo4.60. Event radioAtracción200, sostén1.60, núcleo=`0.43*radioExterior`=71.38, final=`0.74*radioExterior`=122.84. Polar radioTriángulo=`0.61*radioExterior`=101.26 y final=`0.37*radioExterior`=61.42 |
 

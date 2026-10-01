@@ -3,7 +3,7 @@ import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
 import type { BoomerangEvolution, ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BossId } from '../../content/bosses/BossDefinition';
 
-export type BoomerangPhase = 'outbound' | 'returning';
+export type BoomerangPhase = 'outbound' | 'returning' | 'homing';
 
 export interface EnemyState {
   active: boolean;
@@ -103,13 +103,17 @@ export interface BoomerangState {
   ageSeconds: number;
   lifetimeSeconds: number;
   phase: BoomerangPhase;
+  /** Singularity splits once; homing fragments never split again. */
+  fragment: boolean;
+  targetIndex: number;
+  targetGeneration: number;
   directionX: number;
   directionY: number;
   distanceTravelled: number;
   travelLimit: number;
-  /** Signed fan slot of Twin Comet; zero for the other casts. */
+  /** Signed fan slot of Twin Comet or the three Singularity shards. */
   fanOffset: number;
-  /** Quadratic path anchors for Twin Comet and the fixed remote blast point. */
+  /** Twin's curve anchors; fragment curveStart stores its fixed split origin. */
   curveStartX: number;
   curveStartY: number;
   curveControlX: number;
@@ -204,7 +208,10 @@ const createBoomerangState = (slotIndex: number): BoomerangState => ({
   damage: 0,
   ageSeconds: 0,
   lifetimeSeconds: 0,
-  phase: 'outbound',
+      phase: 'outbound',
+      fragment: false,
+      targetIndex: -1,
+      targetGeneration: 0,
       directionX: 1,
       directionY: 0,
       distanceTravelled: 0,

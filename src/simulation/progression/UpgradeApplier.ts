@@ -13,7 +13,7 @@ import {
   type UpgradeId,
   type WeaponPathId
 } from '../../content/upgrades/UpgradeDefinitions';
-import type { WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
+import { CHAIN_EVOLUTION_TUNING, SINGULARITY_RETURN_TUNING, type WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
 import {
   OVERDRIVE_AUTHORED_STACK_CAPS,
   OVERDRIVE_ACQUISITION_HISTORY_LIMIT,
@@ -627,13 +627,16 @@ export class UpgradeApplier {
           ? { stat: 'chainDamage', before: this.combat.currentChainDamage, after: this.combat.currentChainDamage + 4 }
           : channel === 'tempo'
             ? { stat: 'chainCooldown', before: this.combat.currentChainCooldown, after: Math.max(0.45, this.combat.currentChainCooldown - 0.12) }
-            : { stat: 'chainJumpRadius', before: this.combat.currentChainJumpRadius, after: this.combat.currentChainJumpRadius + 30 };
+            : { stat: 'chainTargets', before: this.combat.currentChainMaxTargets,
+              after: Math.min(CHAIN_EVOLUTION_TUNING.maxTargets, this.combat.currentChainMaxTargets + CHAIN_EVOLUTION_TUNING.coverageBonusTargets) };
       case 'boomerang':
         return channel === 'power'
           ? { stat: 'boomerangDamage', before: this.combat.currentBoomerangDamage, after: this.combat.currentBoomerangDamage + 4 }
           : channel === 'tempo'
             ? { stat: 'boomerangCooldown', before: this.combat.currentBoomerangCooldown, after: Math.max(0.35, this.combat.currentBoomerangCooldown - 0.08) }
-            : { stat: 'boomerangDistance', before: this.combat.currentBoomerangOutboundDistance, after: this.combat.currentBoomerangOutboundDistance + 40 };
+            : { stat: 'boomerangDistance', before: this.combat.currentBoomerangOutboundDistance,
+              after: this.combat.currentBoomerangOutboundDistance + 40 * (this.combat.currentBoomerangEvolution === 'singularity_return'
+                ? SINGULARITY_RETURN_TUNING.rangeMultiplier : 1) };
       case 'pulse_ring':
         return channel === 'power'
           ? { stat: 'pulseRingDamage', before: this.combat.currentPulseRingDamage, after: this.combat.currentPulseRingDamage + 6 }

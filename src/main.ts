@@ -283,6 +283,7 @@ const bootstrap = async (): Promise<void> => {
     wardenDrill,
     playerSkin,
     cannonSkin,
+    tetheredShipPrototype: searchParams.get('ship-preview') === 'tether',
     background,
     fxQuality,
     profileMode,

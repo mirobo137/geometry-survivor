@@ -8,6 +8,16 @@ Revisión puntual 28-09-2026: la pareja de Búmeran se reabrió por solicitud de
 usuario. La nueva mecánica de §4.D está implementada y pendiente de su prueba
 humana; la aprobación previa de esa pareja no se traslada automáticamente.
 
+Revisión 30-09-2026: Singularity Return cambia a fragmentación remota guiada
+por solicitud explícita, §4.D. Comet Quintet no cambia. Thunderhead obtiene PNG
+de descarga exclusivo y Echo corrige el fade final, sin cambiar sus reglas.
+
+Segunda revisión autorizada 30-09-2026: Singularity emite seis filos y recorta
+20% del alcance **añadido** (+60% → +48%). Closed Circuit suma dos blancos
+y aumenta 25% su daño por tick; Thunderhead no sacrifica blancos. Cobertura
+postevolución suma un blanco y 30u entre enlaces en ambas ramas (tres compras).
+Estos parámetros prevalecen sobre los prototipos históricos de esta ficha.
+
 Ampliación vigente: [PROGRESION_ARMAS_V2.md](PROGRESION_ARMAS_V2.md) define
 las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
 evolucionar. Sus fórmulas de herencia prevalecen sobre los valores fijos de
@@ -229,7 +239,7 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 #### Closed Circuit / Circuito tendido — `closed_circuit`
 
 - **Verbo:** tres impactos levantan un triángulo eléctrico estacionario.
-  La cadena inicial conserva sus targets adquiridos (cinco en VII); elegir
+  La cadena inicial conserva sus targets adquiridos y suma dos (siete en VII); elegir
   hasta tres de esos impactos como nodos por búsquedas limitadas de la grid.
   Congelar sus posiciones al impacto: aunque mueran, los anclajes no persiguen.
 - Impacto inicial y red de 0.9 s, con ticks cada 0.2 s. Solo los tres cables
@@ -238,13 +248,21 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - Un blanco: un enlace origen capturado→blanco, longitud máxima de alcance
   base; dos blancos: un enlace entre ellos. No inventar vértices fuera de arena
   ni repetir targets para simular triángulo. Máximo una red/3 nodos/3 segmentos.
-- Presupuesto: 40% impacto, 60% red repartido entre ticks. No dispara una
+- Presupuesto vigente: 40% por impacto, 15% por tick de red (antes 12%:
+  **+25% relativo**), cuatro ticks a lo largo de 0.9 s. La maestría de Potencia
+  y el daño permanente también multiplican el cable. No dispara una
   segunda red mientras la primera sigue activa.
 - Ventaja: conducir perseguidores a cables ya tendidos. Pérdida: enemigos
   dispersos o que abandonan la red reducen utilidad; no requiere borde cargado.
 - Arte: nodos metálicos pequeños, conectores cian/marfil y carga que viaja al
   cerrarse. Cable estable, no rayos aleatorios por frame; vacíos entre nodos
   legibles. No rellenar triángulo ni copiar las tres aspas giratorias de Prism.
+- PNG vigente: filamentos trenzados cian/esmeralda, núcleo blanco y tres
+  pequeños capacitores diamantinos; alpha real, frame 128² centrado.
+- Cobertura añade +1 blanco y +30u entre enlaces por compra, hasta tres.
+  En VII alcanza 7→8→9→10 blancos; pool de 13 segmentos conserva siempre
+  espacio para los tres cables, sin truncarlos. Reset de run borra maestrías;
+  limpieza de transición conserva el build. No aumenta el área física del cable.
 - Carta: «Deja cables eléctricos entre impactos. Castiga enemigos que los
   cruzan; la trampa permanece donde nació».
 - Prueba: target nuevo cruza cable y recibe tick; target en interior sin tocar
@@ -254,6 +272,8 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 
 - **Verbo:** dos impactos de la cadena siembran sobrecargas que explotan después.
   Mantener los cinco targets de la cadena base VII; solo dos reciben marca.
+  Cobertura los amplía 5→6→7→8 y suma 30u de distancia por compra, igual que
+  en Closed Circuit. Dos marcas **no significan** un límite de dos enlaces.
   Elegir hasta dos targets distintos de la cadena. Marca sigue target 0.2 s,
   congela posición; aviso final 0.15 s; explosión disco radio70 en ese punto.
   Si muere antes, usar última posición válida de esa generación.
@@ -269,7 +289,7 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - Prueba: objetivos secundarios reciben explosión real; uno que sale a tiempo
   no recibe daño; no aparece una cascada de nuevas explosiones.
 
-### D. Boomerang: barrido cercano o detonación de grupos
+### D. Boomerang: barrido cercano o fragmentación remota
 
 #### Comet Quintet — `twin_comet`
 
@@ -290,22 +310,37 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 
 #### Singularity Return — `singularity_return`
 
-- **Verbo:** escoge el grupo más denso cuyo centro esté dentro del alcance
-  actual del Búmeran. Fija la posición del objetivo al lanzar, viaja hasta
-  ese punto y detona allí. En empate elige el grupo más lejano del jugador.
-  Si no hay objetivo al alcance, conserva la última dirección y detona al
-  final del recorrido. La explosión no sigue al jugador.
-- Radio de daño 155 u más el radio físico de cada enemigo. Una sola detonación
-  inflige 180% del daño actual a todos los enemigos dentro; además se mantiene
-  el daño perforante de ida (50%) y regreso (80%). Supervivientes normales
-  quedan a 45% de velocidad durante 1.5 s; bosses reciben daño pero no control.
-  No atrae enemigos ni encadena explosiones.
-- Presentación: disco tenue y borde segmentado a radio completo desde el
-  instante del impacto, con una onda interior decorativa. El punto de daño y el
-  centro visual son el mismo; el retorno empieza inmediatamente después.
-- Carta: «Busca grupos compactos, detona en su posición y ralentiza a los
-  supervivientes». Probar grupo remoto frente a enemigo cercano aislado,
-  todos los blancos del radio, boss inmune al control y ausencia de atracción.
+- **Verbo (revisión autorizada 30-09-2026):** una pieza recorre el 148% del
+  alcance base + mejoras (370 u en I; 414.4 u desde III), sin detenerse al llegar
+  al blanco inicial. En el extremo se sustituye por **seis fragmentos guiados**.
+  Orienta el lanzamiento hacia el enemigo más cercano; sin blancos conserva dirección.
+- Cada fragmento adquiere uno de los seis enemigos más cercanos al punto de
+  separación, dentro de 320 u, priorizando objetivos distintos. Si quedan menos
+  de seis, pueden compartir blanco; si no hay ninguno, avanzan y caducan.
+  Siguen su posición real con giro limitado a 8 rad/s, velocidad 520 u/s y
+  vida de 1.35 s. Tras muerte/reciclaje buscan otro desde el origen fijo.
+  El índice y la generación impiden perseguir un slot reutilizado fuera de rango.
+- La pieza inicial perfora con 65% del daño actual, una vez por enemigo.
+  Cada fragmento inflige 85% al **primer contacto físico** de su segmento barrido
+  y se consume. Radio físico 70% del cuerpo inicial. No retorno, daño de área,
+  ralentización, aturdimiento ni divisiones recursivas. Hereda daño permanente,
+  mejoras de run y multiplicador Overdrive. Cobertura suma 59.2 u efectivos por
+  maestría (+40 base × 1.48), incluido el antes/después de la carta. No se reduce
+  el daño de cada filo al duplicar su número: este ajuste está en prueba humana.
+- Pool existente de ocho: cada portador reserva cinco plazas extra antes de salir.
+  Sin espacio para las reservas no dispara; no se recorta la división de seis.
+  Puede convivir con hasta dos filos antiguos, pero no con otro portador.
+  Los recién nacidos avanzan sólo el tiempo restante de ese tick, una vez.
+- Presentación: portador singular violeta; apertura transparente de tres brazos
+  de radio decorativo 42 u durante 0.32 s; seis filos individuales orientados
+  según su velocidad. PNG propios, **nunca la explosión de Magnetic Charge**.
+  La apertura no representa un disco dañino. Low conserva los seis filos.
+  El abanico mantiene ±0.55 rad; no se duplica su ancho al sumar piezas.
+- Carta: «Viaja un 48% más lejos y se divide en seis fragmentos que persiguen
+  enemigos cercanos». Probar rango completo frente a blanco cercano, seis
+  destinos distintos, boss único, muerte/reciclaje, blanco móvil, primera
+  colisión, falta de blancos, reservas, limpieza y 30/60/144 Hz.
+  La nueva rama espera prueba humana; el balance general aprobado no se reabre.
 
 ### E. Pulse Ring: regresar por un corredor o abrir un frente
 
@@ -319,7 +354,8 @@ la migración para rediseñar estos assets o «mejorar» su balance.
   en ella. Pérdida: no abre espacio ni cubre el nuevo lugar del jugador.
 - Arte: la vuelta reutiliza la cresta violeta/ámbar, invierte su recorrido y
   contrae sus segmentos hacia el núcleo; nunca dibuja otro centro ni una línea
-  dañina ajena a la banda física.
+  dañina ajena a la banda física. Corrección 30-09-2026: al acabar el regreso,
+  recovery conserva el radio inicial contraído; el fade no reinicia el aro grande.
 - Carta: «Una onda de largo alcance regresa a tu nave. Ida y vuelta golpean;
   no empuja enemigos».
 - Prueba: un objetivo a 240u recibe dos impactos y no se mueve; mover al player
@@ -632,7 +668,7 @@ carta de daño exclusiva del rayo.
 | R1 | Ruta normal enfocada, tablas I–VII, migración de cartas/calibración y selección | Projectile probado rango por rango; después inventario normal |
 | R2 | Pulse Ring: Echo + Ariete | Prueba humana de dos centros y frente útil sin atraer |
 | R3 | Magnetic: Núcleo + Prensa | Daño en centro visible y cierre geométrico distinto |
-| R4 | Boomerang: Comet Quintet + Singularity Return | Abanico corto con daño de ida/vuelta y detonación remota sobre grupos |
+| R4 | Boomerang: Comet Quintet + Singularity Return | Abanico corto de ida/vuelta y alcance largo con seis fragmentos guiados |
 | R5 | Orbit: Corona + Órbita de avance | Coberturas distintas observables y sin hits fantasma |
 | R6 | Chain: Circuito + Sobrecarga | Trampa de cruce frente a explosión diferida real |
 | R7 | Integración de tres armas / Acto II | Sinergias, caps, claridad y perfil PC/móvil |

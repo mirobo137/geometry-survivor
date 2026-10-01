@@ -4,7 +4,7 @@ import type { PulseRingState } from '../hazards/PulseRingHazard';
 import type { AngularSweepState } from '../hazards/AngularSweepHazard';
 import type { ChargerPhase, EnemyKind, FractureEnemyPhase, OrbiterDirection, OrbiterPhase, PrismWeaverPhase } from '../../content/enemies/EnemyDefinitions';
 import type { ProjectileMuzzle } from '../../content/weapons/WeaponDefinitions';
-import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
+import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution, OrbitEvolution, ChainEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 import type { BossInstanceId } from '../bosses/BossSystem';
@@ -257,6 +257,8 @@ export type BoomerangRenderState = Readonly<BoomerangState>;
 
 /** Stable, read-only view contract used by presentation without exposing the coordinator class. */
 export interface CombatRenderState {
+  readonly orbitEvolution?: OrbitEvolution | null;
+  readonly chainEvolution?: ChainEvolution | null;
   readonly enemies: readonly EnemyRenderState[];
   readonly projectiles: readonly ProjectileRenderState[];
   readonly orbitBlades: readonly OrbitBladeRenderState[];

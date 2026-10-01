@@ -106,6 +106,8 @@ export interface GameOptions {
   readonly startWithBasicIntro?: boolean;
   readonly playerSkin?: PlayerSkinId;
   readonly cannonSkin?: CannonSkinId;
+  /** Opt-in visual trial only; no cosmetic ownership, stats or saved selection changes. */
+  readonly tetheredShipPrototype?: boolean;
   readonly background?: BackgroundId;
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
@@ -680,7 +682,8 @@ export class Game {
       options.elements.pauseButton
     ].filter((element): element is HTMLElement => element !== undefined)));
     this.resetAudioFeedbackTrackers();
-    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background);
+    this.view = new PixiGameView(this.app.renderer, this.playerSkin, this.fxQuality, this.cannonSkin, this.background,
+      options.tetheredShipPrototype === true);
     this.debug = new DebugPanel(
       options.elements.debug,
       this.stressMode || this.initialElapsedSeconds > 0 || this.profiler.enabled

@@ -79,6 +79,7 @@ import { SpawnPortalView } from './enemies/SpawnPortalView';
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
 import { BLOOM_TRAIL_ASSET } from '../../assets/skins/cannons/bloom/BloomAssets';
+import { getArsenalTexture } from './weapons/ArsenalTextures';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -440,7 +441,8 @@ export class CombatEntitiesView {
     this.orbiterTelegraphs.render(combat.enemies);
     this.chargerTelegraphs.render(combat.enemies);
     this.prismWeaverTelegraphs.render(combat.enemies, animationSeconds);
-    const trailKind = getCannonSkinDefinition(this.cannonSkin).trail;
+    const cannonDefinition = getCannonSkinDefinition(this.cannonSkin);
+    const trailKind = cannonDefinition.trail;
     for (let index = 0; index < this.enemyVisuals.length; index += 1) {
       const state = combat.enemies[index];
       const wasActive = this.previousActive[index];
@@ -498,13 +500,19 @@ export class CombatEntitiesView {
       const evolutionScale = state.radius / 7;
       const evolutionTint = state.evolution === 'rail_lance'
         ? 0xffd978 : state.evolution === 'pulse_volley' ? 0x9fffe8 : 0xffffff;
-      sprite.tint = evolutionTint;
-      sprite.scale.set(pulse * evolutionScale);
+      const art = getArsenalTexture(state.evolution ?? 'projectile');
+      // Cosmetic packages keep their authored head/trail identity. Evolved shots
+      // and the default emitter use PNG bodies; other packages receive PNG glow.
+      const rasterBody = art && (this.cannonSkin === 'basic' || state.evolution);
+      sprite.texture = rasterBody ? art : this.projectileTextures[this.cannonSkin];
+      sprite.tint = rasterBody ? 0xffffff : evolutionTint;
+      sprite.scale.set(pulse * evolutionScale * (rasterBody ? 32 / art.width : 1));
       if (glow) {
         glow.position.set(px, py);
         glow.rotation = rot;
-        glow.tint = evolutionTint;
-        glow.scale.set(pulse * 1.9 * evolutionScale);
+        glow.texture = art ?? this.projectileTextures[this.cannonSkin];
+        glow.tint = art ? cannonDefinition.accent : evolutionTint;
+        glow.scale.set(pulse * 1.9 * evolutionScale * (art ? 32 / art.width : 1));
         glow.alpha = 0.22 + Math.sin(state.ageSeconds * 14) * 0.06;
       }
     }

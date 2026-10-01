@@ -7,6 +7,30 @@ import { PlayerModel } from '../PlayerModel';
 import { PulseRingWeaponBehavior } from './PulseRingWeaponBehavior';
 
 describe('PulseRingWeaponBehavior', () => {
+  it('Echo Shock fades at its contracted radius after returning, without restarting the wide wave', () => {
+    const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const player = new PlayerModel();
+    const weapon = new PulseRingWeaponBehavior({ enemies, rollCriticalDamage: d => d, onEnemyDefeated: () => undefined });
+    weapon.unlock();
+    weapon.setEvolution('echo_shock');
+    weapon.fire(player.state);
+    for (let i = 0; i < 400; i++) {
+      weapon.update(1 / 60, player.state);
+      if (weapon.state.phase === 'recovery' && weapon.state.wave === 1) {
+        expect(weapon.state.radius).toBe(weapon.state.startRadius);
+        const origin = [weapon.state.originX, weapon.state.originY];
+        player.state.x += 100;
+        weapon.update(1 / 60, player.state);
+        expect(weapon.state.radius).toBe(weapon.state.startRadius);
+        expect([weapon.state.originX, weapon.state.originY]).toEqual(origin);
+        for (let frame = 0; frame < 100; frame++) weapon.update(1 / 60, player.state);
+        expect(weapon.state.active).toBe(false);
+        expect(weapon.state.phase).toBe('idle');
+        return;
+      }
+    }
+    throw new Error('Echo Shock never reached final recovery');
+  });
   it('captures its origin, sweeps the annulus and pushes each target once', () => {
     const pool = new EnemyPool(8);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));

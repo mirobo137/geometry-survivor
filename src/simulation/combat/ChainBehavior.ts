@@ -5,7 +5,7 @@ import type { ChainSegmentState } from './CombatRenderState';
 import type { ChainExplosionState } from './CombatRenderState';
 import type { EnemyState } from './EntityPools';
 import type { EnemySystem } from '../enemies/EnemySystem';
-import type { ChainEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
+import { CHAIN_EVOLUTION_TUNING, type ChainEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { ArenaBoundaryInput } from '../ArenaBoundary';
 import { CHAIN_SEGMENT_POOL_CAPACITY } from '../../config/constants';
 
@@ -45,7 +45,7 @@ const createChainExplosionState = (): ChainExplosionState => ({
 /** Owns chain targeting, segment lifetime and one-hit-per-target-per-cast state. */
 export class ChainBehavior {
   public readonly segments = Array.from({ length: CHAIN_SEGMENT_POOL_CAPACITY }, createChainSegmentState);
-  public readonly explosions = Array.from({ length: CHAIN_DEFINITION.maxTargets + 2 }, createChainExplosionState);
+  public readonly explosions = Array.from({ length: CHAIN_EVOLUTION_TUNING.thunderheadMarks }, createChainExplosionState);
   private readonly hitIndices = Array.from({ length: CHAIN_SEGMENT_POOL_CAPACITY }, () => -1);
   private readonly circuitHitMarkers: Uint32Array;
   private readonly circuitHitGenerations: Uint32Array;
@@ -53,6 +53,7 @@ export class ChainBehavior {
   private damage = CHAIN_DEFINITION.damage;
   private overdrivePowerMultiplier = 1;
   private maxTargets = CHAIN_DEFINITION.maxTargets;
+  private bonusTargets = 0;
   private jumpRadius = CHAIN_DEFINITION.jumpRadius;
   private rank = 1;
   private permanentDamageMultiplier = 1;
@@ -83,7 +84,8 @@ export class ChainBehavior {
   }
 
   public get currentMaxTargets(): number {
-    return this.maxTargets;
+    return Math.min(CHAIN_EVOLUTION_TUNING.maxTargets, this.maxTargets + this.bonusTargets
+      + (this.evolution === 'closed_circuit' ? CHAIN_EVOLUTION_TUNING.closedCircuitBonusTargets : 0));
   }
 
   public get currentJumpRadius(): number {
@@ -108,6 +110,12 @@ export class ChainBehavior {
 
   public increaseJumpRadius(amount: number): void {
     this.jumpRadius += Math.max(0, amount);
+  }
+
+  public increaseMaxTargets(amount: number): void {
+    if (!Number.isFinite(amount)) return;
+    this.bonusTargets = Math.min(CHAIN_EVOLUTION_TUNING.maxTargets,
+      this.bonusTargets + Math.max(0, Math.floor(amount)));
   }
 
   /** Applies the permanent damage branch to every jump in a cast. */
@@ -170,7 +178,7 @@ export class ChainBehavior {
     // Thunderhead changes the damage distribution, not the authored reach of
     // the chain. It marks at most two real links after the chain is built, so
     // rank VII still reaches five targets.
-    const maxTargets = this.maxTargets;
+    const maxTargets = this.currentMaxTargets;
     let targetCount = 0;
     for (let targetIndex = 0; targetIndex < maxTargets; targetIndex += 1) {
       const searchRadius = targetIndex === 0 ? 960 : this.jumpRadius;
@@ -199,7 +207,7 @@ export class ChainBehavior {
       currentX = enemy.x;
       currentY = enemy.y;
       targetCount += 1;
-      if (this.evolution === 'thunderhead' && targetIndex < 2) {
+      if (this.evolution === 'thunderhead' && targetIndex < CHAIN_EVOLUTION_TUNING.thunderheadMarks) {
         this.scheduleExplosion(targetIndex, enemy.x, enemy.y);
       }
     }
@@ -228,6 +236,7 @@ export class ChainBehavior {
     this.overdrivePowerMultiplier = 1;
     this.damage = CHAIN_DEFINITION.damage * this.permanentDamageMultiplier;
     this.maxTargets = CHAIN_DEFINITION.maxTargets;
+    this.bonusTargets = 0;
     this.jumpRadius = CHAIN_DEFINITION.jumpRadius;
     this.evolution = null;
     this.castSequence = 0;
@@ -338,7 +347,7 @@ export class ChainBehavior {
           > (CIRCUIT_LINE_WIDTH * 0.5 + enemy.radius) ** 2) continue;
         this.circuitHitMarkers[index] = this.circuitTick;
         this.circuitHitGenerations[index] = enemy.generation;
-        enemy.health -= this.context.rollCriticalDamage(this.damage * 0.12);
+        enemy.health -= this.context.rollCriticalDamage(this.damage * CHAIN_EVOLUTION_TUNING.circuitTickDamageMultiplier);
         if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
       }
     }

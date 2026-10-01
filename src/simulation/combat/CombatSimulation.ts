@@ -337,7 +337,10 @@ export class CombatSimulation {
     this.boomerangStates = this.weaponSystem.boomerangStates;
     this.boomerangPulse = this.weaponSystem.boomerangPulse;
     this.pulseRingWeapon = this.weaponSystem.pulseRingWeapon;
+    const weaponSystem = this.weaponSystem;
     this.renderState = {
+      get orbitEvolution() { return weaponSystem.currentOrbitEvolution; },
+      get chainEvolution() { return weaponSystem.currentChainEvolution; },
       enemies: this.enemies.states,
       projectiles: this.projectiles.states,
       orbitBlades: this.orbitBlades,
@@ -506,6 +509,10 @@ export class CombatSimulation {
 
   public get currentChainJumpRadius(): number {
     return this.weaponSystem.currentChainJumpRadius;
+  }
+
+  public get currentChainMaxTargets(): number {
+    return this.weaponSystem.currentChainMaxTargets;
   }
 
   public get currentBoomerangDamage(): number {

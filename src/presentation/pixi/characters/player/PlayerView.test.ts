@@ -25,6 +25,7 @@ const firstShotFlashMove = (view: PlayerView): readonly [number, number] => {
 };
 
 const skinTextures = {
+  spearhead: Texture.WHITE,
   manta: Texture.WHITE,
   cyan: Texture.WHITE,
   violet: Texture.WHITE,
@@ -64,9 +65,32 @@ const state = (x: number, y: number, health = 100) => ({
 });
 
 describe('PlayerView', () => {
+  it('activates the free PNG skin lazily and restores old skins on switching', async () => {
+    const view = new PlayerView(textures);
+    expect(view.root.children.some(child => child.label === 'tethered-ship-prototype')).toBe(false);
+    view.setSkin('spearhead');
+    await Promise.resolve(); // Without browser Image, the original hull remains the safe fallback.
+    const raster = view.root.children.find(child => child.label === 'tethered-ship-prototype')!;
+    expect(raster).toBeDefined();
+    view.render(state(300, 400), 0);
+    expect(raster.visible).toBe(false);
+    view.setSkin('manta');
+    view.render(state(300, 400), 0.1);
+    expect(view.skinId).toBe('manta');
+    expect(raster.visible).toBe(false);
+    view.setSkin('spearhead');
+    view.setCannonSkin('helix');
+    view.render(state(300, 400), 0.2);
+    expect(view.cannonSkinId).toBe('helix');
+    expect(view.root.children.filter(child => child.label === 'tethered-ship-prototype')).toHaveLength(1);
+    view.reset();
+    view.setSkin('cyan');
+    view.render(state(300, 400), 0);
+    expect(raster.visible).toBe(false);
+  });
   it('composes aligned pieces, supports skins and animates damage locally', () => {
     const view = new PlayerView(textures);
-    expect(view.root.children).toHaveLength(11);
+    expect(view.root.children).toHaveLength(12); // shared two-sprite rechargeable shield
     expect(view.skinId).toBe('cyan');
     view.render(state(300, 400), 0, 1);
     const shield = view.root.children[10] as { visible: boolean };

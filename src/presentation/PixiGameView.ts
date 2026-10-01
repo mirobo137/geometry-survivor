@@ -54,7 +54,8 @@ export class PixiGameView {
     playerSkin: PlayerSkinId = 'cyan',
     quality: FxQuality = 'medium',
     cannonSkin: CannonSkinId = 'basic',
-    background: BackgroundId = 'deep-space'
+    background: BackgroundId = 'deep-space',
+    tetheredPrototype = false
   ) {
     this.backgroundView = new BackgroundView(renderer, background, quality);
     this.hazardView = new HazardView(quality);
@@ -68,12 +69,13 @@ export class PixiGameView {
     this.entitiesView = new CombatEntitiesView(renderer, quality, cannonSkin);
     this.weaponView = new WeaponView(renderer, () => this.screenFxView.play('chain-hit'), quality);
     this.levelUpFxView = new LevelUpFxView(renderer);
-    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin, quality);
+    this.playerView = new PlayerView(createPlayerTextures(renderer), playerSkin, cannonSkin, quality, tetheredPrototype);
     this.impactFxView = new ImpactFxView(renderer, quality);
     this.terminalFxView = new TerminalFxView(renderer, quality);
     this.world.addChild(
       this.arenaView.root,
       this.weaponView.magneticChargeUnderlay,
+      this.weaponView.arsenalUnderlay,
       this.entitiesView.root,
       this.weaponView.root,
       this.hazardView.root,

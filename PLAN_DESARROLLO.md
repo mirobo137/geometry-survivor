@@ -543,6 +543,45 @@ nubes pequeñas sólo en escritorio, sin cambiar controles ni combate.
 La nueva portada espera aprobación visual; esto no autoriza migrar toda la UI.
 No cambia progresión ni combate, y las pruebas humanas del Laboratorio siguen aplazadas.
 
+### Extensión de combate autorizada — 30-09-2026
+
+Prueba adicional autorizada de nave/cañones vinculados: adaptar la nave de
+portada a un único PNG completo (propulsor integrado) y dos módulos PNG unidos
+por cables visuales. La versión de casco/propulsor separados queda sustituida
+por petición del usuario; cañones/cables conservan su tratamiento aprobado.
+Opt-in `?ship-preview=tether`; no es una migración del catálogo ni del guardado.
+Mantiene hitbox, apuntado y bocas de disparo actuales; sin física de cuerda.
+El usuario aprueba la nave de UNA imagen y autoriza migrar todas las naves y
+cañones a PNG en la próxima sesión, conservando guardados/IDs y elección de
+cañón. En esta entrega sólo añadir Ivory Spear (`spearhead`) GRATIS/equipable;
+no ejecutar aún la migración completa. Guía vigente:
+[Naves PNG](docs/design/NAVES_PNG.md). Contrato, prompts, carga, coste y rutas:
+[Nave vinculada](src/assets/skins/tethered/README.md).
+Evaluar después la nave equipada como arte del menú y propulsión localizada;
+no implementar personalización, shaders o derrota nueva en esta prueba.
+
+El usuario aprueba el prototipo PNG de Magnetic Charge y solicita extenderlo
+a las seis familias, sus doce evoluciones y el escudo recargable. Se autoriza
+arte raster propio y compositor pooled, no cambios de balance, daño, economía,
+colisiones o targeting. La base magnética conserva su tratamiento aprobado;
+las evoluciones dejan de estar bloqueadas para esta entrega visual. Registro,
+prompts, alpha, pivotes, fallback y presupuesto:
+[Arsenal PNG](src/assets/fx/arsenal/README.md). Los warnings y fronteras dinámicas
+pueden seguir usando geometría fina por precisión; Low conserva la información.
+No se declara aprobación humana anticipada del nuevo lote ni FPS físicos.
+
+Revisión puntual posterior, 30-09-2026: el usuario autoriza expresamente cambiar
+Singularity Return a alcance +48% y división remota en seis fragmentos guiados
+(ajuste final: recorte del 20% del extra previamente añadido),
+sin detonación ni slow. Esta excepción de gameplay prevalece sobre la restricción
+visual del lote anterior. Closed Circuit suma dos blancos, +25% de daño por
+tick y PNG exclusivo más legible; Thunderhead conserva todos los blancos base.
+Cobertura postevolución suma un blanco y 30u de salto en ambas ramas, hasta
+tres compras. Thunderhead conserva su descarga propia; Echo Shock corrige su
+fade final contraído. Contrato actual:
+[EVOLUCIONES_V2 §4.D/E](docs/design/EVOLUCIONES_V2.md). Mantener IDs y guardado;
+prueba humana de la rama pendiente, sin reabrir balance general ni Laboratorio.
+
 ### Contrato vigente de fondos — 27-09-2026
 
 Todos los fondos nuevos y existentes heredan el movimiento de placa compartido:
@@ -2369,11 +2408,11 @@ función, visuales, cartas, límites y pruebas. **Solo plan, no código v2.**
 | Projectile | Rail Lance: conservar | Pulse Volley: conservar |
 | Orbit | Solar Crown: emisión espiral de blades | Graviton Halo: órbita elíptica orientada al movimiento |
 | Chain | Closed Circuit: cables estacionarios que dañan al cruzar | Thunderhead: sobrecargas fijadas y explosiones retardadas |
-| Boomerang | Comet Quintet (`twin_comet`): cinco cuchillas de corto alcance, ida y vuelta | Singularity Return: detonación en grupo remoto y ralentización |
+| Boomerang | Comet Quintet (`twin_comet`): cinco cuchillas de corto alcance, ida y vuelta | Singularity Return: alcance +48%, división en seis fragmentos guiados |
 | Pulse Ring | Echo Shock: ondas en dos posiciones del desplazamiento | Compression Wave: frente direccional saliente, cono visible y sin atracción |
 | Magnetic | Event Horizon: núcleo remoto con centro dañino | Polar Collapse: tres frentes convergentes, atracción remota y doble pulso final |
 
-**Ajuste puntual del 28-09-2026:** la pareja Boomerang de esta tabla prevalece
+**Ajustes puntuales del 28/30-09-2026:** la pareja Boomerang de esta tabla prevalece
 sobre su prototipo histórico más abajo. Parámetros, lectura visual y prueba
 pendiente están en [EVOLUCIONES_V2 §4.D](docs/design/EVOLUCIONES_V2.md).
 

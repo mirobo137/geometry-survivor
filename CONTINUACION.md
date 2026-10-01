@@ -1,5 +1,184 @@
 # Geometry Survivor — estado y continuación
 
+## Siguiente sesión: catálogo PNG aprobado / Ivory Spear gratis
+
+Última petición: usuario aprueba nave de una sola imagen y cañones vinculados.
+Migrar todas las skins de nave y modelos de cañón a PNG en próxima sesión,
+conservando IDs/precios/guardados y sin cambios de combate. NO reintroducir
+nave por piezas. Guía y orden: docs/design/NAVES_PNG.md (canónica, enlazada §8).
+Pendientes explícitos: shaders/propulsión y nave equipada como PNG de Inicio;
+derrota nueva también futura. Laboratorio sigue pendiente de pruebas humanas.
+
+Implementado hoy: `spearhead` / Ivory Spear, Skins → Naves, gratis; tarjeta y
+modal usan PNG real de nave y cañón, equipar persiste en localStorage. Sin schema
+nuevo ni pérdida de progreso. Funciona sin `ship-preview`; opción antigua sigue
+compatible. Ruta desarrollo: `/?skin=spearhead&act=radial`; para elección real
+entrar al menú normal. La prueba incluye módulos PNG del prototipo y conserva
+proyectil/estela elegidos sin sobrescribir cannonSkins; migración restaurará
+independencia de modelo físico de cañón (ver guía). Fallback comparte texturas
+cyan existentes, no añade cuatro rasterizaciones SVG para la nueva skin.
+No nueva generación de imágenes hoy; mismo arte aprobado y presupuesto.
+
+Comprobado: typecheck; 120 archivos/578 tests (un worker), builds local/Poki/
+CrazyGames; cuatro smokes desktop/móvil (selección gratis/recarga/cambio a cyan
+y vuelta, preview, gameplay y prueba opt-in pausa/resize/reinicio).
+Primer intento en paralelo agotó memoria con Vite anterior en27.4GiB; usuario
+autorizó reinicio, proceso ya había cerrado al comprobarlo. Vite nuevo disponible
+en127.0.0.1:5173; sesión3668, no cerrar al entregar. Repetición acotada pasó.
+Warning preexistente chunk JS>500kB sigue. No móvil físico ni perfil FPS.
+Sin commit/push; publicar en Pages sólo cuando el usuario lo solicite.
+
+## Prueba de nave y cañones vinculados — 30-09-2026
+
+Snapshot anterior, supersedido por la aprobación y skin equipable de arriba.
+Solicitud entonces: sólo prototipo, no migrar catálogo hasta aceptación humana.
+Revisión actual: usuario aprueba cañones/cables y pide sustituir las dos piezas
+de la nave por una imagen completa, con propulsor integrado. Ya implementado.
+`?ship-preview=tether` activa ese PNG adaptado de la portada, dos módulos que
+comparten PNG y dos cables flexibles de geometría acotada.
+Ruta directa: `/?ship-preview=tether&act=radial&skin=cyan&cannon=basic`.
+Para menú/reinicio, quitar `act`; comparar Low/High o quitar `ship-preview`.
+
+No nuevos IDs, precios, compras, cambios de localStorage ni simulación.
+Mantiene radio22 y slots `(±27,−11)` rotados con el tiro; los cañones conservan
+el apuntado independiente. No son drones libres ni existe física de cuerda.
+Tres sprites de arte + flash compartido/una Graphics en compositor opt-in;
+fallback original sólo se oculta al cargar las dos imágenes. Pausa congela pose.
+79,175bytes PNG /320KiB RGBA8 teóricos. La prueba añade nodos y conserva
+texturas originales ocultas: no prometer ahorro de memoria ni FPS.
+
+Ficha y prompts: src/assets/skins/tethered/README.md y
+scripts/tether-image-sources.json. PNG RGBA reales 256²/128². Eliminados los dos
+derivados antiguos de casco/propulsor; maestros del host conservados. PNG de
+portada y cañón intactos. Sin filtros, shaders ni nueva animación de derrota.
+La nave equipada en Inicio se considera una buena siguiente prueba de identidad,
+pero no está implementada ni autoriza migrar el catálogo.
+QA: scripts/qa-tethered.mjs, ejecutar DESPUÉS de Playwright porque éste limpia
+test-results. Tests de escena y recursos: TetheredShipView.test.ts y
+TetheredAssets.test.ts; dos nuevos smokes en tethered.checks.ts.
+
+Comprobado: typecheck; 120 archivos/575 tests, incluyendo puertos/pausa;
+local/Poki/CrazyGames; dos smokes
+desktop/móvil y cuatro sesiones Low/High con resize/reinicio, sin pageerrors;
+cero PNG en ruta ordinaria, fallback original al abortar descarga de cañón.
+No se midió rendimiento en móvil físico. Pendiente aceptación artística y
+lectura en densidad por el usuario; no aprobar catálogo ni Laboratorio.
+Sin commit/push y sin reiniciar Vite del usuario.
+
+## Ajuste final de Singularity / Closed Circuit / Thunderhead — 30-09-2026
+
+Solicitud actual aplicada, prevalece sobre la revisión anterior de esta página:
+
+- Singularity Return: seis fragmentos, mismo daño por fragmento y reglas de
+  guía/contacto; alcance +48% (recorte del 20% del extra +60%, no del total).
+  I=370u, III–VII=414.4u; Cobertura +59.2u, preview efectivo actualizado.
+  Abanico ±0.55 rad conservado; pool8, cada portador reserva cinco plazas extra
+  y puede convivir con dos filos antiguos. Nunca se recorta una división.
+- Closed Circuit: dos blancos extra, VII=7; cable de 0.9s, tick0.2s, daño
+  15% del daño heredado por tick (antes12%, +25% relativo), unión por objetivo
+  para no multiplicar daño al tocar varios cables. Impacto inicial40% intacto.
+  PNG reemplazado con filamentos trenzados y diamantes cian/esmeralda; 128²,
+  6,782bytes, alpha real. Prompt/maestro en scripts/arsenal-image-sources.json.
+- Thunderhead: conserva los cinco blancos de VII; dos marcas explosivas no
+  limitan enlaces. Ambas ramas reciben +1 blanco/+30u con cada Cobertura,
+  máximo tres: Circuito7→10, Thunder5→8. Carta muestra blancos antes/después.
+- Pool de cadena13 deja espacio para diez blancos y los tres cables; el
+  compositor tiene61 sprites fijos (antes57) al reducir explosiones a dos.
+  Sin filtros, partículas o timers nuevos. Texturas del arsenal: 690,315bytes
+  (−1,002bytes respecto de entrega anterior); memoria RGBA teórica sin cambio.
+
+Validado: typecheck, 118 archivos/566 tests; local/Poki/CrazyGames; tres smokes
+desktop (decisión de cadena, compositor y doce drills aplicados) y uno móvil
+(joystick/pausa/rotación). Seis sesiones Low/High de las tres armas y seis
+transiciones (incluye seis filos visibles y fade Echo), sin pageerrors/HTTP errors.
+Tests cubren crecimiento, reservas, límite13, limpieza/reset, daño único por
+tick a30/60/144Hz y reutilización de sprites. No se midió GPU/FPS físico.
+Warning de chunk JS >500kB permanece. Falta la aceptación artística/de balance
+de estos ajustes por el usuario; balance general y pruebas de Laboratorio no
+se reabren. Sin commit/push.
+
+Rutas existentes: `/?evolution=singularity-return|closed-circuit|thunderhead&scenario=mass&debug=1&quality=high`.
+Guía actual: EVOLUCIONES_V2 §4.C/D, PROGRESION_ARMAS_V2 §herencia y
+src/assets/fx/arsenal/README.md. QA visual: scripts/qa-arsenal.mjs con filtros;
+scripts/qa-weapon-transitions.mjs con preview4173.
+
+## Revisión Singularity / Thunderhead / Echo — 30-09-2026
+
+Solicitud puntual posterior al lote PNG: Singularity Return ya no detona ni
+ralentiza. Portador al 160% del alcance actual; en el extremo se sustituye por
+tres filos guiados hacia enemigos cercanos al punto, priorizando blancos
+distintos. Una sola colisión por filo, TTL 1.35 s, velocidad 520 u/s, giro
+limitado, validación de generación y reservas dentro del pool actual de ocho.
+Daño: portador 65%, cada filo 85% del daño heredado. Maestría de cobertura
+antes/después contempla el alcance efectivo (+64). ID/slug conservados.
+La carta y EVOLUCIONES_V2 §4.D describen la nueva mecánica; prueba humana pendiente.
+
+Tres nuevos PNG transparentes propios: thunderhead-burst (256²),
+singularity-split y singularity-shard (128²). Ya no usan la detonación magnética.
++100,646 bytes PNG/+384 KiB RGBA teóricos; no nuevos sprites/filtros/pools.
+Echo: fallo de active→recovery corregido en simulación, raster y fallback;
+termina al radio contraído, no reabre el aro al radio máximo.
+
+Validado: typecheck, 118 archivos/556 tests; tres builds; tres smokes desktop
+(evoluciones, Pulse Ring, WebGL) y joystick/pausa/rotación móvil.
+QA dirigida Low/High de las tres transiciones, sin pageerrors/HTTP errors;
+seis bases, escudo, menú/reinicio y doce evoluciones sin PNG también correctos.
+Un reintento de suite no pudo iniciar workers por memoria local; la repetición
+secuencial con dos workers pasó. No cambiar CI a causa de esa incidencia.
+Incidencia posterior: Vite local PID 25268 (~28,350 MiB privados) dejó Windows
+con ~720 MiB virtuales libres. Reiniciado con permiso explícito del usuario;
+localhost:5173 y acceso LAN disponibles de nuevo, usando configuración host:true
+y loader runner. Causa del crecimiento aún no diagnosticada; no atribuirlo al juego.
+Tras reiniciar: suite completa 556/556, typecheck y QA de seis transiciones
+repetidos correctos; ningún proceso Node observado supera 125 MiB privados.
+No se midió FPS de móvil físico; warning previo de chunk JS >500 kB permanece.
+Guía, prompts y presupuesto: [Arsenal README](src/assets/fx/arsenal/README.md).
+QA: scripts/qa-weapon-transitions.mjs y qa-arsenal-lifecycle.mjs, preview 4173.
+Rutas locales: `/?evolution=singularity-return|thunderhead|echo-shock&scenario=mass&debug=1&quality=high`.
+Sin commit/push; Laboratorio humano sigue aplazado; no reabrir balance general.
+
+## Arsenal ilustrado en combate — 30-09-2026
+
+Se extendió el prototipo PNG aprobado de Magnetic Charge a las seis armas,
+las doce evoluciones y el escudo recargable. 18 PNG nuevos con alpha real,
+590,671 bytes y 2.06 MiB RGBA teóricos, más cuatro materiales magnéticos
+reutilizados. Arte generado, no imágenes de cartas ni SVG rasterizados.
+Catálogo lazy cerrado, sprites preasignados, sin filtros, dependencias,
+partículas extra ni cambios de reglas, hitboxes, daño, alcance o economía.
+Los cosméticos de cañón conservan su identidad. Low mantiene arte funcional;
+High añade acentos acotados. Fallo de imagen conserva fallback vectorial.
+Event Horizon se disipa sin explosión; Polar sigue sus frentes radiales y
+disco final reales; Echo y Compression siguen los casts de simulación.
+
+Contrato, inventario, prompts, ownership, pivotes y rutas de prueba:
+[Arsenal README](src/assets/fx/arsenal/README.md). Generación y optimización
+reproducibles en scripts/; los maestros originales no se envían al bundle.
+Las skills rendering/mobile-performance guiaron la separación de capas,
+pooling y límites; validation guió fallos de carga y ciclo menú/partida.
+Sólo se amplió el snapshot readonly con IDs de evolución orbit/chain.
+
+Verificado: typecheck, 118 archivos/548 tests unitarios, tres builds
+local/Poki/CrazyGames, diez smokes desktop dirigidos, incluida recuperación
+de contexto WebGL.
+Tres smokes móviles adicionales: entrada, joystick/pausa/rotación y touch.
+QA de las doce evoluciones en Low/Pixel 5 emulado y High/1280×720:
+24 sesiones con textura PNG efectivamente visible en el scene graph y cero
+pageerrors/HTTP errors.
+Capturas bajo test-results/arsenal/ (ignoradas). La congelación usa el botón
+real de pausa; el hook de Pixi sólo inspecciona y existe en los scripts de QA,
+no como global de producción. No ejecutar QA mientras se reconstruye dist.
+Las seis bases y el escudo mostraron también sus texturas; vuelta a menú y
+nuevo inicio correctos. Las doce evoluciones permanecieron funcionales al
+abortar todos los PNG, con fallback. QA reproducible en los dos scripts.
+Sonda aislada de stress en Chromium headless, 390×844/DPR1 Low durante 15 s
+tras Jugar: 250 enemigos/300 proyectiles, sin pageerrors, frameP95/max
+33.40 ms y heap JS reportado 16.3 MB. No es stress de todas las armas/FX,
+ni comparación antes/después, ni una puerta de rendimiento móvil aprobada.
+
+Falta aprobación visual humana y medición en móvil físico; no certificar FPS
+con emulación. Continúa el warning previo de chunk JS >500 kB.
+Sin commit/push. Pruebas humanas del Laboratorio siguen aplazadas.
+
 ## Pages: smoke 8 de Inicio acotado — 30-09-2026
 
 El usuario aportó un fallo móvil que agotó los 60 s primero después de Jugar

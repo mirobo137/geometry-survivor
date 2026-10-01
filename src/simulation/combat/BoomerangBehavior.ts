@@ -4,7 +4,7 @@ import type { PlayerState } from '../PlayerModel';
 import type { BoomerangPulseState } from './CombatRenderState';
 import type { EnemyState, BoomerangPool, BoomerangState } from './EntityPools';
 import type { EnemySystem } from '../enemies/EnemySystem';
-import type { BoomerangEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
+import { SINGULARITY_RETURN_TUNING as SINGULARITY, type BoomerangEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const BOOMERANG_DEFINITION = WEAPON_DEFINITIONS.vectorBoomerang;
 const TARGET_SEARCH_RADIUS = 960;
@@ -12,11 +12,6 @@ const CAPTURE_PADDING = 6;
 const EPSILON = 0.000001;
 const TWIN_COMET_ANGLES = [-0.64, -0.32, 0, 0.32, 0.64] as const;
 const TWIN_COMET_RANGE_MULTIPLIER = 0.85;
-const SINGULARITY_RADIUS = 155;
-const SINGULARITY_BLAST_DAMAGE_MULTIPLIER = 1.8;
-const SINGULARITY_SLOW_SECONDS = 1.5;
-const SINGULARITY_SLOW_MULTIPLIER = 0.45;
-const SINGULARITY_LIFE_SECONDS = 0.32;
 
 export interface BoomerangBehaviorContext {
   readonly enemies: EnemySystem;
@@ -36,8 +31,8 @@ export class BoomerangBehavior {
   /** A single five-piece cast shares its per-phase target ledger. */
   private readonly twinOutboundHitGenerations: Uint32Array;
   private readonly twinReturnHitGenerations: Uint32Array;
-  private readonly blastTargetIndices: Uint32Array;
-  private readonly blastTargetGenerations: Uint32Array;
+  private readonly fragmentTargets = new Int32Array(SINGULARITY.fragmentCount);
+  private readonly spawnedFragments: Uint8Array;
   private readonly returnCurveComplete: Uint8Array;
   private unlocked = false;
   private damage = BOOMERANG_DEFINITION.damage;
@@ -55,7 +50,7 @@ export class BoomerangBehavior {
     active: false,
     x: 0,
     y: 0,
-    radius: SINGULARITY_RADIUS,
+    radius: SINGULARITY.splitFxRadius,
     progress: 0,
     sequence: 0
   };
@@ -71,8 +66,7 @@ export class BoomerangBehavior {
     );
     this.twinOutboundHitGenerations = new Uint32Array(context.enemies.pool.capacity);
     this.twinReturnHitGenerations = new Uint32Array(context.enemies.pool.capacity);
-    this.blastTargetIndices = new Uint32Array(context.enemies.pool.capacity);
-    this.blastTargetGenerations = new Uint32Array(context.enemies.pool.capacity);
+    this.spawnedFragments = new Uint8Array(context.boomerangs.capacity);
     this.returnCurveComplete = new Uint8Array(context.boomerangs.capacity);
   }
 
@@ -93,7 +87,7 @@ export class BoomerangBehavior {
   }
 
   public get currentOutboundDistance(): number {
-    return this.outboundDistance;
+    return this.outboundDistance * (this.evolution === 'singularity_return' ? SINGULARITY.rangeMultiplier : 1);
   }
 
   public get currentReturnSpeed(): number {
@@ -145,14 +139,18 @@ export class BoomerangBehavior {
 
   public fire(player: PlayerState): void {
     const twinCast = this.evolution === 'twin_comet';
+    const singularityCast = this.evolution === 'singularity_return';
     const pieceCount = twinCast ? TWIN_COMET_ANGLES.length : 1;
     const activeCount = this.context.boomerangs.activeCount;
+    // Reserve all five extra slots before firing: never clip the six-way split.
+    const reserved = this.context.boomerangs.states.reduce((count, state) => (
+      count + (state.active && state.evolution === 'singularity_return' && !state.fragment ? SINGULARITY.fragmentCount - 1 : 0)
+    ), 0);
     if (!this.unlocked || pieceCount > this.context.boomerangs.capacity
       || (twinCast && activeCount > 0)
-      || activeCount + pieceCount > (twinCast ? pieceCount : BOOMERANG_DEFINITION.maxActive)) return;
-    const targetIndex = this.evolution === 'singularity_return'
-      ? this.findDensestTargetIndex(player)
-      : this.context.enemies.findNearestEnemyIndex(player.x, player.y, TARGET_SEARCH_RADIUS);
+      || (singularityCast ? activeCount + reserved + SINGULARITY.fragmentCount > this.context.boomerangs.capacity
+        : activeCount + pieceCount > (twinCast ? pieceCount : BOOMERANG_DEFINITION.maxActive))) return;
+    const targetIndex = this.context.enemies.findNearestEnemyIndex(player.x, player.y, TARGET_SEARCH_RADIUS);
     const target = targetIndex >= 0 ? this.context.enemies.getState(targetIndex) : null;
     const targetIsValid = target?.active === true && target.health > 0;
     if (targetIsValid) {
@@ -185,24 +183,23 @@ export class BoomerangBehavior {
       state.ageSeconds = 0;
       state.lifetimeSeconds = BOOMERANG_DEFINITION.lifetimeSeconds;
       state.phase = 'outbound';
+      state.fragment = false;
+      state.targetIndex = -1;
+      state.targetGeneration = 0;
       state.directionX = directionX;
       state.directionY = directionY;
       state.distanceTravelled = 0;
       state.travelLimit = twinCast
         ? this.outboundDistance * TWIN_COMET_RANGE_MULTIPLIER
-        : this.evolution === 'singularity_return' && targetIsValid
-          ? Math.min(this.outboundDistance, Math.hypot(target!.x - player.x, target!.y - player.y))
-          : this.outboundDistance;
+        : this.currentOutboundDistance;
       state.fanOffset = twinCast ? piece - 2 : 0;
       state.pathProgress = 0;
       state.curveStartX = player.x;
       state.curveStartY = player.y;
       state.curveControlX = 0;
       state.curveControlY = 0;
-      state.curveEndX = this.evolution === 'singularity_return' && targetIsValid
-        ? target!.x : player.x + directionX * state.travelLimit;
-      state.curveEndY = this.evolution === 'singularity_return' && targetIsValid
-        ? target!.y : player.y + directionY * state.travelLimit;
+      state.curveEndX = player.x + directionX * state.travelLimit;
+      state.curveEndY = player.y + directionY * state.travelLimit;
       state.returnControlX = 0;
       state.returnControlY = 0;
       state.returnStartX = state.curveEndX;
@@ -229,12 +226,17 @@ export class BoomerangBehavior {
     if (dt <= 0) return;
 
     if (this.pulseState.active) {
-      this.pulseState.progress = Math.min(1, this.pulseState.progress + dt / SINGULARITY_LIFE_SECONDS);
+      this.pulseState.progress = Math.min(1, this.pulseState.progress + dt / SINGULARITY.splitFxSeconds);
       if (this.pulseState.progress >= 1) this.pulseState.active = false;
     }
 
+    this.spawnedFragments.fill(0);
     for (const state of this.context.boomerangs.states) {
-      if (!state.active) continue;
+      if (!state.active || this.spawnedFragments[state.slotIndex]) continue;
+      if (state.fragment) {
+        this.advanceFragment(state, dt);
+        continue;
+      }
       state.ageSeconds += dt;
       state.lifetimeSeconds -= dt;
       if (state.lifetimeSeconds <= 0) {
@@ -269,7 +271,8 @@ export class BoomerangBehavior {
           remaining -= travel / this.speed;
           if (state.distanceTravelled >= state.travelLimit - EPSILON) {
             if (state.evolution === 'singularity_return') {
-              this.detonateAtRemoteEndpoint(state);
+              this.splitAtEndpoint(state, remaining);
+              break;
             }
             this.beginReturn(state, player);
           }
@@ -332,6 +335,9 @@ export class BoomerangBehavior {
       state.ageSeconds = 0;
       state.lifetimeSeconds = 0;
       state.phase = 'outbound';
+      state.fragment = false;
+      state.targetIndex = -1;
+      state.targetGeneration = 0;
       state.directionX = 1;
       state.directionY = 0;
       state.distanceTravelled = 0;
@@ -357,6 +363,8 @@ export class BoomerangBehavior {
     this.twinOutboundHitGenerations.fill(0);
     this.twinReturnHitGenerations.fill(0);
     this.returnCurveComplete.fill(0);
+    this.spawnedFragments.fill(0);
+    this.fragmentTargets.fill(-1);
     this.unlocked = false;
     this.rank = 1;
     this.overdrivePowerMultiplier = 1;
@@ -402,70 +410,115 @@ export class BoomerangBehavior {
     this.pulseState.sequence = snapshot.pulseSequence;
   }
 
-  /** Evaluates the small fixed enemy pool only when a cast begins. */
-  private findDensestTargetIndex(player: PlayerState): number {
+  /** Three bounded nearest-neighbour scans, only on split/retarget (never quadratic). */
+  private nearestFragmentTarget(x: number, y: number, excludedCount = 0): number {
+    let best = -1;
+    let nearest = SINGULARITY.targetSearchRadius ** 2;
     const states = this.context.enemies.pool.states;
-    const rangeSquared = this.outboundDistance * this.outboundDistance;
-    let bestIndex = -1;
-    let bestCount = 0;
-    let bestDistanceSquared = -1;
-    for (let index = 0; index < states.length; index += 1) {
-      const candidate = states[index];
-      if (!candidate.active || candidate.health <= 0) continue;
-      const dx = candidate.x - player.x;
-      const dy = candidate.y - player.y;
-      const distanceSquared = dx * dx + dy * dy;
-      if (distanceSquared > rangeSquared) continue;
-      let count = 0;
-      for (const other of states) {
-        if (!other.active || other.health <= 0) continue;
-        const groupDx = other.x - candidate.x;
-        const groupDy = other.y - candidate.y;
-        const reach = SINGULARITY_RADIUS + other.radius;
-        if (groupDx * groupDx + groupDy * groupDy <= reach * reach) count += 1;
-      }
-      if (count > bestCount || (count === bestCount && distanceSquared > bestDistanceSquared)) {
-        bestIndex = index;
-        bestCount = count;
-        bestDistanceSquared = distanceSquared;
-      }
-    }
-    return bestIndex;
-  }
-
-  private detonateAtRemoteEndpoint(state: BoomerangState): void {
-    this.triggerSingularityPulse(state.x, state.y);
-    const states = this.context.enemies.pool.states;
-    let targetCount = 0;
     for (let index = 0; index < states.length; index += 1) {
       const enemy = states[index];
       if (!enemy.active || enemy.health <= 0) continue;
-      const dx = enemy.x - state.x;
-      const dy = enemy.y - state.y;
-      const reach = SINGULARITY_RADIUS + enemy.radius;
-      if (dx * dx + dy * dy > reach * reach) continue;
-      this.blastTargetIndices[targetCount] = index;
-      this.blastTargetGenerations[targetCount] = enemy.generation;
-      targetCount += 1;
-    }
-    for (let index = 0; index < targetCount; index += 1) {
-      const enemy = states[this.blastTargetIndices[index]];
-      if (!enemy.active || enemy.generation !== this.blastTargetGenerations[index]) continue;
-      enemy.health -= this.context.rollCriticalDamage(state.damage * SINGULARITY_BLAST_DAMAGE_MULTIPLIER);
-      if (enemy.health <= 0) {
-        this.context.onEnemyDefeated(enemy);
-      } else if (enemy.kind !== 'boss') {
-        enemy.slowSeconds = Math.max(enemy.slowSeconds, SINGULARITY_SLOW_SECONDS);
-        enemy.slowMultiplier = Math.min(enemy.slowMultiplier, SINGULARITY_SLOW_MULTIPLIER);
+      let excluded = false;
+      for (let piece = 0; piece < excludedCount; piece += 1) {
+        if (this.fragmentTargets[piece] === index) excluded = true;
+      }
+      if (excluded) continue;
+      const distance = (enemy.x - x) ** 2 + (enemy.y - y) ** 2;
+      if (distance < nearest || (distance === nearest && best < 0)) {
+        nearest = distance;
+        best = index;
       }
     }
+    return best;
+  }
+
+  private splitAtEndpoint(carrier: BoomerangState, remaining: number): void {
+    const { x, y, directionX, directionY, damage, radius } = carrier;
+    this.triggerSingularityPulse(x, y);
+    for (let piece = 0; piece < SINGULARITY.fragmentCount; piece += 1) {
+      const distinct = this.nearestFragmentTarget(x, y, piece);
+      this.fragmentTargets[piece] = distinct >= 0 ? distinct : this.nearestFragmentTarget(x, y);
+    }
+    this.context.boomerangs.release(carrier);
+    for (let piece = 0; piece < SINGULARITY.fragmentCount; piece += 1) {
+      const shard = this.context.boomerangs.acquire();
+      if (!shard) break; // Reserved at fire(); defensive for external pool consumers.
+      const targetIndex = this.fragmentTargets[piece];
+      const target = targetIndex >= 0 ? this.context.enemies.getState(targetIndex) : null;
+      const fanOffset = piece - (SINGULARITY.fragmentCount - 1) / 2;
+      const angle = fanOffset * (2 * SINGULARITY.fragmentFanHalfAngle / (SINGULARITY.fragmentCount - 1));
+      const launchX = directionX * Math.cos(angle) - directionY * Math.sin(angle);
+      const launchY = directionX * Math.sin(angle) + directionY * Math.cos(angle);
+      // Initialise every reused field before presentation or collision can see the slot.
+      Object.assign(shard, {
+        x, y, vx: launchX * SINGULARITY.fragmentSpeed, vy: launchY * SINGULARITY.fragmentSpeed,
+        radius: radius * SINGULARITY.fragmentRadiusMultiplier,
+        damage: damage * SINGULARITY.fragmentDamageMultiplier,
+        ageSeconds: 0, lifetimeSeconds: SINGULARITY.fragmentLifetimeSeconds,
+        phase: 'homing', fragment: true, targetIndex, targetGeneration: target?.generation ?? 0,
+        evolution: 'singularity_return', directionX: launchX, directionY: launchY,
+        distanceTravelled: 0, travelLimit: 0, fanOffset, pathProgress: 0,
+        curveStartX: x, curveStartY: y, curveControlX: 0, curveControlY: 0,
+        curveEndX: x, curveEndY: y, returnControlX: 0, returnControlY: 0,
+        returnStartX: x, returnStartY: y, returnTargetX: x, returnTargetY: y
+      });
+      this.spawnedFragments[shard.slotIndex] = 1;
+      if (remaining > EPSILON) this.advanceFragment(shard, remaining);
+    }
+  }
+
+  private advanceFragment(state: BoomerangState, dt: number): void {
+    const travelTime = Math.min(dt, Math.max(0, state.lifetimeSeconds));
+    state.ageSeconds += travelTime;
+    state.lifetimeSeconds -= dt;
+    let target = state.targetIndex >= 0 ? this.context.enemies.getState(state.targetIndex) : null;
+    if (!target?.active || target.health <= 0 || target.generation !== state.targetGeneration) {
+      state.targetIndex = this.nearestFragmentTarget(state.curveStartX, state.curveStartY);
+      target = state.targetIndex >= 0 ? this.context.enemies.getState(state.targetIndex) : null;
+      state.targetGeneration = target?.generation ?? 0;
+    }
+    if (target) {
+      const desired = Math.atan2(target.y - state.y, target.x - state.x);
+      const heading = Math.atan2(state.directionY, state.directionX);
+      const difference = Math.atan2(Math.sin(desired - heading), Math.cos(desired - heading));
+      const limit = SINGULARITY.turnRadiansPerSecond * travelTime;
+      const turn = Math.max(-limit, Math.min(limit, difference));
+      state.directionX = Math.cos(heading + turn);
+      state.directionY = Math.sin(heading + turn);
+    }
+    state.vx = state.directionX * SINGULARITY.fragmentSpeed;
+    state.vy = state.directionY * SINGULARITY.fragmentSpeed;
+    const startX = state.x;
+    const startY = state.y;
+    state.x += state.vx * travelTime;
+    state.y += state.vy * travelTime;
+    const dx = state.x - startX;
+    const dy = state.y - startY;
+    const candidates = this.context.enemies.queryCircle(
+      (startX + state.x) * 0.5, (startY + state.y) * 0.5, Math.hypot(dx, dy) * 0.5 + state.radius + 48
+    );
+    let hitIndex = -1;
+    let firstHit = Infinity;
+    for (const index of candidates) {
+      const enemy = this.context.enemies.getState(index);
+      if (!enemy.active || enemy.health <= 0) continue;
+      const hit = segmentCircleHit(startX - enemy.x, startY - enemy.y, dx, dy, state.radius + enemy.radius);
+      if (hit < firstHit) { firstHit = hit; hitIndex = index; }
+    }
+    if (hitIndex >= 0) {
+      const enemy = this.context.enemies.getState(hitIndex);
+      const damage = this.context.rollCriticalDamage(state.damage);
+      this.context.boomerangs.release(state);
+      enemy.health -= damage;
+      if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
+    } else if (state.lifetimeSeconds <= 0) this.context.boomerangs.release(state);
   }
 
   private triggerSingularityPulse(x: number, y: number): void {
     this.pulseState.active = true;
     this.pulseState.x = x;
     this.pulseState.y = y;
-    this.pulseState.radius = SINGULARITY_RADIUS;
+    this.pulseState.radius = SINGULARITY.splitFxRadius;
     this.pulseState.progress = 0;
     this.pulseState.sequence = this.pulseState.sequence >= 2_000_000_000
       ? 1 : this.pulseState.sequence + 1;
@@ -537,7 +590,7 @@ export class BoomerangBehavior {
       const phaseMultiplier = state.evolution === 'twin_comet'
         ? 1.1
         : state.evolution === 'singularity_return'
-          ? phase === 'outbound' ? 0.5 : 0.8
+          ? SINGULARITY.carrierDamageMultiplier
           : 1;
       enemy.health -= this.context.rollCriticalDamage(state.damage * phaseMultiplier);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
@@ -572,6 +625,19 @@ const distanceToSegmentSquared = (
   const offsetX = pointX - closestX;
   const offsetY = pointY - closestY;
   return offsetX * offsetX + offsetY * offsetY;
+};
+
+/** Earliest physical collision along the finite segment, including initial overlap. */
+const segmentCircleHit = (x: number, y: number, dx: number, dy: number, radius: number): number => {
+  const c = x * x + y * y - radius * radius;
+  if (c <= 0) return 0;
+  const a = dx * dx + dy * dy;
+  if (a <= EPSILON) return Infinity;
+  const b = x * dx + y * dy;
+  const discriminant = b * b - a * c;
+  if (discriminant < 0) return Infinity;
+  const t = (-b - Math.sqrt(discriminant)) / a;
+  return t >= 0 && t <= 1 ? t : Infinity;
 };
 
 const normalizeMultiplier = (value: number): number => (

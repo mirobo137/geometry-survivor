@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks();
+registerTetheredShipChecks();
 
 test('equipa Manta híbrida gratis, conserva selección y carga una sola textura', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);

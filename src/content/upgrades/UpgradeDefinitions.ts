@@ -313,7 +313,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'closed_circuit',
     title: 'Closed Circuit',
-    description: 'La cadena salta hasta 5 veces y puede regresar desde un borde cargado.',
+    description: 'Alcanza dos blancos extra y deja cables persistentes con mayor dano al cruzarlos.',
     effect: { type: 'weaponEvolution', evolution: 'closed_circuit' },
     maxStacks: 1,
     requires: ['chain_lightning']
@@ -321,7 +321,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'thunderhead',
     title: 'Thunderhead',
-    description: 'Pierde un salto; cada objetivo alcanzado deja una explosion retardada.',
+    description: 'Conserva todos los blancos de la cadena; dos impactos dejan explosiones retardadas.',
     effect: { type: 'weaponEvolution', evolution: 'thunderhead' },
     maxStacks: 1,
     requires: ['chain_lightning']
@@ -337,7 +337,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'singularity_return',
     title: 'Singularity Return',
-    description: 'Busca grupos compactos, detona en su posicion y ralentiza a los supervivientes.',
+    description: 'Viaja un 48% mas lejos y se divide en seis fragmentos que persiguen enemigos cercanos.',
     effect: { type: 'weaponEvolution', evolution: 'singularity_return' },
     maxStacks: 1,
     requires: ['vector_boomerang']
@@ -841,7 +841,7 @@ export const WEAPON_MASTERY_DEFINITIONS: readonly UpgradeDefinition[] = [
   ...createMasteryCards('chain', 'Cadena', {
     power: 'Cada enlace descarga mas energia sobre su objetivo.',
     tempo: 'La red electrica recupera su siguiente salto con mayor rapidez.',
-    coverage: 'La cadena encuentra enlaces validos a mayor distancia.'
+    coverage: '+1 blanco y +30 de alcance entre enlaces, en ambas evoluciones.'
   }),
   ...createMasteryCards('boomerang', 'Bumeran', {
     power: 'La hoja gana peso de impacto en ida y regreso.',

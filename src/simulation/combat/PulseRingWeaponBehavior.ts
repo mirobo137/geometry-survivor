@@ -346,7 +346,7 @@ export class PulseRingWeaponBehavior {
     }
     const travelProgress = this.phase === 'active' ? this.state.progress : 1;
     const travelDistance = (this.effectiveEndRadius() - DEFINITION.startRadius) * smoothstep(travelProgress);
-    this.state.radius = this.evolution === 'echo_shock' && this.state.wave === 1 && this.phase === 'active'
+    this.state.radius = this.evolution === 'echo_shock' && this.state.wave === 1
       ? this.effectiveEndRadius() - travelDistance
       : DEFINITION.startRadius + travelDistance;
   }

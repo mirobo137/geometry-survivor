@@ -45,6 +45,7 @@ const STAT_LABELS: Record<UpgradePreviewStat, string> = {
   chainDamage: 'Daño de cadena',
   chainCooldown: 'Intervalo de cadena',
   chainJumpRadius: 'Salto de cadena',
+  chainTargets: 'Blancos de cadena',
   boomerangDamage: 'Daño de búmeran',
   boomerangCooldown: 'Intervalo de búmeran',
   boomerangDistance: 'Alcance de búmeran',

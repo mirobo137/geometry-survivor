@@ -106,6 +106,9 @@ describe('WeaponView', () => {
         ageSeconds: 0.4,
         lifetimeSeconds: 1.8,
         phase: (index === 0 ? 'outbound' : 'returning') as 'outbound' | 'returning',
+        fragment: false,
+        targetIndex: -1,
+        targetGeneration: 0,
         directionX: 1,
         directionY: 0,
         distanceTravelled: 120,
@@ -181,9 +184,11 @@ describe('WeaponView', () => {
     expect(highLayer.children[6].visible).toBe(true); // cadence markers are High-only.
 
     pulseRingWeapon.phase = 'recovery';
+    pulseRingWeapon.radius = pulseRingWeapon.startRadius;
     pulseRingWeapon.progress = 0.25;
     highView.render(combat);
     expect(highLayer.children[7].visible).toBe(true);
+    expect(highLayer.children[7].scale.x).toBeCloseTo(30 / 200 * (1 + 0.25 * 0.09));
     highView.reset();
     expect(highLayer.visible).toBe(false);
   });

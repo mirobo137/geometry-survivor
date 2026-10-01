@@ -35,19 +35,21 @@ const setup = (count: number) => {
 };
 
 describe('ChainBehavior evolutions', () => {
-  it('Closed Circuit extends the chain and returns from a loaded arena edge', () => {
+  it('Closed Circuit adds two targets and retains all three persistent cables', () => {
     const { behavior, enemies } = setup(5);
     expect(behavior.setEvolution('closed_circuit')).toBe(true);
     const before = enemies.pool.states[0].health;
     behavior.fire(player);
 
-    expect(behavior.segments.filter((segment) => segment.active)).toHaveLength(6);
+    expect(behavior.currentMaxTargets).toBe(5);
+    expect(behavior.segments.filter((segment) => segment.active)).toHaveLength(8);
+    expect(behavior.segments.filter(segment => segment.active && segment.persistent)).toHaveLength(3);
     expect(behavior.segments[5].x1).toBeGreaterThan(0);
     expect(behavior.segments[5].x2).toBeGreaterThan(0);
     expect(enemies.pool.states[0].health).toBeLessThan(before);
   });
 
-  it('Thunderhead trades one jump for delayed bounded explosions', () => {
+  it('Thunderhead retains every base target with only two delayed explosions', () => {
     const { behavior, enemies } = setup(3);
     expect(behavior.setEvolution('thunderhead')).toBe(true);
     const linkHealthBefore = enemies.pool.states[2].health;
@@ -60,5 +62,45 @@ describe('ChainBehavior evolutions', () => {
     behavior.updateSegments(0.2);
     expect(behavior.explosions.some((explosion) => explosion.phase === 'active')).toBe(true);
     expect(enemies.pool.states[2].health).toBeLessThan(healthBefore);
+  });
+
+  it.each(['closed_circuit', 'thunderhead'] as const)('%s retains rank VII targets and grows through coverage without clipping the circuit', evolution => {
+    const { behavior, enemies } = setup(10);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(behavior.setRank(rank)).toBe(true);
+    expect(behavior.currentMaxTargets).toBe(5);
+    behavior.setEvolution(evolution);
+    const evolvedTargets = evolution === 'closed_circuit' ? 7 : 5;
+    expect(behavior.currentMaxTargets).toBe(evolvedTargets);
+    for (let mastery = 1; mastery <= 3; mastery++) {
+      behavior.increaseMaxTargets(1);
+      expect(behavior.currentMaxTargets).toBe(evolvedTargets + mastery);
+    }
+    behavior.fire(player);
+    expect(enemies.pool.states.filter(enemy => enemy.health < 1000)).toHaveLength(evolvedTargets + 3);
+    expect(behavior.segments.filter(segment => segment.active && !segment.persistent)).toHaveLength(evolvedTargets + 3);
+    expect(behavior.segments.filter(segment => segment.active && segment.persistent)).toHaveLength(evolution === 'closed_circuit' ? 3 : 0);
+    expect(behavior.explosions.filter(explosion => explosion.active)).toHaveLength(evolution === 'thunderhead' ? 2 : 0);
+    behavior.clearTransient();
+    expect(behavior.currentMaxTargets).toBe(evolvedTargets + 3);
+    behavior.setPermanentDamageMultiplier(1.2);
+    expect(behavior.currentMaxTargets).toBe(evolvedTargets + 3);
+    behavior.increaseMaxTargets(1000);
+    expect(behavior.currentMaxTargets).toBe(10);
+    expect(() => behavior.fire(player)).not.toThrow();
+    behavior.reset();
+    expect(behavior.currentMaxTargets).toBe(3);
+  });
+
+  it.each([30, 60, 144])('Closed Circuit ticks deal 25%% more damage once per target, including overlapping cables at %i Hz', hz => {
+    const { behavior, enemies } = setup(5);
+    behavior.setEvolution('closed_circuit');
+    behavior.fire(player);
+    const beforeTicks = enemies.pool.states[1].health;
+    expect(beforeTicks).toBeCloseTo(1000 - behavior.currentDamage * 0.4);
+    // This target touches both adjacent cables and the closing cable: still one hit.
+    for (let i = 0; i < Math.ceil(hz * 0.85); i++) behavior.updateSegments(1 / hz);
+    expect(enemies.pool.states[1].health).toBeCloseTo(beforeTicks - behavior.currentDamage * 0.15 * 4);
+    behavior.updateSegments(1);
+    expect(behavior.segments.every(segment => !segment.active)).toBe(true);
   });
 });

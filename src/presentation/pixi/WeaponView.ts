@@ -11,6 +11,7 @@ import magneticChargeCoreUrl from '../../assets/fx/magnetic-singularity-core.png
 import magneticChargeFieldUrl from '../../assets/fx/magnetic-charge-field.png';
 import magneticChargeTravelUrl from '../../assets/fx/magnetic-charge-travel.png';
 import magneticChargeDetonationUrl from '../../assets/fx/magnetic-charge-detonation.png';
+import { RasterArsenalView } from './weapons/RasterArsenalView';
 
 const PRISM_INK = 0x0d1025;
 const PRISM_ARMOR = 0x51456f;
@@ -72,7 +73,7 @@ interface BoomerangVisual {
 }
 
 type WeaponRenderInput = Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>
-  & Partial<Pick<CombatRenderState, 'orbitPulse' | 'chainExplosions' | 'boomerangs' | 'boomerangPulse' | 'pulseRingWeapon' | 'magneticCharge'>>;
+  & Partial<Pick<CombatRenderState, 'orbitEvolution' | 'chainEvolution' | 'orbitPulse' | 'chainExplosions' | 'boomerangs' | 'boomerangPulse' | 'pulseRingWeapon' | 'magneticCharge'>>;
 
 const polygon = (graphics: Graphics, points: readonly [number, number][], color: number, alpha = 1): void => {
   graphics.beginPath().moveTo(points[0][0], points[0][1]);
@@ -129,6 +130,8 @@ export class WeaponView {
   public readonly root = new Container();
   /** Rendered below combat entities so the effect does not obscure enemy sprites. */
   public readonly magneticChargeUnderlay = new Container();
+  public readonly arsenalUnderlay: Container;
+  private readonly raster: RasterArsenalView;
   private readonly orbitLayer = new Container();
   private readonly orbitPulseLayer = new Graphics();
   private readonly chainLayer = new Graphics();
@@ -174,6 +177,8 @@ export class WeaponView {
     private readonly onChainImpact?: () => void,
     private readonly quality: FxQuality = 'medium'
   ) {
+    this.raster = new RasterArsenalView(quality);
+    this.arsenalUnderlay = this.raster.underlay;
     this.previousChainActive = Array.from({ length: CHAIN_SEGMENT_POOL_CAPACITY }, () => false);
     this.reducedMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
@@ -185,6 +190,7 @@ export class WeaponView {
       this.boomerangLayer,
       this.pulseRingLayer
     );
+    this.root.addChild(this.raster.root);
     for (const sprite of [
       this.magneticChargeTravelSprite,
       this.magneticChargeFieldSprite,
@@ -311,10 +317,11 @@ export class WeaponView {
   }
 
   public render(combat: WeaponRenderInput): void {
+    this.raster.render(combat);
     const orbitPulse = combat.orbitPulse;
     this.orbitPulseLayer.clear();
-    this.orbitPulseLayer.visible = orbitPulse?.active === true;
-    if (orbitPulse?.active) {
+    this.orbitPulseLayer.visible = orbitPulse?.active === true && !this.raster.ready('event_horizon');
+    if (orbitPulse?.active && this.orbitPulseLayer.visible) {
       const progress = clamp01(orbitPulse.progress);
       const radius = orbitPulse.radius * (0.32 + progress * 0.68);
       const alpha = (1 - progress) * (this.quality === 'high' ? 0.78 : this.quality === 'medium' ? 0.62 : 0.5);
@@ -324,8 +331,8 @@ export class WeaponView {
     for (let index = 0; index < this.orbitVisuals.length; index += 1) {
       const state = combat.orbitBlades[index];
       const visual = this.orbitVisuals[index];
-      visual.root.visible = state.active;
-      if (!state.active) continue;
+      visual.root.visible = state.active && !this.raster.ready(combat.orbitEvolution ?? 'orbit');
+      if (!visual.root.visible) continue;
       visual.root.position.set(state.x, state.y);
       visual.root.rotation = state.angle;
       visual.root.scale.set(state.radius / WEAPON_DEFINITIONS.orbit.radius);
@@ -343,8 +350,8 @@ export class WeaponView {
     for (let index = 0; index < this.boomerangVisuals.length; index += 1) {
       const visual = this.boomerangVisuals[index];
       const state = boomerangs[index];
-      visual.root.visible = state?.active === true;
-      if (!state?.active) {
+      visual.root.visible = state?.active === true && !this.raster.ready(state.fragment ? 'singularity_shard' : state.evolution ?? 'boomerang');
+      if (!visual.root.visible || !state?.active) {
         visual.trail.clear();
         continue;
       }
@@ -382,7 +389,7 @@ export class WeaponView {
       visual.wake.alpha = this.quality === 'high' ? 0.82 : 0.58;
       visual.body.rotation = this.reducedMotion ? 0 : twinComet
         ? state.ageSeconds * (state.fanOffset < 0 ? -14 : 14)
-        : singularity ? state.ageSeconds * 5 : 0;
+        : singularity && !state.fragment ? state.ageSeconds * 5 : 0;
       visual.body.tint = twinComet ? 0xffe3a2 : singularity ? 0xc6b4ff : 0xffffff;
       visual.body.scale.set(baseScale * 0.58 * pulse);
       visual.body.alpha = 1;
@@ -392,33 +399,18 @@ export class WeaponView {
 
     this.boomerangPulseLayer.clear();
     const boomerangPulse = combat.boomerangPulse;
-    this.boomerangPulseLayer.visible = boomerangPulse?.active === true;
-    if (boomerangPulse?.active) {
+    this.boomerangPulseLayer.visible = boomerangPulse?.active === true && !this.raster.ready('singularity_split');
+    if (boomerangPulse?.active && this.boomerangPulseLayer.visible) {
       const progress = clamp01(boomerangPulse.progress);
       const intensity = 1 - progress;
-      this.boomerangPulseLayer.beginPath().circle(0, 0, boomerangPulse.radius)
-        .fill({ color: 0xa482ff, alpha: intensity * (this.quality === 'low' ? 0.06 : 0.1) });
-      drawSegmentedPulse(
-        this.boomerangPulseLayer,
-        boomerangPulse.radius,
-        intensity * (this.quality === 'high' ? 0.86 : 0.65),
-        0x9b7cff,
-        0xffd978
-      );
-      this.boomerangPulseLayer.beginPath()
-        .circle(0, 0, boomerangPulse.radius * (0.22 + progress * 0.72))
-        .stroke({ color: 0xf4ffff, width: this.quality === 'high' ? 1.8 : 1.2, alpha: intensity * 0.62 });
-      this.boomerangPulseLayer.beginPath()
-        .regularPoly(0, 0, 17 + progress * 12, 6, Math.PI / 6)
-        .stroke({ color: 0xffd978, width: this.quality === 'low' ? 1.4 : 2.2, alpha: intensity * 0.82 });
-      if (this.quality === 'high') {
-        for (let spoke = 0; spoke < 6; spoke += 1) {
-          const angle = spoke * Math.PI / 3 + Math.PI / 6;
-          this.boomerangPulseLayer.beginPath()
-            .moveTo(Math.cos(angle) * boomerangPulse.radius * 0.32, Math.sin(angle) * boomerangPulse.radius * 0.32)
-            .lineTo(Math.cos(angle) * boomerangPulse.radius * 0.7, Math.sin(angle) * boomerangPulse.radius * 0.7)
-            .stroke({ color: 0xc7a3ff, width: 1.5, alpha: intensity * 0.42 });
-        }
+      // A three-way opening, not an area-of-effect disk or a damaging ring.
+      for (let spoke = 0; spoke < 3; spoke += 1) {
+        const angle = spoke * Math.PI * 2 / 3 + progress * 0.3;
+        const reach = boomerangPulse.radius * (0.55 + progress * 0.45);
+        this.boomerangPulseLayer.beginPath().moveTo(0, 0)
+          .quadraticCurveTo(Math.cos(angle + 0.45) * reach * 0.6, Math.sin(angle + 0.45) * reach * 0.6,
+            Math.cos(angle) * reach, Math.sin(angle) * reach)
+          .stroke({ color: 0xc7a3ff, width: this.quality === 'low' ? 2 : 3, alpha: intensity * 0.8 });
       }
       this.boomerangPulseLayer.position.set(boomerangPulse.x, boomerangPulse.y);
     }
@@ -463,13 +455,14 @@ export class WeaponView {
       if (!this.previousChainActive[index]) this.onChainImpact?.();
       this.previousChainActive[index] = true;
       const alpha = Math.max(0, Math.min(1, segment.lifeSeconds / WEAPON_DEFINITIONS.chainLightning.segmentLifetimeSeconds));
-      this.drawChainBeam(segment, alpha, index);
+      const rasterChain = this.raster.ready(combat.chainEvolution ?? 'chain');
+      if (!rasterChain) this.drawChainBeam(segment, alpha, index);
       const sprite = this.chainImpactSprites[index];
       sprite.position.set(segment.x2, segment.y2);
       sprite.rotation = (1 - alpha) * Math.PI * 0.5;
       sprite.scale.set(0.75 + alpha * 0.85);
       sprite.alpha = alpha;
-      sprite.visible = true;
+      sprite.visible = !rasterChain;
       const pulse = this.chainPulseSprites[index];
       const travel = 1 - alpha;
       pulse.position.set(
@@ -479,7 +472,7 @@ export class WeaponView {
       pulse.rotation = travel * Math.PI * 2 + index * 0.6;
       pulse.scale.set(0.65 + alpha * 0.65);
       pulse.alpha = alpha * 0.9;
-      pulse.visible = this.quality !== 'low';
+      pulse.visible = !rasterChain && this.quality !== 'low';
     }
     for (let index = 0; index < chainExplosions.length; index += 1) {
       const explosion = chainExplosions[index];
@@ -491,11 +484,12 @@ export class WeaponView {
       const alpha = explosion.phase === 'telegraph'
         ? 0.4 + progress * 0.35
         : (1 - progress) * 0.9;
-      drawSegmentedPulse(this.chainLayer, radius, alpha, 0xff92a3, 0xffd978, explosion.x, explosion.y);
+      if (!this.raster.ready('thunderhead_burst')) drawSegmentedPulse(this.chainLayer, radius, alpha, 0xff92a3, 0xffd978, explosion.x, explosion.y);
     }
   }
 
   public reset(): void {
+    this.raster.reset();
     this.chainLayer.clear();
     this.chainLayer.visible = false;
     this.chainImpactLayer.visible = false;
@@ -563,6 +557,10 @@ export class WeaponView {
       this.pulseRingLayer.visible = false;
       return;
     }
+    if (this.raster.ready(state.evolution ?? 'pulse_ring')) {
+      this.pulseRingLayer.visible = false;
+      return;
+    }
     if (state.sequence !== this.pulseRingSequence) this.buildPulseRingSequence(state);
 
     this.pulseRingLayer.visible = true;
@@ -612,7 +610,8 @@ export class WeaponView {
     }
     const fade = (1 - progress) ** 2;
     this.pulseRingResidue.alpha = fade * 0.82;
-    this.pulseRingResidue.scale.set(this.reducedMotion ? 1 : 1 + progress * 0.09);
+    this.pulseRingResidue.scale.set(Math.max(0.05, state.radius / this.pulseRingBaseRadius)
+      * (this.reducedMotion ? 1 : 1 + progress * 0.09));
     this.pulseRingResidue.rotation = this.reducedMotion ? 0 : -progress * 0.08;
   }
 
@@ -623,9 +622,12 @@ export class WeaponView {
       this.magneticChargeUnderlay.visible = false;
       return;
     }
+    if (this.raster.magneticReady(state)) {
+      this.magneticChargeUnderlay.visible = false;
+      return;
+    }
     if (state.sequence !== this.magneticChargeSequence) this.buildMagneticChargeSequence(state);
-    // The PNG art covers the base weapon only. Evolutions retain their current
-    // Graphics rendering pending a separate visual review.
+    // Base keeps the approved four-piece pack. Evolutions use the raster compositor.
     if (!state.evolution) this.requestMagneticChargeImagePack();
 
     this.magneticChargeUnderlay.visible = true;

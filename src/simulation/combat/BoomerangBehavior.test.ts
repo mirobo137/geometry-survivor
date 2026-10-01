@@ -173,83 +173,137 @@ describe('BoomerangBehavior', () => {
     expect(boomerangs.activeCount).toBe(0);
   });
 
-  it('Singularity Return targets a dense remote group, damages the whole blast and slows survivors', () => {
-    const { behavior, enemies, enemy, boomerangs, player } = setup();
-    expect(behavior.setEvolution('singularity_return')).toBe(true);
-    const group = [enemies.spawn(0, 270), enemies.spawn(0, 270), enemies.spawn(0, 270)];
-    if (group.some((target) => !target)) throw new Error('No se pudo preparar el grupo remoto');
-    for (const [index, target] of group.entries()) {
-      target!.x = player.x - 180 + index * 12;
-      target!.y = player.y + (index - 1) * 20;
-      target!.speed = 0;
-      target!.health = 1_000;
-      target!.maxHealth = 1_000;
-      target!.radius = 12;
-    }
-    const positions = group.map((target) => [target!.x, target!.y]);
-    enemies.rebuildGrid();
+  it('Singularity travels the trimmed extended range, splits into six nearest distinct homing shards, and never explodes', () => {
+    const { behavior, enemies, enemy, boomerangs, player } = setup(8);
+    behavior.setEvolution('singularity_return');
+    expect(behavior.currentOutboundDistance).toBe(370);
     behavior.fire(player);
-    expect(behavior.pulseState.active).toBe(false);
-    expect(boomerangs.states[0].directionX).toBeLessThan(0);
-    expect(boomerangs.states[0].travelLimit).toBeLessThan(behavior.currentOutboundDistance);
-
-    for (let index = 0; index < 100; index += 1) {
-      behavior.update(1 / 60, player);
-      if (behavior.pulseState.sequence === 1) {
-        expect(behavior.pulseState.active).toBe(true);
-        expect(behavior.pulseState.x).toBeLessThan(player.x);
-        expect(behavior.pulseState.radius).toBe(155);
-        expect(enemy.health).toBe(1_000);
-        for (const [groupIndex, target] of group.entries()) {
-          expect(target!.health).toBeLessThan(1_000);
-          expect(target!.slowSeconds).toBe(1.5);
-          expect(target!.slowMultiplier).toBe(0.45);
-          expect([target!.x, target!.y]).toEqual(positions[groupIndex]);
-        }
-        return;
-      }
-    }
-    throw new Error('Singularity Return no detonó sobre el grupo remoto');
+    const endpoint = player.x + 370;
+    const targets = Array.from({ length: 6 }, () => enemies.spawn(0, 270));
+    targets.forEach((target, i) => {
+      if (!target) throw new Error('missing target');
+      Object.assign(target, { x: endpoint + 90, y: player.y + (i - 2.5) * 55, health: 1000, radius: 12, speed: 0 });
+    });
+    // The carrier's first victim is behind the split, outside its search radius.
+    enemy.x = player.x + 30;
+    enemies.rebuildGrid();
+    for (let i = 0; i < 100 && behavior.pulseState.sequence === 0; i++) behavior.update(1 / 60, player);
+    expect(behavior.pulseState).toMatchObject({ active: true, x: endpoint, y: player.y, radius: 42 });
+    const shards = boomerangs.states.filter(s => s.active);
+    expect(shards).toHaveLength(6);
+    expect(shards.every(s => s.fragment && s.phase === 'homing' && s.curveStartX === endpoint)).toBe(true);
+    expect(new Set(shards.map(s => s.targetIndex)).size).toBe(6);
+    expect(shards.map(s => s.fanOffset)).toEqual([-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]);
+    expect(shards.map(s => enemies.getState(s.targetIndex))).toEqual(expect.arrayContaining(targets));
+    expect(shards.every(s => s.ageSeconds < 1 / 60)).toBe(true); // no newborn double tick
+    expect(targets.every(t => t!.health === 1000 && t!.slowSeconds === 0)).toBe(true);
+    expect(enemy.health).toBeCloseTo(1000 - 13 * 0.65);
+    for (let i = 0; i < 100; i++) behavior.update(1 / 60, player);
+    // Guidance prefers distinct targets, but a closer enemy can physically intercept a shard.
+    expect(targets.reduce((damage, target) => damage + 1000 - target!.health, 0)).toBeCloseTo(13 * 0.85 * 6);
+    expect(boomerangs.activeCount).toBe(0);
   });
 
-  it('Singularity Return damages bosses without applying movement control', () => {
-    const { behavior, enemy, player } = setup();
-    enemy.kind = 'boss';
-    expect(behavior.setEvolution('singularity_return')).toBe(true);
+  it.each([30, 60, 144])('all six guided shards can hit a lone boss without slow or stun at %i Hz', hz => {
+    const { behavior, enemies, enemy, boomerangs, player } = setup(8);
+    Object.assign(enemy, { kind: 'boss', x: player.x + 490, radius: 20 });
+    enemies.rebuildGrid();
+    behavior.setEvolution('singularity_return');
     behavior.fire(player);
-    for (let index = 0; index < 50 && behavior.pulseState.sequence === 0; index += 1) {
-      behavior.update(1 / 60, player);
-    }
+    for (let i = 0; i < hz * 3; i++) behavior.update(1 / hz, player);
     expect(behavior.pulseState.sequence).toBe(1);
-    expect(enemy.health).toBeLessThan(1_000);
+    expect(enemy.health).toBeCloseTo(1000 - 13 * 0.85 * 6);
     expect(enemy.slowSeconds).toBe(0);
     expect(enemy.stunSeconds).toBe(0);
+    expect(boomerangs.activeCount).toBe(0);
   });
 
-  it('Singularity Return uses the same physical blast edge for damage and control', () => {
-    const { behavior, enemies, boomerangs, player } = setup();
-    expect(behavior.setEvolution('singularity_return')).toBe(true);
-    behavior.fire(player);
-    const endpoint = boomerangs.states[0].curveEndX;
-    const inside = enemies.spawn(0, 270);
-    const outside = enemies.spawn(0, 270);
-    if (!inside || !outside) throw new Error('No se pudieron preparar los blancos del borde');
-    for (const [target, margin] of [[inside, -0.5], [outside, 0.5]] as const) {
-      target.x = endpoint + 155 + 12 + margin;
-      target.y = player.y;
-      target.radius = 12;
-      target.speed = 0;
-      target.health = 1_000;
-      target.maxHealth = 1_000;
-    }
+  it('reserves the entire fork capacity and releases empty homing shards by TTL', () => {
+    const { behavior, enemies, boomerangs, player } = setup(8);
+    enemies.pool.reset();
     enemies.rebuildGrid();
-    for (let index = 0; index < 60 && behavior.pulseState.sequence === 0; index += 1) {
-      behavior.update(1 / 60, player);
-    }
-    expect(behavior.pulseState.sequence).toBe(1);
-    expect(inside.health).toBeLessThan(1_000);
-    expect(inside.slowSeconds).toBeGreaterThan(0);
-    expect(outside.health).toBe(1_000);
-    expect(outside.slowSeconds).toBe(0);
+    behavior.setEvolution('singularity_return');
+    for (let i = 0; i < 10; i++) behavior.fire(player);
+    expect(boomerangs.activeCount).toBe(1);
+    for (let i = 0; i < 100 && boomerangs.states.filter(s => s.active && s.fragment).length < 6; i++) behavior.update(1 / 60, player);
+    expect(boomerangs.states.filter(s => s.active && s.fragment)).toHaveLength(6);
+    expect(boomerangs.activeCount).toBe(6);
+    for (let i = 0; i < 100; i++) behavior.update(1 / 60, player);
+    expect(boomerangs.activeCount).toBe(0);
+    const tiny = setup(2);
+    tiny.behavior.setEvolution('singularity_return');
+    tiny.behavior.fire(tiny.player);
+    expect(tiny.boomerangs.activeCount).toBe(0);
+  });
+
+  it('consumes a shard at the first swept collision, not the first pool index or every target on the path', () => {
+    const { behavior, enemies, enemy, boomerangs, player } = setup(8);
+    enemy.x = player.x + 550;
+    const first = enemies.spawn(0, 270)!;
+    Object.assign(first, { x: player.x + 485, y: player.y, radius: 12, health: 1000, speed: 0 });
+    enemies.rebuildGrid();
+    behavior.setEvolution('singularity_return');
+    behavior.fire(player);
+    for (let i = 0; i < 100 && behavior.pulseState.sequence === 0; i++) behavior.update(1 / 60, player);
+    const shard = boomerangs.states.find(s => s.active)!;
+    for (const other of boomerangs.states) if (other !== shard) boomerangs.release(other);
+    Object.assign(shard, { x: player.x + 450, y: player.y, directionX: 1, directionY: 0,
+      targetIndex: enemies.pool.states.indexOf(enemy), targetGeneration: enemy.generation });
+    behavior.update(0.1, player);
+    expect(shard.active).toBe(false);
+    expect(first.health).toBeCloseTo(1000 - 13 * 0.85);
+    expect(enemy.health).toBe(1000);
+  });
+
+  it('reserves six new shards even while two old fragments remain in the eight-slot pool', () => {
+    const { behavior, enemies, boomerangs, player } = setup(8);
+    enemies.pool.reset();
+    enemies.rebuildGrid();
+    behavior.setEvolution('singularity_return');
+    behavior.fire(player);
+    for (let i = 0; i < 100 && behavior.pulseState.sequence === 0; i++) behavior.update(1 / 60, player);
+    expect(boomerangs.activeCount).toBe(6);
+    behavior.fire(player);
+    expect(boomerangs.activeCount).toBe(6);
+    for (const shard of boomerangs.states.filter(state => state.active).slice(2)) boomerangs.release(shard);
+    behavior.fire(player);
+    expect(boomerangs.activeCount).toBe(3);
+    behavior.fire(player);
+    expect(boomerangs.activeCount).toBe(3);
+    for (let i = 0; i < 100 && behavior.pulseState.sequence < 2; i++) behavior.update(1 / 60, player);
+    expect(behavior.pulseState.sequence).toBe(2);
+    expect(boomerangs.activeCount).toBe(8);
+    expect(boomerangs.states.every(state => state.active && state.fragment)).toBe(true);
+  });
+
+  it('retargets from the fixed split point after an enemy slot is recycled and follows moving targets', () => {
+    const { behavior, enemies, enemy, boomerangs, player } = setup(8);
+    enemy.x = player.x + 490;
+    enemies.rebuildGrid();
+    behavior.setEvolution('singularity_return');
+    behavior.fire(player);
+    for (let i = 0; i < 100 && behavior.pulseState.sequence === 0; i++) behavior.update(1 / 60, player);
+    const previousGeneration = enemy.generation;
+    enemies.pool.release(enemy);
+    // The stale pool index must not silently track this out-of-search-range replacement.
+    const recycled = enemies.pool.acquire()!;
+    Object.assign(recycled, { x: 5000, y: 5000, health: 1000, radius: 12 });
+    const nearby = enemies.spawn(0, 270)!;
+    Object.assign(nearby, { x: player.x + 500, y: player.y + 60, health: 1000, radius: 12, speed: 0 });
+    enemies.rebuildGrid();
+    behavior.update(1 / 60, player);
+    const shards = boomerangs.states.filter(s => s.active);
+    expect(shards.every(s => s.targetGeneration !== previousGeneration || enemies.getState(s.targetIndex) === nearby)).toBe(true);
+    expect(shards.every(s => enemies.getState(s.targetIndex) === nearby)).toBe(true);
+    nearby.y += 35;
+    enemies.rebuildGrid();
+    for (let i = 0; i < 100; i++) behavior.update(1 / 60, player);
+    expect(nearby.health).toBeLessThan(1000);
+    expect(recycled.health).toBe(1000);
+    behavior.clearTransient();
+    expect(behavior.currentEvolution).toBe('singularity_return');
+    expect(boomerangs.states.every(s => !s.active && !s.fragment && s.targetIndex === -1)).toBe(true);
+    behavior.reset();
+    expect(behavior.currentEvolution).toBeNull();
   });
 });

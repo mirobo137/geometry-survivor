@@ -565,6 +565,37 @@ describe('UpgradeApplier', () => {
     expect(magneticCombat.currentMagneticChargeOuterRadius).toBe(134);
   });
 
+  it('previews the effective Singularity range including its coverage mastery', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+    expect(applier.apply('vector_boomerang')).toBe(true);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`boomerang_rank_${rank}`)).toBe(true);
+    expect(applier.apply('singularity_return')).toBe(true);
+    const preview = applier.getPreview('boomerang_mastery_coverage');
+    expect(preview?.stat).toBe('boomerangDistance');
+    expect(preview?.before).toBeCloseTo(414.4);
+    expect(preview?.after).toBeCloseTo(473.6);
+    expect(applier.apply('boomerang_mastery_coverage')).toBe(true);
+    expect(combat.currentBoomerangOutboundDistance).toBeCloseTo(473.6);
+  });
+
+  it.each(['closed_circuit', 'thunderhead'] as const)('previews and applies extra targets and reach for %s after evolution', evolution => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+    expect(applier.apply('chain_lightning')).toBe(true);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`chain_rank_${rank}`)).toBe(true);
+    expect(applier.apply(evolution)).toBe(true);
+    const initialTargets = evolution === 'closed_circuit' ? 7 : 5;
+    for (let mastery = 0; mastery < 3; mastery++) {
+      expect(applier.getPreview('chain_mastery_coverage')).toEqual({ stat: 'chainTargets', before: initialTargets + mastery, after: initialTargets + mastery + 1 });
+      expect(applier.apply('chain_mastery_coverage')).toBe(true);
+      expect(combat.currentChainMaxTargets).toBe(initialTargets + mastery + 1);
+      expect(combat.currentChainJumpRadius).toBe(210 + 30 * (mastery + 1));
+    }
+    expect(applier.apply('chain_mastery_coverage')).toBe(false);
+    expect(combat.currentChainMaxTargets).toBe(initialTargets + 3);
+  });
+
   it('limits a normal campaign hand to one evolution decision', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation());
     const families = [

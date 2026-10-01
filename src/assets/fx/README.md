@@ -25,9 +25,10 @@ textures on the first active cast. PixiJS receives decoded images through
 `Texture.from(image)` after native `Image` loading. If any image fails, the
 renderer switches the whole base effect to its existing Graphics version; it
 does not combine an incomplete PNG set with vector layers. Low keeps every
-functional part of the image cycle with lower opacity. The separate Event
-Horizon and Polar Collapse evolutions remain on their existing vector path
-pending a separate visual review.
+functional part of the image cycle with lower opacity. The 30-09-2026 arsenal
+extension now covers Event Horizon and Polar Collapse as well, using distinct
+PNG material and preserving their actual phases. See [Arsenal PNG](arsenal/README.md)
+for all six weapons, twelve evolutions and the rechargeable shield.
 
 The core and detonation sprites use anchors registered to the bright core and
 the center of the detonation aperture, respectively, so their focal points

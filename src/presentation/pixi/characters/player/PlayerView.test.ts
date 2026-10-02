@@ -47,7 +47,8 @@ const textures = {
     rainbow: cannonPair(),
     lattice: cannonPair(),
     helix: cannonPair(),
-    bloom: cannonPair()
+    bloom: cannonPair(),
+    spearhead: cannonPair()
   },
   body: skinTextures,
   core: skinTextures,
@@ -65,13 +66,11 @@ const state = (x: number, y: number, health = 100) => ({
 });
 
 describe('PlayerView', () => {
-  it('activates the free PNG skin lazily and restores old skins on switching', async () => {
+  it('uses the selected full PNG skin when available and keeps the SVG fallback', async () => {
     const view = new PlayerView(textures);
-    expect(view.root.children.some(child => child.label === 'tethered-ship-prototype')).toBe(false);
-    view.setSkin('spearhead');
-    await Promise.resolve(); // Without browser Image, the original hull remains the safe fallback.
-    const raster = view.root.children.find(child => child.label === 'tethered-ship-prototype')!;
+    const raster = view.root.children.find(child => child.label === 'raster-player-skin')!;
     expect(raster).toBeDefined();
+    await Promise.resolve(); // Without browser Image, the original hull remains the safe fallback.
     view.render(state(300, 400), 0);
     expect(raster.visible).toBe(false);
     view.setSkin('manta');
@@ -82,7 +81,7 @@ describe('PlayerView', () => {
     view.setCannonSkin('helix');
     view.render(state(300, 400), 0.2);
     expect(view.cannonSkinId).toBe('helix');
-    expect(view.root.children.filter(child => child.label === 'tethered-ship-prototype')).toHaveLength(1);
+    expect(view.root.children.filter(child => child.label === 'raster-player-skin')).toHaveLength(1);
     view.reset();
     view.setSkin('cyan');
     view.render(state(300, 400), 0);
@@ -90,10 +89,10 @@ describe('PlayerView', () => {
   });
   it('composes aligned pieces, supports skins and animates damage locally', () => {
     const view = new PlayerView(textures);
-    expect(view.root.children).toHaveLength(12); // shared two-sprite rechargeable shield
+    expect(view.root.children).toHaveLength(13); // shared shield plus the raster path/fallback
     expect(view.skinId).toBe('cyan');
     view.render(state(300, 400), 0, 1);
-    const shield = view.root.children[10] as { visible: boolean };
+    const shield = view.root.children[11] as { visible: boolean };
     expect(shield.visible).toBe(true);
     view.render(state(300, 400), 0.1, 0.5);
     expect(shield.visible).toBe(true);

@@ -1,64 +1,110 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
-import { TETHERED_SHIP_ART as ART } from '../../../../assets/skins/tethered/TetheredAssets';
+import {
+  CANNON_SKIN_RASTER_ART,
+  LINKED_CANNON_LAYOUT,
+  PLAYER_SHIP_RASTER_ART
+} from '../../../../assets/skins/SkinRasterAssets';
 import { PROJECTILE_MUZZLE_OFFSETS } from '../../../../content/weapons/WeaponDefinitions';
-import type { FxQuality } from '../../../../content/visual/VisualTokens';
+import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
+import type { FxQuality, PlayerSkinId } from '../../../../content/visual/VisualTokens';
 
 export interface TetheredShipTextures { readonly ship: Texture; readonly cannon: Texture }
-let cachedArt: Promise<TetheredShipTextures | undefined> | undefined;
+export type TetheredShipArtLoader = (
+  shipSkin: PlayerSkinId,
+  cannonSkin: CannonSkinId
+) => Promise<TetheredShipTextures | undefined>;
 
-/** Shared application-lifetime sources; views never destroy shared textures. */
-export const loadTetheredShipArt = (): Promise<TetheredShipTextures | undefined> => {
+const texturePromises = new Map<string, Promise<Texture | undefined>>();
+
+const loadTexture = (url: string): Promise<Texture | undefined> => {
   if (typeof Image === 'undefined') return Promise.resolve(undefined);
-  if (!cachedArt) {
-    const load = (url: string): Promise<Texture | undefined> => new Promise(resolve => {
-      const image = new Image();
-      image.decoding = 'async';
-      image.onload = () => {
-        try { resolve(Texture.from(image)); } catch { resolve(undefined); }
-      };
-      image.onerror = () => resolve(undefined);
-      image.src = url;
-    });
-    cachedArt = Promise.all([load(ART.ship.url), load(ART.cannon.url)])
-      .then(([ship, cannon]) => {
-        if (ship && cannon) return { ship, cannon };
-        cachedArt = undefined;
-        return undefined;
-      });
-  }
-  return cachedArt;
+  const cached = texturePromises.get(url);
+  if (cached) return cached;
+
+  let pending: Promise<Texture | undefined>;
+  pending = new Promise<Texture | undefined>(resolve => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      try { resolve(Texture.from(image)); } catch { resolve(undefined); }
+    };
+    image.onerror = () => resolve(undefined);
+    image.src = url;
+  }).then(texture => {
+    if (!texture && texturePromises.get(url) === pending) texturePromises.delete(url);
+    return texture;
+  });
+  texturePromises.set(url, pending);
+  return pending;
 };
 
-/** One intact ship + two shared cannons + ship flash + bounded cables. No rope physics. */
+/** Loads only the equipped ship and cannon; shared image URLs share textures. */
+export const loadShipSkinArt: TetheredShipArtLoader = async (shipSkin, cannonSkin) => {
+  const shipArt = PLAYER_SHIP_RASTER_ART[shipSkin];
+  const cannonArt = CANNON_SKIN_RASTER_ART[cannonSkin];
+  const [ship, cannon] = await Promise.all([loadTexture(shipArt.url), loadTexture(cannonArt.url)]);
+  return ship && cannon ? { ship, cannon } : undefined;
+};
+
+/** Compatibility helper for the original Ivory Spear visual QA route. */
+export const loadTetheredShipArt = (): Promise<TetheredShipTextures | undefined> => (
+  loadShipSkinArt('spearhead', 'spearhead')
+);
+
+/** One complete ship + two shared interchangeable cannons + flash and cables. */
 export class TetheredShipView {
-  public readonly root = new Container({ label: 'tethered-ship-prototype' });
+  public readonly root = new Container({ label: 'raster-player-skin' });
   private readonly cables = new Graphics({ label: 'tether-cables' });
   private readonly ship = new Sprite({ texture: Texture.EMPTY, label: 'tether-ship' });
   private readonly left = new Sprite({ texture: Texture.EMPTY, label: 'tether-cannon-left' });
   private readonly right = new Sprite({ texture: Texture.EMPTY, label: 'tether-cannon-right' });
   private readonly damage = new Sprite({ texture: Texture.EMPTY, label: 'tether-damage-flash' });
   private loaded = false;
+  private generation = 0;
   private lastSeconds: number | null = null;
   private lastDefeat = -1;
+  private shipSkin: PlayerSkinId;
+  private cannonSkin: CannonSkinId;
   private readonly reducedMotion = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   public constructor(
     private readonly quality: FxQuality,
-    load: () => Promise<TetheredShipTextures | undefined> = loadTetheredShipArt
+    shipSkin: PlayerSkinId = 'spearhead',
+    cannonSkin: CannonSkinId = 'spearhead',
+    private readonly load: TetheredShipArtLoader = loadShipSkinArt
   ) {
     this.root.eventMode = 'none';
     this.root.visible = false;
     this.root.addChild(this.cables, this.ship, this.left, this.right, this.damage);
-    void load().then(art => {
-      if (!art || this.root.destroyed) return;
-      this.configure(this.ship, art.ship, ART.ship);
-      this.configure(this.damage, art.ship, ART.ship);
-      this.configure(this.left, art.cannon, ART.cannon);
-      this.configure(this.right, art.cannon, ART.cannon);
+    this.shipSkin = shipSkin;
+    this.cannonSkin = cannonSkin;
+    this.loadCurrentArt();
+  }
+
+  private loadCurrentArt(): void {
+    const generation = ++this.generation;
+    const requestedShip = this.shipSkin;
+    const requestedCannon = this.cannonSkin;
+    this.loaded = false;
+    this.root.visible = false;
+    void this.load(requestedShip, requestedCannon).then(art => {
+      if (!art || this.root.destroyed || generation !== this.generation) return;
+      this.configure(this.ship, art.ship, PLAYER_SHIP_RASTER_ART[requestedShip]);
+      this.configure(this.damage, art.ship, PLAYER_SHIP_RASTER_ART[requestedShip]);
+      this.configure(this.left, art.cannon, CANNON_SKIN_RASTER_ART[requestedCannon]);
+      this.configure(this.right, art.cannon, CANNON_SKIN_RASTER_ART[requestedCannon]);
       this.damage.blendMode = 'add';
       this.loaded = true;
+      this.lastSeconds = null;
     }).catch(() => { /* Keep the existing player visible on unexpected decode errors. */ });
+  }
+
+  public setSkins(shipSkin: PlayerSkinId, cannonSkin: CannonSkinId): void {
+    if (shipSkin === this.shipSkin && cannonSkin === this.cannonSkin) return;
+    this.shipSkin = shipSkin;
+    this.cannonSkin = cannonSkin;
+    this.loadCurrentArt();
   }
 
   private configure(sprite: Sprite, texture: Texture, part: {
@@ -98,7 +144,7 @@ export class TetheredShipView {
 
   private placeCannon(sprite: Sprite, index: 0 | 1, aim: number, cos: number, sin: number, recoil: number, defeat: number): void {
     const mouth = PROJECTILE_MUZZLE_OFFSETS[index];
-    // The asset pivot IS the barrel tip, so its world origin matches simulation.
+    // The image pivot IS the barrel tip, so its world origin matches simulation.
     // Recoil retreats along the barrel, never smooths or changes shot targeting.
     sprite.position.set(mouth.x * cos - mouth.y * sin - recoil * sin * 0.24 + (index === 0 ? -1 : 1) * defeat * 20,
       mouth.x * sin + mouth.y * cos + recoil * cos * 0.24 + defeat * 12);
@@ -106,24 +152,24 @@ export class TetheredShipView {
   }
 
   private drawCable(sprite: Sprite, side: number, aim: number, wave: number, movement: number, defeat: number): void {
-    // Each turret owns a DISTINCT port, even when both muzzles lie on one side.
-    const portSide = side;
-    const x0 = portSide * ART.cablePortX;
-    const y0 = ART.cablePortY - defeat * 9;
-    const rear = ART.cannon.height * (0.84 - ART.cannon.anchorY);
+    // Each cannon has a distinct rear socket and its own hull port.
+    const cannonArt = CANNON_SKIN_RASTER_ART[this.cannonSkin];
+    const x0 = side * LINKED_CANNON_LAYOUT.cablePortX;
+    const y0 = LINKED_CANNON_LAYOUT.cablePortY - defeat * 9;
+    const rear = cannonArt.height * (cannonArt.cableAnchorY - cannonArt.anchorY);
     const x1 = sprite.x - Math.sin(aim) * rear;
     const y1 = sprite.y + Math.cos(aim) * rear;
     const dx = x1 - x0;
     const dy = y1 - y0;
     const length = Math.max(1, Math.hypot(dx, dy));
     const flex = (this.quality === 'low' ? 2 : 3) + wave * (1 + movement);
-    const bendX = -dy / length * flex * portSide;
-    const bendY = dx / length * flex * portSide;
+    const bendX = -dy / length * flex * side;
+    const bendY = dx / length * flex * side;
     // One graphics object, two short polylines, no link sprites or physics objects.
     for (let pass = 0; pass < 2; pass += 1) {
       this.cables.beginPath().moveTo(x0, y0);
-      for (let i = 1; i <= ART.cableSegments; i += 1) {
-        const t = i / ART.cableSegments;
+      for (let i = 1; i <= LINKED_CANNON_LAYOUT.cableSegments; i += 1) {
+        const t = i / LINKED_CANNON_LAYOUT.cableSegments;
         const curve = Math.sin(t * Math.PI);
         this.cables.lineTo(x0 + dx * t + bendX * curve, y0 + dy * t + bendY * curve);
       }

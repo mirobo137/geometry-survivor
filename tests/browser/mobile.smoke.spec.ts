@@ -118,11 +118,11 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
     const screen = document.querySelector<HTMLElement>('#start-screen');
     const panel = document.querySelector<HTMLElement>('.start-screen-panel');
     const scene = document.querySelector<HTMLElement>('.start-scene');
-    const preview = document.querySelector<SVGElement>('#start-cosmetic-preview .skin-preview svg');
-    const previewCore = document.querySelector<SVGElement>('#start-cosmetic-preview .skin-preview svg .skin-art-core');
-    const cardSignature = document.querySelector<SVGElement>('.skin-card-art svg .skin-art-orbit');
-    const cardArt = document.querySelector<SVGElement>('.skin-card-art svg');
-    if (!screen || !panel || !scene || !preview || !previewCore || !cardSignature || !cardArt) {
+    const preview = document.querySelector<HTMLElement>('#start-cosmetic-preview .tethered-preview');
+    const previewCraft = document.querySelector<HTMLElement>('#start-cosmetic-preview .tethered-preview-craft');
+    const cardPreview = document.querySelector<HTMLElement>('.skin-card-art .tethered-preview');
+    const cardCraft = document.querySelector<HTMLElement>('.skin-card-art .tethered-preview-craft');
+    if (!screen || !panel || !scene || !preview || !previewCraft || !cardPreview || !cardCraft) {
       throw new Error('Faltan capas del locker');
     }
     return {
@@ -131,12 +131,12 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
       panelInner: getComputedStyle(panel, '::before').animationName,
       sceneAtmosphere: getComputedStyle(scene, '::before').animationName,
       preview: getComputedStyle(preview).animationName,
-      previewCore: getComputedStyle(previewCore).animationName,
       previewAnimated: preview.classList.contains('is-animated'),
-      previewHasSmil: preview.querySelector('animateTransform') !== null,
-      cardArt: getComputedStyle(cardSignature).animationName,
-      cardHasSmil: cardArt.querySelector('animateTransform') !== null,
-      cardHasEmitters: Boolean(cardArt.querySelector('.skin-art-emitters'))
+      previewCraft: getComputedStyle(previewCraft).animationName,
+      previewImages: [...preview.querySelectorAll('img')].map(image => (image as HTMLImageElement).naturalWidth),
+      cardPreviewStatic: cardPreview.classList.contains('is-static'),
+      cardCraft: getComputedStyle(cardCraft).animationName,
+      cardImages: cardPreview.querySelectorAll('img').length
     };
   });
   expect(lockerMotion).toEqual({
@@ -144,13 +144,13 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
     panel: 'none',
     panelInner: 'none',
     sceneAtmosphere: 'none',
-    preview: 'skin-preview-float-mobile',
-    previewCore: 'none',
+    preview: 'none',
     previewAnimated: true,
-    previewHasSmil: true,
-    cardArt: 'none',
-    cardHasSmil: false,
-    cardHasEmitters: false
+    previewCraft: 'tethered-preview-float',
+    previewImages: [256, 128, 128],
+    cardPreviewStatic: true,
+    cardCraft: 'none',
+    cardImages: 3
   });
   const modalBounds = await page.locator('#start-cosmetic-dialog').evaluate(dialog => {
     const rect = dialog.getBoundingClientRect();
@@ -179,7 +179,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
   await page.locator('.cannon-card[data-cannon="basic"] button').click();
   await expect(page.locator('#start-cosmetic-preview .cannon-preview svg')).toBeVisible();
   await page.locator('#start-cosmetic-close').click();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(7);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(8);
   const cannonScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight
@@ -254,18 +254,25 @@ test('mantiene estática la vista previa de fondo en calidad low', async ({ page
     getComputedStyle(element).animationName)).toBe('none');
 });
 
-test('mantiene alineada Manta híbrida en la vista previa móvil', async ({ page }, testInfo) => {
+test('mantiene alineadas la nave y los cañones PNG de Manta en móvil', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/?quality=medium');
   await page.locator('#start-skins').click();
   await page.locator('.skin-card[data-skin="manta"] button').click();
-  await expect(page.locator('#start-cosmetic-preview .manta-fin img')).toHaveCount(2);
-  const alignment = await page.locator('#start-cosmetic-preview .manta-preview').evaluate(element => {
+  await expect.poll(() => page.locator('#start-cosmetic-preview img').evaluateAll(images => images.map(image => (image as HTMLImageElement).naturalWidth)))
+    .toEqual([256, 128, 128]);
+  const alignment = await page.locator('#start-cosmetic-preview .tethered-preview').evaluate(element => {
     const frame = element.getBoundingClientRect();
-    const hull = element.querySelector('svg')!.getBoundingClientRect();
-    return { x: Math.abs(frame.x - hull.x), width: Math.abs(frame.width - hull.width) };
+    const craft = element.querySelector('.tethered-preview-craft')!.getBoundingClientRect();
+    const hull = element.querySelector('.tethered-preview-ship')!.getBoundingClientRect();
+    return {
+      x: Math.abs(frame.x - craft.x), width: Math.abs(frame.width - craft.width),
+      center: Math.abs(frame.x + frame.width / 2 - hull.x - hull.width / 2)
+    };
   });
   expect(alignment.x).toBeLessThan(1);
   expect(alignment.width).toBeLessThan(1);
+  expect(alignment.center).toBeLessThan(1);
   if (!process.env.CI) await page.locator('#start-cosmetic-preview').screenshot({ path: testInfo.outputPath('manta-modal-mobile.png') });
 });
 

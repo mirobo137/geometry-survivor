@@ -1,16 +1,36 @@
-import { TETHERED_SHIP_ART as ART } from '../../assets/skins/tethered/TetheredAssets';
+import {
+  CANNON_SKIN_RASTER_ART,
+  LINKED_CANNON_LAYOUT,
+  PLAYER_SHIP_RASTER_ART
+} from '../../assets/skins/SkinRasterAssets';
+import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
+import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
+import { getPlayerSkinDefinition } from '../../content/visual/SkinDefinitions';
+import type { PlayerSkinId } from '../../content/visual/VisualTokens';
+import { PROJECTILE_MUZZLE_OFFSETS } from '../../content/weapons/WeaponDefinitions';
 import './tethered.css';
 
-/** Same ship/cannon sources and logical geometry as the playable skin. */
-export const createTetheredPreview = (animated: boolean): string => `
-  <span class="player-skin-preview tethered-preview ${animated ? 'is-animated' : 'is-static'}" role="img" aria-label="Vista previa de Ivory Spear">
+/** Same PNG sources, frame geometry and pivots as the playable player view. */
+export const createTetheredPreview = (
+  animated: boolean,
+  shipSkin: PlayerSkinId = 'spearhead',
+  cannonSkin: CannonSkinId = 'spearhead'
+): string => {
+  const ship = PLAYER_SHIP_RASTER_ART[shipSkin];
+  const cannon = CANNON_SKIN_RASTER_ART[cannonSkin];
+  const cablePaths = PROJECTILE_MUZZLE_OFFSETS.map((muzzle, index) => {
+    const side = index === 0 ? -1 : 1;
+    const rear = muzzle.y + cannon.height * (cannon.cableAnchorY - cannon.anchorY);
+    return `<path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#304451" stroke-width="2.7"/><path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#75d9eb" stroke-width=".7"/>`;
+  }).join('');
+  const accessibleName = `Vista previa de ${getPlayerSkinDefinition(shipSkin).name} con ${getCannonSkinDefinition(cannonSkin).name}`;
+
+  return `<span class="player-skin-preview tethered-preview ${animated ? 'is-animated' : 'is-static'}" role="img" aria-label="${accessibleName}">
     <span class="tethered-preview-craft">
-      <svg viewBox="-48 -48 96 96" aria-hidden="true" focusable="false">
-        <path d="M-11 7Q-21 14-27 8.76M11 7Q21 14 27 8.76" fill="none" stroke="#304451" stroke-width="2.7"/>
-        <path d="M-11 7Q-21 14-27 8.76M11 7Q21 14 27 8.76" fill="none" stroke="#75d9eb" stroke-width=".7"/>
-      </svg>
-      <img class="tethered-preview-ship" src="${ART.ship.url}" alt="" width="256" height="256" loading="lazy" decoding="async"/>
-      <img class="tethered-preview-gun is-left" src="${ART.cannon.url}" alt="" width="128" height="128" loading="lazy" decoding="async"/>
-      <img class="tethered-preview-gun is-right" src="${ART.cannon.url}" alt="" width="128" height="128" loading="lazy" decoding="async"/>
+      <svg viewBox="-45 -40 90 80" aria-hidden="true" focusable="false">${cablePaths}</svg>
+      <img class="tethered-preview-ship" src="${ship.url}" alt="" width="256" height="256" loading="lazy" decoding="async" draggable="false"/>
+      <img class="tethered-preview-gun is-left" src="${cannon.url}" alt="" width="128" height="128" loading="lazy" decoding="async" draggable="false"/>
+      <img class="tethered-preview-gun is-right" src="${cannon.url}" alt="" width="128" height="128" loading="lazy" decoding="async" draggable="false"/>
     </span>
   </span>`;
+};

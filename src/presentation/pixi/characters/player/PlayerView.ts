@@ -11,7 +11,6 @@ import {
   type PlayerSkinId
 } from '../../../../content/visual/VisualTokens';
 import type { PlayerTextureSet } from './PlayerVisualAssets';
-import { MantaWingView } from './MantaWingView';
 import { RechargeableShieldView } from './RechargeableShieldView';
 import { TetheredShipView } from './TetheredShipView';
 
@@ -39,7 +38,6 @@ export class PlayerView {
   private readonly rechargeableShield: RechargeableShieldView;
   private readonly shotFlash: Graphics;
   private readonly signature: Sprite;
-  private mantaWings?: MantaWingView;
   private tetheredShip?: TetheredShipView;
   private skin: PlayerSkinId = 'cyan';
   private cannonSkin: CannonSkinId = 'basic';
@@ -101,15 +99,11 @@ export class PlayerView {
 
   public setSkin(skin: PlayerSkinId): void {
     this.skin = skin;
-    if ((skin === 'spearhead' || this.tetheredPrototype) && !this.tetheredShip) {
-      this.tetheredShip = new TetheredShipView(this.quality);
+    const rasterSkin = this.tetheredPrototype ? 'spearhead' : skin;
+    if (!this.tetheredShip) {
+      this.tetheredShip = new TetheredShipView(this.quality, rasterSkin, this.cannonSkin);
       this.root.addChildAt(this.tetheredShip.root, 5);
-    }
-    if (skin === 'manta' && !this.mantaWings && !this.tetheredPrototype) {
-      this.mantaWings = new MantaWingView();
-      this.root.addChildAt(this.mantaWings.root, 4);
-    }
-    if (this.mantaWings) this.mantaWings.root.visible = false;
+    } else this.tetheredShip.setSkins(rasterSkin, this.cannonSkin);
     this.ring.visible = true;
     this.ring.rotation = 0;
     this.ring.alpha = 1;
@@ -148,6 +142,7 @@ export class PlayerView {
     // Cannon SVGs own their palette so a body skin never recolors the loadout.
     this.weaponLeft.tint = 0xffffff;
     this.weaponRight.tint = 0xffffff;
+    this.tetheredShip?.setSkins(this.tetheredPrototype ? 'spearhead' : this.skin, cannonSkin);
   }
 
   /** Called by the app after the simulation accepts a damage event. */
@@ -231,8 +226,7 @@ export class PlayerView {
       ? shotAimRotation
       : -this.movementTilt * 0.65 + damagePulse * PLAYER_VISUAL_TOKENS.movementTiltRadians;
     this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
-    const hybridReady = this.mantaWings?.render(this.skin === 'manta', animationSeconds, this.movementStrength, defeat, damagePulse) ?? false;
-    this.ring.visible = !hybridReady;
+    this.ring.visible = true;
     this.weapons.position.set(defeat * 26, defeat * 8);
     const kick = shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance;
     const leftKick = (this.shotMuzzleMask & 1) !== 0 ? kick : 0;
@@ -253,14 +247,12 @@ export class PlayerView {
     this.renderCannonSocketFx(animationSeconds, shotPulse);
     this.renderShotFlash(shotPulse, state);
     if (this.tetheredShip) {
-      const active = this.tetheredPrototype || this.skin === 'spearhead';
-      if (!active) this.tetheredShip.root.visible = false;
-      const ready = active && this.tetheredShip.render(animationSeconds, this.weapons.rotation,
+      const ready = this.tetheredShip.render(animationSeconds, this.weapons.rotation,
         this.movementStrength, defeat, damagePulse, leftKick, rightKick);
       this.body.visible = this.core.visible = this.signature.visible = this.weapons.visible = !ready;
       this.damageFlash.visible = !ready;
       this.accent.visible = !ready && this.skin !== 'manta';
-      this.ring.visible = !ready && !hybridReady;
+      this.ring.visible = !ready;
       // The intact raster ship already carries the short engine plume.
       if (ready) this.movementTrail.visible = false;
     }

@@ -5,7 +5,7 @@ import { PROJECTILE_MUZZLE_OFFSETS } from '../../../../content/weapons/WeaponDef
 
 const art = { ship: Texture.WHITE, cannon: Texture.WHITE };
 const loaded = async (quality: 'low' | 'high' = 'high') => {
-  const view = new TetheredShipView(quality, async () => art);
+  const view = new TetheredShipView(quality, 'spearhead', 'spearhead', async () => art);
   await Promise.resolve();
   return view;
 };
@@ -69,15 +69,29 @@ describe('TetheredShipView visual trial', () => {
     expect(left.y).toBe(-11);
   });
 
+  it('requests a new full ship and independent cannon when either skin changes', async () => {
+    const requests: string[] = [];
+    const view = new TetheredShipView('low', 'cyan', 'basic', async (ship, cannon) => {
+      requests.push(`${ship}:${cannon}`);
+      return art;
+    });
+    await Promise.resolve();
+    expect(view.render(0, 0, 0, 0, 0, 0, 0)).toBe(true);
+    view.setSkins('manta', 'bloom');
+    await Promise.resolve();
+    expect(requests).toEqual(['cyan:basic', 'manta:bloom']);
+    expect(view.render(0.1, 0, 0, 0, 0, 0, 0)).toBe(true);
+  });
+
   it('falls back on failure and never attaches art after disposal', async () => {
-    const failed = new TetheredShipView('low', async () => undefined);
+    const failed = new TetheredShipView('low', 'spearhead', 'spearhead', async () => undefined);
     await Promise.resolve();
     expect(failed.render(0, 0, 0, 0, 0, 0, 0)).toBe(false);
-    const rejected = new TetheredShipView('high', async () => { throw new Error('decode'); });
+    const rejected = new TetheredShipView('high', 'spearhead', 'spearhead', async () => { throw new Error('decode'); });
     await Promise.resolve();
     await Promise.resolve();
     expect(rejected.render(0, 0, 0, 0, 0, 0, 0)).toBe(false);
-    const disposed = new TetheredShipView('high', async () => art);
+    const disposed = new TetheredShipView('high', 'spearhead', 'spearhead', async () => art);
     disposed.root.destroy({ children: true });
     await Promise.resolve();
     expect(disposed.root.destroyed).toBe(true);

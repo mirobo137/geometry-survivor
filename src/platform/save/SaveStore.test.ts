@@ -35,7 +35,7 @@ describe('LocalSaveStore', () => {
     const defaults = createDefaultSaveData();
     store.save({ ...defaults, wallet: { nova: 425 },
       skins: { selected: 'spearhead', unlocked: ['cyan', 'manta', 'spearhead'] } });
-    expect(store.load().skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'manta', 'spearhead'] });
+    expect(store.load().skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'spearhead', 'manta'] });
     expect(store.load().wallet.nova).toBe(425);
     expect(store.load().cannonSkins).toEqual(defaults.cannonSkins);
   });
@@ -108,8 +108,8 @@ describe('LocalSaveStore', () => {
       },
       best: { timeSeconds: 0, score: 14 },
       tutorialSeen: true,
-      skins: { selected: 'cyan', unlocked: ['cyan'] },
-      cannonSkins: { selected: 'basic', unlocked: ['basic'] },
+      skins: { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] },
+      cannonSkins: { selected: 'spearhead', unlocked: ['basic', 'spearhead'] },
       backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
       wallet: { nova: 0 },
       laboratory: createDefaultSaveData().laboratory,
@@ -233,15 +233,15 @@ describe('LocalSaveStore', () => {
     expect(migrateSaveData({
       schemaVersion: 1,
       skins: { selected: 'violet', unlocked: ['violet', 'violet', 'unknown'] }
-    }).skins).toEqual({ selected: 'violet', unlocked: ['cyan', 'violet'] });
+    }).skins).toEqual({ selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet'] });
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       skins: { selected: 'violet', unlocked: [] }
-    }).skins).toEqual({ selected: 'cyan', unlocked: ['cyan'] });
+    }).skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'spearhead'] });
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       cannonSkins: { selected: 'rainbow', unlocked: ['rainbow', 'rainbow', 'unknown'] }
-    }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['basic', 'rainbow'] });
+    }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['basic', 'spearhead', 'rainbow'] });
     expect(migrateSaveData({
       schemaVersion: 3,
       backgrounds: { selected: 'crystal-field', unlocked: ['crystal-field', 'crystal-field', 'unknown'] }

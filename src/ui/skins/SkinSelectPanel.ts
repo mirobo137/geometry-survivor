@@ -28,7 +28,7 @@ export class SkinSelectPanel {
   private readonly cards: HTMLElement;
   private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<PlayerSkinId, SkinCardEntry>();
-  private state: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
+  private state: SkinSaveData = { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] };
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: SkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
@@ -57,8 +57,8 @@ export class SkinSelectPanel {
   }
 
   private normalize(state: SkinSaveData): SkinSaveData {
-    const unlocked = Array.from(new Set<PlayerSkinId>(['cyan', ...state.unlocked]));
-    const selected = unlocked.includes(state.selected) ? state.selected : 'cyan';
+    const unlocked = Array.from(new Set<PlayerSkinId>(['cyan', 'spearhead', ...state.unlocked]));
+    const selected = unlocked.includes(state.selected) ? state.selected : 'spearhead';
     return { selected, unlocked };
   }
 

@@ -6,31 +6,36 @@ import { registerTetheredShipChecks } from './tethered.checks';
 registerHomeChecks();
 registerTetheredShipChecks();
 
-test('equipa Manta híbrida gratis, conserva selección y carga una sola textura', async ({ page }, testInfo) => {
+test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y cañones', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const textures: string[] = [];
   page.on('response', response => {
-    if (response.url().includes('manta-wing-') && response.ok()) textures.push(response.url());
+    if (/\/(manta|tether-cannon)-[^/]+\.png/.test(response.url()) && response.ok()) textures.push(response.url());
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await expect(page.locator('#boot-status')).toBeHidden();
-  expect(textures).toHaveLength(0);
+  expect(textures.every(url => url.includes('tether-cannon'))).toBe(true);
+  expect(textures.some(url => url.includes('/manta-'))).toBe(false);
   await page.locator('#start-skins').click();
   await page.locator('.skin-card[data-skin="manta"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Manta Veil');
-  const mantaAlignment = await page.locator('#start-cosmetic-preview .manta-preview').evaluate(element => {
+  const mantaAlignment = await page.locator('#start-cosmetic-preview .tethered-preview').evaluate(element => {
     const outer = element.getBoundingClientRect();
-    const hull = element.querySelector('svg')!.getBoundingClientRect();
-    return { left: Math.abs(outer.left - hull.left), width: Math.abs(outer.width - hull.width) };
+    const craft = element.querySelector('.tethered-preview-craft')!.getBoundingClientRect();
+    const hull = element.querySelector('.tethered-preview-ship')!.getBoundingClientRect();
+    return { left: Math.abs(outer.left - craft.left), width: Math.abs(outer.width - craft.width), center: Math.abs(outer.left + outer.width / 2 - hull.left - hull.width / 2) };
   });
   expect(mantaAlignment.left).toBeLessThan(1);
   expect(mantaAlignment.width).toBeLessThan(1);
+  expect(mantaAlignment.center).toBeLessThan(1);
   await expect.poll(() => page.locator('#start-cosmetic-preview img').evaluateAll(images =>
-    images.length === 2 && images.every(image => (image as HTMLImageElement).naturalWidth === 256)
+    images.length === 3 && images.filter(image => (image as HTMLImageElement).naturalWidth === 256).length === 1
+      && images.filter(image => (image as HTMLImageElement).naturalWidth === 128).length === 2
   )).toBe(true);
   await page.locator('#start-cosmetic-preview').screenshot({ path: testInfo.outputPath('manta-preview.png') });
-  expect(new Set(textures).size).toBe(1);
+  expect(new Set(textures).size).toBe(2);
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.skin-card[data-skin="manta"]')).toHaveClass(/is-selected/);
   await page.locator('#start-skins-back').click();
@@ -46,7 +51,7 @@ test('equipa Manta híbrida gratis, conserva selección y carga una sola textura
 for (const quality of ['low', 'high']) {
   test(`Manta conserva identidad y carga diferida en partida ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);
-    const imageReady = page.waitForResponse(response => response.url().includes('manta-wing-') && response.ok());
+    const imageReady = page.waitForResponse(response => /\/manta-[^/]+\.png/.test(response.url()) && response.ok());
     await page.goto(`/?skin=manta&quality=${quality}&boss=1`);
     await imageReady;
     await expect(page.locator('#boot-status')).toBeHidden();
@@ -78,32 +83,36 @@ const RESIZE_MATRIX = [
   { width: 412, height: 915 }
 ] as const;
 
-for (const quality of ['low', 'high']) {
-  test(`carga el arte de las siete familias cosmeticas y boss en ${quality}`, async ({ page }, testInfo) => {
+test('carga las ocho naves PNG y ocho canones con boss en high', async ({ page }, testInfo) => {
+    test.setTimeout(150_000);
+    const quality = 'high';
     const failures = captureRuntimeFailures(page);
+    await page.route('**/*', route => route.continue());
     const smokeAssetResponses: string[] = [];
     const bloomAssetResponses: string[] = [];
     page.on('response', (response) => {
       if (response.url().includes('projectile-smoke-puff-') && response.ok()) smokeAssetResponses.push(response.url());
       if (response.url().includes('bloom-trail-') && response.ok()) bloomAssetResponses.push(response.url());
     });
-    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta'];
+    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead'];
     const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
-    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom'];
+    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead'];
     for (let index = 0; index < skins.length; index += 1) {
+      const shipAsset = skins[index] === 'spearhead' ? 'tether-ship-' : `${skins[index]}-`;
+      const cannonAsset = cannons[index] === 'spearhead' ? 'tether-cannon-' : `${cannons[index]}-`;
+      const shipReady = page.waitForResponse(response => response.url().includes(`/assets/${shipAsset}`) && response.ok());
+      const cannonReady = page.waitForResponse(response => response.url().includes(`/assets/${cannonAsset}`) && response.ok());
       await page.goto(`/?boss=1&quality=${quality}&skin=${skins[index]}&background=${backgrounds[index % backgrounds.length]}&cannon=${cannons[index]}`);
+      await Promise.all([shipReady, cannonReady]);
       await expect(page.locator('#boot-status')).toBeHidden();
       await expect(page.locator('#game-container canvas')).toBeVisible();
       await expect(page.locator('#debug-panel')).toContainText('boss: intro');
       await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`art-${quality}-${skins[index]}.png`) });
     }
-    if (quality === 'high') expect(smokeAssetResponses).toHaveLength(1);
-    else expect(smokeAssetResponses).toHaveLength(0);
-    if (quality === 'high') expect(bloomAssetResponses).toHaveLength(1);
-    else expect(bloomAssetResponses).toHaveLength(0);
+    expect(smokeAssetResponses).toHaveLength(1);
+    expect(bloomAssetResponses).toHaveLength(1);
     expect(failures).toEqual([]);
-  });
-}
+});
 
 const captureRuntimeFailures = (page: Page): string[] => {
   const failures: string[] = [];
@@ -254,7 +263,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.skin-card[data-skin="nova"]')).toHaveClass(/is-selected/);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'violet', 'nova'] });
+  expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'spearhead', 'violet', 'nova'] });
   expect(saved.wallet.nova).toBeLessThan(20000);
   expect(failures).toEqual([]);
 });
@@ -265,26 +274,29 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await page.locator('#start-cannon-skins-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(7);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(8);
   expect(await page.locator('#start-cannon-cards .cannon-card-art').evaluateAll((artworks) =>
     artworks.every((artwork) => getComputedStyle(artwork).overflowX === 'hidden' && getComputedStyle(artwork).overflowY === 'hidden')
   )).toBe(true);
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Arc Needle');
-  await expect(page.locator('#start-cosmetic-preview .cannon-preview-shot')).toHaveCount(2);
+  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg image')).toHaveCount(3);
   await page.mouse.click(2, 2);
   await expect(page.locator('#start-cosmetic-dialog')).toBeHidden();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-selected/);
+  const consoleScroller = page.locator('#start-skins-view .console-body');
+  await consoleScroller.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => consoleScroller.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   await page.locator('.cannon-card[data-cannon="helix"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Helix Lance');
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.cannon-card[data-cannon="helix"]')).toHaveClass(/is-selected/);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'curve', 'helix'] });
+  expect(saved.cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'spearhead', 'curve', 'helix'] });
   expect(saved.wallet.nova).toBeLessThan(20000);
   expect(failures).toEqual([]);
 });
@@ -620,7 +632,7 @@ test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) =
   await expect(page.locator('#start-cosmetic-rewarded-button')).toBeHidden();
 
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
-  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'violet'] });
+  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet'] });
   expect(failures).toEqual([]);
 });
 

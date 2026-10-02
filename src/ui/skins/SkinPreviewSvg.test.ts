@@ -1,65 +1,44 @@
 import { describe, expect, it } from 'vitest';
+import { PLAYER_SKIN_DEFINITIONS } from '../../content/visual/SkinDefinitions';
+import { CANNON_SKIN_RASTER_ART, PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
-import { PLAYER_HULL_SVG, tintPlayerSvgMarkup } from '../../assets/svg/characters/player/PlayerHullSvg';
 
 describe('SkinPreviewSvg', () => {
-  it('uses one intact ship PNG and two shared gun images in static and modal previews', () => {
+  it('shows the equipped ship PNG and two instances of the same base cannon PNG', () => {
     const card = createPlayerSkinPreviewSvg('spearhead');
     const selected = createPlayerSkinPreviewSvg('spearhead', { animated: true });
     const images = [...card.matchAll(/<img[^>]*src="([^"]+)"/g)].map(match => match[1]);
     expect(images).toHaveLength(3);
-    expect(images[0]).toContain('tether-ship');
-    expect(images[1]).toContain('tether-cannon');
+    expect(images[0]).toBe(PLAYER_SHIP_RASTER_ART.spearhead.url);
+    expect(images[1]).toBe(CANNON_SKIN_RASTER_ART.spearhead.url);
     expect(images[1]).toBe(images[2]);
     expect(card).toContain('is-static');
     expect(selected).toContain('is-animated');
     expect(selected).not.toMatch(/tether-engine|tether-hull|<script/);
   });
-  it('shares the PNG between two fins and only animates the selected hybrid preview', () => {
-    const card = createPlayerSkinPreviewSvg('manta');
-    const selected = createPlayerSkinPreviewSvg('manta', { animated: true });
-    const sources = [...card.matchAll(/<img src="([^"]+)"/g)].map(match => match[1]);
-    expect(sources).toHaveLength(2);
-    expect(new Set(sources).size).toBe(1);
-    expect(card).toContain('is-static');
-    expect(selected).toContain('is-animated');
-    expect(card).not.toMatch(/<image|<script/i);
-  });
-  it('keeps a bounded, vector-only preview for each skin', () => {
-    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'] as const) {
-      const svg = createPlayerSkinPreviewSvg(skin);
-      expect(svg).toContain('viewBox="-52 -52 104 104"');
-      expect(svg).toContain('<path');
-      expect(svg).not.toMatch(/<image|<script|url\(/i);
-      expect(svg).toMatch(/#[0-9a-f]{6}/i);
+
+  it('replaces all seven existing ship appearances while retaining their IDs', () => {
+    expect(PLAYER_SKIN_DEFINITIONS.map(skin => skin.id)).toContain('spearhead');
+    expect(PLAYER_SKIN_DEFINITIONS).toHaveLength(8);
+    for (const definition of PLAYER_SKIN_DEFINITIONS) {
+      const card = createPlayerSkinPreviewSvg(definition.id);
+      const preview = createPlayerSkinPreviewSvg(definition.id, { animated: true });
+      const images = [...card.matchAll(/<img[^>]*src="([^"]+)"/g)].map(match => match[1]);
+      expect(images).toHaveLength(3);
+      expect(images[0]).toBe(PLAYER_SHIP_RASTER_ART[definition.id].url);
+      expect(images[1]).toBe(CANNON_SKIN_RASTER_ART.spearhead.url);
+      expect(images[1]).toBe(images[2]);
+      expect(card).toContain('is-static');
+      expect(preview).toContain('is-animated');
+      expect(card).not.toMatch(/<script|tether-engine|tether-hull/i);
     }
   });
 
-  it('uses a distinct hull silhouette in the locker preview', () => {
-    const silhouettes = new Set<string>();
-    for (const skin of ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova'] as const) {
-      const preview = createPlayerSkinPreviewSvg(skin);
-      for (const source of Object.values(PLAYER_HULL_SVG[skin])) {
-        for (const [, path] of source.matchAll(/\sd="([^"]+)"/g)) expect(preview).toContain(`d="${path}"`);
-      }
-      silhouettes.add(PLAYER_HULL_SVG[skin].body.match(/\sd="([^"]+)"/)![1]);
-    }
-    expect(silhouettes.size).toBe(6);
-  });
-
-  it('mirrors multiplicative Sprite tint without retaining duplicate IDs', () => {
-    const markup = tintPlayerSvgMarkup('<svg><path id="test" fill="#808080" stroke="#ffffff"/></svg>', 0x804020);
-    expect(markup).toBe('<path fill="#402010" stroke="#804020"/>');
-  });
-
-  it('omits cannon emitters and only animates the equipped preview', () => {
+  it('keeps static cards still and leaves motion to the inspected modal preview', () => {
     const card = createPlayerSkinPreviewSvg('cyan');
     const preview = createPlayerSkinPreviewSvg('violet', { animated: true });
-    expect(card).not.toContain('M-22-7-39-18');
     expect(card).not.toContain('animateTransform');
     expect(card).toContain('is-static');
-    expect(preview).not.toContain('M-22-7-39-18');
-    expect(preview).toContain('animateTransform');
     expect(preview).toContain('is-animated');
   });
 });

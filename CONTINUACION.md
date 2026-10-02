@@ -1,32 +1,48 @@
 # Geometry Survivor — estado y continuación
 
-## Siguiente sesión: catálogo PNG aprobado / Ivory Spear gratis
+## Estado actual: flota PNG completa para revisión visual — 01-10-2026
 
-Última petición: usuario aprueba nave de una sola imagen y cañones vinculados.
-Migrar todas las skins de nave y modelos de cañón a PNG en próxima sesión,
-conservando IDs/precios/guardados y sin cambios de combate. NO reintroducir
-nave por piezas. Guía y orden: docs/design/NAVES_PNG.md (canónica, enlazada §8).
-Pendientes explícitos: shaders/propulsión y nave equipada como PNG de Inicio;
-derrota nueva también futura. Laboratorio sigue pendiente de pruebas humanas.
+Solicitud vigente: leer el diseño de skins y Ivory Spear, crear siete naves y
+siete cañones originales, reemplazar las ilustraciones anteriores, mostrar los
+ocho elementos en cada pestaña, verificar el juego y preparar capturas antes de
+pasar cambios a `main`.
 
-Implementado hoy: `spearhead` / Ivory Spear, Skins → Naves, gratis; tarjeta y
-modal usan PNG real de nave y cañón, equipar persiste en localStorage. Sin schema
-nuevo ni pérdida de progreso. Funciona sin `ship-preview`; opción antigua sigue
-compatible. Ruta desarrollo: `/?skin=spearhead&act=radial`; para elección real
-entrar al menú normal. La prueba incluye módulos PNG del prototipo y conserva
-proyectil/estela elegidos sin sobrescribir cannonSkins; migración restaurará
-independencia de modelo físico de cañón (ver guía). Fallback comparte texturas
-cyan existentes, no añade cuatro rasterizaciones SVG para la nueva skin.
-No nueva generación de imágenes hoy; mismo arte aprobado y presupuesto.
+Implementación local completa en `codex/fix-naves-png-smoke`. Ocho naves PNG
+RGBA completas, cada una de 256×256; ocho PNG de cañón de 128×128. Ivory Spear y
+sus cañones originales son las entradas base gratuitas. Se conservan IDs,
+precios, selecciones y desbloqueos anteriores. Guardados viejos reciben la
+nave/cañón gratis sin cambiar su elección ni actualizar el schema.
 
-Comprobado: typecheck; 120 archivos/578 tests (un worker), builds local/Poki/
-CrazyGames; cuatro smokes desktop/móvil (selección gratis/recarga/cambio a cyan
-y vuelta, preview, gameplay y prueba opt-in pausa/resize/reinicio).
-Primer intento en paralelo agotó memoria con Vite anterior en27.4GiB; usuario
-autorizó reinicio, proceso ya había cerrado al comprobarlo. Vite nuevo disponible
-en127.0.0.1:5173; sesión3668, no cerrar al entregar. Repetición acotada pasó.
-Warning preexistente chunk JS>500kB sigue. No móvil físico ni perfil FPS.
-Sin commit/push; publicar en Pages sólo cuando el usuario lo solicite.
+El mismo compositor carga la nave y los dos cañones seleccionados; sólo una
+textura por modelo equipado se comparte por ambos cañones y por el flash. El
+locker y los modales muestran esos PNG. Las siluetas SVG anteriores no se
+usaron para diseñar la nueva flota; sólo se consultaron sus paletas. Sin cambios
+de combate, hitbox o slots. Guía canónica: [NAVES_PNG](docs/design/NAVES_PNG.md);
+prompts completos y procedencia: `scripts/fleet-skin-image-sources.json`.
+
+Assets nuevos: 741,025 bytes (~723.7 KiB); las dos texturas activas son 320 KiB
+RGBA8 teóricos. Esto no equivale a medición de FPS/VRAM total.
+
+Verificación: `npm run build:local` pasó (typecheck, 120 archivos y 577 tests,
+compilación local; permanece la advertencia conocida de chunk JS mayor de
+500 kB). Pasaron los smoke de las ocho parejas de nave/cañón en partida high,
+Manta en low/high, selección y persistencia de naves/cañones, cañón gratuito
+rewarded, Ivory Spear base con pausa/resize/reinicio, locker portrait y
+alineación móvil. `git diff --check` pasó.
+
+Playwright no pudo descargar su Chromium porque el CDN devolvió HTTP 403; estas
+pruebas usaron `/usr/bin/chromium` mediante una configuración local temporal,
+ya eliminada. La pasada amplia de 79 smoke no terminó: detectó expectativas
+viejas de guardados/selectores (corregidas y repetidas con éxito) y luego
+timeouts/stream en escenarios generales de Laboratorio/Overdrive ajenos al
+locker. No se reporta esa pasada como suite completa.
+
+Capturas revisadas: `test-results/skin-refresh/ships-contact.png`,
+`cannons-contact.png`, `ships-locker.png`, `cannons-locker.png` y
+`combat-manta-bloom.png`.
+
+Sin commit, push ni publicación. La revisión de arte/código de la persona usuaria
+queda pendiente; no pasar a `main` hasta recibir esa revisión.
 
 ## Prueba de nave y cañones vinculados — 30-09-2026
 

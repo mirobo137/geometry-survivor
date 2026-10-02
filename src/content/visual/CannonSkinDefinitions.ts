@@ -1,4 +1,4 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'spearhead';
 export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -108,11 +108,24 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     trail: 'bloom',
     accent: 0xff8fd8,
     projectileAccent: 0x9fffe8
+  },
+  {
+    id: 'spearhead',
+    name: 'Ivory Spear',
+    subtitle: 'Módulos vinculados de marfil',
+    description: 'Los cañones originales de Ivory Spear, con el mismo pulso directo y la estela elegida.',
+    rarity: 'NAVE BASE · GRATIS',
+    tier: 'starter',
+    priceNova: 0,
+    acquisition: 'default',
+    trail: 'straight',
+    accent: 0x75e6ff,
+    projectileAccent: 0xfff6a8
   }
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom'
+  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom' || value === 'spearhead'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

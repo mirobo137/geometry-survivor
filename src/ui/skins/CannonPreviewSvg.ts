@@ -1,11 +1,8 @@
 import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
-import { getProjectileCurveOffset } from '../../presentation/pixi/fx/ProjectileMotionVisual';
-import {
-  CANNON_BARREL_SVG,
-  CANNON_PROJECTILE_SVG,
-  extractSvgGraphicMarkup
-} from '../../assets/svg/cannons/CannonSvgMarkup';
+import { CANNON_SKIN_RASTER_ART, LINKED_CANNON_LAYOUT, PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
+import { PROJECTILE_MUZZLE_OFFSETS } from '../../content/weapons/WeaponDefinitions';
+import { CANNON_PROJECTILE_SVG, extractSvgGraphicMarkup } from '../../assets/svg/cannons/CannonSvgMarkup';
 
 export interface CannonPreviewOptions {
   readonly animated?: boolean;
@@ -13,84 +10,58 @@ export interface CannonPreviewOptions {
 
 const toHex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
 
-const shotMotion = (skin: CannonSkinId, animated: boolean): string => {
-  if (!animated) return '';
-  const values = Array.from({ length: 25 }, (_, index) => {
-    const ageSeconds = index * 0.025;
-    const state = { active: true, x: 0, y: 0, vx: 340, vy: 0, radius: 7, ageSeconds, lifetimeSeconds: 2.5 - ageSeconds, muzzle: 1 as const };
-    return `${28 + ageSeconds * 340} ${getProjectileCurveOffset(state, getCannonSkinDefinition(skin).trail).toFixed(3)}`;
-  }).join(';');
-  return `<animateTransform attributeName="transform" type="translate" values="${values}" dur="1.25s" repeatCount="indefinite" begin="-0.08s"/>`;
+const trailMarkup = (skin: CannonSkinId, x: number, accent: string): string => {
+  if (skin === 'curve') return `<path class="cannon-preview-trail" d="M${x} -16C${x - 6} -25 ${x + 7} -34 ${x + 2} -48" fill="none" stroke="${accent}" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 4"/>`;
+  if (skin === 'helix') return `<path class="cannon-preview-trail cannon-preview-trail-helix" d="M${x} -16C${x + 7} -23 ${x - 7} -27 ${x} -33S${x + 7} -42 ${x} -49" fill="none" stroke="${accent}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M${x - 3} -29H${x + 3}M${x - 3} -41H${x + 3}" stroke="#ffd978" stroke-width="1.2"/>`;
+  if (skin === 'smoke') return `<path class="cannon-preview-trail" d="M${x} -16V-46" fill="none" stroke="${accent}" stroke-width="2.2" stroke-linecap="round"/><g class="cannon-preview-smoke" fill="#b56b53"><circle cx="${x + 3}" cy="-24" r="2.5"/><circle cx="${x - 2}" cy="-33" r="2"/><circle cx="${x + 1}" cy="-42" r="1.4"/></g>`;
+  if (skin === 'rainbow') return `<g class="cannon-preview-rainbow" fill="none" stroke-width="1.15" stroke-linecap="round" stroke-dasharray="3 3"><path d="M${x - 3} -16V-47" stroke="#ff668f"/><path d="M${x - 1} -16V-47" stroke="#ffb86b"/><path d="M${x + 1} -16V-47" stroke="#65f2c2"/><path d="M${x + 3} -16V-47" stroke="#75e6ff"/></g>`;
+  if (skin === 'lattice') return `<path class="cannon-preview-trail" d="M${x} -16V-47" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 4"/><path d="M${x} -25l3 3-3 3-3-3zM${x} -38l3 3-3 3-3-3z" fill="none" stroke="#d3e8ff" stroke-width=".8"/>`;
+  if (skin === 'bloom') return `<path class="cannon-preview-trail" d="M${x} -16V-47" fill="none" stroke="#9fffe8" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 4"/><path d="M${x} -24c-4-4-6-1-3 2s5 2 3-2M${x} -35c4-4 6-1 3 2s-5 2-3-2M${x} -44c-3-3-5-1-3 2s5 1 3-2" fill="none" stroke="#ff8fd8" stroke-width="1.2" stroke-linecap="round"/>`;
+  return `<path class="cannon-preview-trail" d="M${x} -16V-47" fill="none" stroke="${accent}" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 4"/>`;
 };
 
-const barrelRecoil = (side: 'left' | 'right', animated: boolean): string => {
-  if (!animated) return '';
-  const values = side === 'left' ? '0 0;3 1.4;0 0' : '0 0;-3 1.4;0 0';
-  return `<animateTransform attributeName="transform" type="translate" values="${values}" dur="1.25s" repeatCount="indefinite"/>`;
-};
+const roundTripSkin = (skin: CannonSkinId): keyof typeof CANNON_PROJECTILE_SVG => (
+  skin === 'spearhead' ? 'basic' : skin
+);
 
-const muzzleFlash = (x: number, color: string, animated: boolean): string => {
-  if (!animated) return '';
-  return `<circle class="cannon-preview-muzzle-flash" cx="${x}" cy="-11" r="5" fill="${color}" opacity="0">
-    <animate attributeName="opacity" values="0;.9;0" dur="1.25s" repeatCount="indefinite"/>
-    <animate attributeName="r" values="2.2;7.5;2.2" dur="1.25s" repeatCount="indefinite"/>
-  </circle>`;
-};
-
-const previewCurvePath = (skin: CannonSkinId): string => {
-  const trailKind = getCannonSkinDefinition(skin).trail;
-  return Array.from({ length: 25 }, (_, index) => {
-    const ageSeconds = index * 0.025;
-    const state = { active: true, x: 0, y: 0, vx: 340, vy: 0, radius: 7, ageSeconds, lifetimeSeconds: 2.5 - ageSeconds, muzzle: 1 as const };
-    return `${index === 0 ? 'M' : 'L'}${28 + ageSeconds * 340} ${getProjectileCurveOffset(state, trailKind).toFixed(3)}`;
-  }).join(' ');
-};
-
-const trailMarkup = (skin: CannonSkinId): string => {
-  if (skin === 'curve') {
-    return `<path class="cannon-preview-trail cannon-preview-trail-curve" d="${previewCurvePath(skin)}" fill="none" stroke="#d2a8ff" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>`;
-  }
-  if (skin === 'helix') return `<path class="cannon-preview-trail cannon-preview-trail-helix" d="${previewCurvePath(skin)}" fill="none" stroke="#8de8ff" stroke-width="2.1" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M52-5 58 0 52 5M120-5 126 0 120 5" fill="none" stroke="#ffd978" stroke-width="1.2"/>`;
-  if (skin === 'smoke') return `<path class="cannon-preview-trail" d="M30 0H190" fill="none" stroke="#ffb86b" stroke-width="2.4" stroke-linecap="round"/><g class="cannon-preview-smoke" fill="#b56b53"><circle cx="66" cy="4" r="6"/><circle cx="103" cy="-3" r="4.5"/><circle cx="140" cy="4" r="3.3"/></g>`;
-  if (skin === 'rainbow') return `<path class="cannon-preview-trail" d="M30-5H190M30-2H190M30 2H190M30 5H190" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="7 4"/><path d="M30-5H190" stroke="#ff668f" stroke-width="1.6"/><path d="M30-2H190" stroke="#ffb86b" stroke-width="1.6"/><path d="M30 2H190" stroke="#65f2c2" stroke-width="1.6"/><path d="M30 5H190" stroke="#75e6ff" stroke-width="1.6"/>`;
-  if (skin === 'lattice') return `<path class="cannon-preview-trail cannon-preview-trail-lattice" d="M30 0H190" fill="none" stroke="#ff7ca8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 8"/><path d="M72-8 82 0 72 8 62 0zM132-8 142 0 132 8 122 0z" fill="none" stroke="#d3e8ff" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="72" cy="0" r="2.5" fill="#fff0fa"/><circle cx="132" cy="0" r="2.5" fill="#fff0fa"/>`;
-  if (skin === 'bloom') return `<path class="cannon-preview-trail cannon-preview-trail-bloom" d="M30 0H190" fill="none" stroke="#9fffe8" stroke-width="1.7" stroke-linecap="round" stroke-dasharray="3 8"/><g fill="none" stroke-linecap="round"><path d="M66 0c-7-9-12-7-15 0s8 9 15 0M108 0c-6 8-12 7-14 0s8-8 14 0M150 0c-7-9-12-7-15 0s8 9 15 0" stroke="#ff8fd8" stroke-width="2"/><path d="M72 0c-3-5-6-5-8 0s4 5 8 0M132 0c-3 5-6 5-8 0s4-5 8 0" stroke="#ffcf72" stroke-width="1.5"/></g>`;
-  return `<path class="cannon-preview-trail" d="M30 0H190" fill="none" stroke="#fff6a8" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="5 7"/>`;
-};
-
-/** Code-first DOM preview for a complete cannon/projectile/trail package. */
+/** Preview the actual linked PNG modules, with their saved projectile/trail package. */
 export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPreviewOptions = {}): string => {
   const definition = getCannonSkinDefinition(skin);
   const animated = options.animated !== false;
   const animationClass = animated ? ' is-animated' : ' is-static';
   const accent = toHex(definition.accent);
-  const barrels = CANNON_BARREL_SVG[skin];
-  const bullet = extractSvgGraphicMarkup(CANNON_PROJECTILE_SVG[skin]);
-  const smokeAnimation = animated
-    ? '<animate attributeName="opacity" values=".15;.72;.08" dur="1.25s" repeatCount="indefinite"/>'
+  const ship = PLAYER_SHIP_RASTER_ART.spearhead;
+  const cannon = CANNON_SKIN_RASTER_ART[skin];
+  const bullet = extractSvgGraphicMarkup(CANNON_PROJECTILE_SVG[roundTripSkin(skin)]);
+  const cable = PROJECTILE_MUZZLE_OFFSETS.map((muzzle, index) => {
+    const side = index === 0 ? -1 : 1;
+    const rear = muzzle.y + cannon.height * (cannon.cableAnchorY - cannon.anchorY);
+    return `<path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#304451" stroke-width="2.7"/><path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#75d9eb" stroke-width=".7"/>`;
+  }).join('');
+  const shots = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => {
+    const body = `<g transform="translate(${muzzle.x} -46) rotate(-90)">${bullet}</g>`;
+    return animated
+      ? `<g class="cannon-preview-shot">${body}</g>`
+      : `<g>${body}</g>`;
+  }).join('');
+  const trails = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => trailMarkup(skin, muzzle.x, accent)).join('');
+  const muzzleFlashes = animated
+    ? PROJECTILE_MUZZLE_OFFSETS.map(muzzle => `<circle class="cannon-preview-muzzle-flash" cx="${muzzle.x}" cy="-11" r="3.5" fill="${accent}"/>`).join('')
     : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-62 -58 286 116" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
+  const cannonImages = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => (
+    `<image href="${cannon.url}" x="${muzzle.x - cannon.width * cannon.anchorX}" y="${muzzle.y - cannon.height * cannon.anchorY}" width="${cannon.width}" height="${cannon.height}" preserveAspectRatio="none"/>`
+  )).join('');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-45 -53 90 97" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
   <g class="cannon-preview-scene${animationClass}">
-    <ellipse cx="0" cy="20" rx="35" ry="13" fill="#020611" opacity=".6"/>
-    <g class="cannon-preview-route">${trailMarkup(skin)}</g>
-    <g class="cannon-preview-route cannon-preview-route-reverse" transform="scale(-1 1)">${trailMarkup(skin)}</g>
-    <g class="cannon-preview-shot cannon-preview-shot-right"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
-    <g class="cannon-preview-shot cannon-preview-shot-left" transform="scale(-1 1)"><g transform="translate(28 0)">${bullet}${shotMotion(skin, animated)}</g></g>
-    <g class="cannon-preview-ship">
-      <g class="cannon-preview-hull">
-        <path d="M0-20 18-10 18 10 0 20-18 10-18-10z" fill="#182844" stroke="#b9d7ff" stroke-width="2.4" stroke-linejoin="round"/>
-        <path d="M0-14 11-7 11 7 0 14-11 7-11-7z" fill="none" stroke="#50739e" stroke-width="1.5"/>
-        <circle cx="0" cy="0" r="8" fill="#75e6ff" stroke="#f4ffff" stroke-width="1.8"/>
-        <path d="M0-5V5M-5 0H5" stroke="#10213c" stroke-width="1.6" stroke-linecap="round"/>
-        <circle cx="0" cy="0" r="2.2" fill="#fff"/>
-      </g>
-      <g class="cannon-preview-hardpoint">
-        <g class="cannon-preview-barrel cannon-preview-barrel-left">${extractSvgGraphicMarkup(barrels.left)}${barrelRecoil('left', animated)}${muzzleFlash(-27, accent, animated)}</g>
-        <g class="cannon-preview-barrel cannon-preview-barrel-right">${extractSvgGraphicMarkup(barrels.right)}${barrelRecoil('right', animated)}${muzzleFlash(27, accent, animated)}</g>
-      </g>
-      ${animated ? '<animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0;0 2;0 0" dur="2.8s" repeatCount="indefinite"/>' : ''}
+    <g class="cannon-preview-routes">${trails}</g>
+    ${shots}
+    <g class="cannon-preview-craft">
+      <g class="cannon-preview-cables">${cable}</g>
+      <image href="${ship.url}" x="-28" y="-32" width="56" height="64" preserveAspectRatio="none"/>
+      ${cannonImages}
+      ${muzzleFlashes}
     </g>
-    ${animated && skin === 'smoke' ? `<g class="cannon-preview-smoke-pulse" fill="#b56b53" opacity=".2"><circle cx="72" cy="-2" r="5">${smokeAnimation}</circle><circle cx="130" cy="4" r="3">${smokeAnimation}</circle></g>` : ''}
   </g>
 </svg>`;
 };

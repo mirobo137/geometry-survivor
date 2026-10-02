@@ -534,7 +534,8 @@
 .cosmetic-dialog-stage .skin-preview,
 .cosmetic-dialog-stage .cannon-preview,
 .cosmetic-dialog-stage .cosmetic-background-frame { width: 100%; height: 100%; }
-.cosmetic-dialog-stage .skin-preview > svg { width: min(72%, 13rem); }
+.cosmetic-dialog-stage .skin-preview > svg,
+.cosmetic-dialog-stage .skin-preview > .tethered-preview { width: min(72%, 13rem); }
 .cosmetic-dialog-stage .manta-preview > svg { width: 100%; height: 100%; }
 .cosmetic-dialog-stage .cannon-preview svg { width: min(94%, 30rem); }
 

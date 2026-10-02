@@ -126,12 +126,12 @@ export const createDefaultSaveData = (): SaveData => ({
   },
   tutorialSeen: false,
   skins: {
-    selected: 'cyan',
-    unlocked: ['cyan']
+    selected: 'spearhead',
+    unlocked: ['cyan', 'spearhead']
   },
   cannonSkins: {
-    selected: 'basic',
-    unlocked: ['basic']
+    selected: 'spearhead',
+    unlocked: ['basic', 'spearhead']
   },
   backgrounds: {
     selected: 'deep-space',
@@ -199,7 +199,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const unlocked = Array.isArray(rawSkins.unlocked)
     ? rawSkins.unlocked.filter(isPlayerSkinId)
     : [];
-  const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', ...unlocked]));
+  const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', 'spearhead', ...unlocked]));
   const normalizedUnlockedActs = Array.from(new Set<CampaignActId>([
     'radial',
     ...rawUnlockedActs.filter(isCampaignActId)
@@ -207,14 +207,14 @@ export const migrateSaveData = (value: unknown): SaveData => {
   // Before schema 7 there was no proof of an actual Act III victory. Merely
   // having the act selectable must not unlock the new mode during migration.
   const overdriveUnlocked = version >= 7 && rawOverdrive.unlocked === true;
-  const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'cyan';
-  const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'cyan';
+  const requestedSelected = isPlayerSkinId(rawSkins.selected) ? rawSkins.selected : 'spearhead';
+  const selected = normalizedUnlocked.includes(requestedSelected) ? requestedSelected : 'spearhead';
   const cannonUnlocked = Array.isArray(rawCannonSkins.unlocked)
     ? rawCannonSkins.unlocked.filter(isCannonSkinId)
     : [];
-  const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['basic', ...cannonUnlocked]));
-  const requestedCannon = isCannonSkinId(rawCannonSkins.selected) ? rawCannonSkins.selected : 'basic';
-  const selectedCannon = normalizedCannonUnlocked.includes(requestedCannon) ? requestedCannon : 'basic';
+  const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['basic', 'spearhead', ...cannonUnlocked]));
+  const requestedCannon = isCannonSkinId(rawCannonSkins.selected) ? rawCannonSkins.selected : 'spearhead';
+  const selectedCannon = normalizedCannonUnlocked.includes(requestedCannon) ? requestedCannon : 'spearhead';
   const backgroundUnlocked = Array.isArray(rawBackgrounds.unlocked)
     ? rawBackgrounds.unlocked.filter(isBackgroundId)
     : [];

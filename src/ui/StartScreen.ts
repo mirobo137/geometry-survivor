@@ -132,8 +132,8 @@ export class StartScreen {
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
   private controlSchemeHandler: ((controlScheme: ControlScheme) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
-  private skinState: SkinSaveData = { selected: 'cyan', unlocked: ['cyan'] };
-  private cannonSkinState: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
+  private skinState: SkinSaveData = { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] };
+  private cannonSkinState: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['basic', 'spearhead'] };
   private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
   private laboratory: LaboratorySaveData = { levels: {}, currentOfferIds: [], deferredOffers: [], history: [], purchasesSinceVitalityAd: 0, vitalityAdRank: 0, offerStep: 0 };

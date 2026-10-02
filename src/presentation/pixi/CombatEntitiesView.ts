@@ -352,7 +352,8 @@ export class CombatEntitiesView {
       rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME),
       lattice: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.lattice, PROJECTILE_TEXTURE_FRAME),
       helix: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.helix, PROJECTILE_TEXTURE_FRAME),
-      bloom: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.bloom, PROJECTILE_TEXTURE_FRAME)
+      bloom: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.bloom, PROJECTILE_TEXTURE_FRAME),
+      spearhead: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.basic, PROJECTILE_TEXTURE_FRAME)
     };
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.bosses);

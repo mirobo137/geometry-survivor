@@ -28,7 +28,7 @@ export class CannonSelectPanel {
   private readonly cards: HTMLElement;
   private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<CannonSkinId, CannonCardEntry>();
-  private state: CannonSkinSaveData = { selected: 'basic', unlocked: ['basic'] };
+  private state: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['basic', 'spearhead'] };
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
@@ -57,8 +57,8 @@ export class CannonSelectPanel {
   }
 
   private normalize(state: CannonSkinSaveData): CannonSkinSaveData {
-    const unlocked = Array.from(new Set<CannonSkinId>(['basic', ...state.unlocked]));
-    const selected = unlocked.includes(state.selected) ? state.selected : 'basic';
+    const unlocked = Array.from(new Set<CannonSkinId>(['basic', 'spearhead', ...state.unlocked]));
+    const selected = unlocked.includes(state.selected) ? state.selected : 'spearhead';
     return { selected, unlocked };
   }
 

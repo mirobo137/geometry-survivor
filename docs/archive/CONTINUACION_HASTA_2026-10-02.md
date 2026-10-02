@@ -1,0 +1,4901 @@
+# Archivo de sesiones — hasta el 02-10-2026
+
+> HISTÓRICO, no guía operativa. Este archivo conserva íntegro el contenido del
+> antiguo snapshot antes de la depuración documental del 02-10-2026. Los estados
+> «actual», «pendiente», «en curso», procesos activos, permisos y resultados de QA
+> describen únicamente la sesión de su fecha; no demuestran el checkout presente.
+> Para retomar usar [CONTINUACION.md](../../CONTINUACION.md) y la
+> [guía vigente](../PLAN_EJECUCION.md). Se conserva la evidencia, no se reactivan
+> tareas ya completadas ni autorizaciones históricas.
+
+# Geometry Survivor — estado y continuación
+
+## Estado actual: mitigación de memoria Node/Vite — 02-10-2026
+
+Solicitud vigente: ejecutar los pasos de mitigación tras la auditoría de memoria.
+Node global actualizado a 24.19.0 LTS / libuv 1.52.1, sin tocar runtimes de Codex.
+`vite.config.ts` excluye todos los outputs de plataformas, reportes y temporales
+del watcher. `.node-version` y README documentan el runtime; no instalar versiones
+antiguas por las instrucciones históricas de este snapshot.
+
+Guía y evidencia: [VITE_MEMORY](../../docs/performance/VITE_MEMORY.md).
+Diagnóstico acotado: `node scripts/qa-vite-memory.mjs --watch=fixed --seconds=180 --builds`.
+Comparaciones original/corregida/off sobre Node 24 pasaron; el caso ampliado
+terminó con 149.54 MiB RSS y muestras de memoria privada estables en 184.86 MiB
+tras la recarga de config. Esto no certifica horas ni demuestra el disparador
+histórico exacto. Typecheck, 120 archivos / 578 unitarios y builds de tres targets
+pasaron. Sólo se comprobaron sesiones de menú, no la suite browser completa.
+
+El Vite antiguo PID 1588 fue detenido con permiso. Todos los procesos de prueba
+se cerraron y 5173/5175 quedaron apagados; el estado «servidor iniciado» de abajo
+es histórico. Para probar, usar `npm run dev` con `node --version` en v24.
+No se hizo commit/push; se conservan los cambios locales de previews anteriores.
+
+## Estado anterior: flota PNG en main y corrección de previews — 01-10-2026
+
+Solicitud anterior: corregir los hallazgos de la auditoría del pull, mostrar
+sólo naves en Naves y sólo cañones en Cañones, y dejar Vite local para probar.
+No hay autorización de commit/push en esta entrega.
+
+Migración recibida en `main` mediante pull fast-forward `73a00c8 → e22d837`.
+Los commits nuevos fueron `adaa683` y `e22d837`. Ocho naves PNG
+RGBA completas, cada una de 256×256; ocho PNG de cañón de 128×128. Ivory Spear y
+sus cañones originales son las entradas base gratuitas. Se conservan IDs,
+precios, selecciones y desbloqueos anteriores. Guardados viejos reciben la
+nave/cañón gratis sin cambiar su elección ni actualizar el schema.
+
+El mismo compositor carga la nave y los dos cañones seleccionados; sólo una
+textura por modelo equipado se comparte por ambos cañones y por el flash. El
+locker y los modales muestran esos PNG. El ajuste local separa los previews:
+Naves sólo casco completo; Cañones sólo módulos, disparos y estelas. Ninguna
+de las dos categorías incluye cables sueltos. La nave DOM conserva proporción
+56/64 y límites de ancho/alto para no sobresalir de tarjetas estrechas. El
+ensamblaje con cañones/cables en gameplay permanece intacto.
+Por solicitud posterior, las tarjetas de Cañones usan un solo cañón y un
+disparo/estela horizontal, sin recortes; el modal conserva los dos módulos
+verticales. La composición se elige explícitamente, no por reduced-motion.
+Este ajuste pasó typecheck, 8 unitarios, build local y 3 smoke enfocados;
+capturas PC/móvil revisadas y encuadre de las ocho miniaturas en cuatro tamaños.
+Las siluetas SVG anteriores no se
+usaron para diseñar la nueva flota; sólo se consultaron sus paletas. Sin cambios
+de combate, hitbox o slots. Guía canónica: [NAVES_PNG](../../docs/design/NAVES_PNG.md);
+prompts completos y procedencia: `scripts/fleet-skin-image-sources.json`.
+
+Catálogo raster: 741,025 bytes (~723.7 KiB); las dos texturas activas son 320 KiB
+RGBA8 teóricos. Esto no equivale a medición de FPS/VRAM total.
+
+Auditoría antes del ajuste: typecheck, 120 archivos / 577 tests, 19 smoke
+enfocados (desktop/móvil emulado), builds local/Poki/CrazyGames y diff check.
+Advertencia preexistente de chunk JS >500 kB. No se ejecutó toda la suite ni
+se midió rendimiento en móvil físico. El ajuste incorpora regresiones para
+proporción, aislamiento y encuadre en cuatro tamaños.
+
+Validación del ajuste en Windows: typecheck, 577 pruebas en 120 archivos y los
+tres builds pasaron. Pasada enfocada: 11 smoke de skins, compras, persistencia,
+pausa/resize/reinicio y locker portrait. Tras revisar capturas, se añadió margen
+para no cortar los proyectiles del preview de cañones y se corrigió el mínimo
+intrínseco del grid en modales bajos. Repetición final: 3 smoke verdes (previews
+desktop/móvil y compra/guardado de fondos); 7 unitarios de previews repetidos.
+Diagnóstico `qa-tethered.mjs`: cuatro sesiones Low/High desktop/móvil y dos
+casos de carga normal/fallida pasaron. No equivale a la suite browser completa.
+Vite dev queda iniciado en `http://localhost:5173/`, con raíz del proyecto y
+acceso LAN; no se hizo commit, push ni despliegue.
+
+El problema de descarga Chromium HTTP 403 correspondía al entorno remoto.
+La auditoría local de Windows utilizó el Chromium normal de Playwright, sin
+configuración alternativa. La suite amplia remota de 79 smoke no terminó;
+no se presenta ni esa ejecución ni el subconjunto local como suite completa.
+
+Capturas revisadas: `test-results/skin-refresh/ships-contact.png`,
+`cannons-contact.png`, `ships-locker.png`, `cannons-locker.png` y
+`combat-manta-bloom.png`.
+
+Correcciones locales aún sin commit/push; la migración anterior sí está en main.
+La revisión visual del nuevo encuadre y móvil físico queda para el usuario.
+`scripts/qa-tethered.mjs` actualizado al nodo `raster-player-skin`, cañón de
+prueba explícito y carga PNG normal; conserva pausa/resize/reinicio y fallback.
+Ejecutar contra preview en 4173 después de Playwright. Shaders, nave elegida
+en portada, nueva derrota y pruebas humanas del Laboratorio siguen pendientes.
+
+## Prueba de nave y cañones vinculados — 30-09-2026
+
+Snapshot anterior, supersedido por la aprobación y skin equipable de arriba.
+Solicitud entonces: sólo prototipo, no migrar catálogo hasta aceptación humana.
+Revisión actual: usuario aprueba cañones/cables y pide sustituir las dos piezas
+de la nave por una imagen completa, con propulsor integrado. Ya implementado.
+`?ship-preview=tether` activa ese PNG adaptado de la portada, dos módulos que
+comparten PNG y dos cables flexibles de geometría acotada.
+Ruta directa: `/?ship-preview=tether&act=radial&skin=cyan&cannon=basic`.
+Para menú/reinicio, quitar `act`; comparar Low/High o quitar `ship-preview`.
+
+No nuevos IDs, precios, compras, cambios de localStorage ni simulación.
+Mantiene radio22 y slots `(±27,−11)` rotados con el tiro; los cañones conservan
+el apuntado independiente. No son drones libres ni existe física de cuerda.
+Tres sprites de arte + flash compartido/una Graphics en compositor opt-in;
+fallback original sólo se oculta al cargar las dos imágenes. Pausa congela pose.
+79,175bytes PNG /320KiB RGBA8 teóricos. La prueba añade nodos y conserva
+texturas originales ocultas: no prometer ahorro de memoria ni FPS.
+
+Ficha y prompts: src/assets/skins/tethered/README.md y
+scripts/tether-image-sources.json. PNG RGBA reales 256²/128². Eliminados los dos
+derivados antiguos de casco/propulsor; maestros del host conservados. PNG de
+portada y cañón intactos. Sin filtros, shaders ni nueva animación de derrota.
+La nave equipada en Inicio se considera una buena siguiente prueba de identidad,
+pero no está implementada ni autoriza migrar el catálogo.
+QA: scripts/qa-tethered.mjs, ejecutar DESPUÉS de Playwright porque éste limpia
+test-results. Tests de escena y recursos: TetheredShipView.test.ts y
+TetheredAssets.test.ts; dos nuevos smokes en tethered.checks.ts.
+
+Comprobado: typecheck; 120 archivos/575 tests, incluyendo puertos/pausa;
+local/Poki/CrazyGames; dos smokes
+desktop/móvil y cuatro sesiones Low/High con resize/reinicio, sin pageerrors;
+cero PNG en ruta ordinaria, fallback original al abortar descarga de cañón.
+No se midió rendimiento en móvil físico. Pendiente aceptación artística y
+lectura en densidad por el usuario; no aprobar catálogo ni Laboratorio.
+Sin commit/push y sin reiniciar Vite del usuario.
+
+## Ajuste final de Singularity / Closed Circuit / Thunderhead — 30-09-2026
+
+Solicitud actual aplicada, prevalece sobre la revisión anterior de esta página:
+
+- Singularity Return: seis fragmentos, mismo daño por fragmento y reglas de
+  guía/contacto; alcance +48% (recorte del 20% del extra +60%, no del total).
+  I=370u, III–VII=414.4u; Cobertura +59.2u, preview efectivo actualizado.
+  Abanico ±0.55 rad conservado; pool8, cada portador reserva cinco plazas extra
+  y puede convivir con dos filos antiguos. Nunca se recorta una división.
+- Closed Circuit: dos blancos extra, VII=7; cable de 0.9s, tick0.2s, daño
+  15% del daño heredado por tick (antes12%, +25% relativo), unión por objetivo
+  para no multiplicar daño al tocar varios cables. Impacto inicial40% intacto.
+  PNG reemplazado con filamentos trenzados y diamantes cian/esmeralda; 128²,
+  6,782bytes, alpha real. Prompt/maestro en scripts/arsenal-image-sources.json.
+- Thunderhead: conserva los cinco blancos de VII; dos marcas explosivas no
+  limitan enlaces. Ambas ramas reciben +1 blanco/+30u con cada Cobertura,
+  máximo tres: Circuito7→10, Thunder5→8. Carta muestra blancos antes/después.
+- Pool de cadena13 deja espacio para diez blancos y los tres cables; el
+  compositor tiene61 sprites fijos (antes57) al reducir explosiones a dos.
+  Sin filtros, partículas o timers nuevos. Texturas del arsenal: 690,315bytes
+  (−1,002bytes respecto de entrega anterior); memoria RGBA teórica sin cambio.
+
+Validado: typecheck, 118 archivos/566 tests; local/Poki/CrazyGames; tres smokes
+desktop (decisión de cadena, compositor y doce drills aplicados) y uno móvil
+(joystick/pausa/rotación). Seis sesiones Low/High de las tres armas y seis
+transiciones (incluye seis filos visibles y fade Echo), sin pageerrors/HTTP errors.
+Tests cubren crecimiento, reservas, límite13, limpieza/reset, daño único por
+tick a30/60/144Hz y reutilización de sprites. No se midió GPU/FPS físico.
+Warning de chunk JS >500kB permanece. Falta la aceptación artística/de balance
+de estos ajustes por el usuario; balance general y pruebas de Laboratorio no
+se reabren. Sin commit/push.
+
+Rutas existentes: `/?evolution=singularity-return|closed-circuit|thunderhead&scenario=mass&debug=1&quality=high`.
+Guía actual: EVOLUCIONES_V2 §4.C/D, PROGRESION_ARMAS_V2 §herencia y
+src/assets/fx/arsenal/README.md. QA visual: scripts/qa-arsenal.mjs con filtros;
+scripts/qa-weapon-transitions.mjs con preview4173.
+
+## Revisión Singularity / Thunderhead / Echo — 30-09-2026
+
+Solicitud puntual posterior al lote PNG: Singularity Return ya no detona ni
+ralentiza. Portador al 160% del alcance actual; en el extremo se sustituye por
+tres filos guiados hacia enemigos cercanos al punto, priorizando blancos
+distintos. Una sola colisión por filo, TTL 1.35 s, velocidad 520 u/s, giro
+limitado, validación de generación y reservas dentro del pool actual de ocho.
+Daño: portador 65%, cada filo 85% del daño heredado. Maestría de cobertura
+antes/después contempla el alcance efectivo (+64). ID/slug conservados.
+La carta y EVOLUCIONES_V2 §4.D describen la nueva mecánica; prueba humana pendiente.
+
+Tres nuevos PNG transparentes propios: thunderhead-burst (256²),
+singularity-split y singularity-shard (128²). Ya no usan la detonación magnética.
++100,646 bytes PNG/+384 KiB RGBA teóricos; no nuevos sprites/filtros/pools.
+Echo: fallo de active→recovery corregido en simulación, raster y fallback;
+termina al radio contraído, no reabre el aro al radio máximo.
+
+Validado: typecheck, 118 archivos/556 tests; tres builds; tres smokes desktop
+(evoluciones, Pulse Ring, WebGL) y joystick/pausa/rotación móvil.
+QA dirigida Low/High de las tres transiciones, sin pageerrors/HTTP errors;
+seis bases, escudo, menú/reinicio y doce evoluciones sin PNG también correctos.
+Un reintento de suite no pudo iniciar workers por memoria local; la repetición
+secuencial con dos workers pasó. No cambiar CI a causa de esa incidencia.
+Incidencia posterior: Vite local PID 25268 (~28,350 MiB privados) dejó Windows
+con ~720 MiB virtuales libres. Reiniciado con permiso explícito del usuario;
+localhost:5173 y acceso LAN disponibles de nuevo, usando configuración host:true
+y loader runner. Causa del crecimiento aún no diagnosticada; no atribuirlo al juego.
+Tras reiniciar: suite completa 556/556, typecheck y QA de seis transiciones
+repetidos correctos; ningún proceso Node observado supera 125 MiB privados.
+No se midió FPS de móvil físico; warning previo de chunk JS >500 kB permanece.
+Guía, prompts y presupuesto: [Arsenal README](../../src/assets/fx/arsenal/README.md).
+QA: scripts/qa-weapon-transitions.mjs y qa-arsenal-lifecycle.mjs, preview 4173.
+Rutas locales: `/?evolution=singularity-return|thunderhead|echo-shock&scenario=mass&debug=1&quality=high`.
+Sin commit/push; Laboratorio humano sigue aplazado; no reabrir balance general.
+
+## Arsenal ilustrado en combate — 30-09-2026
+
+Se extendió el prototipo PNG aprobado de Magnetic Charge a las seis armas,
+las doce evoluciones y el escudo recargable. 18 PNG nuevos con alpha real,
+590,671 bytes y 2.06 MiB RGBA teóricos, más cuatro materiales magnéticos
+reutilizados. Arte generado, no imágenes de cartas ni SVG rasterizados.
+Catálogo lazy cerrado, sprites preasignados, sin filtros, dependencias,
+partículas extra ni cambios de reglas, hitboxes, daño, alcance o economía.
+Los cosméticos de cañón conservan su identidad. Low mantiene arte funcional;
+High añade acentos acotados. Fallo de imagen conserva fallback vectorial.
+Event Horizon se disipa sin explosión; Polar sigue sus frentes radiales y
+disco final reales; Echo y Compression siguen los casts de simulación.
+
+Contrato, inventario, prompts, ownership, pivotes y rutas de prueba:
+[Arsenal README](../../src/assets/fx/arsenal/README.md). Generación y optimización
+reproducibles en scripts/; los maestros originales no se envían al bundle.
+Las skills rendering/mobile-performance guiaron la separación de capas,
+pooling y límites; validation guió fallos de carga y ciclo menú/partida.
+Sólo se amplió el snapshot readonly con IDs de evolución orbit/chain.
+
+Verificado: typecheck, 118 archivos/548 tests unitarios, tres builds
+local/Poki/CrazyGames, diez smokes desktop dirigidos, incluida recuperación
+de contexto WebGL.
+Tres smokes móviles adicionales: entrada, joystick/pausa/rotación y touch.
+QA de las doce evoluciones en Low/Pixel 5 emulado y High/1280×720:
+24 sesiones con textura PNG efectivamente visible en el scene graph y cero
+pageerrors/HTTP errors.
+Capturas bajo test-results/arsenal/ (ignoradas). La congelación usa el botón
+real de pausa; el hook de Pixi sólo inspecciona y existe en los scripts de QA,
+no como global de producción. No ejecutar QA mientras se reconstruye dist.
+Las seis bases y el escudo mostraron también sus texturas; vuelta a menú y
+nuevo inicio correctos. Las doce evoluciones permanecieron funcionales al
+abortar todos los PNG, con fallback. QA reproducible en los dos scripts.
+Sonda aislada de stress en Chromium headless, 390×844/DPR1 Low durante 15 s
+tras Jugar: 250 enemigos/300 proyectiles, sin pageerrors, frameP95/max
+33.40 ms y heap JS reportado 16.3 MB. No es stress de todas las armas/FX,
+ni comparación antes/después, ni una puerta de rendimiento móvil aprobada.
+
+Falta aprobación visual humana y medición en móvil físico; no certificar FPS
+con emulación. Continúa el warning previo de chunk JS >500 kB.
+Sin commit/push. Pruebas humanas del Laboratorio siguen aplazadas.
+
+## Pages: smoke 8 de Inicio acotado — 30-09-2026
+
+El usuario aportó un fallo móvil que agotó los 60 s primero después de Jugar
+y en el retry al esperar la variante de imagen. No se dispone de la traza remota;
+no atribuir esos 60 s al botón ni afirmar un crash. El test juntaba boot,
+animaciones, tres consolas, cuatro tamaños, ajustes e inicio real.
+Se separó en dos casos por proyecto, manteniendo todas las comprobaciones y
+el timeout/retry vigentes. El caso responsive usa reduced-motion desde antes
+del boot y termina en portrait, iniciando después de rotar. Ahora comprueba
+también carga correcta de la imagen exterior. No se modificó producción ni el
+workflow, y ninguna prueba dejó de ser puerta para publicar.
+
+Comparación local Pixel 5 con CPU ralentizada 8×: original 49.4 s;
+boot/navegación 24.2/24.1 s y responsive 33.9/33.8 s, dos pases de cada uno.
+Shard 8 completo con CI=true: 9/9 en 1.2 min, sin reintentos. Preview manual
+con loader runner por OneDrive; el resto de configuración coincide con CI.
+Dos smokes desktop con CI=true: 2/2 en 16.7 s; typecheck, build local y 528
+tests unitarios correctos. Warning JS >500 kB previo, sin cambio. Suite browser
+vigente 75 casos. El coste total incorpora
+un boot extra por proyecto, repartible entre shards; no prometer menos minutos
+acumulados ni equiparar el diagnóstico 8× a Ubuntu. Contrato:
+[CI y deploy](../../docs/CI_DEPLOY.md#smoke-8-presupuesto-acumulado-de-inicio--30-09-2026).
+Falta confirmar el run real de GitHub. Sin commit/push; Laboratorio humano
+continúa aplazado.
+
+## Inicio: variante vertical y atmósfera exterior — 30-09-2026
+
+El usuario aprobó la propuesta de una composición específica para el menú
+vertical y aprovechar el espacio exterior. Generada orbital-sanctuary-portrait.webp:
+720×1440 RGB, 119,376 bytes; no es un recorte de la panorámica. Reutiliza la nave
+PNG existente. Picture elige según el layout apilado, no por user-agent. Interior
+y exterior usan la misma URL: seis sesiones limpias solicitaron sólo la variante
+correcta, una vez. Al rotar puede descargarse la otra y quedar ambas en caché.
+El arte ahora continúa por todo el panel y detrás de él. El exterior es estático;
+dos nubes de las corrientes existentes se mueven sólo en escritorio ≥832×512,
+máximo 300 px, Low estáticas y móvil ocultas. No hay filtro, shader ni RAF nuevo.
+Las corrientes sí se descargan al iniciar en móvil por la precarga existente
+del juego (iniciador img): ocultarlas en CSS no elimina ese coste previo.
+Prompts, presupuesto, ownership y fallback: [Portada README](../../src/assets/images/ui/home/README.md).
+
+Verificado: typecheck, 115 archivos/528 tests unitarios y builds local/Poki/CrazyGames.
+Tres smokes desktop pasaron: consolas 48.5 s, Inicio 19.2 s, ruta guardada 26.7 s.
+El mismo smoke de Inicio pasó en emulación Pixel 5 (29.0 s).
+Sin subir timeouts ni añadir otro arranque WebGL. Matriz de 18 tamaños sin overflow
+horizontal ni botones menores de 44 px; selección de variante correcta y cero
+pageerrors/HTTP errors. Fallo de imagen vertical conserva controles; al ampliar
+a escritorio vuelve a mostrar la panorámica correctamente y permite iniciar.
+Permanece el warning previo de JS >500 kB. No se certifican FPS/memoria real,
+CI ni móvil físico. Capturas ignoradas: test-results/home-portrait/.
+Pendiente aprobación visual humana. Sin commit/push; pruebas humanas del
+Laboratorio siguen aplazadas. El apartado anterior describe la primera entrega.
+
+## Inicio: portada de lanzamiento ilustrada — 30-09-2026
+
+Tras aprobar Actos y los emblemas PNG, el usuario autorizó rediseñar el menú
+principal libremente. Ahora el entorno forma parte visible de la portada, no
+un fondo oculto detrás de un panel opaco. Dos assets generados con image_gen:
+hangar orbital WebP 1200×800 (102,678 bytes) + nave PNG transparente 512×512
+(260,169 bytes). Son arte decorativo de Inicio, NO una skin nueva/equipada.
+Prompts, originales, alpha, tamaños, coste y fallback:
+[Portada README](../../src/assets/images/ui/home/README.md).
+
+PC usa arte a la izquierda y acciones a la derecha; portrait apila portada y
+consola, landscape corto conserva dos columnas compactas. Actos/Skins/Lab
+reutilizan arte aprobado en sus accesos; Configuración mantiene SVG/material CSS.
+Jugar muestra la última ruta elegida y mantiene el guardado vigente. Todos los
+textos, botones, estados y estadísticas siguen siendo DOM real. Nada de combate,
+balance, economía ni anuncios cambia. El escenario permanece estático; sólo
+derivan una nave de hasta 296 px y cuatro luces de 6 px. Reduced-motion y salir
+de Inicio detienen ese movimiento. Fallo PNG → SVG original; fallo WebP → fondo
+CSS, sin imagen rota ni bloqueo de Jugar. Los SVG antiguos no se borraron.
+
+Verificado: typecheck; 115 archivos/528 tests unitarios; builds local, Poki y
+CrazyGames; smoke de Inicio (20.8 s), ruta persistente/caption (25.8 s) y consolas
+1280×720 (41.1 s). Se ajustó el límite del antiguo badge al nuevo casco acotado,
+sin subir timeouts ni sumar otro test WebGL. Revisión Chromium en los 16 tamaños
+de §6.6 + 320×568 y 768×1024: 18 viewports sin overflow horizontal, botones
+≥44 px ni solapamientos. Se comprobó ajustes/cambio de control y abrir/cerrar
+las tres consolas a 390×844 y 640×360, Overdrive en Jugar, reduced-motion y
+decoración detenida al iniciar; cero pageerrors/HTTP errors. También pasó la
+prueba abortando ambos assets de portada y arrancando con fallback. A 320×568
+el panel tiene scroll vertical para conservar controles y pie, intencional.
+
+Los dos assets nuevos suman 362,847 bytes. Los accesos reutilizados descargaron
+404,892 + 53,256 + 64,894 bytes adicionales en la sesión observada; reusar una
+URL no significa coste inicial cero. Cálculo RGBA8 de las dos imágenes ≈4.66 MiB,
+no memoria real ni FPS medidos. Sigue el warning previo de chunk JS >500 kB.
+Capturas ignoradas: test-results/main-cover/ (Playwright puede limpiar esa ruta).
+Pendiente aprobación visual humana y prueba en móvil físico/Pages. No se ejecutó
+suite browser completa, Inspector, profiling ni CI. Sin commit/push.
+El Laboratorio sigue pendiente de pruebas humanas; no se cierra esa puerta.
+
+## Selector: iconos PNG con transparencia — 29-09-2026
+
+Nueva prueba pedida por el usuario: Radial, Angular, Fracture y Overdrive usan
+emblemas PNG RGBA generados (160×160, 127,724 bytes total), no rasterización de
+SVG. Se conserva la silueta simbólica con metal y energía, alfa real verificado
+(0–255) y huecos transparentes. Tamaño UI 56 px PC/48 px móvil. Iconos estáticos,
+sin filtros ni nuevo loop; JPG/rectángulo/damero pintados no son transparencia.
+StartScreen restaura el SVG original empaquetado si falla cada PNG. Esos SVG
+siguen intactos. En móvil estrecho el badge largo se convierte en candado para
+evitar invadir el icono. No modifica ruta elegida, guardado ni gameplay.
+
+Typecheck y build local verdes; review de 1280×720, 390×844, 320×568 y 640×360
+con cuatro PNG cargados, altura de botones igual, texto sin solapar y cabecera
+alineada. Volver/Jugar mantiene Overdrive y no hubo errores de página. Prueba
+abortando los cuatro PNG pasó con cuatro SVG fallback. Composición clara/oscura
+revisada; capturas ignoradas test-results/act-png-icons/. Sigue warning antiguo
+chunk >500 kB. No CI, suite completa, FPS/memoria ni móvil físico en esta prueba.
+Pendiente aceptación visual humana, sin commit/push. Prompts/procedencia:
+src/assets/images/ui/menus/icons/README.md. Laboratorio continúa aplazado.
+
+## Última ruta persistente del menú — 29-09-2026
+
+Por petición del usuario se guarda `lastSelectedRoute` en el SaveStore local:
+Radial, Angular, Fracture u Overdrive. Schema 9 conserva el guardado previo;
+la selección se persiste inmediatamente, incluso sin iniciar. Al entrar al
+menú normal tras recargar, Jugar arranca esa ruta; al volver desde pausa se
+mantiene. Continuar al siguiente acto también recuerda el destino. Overdrive
+siempre empieza una run nueva desde tramo 1, no guarda una partida activa.
+Una ruta desconocida/bloqueada cae a Radial; URL explícita/de pruebas prevalece
+sin cambiar automáticamente la preferencia. No se modifica balance ni economía.
+
+Pasaron typecheck, 115 archivos/528 tests unitarios y build local. El loader
+bundle de Vitest falló por permisos de OneDrive; con `--configLoader runner`
+la suite completa pasó. Se comprobó inicialmente en browser el ciclo de las
+cuatro rutas (selección, recarga, Jugar, pausa, menú, Jugar). El smoke persistido
+en CI se acotó a Angular y Overdrive para evitar repetir WebGL innecesariamente:
+pasó en 19 s locales. También pasó el smoke existente del selector Overdrive.
+Checks locales adicionales a 390×844: restauración Overdrive, fallback bloqueado
+y prioridad de URL de Angular, sin errores de página. No se probó móvil físico
+ni portales ni CI remoto. Sigue warning previo de chunk >500 kB. Sin commit/push.
+
+## Actos: botones ilustrados y anchos alineados — 29-09-2026
+
+El usuario aprobó continuar con imágenes en UI y pidió cuatro botones enteros
+ilustrados para Radial, Angular, Fracture y Overdrive. Se generan cuatro escenas
+diferenciadas, PNG RGB 640×426 (1,750,591 bytes total), como fondo estático del
+botón. Texto hijo HTML, emblemas SVG, selección/foco y bloqueo siguen adaptables.
+No cambia progreso, guardado, rutas ni gameplay. Overdrive seleccionado conserva
+texto claro, corrigiendo el contraste oscuro anterior.
+
+La cabecera ahora comparte gutter y padding del cuerpo mediante act-header-rail:
+bordes idénticos a la cuadrícula y al botón iniciar, en PC y móvil. Build local
+verde y revisión en 1280×720, 390×844, 320×568 y 640×360: alineación 0 px, sin
+overflow/solapamiento, textos dentro de sus botones y carga PNG sólo al abrir
+Actos en Chromium. Pasaron selección Overdrive, volver/reabrir/Radial/iniciar,
+bloqueos, Enter, resize y fallback de imágenes fallidas. Capturas ignoradas:
+test-results/act-buttons-art/. No se midió memoria/FPS ni móvil físico.
+Pendiente aprobación humana del arte completo; Laboratorio sigue aplazado.
+Sin commit/push ni CI. Prompts/procedencia/coste en el README de menús ilustrados.
+
+## Piloto de UI: cabecera ilustrada de Actos — 29-09-2026
+
+Por solicitud del usuario se integra una única ilustración nueva en la cabecera
+del selector de Actos para evaluar si conviene extender el arte a más UI.
+Portal orbital decorativo WebP 1200×400, 76,892 bytes; una placa CSS estática,
+sin cambios de reglas, navegación, guardado ni nuevas dependencias. Texto y
+controles conservan HTML/SVG. Se puede probar desde Menú → Actos.
+
+Build local verde y revisión de layout/volver/reabrir/seleccionar/iniciar en
+1280×720, 390×844, 320×568 y 640×360 sin errores de página ni solapamientos.
+Iniciar cabe en el frame inicial a 720p y 390×844; las ventanas menores usan
+scroll del cuerpo. Chromium no descargó el arte hasta abrir Actos. Permanece
+el warning anterior de chunk >500 kB; no se midió memoria/FPS ni móvil físico.
+No se ejecutó CI ni se hizo commit/push. Pendiente aprobación visual humana
+antes de extender el piloto. Laboratorio: pruebas humanas siguen aplazadas.
+
+Recurso, prompt y contrato:
+[`README de menús ilustrados`](../../src/assets/images/ui/menus/README.md).
+Capturas locales: `test-results/act-header-art/` (ignoradas).
+
+## Catálogo ilustrado completo de cartas — 29-09-2026
+
+Por nueva autorización del usuario, el piloto de Rail Lance/Pulse Volley se
+amplió a todas las cartas: 6 artes de arma base, dos imágenes distintas para
+cada una de las 6 familias (12 evoluciones) y 11 ilustraciones no armadas,
+incluyendo escudo, vampirismo, armadura, maestría y reservas de Overdrive.
+Total: 29 WebP 768×384, 1,959,074 bytes. Los rangos conservan el arte base;
+las maestrías y potencia de Overdrive conservan la ilustración de la evolución
+realmente elegida. No se alteraron ofertas, efectos, daño ni guardado.
+
+La carga sigue en HTML: sólo se crean las imágenes de hasta tres cartas al
+mostrar una oferta; marcos, texto, cifras, foco y selección siguen siendo
+DOM/SVG. Si falla una imagen, la carta vuelve a su icono SVG. El navegador
+controla caché/decodificación; no se midieron FPS ni memoria real.
+
+Pasaron typecheck, suite unitaria completa (115 archivos, 518 pruebas), build
+local de Vite con `--configLoader runner`, los 7 smokes de campaña/evoluciones
+y la prueba separada de escudo/vampirismo/armadura (todos verdes), y el guion
+visual contra preview: cinco tamaños de evolución y tres tamaños de oferta
+normal, imágenes decodificadas, selección, scroll móvil, comparación SVG y
+fallback de carga. El test combinado detectó inicialmente una aserción demasiado
+estricta sobre el sufijo de nombre de archivo con hash de Vite; se corrigió y la
+prueba afectada se repitió verde. Para este entorno el loader predeterminado del
+servidor de Playwright falla por permisos de OneDrive; el build y preview con
+`--configLoader runner` sí funcionaron. Vite mantiene su warning existente de
+chunk principal superior a 500 kB.
+
+Rutas: `/?debug=1&campaign=evolved&quality=low` muestra cartas normales y
+maestrías; `/?evolution=solar-crown&debug=1&quality=low` muestra la pareja de
+Órbita; `/?card=vampiric-core&debug=1&quality=low` permite revisar una mejora
+defensiva; añadir `&card-art=svg` compara el estilo anterior. Catálogo,
+asociaciones, prompts comunes, briefs y procedencia de los 29 recursos:
+[`README de cartas ilustradas`](../../src/assets/images/ui/cards/README.md).
+
+Pendiente de aprobación: mirar la entrega en el juego, especialmente tamaños y
+legibilidad en móvil físico. Laboratorio: sus pruebas manuales siguen aplazadas.
+No se hizo commit ni push.
+
+## Primera prueba de UI ilustrada — 29-09-2026
+
+Por autorización del usuario se prueba la opción A del estudio de arte con
+las dos cartas de evolución de Proyectil: Rail Lance y Pulse Volley. Usan
+ilustraciones reales creadas con el generador integrado, derivadas a WebP
+768×384 (119,030 bytes entre ambas). La base RGBA8 calculada es 2.25 MiB;
+no es una medición de memoria total. Las cartas conservan texto, iconos,
+marcos, foco y elección DOM. No cambia progresión, daño ni guardado.
+
+En Vite local:
+
+- `/?evolution=rail-lance&debug=1&quality=low` abre ambas cartas ilustradas.
+- La misma ruta con `&card-art=svg` compara la presentación anterior.
+- También aparecen al elegir las evoluciones de Proyectil en una run normal.
+
+La captura 320×568 detectó compresión del texto: se corrigió el sizing del
+overlay ilustrado para conservar altura de contenido y permitir scroll; las
+ventanas cortas también mantienen accesible el encabezado. Una imagen fallida
+devuelve esa carta al icono SVG y sigue permitiendo seleccionar.
+
+Pasaron typecheck, 515 pruebas unitarias, builds local/Poki/CrazyGames, el smoke
+desktop existente de las dos evoluciones (1/1) y la revisión reproducible en
+cinco viewports: 1280×720, 390×844, 320×568, 640×360 y 1280×360. Se comprobaron
+imágenes decodificadas, ausencia de solapamiento/overflow horizontal, scroll y
+selección, baseline SVG sin descarga de imágenes y fallback de carga. La
+revisión pasa contra preview y contra Vite dev; en dev los imports `?url` son
+JavaScript y no deben contarse/abortarse como imágenes. Sin errores HTTP ni de
+página observados. La carga bundle de config falló por permisos de OneDrive;
+se utilizó `--configLoader runner`. Sigue el warning previo de chunk >500 kB.
+
+Arte, prompts completos y contrato:
+[`README del piloto`](../../src/assets/images/ui/evolutions/README.md).
+Capturas ignoradas: `test-results/evolution-art/`; script:
+`node docs/visual/capture-evolution-art.mjs [URL]` (preview 4173 por defecto).
+Pendiente aprobación artística/táctil humana en móvil físico; no se midieron
+FPS ni se certificaron SDKs de portales. No extender el estilo al catálogo antes
+de esa decisión. Laboratorio: pruebas humanas siguen aplazadas. Sin commit/push.
+
+## Laboratorio: pruebas humanas aplazadas — 29-09-2026
+
+Por solicitud del usuario se hace una pausa en el Laboratorio para retomarlo
+después. La implementación y las comprobaciones automáticas se conservan;
+no marcar su aceptación manual ni los topes/costes como validados. El recordatorio
+y la lista para retomar están en
+[`LABORATORIO_META_V2.md`](../../docs/design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).
+Pendientes: acabado y controles en PC/móvil físico, compra/recarga, Vitalidad
+Rewarded y efecto real de las mejoras en cartas y partidas.
+
+La investigación solicitada sobre imágenes generadas frente a SVG está en
+[`ESTUDIO_ARTE_GENERADO.md`](../../docs/design/ESTUDIO_ARTE_GENERADO.md): datos del
+repositorio, coste de memoria, opciones y alcance de retrabajo. Es una evaluación,
+no una migración visual aprobada; en esta entrega sólo se actualiza documentación.
+
+## Reorganización visual del Laboratorio — 29-09-2026
+
+El feedback indicó que la primera vista radial no se sentía como el árbol de
+habilidades de las referencias. Se reemplazó por una red lateral: el núcleo
+NOVA se bifurca en `ARSENAL` (8 ramas) y `NAVE Y PILOTO` (3 ramas), con
+conectores y nodos hexagonales de icono. Cada rama renderiza lo adquirido y
+como máximo el siguiente rango; las tres ofertas actuales son las comprables.
+La isla dorada `PULSO DE VITALIDAD` permanece separada, fuera del encuadre
+inicial, para descubrirla al desplazar o alejar el mapa. Todo esto es
+presentación: no cambia catálogo, rotación, precio, efecto, guardado ni el
+requisito de tres compras NOVA antes de reclamar Rewarded.
+
+Pasaron `npm run typecheck`, los tests unitarios dirigidos, build local y seis
+smokes de escritorio: layout en 320×568, 390×844, 640×360 y 1280×720; compra
+persistente; y Vitalidad tras tres compras NOVA. La prueba también comprueba
+que las once raíces formen filas, no una rueda radial, y que el árbol rewarded
+empiece fuera de vista, y que los nodos con el zoom mínimo mantengan targets de
+al menos 44 px. Sigue pendiente inspección táctil/visual humana en móvil físico.
+No se hizo commit/push. Contrato canónico:
+`docs/design/LABORATORIO_META_V2.md`.
+
+## Ajuste de duración del smoke de Vitalidad — 29-09-2026
+
+El shard 2 de GitHub agotó el timeout de 60 s en la prueba que desbloquea la
+Vitalidad Rewarded tras tres compras NOVA. No se observó un fallo funcional: la
+prueba repetía tres veces las comprobaciones de cerrar el modal por Escape y
+clic exterior, ya cubiertas por el smoke dedicado de compra. Esas
+comprobaciones siguen activas en la prueba dedicada; el flujo de compra se
+ejecuta en cada iteración y la prueba de Vitalidad emula `prefers-reduced-motion`
+para evitar trabajo visual innecesario en CI. Pasaron `npm run typecheck` y los
+dos smokes dirigidos en desktop (2/2; compra persistente 14.5 s y Vitalidad
+19.0 s local). El shard de GitHub aún debe repetirse para confirmar el resultado
+en el runner; no se hizo commit/push.
+
+## Rediseño puntual de las evoluciones de Búmeran — 28-09-2026
+
+Por feedback de juego, `twin_comet` se presenta como Comet Quintet: cinco filos
+con alcance de ida del 85% del rango vigente (212.5 u en rango I y 238 u desde
+rango III), abanico curvo e impactos de ida y vuelta compartidos por objetivo.
+`singularity_return` elige el grupo más denso al lanzar, detona allí
+en radio 155 y ralentiza a los supervivientes normales; ya no atrae enemigos.
+Los IDs de guardado permanecen. La especificación actual está en
+`docs/design/EVOLUCIONES_V2.md` §4.D. Accesos directos:
+`/?evolution=twin-comet&scenario=single|mass&debug=1&quality=high` y
+`/?evolution=singularity-return&scenario=single|mass&debug=1&quality=high`
+(`single` o `mass` como valor, no la barra literal). Pasaron `npm run typecheck`,
+504 pruebas unitarias, build local y el smoke desktop de las dos cartas. Se
+inspeccionaron escenarios `mass` en High de escritorio y Low móvil emulado;
+sin errores de página observados. Pendientes: prueba humana de ambas ramas,
+medición de FPS en teléfono real y balance fino si las runs lo requieren.
+
+## Ajuste puntual de ritmo inicial del Acto I — 28-09-2026
+
+Por solicitud del usuario, los ciclos de aparición del Acto I pasan de 0.85 s a
+1.00 s durante los primeros 30 segundos; a los 30 s vuelven a 0.85 s y desde
+el minuto 1 en adelante se conserva la curva aprobada. La referencia de 0.34 s
+correspondía aproximadamente al minuto 4, no a la apertura. El ajuste afecta
+solo la campaña del Acto I: Actos II/III y Overdrive permanecen intactos.
+Pasaron 15 tests dirigidos, `npm run typecheck` y `git diff --check`; queda
+pendiente la prueba manual del usuario. Ficha:
+`docs/balance/ACT-I-OPENING-SPAWN.md`.
+
+## Aprobación del baseline de balance — 28-09-2026
+
+El usuario aprueba el balance jugable actual de Actos I–III y Overdrive con los
+valores documentados en las fichas EX-02c: +20% de vida en enemigos normales de
+Actos I/II, +30% adicional al Chaser sobre esa prueba y ×2.2 de vida para los
+tres bosses. Acto III normal conserva sus valores base. EX-02c queda cerrado
+por validación humana; futuras correcciones serán puntuales y motivadas por un
+problema observado durante una run. No se inventan métricas ni una matriz nueva
+de diez partidas. EX-02d queda opcional y no bloquea este baseline. Ver
+`docs/PLAN_EJECUCION.md` y `PLAN_DESARROLLO.md` §22.16.
+
+## Recorte de cañones en tarjetas de Skins — 28-09-2026
+
+Las estelas horizontales del SVG de vista previa se salían de `.cannon-card-art`
+en escritorio. La ventana de arte ahora recorta su contenido con
+`overflow: hidden`, sin reducir la vista grande del modal. El smoke de compra y
+equipamiento de cañones en Playwright desktop pasó (1/1) y comprobó el recorte
+en las siete tarjetas. También pasaron `npm run typecheck` y `vite build` con
+`--configLoader runner`. El flujo `test:browser` normal y el build Vite normal
+fallaron al leer la configuración desde OneDrive (`Access is denied`); se usó
+el config loader alternativo para el build y preview local.
+
+## Prueba de vida de bosses — 28-09-2026
+
+Core Sentinel y Orbital Warden pasan de 520 a 1,144 HP; Fracture Engine, de
+900 a 1,980 HP: multiplicador común ×2.2 (10% por encima de duplicar). Daño,
+patrones, fases y tiempos no cambian. Overdrive parte de estas vidas base y
+después aplica su multiplicador de tramo. El usuario aprueba este valor como
+parte del baseline actual; la vida adicional alarga el combate, pero no añade
+por sí sola complejidad mecánica. Ficha: `docs/balance/EX-02c-boss-health-trial.md`.
+Conservar también la iteración local previa de Chaser (+30% sobre su prueba
+inicial); no se hizo commit/push.
+
+## Iteración de vida de Chaser — 27-09-2026
+
+Sobre la prueba EX-02c de +20% para enemigos normales de Actos I/II, Chaser
+recibe un +30% adicional respecto de aquella prueba: su vida pasa de 28.8 a
+37.44 (`24 × 1.2 × 1.3`), equivalente a +56% sobre la base original. Los otros
+siete enemigos conservan los valores de la primera prueba; Acto III, bosses y
+réplicas siguen sin cambios. Overdrive hereda el nuevo valor base de Chaser y
+aplica su multiplicador de tramo. Al registrarse era un ajuste provisional;
+la aprobación humana vigente está arriba. Registro y valores:
+`docs/balance/EX-02c-health-trial-actos-1-2.md`.
+
+## Prueba inicial de balance de resistencia — 27-09-2026
+
+EX-02c inicia con +20% de vida base para las ocho familias normales de Actos I
+y II. Acto III, bosses y réplicas permanecen iguales; daño, movimiento, XP,
+frecuencias y recompensas no cambian. Splitter conserva la escala de vida de
+sus hijos. Overdrive reutiliza estas vidas base y aplica después su curva por
+tramo. La ficha conserva el registro histórico de la prueba inicial; su
+aprobación y el valor vigente se detallan en
+`docs/balance/EX-02c-health-trial-actos-1-2.md`.
+
+## CI de Pages distribuido — 27-09-2026
+
+El deploy de Pages ahora exige `build` y ocho shards Playwright en runners
+separados. Los 70 casos siguen siendo puerta obligatoria, un worker por runner;
+cada shard conserva su HTML y diagnósticos por separado. Browser ya no comparte
+el límite global de 20 minutos del antiguo job monolítico. El primer run con
+cuatro shards aprobó build, pruebas y deploy en casi 10 minutos; se aumentó a
+ocho para reducir la espera. Pendiente medir esa segunda corrida; contrato en
+`docs/CI_DEPLOY.md`.
+
+## OD-F01 — propuesta futura de ritmo por puntos en Overdrive — 27-09-2026
+
+El usuario pidió estudiar una ruta más rápida para jugadores con Laboratorio
+avanzado, sin implementarla todavía. El plan opcional Normal/Asalto, cuotas
+de bajas medidas por tramo, spawns más frecuentes, arena/hazards seguros,
+récords separados y puerta de balance está en
+[OVERDRIVE_RITMO_POR_PUNTOS.md](../../docs/design/OVERDRIVE_RITMO_POR_PUNTOS.md).
+Depende de EX-02c; la jugabilidad actual de Overdrive no cambió.
+
+## Portales de aparición — 27-09-2026
+
+Los enemigos normales reciben un portal breve generado desde una sola textura
+Pixi compartida; la vista limita simultaneidad por calidad y solo gasta slots
+en nacimientos cercanos al viewport. Los bosses aprovechan su intro existente
+de 1,1–1,3 s: portal grande y ensamblaje de sus cuatro piezas antes del primer
+ataque. No se modifican daño, colisiones ni tiempos de simulación. Contrato,
+presupuestos y pendiente de validación humana en
+[PORTALES_APARICION.md](../../docs/design/PORTALES_APARICION.md).
+Comprobado: `npm run build:local` (502 pruebas unitarias) y cinco smoke browser
+dirigidos (familias de enemigos/boss High, atajo del boss, touch portrait,
+Orbital Warden y Fracture Engine).
+Se inspeccionó una captura Pixel 5 emulada; aún no hay medición de FPS en
+teléfono físico ni aprobación estética humana. Los cambios siguen locales.
+
+## Fondos portrait y estabilidad de smoke CI — 27-09-2026
+
+En juego, las cuatro corrientes transparentes de los fondos pintados se
+posicionaban respecto a un cuadrado `cover` de 1280 unidades: en portrait gran
+parte quedaba fuera del viewport aunque la placa base sí se movía. Ahora las
+dos corrientes A/B se escalan al ancho visible y se anclan a las cuatro
+esquinas en portrait; landscape conserva su composición anterior. Se aplica a
+Velo de Marea y a los otros seis fondos pictóricos sin añadir texturas ni
+sprites. Low y movimiento reducido siguen inmóviles. Las pruebas unitarias
+comprueban las cuatro esquinas visibles y la deriva en cuatro segundos a
+720×1280. Capturas Pixel 5 emulado de Velo de Marea y Espacio Profundo muestran
+nubes periféricas sin cubrir la arena; falta comprobarlo en el S25+ físico.
+
+El smoke de las doce rutas de evolución se dividió en seis pruebas por familia,
+sin omitir ninguna rama, para que un solo timeout no cancele doce recargas. La
+prueba de crecimiento del catálogo a 1280×720 conserva sus aserciones y tiene
+90 s de margen en CI, donde el renderizado WebGL por software puede tardar más.
+Comprobado en local con `npm run build:local` (495 unitarias) y la suite browser
+completa en modo CI (70/70, 8,6 min). El runner de GitHub aún no se ha repetido
+con este cambio, por lo que el deploy de Pages queda pendiente de esa corrida.
+
+## Locker cosmético en modal — 27-09-2026
+
+Las pestañas de Naves, Disparos y Fondos muestran directamente sus tarjetas;
+la vista previa animada ya no ocupa la cabecera. Tocar cualquier tarjeta abre
+un único modal con arte, descripción, estado y acción de equipar o desbloquear.
+Explorar no gasta NOVA; el débito ocurre al confirmar. Se cierra con botón,
+Escape o toque fuera, devuelve el foco a la tarjeta y retira el arte animado al
+cerrar. Las naves y disparos reutilizan sus SVG animados. Manta Veil conserva
+su SVG y dos aletas PNG sobre un mismo cuadro de referencia; el modal debe
+dimensionar el SVG interior al 100% de ese cuadro. Los fondos reutilizan la
+placa y las dos texturas transparentes A/B en cuatro esquinas, con deriva
+independiente. El tinte del modal es una aproximación CSS de la paleta de cada
+tema; la partida conserva el tinte exacto de Pixi. Low y movimiento reducido congelan
+el fondo del modal. La regla para nuevos cosméticos es conservar las tarjetas
+estáticas y montar su vista animada solo durante la inspección.
+
+Comprobado: typecheck, 493 pruebas Vitest y build local; cinco pruebas browser
+de equipamiento/guardado, matriz de layout 320×568/390×844/640×360/1280×720,
+flujo móvil de compra gratuita y bloqueo sin saldo, cierre táctil y modo Low.
+Se inspeccionaron capturas portrait de nave y fondo: Manta mantiene alineados
+SVG y PNG en escritorio y móvil, y los cuatro humos se animan en Medium/High
+pero quedan inmóviles en Low. Pendiente la valoración
+visual y táctil en el Samsung S25+ del usuario; no se midió FPS físico.
+
+## Estabilidad de browser smoke / Pages — 27-09-2026
+
+El run más reciente de 64 casos reportó cuatro errores. Se actualizó la
+expectativa del locker para tomar las siete identidades desde
+`BACKGROUND_DEFINITIONS`, se eliminó la repetición móvil de 1280×720 (sigue en
+desktop), y la prueba de intro ahora omite inmediatamente cuando el botón está
+visible en vez de capturar antes de que cierre la animación. Build local,
+typecheck, 493 tests Vitest y siete pruebas Playwright dirigidas pasaron. Falta
+confirmar el run completo en Actions; detalles en `docs/CI_DEPLOY.md`.
+
+## Movimiento compartido de placas y atmósfera — 27-09-2026
+
+Los seis fondos pintados aparte de Velo de Marea ahora reutilizan sus dos
+texturas transparentes de corrientes, con tinte, opacidad, ritmo y fase propios
+por tema. Además, los siete fondos raster reciben paneo común (±12×10 px) y
+respiración de zoom (0–1.5%, ciclos de 28–38 s) en el mismo Sprite; no carga
+recursos adicionales. Se amplificó porque la primera receta era imperceptible.
+El centro de juego permanece despejado. Medium/High animan; Low y
+`prefers-reduced-motion` congelan placa y overlays.
+
+Regla permanente para cualquier fondo futuro: heredar este mismo movimiento
+base; si la placa se genera con imágenes GPT, diferenciar motivo/composición y
+al menos dos ejes visuales adicionales respecto al catálogo. Un recolor no
+cuenta como fondo nuevo. Ver el contrato/matriz en
+`docs/design/FONDOS_PREMIUM.md`.
+
+Implementación y contrato: `src/presentation/pixi/StaticRasterBackgroundView.ts`,
+`src/presentation/pixi/PainterlyBackgroundMotionView.ts` y
+`docs/design/FONDOS_PREMIUM.md`. Pasaron `npm run typecheck` y la suite completa
+de Vitest (113 archivos / 493 tests), incluidas pruebas de límites del paneo,
+zoom, congelación por Low/reduced-motion y restauración del encuadre. Falta
+revisar visualmente los seis temas en gameplay,
+portrait/landscape y Low/High; no se ha medido rendimiento en móvil físico.
+
+Iteracion de prueba pedida despues: nubes un poco mas visibles y recorrido mas
+amplio. Opacidad configurada +0.10, deriva hasta ±35-44 px por eje horizontal y
+±25-39 px vertical, ciclo ~5% mas rapido. Pendiente de revision humana.
+
+## Acabado pictórico consistente para fondos — 26-09-2026
+
+Registro histórico de la primera entrega: en ese corte las nuevas placas,
+excepto Tidal Veil, todavía no tenían movimiento. La regla actual está arriba:
+las siete heredan movimiento de placa y las corrientes adicionales tienen
+identidad/ritmo por tema.
+
+El locker conserva sus siete identidades y su economía. Los seis temas estáticos
+ahora tienen placas pintadas distintas: Deep Space, Ion Storm, Solar Drift,
+Crystal Field, Nacre Orbit y Vesper Bloom. Se generaron masters PNG cuadrados y
+derivaciones WebP: 1254 px para Pixi, 512 px para previews CSS. Cada tema se carga
+bajo demanda. No se alteran armas, arena ni gameplay.
+
+Dirección de arte, medidas, prompts resumidos y límites: `docs/design/FONDOS_PREMIUM.md`
+y `src/assets/images/backgrounds/README.md`. Referencia real con BackgroundView
+y ArenaView: `/docs/visual/background-reference.html`. La aprobación visual
+manual del nuevo conjunto y la revisión de lectura/rendimiento en móvil siguen
+pendientes hasta que el usuario lo pruebe. Comprobado en esta sesión: typecheck;
+suite completa Vitest (111 archivos / 487 tests); build local Vite en directorio
+temporal (sin tocar `dist`); captura Playwright de la referencia, locker, Low
+desktop y High portrait boss sin errores de página ni HTTP. Se inspeccionó la
+referencia y se reencuadraron Nacre/Vesper tras descubrir que los motivos se
+perdían en landscape.
+El build mantiene el warning preexistente de chunk principal (~1,046 kB min / 273
+kB gzip). No se midieron FPS ni memoria en móvil físico.
+
+## Movimiento atmosférico de Velo de Marea — 26-09-2026
+
+Registro de la primera iteración: entonces se mantenía fija la placa base. La
+regla vigente ahora suma el paneo/zoom compartidos documentados arriba.
+
+La primera prueba manual indicó que el movimiento era prácticamente
+imperceptible; al aumentar intensidad quedó bien, pero se pidió movimiento en
+las cuatro esquinas. El reloj sí avanzaba. La receta ahora mantiene fija la
+placa y anima cuatro sprites independientes: dos texturas WebP fuente y dos
+instancias reflejadas, con fases propias y alpha 0.24/0.22/0.20/0.18. Medium/High
+animan las capas; Low y `prefers-reduced-motion` siguen estáticos. Locker muestra
+la composición de cuatro esquinas también en reposo. Sin filtros ni partículas.
+
+Tests actualizados para exigir deriva medible en las cuatro esquinas dentro de
+4 segundos, reutilización/espejo de textura y congelación del movimiento cuando
+se desactiva.
+Pendiente: confirmar visualmente esta extensión en partida a calidad Medium/High
+y comprobar legibilidad/rendimiento en móvil físico. La estrategia común para
+fondos pintados y la excepción animada viven en `docs/design/FONDOS_PREMIUM.md`
+y `src/assets/images/backgrounds/README.md`.
+
+Nota histórica: antes de la dirección pictórica del 26-09-2026, los cuatro
+temas base se componían con Graphics/estrellas/nebula. Esa implementación se
+conserva sólo bajo la placa opaca como fallback de carga; su diseño de runtime
+vigente y los nuevos masters están documentados en la sección superior.
+
+Antes de extender a cuatro esquinas, la iteración previa pasó typecheck, suite
+completa Vitest (110 archivos / 486 tests) y build Vite local aislado; el build
+tenía el warning previo del chunk principal (~1,046 kB minificado), no atribuido
+a las corrientes. Para esta extensión pasaron `npm run typecheck` y 5 pruebas
+focalizadas de Tidal Veil/BackgroundView. No se levantó servidor ni se hizo
+captura visual, build ni perfil en móvil de esta última extensión. Falta que el
+usuario confirme la composición completa y legibilidad en Medium/High, y medir
+rendimiento en móvil físico; sigue sin aprobación final.
+
+## Revisión sonora premium ZzFX — 26-09-2026
+
+48 cues con cuerpo tonal, transitorio y resonancia mezclados offline a una
+sola voz. Corregido el uso de filtros positivos que adelgazaba las recetas.
+Láseres de arena/boss/Prism tienen encendido, sostenido durante barrido y
+caída; ataques Charger/Orbiter/Fracture, minas y réplicas ya tienen señal
+activa. Pulse/Echo/Compression y Magnetic/Event Horizon/Polar respetan cada
+fase real; Rail y Volley tienen firma propia. Howler sigue encargado de música.
+
+Contrato y guía para iterar: `docs/design/AUDIO_SFX_ZZFX.md`. El nuevo observador
+`src/audio/AttackAudioFeedback.ts` sólo lee snapshots; no cambia gameplay.
+Caché con precalentamiento idle opcional, hasta ocho voces, dos plazas
+reservadas para señales importantes, prioridades y compresión sólo de SFX.
+Pausa detiene voces de combate; UI sigue utilizable. Recursos desconectados
+al terminar, fallar, pausar o cerrar.
+
+Probar con Vite en `http://127.0.0.1:5173/docs/audio/sound-lab.html` (48 sonidos y
+seis secuencias sin música), o `/?boss=1&debug=1&quality=low` para integración.
+La página de audición es local de desarrollo y no se publica en Pages.
+
+Comprobado: typecheck; suite completa 482 tests y 17 tests de audio en la
+pasada focalizada final (incluye dos regresiones añadidas después); tres
+smokes de producción de menú/audio/entrada móvil; builds local/Poki/CrazyGames.
+Web Audio en Chromium desktop/móvil emulado: 53 sonidos en secuencia, pico
+de cinco voces, cero restantes al detener y cero excepciones. Partida real
+del boss emite láser sostenido y anillo. Caché PCM 2,30 MB para las 48 recetas
+a 48 kHz; esto no es una medición de FPS. Se conserva warning del bundle
+principal (~1.041 kB minificado / 271 kB gzip). Pendiente escucha humana,
+mezcla en altavoz móvil físico y coste de primera síntesis en ese dispositivo.
+Sin commit/push de esta revisión. No queda implementación a medias: para Luna,
+seguir la sección «Entrega para Luna y siguientes iteraciones» de la guía.
+Mezcla adicional comprobada en OfflineAudioContext de Chromium: ocho efectos
+fuertes simultáneos, pico 0,814, sin muestras saturadas en ese escenario.
+
+## Audio de combate e interfaz con ZzFX — 26-09-2026
+
+Howler queda reservado para música. El backend SFX usa la síntesis completa de
+ZzFXMicro 1.3.2, adaptada al `AudioContext` ya desbloqueado por Howler para no
+crear un contexto prematuro en móvil. Los `AudioBuffer` se generan al primer
+uso y quedan cacheados; se conserva el máximo de ocho voces y cooldown por cue.
+Los cues están categorizados como gameplay/UI: al pausar no entran sonidos de
+combate nuevos, los sonidos UI sí funcionan y las voces cortas ya iniciadas
+terminan sin corte. El menú sólo solicita música al entrar a una run.
+
+Cobertura: disparos e impactos, críticos, bajas, daño/escudo del player,
+telegraphs de enemigos/boss/arena, transformaciones, armas activas, nivel,
+entradas y cambios de tramo, botones/cartas/ajustes, compras y recompensas.
+No hay pickup físico de XP; no se inventa un cue para un evento inexistente.
+Contrato de recetas y categorías: `docs/design/AUDIO_SFX_ZZFX.md`; la sección
+10 de `PLAN_DESARROLLO.md` enlaza el documento. Aviso MIT de ZzFX incluido en
+`public/third-party-licenses/zzfx.txt`.
+
+Typecheck aprobado. Builds Vite `local`, `poki` y `crazygames` aprobados; la
+licencia aparece copiada a los tres directorios `dist`. Los tres builds
+conservan la advertencia del bundle principal: ~1.031 MB minificado / 268 kB
+gzip en esta máquina; es un asunto de presupuesto pendiente, no se atribuye a
+ZzFX sin comparar perfiles. No se ejecutaron tests en esta sesión. Falta
+validación auditiva humana (volumen y separación de cues), especialmente en
+móvil; no se midió rendimiento ni se hicieron commit/push.
+
+## Refinamiento de entradas — compuerta geométrica — 25-09-2026
+
+Las entradas premium ahora ensamblan cuatro placas con bisel, alinean una firma
+distinta por ruta y abren dos hojas para revelar la partida. Radial: arcos;
+Angular: rombos; Fracture: facetas separadas; Overdrive: circuito infinito.
+Duraciones y coordinación intactas: 2,6 s premium omisible, 1,3 s continuación,
+3 s entre tramos. La versión breve usa una placa de título sobre la escena.
+Los tramos muestran familia entrante en lugar del multiplicador interno.
+
+Contrato para iterar: `docs/design/TRANSICIONES_ENTRADA.md`, enlazado desde la
+guía UI. CSS propio en `src/ui/run-transition.css`; un master SVG de 4.660 bytes,
+montado una vez, sin filtros ni bucles de animación. Low conserva el acabado.
+Referencia para repetir todas las variantes con Vite:
+`http://127.0.0.1:5173/docs/visual/transitions-reference.html`.
+
+Comprobado en este refinamiento: typecheck, 32 tests focalizados Game/GameState,
+4 smokes de entradas en juego (desktop/móvil emulado), builds local/Poki/CrazyGames,
+9 capturas de referencia y movimiento reducido sin animaciones. Inspeccionadas
+capturas de producción y móvil horizontal/portrait; corregido solapamiento del
+botón Omitir en landscape bajo. Medición DOM aislada en Chromium headless,
+1280×720: 169 intervalos por preset; p95 16,7 ms High y 16,8 ms Low. No es una
+medición del juego en teléfono físico. Sigue pendiente aprobación visual del
+usuario y continúa el warning conocido de chunk >500 kB.
+
+## Auditoría funcional y rewarded — 25-09-2026
+
+Corregidos dos defectos encontrados antes de retomar Laboratorio/balance:
+la regla CSS de botones de pausa anulaba el atributo `hidden`, por lo que
+`Retirarse y cobrar` se veía también en campaña; ahora cualquier botón oculto
+de la pausa queda fuera del layout. En Overdrive público, la oferta de duplicar
+NOVA estaba bloqueada por una condición de modo; ahora puede aparecer una vez
+al liquidar una derrota definitiva, aunque el revive ya se haya usado. Respeta
+el ledger de una sola oferta por run; los tramos no reinician contadores. Una
+retirada confirmada liquida sin revive ni duplicación. Las rutas diagnósticas no
+reciben recompensas.
+
+Revisé liquidación, callbacks rewarded, pause/lifecycle, guardado, selección de
+ruta, límites de pools, builds y cobertura de regresión. No salió otro defecto
+bloqueante nuevo de esa pasada. Siguen abiertos los trabajos conocidos EX-02c
+(balance y laboratorio), EX-09 (SDK/QA de portales), verificación de entrada en
+móvil físico y el aviso de bundle local >500 kB; esta auditoría no los declara
+resueltos.
+
+Regresiones automatizadas añadidas para ocultación real del botón por CSS,
+visibilidad sólo durante pausa de Overdrive, duplicación tras revive agotado y
+retirada sin ofertas rewarded. `npm run typecheck` pasó; `npm run build:local`
+ejecutó 470 tests en 107 archivos y compiló correctamente. También pasaron los
+builds `poki` y `crazygames`. Playwright tuvo 61/64 en la corrida completa: los
+tres fallos eran smokes que enviaban input durante la entrada premium; tras
+hacer que esos smokes la omitan, los tres pasaron por separado. No repetí la
+suite browser completa en una sola corrida. Sigue el aviso de chunk JS local
+mayor a 500 kB; no medí teléfono físico ni portales reales.
+
+## Presentación de entrada por ruta — 25-09-2026
+
+Contrato de UX implementado: iniciar directamente Acto I, II, III o Infinito
+desde el menú muestra una entrada premium de 2,6 s con emblema y nombre grande;
+puede omitirse. Continuar I→II o II→III muestra sólo la tarjeta breve del acto
+(1,3 s). Continuar III→Overdrive abre la ruta pública con esa misma entrada
+breve. Dentro de Overdrive, cada tramo conserva un anuncio básico de 3 s,
+sin repetir la cinemática premium. La simulación no avanza durante estas
+presentaciones; pausa por lifecycle conserva el estado. Movimiento reducido
+acorta la entrada de ruta.
+
+Verificado: typecheck; 468 tests unitarios/107 archivos; build local; 3 smokes
+desktop de selección/continuación y un smoke móvil emulado con captura visual
+revisada y botón Omitir dentro del viewport. Pendiente: sensación y legibilidad
+en teléfono físico; no se midieron FPS nuevos ni se validaron portales.
+
+## Estado actual — Overdrive, evoluciones y Actos I–III validados, 22-09-2026
+
+Validación humana reportada por el usuario: las evoluciones quedaron aprobadas,
+Overdrive funciona correctamente y los Actos I, II y III fueron probados en
+móvil. Estas áreas quedan validadas para continuar el proyecto; no se reabre su
+implementación salvo que aparezca un fallo concreto.
+
+Pendientes vigentes: EX-02c, balance final de daño/vida/spawn/recompensas;
+EX-09, SDKs reales y QA por portal; y la preparación de publicación una vez
+cerrados balance y plataforma. El balance de Overdrive permanece incluido en
+EX-02c y no se considera cerrado sólo por tener la implementación funcionando.
+
+## GitHub Pages — corrección de smoke — 22-09-2026
+
+El log de Actions mostraba 61/62 tests y 12.3 min. La prueba de pausa contaba
+el SVG del botón de retirada aunque ese botón está oculto fuera de Overdrive;
+ahora mide iconos y hit areas de botones visibles. La configuración de
+Playwright se probó con `fullyParallel` y dos workers; en Actions saturó
+Chromium (2–3 FPS), provocó sesiones cerradas y múltiples timeouts. Esa
+estrategia queda revertida: CI corre un worker por archivo, con toda la
+cobertura, retry único y trazas intactos. Con la reversión, la suite pasó
+62/62 en 5.5 min; typecheck y los 466 tests unitarios también pasaron. Falta
+confirmar el tiempo y resultado del siguiente run de Actions. Detalle en
+`docs/CI_DEPLOY.md`.
+
+## UI de inicio — consolas premium — 22-09-2026
+
+Skins, Mejoras y Actos usan consolas con cabecera persistente y un cuerpo
+desplazable. Anuncios de cosméticos desplegables, emblemas de rutas, progreso
+del Laboratorio y catálogos con altura natural. Contrato en
+`skills/geometry-survivor-svg/references/ui-art-direction.md`, sección
+Consolas de inicio. Revisar visualmente en móvil físico antes de aprobar
+esta presentación; las aprobaciones de gameplay anteriores se conservan.
+
+Comprobado: typecheck, 466 tests / 107 archivos y builds local/Poki/CrazyGames.
+Smoke dirigido final: 19/19, incluyendo compras, anuncios, selección de actos,
+Overdrive, navegación y crecimiento de catálogos en desktop/móvil emulado.
+Capturas inspeccionadas en `test-results/`; matriz 320×568, 390×844, 640×360
+y 1280×720. SVGs estructuralmente válidos (594–636 bytes por emblema), sin
+filtros ni recursos externos. Persiste el aviso conocido de bundle >500 kB.
+La prueba responsive se divide por viewport para evitar un único test largo
+en CI; las capturas de referencia sólo se generan localmente. Sin medición
+nueva de FPS ni prueba física del teléfono en esta entrega.
+
+## Balance Overdrive recalibrado — 17-09-2026
+
+La curva de vida dejó de usar `1, 3, 6, 9…`, porque el salto a `×9` en el
+tramo 4 producía un muro alrededor de los 13 minutos, pero la propuesta suave
+permitía llegar al minuto 26 con demasiada facilidad. Ahora usa
+`×1.25, ×2.59, ×4.64, ×6.76, ×8.97, ×11.25…`, con fórmula intermedia
+`redondear(0.625 + 1.925 × d + 0.04 × d², 2)` desde el tramo 2. El primer
+tramo gana presión desde el inicio y el cuarto vuelve a exigir una build
+desarrollada sin saltar a `×9`. El objetivo queda en 15–20 minutos; falta
+validarlo con una run humana real antes de cerrar el balance.
+
+Base de trabajo: `b00fbdb`, publicada en `origin/main`. Se implementaron y
+regresaron OD-A01–OD-A08 de [AUDITORIA_OVERDRIVE.md](../../docs/design/AUDITORIA_OVERDRIVE.md):
+las rutas debug ya no liquidan NOVA/récords, la transición conserva pausa y
+tiempo restante, daño letal gana a boss en el mismo tick, las reservas esperan
+agotamiento real, la maestría universal funciona con seis familias, el boss usa
+250 s desde el tramo 10, la vida final respeta el cap y el reinicio reconstruye
+etapa/preset. También se acotaron historial de adquisiciones, XP no finita y FX
+de transición.
+
+Validación automática de esta sesión: `npm run typecheck` OK; suite completa
+Vitest en un worker: 107 archivos / 460 tests OK. La validación manual de
+Overdrive en Pages/móvil fue aprobada por el usuario. El único hallazgo fue un
+proyectil hostil que en una ocasión quedó congelado sin daño; el pool ahora
+retira proyectiles inmóviles/inválidos tras 0.25 s y la vista limpia su slot.
+La regresión correspondiente está en `FractureThreatSystem.test.ts`.
+
+Se implementaron EX-11.6 y EX-11.7. Overdrive tiene dos slots de boss con
+identidad/vida/FX/eventos independientes; reserva dos posiciones del pool,
+coordina especiales y sólo cambia de tramo al derrotar a todos. En parejas no
+se inician nuevos hazards de arena y las amenazas ya anunciadas terminan.
+La victoria real del Acto III desbloquea el botón Infinito; el clic de la tarjeta
+selecciona el modo sin recargar. El selector incluye **Iniciar** para cualquiera
+de las cuatro rutas. Infinito conserva su selección y desbloqueo al volver al
+menú; elegir un acto restaura campaña. Corregido el uso de `location.assign`
+en la tarjeta y la ocultación del botón cuando el runtime ya era Overdrive.
+La ruta manual `?mode=overdrive` conserva el menú antes de jugar, mientras que las rutas
+`?debug=1&mode=overdrive&od-stage=1|4|7|10` y `od-pair=core-warden|core-fracture|warden-fracture`
+son diagnósticas y no liquidan guardado. Pausa ofrece retirada confirmada y
+la derrota definitiva liquida NOVA y récord Overdrive una sola vez y puede
+ofrecer doble-NOVA; una retirada liquida sin revive ni duplicación. Los
+placements rewarded no se reinician por tramo.
+
+Validación automática de esta entrega: `npm run typecheck` OK; suite completa
+Vitest en un worker: 107 archivos / 462 tests OK; integración de pareja
+`core-sentinel + orbital-warden` OK. La validación humana posterior del usuario
+confirma que Overdrive funciona correctamente; quedan como deuda separada las
+pruebas de portal de EX-09 y el balance EX-02c.
+
+Validacion browser local adicional: la ruta publica desbloqueada inicia
+Overdrive con build limpia y muestra `Retirarse y cobrar` en pausa. Quedan las
+tres parejas y la sesion continua de diez minutos en PC/movil.
+La tarjeta de entrada ahora vive dentro de `Actos`: bloqueada se muestra
+deshabilitada y, tras vencer Acto III, permite iniciar Overdrive.
+La pantalla de victoria del Acto III tambien ofrece `Continuar al Overdrive`
+directamente; la navegacion abre la ruta publica con build limpia.
+
+Siguiente paso operativo: abordar EX-02c o EX-09 según la decisión del usuario;
+no reabrir Overdrive ni los Actos I–III sin un defecto reproducible.
+
+## Historial — cierre técnico EX-11.6/EX-11.7, 17-09-2026
+
+`BossSystem` ahora admite instancia primaria/secundaria, definición explícita,
+gate de ataques y ownership de réplicas; `CombatSimulation` mantiene ambos
+estados, reserva slots, no termina con el primer boss y reconfigura el par por
+tramo. La presentación dibuja hasta dos naves, barras y telegraphs sin ampliar
+los pools. `StartScreen`, `PauseOverlay`, `SaveStore` y `Game` conectan el
+desbloqueo real de Acto III, la entrada pública, retirada y récord separado.
+El balance global y el reinicio del laboratorio siguen fuera de esta entrega.
+
+## Historial — implementación EX-11.5, 17-09-2026
+
+Implementadas las cartas de reserva post-evolución de Overdrive. Las
+definiciones viven fuera de la campaña y sólo aparecen cuando se agotaron
+adquisiciones, rangos, evoluciones, maestrías, pasivas y el marcador universal.
+Cada familia evolucionada tiene `Potencia Overdrive` (+5% acumulable en un
+multiplicador independiente, tope técnico x1000) y existe `Reparación
+Overdrive` (+25% de vida máxima sólo con vida incompleta). Con vida completa se
+componen tres potencias; con vida incompleta, dos potencias y reparación.
+
+Para hacer alcanzable la transferencia sin cambiar la campaña, `swift_step` y
+`reinforced_core` tienen topes específicos de Overdrive de 6 y 9 stacks. Los
+behaviors de las seis armas conservan el multiplicador al aplicar rango,
+evolución o limpieza transitoria; `CombatWeaponSystem.reset()` lo devuelve a
+x1. La conversión a NOVA, recompensa única y bosses dobles siguen fuera.
+
+Validación automática: tests focalizados de `UpgradeApplier` (28), suite
+completa en un worker (107 archivos / 451 tests), `npm run typecheck` y builds
+Vite de local/Poki/CrazyGames sin sourcemaps, todos OK. La prueba visual de la
+mano en Pages continúa siendo humana y la ruta pública de Infinito sigue
+bloqueada.
+
+Publicación de esta implementación: `cdd3fa5`. Su siguiente paso original
+(EX-11.6) queda sustituido por las correcciones de la auditoría de cabecera.
+
+## Historial — implementación EX-11.4, 17-09-2026
+
+Implementado el arsenal ampliado de Overdrive. `UpgradeApplier` recibe el modo
+`campaign | overdrive`: la campaña conserva tres armas; Overdrive comienza con
+el mismo límite y lo abre de forma irreversible a seis después de evolucionar
+sus tres familias iniciales. La mano mantiene una sola adquisición de arsenal,
+peso uniforme entre familias nuevas y la rotación existente de rangos,
+evoluciones y maestrías. `reset()` devuelve la run a build limpia y vuelve a
+cerrar la ampliación.
+
+Añadidos los presets de inspección efímeros
+`/?debug=1&mode=overdrive&od-build=three-evolved` y
+`/?debug=1&mode=overdrive&od-build=six-evolved`; no escriben guardado, NOVA ni
+desbloqueos. El preset por defecto sigue siendo `starter`, con Projectile como
+build inicial. El panel debug indica `overdriveArsenal: initial 3` o
+`expanded 6`.
+
+Validado: tests focalizados de `UpgradeApplier` (25), suite completa en un
+worker (107 archivos / 448 tests), typecheck y builds Vite local/Poki/CrazyGames
+sin sourcemaps. Falta la inspección manual de la mano en Pages; el smoke browser
+sigue inconcluso por la inestabilidad documentada del runner. No se
+implementaron aún cartas de reserva, bosses dobles ni recompensa única.
+Siguiente ID: EX-11.5.
+
+## EX-11.3 — vida escalada y transición segura — 17-09-2026
+
+Implementado el multiplicador de vida de Overdrive y la transición segura de
+tramos. Normales, Splitter hijos, réplicas y boss escalan una vez desde las
+definiciones; build, XP, modificadores, kills y cooldowns de armas sobreviven a
+`CombatSimulation.reconfigureOverdriveStage()`. `GameState` congela la
+simulación en `overdrive-transition`; `Game` limpia entidades transitorias,
+cura 25% sólo si el player está vivo, limita la nueva arena y muestra
+`Vuelta X · Tramo Y` durante 3 s. La entrada continúa sólo en debug.
+
+Validado: typecheck; suite 107 archivos / 446 tests en un worker; builds
+local/Poki/CrazyGames sin sourcemaps. Smoke browser interrumpido después de
+fallos intermitentes de animación inicial/carga diferida de Manta; queda como
+inconcluso, no como aprobación. Publicado en `01d41bc` (`main` y
+`origin/main` sincronizados). Falta prueba humana en Pages de derrota de boss
+y reanudación.
+
+## EX-11.2 — director de composición y ruta de inspección — 17-09-2026
+
+Fecha y commit de partida: `b5cea91` (`main` y `origin/main` sincronizados).
+ID / subtarea: EX-11.2.
+Objetivo y exclusiones: conectar el modo `overdrive` a la simulación mediante
+un director que reutiliza los tres actos. La primera vuelta conserva sus
+perfiles; las vueltas 2 y 3 mezclan invitados 80/20 y 65/35; desde el tramo 10
+la familia normal se elige de forma uniforme. La arena, el boss y la cadencia
+de la familia principal permanecen separados. No se implementaron todavía
+transición, multiplicador de vida, cartas de seis armas, bosses múltiples ni
+recompensas.
+Archivos cambiados: `src/simulation/acts/OverdriveActDirector.ts` y su test;
+`src/app/Game.ts`, `src/app/Game.test.ts`, `src/main.ts` y smoke browser;
+`PLAN_DESARROLLO.md`; `docs/PLAN_EJECUCION.md`.
+Pruebas ejecutadas y resultados: 20 pruebas focalizadas OK; suite completa en
+un worker, 107 archivos / 442 tests OK; typecheck OK; builds Vite de Poki,
+CrazyGames y local sin sourcemaps OK. El build local con sourcemaps (la
+configuración de desarrollo habitual) agotó la memoria del runner al generar
+chunks; no es un fallo de TypeScript ni del producto. El smoke browser
+específico de Overdrive se quedó detenido en el runner sin producir una
+aserción y fue interrumpido. Un segundo intento con concurrencia limitada
+terminó el worker con código nativo `3221226505` y dejó el servidor de prueba
+activo hasta su interrupción; queda como resultado inconcluso, no como
+aprobación de navegador.
+Evidencia humana / dispositivo / reporte: no aplica todavía; la ruta está
+preparada para inspección manual en GitHub Pages.
+Puerta: AUTOMÁTICO OK; ESPERA HUMANA para la prueba browser/manual.
+Pendiente concreto y condición para avanzar: EX-11.3 debe aplicar el
+multiplicador de vida desde las definiciones base y crear la transición segura
+entre tramos, conservando build, XP, modificadores y recargas. Mantener la
+entrada pública bloqueada hasta una victoria real del Acto III.
+Siguiente ID habilitado: EX-11.3.
+Publicación: artefactos verificados; commits `615db97` y `24148b8` publicados
+en `origin/main`.
+
+## EX-11.1 — contrato y guardado de Infinito — 17-09-2026
+
+Fecha y commit de partida: `dca467b` (`main` y `origin/main` sincronizados).
+ID / subtarea: EX-11.1.
+Objetivo y exclusiones: establecer el contrato puro `campaign | overdrive`,
+estado de tramo, semillas, fórmulas de vida/presión y persistencia versionada.
+No se activaron menú, director, transición, cartas, bosses múltiples ni
+recompensas.
+Archivos cambiados: `src/content/run/OverdriveDefinitions.ts` y su test;
+`src/platform/save/SaveStore.ts` y su test; prueba determinista de
+`UpgradeApplier`; `PLAN_DESARROLLO.md`; `docs/PLAN_EJECUCION.md`.
+Pruebas ejecutadas y resultados: typecheck OK; suite focalizada 39/39 OK;
+suite completa en un worker 106 archivos / 434 tests OK; build local Vite con
+`--configLoader runner` OK. La ejecución paralela predeterminada de Vitest y un
+primer intento de build agotaron la memoria del entorno (OOM); no se tomó ese
+fallo de runner como fallo del producto.
+Evidencia humana / dispositivo / reporte: no aplica a este contrato sin UI.
+Puerta: AUTOMÁTICO OK.
+Pendiente concreto y condición para avanzar: conectar el consumidor runtime
+EX-11.2 (director de Infinito) sin importar Pixi/DOM en simulación y conservar
+la migración bloqueada hasta una victoria real del Acto III.
+Siguiente ID habilitado: EX-11.2.
+Publicación: pendiente de commit y push de esta entrega.
+
+## Joystick móvil opcional — 16-09-2026
+
+Refinamiento solicitado: selector reducido a Seguir el dedo / Joystick, teclado
+siempre disponible en PC. Guardados anteriores normalizados a las dos opciones.
+Nuevos masters SVG de consola segmentada y pomo facetado; indicador direccional
+sin loop. El origen acompaña el exceso de arrastre para facilitar cambios de
+sentido. Contrato actualizado; la comodidad física sigue pendiente del usuario.
+QA del refinamiento: suite completa previa al retiro de código legacy pasó
+(424 tests); luego typecheck, 17 tests focalizados de input/save/assets y build
+local correctos. Cuatro browser móviles correctos; capturas del joystick
+segmentado inspeccionadas en portrait/landscape. No se hizo commit/push.
+
+El usuario aprobó la entrega anterior de FX Fracture. Añadido `joystick` a
+Desplazamiento en Inicio y Pausa, persistente en settings. Sigue disponible
+«Seguir el dedo»; auto/relative-touch/keyboard son sólo entradas de compatibilidad. Joystick flotante
+con radio 52 CSS px, zona muerta 8 px, fuerza gradual y reinicio del gesto en
+pausa, cancelación, resize y cambio de modo. No cambia velocidad máxima ni build.
+Contrato: [CONTROLES_MOVILES.md](../../docs/design/CONTROLES_MOVILES.md).
+Validado: typecheck, 424 tests unitarios (103 archivos), build local, cuatro
+smokes móviles y tres desktop de configuración/input/pausa/resize. Capturas
+portrait/landscape inspeccionadas. El build mantiene el warning previo de
+chunk >500 kB; no se añadió dependencia. Vite disponible en localhost:5173.
+Pendiente validación física del usuario en S25; no declarar rendimiento medido.
+
+## FX de ataques Fracture y continuidad del boss — 16-09-2026
+
+Mejorados los cuatro enemigos y la misma familia de ataques del boss: dardos
+con estela, corona facetada de púas, zigzag con estela y minas con cuenta atrás
+y detonación. Corregidos avisos invisibles sin boss, radio cero del aviso de
+Thorn y señales persistentes en recovery. Fracture Engine conserva el punto
+de llegada tras zigzag; no vuelve a su órbita de entrada.
+
+Contrato y QA: [FRACTURE_ATTACK_FX.md](../../docs/design/FRACTURE_ATTACK_FX.md).
+Cambios de esta entrega locales, pendientes de aprobación visual en juego;
+no se ha alterado balance. Typecheck, suite unitaria y build local correctos.
+También pasaron los seis smoke browser de Fracture y el capturador visual;
+se inspeccionaron las láminas de FX Low/High. El preview automático requirió
+arrancar Vite con `--configLoader runner` por permisos del entorno local.
+Pendiente probar sensación/legibilidad y rendimiento en móvil físico.
+La flota de la sección siguiente sí se publicó previamente en `aaa0325`;
+su handoff histórico «sin commit» ya no describe el estado actual.
+
+## Rediseño visual de flota Fracture — 16-09-2026
+
+Se sustituyó el casco único recoloreado de Acto III por cuatro geometrías
+independientes: batería asimétrica Gunner, coraza dentada Thorn, interceptor Z
+Reaver y doble silo Miner. Fracture Engine pasa a máquina de asedio de proa
+transversal y reactor rectangular. Master Low y cuatro piezas usan una sola
+fuente de geometría; el boss ya no cambia de diseño según calidad.
+
+Contrato, alternativas, costes y guía para continuar:
+[FLOTA_FRACTURE.md](../../docs/design/FLOTA_FRACTURE.md). Comparativa ejecutable:
+`/docs/visual/fracture-reference.html` con Vite dev. Se conservaron los tamaños
+de textura, cuatro piezas, pools y reglas de combate; se ajustaron movimientos
+de piezas y orientación visual de Gunner a la puntería capturada al disparar.
+Pendiente aprobación visual del usuario y perfil en móvil físico.
+
+### Handoff a Luna — cierre solicitado por límite del modelo
+
+Los cinco diseños están integrados y no falta terminar ninguno de sus SVG.
+Comprobado en esta entrega: typecheck, **415 tests / 102 archivos**, build local
+(`npx vite build --mode development --configLoader runner`) y script visual
+`node docs/visual/capture-fracture.mjs` sin errores de navegador. El script
+capturó cuatro modos de inspección, 16 poses Pixi Low/High, despiece/reset del
+boss y diez vistas de juego (cuatro drills + boss en Low/High). Se inspeccionó
+la comparativa final de cinco diseños y el compositor. Evidencia local en
+`test-results/fracture-art`; no añadir capturas al build.
+
+Para Luna, en orden:
+
+1. Leer `docs/design/FLOTA_FRACTURE.md` y abrir la lámina antes de cambiar arte.
+   Conservar las cinco siluetas salvo feedback del usuario. No regresar al
+   antiguo `makeEnemy(name, accent)` ni separar el master Low de las piezas.
+2. Recoger aprobación del usuario en juego y medir en móvil físico. El browser
+   headless valida carga/poses, no certifica FPS ni calidad artística humana.
+3. Antes de publicar este refinamiento, ejecutar builds Poki/CrazyGames y el
+   smoke browser completo. Esta entrega hizo build local y capturas de juego;
+   las 45+6 pruebas browser del bloque anterior pertenecen a la entrega anterior.
+4. Revisar diff y hacer commit/push cuando se retome la publicación. **Estos
+   cambios visuales están locales, sin commit ni push**; el remoto anterior
+   `1a583b8` contiene la implementación jugable, no este rediseño.
+
+Servidor Vite de esta entrega: `http://localhost:5173/`, iniciado con
+`npx vite --host 127.0.0.1 --port 5173 --strictPort --configLoader runner`.
+Si no sigue activo, usar ese comando. Lámina:
+`http://localhost:5173/docs/visual/fracture-reference.html`.
+El build conserva el warning de chunk >500 kB: principal ~962 kB minificado,
+~251 kB gzip. No se hizo una nueva partición de bundles en esta tarea visual.
+
+## Estado vigente — Acto III Fracture implementado — 16-09-2026
+
+La entrega actual implementó el Acto III completo y lo dejó conectado al flujo
+de campaña: arena octagonal con morphs frecuentes de rectángulo, rombo, círculo,
+hexágono y octágono; presión simultánea de láser, pulso radial, Pulse Ring y
+Angular Sweep; cuatro enemigos nuevos (`fracture-gunner`, `thorn-bastion`,
+`zigzag-reaver`, `rift-miner`); y el boss `fracture-engine` a los 250 s.
+Fracture Engine alterna batería de proyectiles, púas, zigzag y minas. La entrada
+al acto es limpia y el desbloqueo persistente ocurre al vencer Acto II.
+
+QA directa disponible:
+
+- `/?debug=1&act=fracture&quality=high` — acto completo.
+- `/?debug=1&act=fracture&boss=1&quality=high` — boss directo.
+- `/?debug=1&fracture-drill=gunner|thorn|zigzag|miner&quality=high` — enemigo
+  aislado.
+
+Validación automática realizada: typecheck limpio, 407 pruebas unitarias/
+integración y build local Vite. En este checkout el runner bundle por defecto
+de Vitest/Vite no puede resolver la ruta de OneDrive (`Access is denied`); se
+validó con `--configLoader runner`, sin modificar la configuración de producción.
+
+El acto no está declarado cerrado todavía: falta la inspección humana en las
+tres calidades, touch y runs comparables. EX-02c (balance final de vida/daño),
+EX-09 (SDKs reales) y EX-11 (Overdrive) siguen pendientes. El código y esta
+nota son el punto de continuación; no rehacer Acto I/II ni las seis armas y
+evoluciones aprobadas.
+
+## Auditoría de compositor corregida — 16-09-2026
+
+La revisión posterior del compositor de campaña cerró siete regresiones de
+ofertas sin tocar el balance EX-02c: cada run recibe semilla nueva (las pruebas
+inyectan una semilla fija), una mano contiene como máximo una adquisición de
+arsenal y no puede filtrar cartas legacy. Las evoluciones pendientes y los
+rangos se reservan/rotan entre manos; una adquisición ya tomada pasa a ofrecer
+su rango, no vuelve a duplicar el arma.
+
+`Potencia calibrada` requiere un objetivo válido, tiene un máximo real de tres
+aplicaciones y no puede rerollearse durante la pantalla de objetivo. Sus
+previews muestran el cambio numérico de la maestría elegida. Cobertura también
+afecta las ramas de radio fijo compatibles: Solar Crown conserva su radio de
+órbita de 94u y amplía contacto; Compression Wave y Event Horizon sí aumentan
+su alcance efectivo. Pruebas: typecheck, 397 pruebas unitarias/integración,
+build local y 2/2 smoke browser específico verdes.
+
+### Decisión temporal — entrada limpia al Acto II
+
+Por decisión de producto, la selección pública de las tres calibraciones
+iniciales (`Projectile`, `Orbit`, `Chain`) está **deshabilitada temporalmente**.
+Al continuar desde Acto I o iniciar Angular desde el selector, Acto II comienza
+con build limpia y la primera mano normal de campaña. El acceso directo
+`?calibration=projectile|orbit|chain` se conserva únicamente para QA; no es una
+oferta visible. Reactivar las plantillas exige una validación de composición,
+no asumir que vuelven por defecto.
+
+## Auditoría acotada corregida — 15-09-2026
+
+Antes de ampliar las evoluciones, consultar
+[AUDITORIA_EVOLUCIONES_2026-09-15.md](../../docs/design/AUDITORIA_EVOLUCIONES_2026-09-15.md).
+Contiene los ocho hallazgos, su corrección, evidencias y pruebas de aceptación
+para cualquier agente. Se corrigieron reset, impactos por onda, transición del
+eco, sincronización visual, cooldown integrado y rumbo idle; las regresiones
+específicas pasan; typecheck, 390 unitarias y build local también pasaron.
+El smoke browser completo quedó pendiente por su inestabilidad conocida, al no
+terminar en esta ejecución. Quedan pendientes revisión visual humana, balance
+EX-02c y la migración normal de progresión.
+
+## Decisión vigente — cartas post-evolución — 15-09-2026
+
+La validación humana de las seis evoluciones queda aprobada por decisión del
+usuario. Se establece que los actos I–III comparten el límite de tres armas y
+la progresión de rangos/evoluciones. Las maestrías específicas aparecen después
+de evolucionar cada familia; `Potencia calibrada` es una carta rara universal
+que solo aparece cuando las tres armas están evolucionadas. No abre otra vez las
+dos ramas: muestra una selección de armas evolucionadas, aplica la potencia al
+objetivo elegido y se retira. Su rareza visual y el contrato completo, incluida
+la separación del futuro modo infinito, están en
+[EVOLUCIONES_V2 §8.1](../../docs/design/EVOLUCIONES_V2.md).
+
+Implementado en la campaña real: `UpgradeApplier.getChoices()` compone manos
+de tres cartas con estado de armas, rangos, evoluciones y maestrías válidas.
+Mientras haya ranuras libres aparece una sola oferta de arsenal elegida con el
+mismo peso entre `projectile_rank_2` (Doble cañón) y las cinco adquisiciones
+restantes; no existe prioridad fija para Projectile ni para Doble cañón. Al
+llegar a tres armas desaparecen las adquisiciones. El rango VII habilita una
+carta hito `Evolución disponible`, que abre sus dos ramas y consume solo al
+confirmar. Las cartas antiguas de daño/cadencia de armas quedan fuera de la
+mano normal para no duplicar el sistema de rangos.
+
+También quedó conectada la pantalla de objetivo de `Potencia calibrada` y los
+tres canales de maestría por familia (`Potencia`, `Ritmo`, `Cobertura`). Para
+probarla sin construir tres armas durante una run, usar
+`/?debug=1&campaign=evolved&act=angular&quality=high` (si Acto II todavía no
+está desbloqueado, quitar `act=angular`). La ruta abre una build real de tres
+armas evolucionadas y la primera mano normal; no es un laboratorio de daño.
+El balance EX-02c continúa separado.
+
+## Estado operativo vigente — lote completo de progresión y evoluciones v2 — 14-09-2026
+
+La solicitud más reciente autoriza implementar de forma continua las seis
+familias restantes, sin esperar validación humana entre una y otra. Ya están
+conectadas las rutas `projectile`, `orbit`, `chain`, `boomerang`, `pulse_ring` y
+`magnetic_charge`: cada una inicia con su arma I, ofrece II→VI una carta por
+nivel, y después muestra en el nivel global 7 una carta hito sin estadísticas.
+El hito abre las dos evoluciones de esa familia; elegir una consume la subida y
+la alternativa queda excluida.
+
+Rutas de partida normal enfocada:
+
+- `/?weapon-path=projectile&debug=1&quality=low|medium|high`
+- `/?weapon-path=orbit&debug=1&quality=low|medium|high`
+- `/?weapon-path=chain&debug=1&quality=low|medium|high`
+- `/?weapon-path=boomerang&debug=1&quality=low|medium|high`
+- `/?weapon-path=pulse-ring&debug=1&quality=low|medium|high`
+- `/?weapon-path=magnetic-charge&debug=1&quality=low|medium|high`
+
+Evidencia exacta de esta pasada: `npm run test:browser` reconstruyo el bundle,
+paso **97/97 archivos y 383/383 pruebas unitarias**, y Playwright paso
+**44/44 pruebas browser** en desktop y mobile. Durante la comprobacion se
+corrigio una divergencia de capacidad de render: Closed Circuit/rango VII
+puede producir hasta ocho segmentos, por lo que simulacion y `WeaponView`
+comparten `CHAIN_SEGMENT_POOL_CAPACITY = 8`; antes la vista reservaba seis y
+podía lanzar `Cannot set properties of undefined (setting 'visible')`.
+
+## Correccion vigente de evoluciones - 14-09-2026
+
+Se corrigieron tres contratos que requerian comprobacion adicional:
+
+- `solar_crown` ya no dispara cuchillas hacia afuera. Al elegirse agrega tres
+  cuchillas y deja seis activas orbitando a radio fijo 94u. El dano proviene
+  del contacto orbital real y el primer posicionamiento no genera un golpe
+  fantasma desde la coordenada cero.
+- `compression_wave` captura el eje al comenzar el aviso y conserva esa misma
+  direccion durante el cast; la vista muestra ahora solo el frente de 110
+  grados, igual que la colision. El radio final visible/fisico queda en 320u
+  y el borde considera el radio completo de cada enemigo.
+- `polar_collapse` mantiene tres frentes convergentes, activa una atraccion
+  remota segura durante 0.3 s y deja el nucleo 0.42 s. El nucleo de 0.43 del
+  radio exterior (aprox. 64u en base) entrega dos pulsos retrasados; el frente
+  y los dos pulsos conservan el presupuesto de dano del cast. La vista muestra
+  triangulo, frentes y doble pulso.
+
+La auditoria unitaria ahora exige dano real de las doce ramas: Rail Lance,
+Pulse Volley, Solar Crown, Graviton Halo, Closed Circuit, Thunderhead, Twin
+Comet, Singularity Return, Echo Shock, Compression Wave, Event Horizon y
+Polar Collapse. Tambien comprueba que Rail Lance avance despues de disparar y
+libere su slot por TTL; no queda una bala congelada por la estela ni por el
+pool. El balance global de vida/dano sigue pendiente; la aprobacion humana de
+las seis evoluciones ya queda registrada en la decision vigente de este archivo.
+
+El compositor normal de cartas y sus maestrias post-evolucion ya estan
+integrados en los tres actos. La siguiente validacion humana debe revisar la
+rotacion inicial, la desaparicion de adquisiciones al completar tres armas,
+la pantalla de evolucion y la carta universal; el balance global de enemigos
+sigue deliberadamente pendiente.
+
+La ruta `weapon-path` conserva su recorrido comprimido de laboratorio y no
+representa la mano normal de campana. En la campana real el rango VII si se
+ofrece y habilita la carta hito. Las URLs
+`?evolution=<slug>&scenario=single|mass&debug=1` siguen disponibles para
+inspeccionar una rama ya aplicada, y ahora el laboratorio actualiza únicamente
+la familia de la evolución indicada.
+
+La implementación está validada automáticamente con typecheck, suite unitaria
+y smoke browser; cualquier cambio posterior de presentación o diversión en las
+evoluciones requiere una nueva aprobación humana. No ajustar aún la vida/daño
+global de enemigos ni cerrar EX-02c.
+
+## Histórico: EX-08-R — plan de rediseño, R1 parcial implementado — 14-09-2026
+
+Este bloque conserva contexto anterior al lote completo descrito al inicio.
+No interpretar sus pendientes de implementación como el estado actual de las
+seis rutas enfocadas. Consultar también la auditoría del 15-09-2026.
+
+**Ampliación más reciente:** [PROGRESION_ARMAS_V2.md](../../docs/design/PROGRESION_ARMAS_V2.md)
+define las 42 filas de rango I–VII, mejoras concretas y valores de prototipo.
+Se adopta secuencia fija por familia, con carta del siguiente rango; sustituye
+contar stacks libremente. Incluye migración de cartas, calibración Acto II,
+herencia de cada mejora hacia la evolución y pruebas. R1 ya tiene una ruta
+debug de Projectile; falta su validación humana y la integración normal de las
+tablas. El juego principal sigue en v1.
+
+El usuario probó evoluciones: aprueba Rail Lance/Pulse Volley; Solar Crown y
+Event Horizon no explican su utilidad, Compression Wave/Singularity Return
+atraen enemigos peligrosamente cerca, Polar Collapse no aporta diferencia.
+Las otras cinco rutas no tienen aprobación explícita. No cerrar EX-08.
+
+Por petición explícita esta entrega documenta cómo rediseñar las diez rutas
+restantes. La primera ruta modifica gameplay solo bajo el query debug descrito
+abajo; no altera la campaña normal. Leer plan §16.4–16.5/§22.1r y
+[EVOLUCIONES_V2.md](../../docs/design/EVOLUCIONES_V2.md), especificación para Luna con
+fases, geometrías, riesgos, cartas, visuales, caps y pruebas.
+
+R1 está parcialmente implementado con la ruta normal enfocada de Projectile.
+Siguiente paso: validar manualmente I–VI, la carta hito del nivel 7 y ambas
+evoluciones.
+Después de esa puerta se integra el inventario normal y se clona el contrato
+para la siguiente familia. Luego R2: Echo Shock en dos posiciones y Compression
+como frente saliente sin atracción. Entregar base/A/B y presión; esperar prueba
+humana antes de la siguiente pareja. Preservar Projectile y balance EX-02c
+diferido.
+
+R0 documental completado; R1 parcial implementado y R2–R7 pendientes. La ruta
+ya tiene pruebas unitarias, typecheck, build y un smoke browser inicial; la
+validación humana completa sigue pendiente. Los escenarios de evoluciones
+directas continúan siendo históricos.
+El comportamiento rechazado sigue en código hasta su implementación v2.
+
+> Estado operativo: R1 parcial implementado. La ruta `/?weapon-path=projectile&debug=1&quality=high`
+> permite validar Projectile rango por rango en una partida normal; falta la
+> validacion humana de I-VI, la carta hito del nivel 7 y ambas evoluciones.
+> Despues se clonara el contrato
+> para la siguiente familia.
+
+**Nueva ruta de prueba implementada:** `/?weapon-path=projectile&debug=1&quality=low`
+abre una partida normal con Projectile enfocado. Sus level-ups ofrecen una sola
+carta secuencial: rango II, III, IV y V; después VI deja listo el hito del nivel
+7 `Evolucion disponible`, que abre Rail Lance y Pulse Volley. El panel muestra
+`mode: weapon-path-projectile`, rango y paso.
+La ruta no usa escenarios, no da XP ni modifica el pool normal o el guardado.
+En el nivel 7, la carta hito abre Rail Lance/Pulse Volley, con `Volver` para
+restaurar la oferta anterior sin consumir la subida. El rango VII queda para la
+integración normal futura. La prueba
+browser verifica el arranque y el primer salto; la validación humana de los
+seis rangos base, el hito y las dos evoluciones sigue pendiente. Después de aprobar
+Projectile se clonará el patrón para la siguiente familia, una por una.
+
+## Histórico: EX-08d — lote completo de evoluciones implementado — 14-09-2026
+
+Por solicitud explicita del usuario se implementaron todas las evoluciones
+authored, una por una dentro del codigo y con sus pruebas, sin esperar a que el
+usuario valide cada ruta durante esta sesion. Esta decision sustituye para este
+lote la instruccion historica de abrir solo una evolucion por entrega; no cambia
+el balance diferido de EX-02c ni el limite de tres armas activas.
+
+Las seis familias tienen dos rutas mutuamente excluyentes: Rail Lance / Pulse
+Volley, Solar Crown / Graviton Halo, Closed Circuit / Thunderhead, Twin Comet /
+Singularity Return, Echo Shock / Compression Wave y Event Horizon / Polar
+Collapse. Cada una usa la simulacion real, pools fijos, cooldown por objetivo
+cuando aplica, y el boss queda inmune a fuerzas. El overlay de nivel 7 cambia a
+dos cartas, marca `EVOLUCION` y no ofrece reroll para no romper la decision.
+
+Para probar cualquier ruta directamente, con el servidor local activo:
+
+`http://localhost:5173/?evolution=rail-lance&debug=1&quality=high`
+
+Sustituir `rail-lance` por cualquiera de estos slugs: `pulse-volley`,
+`solar-crown`, `graviton-halo`, `closed-circuit`, `thunderhead`, `twin-comet`,
+`singularity-return`, `echo-shock`, `compression-wave`, `event-horizon` o
+`polar-collapse`. `quality=low` tambien esta disponible. El acceso prepara la
+familia base cuando hace falta, muestra la pareja correcta y al elegir una
+continua una run real del Acto II.
+
+Para probar cada evolucion por separado sin esperar al nivel 7, usar el mismo
+slug con `scenario=single` o `scenario=mass`:
+
+- `http://localhost:5173/?evolution=rail-lance&scenario=single&debug=1&quality=high`
+  aplica Rail Lance y deja un blanco durable.
+- `http://localhost:5173/?evolution=rail-lance&scenario=mass&debug=1&quality=high`
+  aplica Rail Lance y deja 56 blancos durables en tres anillos.
+
+Sustituir `rail-lance` por cualquiera de los doce slugs y `high` por `low`.
+Estos escenarios desactivan hazards y boss para aislar la lectura del arma; el
+panel debug muestra `mode: evolution-single`/`evolution-mass` y el conteo
+`enemies: 1/250`/`56/250`. La ruta sin `scenario` sigue siendo la prueba de la
+oferta real de dos cartas.
+
+Validacion automatica: typecheck correcto; suite completa **97 archivos / 379
+tests** correcta; build local correcto; y smoke browser completo **37/37**, con
+las 24 rutas de laboratorio. La ficha de contrato, valores authored, checklist humano y todos
+los accesos viven en
+[`docs/balance/EX-08d-weapon-evolutions-batch.md`](../../docs/balance/EX-08d-weapon-evolutions-batch.md).
+La validacion humana en PC/movil y Low/High queda para el regreso del usuario;
+no se debe ajustar todavia el dano o la vida general de enemigos.
+
+## EX-08c — cartas de armas disponibles para prueba — 14-09-2026
+
+`pulse_ring` y `magnetic_charge` ya forman parte del catálogo normal de
+level-up, con iconos y aplicación real a `CombatSimulation`. Su rotación
+authored los ofrece respectivamente en los niveles 7 y 8 cuando siguen siendo
+aplicables; el límite global de tres armas continúa vigente y una carta no
+puede saltárselo.
+
+Para probarlas dentro de una run real sin esperar a esos niveles, se añadió una
+entrada de desarrollo que abre el overlay normal con la carta solicitada al
+frente (las otras dos opciones siguen siendo cartas válidas):
+
+- `/?card=pulse-ring&debug=1&quality=low|high`
+- `/?card=magnetic-charge&debug=1&quality=low|high`
+
+La prueba no activa el arma por fuera de la carta, no modifica daño/cadencia ni
+desactiva enemigos o hazards. Seleccionar la carta cierra el overlay y deja la
+run funcionando con el arma elegida. El parámetro sólo se acepta junto a
+`debug=1`; sin él la partida conserva su flujo normal de menú.
+
+Validación automática añadida: los tests de catálogo confirman la rotación de
+niveles 7–8, `UpgradeApplier` confirma la prioridad sin romper el cap, y el
+smoke browser comprueba la selección de ambas cartas dentro de una run real.
+La validación humana de Pulse Ring y Magnetic Charge en PC/móvil y Low/High
+sigue siendo la siguiente puerta antes de abrir sus evoluciones.
+
+## Pulido visual Pulse Ring — 14-09-2026
+
+Carga con cuatro compuertas facetadas convergentes, onda con caras oscuras,
+bisel cálido y filo marfil, encendido breve y fragmentos en disipación.
+Ocho Graphics reutilizados, sin cambiar daño, empuje, cadencia ni radio.
+Receta actualizada en docs/design/PULSE_RING_WEAPON_FX_PREMIUM.md.
+Pendiente aprobación visual del usuario; Magnetic Charge fue aprobada por él.
+
+## Corrección visual Magnetic Charge — 14-09-2026
+
+Corregido el desfase: piezas locales centradas en cero, colocadas en el destino
+antes de rotar. Vuelo con elevación y escala parabólica visual, núcleo facetado,
+estela corta, campo que converge y banda translúcida con plasma y límites reales
+legibles también en Low. Validación estética del usuario y rendimiento móvil
+siguen pendientes; ver la receta MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.
+
+## EX-08b — Magnetic Charge de jugador EN CURSO — 14-09-2026
+
+Por instrucción explícita del usuario, `magnetic_charge` reemplaza uno por uno
+a Resonant Aura como sexta familia. La carga viaja a un destino remoto aunque
+no haya enemigos, atrae enemigos comunes durante una ventana corta y detona en
+una banda annular de 62–148 u con centro seguro. El boss puede recibir daño de
+la banda, pero nunca es desplazado.
+
+Acceso directo: `/?weapon=magnetic-charge&debug=1&quality=high` (también
+`low`). El drill crea ocho blancos estáticos, desactiva el resto del arsenal y
+hazards, y muestra `mode: magnetic-charge-drill` junto a
+`magnetic: phase | x,y`.
+
+La presentación usa ocho Graphics persistentes: estela, baliza, campo,
+backplate, banda, rieles, núcleo y residuo. La geometría del destino se
+construye una vez por `sequence`; Low conserva baliza, núcleo y banda de daño,
+High agrega detalle sin cambiar la lectura. La receta está en
+[`MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md`](../../docs/design/MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md)
+y el contrato en
+[`EX-08b-magnetic-charge-weapon.md`](../../docs/balance/EX-08b-magnetic-charge-weapon.md).
+
+Validación automática: build local, typecheck, 362 tests y smoke dirigido pasan.
+Falta la
+validación humana en PC/móvil y Low/High. Las evoluciones `event_horizon` y
+`polar_collapse` quedan bloqueadas hasta aprobar la base; el balance final de
+EX-02c sigue separado.
+
+## EX-08a — Pulse Ring de jugador EN CURSO — 14-09-2026
+
+La primera arma faltante ya tiene una implementacion funcional separada del
+hazard Pulse Ring del Acto II. La carta `pulse_ring` desbloquea una quinta
+familia de arma y respeta el limite vigente de tres armas activas. Su behavior
+puro captura el origen del player, ejecuta `telegraph → active → recovery`,
+cruza la banda por radio barrido, dana una vez por enemigo y aplica un impulso
+visible de 10 u a objetivos vivos. No modifica el balance diferido de EX-02c.
+
+La vista usa una carcasa de tinta, armadura, manto cian, filo marfil, crestas
+geometricas y riel de recuperacion. Construye los paths una vez por sequence;
+Low mantiene la lectura jugable y reduce ornamentos. La guia para futuros
+modelos es [`PULSE_RING_WEAPON_FX_PREMIUM.md`](../../docs/design/PULSE_RING_WEAPON_FX_PREMIUM.md)
+y la ficha de contrato es [`EX-08a-pulse-ring-weapon.md`](../../docs/balance/EX-08a-pulse-ring-weapon.md).
+
+Acceso directo: `/?weapon=pulse-ring&debug=1&quality=high` (tambien `low`).
+El drill crea siete blancos estaticos, desactiva otras armas y hazards, y usa
+una cadencia de 1.6 s para que el cast aparezca rapido. `?pulse=1` sigue siendo
+el drill del hazard enemigo, no el arma.
+
+Validacion automatica: typecheck, suite completa (93 archivos / 355 tests) y
+smoke browser dirigido del drill High (1/1) pasan. La captura confirma el
+arranque del modo, siete blancos y ausencia de errores de runtime. La
+validacion visual humana en PC y movil queda pendiente antes de abrir las
+evoluciones de Magnetic Charge o cualquier otra evolucion.
+
+Actualizacion visual posterior: Pulse Ring ahora usa una apertura de reactor
+de cuatro compuertas al cargar, una onda violeta/ambar de paneles separados
+con dientes de expansion durante el ataque y ecos fragmentados en recovery.
+No comparte la silueta de Shield ni el ring continuo del hazard radial; se
+mantienen ocho Graphics persistentes y la misma simulacion.
+
+## EX-07 — Acto II Angular APROBADO — 12-09-2026
+
+El usuario aprobó explícitamente el Acto II en composición, identidad espacial
+y game feel. EX-07e queda **APROBADO/CERRADO** con sus tres calibraciones de
+entrada, Orbiter, Charger, Splitter, Prism Weaver, Pulse Ring, Angular Sweep,
+arena cambiante y Orbital Warden. El balance final de daño, vida, resistencia,
+spawn y porcentajes continúa separado en EX-02c.
+
+La arena cambia cada 40 s: 40 s hacia cuadrado, 80 s hacia círculo, 120 s hacia
+hexágono, 160 s hacia cuadrado y 200 s hacia hexágono. El cierre pre-boss
+empieza a los 248.05 s y termina a los 250 s hacia círculo, dejando 10 s
+estables antes del Warden a los 260 s. Cada cambio tiene aviso de 1.20 s y
+morph de 0.75 s.
+
+Hallazgo `VIS-A2-01`: el destello ligero residual del cuadrado no viene del
+antiguo pulso de opacidad, ya eliminado y cubierto por test. Las ventanas
+cuadradas (`40–80 s` y `160–200 s`) contienen exactamente las expansiones
+globales de `60 s` y `180 s`; en esos momentos coinciden crecimiento/redibujado
+de frontera durante `1.25 s`, resonancia de `2.8 s` y onda de `0.58 s`. Los
+lados planos hacen más visible la suma de capas transparentes. No cambia
+frontera, colisión, daño ni rendimiento observado, así que se acepta como deuda
+visual menor no bloqueante.
+
+La recomendación oficial de PixiJS 8 es evitar reconstruir `Graphics` cada
+frame, usar `clear()` con moderación y considerar que las transparencias se
+mezclan por primitiva. Una iteración futura puede desacoplar el FX de expansión
+del marco estable o medir `GraphicsContext`; no debe ocultarlo con filtros ni
+retirar feedback. Fuente:
+https://pixijs.com/8.x/guides/components/scene-objects/graphics#performance-best-practices
+
+Validación automática de la aprobación original: **20/20** pruebas dirigidas;
+typecheck, **92 archivos / 346 tests**, build local y smoke de gating Angular
+pasaron. Persiste
+únicamente el warning conocido del chunk principal mayor de 500 kB. El
+siguiente bloque habilitado es EX-08; EX-02c permanece diferido y Acto III
+continúa en EX-10.
+
+## Refinamiento Orbiter — cadencia temporal y arco ampliado — 14-09-2026
+
+La revisión de la campaña detectó dos fallos de lectura: el objetivo lateral
+authored podía parecer que huía del jugador y el requisito de proximidad hacía
+que el ataque no apareciera cuando el Orbiter estaba lejos. Ya quedó corregido:
+
+- durante `approach`, cada nave persigue directamente al player mientras
+  avanza `attackDelaySeconds = 1.8`; lanza sin lado estable ni requisito de
+  distancia;
+- al iniciar `telegraph`, captura la posición actual de la nave y crea una ruta
+  local de radio 112 u y arco 135°. La curva comienza exactamente donde está
+  el casco, incluso si está lejos, en contacto o delante del player;
+- una vez anunciado, el ataque pasa a `commit` sin consultar la posición del
+  player: la nave recorre la ruta capturada más rápido y de forma más extensa,
+  sin homing. `recovery` sigue al player durante 1.1 s y reinicia el reloj para
+  el siguiente lanzamiento;
+- el telegraph conserva las ocho plumas premium, pero ahora se traslada al foco
+  local mediante una única transform. El `root` queda en `(0, 0)` y el slot
+  recibe las coordenadas mundiales del foco; así se evita el desfase por doble
+  traslación. No crea un collider ni redibuja un anillo global;
+- se mantiene `commitCap = 1`, el daño de contacto del casco y todo el balance
+  provisional de EX-02c.
+
+La regresión cubre persecución durante la espera, lanzamiento remoto, segunda
+secuencia después de recovery, variación entre Orbiters, compromiso durante
+telegraph aunque el player se coloque delante, contacto, salida de un
+solapamiento y estabilidad a 30/60/144 Hz; la vista verifica el traslado y la
+reutilización de la geometría. Typecheck y 14 pruebas dirigidas están verdes;
+el smoke de Playwright del drill también pasa. La validación humana del usuario
+incluye el drill y una run Angular en PC y móvil, con camping en esquina,
+cadencia temporal y salida táctil durante el arco.
+La validacion humana del usuario confirma la lectura, evasion, cadencia temporal
+y amenaza del Orbiter. EX-07 queda **APROBADO/CERRADO** en composicion,
+identidad, game feel y comportamiento del Acto II. EX-02c sigue diferido para
+la pasada final de balance.
+
+## Siguiente bloque operativo — EX-08
+
+El siguiente trabajo es niveles y evoluciones, una ruta por entrega. Primero se
+debe cerrar DEC-03: mapa de cartas a niveles 1–7, elegibilidad de nivel 7,
+presentacion de dos evoluciones mutuamente excluyentes, aplicacion unica y
+reroll. No se implementaran todas las evoluciones juntas ni se tocara el
+balance final de EX-02c. El orden de dependencia comienza con Projectile/Orbit;
+despues Boomerang, Pulse Ring en Acto II y Resonant Aura en Acto III.
+
+Decision de orden: EX-08 se probara primero dentro del Acto II Angular, usando
+sus enemigos, formas de arena y hazards ya aprobados como escenario de presion.
+La primera entrega sera una sola ruta de Projectile u Orbit con una run
+reproducible; despues se comparara contra la base antes de abrir otra ruta.
+
+## EX-07e — Acto II conectado a campaña — 12-09-2026
+
+Esta sección conserva el detalle de implementación; su estado pendiente quedó
+reemplazado por la aprobación registrada arriba. El Acto II (`angular`) consume
+Orbiter, Charger, Splitter, Prism
+Weaver, Pulse Ring, Angular Sweep y Orbital Warden a los 260 s; Acto I conserva
+su composición radial y no se tocó el balance final de EX-02c.
+
+La experiencia pública queda en un solo flujo: se empieza en Acto I y, al
+vencer su boss, la intermisión ofrece tres calibraciones authored para entrar
+al Acto II desde cero (`Projectile`, `Orbit` o `Chain`). No se hereda la build
+del Acto I y se reinicia la progresión de nivel; la recompensa de NOVA del acto
+ya liquidado sigue siendo idempotente. El selector de actos que permanece en el
+menú sólo sirve para repetir actos ya desbloqueados con esas mismas tres
+calibraciones; no hay elección visible entre `Quick Act` y `Expedition`.
+El save esquema 6 añade únicamente `unlockedActs` y migra saves anteriores de
+forma segura.
+
+Validación automática de esa entrega: 92 archivos y 339 tests verdes,
+typecheck, build local y smoke browser dirigido del Prism Weaver en Chromium
+Low/High. Las capturas confirman que el abanico visible nace de la nave cerca
+del borde. La aprobación humana posterior cierra EX-07d/EX-07e; las runs
+cuantitativas restantes alimentarán EX-02c, que queda para el final.
+
+La integracion de campana quedo comprobada ademas en la simulacion real:
+`AngularActDirector` selecciona el Prism Weaver desde la fase tardia de 165 s,
+antes del boss de 260 s, respetando su `activeCap`. No es necesario activar
+`?prism=1` para que aparezca; ese parametro solo aisla el drill visual.
+La prueba dirigida del director, spawn profile y simulacion Angular queda en
+35 tests verdes.
+
+Corrección vigente Prism Weaver: el ataque de tres radios se emite desde
+`state.x/state.y`, tanto en la colisión como en el telegraph Pixi. El centro de
+la arena sólo elige los puntos de aproximación; nunca vuelve a ser el origen
+visual o de daño. La segunda pasada premium fija su identidad de **telar
+astral**: el asset de 21 primitivas tiene contra-peso, tres brazos abiertos con
+vacíos, huso de planos e iris prismático; el cast usa canal profundo, manto,
+rieles, trama diagonal cacheada, filamentos segmentados, core afilado, collar
+mecánico, terminales estratificados y doble ritmo de pulsos (Medium/High).
+Low conserva el canal y la silueta honesta pero omite trama, filamentos,
+cometa y edge decorativos. Toda la geometría se cachea por
+cast/radio. La regresión está en
+`PrismWeaverBehavior.test.ts` y `PrismWeaverTelegraphView.test.ts`.
+
+La validación posterior aprobó la composición y la lectura del Prism Weaver.
+El próximo bloque operativo es EX-08; Acto III permanece en EX-10.
+
+## Mejora de previsualización Angular — 12-09-2026
+
+La previsualización y el `telegraph` real del hazard Angular fueron refinados:
+la advertencia ya no depende de dos líneas radiales continuas. Usa una cámara
+de calibración muy tenue, rieles segmentados con capas metal/ámbar, remates en
+los extremos, emisor de origen y chevrones tangenciales de dirección. La
+geometría sigue siendo la misma del sector comprometido; no se modificaron
+daño, colisión, duración ni ruta. `docs/visual/angular-reference.html` ahora
+muestra los estados reales `telegraph`, `active` y `recovery`, y el capturador
+incluye el drill `?angular=1&debug=1`.
+
+Validación confirmada: typecheck correcto, 90 archivos y 325 tests verdes,
+build local correcto, smoke del drill Angular 1/1 y captura desktop/móvil de la
+lámina y del drill sin errores de runtime. Falta la aprobación visual humana en
+la partida y la revisión física de rendimiento en móvil.
+
+## Movimiento del boss y Charge comprometido — 12-09-2026
+
+Orbital Warden ya no se queda estático entre ataques: `BossSystem` le da una
+deriva orbital lenta, determinista y sin homing durante `intro`, `sweep`, `ring`
+y `recovery`. La deriva se inicia con el radio real de spawn y, después de
+Charge/Curve, continúa desde el endpoint real; no vuelve a la órbita anterior
+ni genera un salto visual. Durante `charge`/`curve` (telegraph y active) y
+`replicas` el movimiento ambiental queda bloqueado para que el aviso coincida
+con la acción.
+
+La embestida queda comprometida al comenzar su aviso: `chargeAimX/Y` se captura
+una sola vez y la transición a `charge-active` no se cancela aunque el jugador
+ya esté sobre la ruta. Se añadieron regresiones para movimiento ambiental,
+continuidad del endpoint y Charge en trayectoria. Core Sentinel conserva su
+comportamiento de Acto I. No se tocaron daño, vida, spawn, cadencia ni EX-02c.
+
+Pendiente de esta entrega: ejecutar validación automática final y revisar en
+`?warden=1&debug=1&quality=low|medium|high` que el movimiento se sienta
+intencional, que el aviso permanezca legible y que la embestida cruce al jugador
+sin cancelarse. Después continúa EX-07e; la aprobación humana de EX-07d sigue
+pendiente.
+
+## Corrección de réplicas del Warden — 12-09-2026
+
+La implementación de Astra sí estaba integrada, pero las réplicas pequeñas
+tenían un defecto de asset: declaraban `viewBox="-32 -32 64 64"` mientras sus
+paths aún usaban las coordenadas del boss grande (`aprox. -54..48`). Al crear
+las texturas con el frame común de 64 px, Pixi recortaba brazos y casco; por eso
+nacían incompletas/cortadas en partida.
+
+Se corrigieron las cinco fuentes en
+`src/assets/svg/enemies/warden-replica/` reduciendo explícitamente cada
+coordenada de sus paths al 55%. El intento anterior con
+`<g transform="scale(0.55)">` no surtía efecto en Pixi: su parser
+`Graphics.svg()` recorre el grupo, pero no aplica su `transform`. El ancla, el
+frame, la escala runtime `0.72`, la colisión y la lógica de spawn no cambiaron.
+El master sigue siendo la concatenación exacta de `rear → wings → hull → cockpit`.
+
+Validación confirmada después del arreglo:
+
+- prueba dirigida: 12/12 tests;
+- build local: typecheck, 90 archivos y 325 tests, Vite correcto;
+- captura actualizada de la lámina desktop/móvil en
+  `test-results/warden-reference/`, con ambas copias completas visibles;
+- regresión nueva en `SvgEnemyAssets.test.ts` comprueba que ningún valor de
+  path de las cinco fuentes salga de `[-32, 32]`.
+
+Pendiente para Luna: comprobarlo todavía en una run real en Low/Medium/High y
+en móvil, especialmente mientras las copias reciben daño y al morir. No cerrar
+EX-07d sólo por estas pruebas visuales; falta tu aprobación en partida. El
+posible salto de orientación al morir del boss principal sigue siendo un tema
+separado y documentado abajo.
+
+## Corrección de posición de réplicas — 12-09-2026
+
+La captura del juego real reveló un segundo caso independiente: el Warden podía
+estar cerca del borde y el offset fijo de 80 unidades colocaba una réplica fuera
+del radio útil. La textura ya cabía en su frame, pero la entidad se dibujaba
+fuera de la arena y por eso parecía cortada. `BossSystem` ahora proyecta cada
+punto de aparición al radio `arenaRadius - 30`; conserva el ángulo y la
+separación tanto como sea posible, y no modifica daño, colisión ni spawn count.
+
+La regresión correspondiente fuerza un apuntado hacia el borde y comprueba
+ambas posiciones. Luna debe volver a revisar el primer frame de
+`replicas-active` en partida; si aún hay una pieza separada, distinguirla del
+efecto de lanzamiento o de muerte antes de tocar la escala del SVG.
+
+## Revisión Warden y angular — 12-09-2026 (vigente)
+
+El usuario rechazó la primera ciudadela y los efectos planos. Warden ahora
+es un astrolabio de tres brazos con huso central, 24 paths y copias de la misma
+silueta. Charge/Curve conservan su endpoint durante recovery; Charge termina
+dentro de la arena y Curve nace desde el radio real, corrigiendo el teletransporte
+a la órbita anterior. WardenAttackView anima geometría preconstruida: plumas
+de aviso, estelas laminadas afiladas y cámaras de lanzamiento con mordazas.
+El angular usa tres láminas curvas, emisor y campo tenue que comunica todo el
+sector dañino, sin escalarlo durante active.
+
+Guía vigente: [ACTO_II_BOSS_FAMILY_PREMIUM.md](../../docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
+Lámina: /docs/visual/warden-reference.html; captura con capture-warden.mjs.
+Probar ?warden=1&debug=1 y ?angular=1&debug=1 en las tres calidades.
+La aprobación artística anterior no se extiende a esta revisión. EX-07d sigue
+pendiente de validación humana; EX-07e campaña sigue después; EX-02c diferido.
+
+### Relevo de sesión para Luna — qué falta exactamente
+
+La implementación de esta revisión está escrita; no rehacerla desde cero ni
+tomar las descripciones históricas de abajo como la receta visual vigente.
+Leer primero la guía ACTO_II_BOSS_FAMILY_PREMIUM enlazada arriba e inspeccionar
+el diff de Git, conservando los cambios existentes del usuario.
+
+Evidencia recogida en esta sesión:
+
+- Un build local completo pasó con 90 archivos y 323 tests; incluye las nuevas
+  regresiones de posición al terminar Charge/Curve. Después de los últimos
+  retoques también pasó typecheck.
+- Se ejecutaron capturas desktop/móvil de la lámina y se inspeccionaron sus
+  imágenes. Esto NO equivale a validación de rendimiento ni de juego móvil.
+- Se lanzó otro build final, pero su resultado no quedó recuperable al cerrar
+  la sesión. No presentarlo como una segunda ejecución confirmada.
+- No se ejecutó un smoke de navegador nuevo para esta revisión.
+
+Pendientes, en orden:
+
+1. Ejecutar `npm run build:local` y después los smoke dirigidos:
+   `npx playwright test --reporter=line --grep "familia de ataques premium|drill Angular"`.
+   Comprobar que el filtro encuentre los tests; si cambiaron sus títulos,
+   localizar los equivalentes en tests/browser antes de ejecutar.
+2. Revisar `BossShipVisual.playDefeat`: actualmente reinicia root.rotation a
+   cero y podría producir un salto de orientación al morir. Conservar la
+   orientación durante defeat si se confirma; resetearla en reset.
+3. Recapturar `node docs/visual/capture-warden.mjs`: después de la última
+   captura se corrigió el origen del aviso curvo y se añadieron copias pequeñas
+   a la lámina. Las capturas anteriores no muestran esos últimos ajustes.
+4. Probar en partida `?warden=1&debug=1` y `?angular=1&debug=1`: endpoint sin
+   retorno, continuidad del arco, dos réplicas destructibles y sus cámaras,
+   correspondencia daño/sector angular, pausa/reinicio y cambio de boss.
+   Revisar Low/Medium/High en PC y móvil; medir rendimiento y pedir aprobación
+   visual al usuario. Revisar también reduced-motion en los FX nuevos.
+5. Sincronizar, si procede, las descripciones antiguas de ANGULAR_ART_PREMIUM,
+   BOSS_FX_PREMIUM, la ficha EX-07d y el README del Warden con la guía vigente:
+   la nueva familia tiene 24 paths, no los 22 de la primera entrega. Conservar
+   el historial de mediciones como histórico, no como prueba de esta revisión.
+
+Archivos clave: BossSystem.ts, WardenAttackView.ts, BossView.ts,
+AngularSweepView.ts, BossShipVisual.ts, los SVG orbital-warden y warden-replica,
+y docs/visual/warden-reference.html. WardenAttackView preconstruye 43/51/59
+Graphics por calidad; esto es un presupuesto de objetos, NO una medición FPS.
+Los patrones antiguos sweep/ring de BossView aún reconstruyen geometría acotada;
+no afirmar que todo el renderer del boss sea estático.
+
+El servidor de desarrollo se inició en http://127.0.0.1:5173/; comprobar que
+siga vivo antes de usarlo. No asumir que sobrevive al cambio de sesión.
+No cerrar EX-07d como aprobado ni empezar EX-07e por inferencia: completar esta
+validación y retomar la puerta vigente. Balance EX-02c continúa diferido.
+
+## Actualización EX-07d — Orbital Warden, familia de patrones — 12-09-2026
+
+Se amplió el boss del Acto II sin alterar Core Sentinel ni cerrar el balance
+diferido de EX-02c. El ciclo authored de Orbital Warden ahora es
+`sweep → charge → curve → replicas → ring`: reutiliza el riel angular, fija una
+embestida tipo Charger, recorre un arco tipo Orbiter y lanza dos réplicas
+miniatura destructibles tipo Splitter, además del anillo con corredor móvil.
+
+Charge, Curve y Replicas mantienen el origen bloqueado durante su aviso para
+que el telegraph coincida con la acción real. Charge y Curve desplazan al boss
+y hacen daño desde `BossSystem`; Replicas consumen el pool global, pueden morir
+con las armas existentes, no se duplican y usan el FX de muerte desacoplado.
+El boss tiene una familia SVG propia y cacheada en
+`src/assets/svg/enemies/boss/orbital-warden*.svg`; las copias viven en
+`src/assets/svg/enemies/warden-replica/`. Los avisos premium viven en
+`BossView`: riel segmentado, nariz direccional, arco limitado, rieles curvos y
+marcadores rombo/crosshair sin líneas de alcance falsas.
+
+La guía neutral para Luna y futuras iteraciones es
+[`docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md`](../../docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md);
+la ficha de balance es [`docs/balance/EX-07d-angular-warden.md`](../../docs/balance/EX-07d-angular-warden.md).
+La validación automática dirigida final queda en 49/49 pruebas verdes; la puerta
+completa posterior queda en 90 archivos y 321 pruebas verdes con typecheck y
+build Vite correctos. Falta la prueba humana en desktop/móvil y
+Low/Medium/High del ciclo completo, seguida de la composición real de Acto II.
+Después de esa puerta, el siguiente bloque sigue siendo EX-07e: campaña,
+selector/gating, transición I→II, recompensa y runs. No tocar aún vida/daño
+final ni spawn de EX-02c.
+
+## EX-07d — hazard angular y Orbital Warden — 12-09-2026
+
+Se implementó el siguiente bloque habilitado del plan como consumidor aislado.
+`AngularSweepHazard` compromete un sector durante `telegraph`, alterna el
+sentido y rota una hoja de daño por un arco limitado durante `active`; aplica
+un solo hit por cast y deja salida lateral. `AngularSweepView` conserva la
+señal en Low/Medium/High con base tinta, manto metálico, cuerpo coral, núcleo
+marfil, bordes y chevrones, sin falsos refugios, filtros ni paths reconstruidos
+por frame.
+
+`BossDefinition` distingue `core-sentinel` y `orbital-warden`. Orbital Warden
+reutiliza la interfaz y el ensamblaje cacheado del boss, pero el riel gira en
+`sweep-active`, el corredor seguro se desplaza en `ring-active` y la vista lo
+identifica por nombre. Core Sentinel conserva su órbita authored y sus hazards
+sin rotación: el Acto I no cambió.
+
+Drills reproducibles:
+`?angular=1&debug=1&quality=low|medium|high` y
+`?warden=1&debug=1&quality=low|medium|high`. El primero muestra sólo hazard y
+player; el segundo sólo boss y hazard, sin oleadas, economía, menú ni save.
+Typecheck, 12 tests específicos, build development y 2 smoke browser dirigidos
+pasaron. Las capturas headless Low fueron inspeccionadas; no son benchmark.
+La ficha es [`docs/balance/EX-07d-angular-warden.md`](../../docs/balance/EX-07d-angular-warden.md).
+
+Estado histórico de esa entrega: **AUTOMÁTICO OK; validación humana
+pendiente**. La aprobación integrada actual del Acto II está al inicio de este
+archivo y sustituye esa puerta. EX-02c sigue diferido; no tocar vida, daño ni
+spawn final.
+
+## EX-07c — Pulse Ring angular base — 12-09-2026
+
+Se incorporó la base del hazard Angular como drill aislado. `PulseRingHazard`
+usa `telegraph → active → recovery`, alterna el recorrido radial y muestra una
+abertura sectorial que gira mientras la banda activa hace daño. El cast aplica
+como máximo un hit; si el jugador queda atrapado, el empuje radial es limitado
+y pasa por el mismo clamp de arena. La geometría reutiliza `RadialPulseView`
+pero omite físicamente la abertura: no se pinta una falsa superficie segura.
+
+Se puede probar con `?pulse=1&debug=1&quality=low|medium|high`. El drill no
+crea enemigos, boss, XP, NOVA ni selección de actos. La ficha completa vive en
+[`docs/balance/EX-07c-pulse-ring.md`](../../docs/balance/EX-07c-pulse-ring.md).
+
+Validación automática específica: hazard puro, integración de
+`CombatSimulation` y regresión de `RadialPulseView`, 28 tests verdes. Falta
+validación humana en desktop/móvil de comprensión, tiempo de reacción,
+seguimiento de la abertura, empuje y legibilidad Low/High. El siguiente ID es
+**EX-07d**: hazard Angular y Orbital Warden; el selector/gating permanece
+después de completar el consumidor de campaña y no se crea un Acto II vacío.
+
+## EX-07b — Splitter angular premium — 11-09-2026
+
+Se incorporó el tercer prototipo Angular como una entrega aislada. Splitter es
+una nave de fractura, distinta del arco del Orbiter y del ariete del Charger:
+su casco diamante tiene una costura luminosa, placas gemelas y núcleo dual.
+El paquete SVG vive en `src/assets/svg/enemies/splitter/` con master Low y
+cuatro piezas cacheadas; su ficha está en
+[`docs/design/EX-07b-splitter.md`](../../docs/design/EX-07b-splitter.md).
+
+La muerte de un padre de profundidad 0 crea dos hijos laterales de profundidad
+1. Los hijos no se dividen. `EnemySystem` comprueba el cap de familia y cada
+slot del pool antes de adquirirlo, por lo que la fractura no puede superar la
+capacidad global. El drill `?splitter=1&debug=1&quality=high` conserva autofire
+para que la transición pueda probarse sin esperar al Acto II; no cambia las
+oleadas de Acto I ni el balance final de vida/daño.
+
+Integración pendiente de aprobación humana: comparar 32/64/96 px, silueta y
+partida en Low/High, verificar que la separación se entiende bajo presión y
+probar en móvil. EX-07b sigue abierto hasta validar la composición Angular real;
+el siguiente paso técnico es EX-07d, no selector/gating prematuro ni alterar el
+balance diferido de EX-02c.
+
+## Revisión visual Angular — 11-09-2026
+
+Charger reconstruido con proa cerámica centrada, estabilizadores titanio y
+reactor ámbar; Orbiter conserva su nave; Splitter añade casco fracturado,
+placas gemelas y núcleo dual. Aviso Charger: aletas cortas de energía
+convergentes, sin alcance completo; Orbiter: plumas curvas discontinuas que
+se apagan al pasar; Splitter comunica la separación mediante dos hijos
+laterales, sin línea de alcance. Guía vigente:
+[ANGULAR_ART_PREMIUM.md](../../docs/design/ANGULAR_ART_PREMIUM.md).
+Comparador de producción: /docs/visual/angular-reference.html.
+Pendiente aprobación humana de esta revisión; no cerrar EX-07b por tests verdes.
+
+## Decisión de cadencia Acto I — 11-09-2026
+
+- El usuario probó `chaos` y aprobó que se convierta en la cadencia principal:
+  los intervalos de rayos y pulsos quedan reducidos a un tercio sin modificar
+  daño, vida, spawn, telegraph, recuperación, refugios ni boss.
+- El primer disparo y el arbitraje se conservan. El perfil `authored` queda
+  disponible únicamente como control histórico mediante `?hazards=authored`.
+- El baseline anterior de dos runs pertenecía al ritmo authored y no se mezcla
+  con la nueva línea base. Se actualizó el storage a v2; las diez runs de EX-06d
+  deben comenzar de nuevo con `?baseline=1` en el perfil principal.
+- EX-06d sigue EN CURSO: la aprobación de ritmo no sustituye las diez runs ni
+  la validación de legibilidad, evasión, móvil y cierre del acto.
+- Las dos runs compartidas quedan aceptadas como validación reducida de
+  estabilidad/cierre: victorias con boss derrotado, High, 59.97 FPS, 11–12
+  enemigos, 20 proyectiles y 45–47 FX. Las ocho restantes quedan PENDIENTES
+  por decisión de producto y no bloquean EX-07a; no se presentan como muestra
+  estadística de diez runs ni como aislamiento perfecto de Chaos.
+- EX-07a ya tiene consumidor directo mediante
+  `?calibration=projectile|orbit|chain`: aplica la plantilla una sola vez al
+  iniciar la run y `?debug=1` la muestra. La selección visual y el gating se
+  difieren hasta que exista el consumidor real de Acto II: mostrarlos ahora
+  concedería una build superior a Acto I y contaminaría su balance. No se crea
+  todavía un Acto II vacío, save nuevo o balance.
+- EX-07b ya tiene ficha e implementación aislada de Orbiter, Charger y Splitter.
+  Orbiter persigue durante un reloj y compromete un arco local anunciado de
+  135° desde donde se encuentre; Charger fija una embestida; y
+  Splitter crea dos hijos laterales sólo al morir el padre. Sus drills no
+  contaminan Acto I: Orbiter/Charger mantienen el objetivo para leer la ruta y
+  Splitter conserva autofire para demostrar la fractura. Automático OK; falta
+  validación humana y consumidor Angular real. Pulse Ring ya tiene una base
+  aislada en EX-07c; el hazard Angular y Orbital Warden no entran aún en este
+  incremento.
+- Charger es el segundo prototipo Angular aislado: fija una línea de embestida
+  durante su telegraph y no corrige después. Probar con
+  `?charger=1&debug=1&quality=high`; la ficha y pendientes viven en
+  [`docs/design/EX-07b-charger.md`](../../docs/design/EX-07b-charger.md).
+- Se corrigió el destello rosa de salida del cañón: `PlayerView` convertía el
+  origen sólo con la rotación del casco y lo rotaba una segunda vez cuando el
+  tiro apuntaba a otra dirección. Ahora usa la rotación mundial efectiva del
+  flash. La regresión cubre casco hacia la derecha con tiro hacia arriba;
+  gameplay, daño y estela de proyectil no cambian.
+
+## Guía reutilizable para otros proyectos — 11-09-2026
+
+- Se recopiló en [`docs/GUIA_PORTABLE_GAMEDEV_PREMIUM.md`](../../docs/GUIA_PORTABLE_GAMEDEV_PREMIUM.md)
+  lo transferible del proyecto: separación de capas, loop determinista,
+  responsive móvil, elección SVG/PNG/Graphics, regla de subpaths de PixiJS,
+  recetas de FX premium, telegraphs, arena, fondos, UI, audio, meta, anuncios,
+  guardado, plataformas y validación.
+- El documento distingue principios generales de ejemplos propios de Geometry
+  Survivor. Puede copiarse al proyecto nuevo y adaptarse sin arrastrar nombres,
+  siluetas, valores de daño ni presupuestos que no hayan sido medidos allí.
+
+## Validación y promoción de cadencia Acto I — 11-09-2026
+
+- Las runs #1 y #2 del baseline actual son victorias a 59.97 FPS, con 11–12
+  enemigos, 20 proyectiles y 45–47 FX. Confirman estabilidad y baja variación
+  del escenario, pero no sustituyen la puerta humana de diez runs: esa puerta
+  mide también comprensión, comodidad, plataforma y resultado, no sólo FPS.
+- No se mezclan los dos registros authored con el nuevo baseline. Las diez runs
+  formales deben continuar con `?baseline=1` usando el perfil principal chaos;
+  el storage v2 las separa del control histórico.
+- El usuario probó `?hazards=chaos&debug=1&quality=high` y aprobó su ritmo para el
+  acto. Reduce a un tercio los intervalos de rayos y pulsos; la ventana inicial
+  y el arbitraje permanecen intactos, así que la frecuencia real puede quedar
+  por debajo de tres veces.
+- Ficha y checklist: `docs/balance/EX-06d-hazard-cadence-experiment.md`. La
+  aprobación de ritmo no cierra EX-06d: todavía deben registrarse legibilidad,
+  tiempo de respuesta, bolsillos seguros, dispositivo y resultado en las diez
+  runs nuevas.
+
+> **Último handoff operativo (10-09-2026):** EX-03 está cerrado con las diez runs, economía/rewarded, controles, stress PC y validación cualitativa S25+. EX-05 Búmeran queda aprobado para este hito por validación humana bajo movimiento, otras armas y presión; EX-05e se difiere como auditoría no bloqueante. EX-06a/b/c están automáticos OK: Radial tiene pulso con evasión real y una intermisión segura al vencer al boss. El siguiente ID es EX-06d, validación humana completa del acto. EX-02c (balance global de daño/vida) continúa pendiente. La estabilización de CI está en sección 86 y `docs/CI_DEPLOY.md`; fondos: Flor del Ocaso (§84), Nacre; arena: Aster Loom (§82).
+
+## Revisión de onda radial premium — 10-09-2026
+
+- Desvío visual solicitado durante la validación de EX-06d. Pulse Crest
+  reemplaza la onda activa plana por una banda con carcasa tinta, armadura,
+  manto cromático, núcleo caliente, filo direccional y dientes geométricos.
+  Outward e inward se distinguen por orientación y material, no sólo por color.
+- Telegraph conserva su lectura previa; recovery apaga inmediatamente el cuerpo
+  dañino y deja únicamente un riel segmentado. No cambia radio, ancho, daño,
+  refugios, tiempos, arbitraje ni balance.
+- La vista conserva la jerarquía de cinco grupos de primer nivel y construye
+  los paths una vez por `state.sequence`; durante el viaje sólo usa escala,
+  rotación ornamental, alpha y visibilidad. Low mantiene el peligro completo.
+- Guía para Luna y futuras iteraciones: `docs/design/RADIAL_PULSE_FX_PREMIUM.md`,
+  enlazada desde `EFECTOS_PREMIUM.md`, EX-06b y el plan. Referencia real y
+  captura reproducible en `docs/visual/radial-pulse-reference.html` y
+  `capture-radial-pulse.mjs`.
+- Validado automáticamente: `npm run typecheck` y `npm test -- --run` pasan con
+  82 archivos / 279 pruebas; `npm run build:local`, `npm run build:poki` y
+  `npm run build:crazygames` generan correctamente sus targets (chunk local
+  681.60 kB / 187.88 kB gzip; warning de tamaño conocido). La galería real se
+  capturó en desktop, portrait y animación sin errores de página; la prueba de
+  `RadialPulseView` confirma que el viaje no reconstruye paths por frame.
+- Regresión browser dirigida: 5/5 correcta (Manta Low/High, pausa/resize,
+  boss shortcut y control touch en portrait).
+- Pendiente: aprobación visual humana en combate y móvil físico. La onda no se
+  declara cerrada por tests verdes; debe comprobarse dentro de una run con
+  enemigos y lásers.
+- Esta iteración es exclusivamente de presentación: no invalida el reporte de
+  runs ni exige repetir diez partidas para el efecto. EX-06d conserva sus diez
+  runs como puerta formal para cerrar el acto completo.
+
+## Revisión de impactos premium — 10-09-2026
+
+- Desvío visual solicitado antes de continuar EX-06d. Hull Fracture reemplaza
+  el anillo de hit enemigo por una lente de material fracturado, núcleo marfil
+  inmediato y astillas afiladas. También se emite en bajas de un solo golpe.
+- Breach Petals reemplaza el anillo de daño del player por cuatro placas coral
+  con bisel y centro libre. El flash del casco responde desde el primer frame.
+  No altera daño, invulnerabilidad, escudo, movimiento ni balance.
+- `DamageBloomView` comparte el lifecycle de ambos consumidores: tres contextos
+  por pool, 8/12/16 impactos enemigos y uno del player; transforms/alpha sin
+  reconstruir geometría de contacto. Reduced motion mantiene señal estática.
+- Guía para futuras iteraciones: `docs/design/DAMAGE_FX_PREMIUM.md`, enlazada
+  desde `EFECTOS_PREMIUM.md` y el plan. Referencia real y captura reproducible
+  en `docs/visual/damage-reference.html` y `capture-damage.mjs`.
+- Validado: build local con typecheck y 82 archivos / 278 pruebas; cinco smoke
+  browser dirigidos (Low/High, pausa/resize, boss y control móvil), correctos.
+  Seis paneles Pixi capturados e inspeccionados en desktop/portrait y fondos
+  claros/oscuros; animación sin errores de runtime. Chunk local 681.60 kB /
+  187.88 kB gzip; conserva el warning de tamaño conocido.
+- Pendiente: aprobación visual humana en combate y stress en móvil físico.
+  Se validaron los tres builds Vite (`local`, `poki` y `crazygames`), pero no se
+  repitieron workflows reales de portal ni toda la suite browser en este cambio
+  exclusivamente visual. El siguiente paso de meta sigue siendo EX-06d.
+
+## Corrección Bloomwake — sockets y lectura del segundo cañón, 09-09-2026
+
+- El reporte móvil indicó que el segundo cañón y el círculo rosado no se leían.
+  Se añadió una guía visual persistente con dos sockets rosados pulsantes en el
+  contenedor de armas, en los slots reales `(-27,-11)` y `(27,-11)`. Sigue la
+  rotación del apuntado, respeta pausa y no añade daño, proyectiles ni bocas de
+  simulación.
+- Los sockets usan una sola `Graphics` reutilizada; el flash temporal conserva
+  los orígenes emitidos por la simulación. El SVG derecho continúa siendo un
+  reflejo del izquierdo dentro del frame común, con textura cacheada.
+- Typecheck y pruebas específicas pasaron: 14/14. Debe repetirse el smoke
+  completo y el build de Pages antes de considerar esta corrección publicada.
+
+## Corrección Bloomwake — cañón derecho rasterizado, 09-09-2026
+
+- Tras la prueba real del usuario, se confirmó que el catálogo DOM mostraba
+  ambos cañones pero Pixi sólo mostraba el izquierdo. Causa: los paths del
+  SVG derecho dependían de `transform="scale(-1 1)"`; el parser SVG de Pixi
+  no lo interpretó de forma fiable durante `generateTexture`.
+- El derecho ahora usa coordenadas espejadas explícitas, como Helix y los
+  demás paquetes. El master se actualizó con los mismos paths y una prueba
+  estructural bloquea que Bloomwake vuelva a depender de `transform`.
+- Validación de esta corrección: typecheck y 245 pruebas unitarias correctas;
+  smoke visual dirigido de Pixi 2/2 y captura inspeccionada con ambos sockets
+  y cañones presentes. Builds local y CrazyGames correctos; Poki completó
+  typecheck y sus 245 pruebas antes de empaquetar. Falta únicamente la prueba
+  física del usuario tras el deploy de Pages.
+
+## Revisión Bloomwake — cañón nacarado, 09-09-2026
+
+- Se rediseñaron los dos emisores y su master: montura lateral, dos pétalos
+  envolventes, recámara oscura, canal menta y boca integrada en `(±27,-11)`.
+  Antes la masa estaba cerca del centro y el círculo de salida quedaba separado.
+- 11 primitivas por lado / 22 master; mismos dos sprites y frame 64×64.
+  Conserva proyectil y PNG de estela existentes, selección, precio y retroceso.
+  Low tiene cero estelas (la nota anterior sobre ribbon en Low era incorrecta).
+- Guía para Luna y otros agentes en `src/assets/skins/cannons/bloom/README.md`,
+  enlazada desde `docs/design/ARTE_HIBRIDO.md`: masas, capas, reflejo, materiales,
+  slots, costes y procedimiento para futuras revisiones.
+- Comprobado: build local con 245 tests; bundles Poki/CrazyGames; Playwright
+  completo 19/19, salida 0 (2.1 min), incluido locker móvil. Galería 19 assets /
+  57 muestras validada; inspección de captura oscura y partida Manta/Bloomwake.
+  Sigue el aviso preexistente de chunk >500 kB. No se midió rendimiento físico.
+- Probar sin URL: Inicio → Skins → Cañones → Bloomwake → equipar → Jugar.
+  Pendiente valoración visual del usuario; no tratar el rediseño como aprobado.
+
+## Encargo más reciente — 09-09-2026: Bloomwake, séptimo cañón híbrido
+
+- Añadido el paquete cosmético `bloom` / **Bloomwake** al stock: cañones
+  compuestos SVG, proyectil semilla SVG y estela PNG RGBA generada para el
+  proyecto (`src/assets/skins/cannons/bloom/`). No cambia daño, cadencia,
+  trayectoria, colisión ni selección de objetivos.
+- La estela se carga de forma diferida sólo al equipar en Medium/High, se
+  comparte en el pool existente y conserva ribbon procedural en Low o si falla
+  la decodificación. El arranque normal no solicita el PNG.
+- Preview del locker incluye una receta floral animada; la partida usa la
+  textura híbrida real. URL opcional: `?cannon=bloom&quality=high`.
+- Contrato y prompt en `src/assets/skins/cannons/bloom/README.md`; reglas
+  generales en `docs/design/ARTE_HIBRIDO.md`. La galería de flota pasa a 19
+  assets / 57 muestras.
+- Validación: unitarias 245/245, browser desktop 16/16 y browser móvil 3/3.
+  Los builds local/Poki/CrazyGames pasaron; un deploy inicial falló porque
+  `mobile.smoke.spec.ts` esperaba 6 cañones, se corrigió a 7 en `919f7e2` y se
+  publicó. La inspección visual manual del disparo en Android sigue siendo
+  necesaria.
+
+## Encargo más reciente — 09-09-2026: Manta Veil, séptima skin híbrida
+
+- Implementación guardada en `fccc6fd` antes de retomar la validación. No
+  rehacerla ni sustituir las seis skins anteriores. Id `manta`, séptima tarjeta,
+  disponible con **PROBAR GRATIS** (0 NOVA) para aprobación visual del usuario.
+- Inicio → Skins → Manta Veil → PROBAR GRATIS → Volver → Jugar. No hace falta
+  escribir parámetros. Atajo opcional: `?skin=manta` y `&quality=low|high`.
+- Identidad: quilla estrecha SVG, reactor longitudinal, cola bifurcada y dos
+  aletas nacaradas que flexionan, usando una sola imagen PNG generada con la
+  herramienta integrada. PNG RGBA 256×256 / 43,207 bytes, alpha cero en esquina.
+  Imagen base de 256 KiB teóricos, compartida por dos sprites. No es VRAM medida.
+- `MantaAssets.ts` comparte URL, dimensiones y pivotes con DOM/Pixi. La partida
+  carga el PNG al equipar; el catálogo puede solicitarlo al acercarse la tarjeta
+  al viewport. Sólo la preview seleccionada anima, respeta reduced-motion; la
+  partida conserva las aletas en todos los presets. Fallback SVG si falla carga.
+- `MantaWingView` usa transforms, dos sprites persistentes y caché por aplicación.
+  Muerte/revive reutilizan piezas. Cañones, radio y estadísticas no cambian.
+- Guía neutral para Luna/Codex/Grok: `docs/design/ARTE_HIBRIDO.md`, enlazada desde
+  AGENTS.md y §8 del plan. Ficha y prompt completo en `src/assets/skins/manta/README.md`.
+  No exigir SVG como fuente ficticia de una imagen generada. No asumir que PNG
+  sea más barato/nítido: comparar descarga, memoria, coste por frame y legibilidad.
+- Lámina de flota ampliada a 18 assets / 54 muestras; exploración de tres masas
+  en `docs/visual/manta-silhouettes.html`. Inspección de menú y partida 390×844
+  realizada. Los detalles del nacarado se aprecian más en el menú; en combate
+  predomina la silueta. Pendiente aprobación visual y perfil de móvil físico.
+- Las puertas EX/VIS previas siguen en su estado anterior. No cerrar todo el
+  plan de juice por esta skin, ni confundir test sin errores con juicio artístico.
+- Cierre automático: `npm run build:local` correcto (typecheck + 244 tests / 72
+  archivos); builds Vite Poki y CrazyGames correctos; Playwright completo **19/19
+  en 2.1 min**, salida 0 usando preview independiente en 4173. Incluye Manta
+  gratuita/persistencia/carga PNG y pausa/resize en Low/High. Galería **18 assets
+  / 54 muestras** validada con `node docs/visual/capture-reference.mjs`.
+- Capturas inspeccionadas: preview, partida 390×844 y siluetas comparadas con las
+  otras seis skins. El bundle principal sigue avisando por >500 kB minificados
+  (640.74 kB / 176.88 kB gzip); no es error de build. PNG se publica separado.
+  No se midieron FPS/VRAM de móvil físico ni se confirmó el acabado humano.
+
+## Encargo anterior — 09-09-2026: primera partícula PNG
+
+- Se añadió `src/assets/fx/projectile-smoke-puff.png`, un sprite RGBA de 128×128
+  y 7.1 KiB, generado con una textura de humo blanca y fondo realmente
+  transparente. `identify` confirma `srgba` y alpha 0 en la esquina.
+- El paquete cosmético `smoke` usa ahora esa textura en su estela: cuatro puffs
+  por proyectil, con tamaño, rotación, posición y alpha deterministas. La
+  textura se carga de forma perezosa como `Image` al seleccionar ese paquete,
+  se reutiliza en el pool existente y no crea sprites ni texturas durante el
+  loop. `Texture.from(URL)` no descarga URLs en PixiJS 8; se pasa la imagen ya
+  cargada a `Texture.from(image)`. Si el runtime no dispone de la textura
+  (tests Node), la estela conserva el ribbon procedural anterior.
+- Low mantiene el presupuesto de trail en cero; Medium/High reutilizan el
+  mismo recurso acotado. La prueba no toca daño, colisión, trayectoria ni
+  simulación. El contrato y la razón de esta excepción a SVG están en
+  `src/assets/fx/README.md`.
+- El primer deploy con la textura reportó dos timeouts de Playwright con la
+  sesión Chromium cerrada durante el menú. Se eliminó la petición al arrancar
+  cuando el cañón no es `smoke`; la textura se adjunta al cambiar de paquete.
+  La segunda incidencia conservó los mismos dos tests: se sustituyó la
+  navegación repetida por todos los cosméticos por dos compras representativas
+  por familia, y las llamadas frágiles a `scrollIntoViewIfNeeded` por una
+  medición atómica de los cinco botones. La suite completa local quedó en
+  16/16 browser en 1.8 min, además de 239 tests unitarios. El workflow ejecuta
+  typecheck/unit una vez y conserva los tres bundles aislados para no repetir
+  esa misma puerta tres veces.
+
+## Encargo anterior — 08-09-2026: presentación inicial
+
+- Se sustituyó el aviso flotante de carga por cobertura HTML opaca de viewport
+  completo, visible incluso antes de ejecutar JS. Reutiliza `mark.svg`.
+- Menú con placa de consola, acciones con iconos SVG, textos adaptables y
+  distribución desktop/portrait. Estilos específicos: `src/ui/home.css`.
+- Se corrigió `#game-hud[hidden]`: su display CSS anulaba el hidden nativo.
+- Regresión: `tests/browser/home.checks.ts`, compartida desktop/móvil,
+  bloquea temporalmente el entry JS y comprueba cobertura, relevo al menú,
+  textos en 320/390/640/1280 px, ajustes y entrada al juego.
+- No cambia balance, saves, arsenal ni las tareas EX pendientes abajo.
+- El usuario reportó regresión de parpadeo tras `5bc8268`. Se reemplaza la
+  escena SVG inline animada por el mismo master como imagen estática. Marca
+  como imagen con giro 36 s y cuatro luces CSS pequeñas con movimiento 8 px.
+  Fondo, gradientes y marco RGB estáticos; sólo cinco superficies pequeñas
+  animadas. No reactivar la estrategia anterior basándose sólo en tests CSS.
+  Hipótesis: repintados de capas grandes; falta traza del móvil afectado.
+  Skins/meta, menú oculto y reduced-motion detienen estos adornos.
+- El smoke de GitHub detectó una carrera al hacer clic en Configuración con
+  animación activa. La prueba ahora valida movimiento primero y usa
+  `reduced-motion` durante la secuencia larga de clics; no cambia la UI de
+  producción. Repetición local: presentación desktop y carga desktop/móvil
+  dieron `ok`; el runner Windows puede quedarse esperando al cerrar Vite.
+- Validación del refuerzo: build local (incluye typecheck y suite unitaria)
+  y builds Vite Poki/CrazyGames correctos; 4 pruebas browser pertinentes
+  pasadas con salida 0 usando servidor independiente. Cubren movimiento real,
+  sólo cinco superficies animadas pequeñas, reduced-motion, retorno de
+  skins/meta, scroll del locker y botones en varios tamaños. Captura 390 px
+  revisada. El parpadeo específico de la GPU del usuario sigue pendiente de
+  confirmación manual; no declararlo eliminado sólo por estas pruebas.
+- Validación anterior de la presentación: typecheck, 237 tests unitarios y builds local/Poki/CrazyGames
+  correctos. Los 16 casos browser dieron `ok`; hubo bloqueo al cerrar el
+  servidor de Playwright en Windows y se interrumpió ese proceso. Repetición
+  de los 2 casos de inicio con servidor independiente: `2 passed`, exit 0.
+  Capturas revisadas en 320/390/1280 px y carga. Persiste aviso Vite por
+  chunk principal de ~640 kB minificado (~176 kB gzip), no error de build.
+- Pendiente aprobación visual en Android real, especialmente carga fría,
+  cerrar ajustes y volver de skins. No se afirma rendimiento en móvil modesto.
+
+
+> Snapshot operativo: 08-09-2026. Entrada vigente: [§22 del plan](../../PLAN_DESARROLLO.md#ejecucion-vigente) y [guía de ejecución](../../docs/PLAN_EJECUCION.md).
+>
+> Encargo anterior: resolver la condición de dedos gruesos detectada en EX-03 con una segunda modalidad de desplazamiento; ver §80. Último encargo: presentación inicial descrita arriba.
+>
+> Encargo visual posterior: guía premium de UI y ejemplo integrado; ver
+> [dirección de UI](../../skills/geometry-survivor-svg/references/ui-art-direction.md)
+> y `docs/visual/ui-reference.html`. Pendiente aprobación humana del lote UI.
+>
+> **Ruta actual: prototipo ACT-I-PROTOTYPE ampliado; EX-03 sigue abierto solo por evidencia baseline pendiente.** La condición de dedos gruesos ya tiene una solución implementada y validada en browser móvil. EX-02c queda pendiente para la pasada final de balance junto con vida de enemigos y daño general. Los behaviors de armas ya están extraídos; no rehacerlos. Boomerang espera las puertas anteriores. Las propuestas visuales VIS-01–03 no se activan automáticamente.
+>
+> Referencia de partida `a3d0ccd`. Tank aprobado como dirección por el usuario; extensión autorizada a flota, boss y cosméticos en §58. No cambia gameplay ni save. EX-01 automático quedó cerrado; EX-02a y EX-02b están validados automáticamente; EX-02c está diferida por decisión de producto. La definición de meta, actos y Overdrive queda en `docs/design/ACTOS_Y_META.md`. No repetir el trabajo visual ya implementado.
+>
+> Aprobación visual vigente: el usuario inspeccionó y aprobó las seis skins y
+> los seis paquetes de cañón/bala. Son la biblioteca premium de referencia para
+> futuras variantes; deben inspirar sin repetirse. Cada diseño nuevo conserva
+> contratos y presupuestos, declara su referencia y requiere validación propia.
+>
+> Estado funcional auditado desde el último commit publicado y las correcciones acumuladas de las sesiones anteriores.
+>
+> Este archivo sirve para retomar el trabajo en otra sesión o con otro agente. No reemplaza las fuentes de verdad: solicitud actual del usuario → `PLAN_DESARROLLO.md` → `proyecto.md` → skills → código/tests.
+
+## 1. Cómo retomar correctamente
+
+1. Abrir este directorio como raíz del proyecto para que el agente reciba `AGENTS.md`.
+2. Leer `AGENTS.md`, este snapshot y la skill mínima aplicable.
+3. Para arquitectura, boss, plataformas o cambios de alcance, leer completos `PLAN_DESARROLLO.md` y `proyecto.md`.
+4. Ejecutar `git status --short` y conservar cualquier cambio que no pertenezca a la tarea.
+5. Ejecutar `npm run typecheck` y `npm test` antes de modificar una frontera importante.
+6. No asumir que este snapshot sigue vigente si el código o el plan tienen cambios posteriores.
+
+Codex/GPT y Grok deben aplicar las mismas decisiones. Las skills canónicas viven en `skills/`; `.grok/skills/` contiene únicamente adaptadores de descubrimiento.
+
+## 2. Objetivo del producto que no debe cambiarse silenciosamente
+
+- Survivor web geométrico, mobile-first y portrait como orientación primaria.
+- Jugable también en PC, tablet y landscape sin cambiar reglas ni conceder ventaja por tamaño de pantalla.
+- Destinos separados: GitHub Pages/local, Poki y CrazyGames.
+- Run objetivo del vertical slice: 5–6 minutos.
+- Control de movimiento con un dedo, mouse-drag y teclado; ataques automáticos.
+- En móvil se conservan táctil directo/automático y se ofrece `relative-touch`:
+  el gesto define dirección desde su punto inicial y no obliga a mantener el dedo
+  sobre el player; la selección se guarda y puede cambiarse desde inicio o pausa.
+- Arena viva como gancho: expansiones, resonancia, borde y hazards relacionados.
+- XP acreditada directamente al derrotar enemigos. No existen gemas físicas de experiencia.
+- Assets visuales creados por IA mediante código. SVG es el master preferido para UI/assets, aunque las masas repetidas pueden convertirse a textura/atlas en runtime por rendimiento.
+- Sin dependencias externas, analítica, backend o SDK comercial hasta que la fase correspondiente lo justifique.
+
+## 3. Estado ejecutable actual
+
+URL publicada:
+
+```text
+https://mirobo137.github.io/geometry-survivor/
+```
+
+Atajos que pueden escribirse después de la URL base:
+
+```text
+?debug=1
+?stress=1
+?boss=1
+?skin=cyan|violet|amber|emerald|obsidian|nova
+?background=deep-space|ion-storm|solar-drift|crystal-field
+?quality=low|medium|high
+?profile=1
+?baseline=1
+?spike=rendering
+?spike=audio
+```
+
+`?boss=1` es el atajo de desarrollo para probar el encuentro sin jugar los 4:20 previos: inicia el reloj en el umbral oficial, coloca la arena en su estado de late game y muestra el panel técnico. La URL normal no cambia. También puede combinarse con `&debug=1` aunque el panel ya se muestra automáticamente.
+
+Stack y calidad confirmada:
+
+- TypeScript estricto, Vite y PixiJS 8.20.0.
+- Build target ES2018 para compatibilidad móvil.
+- Timestep fijo de 60 Hz; presentación desacoplada del ritmo de simulación.
+- Viewport lógico 720×1280 en portrait y 1280×720 en landscape.
+- Pool de 250 enemigos y 300 proyectiles con spatial grid.
+- CI construye `dist/local`, ejecuta Playwright/Chromium sobre ese artefacto, construye Poki y CrazyGames, y sólo entonces despliega GitHub Pages.
+- Builds separados `local`, `poki` y `crazygames`.
+- Última auditoría local: typecheck correcto, 139 tests unitarios/integración en 53 archivos y 9 smoke tests de Playwright pasando en Chromium (7 desktop + 2 Pixel 5 emulados).
+
+Mediciones manuales aportadas desde Android Chrome:
+
+- Spike de 500 entidades: aproximadamente 60 FPS en Sprite, GraphicsContext compartido y pool; p95 de 16.80 ms.
+- Audio: `AudioContext` running y latencia base de 3.0 ms.
+- Audio integrado: el usuario confirma música, efectos, pausa, reanudación, volumen y silencio funcionando correctamente en móvil.
+- Stress de 250 enemigos + 300 proyectiles: estable alrededor de 60 FPS quieto, con picos reportados de 120 FPS al mover.
+- El usuario confirma que el modo stress corre correctamente en móvil y PC, y que las partidas completas siguen pudiendo terminarse.
+- Una run móvil llegó al boss de 4:20 y descubrió `Unable to convert color 4294430586`; la causa era un color de ocho dígitos en el telegraph de barrido. Quedó corregido con una paleta RGB validada por test. Falta repetir el encuentro en el build publicado.
+- Falta registrar modelo exacto del teléfono y preset de calidad cuando éstos existan.
+
+## 4. Funcionalidad implementada
+
+### Base, móvil y rendimiento
+
+- Shell responsive sin obligación de girar el teléfono.
+- Pointer Events con fallback touch, teclado WASD/ZQSD/flechas y mapping por viewport.
+- Pausa al perder foco o visibilidad, limpieza de input y reanudación explícita.
+- Errores de arranque visibles en la página.
+- Spikes reproducibles de rendering y Web Audio.
+
+### Simulación y combate
+
+- Jugador con velocidad, vida, armadura, invulnerabilidad, escudo recargable y
+  límite circular.
+- Chaser, Fast, Tank y variante Elite data-driven.
+- Elite determinista desde 2:00.
+- Projectile, Orbit y Chain Lightning con críticos deterministas.
+- Pooling, targeting, spatial grid, colisiones, daño, muerte y XP directa.
+- Preset `?stress=1` mantiene ambos pools en capacidad.
+- Preset `?boss=1` inicia una run de prueba en el umbral del boss sin cambiar la URL normal ni el balance del encuentro.
+
+### Progresión y arena
+
+- Level-up pausado con tres cartas táctiles.
+- Quince mejoras tipadas/data-driven.
+- Dos expansiones de arena: 1:00 y 3:00, con radio intermedio y pulso de resonancia.
+- Curva de spawn con seis fases de contenido entre 0:00 y 5:00.
+- Laser desde aproximadamente 0:45 con `telegraph → attack → recovery`, un impacto por activación y escape perpendicular.
+
+### Presentación
+
+- Sprites/texturas reutilizadas para entidades repetidas.
+- Graphics para arena, resonancia, Chain Lightning y Laser.
+- HUD de tiempo, vida, XP, bajas y nivel.
+- Overlays DOM responsive para level-up y pausa.
+- Panel debug con FPS, viewport, pools, armas, nivel, pausa, arena y resonancia.
+
+### Audio
+
+- `src/audio/AudioService.ts` mantiene Web Audio fuera de la simulación y crea el contexto sólo después de la primera interacción.
+- `WebAudioService` reproduce una música procedural discreta, cues de daño/level-up/victoria y pausa/reanuda junto con el lifecycle del juego.
+- El usuario validó manualmente que el spike de audio suena; su volumen de prueba es deliberadamente bajo y la música integrada todavía requiere validación en móvil real.
+
+## 5. Resultado de la auditoría de modularidad
+
+### Lo que sí cumple
+
+- `src/simulation/` no importa PixiJS, DOM, audio ni SDKs.
+- `src/content/` contiene definiciones tipadas para enemigos, armas, upgrades, hazards y dificultad.
+- El renderer observa estado; no decide daño, XP, drops ni dificultad.
+- El resize cambia presentación, no simulación.
+- `MovementVector` evita que `PlayerModel` dependa de `InputManager`.
+- `LocalPlatform` mantiene el SDK fuera del gameplay.
+- Las reglas críticas se prueban sin levantar Pixi.
+- Añadir una variante común de enemigo o ajustar balance permanece localizado.
+
+### Riesgos antes de seguir creciendo
+
+No son fallos actuales, pero ya son puntos de concentración reales:
+
+1. `src/simulation/combat/CombatWeaponSystem.ts` tiene alrededor de 310 líneas y mantiene Projectile, Orbit y Chain detrás de una frontera única; el benchmark se extrajo a `StressCombatScenario.ts` porque es un escenario de validación distinto. `CombatSimulation.ts` coordina Laser, run, derrotas, XP y eventos.
+2. `src/main.ts` tiene alrededor de 99 líneas y queda como bootstrap; `src/app/Game.ts` tiene alrededor de 331 líneas y coordina lifecycle, loop, pausa, level-up, HUD, game-over/victoria y persistencia sin implementar sistemas completos. Se mantiene como orquestador cohesivo; se extraerá una responsabilidad sólo cuando exista un segundo consumidor real.
+3. `src/presentation/PixiGameView.ts` tiene alrededor de 95 líneas y ahora es una fachada; arena, entidades, armas, hazards y jugador viven en vistas Pixi separadas.
+4. `CombatRenderState` ya evita que `PixiGameView` reciba la clase completa de combate; incluye un snapshot de boss con fase, salud, barrido y anillo y contratos reducidos de solo lectura para arrays de enemigos, proyectiles, órbitas y cadenas. Los sistemas de simulación ya exponen reset explícito para reinicio in-place.
+5. `UpgradeApplier` ya retiró la aplicación de efectos de `main.ts` y controla stacks/prerrequisitos; un efecto nuevo todavía requiere modificar ese módulo tipado.
+6. `PlatformAdapter` ahora compone `PlatformLifecycle`, `AdService`, `SaveStore` y `AudioService`; el resumen de game-over ya actualiza la mejor marca, pero falta conectar ajustes a una UI.
+7. Los textos visibles están hardcodeados en español. Falta i18n con inglés como fallback.
+8. La skill SVG ya tiene dos assets master de UI (`pause.svg` y `settings.svg`) con validación estructural; faltan las familias visuales de player, enemigos y hazards.
+9. `tests/browser/game.smoke.spec.ts` ejecuta Playwright sobre `dist/local`: carga, teclado/pointer, pausa/reanudación, matriz de resize, level-up, persistencia local, context loss y consola/red. `tests/browser/mobile.smoke.spec.ts` cubre un drag touch emulado en portrait Pixel 5. El fallback de storage bloqueado, el constructor Web Audio fallido y el lifecycle de audio tienen cobertura unitaria; la validación manual en móvil real sigue pendiente.
+
+Conclusión: las fronteras principales son correctas y la consolidación avanza; presentación y runtime ya tienen fachadas separadas, y quedan por cerrar snapshots/UI secundarios, ajustes persistentes y el balance final de la run. `GameState`, `BossSystem` y los modelos de simulación ya permiten terminar, mostrar victoria y reiniciar una run in-place sin recargar ni perder la mejor marca. El boss usa contenido tipado, patrones telegraphed y un snapshot de render; las cartas numéricas ya muestran un preview runtime `antes → después` sin aplicar el efecto, `LocalSaveStore` ya cubre schema v1, migración y fallback en memoria, y la plataforma local separa lifecycle/anuncios.
+
+## 6. Próximo hito recomendado: cerrar la puerta de Fase 5
+
+Objetivo: validar una run completa de 5–6 minutos con boss, victoria, reinicio y balance legible sin cambiar las fronteras modulares.
+
+Orden recomendado:
+
+1. Usar `src/app/GameState.ts` en todos los estados de gameplay; el contrato de fin/victoria/reinicio ya está integrado en `Game` y cubierto por tests.
+2. `src/app/Game.ts` ya coordina la run; mantenerlo como orquestador de lifecycle/loop, no como contenedor de sistemas.
+3. Mantener `src/simulation/progression/UpgradeApplier.ts` como punto único de aplicación; límites y prerrequisitos de cartas ya están data-driven.
+4. Mantener `CombatWeaponSystem` como frontera única mientras no haya un segundo consumidor; el stress ya vive en `StressCombatScenario` y, si una cuarta arma o regla transversal lo exige, separar Projectile/Orbit/Chain con contratos pequeños. `EnemySystem` cubre ciclo de vida, movimiento, contacto y spatial grid; `EnemySpawnDefinitions` posee la mezcla temporal.
+5. Mantener `PixiGameView` como fachada pequeña; `ArenaView`, `CombatEntitiesView`, `WeaponView`, `HazardView` y `PlayerView` ya separan la representación por responsabilidad.
+6. Completar snapshots mínimos de presentación; `CombatRenderState` ya incluye el boss. `UpgradePreview` y `SaveStore` son contratos adicionales ya aislados.
+7. Mantener tests de transiciones de estado, pausa, level-up, game over y reinicio; después ejecutar typecheck, suite, tres builds y smoke móvil.
+
+Límites de este refactor:
+
+- no cambiar balance, timings, apariencia ni controles salvo corrección comprobada;
+- no crear ECS, bus global, service locator ni infraestructura especulativa;
+- no añadir dependencias;
+- no añadir un segundo boss ni una fase narrativa;
+- conservar las URLs de spike/stress y los formatos actuales de build.
+
+Puerta del hito:
+
+- comportamiento observable equivalente;
+- ninguna importación inversa hacia Pixi/DOM/SDK desde simulación;
+- los coordinadores dejan de crecer como managers universales;
+- 88 tests unitarios/integración y 8 browser smoke pasan; existen pruebas de estados, aplicación, enemigos, cartas, guardado, resumen, reset, boss, colores, paths Pixi, audio (incluido constructor fallido), SVG, pantalla de inicio, acceso rápido de boss, context loss y touch emulado;
+- `local`, `poki` y `crazygames` construyen correctamente;
+- pausa, cartas, Laser, elite y expansiones siguen funcionando en móvil.
+
+## 7. Trabajo pendiente por fase
+
+### Fase 3 — casi cerrada, pendiente de validación manual
+
+- Ajustes persistentes conectados a la UI de pausa: música, efectos y silencio; la mejor marca ya se actualiza desde game-over.
+- Pausa manual, continuar y reinicio desde pausa cubiertos por smoke browser.
+- Validar manualmente dos builds que se sientan diferentes; la evidencia del usuario confirma que las decisiones importan, pero todavía no documenta dos rutas de build comparables.
+
+### Fase 4 — implementada, pendiente de puerta humana
+
+- ✅ El usuario confirma que las mecánicas generales funcionan y que el balance inicial es adecuado.
+- Confirmar en móvil que el Laser se entiende tras verlo una vez.
+- Confirmar que el camping no domina.
+- Confirmar que elite, densidad y Laser no producen daño inevitable.
+- Ajustar timings y presión con runs completas, no sólo unit tests.
+- Verificar manualmente primera y segunda expansión con resonancia.
+
+### Fase 5 — parcial, boss implementado
+
+- Boss con dos patrones: barrido/línea telegraphed y anillo con huecos seguros ya implementado.
+- El boss se desplaza en una órbita determinista, lenta y acotada dentro de la arena; radio y velocidad viven en contenido, no en Pixi.
+- ✅ Varias runs normales de 5–6 minutos fueron completadas manualmente; el usuario confirma que el balance inicial y las decisiones de build funcionan.
+- El atajo `?boss=1` fue probado manualmente por el usuario; el smoke browser confirma además su aparición y la secuencia de barrido/anillo.
+- Game over por muerte, resumen, mejor marca, victoria y reinicio in-place ya están implementados.
+- Primer balance integral y diez runs internas sin softlock: todavía falta registrar el número exacto de runs y sus resultados.
+
+### Fase 6 — parcialmente implementada
+
+- Lenguaje visual definitivo.
+- ✅ Primer pipeline SVG master code-first para UI: iconos `pause.svg` y `settings.svg` inline, recoloreables y validados.
+- ✅ AudioService real con música procedural, cues básicos, volumen separado, desbloqueo diferido y pausa/reanudación; audio integrado validado manualmente.
+- ⬜ Música final/asset externo opcional, límites de voces refinados y mezcla definitiva; la UI de ajustes del prototipo ya está conectada.
+- Hit feedback, shake presupuestado, hit stop, trails y partículas.
+- Presets Low/Medium/High sin cambiar gameplay.
+
+### Fase 7 — parcial
+
+- Ya existen responsive, pausa de lifecycle y stress inicial.
+- ✅ Context loss está cubierto en browser smoke; el fallback ante storage bloqueado está cubierto por tests unitarios.
+- ✅ La matriz completa de resize está cubierta por browser smoke.
+- Faltan validación manual móvil y profiling CPU/GPU/GC.
+- Falta decidir adaptive quality con datos reales.
+
+## 7.1 Evidencia manual actual
+
+- ✅ La rotación funciona.
+- ✅ El usuario completó varias runs normales hasta el final.
+- ✅ El boss fue probado y derrotado.
+- ✅ El balance inicial y el peso de las decisiones se perciben correctos para el primer nivel.
+- ⬜ Falta registrar número exacto de runs, dispositivo, navegador, calidad y FPS.
+- ✅ Context loss ya tiene smoke browser; el fallback de storage bloqueado ya tiene test unitario.
+- ✅ El usuario validó que el spike de Web Audio reproduce sonido; el volumen bajo queda registrado como comportamiento actual de prueba.
+- ⬜ Falta completar en móvil context loss, storage bloqueado y background/foreground; el usuario ya validó audio integrado, pausa, volumen y silencio.
+- El aspecto amateur y la falta de juice quedan conscientemente aplazados a la Fase 6; no bloquean la validación funcional actual.
+
+### Fase 8 — pendiente
+
+- Adaptadores reales Poki y CrazyGames.
+- Lifecycle, anuncios y guardado específicos.
+- Poki Inspector y CrazyGames Preview Tool.
+- Validación con adblock, anuncios ausentes y storage fallido.
+
+### Fase 9 — posterior
+
+- Producción adicional de contenido sólo después de superar las puertas anteriores.
+
+## 8. Prueba manual corta desde móvil
+
+En la URL normal:
+
+1. comprobar movimiento portrait y landscape;
+2. abrir una carta y confirmar que la simulación se detiene;
+3. cambiar de aplicación/pestaña y volver; debe aparecer “Continuar”;
+4. alrededor de 0:45, observar aviso amarillo y Laser rojo;
+5. alrededor de 1:00, observar primera expansión/resonancia;
+6. después de 2:00, identificar el elite rosa/octagonal;
+7. alrededor de 3:00, observar segunda expansión/resonancia;
+8. alrededor de 4:20, confirmar que aparece un solo boss con barra de vida, se mueve por su órbita y no muestra el error de color corregido;
+9. observar el aviso del barrido y, después, el anillo con un hueco cian seguro;
+10. derrotar al boss, confirmar el resumen de Victoria y reiniciar sin recarga;
+11. confirmar que HUD y cartas no se cortan ni generan scroll.
+
+En `?stress=1`:
+
+1. confirmar `250/250` enemigos y `300/300` proyectiles;
+2. mover durante al menos un minuto;
+3. comprobar que pausa/reanudación no duplica entidades ni acelera la simulación;
+4. registrar modelo, navegador, FPS aproximado y cualquier congelamiento.
+
+En `?boss=1`:
+
+1. confirmar que el HUD inicia alrededor de `4:20` y que aparece un solo boss;
+2. probar el movimiento orbital, el telegraph del barrido y el anillo con hueco seguro;
+3. comprobar que la línea del boss no aparece conectada accidentalmente con el origen;
+4. derrotar al boss si se desea validar Victoria, resumen y reinicio in-place.
+
+## 9. Comandos de validación
+
+```bash
+npm ci
+npx playwright install chromium
+npm run typecheck
+npm test
+npm run validate
+npm run test:browser
+npm run build:poki
+npm run build:crazygames
+```
+
+`npm run validate` ya incluye typecheck, tests y build local. `npm run test:browser` vuelve a construir `dist/local` y ejecuta Playwright en Chromium. No declarar una puerta manual superada sólo porque estos comandos pasen.
+
+## 10. Archivos clave
+
+- `AGENTS.md`: reglas neutrales para agentes y routing de skills.
+- `PLAN_DESARROLLO.md`: alcance, decisiones, fases y puertas.
+- `proyecto.md`: visión y principios de largo plazo.
+- `src/simulation/enemies/EnemySystem.ts`: ciclo de vida, movimiento, contacto, spawn y consultas espaciales de enemigos.
+- `src/content/run/EnemySpawnDefinitions.ts`: mezcla temporal de enemigos en perfiles tipados, separada del engine.
+- `src/simulation/combat/CombatWeaponSystem.ts`: Projectile, Orbit y Chain Lightning; frontera preparada para futuras armas.
+- `src/simulation/combat/StressCombatScenario.ts`: benchmark reproducible que reutiliza el pool de proyectiles de producción.
+- `src/simulation/combat/CombatSimulation.ts`: coordinador de run/laser/eventos/XP; mantiene la composición sin lógica de armas.
+- `src/presentation/PixiGameView.ts`: fachada de render; delega en vistas Pixi por responsabilidad.
+- `src/presentation/pixi/`: vistas de arena, entidades, armas, hazards, jugador y fábrica de texturas.
+- `src/app/Game.ts`: orquestador de lifecycle, loop, pausa, level-up, HUD y plataforma.
+- `src/content/audio/MusicDefinitions.ts`: frase procedural versionada como contenido, separada del adaptador Web Audio.
+- `src/app/RunSummary.ts` y `src/ui/GameOverOverlay.ts`: snapshot y representación del fin de run.
+- `reset()` en `ArenaModel`, `PlayerModel`, `CombatSimulation`, pools, Laser y progresión: reinicio in-place sin reasignar sistemas.
+- `src/content/bosses/BossDefinition.ts`, `src/simulation/bosses/BossSystem.ts` y `src/presentation/pixi/BossView.ts`: datos, reglas, movimiento y representación separadas del boss; `BossVisualTokens.ts` mantiene su paleta RGB comprobable.
+- `src/main.ts`: composition root y bootstrap de Pixi/spikes.
+- `src/content/`: configuración data-driven.
+- `src/simulation/hazards/LaserHazard.ts`: patrón de referencia para hazard puro y testeable.
+- `skills/geometry-survivor-svg/`: contrato code-first para futuros SVG.
+- `docs/performance/F0_SPIKES.md`: mediciones y protocolo de rendimiento.
+
+## 11. Evidencia pendiente, no asumir
+
+- El usuario reporta varias runs manuales completas de 5–6 minutos; falta registrar el número exacto y sus resultados.
+- Laser, elite, segunda expansión, boss y curva reciente tienen pruebas automáticas; el browser smoke ya cubre carga, input, pausa, level-up, storage local, consola/red, la matriz de resize y el acceso rápido al boss con sus dos patrones. El atajo y varias runs completas también fueron probados manualmente por el usuario; falta registrar el número exacto de runs y sus resultados.
+- No hay evidencia de Poki Inspector o CrazyGames Preview porque los SDK aún no están integrados.
+- No existen resultados manuales en móvil de context loss, storage bloqueado ni una run completa registrada con dispositivo y FPS; audio integrado, pausa, volumen y silencio ya fueron validados por el usuario.
+- La diversión, claridad y balance no pueden declararse aprobados sólo con tests.
+
+## 12. Registro de sesión — auditoría de modularidad
+
+Fecha: 28-08-2026.
+
+Estado al cerrar esta sesión:
+
+- `main` permanece sincronizado con `origin/main`; las sesiones de audio/pausa y SVG quedan registradas en commits de cierre identificables.
+- La base sigue respetando la separación `content → simulation → snapshot → presentation`, con plataforma aislada mediante puertos/adaptadores.
+- No se encontraron imports prohibidos desde `simulation`/`content` hacia Pixi, DOM, UI, plataforma, audio o SDKs.
+- No se encontraron ciclos de dependencias en `src`.
+- TypeScript estricto, `npm run validate`, `npm run build:poki` y `npm run build:crazygames` pasan; última suite: 88 tests en 31 archivos y 8 smoke tests browser.
+- Los adaptadores `.grok/skills/` siguen apuntando a las skills canónicas de `skills/`; Grok 4.6 y GPT/Codex deben recibir las mismas reglas mediante `AGENTS.md`.
+- El modelo de partida vigente es una run con objetivo: sobrevivir hasta el boss y derrotarlo alrededor de 4:20. La victoria es intencional; un modo infinito queda para una fase posterior.
+
+Estado y pendientes prioritarios:
+
+1. En `src/app/Game.ts`, `finishRun()` ya crea el resumen con `createRunSummary(outcome, ...)`; `src/app/Game.test.ts` confirma que una victoria llega al overlay como `victory`.
+2. El arco seguro del boss ya inicia cada segmento con `beginPath()`: esto evita la diagonal que PixiJS producía al heredar `(0,0)` después de dibujar el círculo. `src/presentation/pixi/BossView.test.ts` cubre arcos normales y wrap-around. Repetir en móvil el encuentro publicado y comprobar que no aparece la diagonal, además de movimiento orbital, telegraphs, derrota y texto “Victoria”.
+3. Browser smoke en CI completado con Playwright/Chromium: carga, teclado/pointer, pausa, level-up, persistencia local, context loss, consola/red, matriz de resize y drag touch emulado se ejecutan sobre `dist/local` antes del deploy. Audio integrado tiene regresiones unitarias, incluido constructor rechazado; lifecycle y storage bloqueado en móvil real siguen siendo una comprobación manual.
+4. Los hallazgos de concentración se abordaron sin fragmentación especulativa: stress está en `StressCombatScenario`, la selección temporal está en `EnemySpawnDefinitions` y el contrato de render no expone campos mutables de gameplay. `CombatWeaponSystem` y `Game` conservan fronteras cohesivas con umbral explícito para futuras extracciones.
+
+Limitaciones de esta sesión:
+
+- El smoke automatizado se ejecutó localmente en Chromium: 7 escenarios correctos (6 desktop y 1 Pixel 5 emulado) sin errores de consola/red. Esto no sustituye la verificación visual ni el lifecycle de audio/storage en un móvil físico.
+- Se modificaron `src/audio/AudioService.ts`, `src/simulation/enemies/EnemySystem.ts`, `src/simulation/combat/CombatRenderState.ts` y `src/simulation/combat/CombatWeaponSystem.ts`; se añadieron `EnemySpawnDefinitions`, `StressCombatScenario` y el smoke touch móvil. El audio degrada a silencio si el navegador rechaza la construcción, y la documentación/README incluye la instalación reproducible de Chromium.
+
+Para retomar en otra PC:
+
+1. Abrir `C:\PROYECTOS\pruebas_geo` como raíz y leer `AGENTS.md` y este archivo.
+2. Ejecutar `git status --short --branch`, `npm run typecheck` y `npm test`.
+3. Ejecutar `npm run test:browser`, `npm run build:poki` y `npm run build:crazygames`.
+4. Publicar en `main` y repetir la URL normal de GitHub Pages para la run completa; usar `?boss=1` para repetir el encuentro corregido sin esperar 4:20.
+
+## 13. Continuación — audio y pausa manual
+
+Fecha: 28-08-2026.
+
+Implementado en esta sesión:
+
+- `#pause-toggle` ofrece pausa directa con un objetivo táctil amplio y se oculta durante level-up, pausa o fin de run;
+- `PauseOverlay` añade continuar, configuración de música/SFX/silencio y reinicio seguro desde pausa;
+- `GameState.restartFromPause()` impide reinicios accidentales desde estados terminales o transitorios;
+- los cambios de audio se aplican al `WebAudioService` y se guardan con el schema existente de `SaveStore`;
+- la música procedural usa un patrón de ocho pasos con bajo, melodía y armonía, sin archivos remotos ni dependencia npm;
+- smoke browser: 88 tests unitarios/integración y 8 escenarios browser (incluido Pixel 5 emulado) pasan.
+
+Decisión de assets/librerías: se revisaron ZzFX/ZzFXM y Kenney Sci-Fi Sounds. Se mantienen como candidatos documentados, pero no se incorporan aún para respetar el presupuesto, el requisito de builds autocontenidos y la regla de no añadir dependencias para una utilidad pequeña. El usuario validó auditivamente el audio integrado; antes de cerrar Fase 6 queda decidir si una pista local comprimida justifica su peso.
+
+Para retomar: abrir pausa en la URL publicada, desplegar “Configuración”, cambiar música/SFX/silencio, reanudar y recargar para comprobar persistencia. El botón “Reiniciar partida” debe devolver la run a `00:00` sin recarga.
+
+## 14. Continuación — SVG UI
+
+Fecha: 28-08-2026.
+
+- `src/assets/svg/ui/pause.svg` y `settings.svg` son masters code-first de 24×24, inline, recoloreables con `currentColor` y sin filtros ni recursos externos;
+- `main.ts` los monta en los botones existentes; el hit-area y la etiqueta accesible siguen siendo HTML;
+- `SvgAssets.test.ts` valida `viewBox`, `preserveAspectRatio`, IDs prefijados y ausencia de scripts, raster, handlers o URLs externas;
+- smoke browser confirma que ambos iconos aparecen junto con pausa, configuración, persistencia y touch emulado.
+
+El siguiente bloque visual puede reutilizar este contrato para un asset de player o enemigo; no se parsearán SVG nuevos por frame ni se modificarán reglas de simulación.
+
+## 15. Continuación — audio Howler + ZzFX
+
+Fecha: 28-08-2026.
+
+- `AudioManager` sustituye al adaptador procedural temporizado como fachada de audio y sigue cumpliendo el contrato `AudioService` que usa `Game`;
+- la música se reproduce con `HowlerMusicBackend`: instancia la pista sólo en el primer gesto de usuario, mantiene una única pista looping y conserva su estado al pausar, reanudar o reiniciar;
+- mientras no exista una composición licenciada, `PrototypeMusicSource` genera una pista WAV local en memoria. No hay request de red ni asset externo; la sustitución futura debe aportar `WebM/Opus` + `MP3` locales;
+- `ZzfxSfxBackend` toma el `AudioContext` ya desbloqueado por Howler y produce efectos desde recetas contenidas en `AudioCueDefinitions`. Tiene límite de ocho voces y cooldown por cue; `enemy-defeated` ya usa esa ruta sin tocar la simulación;
+- las dependencias `howler`, `zzfx` y `@types/howler` se fijaron en `package-lock.json`. La adaptación local de ZzFX evita importar su entrypoint directamente porque éste construye un contexto de audio al cargarlo, algo incompatible con el desbloqueo móvil diferido;
+- antes de cerrar el hito, desplegar en GitHub Pages y comprobar en móvil: primer gesto, pausa/reanudar, reiniciar, mute, cambio de volúmenes y volver desde segundo plano. Si el navegador rechaza audio, la run debe seguir silenciosa y sin error de consola.
+
+## 16. Continuacion — primer enemigo SVG
+
+Fecha: 28-08-2026.
+
+- se amplio la skill SVG con una ficha obligatoria de diseno, reglas top-down y una rubrica de reconocimiento antes de generar XML;
+- `src/assets/svg/enemies/turtle/turtle.svg` es el primer master code-first de personaje: viewBox centrado, piezas semanticas, silueta reconocible y 12 primitivas sin filtros;
+- `CombatEntitiesView` convierte el master a una textura Pixi una sola vez y la comparte en el pool. El chaser conserva sus radios, velocidad y colisiones de simulacion;
+- `SvgEnemyAssets.test.ts` cubre el contrato estructural y el limite geometrico; la inspeccion raster en fondo oscuro/claro confirmo lectura a 32/96/384 px;
+- antes de convertir la tortuga en diseno definitivo, probar la URL publicada en movil y observarla durante gameplay real con enemigos, UI y hazards simultaneos. Si funciona, continuar con player y luego las familias fast/tank/elite respetando siluetas distintas.
+
+## 17. Continuacion — orientacion y animacion de personajes
+
+Fecha: 28-08-2026.
+
+- `EnemyState` expone velocidad visual (`vx`, `vy`) calculada en simulacion, sin importar Pixi ni cambiar reglas de combate;
+- `TurtleVisual` compone cuatro texturas SVG alineadas, conserva la pose neutra con cabeza hacia `-Y` y orienta el contenedor con `atan2(vy, vx) + PI/2`. La marcha balancea patas por pares, hace bob de cabeza y una respiracion de 0.8 %, todo mediante transforms cacheados;
+- el orden de composicion queda fijado como patas traseras, patas delanteras, caparazon y cabeza, para que las patas delanteras no se dibujen encima del caparazon;
+- las piezas se crean de forma diferida por ranura del pool al primer `chaser` y luego se reutilizan; al cambiar de especie se limpia la posicion padre para evitar offsets heredados;
+- el tiempo de presentacion avanza solo mientras la simulacion esta jugando, por lo que la animacion queda congelada durante pausa, level-up y game over;
+- `TurtleVisual.test.ts` cubre frente, direccion y velocidad cero; `SvgEnemyAssets.test.ts` mantiene el contrato estructural de las piezas;
+- la tortuga sigue siendo el patron de revision: silueta, direccion, piezas, amplitud, lectura a 32 px y rendimiento antes de crear player o nuevas familias de enemigos.
+
+## 18. Continuacion — frame comun para piezas SVG
+
+Fecha: 28-08-2026.
+
+- la prueba movil revelo que Pixi recortaba cada pieza de la tortuga a sus limites visibles, cambiando su centro aunque todas compartieran `viewBox`;
+- `SvgTextureFactory` exige un frame logico explicito al rasterizar y la tortuga usa `(-32, -32, 64, 64)` para master, caparazon, patas y cabeza;
+- la regla canonica queda en la skill SVG: un personaje modular comparte `viewBox`, frame de textura, ancla y escala; no se corrige el recorte con offsets manuales dentro del dibujo;
+- `SvgTextureFactory.test.ts` protege el frame y el ancla para futuras criaturas;
+- una captura del render Pixi en Pixel 5 emulado confirmo tortugas completas y orientadas hacia el jugador desde varios lados de la arena.
+
+## 19. Continuacion - organizacion por personaje y cartas SVG
+
+Fecha: 28-08-2026.
+
+- La estructura por dominio queda establecida: `src/assets/svg/enemies/<id>/`
+  contiene los masters y pruebas del asset; `src/presentation/pixi/enemies/<id>/`
+  contiene su compositor y animacion; `src/assets/svg/characters/<id>/` y
+  `src/presentation/pixi/characters/<id>/` siguen el mismo contrato para player
+  y futuros personajes. Cada carpeta tiene un README corto con su responsabilidad.
+- `src/ui/level-up/LevelUpOverlay.ts` ya vive junto a
+  `UpgradeCardVisual.ts`; la UI no decide dano, XP, rareza ni progresion. El
+  mapa visual por `UpgradeId` permite agregar cartas sin duplicar markup ni
+  tocar la simulacion.
+- `src/assets/svg/ui/level-up/card-frame.svg` define el marco escalable por
+  variables CSS y `icons.svg` es un sprite de seis simbolos referenciados con
+  `<use>`. El texto y la zona tactil siguen siendo botones HTML accesibles.
+- `LevelUpSvgAssets.test.ts` valida viewBox, `preserveAspectRatio`, IDs
+  prefijados y ausencia de raster, filtros, scripts, handlers o URLs externas;
+  `UpgradeCardVisual.test.ts` exige cobertura visual para cada upgrade existente.
+- La estrategia responsive esta documentada: tres cartas en desktop, una
+  columna en portrait, safe-area y reduced-motion. El resize solo cambia
+  presentacion y no modifica la simulacion.
+
+Verificacion de esta continuacion: typecheck, suite unitaria, smoke browser y
+builds local/Poki/CrazyGames completados; el commit `9045c6e` esta publicado en
+`main`.
+
+## 20. Continuacion - feedback premium de cartas
+
+Fecha: 28-08-2026.
+
+- `LevelUpCardInteraction.ts` fija los eventos semanticos `focus`, `blur`,
+  `press` y `select`, sin exponer Pixi a la UI ni mezclar reglas de progresion.
+- `LevelUpOverlay` conserva botones HTML/SVG accesibles, aplica una confirmacion
+  de 220 ms, marca la opcion elegida con `aria-pressed` y atenúa las restantes.
+- `LevelUpFxView` agrega aura, aura interior, anillo, rayos y una rafaga de 24
+  sprites reutilizados. El efecto se ancla en espacio logico, tiene reloj propio
+  durante la pausa, respeta `prefers-reduced-motion` y no intercepta input.
+- El resize solo vuelve a sincronizar anclas. No se anadio `pixi-filters`: se
+  validara un glow filtrado unicamente como spike con presupuestos Low/High.
+- La captura automatizada de Pixel 5 confirma foco y seleccion; la prueba tactil
+  fisica del usuario sigue siendo la ultima comprobacion de sensacion y legibilidad.
+
+Archivos principales: `src/ui/level-up/LevelUpOverlay.ts`,
+`src/ui/level-up/LevelUpCardInteraction.ts`,
+`src/presentation/pixi/ui/level-up/LevelUpFxView.ts`,
+`src/app/Game.ts` y `src/presentation/viewport/ViewportTransform.ts`.
+
+## 21. Continuacion - pantalla de inicio premium
+
+Fecha: 28-08-2026.
+
+- `GameState` admite la fase `menu`; la simulacion no avanza y el input no se
+  conecta hasta que el usuario pulsa `JUGAR`. El atajo `?boss=1` conserva el
+  arranque directo para pruebas.
+- `src/ui/StartScreen.ts` controla la vista DOM, el CTA, ajustes de audio y la
+  mejor marca. `JUGAR` desbloquea Howler/ZzFX dentro del gesto movil y activa
+  input, HUD, lifecycle y musica en una unica transicion.
+- `src/assets/svg/ui/start/mark.svg` define el nucleo/orbitas como master
+  vectorial code-first; la pantalla combina gradientes, rejilla, safe-area y
+  animacion CSS ligera. No se usa un segundo canvas ni una segunda simulacion.
+- Niveles y skins aparecen como botones deshabilitados con `data-feature`
+  (`level-select`, `skins`), listos para consumidores futuros sin tocar el
+  engine ni duplicar el menu.
+- La captura desktop y portrait confirma que el panel, CTA y acciones caben sin
+  scroll inesperado; el usuario debe validar en su movil la respuesta tactil y
+  el desbloqueo de audio desde la URL publicada.
+
+El spike de FX de cartas queda conscientemente abierto: el plan conserva el
+baseline actual y una matriz para comparar glow aditivo, `GlowFilter` y
+`ParticleContainer` con mediciones antes de elevar el presupuesto visual.
+
+## 22. Continuación — escena SVG dinámica de presentación
+
+Fecha: 31-08-2026.
+
+- `src/assets/svg/ui/start/hero-scene.svg` añade una escena ambiental
+  vectorial code-first con órbitas, rayos, nodos, barridos, fragmentos y un
+  núcleo central. Usa `viewBox="0 0 1200 900"`, no contiene raster, scripts,
+  recursos externos, filtros ni máscaras complejas, y todos sus IDs usan el
+  prefijo `ui-start-hero-`.
+- `StartScreen` monta la escena una sola vez en `#start-scene`; permanece
+  decorativa (`aria-hidden` y `pointer-events: none`) mientras el texto, foco y
+  hit-area continúan siendo HTML accesible.
+- CSS anima únicamente transformaciones, opacidad y `stroke-dashoffset` en
+  ciclos lentos: órbitas, pulsos de nodos, barridos de luz, respiración del
+  núcleo y una pasada de brillo sobre el panel. No se reconstruye el XML ni se
+  crea un segundo canvas o una segunda simulación.
+- `prefers-reduced-motion` detiene las animaciones y reduce la opacidad de la
+  escena; portrait, landscape y safe-area conservan el CTA y el layout de
+  acciones.
+- `StartSvgAssets.test.ts` valida el contrato del nuevo master y el smoke de
+  navegador confirma que la escena está montada antes de jugar. La inspección
+  visual en 1280×720 y 390×844 no mostró solapamiento del panel, scroll
+  inesperado ni pérdida de legibilidad.
+- `npm run typecheck`, `npm test` (89 tests), `npm run test:browser` (8 smoke),
+  y builds local/Poki/CrazyGames quedan como puertas antes de publicar.
+
+La próxima mejora visual debe medirse en el teléfono de referencia. Sólo si la
+escena SVG/CSS resulta insuficiente se abrirá un spike Pixi separado con un
+pool pequeño de partículas; no se añadirá `pixi-filters` ni una textura
+recalculada por frame sin evidencia de coste y beneficio.
+
+## 24. Continuación — marco cromático del panel inicial
+
+Fecha: 31-08-2026.
+
+- El borde exterior de `.start-screen-panel` anima `border-color` en un ciclo
+  lento cyan → violeta → dorado → mint → cyan, con 14 segundos por vuelta.
+- La línea interna (`::before`) usa el mismo recorrido con un desfase de 2.5
+  segundos para crear profundidad sin añadir filtros ni capas grandes.
+- `prefers-reduced-motion` detiene ambos ciclos y conserva el color base cyan.
+- El efecto sólo pinta dos bordes pequeños; no toca el fondo, el canvas, la
+  simulación ni el input. Los builds local/Poki/CrazyGames y los 89 tests pasan.
+
+## 23. Continuación — estabilización de la escena en móviles
+
+Fecha: 31-08-2026.
+
+- La pantalla y `#start-scene` permanecen visibles durante toda la ejecución;
+  la revisión local confirmó que no hay un cambio de fase ni un `display:none`
+  intermitente.
+- La causa más probable del parpadeo observado en ciertos GPU móviles era la
+  combinación de rotaciones de grupos SVG grandes, gradientes desplazados y
+  varias superficies compuestas mientras el panel usa `backdrop-filter`.
+- La animación se ajustó para mantener la escena estable: el grid y los
+  desplazamientos de capas grandes son estáticos; las órbitas usan
+  `stroke-dashoffset`, las luces usan opacidad y sólo los nodos pequeños
+  conservan un pulso de escala. El efecto visual dinámico se mantiene sin
+  reconstruir el SVG.
+- Las capas de luz ya no llegan a opacidad cero en el reinicio del ciclo; así
+  se evita un destello de apagado/encendido que podía parecer una desaparición.
+- La inspección local en portrait (390×844) a 0, 3, 6 y 9 segundos conservó el
+  panel, el CTA y el SVG; typecheck y la suite de 89 tests deben repetirse
+  antes de publicar este ajuste. La validación final requiere volver a abrir
+  la URL publicada en el móvil de referencia.
+- Tras el ajuste, `npm run typecheck`, `npm test` (89 tests) y los builds
+  `local`, `poki` y `crazygames` son correctos. El escenario browser específico
+  de menú llegó a ejecutar su aserción completa, aunque el runner local dejó
+  vivo el servidor de preview al cerrar y se detuvo manualmente; no reportó
+  errores de aplicación.
+
+## 25. Continuación — plan de juice visual mobile-first
+
+Fecha: 31-08-2026.
+
+La siguiente iteración visual queda definida en `PLAN_DESARROLLO.md` §15.6.
+No se implementan todavía efectos nuevos en esta sesión; se fija el orden para
+que cada cambio pueda probarse en GitHub Pages desde el móvil y pueda revertirse
+sin tocar la simulación.
+
+- El lenguaje visual vigente (geometría limpia, neón cyan/violeta/mint/dorado,
+  contraste alto y animación breve) se convierte en tokens compartidos por UI,
+  player, enemigos, hazards y FX.
+- Se crearán un `FxPool`, recetas `ImpactFX`, `DamageNumberView` y
+  `HealthBarView` en presentación Pixi. La simulación sólo emitirá eventos; no
+  importará Pixi, DOM ni audio.
+- El player será modular (`shadow`, `outer-ring`, `body`, `core`, armas y
+  accent), con dos skins de prueba sin estadísticas ni reglas propias.
+- Los impactos usarán flash, scale-punch y recoil visual; las muertes comunes
+  harán fade/shrink y las criaturas modulares podrán desarmarse en fragmentos
+  cacheados. El boss y la muerte del player tendrán secuencias breves propias.
+- Los números de daño se agruparán y limitarán; las mini barras sólo aparecerán
+  en objetivos dañados recientemente y elites/tanks, nunca sobre cientos de
+  enemigos de forma permanente.
+- Low/Medium/High controlarán partículas, trails, glow, texto y barras sin
+  cambiar telegraphs, controles ni gameplay. `prefers-reduced-motion` elimina
+  movimiento y fragmentos, pero conserva la información esencial.
+- Orden de trabajo: tokens/contratos → player y daño recibido → impacto/muerte
+  de chaser → tank/elite/boss → números/barras → muerte del player → skins →
+  comparación de presets en `?stress=1`.
+- La puerta de la fase exige 60 FPS objetivo, al menos 30 FPS jugables bajo
+  stress, legibilidad del player y hazards, ausencia de efectos huérfanos en
+  pausa/resize/restart y validación de los tres builds.
+
+## 26. Continuación — primera implementación de juice y player
+
+Fecha: 31-08-2026.
+
+- `VisualTokens.ts` centraliza skins, colores y presupuestos de FX; no hay
+  colores duplicados en `PlayerView` ni límites dispersos en el compositor.
+- El player dejó de ser dos círculos: ahora usa un master SVG y seis piezas
+  cacheadas (sombra, anillo, emisores, cuerpo, núcleo y acentos) con la misma
+  caja lógica. `PlayerView` soporta orientación por movimiento, pulso idle,
+  recoil y flash/compresión visual al recibir daño.
+- `FxPool` reutiliza sprites y mantiene una capacidad fija. `ImpactFxView`
+  dibuja el anillo y las partículas del primer impacto del player; respeta
+  `prefers-reduced-motion`, pausa y descarte por presupuesto.
+- La variante `?skin=violet` permite comparar la segunda paleta en Pages; el
+  parámetro opcional `?quality=low|medium|high` reduce o aumenta el presupuesto del
+  primer recipe. La URL normal sigue usando `cyan`/`medium`.
+- La simulación continúa sin imports de Pixi/DOM/audio. `Game` sólo reenvía el
+  evento de daño aceptado a la fachada de presentación; no cambia vida,
+  invulnerabilidad, XP, colisiones ni timestep.
+- Validación: typecheck correcto, 95 tests unitarios/integración, builds local,
+  Poki y CrazyGames correctos y los 8 smoke browser (incluido Pixel 5 touch)
+  correctos. Pendiente: inspección visual manual en el teléfono publicado.
+
+## 27. Continuación — locker de skins cosméticas
+
+Fecha: 31-08-2026.
+
+- El botón `#start-skins` del menú principal ya está habilitado y abre una
+  escena completa de locker dentro del mismo panel. Incluye volver al menú,
+  preview grande, colección, estado equipada/bloqueada y acción de adquirir o
+  equipar.
+- `src/content/visual/SkinDefinitions.ts` es el catálogo único de contenido:
+  Núcleo Aurora (`cyan`) se entrega de inicio y Prisma Violeta (`violet`) se
+  adquiere gratis como flujo de demostración. Añadir otra skin requiere ampliar
+  el tipo, la paleta y una definición, no duplicar la pantalla.
+- `src/ui/skins/SkinSelectPanel.ts` contiene la administración DOM y los
+  botones accesibles; `SkinPreviewSvg.ts` genera un preview vectorial pequeño
+  por código. El jugador real sigue usando sus piezas SVG cacheadas de Pixi.
+- `SaveStore` está en schema v2 y migra guardados v1. Persiste
+  `skins.selected` y `skins.unlocked`, fuerza cyan como fallback seguro y
+  garantiza que nunca se equipe una skin no adquirida.
+- `Game` toma la selección guardada al iniciar y `PixiGameView.setPlayerSkin`
+  actualiza la vista en vivo. Las skins son cosméticas: no cambian simulación,
+  daño, vida, velocidad, colisiones, XP ni balance. `?skin=cyan|violet` sigue
+  disponible como override de desarrollo.
+- El layout usa HTML/SVG, safe-area, portrait y landscape; no crea un canvas,
+  filtro ni textura por tarjeta. `prefers-reduced-motion` elimina el levitado
+  del preview y conserva la información y el foco.
+
+Validación de la sesión: typecheck correcto, 97 tests unitarios/integración,
+build local correcto y 8 smoke browser (desktop + Pixel 5 touch) correctos,
+incluyendo abrir el locker, adquirir/equipar violeta y comprobar el guardado.
+Pendiente para el móvil real: revisar escala de texto y sensación táctil en la
+URL publicada. La economía meta, costes, inventario amplio y skins con ventajas
+siguen fuera de alcance hasta definir esa progresión.
+
+## 28. Continuación — firmas visuales y desplazamiento del locker
+
+Fecha: 31-08-2026.
+
+- El locker ahora contiene cuatro skins con identidad geométrica propia:
+  Aurora Strider (`cyan`), Eclipse Prism (`violet`), Solar Bastion (`amber`) y
+  Verdant Vector (`emerald`). Ya no son variantes basadas solamente en color.
+- `SkinSignatureSvg.ts` genera una pieza vectorial adicional por skin:
+  órbitas segmentadas, fragmentos cristalinos, corona solar o aspas orgánicas.
+  Todas comparten `viewBox="-32 -32 64 64"`, frame y ancla; se rasterizan una
+  vez por skin y se reutilizan en Pixi.
+- `PlayerView` compone la firma encima de la sombra y la anima con rotación y
+  pulso de baja amplitud según tokens. El preview SVG del locker añade casco,
+  emisores, núcleo, detalle interno y firma periférica; CSS anima cada familia
+  sin filtros ni canvas secundario.
+- El panel usa cuatro tarjetas y permite scroll vertical en portrait. Se
+  habilitó `touch-action: pan-y` sólo en el overlay/panel; el canvas de juego
+  conserva su gesto `none`.
+- La prueba browser de Pixel 5 verifica que `scrollHeight` supera la altura
+  visible y que `scrollTop` cambia. También se mantiene la prueba de adquirir y
+  equipar la skin violeta y persistir la selección.
+
+Validación actual: typecheck correcto, 98 tests unitarios/integración, builds
+local/Poki/CrazyGames generados y smoke browser ampliado a 9 escenarios (7
+desktop y 2 Pixel 5), incluido el desplazamiento del locker. Sólo queda la
+revisión visual en el teléfono físico; `prefers-reduced-motion` conserva la
+lectura y elimina las animaciones decorativas.
+
+## 29. Continuación — corrección de parpadeo del locker móvil
+
+Fecha: 01-09-2026.
+
+- La auditoría encontró repintado excesivo al reconstruir las cuatro tarjetas
+  y sus SVG cada vez que se elegía una skin. `SkinSelectPanel` ahora monta las
+  tarjetas una vez y actualiza estado, clases, ARIA y texto sin destruir los
+  nodos ni reiniciar todas las animaciones.
+- `StartScreen` marca el root con `is-skins-mode`. En viewport de hasta 60rem,
+  ese modo congela las animaciones del fondo, los grupos SVG de la escena, el
+  marco del panel y las cuatro miniaturas. El preview grande de la skin
+  equipada conserva una animación de baja intensidad (levitación, opacidad y
+  dash), sin rotaciones/escala de grupos SVG. Se mantienen gradientes,
+  contraste, scroll y controles; el menú principal conserva su movimiento en
+  escritorio.
+- El preview equipado y la cabecera quedan fijos como una celda congelada; el
+  único scroll es `#start-skin-cards`, que se reinicia al abrir el locker. Así
+  la elección permanece visible mientras se comparan las skins.
+- La congelación es un preset de estabilidad para GPU móvil, no una regla de
+  gameplay ni una segunda escena. Un futuro spike con dispositivo real puede
+  reactivar una animación aislada si las mediciones lo permiten.
+
+Validación de esta sesión: typecheck correcto, 98 tests unitarios/integración y
+9 smoke browser (incluido Pixel 5) correctos. El smoke móvil comprueba que el
+modo locker congela panel, atmósfera y miniaturas, mantiene sólo la animación
+suave del preview equipado y conserva el desplazamiento vertical.
+
+## 30. Continuación — feedback pooled de impactos y derrotas enemigas
+
+Fecha: 01-09-2026.
+
+- `EnemyImpactFxView` añade un anillo expansivo y fragmentos geométricos con
+  capacidad fija para impactos y derrotas. Los colores salen del catálogo de
+  enemigos; los fragmentos son presentación y nunca colisionan ni conceden XP.
+- `CombatEntitiesView` detecta una caída de vida entre frames para disparar el
+  impacto y aplica un scale-punch de 4.5% durante 120 ms. La derrota se dispara
+  desde el evento `enemyDefeated` de `Game`, por lo que no se pierde cuando un
+  slot pooled se libera y se reutiliza en el mismo tick.
+- `PixiGameView` mantiene la frontera: recibe el evento, actualiza la vista y
+  avanza/limpia el FX junto con el resto de la presentación. `resetPresentation`
+  borra pools y snapshots para que reiniciar no produzca muertes fantasma.
+- El preset `prefers-reduced-motion` conserva el anillo informativo y descarta
+  fragmentos. La capacidad sigue limitada por `FxQuality`; no se crean nodos
+  DOM, texturas SVG por impacto ni cambios en simulación, daño, XP o timestep.
+
+Validación de esta sesión: typecheck correcto, 99 tests unitarios/integración,
+smoke browser normal y móvil correctos, y builds local/Poki/CrazyGames generados.
+Quedan pendientes para las siguientes puertas: números de daño agrupados,
+mini-barras recientes y la secuencia especial de muerte del boss/player.
+
+## 31. Continuacion — anclaje de tortuga y polvo de impacto
+
+Fecha: 01-09-2026.
+
+- Se corrigio el salto lateral de la tortuga al recibir dano. No era una
+  reconstruccion de SVG: el `scale-punch` del padre escalaba la posicion mundial
+  de las piezas desde el origen. La regla queda fijada: la ranura pooled posee
+  la posicion mundial y `TurtleVisual` usa espacio `local` al integrarse en
+  combate. Previews aislados pueden seguir usando espacio `world`.
+- `EnemyImpactFxView` reemplaza las chispas del impacto normal por polvo breve
+  con textura circular cacheada. Reutiliza el mismo `FxPool`, sin crear sprites
+  ni texturas durante gameplay: 3/4/5 motas Low/Medium/High, nacen en el borde
+  visible de la silueta (incluida la tortuga SVG), conservan velocidad de rafaga
+  y tienen tamano legible en portrait movil. El descarte al llenarse el pool se
+  mantiene. Los fragmentos de derrota son geometricos; el desarme de las cuatro
+  piezas SVG de la tortuga aun no esta implementado.
+- `FxPool` conserva escala, alpha y textura iniciales por slot, por lo que una
+  misma capacidad fija puede servir recetas cacheadas distintas sin allocations
+  en la ruta caliente. El cambio continua siendo solo de presentacion y
+  respeta `prefers-reduced-motion`.
+
+Validacion de esta sesion: typecheck correcto, 101 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.
+
+## 33. Continuacion — cierre visual de player y boss
+
+Fecha: 01-09-2026.
+
+- `PlayerView` conserva sus piezas SVG cacheadas y, al morir, separa armas,
+  cuerpo, core y acento mediante transforms durante 0.9 s mientras se desvanece.
+- `TerminalFxView` reutiliza un pool acotado para un anillo/burst de siete piezas
+  del player, una capa gris semitransparente y un cierre mas amplio del boss. El
+  panel de resumen deja ver el tono y la periferia de la explosion sin esperar a
+  terminar la animacion ni bloquear reinicio.
+- `AudioCueDefinitions` incorpora `player-defeated`: una receta ZzFX grave y
+  descendente de 0.9 s con cooldown propio, usando el mismo contexto compartido.
+- `Game` solo dispara las recetas desde los eventos ya existentes; la simulacion
+  y los contratos de victoria/game-over permanecen sin cambios.
+
+Validacion de esta sesion: typecheck correcto, 105 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.
+
+## 32. Continuacion — numeros de dano y mini-barras acotadas
+
+Fecha: 01-09-2026.
+
+- `DamageNumberView` mantiene un pool fijo de `Text` Pixi: Low no emite texto,
+  Medium/High reservan 16/24 slots. Agrupa golpes de la misma ranura durante
+  80 ms, asciende brevemente y descarta nuevos textos al llenarse, sin DOM ni
+  cambios de simulacion.
+- `HealthBarView` redibuja una unica geometria compartida con limite 8/16/24.
+  Tanks y elites tienen prioridad permanente; chasers/fast aparecen solo un
+  segundo despues de recibir dano. El boss conserva exclusivamente su HUD.
+- `CombatEntitiesView` es el unico consumidor: ya detectaba el delta de vida
+  para el impacto, por lo que reusa esa observacion para ambas vistas y las
+  limpia al reiniciar. Ninguna de las nuevas vistas decide dano, XP, colisiones
+  o dificultad.
+
+Validacion de esta sesion: typecheck correcto, 104 pruebas
+unitarias/integracion, 9 smoke browser (incluido movil) y builds
+local/Poki/CrazyGames correctos.
+
+## 34. Continuacion - muerte del jugador visible y resumen diferido
+
+Fecha: 01-09-2026.
+
+- La derrota del jugador conserva las piezas SVG de `PlayerView` y las separa
+  durante 2.2 s. La posicion de la ranura no cambia: solo se aplican transforms
+  de presentacion a armas, cuerpo, core, acento, anillo y firma.
+- `TerminalFxView` amplia el cierre del player con 10 fragmentos del pool,
+  velocidades radiales, arrastre suave y anillo de 3.4 radios. Un `Graphics`
+  gris overscan cubre la zona visible completa en portrait y landscape; el boss
+  mantiene su receta mas corta y discreta. El tono gris permanece durante la
+  ventana completa de 3 s aunque la separacion del player termina a los 2.2 s.
+- La receta ZzFX `player-defeated` continua siendo opcional y rate-limited. No se
+  crean contextos ni nodos de audio durante la muerte y el fallo de audio no
+  bloquea la run.
+- `Game.finishRun` guarda el resultado inmediatamente, pero abre el overlay
+  despues de 3 s. El timer se limpia en `resetRunState` y `shutdown`, y verifica
+  que la fase siga terminal antes de tomar foco.
+
+Validacion de esta sesion: typecheck correcto, 105 pruebas unitarias/integracion,
+9 smoke browser (desktop + Pixel 5) y builds local/Poki/CrazyGames correctos.
+En movil real hay que comprobar que el efecto se percibe completo antes del
+resumen; la puerta humana sigue siendo mantener 60 FPS y que el boton de
+reinicio aparezca tras el cierre visual.
+
+## 35. Continuacion - secuencia especial de derrota del boss
+
+Fecha: 01-09-2026.
+
+- `TerminalFxView` conserva el burst del pool, pero ahora el boss tiene una
+  lectura propia de colapso: dos anillos se separan, el nucleo se comprime y
+  dos fragmentos de energia se abren antes de desaparecer.
+- La receta dura 1.2 s y sigue debajo del modal diferido de 3 s. No retiene la
+  simulacion, no altera el resultado de victoria y no crea una segunda entidad
+  de gameplay.
+- Cada arco o circulo inicia su subpath de forma explicita; el efecto usa solo
+  tres `Graphics` reutilizados (ring, collapse y core) y el pool acotado de
+  fragmentos. `prefers-reduced-motion` conserva anillos y elimina particulas.
+
+Validacion pendiente de esta iteracion: comprobar en `?boss=1` que el boss se
+desplace, se derrote y deje ver la secuencia completa antes del resumen, ademas
+de repetir typecheck, tests, smoke browser y los tres builds.
+
+## 36. Continuacion - feedback de disparo y estelas
+
+Fecha: 01-09-2026.
+
+- `PlayerView` agrega recoil local de los emisores y un destello geometrico de
+  90 ms. `Game` usa el contador de disparos de `CombatSimulation` y colapsa
+  multiples disparos en un solo pulso por frame para no saturar el player ni el
+  bus de audio.
+- `AudioCueDefinitions` incorpora `player-shot` con cooldown de 80 ms. Howler y
+  ZzFX siguen detras de `AudioService`; el cue falla de forma silenciosa si el
+  contexto no fue desbloqueado.
+- `ProjectileTrailView` dibuja estelas cortas con una `Graphics` reutilizada:
+  Low 0, Medium 64 y High 120 segmentos maximos. Las ranuras se marcan activas
+  para evitar lineas fantasma al reciclar un proyectil y `reset()` limpia todo.
+- `CombatEntitiesView` conserva la jerarquia de capas: estela bajo enemigos y
+  sobre el sprite del proyectil. No se crean nodos ni texturas durante el loop.
+
+Validacion de esta iteracion: typecheck correcto, 108 pruebas
+unitarias/integracion, 9 smoke browser (desktop + Pixel 5) y builds
+local/Poki/CrazyGames correctos. Pendiente humano: comprobar en el movil real
+el destello/recoil/trail, especialmente con `?stress=1`, y registrar FPS.
+
+## 37. Continuacion - origen exacto y carta Doble canon
+
+Fecha: 01-09-2026.
+
+- `WeaponDefinitions` define las dos anclas logicas del arma en el mismo marco
+  64x64 de los SVG. `CombatWeaponSystem` rota esas anclas con la direccion del
+  objetivo y coloca el proyectil en el origen, no en el centro del player.
+- La configuracion base alterna los emisores izquierdo/derecho. El nuevo
+  `twin_emitters` es una mejora data-driven de una sola acumulacion: genera dos
+  proyectiles, registra una mascara de bocas y conserva un solo burst de audio.
+- `ShotRenderState` es estable y pooled: incluye secuencia, direccion, mascara
+  y origen de cada boca. `PlayerView` usa el mismo descriptor para orientar
+  temporalmente el arma y dibujar uno o dos destellos exactamente donde nace
+  cada bala.
+- El stress reutiliza la misma transformacion y `Game` condensa el feedback por
+  frame para no saturar audio/GPU. No se agregan nodos ni objetos por disparo.
+
+Validacion de esta iteracion: typecheck correcto, 110 pruebas
+unitarias/integracion y carta incluida en el mapa visual. Pendiente humano:
+comprobar en movil la alternancia, la alineacion bala/destello y la carta Doble
+canon durante `?stress=1`, ademas de repetir smoke browser y los tres builds.
+
+## 38. Continuacion - investigacion de canones y skins de proyectil
+
+Fecha: 01-09-2026.
+
+La siguiente ampliacion visual esta aprobada como cosmetic-only. Los SVG seran
+masters rasterizados una vez a texturas compartidas; las balas seguiran siendo
+sprites reutilizados y sus estelas tendran recetas pooled. La ruta curva sera
+un arco visual del trail, no una curva de la posicion simulada. Humo y glow
+deben tener limites por calidad: Low sin trail/filtro, Medium con pocos
+segmentos y High con un glow pequeno. Pixi advierte que los filtros cuestan
+GPU y que no se debe reconstruir `Graphics` constantemente.
+
+El commit `7beb11e` ya deja la frontera necesaria para comenzar: anclas de
+emisor compartidas, disparo alternado, carta `twin_emitters`, origen exacto y
+`ShotRenderState` estable. El siguiente consumidor sera un
+`ProjectileSkinDefinition` data-driven con variantes de cuerpo, estela y color;
+no debe cambiar dano, cadencia, velocidad, colision ni trayectoria logica.
+
+Orden de continuacion: variantes SVG de canon manteniendo el frame `64x64`,
+definiciones de bala, pool de presentacion, locker de skins de bala y medicion
+en `?stress=1`. La puerta humana es comprobar en movil que la bala y el
+destello coinciden y que Low/Medium/High mantienen 60 FPS.
+
+## 39. Continuacion - locker de canones, balas y estelas
+
+Fecha: 01-09-2026.
+
+- `CannonSkinDefinitions` declara cuatro paquetes completos: `basic`, `curve`,
+  `smoke` y `rainbow`. Cada uno referencia una silueta SVG de canon, una bala
+  SVG y una receta de estela; el contenido no altera reglas de combate.
+- `SaveStore` sube el schema a v3 y migra partidas antiguas agregando
+  `cannonSkins` con `basic` equipado. La seleccion y adquisicion demo se guarda
+  igual que las skins del cuerpo.
+- El locker ahora tiene pestañas Nucleo / Canones y balas. El panel de canones
+  mantiene una sola preview SVG animada con disparos constantes; las tarjetas
+  usan thumbnails estaticos para no animar cuatro escenas a la vez. En movil la
+  coleccion conserva su scroll independiente.
+- `PlayerView` usa texturas de canon independientes y `CombatEntitiesView`
+  cambia las texturas pooled de proyectil. `ProjectileTrailView` cambia entre
+  linea, arco visual, humo y franjas arcoiris sin crear objetos en el loop.
+- La variante curva es solo una forma visual del trail; origen, velocidad,
+  colision, dano y trayectoria logica permanecen intactos.
+
+Validacion: typecheck correcto, 45 archivos y 116 pruebas, smoke desktop y
+Pixel 5 incluyendo ambas pestañas, y builds local/Poki/CrazyGames correctos.
+Pendiente humano: abrir la URL publicada, adquirir cada paquete, comprobar la
+preview continua y confirmar que el proyectil coincide con el destello en una
+run movil. `debug.log` local no forma parte del commit.
+
+## 40. Continuacion - desarme visual de tortuga
+
+Fecha: 01-09-2026.
+
+- `TurtleDefeatFxView` mantiene un pool de copias de las cuatro piezas SVG ya
+  cacheadas de la tortuga. En Medium/High usa 4/6 slots; Low y
+  `prefers-reduced-motion` no emiten fragmentos modulares.
+- Al morir un `chaser`, `CombatEntitiesView` inicia una copia visual de 360 ms
+  que abre patas, caparazon y cabeza desde el mismo frame comun. La entidad
+  logica se puede liberar y reciclar inmediatamente: no se retiene su slot ni
+  se alteran dano, XP, colisiones o movimiento.
+- La copia se ubica sobre la capa de enemigos y debajo de barras/numeros; se
+  limpia con `reset()` y no crea texturas, SVG ni nodos durante el loop.
+- Queda pendiente probar en movil real que el desarme se perciba junto al polvo
+  sin tapar la arena. Tank y Elite siguen usando el burst generico hasta tener
+  arte modular propio.
+
+## 41. Continuacion - masters SVG de Fast, Tank y Elite
+
+Fecha: 01-09-2026.
+
+- `fast/fast.svg`, `tank/tank.svg` y `elite/elite.svg` reemplazan los
+  `Graphics` provisionales del pool de enemigos. Comparten `viewBox` y ancla
+  con la tortuga, son masters auto-contenidos y se rasterizan una vez como
+  texturas Pixi reutilizadas.
+- Las tres familias tienen una lectura propia a escala pequeña: punta/aletas
+  para velocidad, placas/cuña para resistencia y corona/nucleo para prioridad.
+  Ninguna modifica radio de colision, vida, velocidad, XP o spawn.
+- `SvgEnemyAssets.test.ts` valida estructura, prefijos, ausencia de recursos
+  externos/filtros y presupuesto de primitivas. El siguiente paso visual para
+Tank y Elite es separar sus masters en piezas reales solo cuando se conecte
+su desarme pooled; no volver a efectos genericos temporales.
+
+## 42. Continuacion - naves modulares y arco visual de proyectiles
+
+Fecha: 01-09-2026.
+
+- El `chaser` dejo de renderizarse como tortuga: ahora usa una nave scout de
+  cuatro piezas (`rear`, `wings`, `hull` y `cockpit`). Los SVG de la tortuga y
+  sus pruebas se conservan como base de diseno y referencia historica.
+- Fast, Tank y Elite tambien se componen con cuatro piezas cacheadas. Cada
+  familia tiene un perfil de movimiento sutil: motores pulsantes, alas/placas
+  con sway, respiracion del casco y bob de cabina. La direccion continua
+  viniendo del vector de movimiento y las transformaciones son locales.
+- `EnemyDefeatFxView` reemplaza el desarme exclusivo de la tortuga por un pool
+  comun para las cuatro naves. La separacion dura 420 ms y no retiene la
+  entidad de simulacion ni cambia radio, dano, XP, colisiones o reciclaje.
+- `ProjectileTrailView` ahora usa sprites preasignados en lugar de limpiar y
+  reconstruir `Graphics` cada frame. Las estelas son mas largas y visibles en
+  Medium/High; Low continua sin trail.
+- El paquete `curve` produce un arco visual temporal de 10 unidades: el sprite
+  y la estela se separan suavemente de la linea, alternan el lado por emisor y
+  convergen de nuevo. La posicion logica de colision sigue recta para que la
+  skin no se convierta en ventaja de gameplay.
+
+Validacion de esta iteracion: typecheck correcto, 125 pruebas en 49 archivos,
+smoke browser 9/9 y builds local, Poki y CrazyGames correctos. Queda como
+puerta manual medir FPS/CPU/GPU en un movil real bajo `?stress=1` y revisar la
+legibilidad de naves, separacion de piezas y estelas en Medium/High; esa puerta
+no puede medirse desde este entorno.
+
+## 43. Continuacion - game feel inicial y profiling - 01-09-2026
+
+- Se auditaron los `Graphics` que dibujan formas independientes y cada arco,
+  circulo, rectangulo o segmento reinicia su subpath con `beginPath()` o
+  `moveTo()` explicito. Esto protege contra diagonales heredadas entre figuras.
+- `ScreenFxView` agrega un shake determinista y limitado por calidad. Los
+  impactos normales no mueven la camara en hordas; Tank/Elite, dano del player,
+  expansion, cadena y derrota tienen impulsos acotados. `Game` aplica
+  micro-hit-stop solo a golpes relevantes, conservando input y sin cambiar
+  dano, colisiones, cadencia ni trayectoria logica.
+- `PlayerView` ahora deriva velocidad desde snapshots consecutivos para aplicar
+  tilt local, respuesta elastica y dos trazos de motor en Medium/High. Low no
+  crea ese trail y todas las piezas siguen siendo presentacion.
+- Los enemigos muestran flash de impacto sobre el casco. Chain Lightning tiene
+  doble trazo y un nodo de impacto pooled por salto; Laser tiene carga radial y
+  pulsos de ataque/recuperacion; la expansion de arena emite un shockwave
+  reutilizado y conserva la resonancia existente.
+- `?profile=1` habilita `FrameProfiler`: mantiene 240 muestras sin allocations
+  por frame y expone promedio, p95, maximo, frames largos y heap JS cuando el
+  navegador lo ofrece. No sustituye profiling de CPU/GPU/GC en telefono real.
+
+Validacion de esta iteracion: typecheck correcto, 130 pruebas en 52 archivos,
+smoke browser 9/9 y builds local, Poki y CrazyGames correctos. Queda como
+puerta manual medir en un movil fisico con `?stress=1&profile=1`: registrar
+dispositivo, navegador, preset, FPS/p95, legibilidad y consumo.
+
+## 44. Continuacion - atmosferas, locker de fondos y HUD de gameplay - 02-09-2026
+
+El usuario confirma que el modo stress funciona correctamente en movil y PC, y
+que las runs completas siguen siendo terminables. La siguiente capa visual
+resuelve el fondo plano sin tocar simulacion, combate ni balance:
+
+- `BackgroundView` usa un unico `Graphics` estatico detras de la arena. Cada
+  tema se dibuja solo al equiparlo o al cambiar portrait/landscape; no parsea
+  SVG, no descarga imagenes y no reconstruye geometria durante el ticker.
+- Hay cuatro atmosferas seleccionables: `deep-space`, `ion-storm`,
+  `solar-drift` y `crystal-field`. El preset limita las estrellas a 12/24/34
+  en Low/Medium/High. La arena conserva una opacidad dominante para que el
+  fondo aporte profundidad sin competir con player, boss o telegraphs.
+- El locker suma la pestaña `Fondos` junto a `Nucleo` y `Canones y balas`.
+  La seleccion se persiste mediante schema v4 y mantiene `deep-space` como
+  fallback seguro para partidas guardadas anteriores. `?background=` queda
+  disponible como atajo de desarrollo.
+- Se eliminaron del mundo de gameplay el titulo `GEOMETRY SURVIVOR` y la
+  instruccion inferior. La identidad queda en el menu y el HUD conserva solo
+  informacion de la run.
+
+La puerta automatica de esta iteracion es typecheck, suite, smoke desktop y
+mobile, build local y builds de plataforma. La puerta manual posterior es
+comparar las cuatro atmosferas en movil real, revisar contraste y confirmar
+que Low mantenga legibilidad y rendimiento.
+
+## 45. Continuacion - protecciones para dispositivos modestos y profiler
+
+Fecha: 02-09-2026.
+
+- El resultado estable del stress en el telefono de referencia valida ese
+  dispositivo, pero no sustituye una medicion en hardware modesto. Las naves
+  mantienen sus cuatro piezas SVG en Medium/High; en Low solo renderizan el
+  casco. La entidad, colision, telegraph y simulacion siguen presentes: se
+  omiten exclusivamente piezas decorativas, flash y movimiento secundario.
+- `EnemyDefeatFxView` deja de crear un array temporal por derrota al asignar
+  directamente las cuatro texturas cacheadas de la familia al slot pooled.
+- `FrameProfiler` conserva sus muestras sin allocations por frame, pero ahora
+  calcula promedio/p95/maximo y heap como maximo cada 500 ms. Cuando no esta
+  activado devuelve un snapshot constante y no consulta memoria en cada frame.
+- Se retiran las clases Pixi obsoletas de la tortuga. Sus SVG y pruebas de
+  contrato permanecen como referencia historica; el runtime comun usa
+  `EnemyShipVisual` y `EnemyDefeatFxView` para las cuatro familias.
+
+Puerta humana pendiente: ejecutar `?stress=1&quality=low&profile=1` en un
+telefono menos potente, mover durante un minuto y registrar modelo, navegador,
+FPS/p95 y cualquier congelamiento. Medium/High siguen siendo el objetivo
+visual; Low es el modo de seguridad, no un cambio de gameplay.
+
+## 46. Continuacion - tolerancia del smoke en runner compartido
+
+Fecha: 02-09-2026.
+
+- El registro de CI confirma que Vite termina correctamente (`built in 4.45s`).
+  El fallo posterior estaba en Playwright: dos smoke tests agotaron el limite
+  global de 30 s mientras Chromium headless esperaba el canvas tras resize.
+- El log local del navegador muestra `GPU stall due to ReadPixels` al crear
+  texturas WebGL. Es una demora del backend headless al rasterizar los masters
+  SVG durante varios boots, no una excepcion del runtime ni un error de Pages.
+- `playwright.config.ts` usa ahora 60 s por escenario y 10 s por asercion. Las
+  condiciones verificadas no cambian; solo se evita abortar una prueba valida
+  por la variacion de carga del runner compartido.
+
+Validacion previa: typecheck, suite (131 tests), build local y builds de
+Poki/CrazyGames en verde. Los escenarios desktop y mobile ejecutados por
+separado pasan; CI debe repetir la matriz completa con el nuevo margen.
+
+## 47. Continuacion - primeras pasivas de progresion
+
+Fecha: 02-09-2026.
+
+- `longshot_projectiles` sale del catalogo activo: la arena actual concentra
+  el combate cerca del jugador y la velocidad del proyectil no aporta una
+  decision perceptible durante la primera run.
+- `resonant_core` suma 12% de experiencia por acumulacion, hasta 3; el bonus
+  se aplica al derrotar y conserva los decimales antes de que
+  `LevelProgression` sincronice la experiencia mostrada.
+- `regenerative_reactor` suma 2% de vida maxima cada 5 segundos, hasta 3;
+  `PlayerModel` realiza los pulsos, evita sobrecurar y reinicia su temporizador
+  al reiniciar la run.
+- `vampiric_core` suma 1% de vida maxima por derrota aceptada, hasta 3. El
+  disparador se limita a una curacion cada 0.25 segundos para que una oleada
+  densa no cree una recuperacion infinita. No depende de la vida del enemigo.
+- Las tres cartas usan `UpgradeApplier`, previews numericos con porcentaje e
+  iconos SVG nuevos (`experience`, `repair`, `vampirism`). No se creo un
+  manager global ni se introdujeron imports de Pixi/DOM en simulacion.
+- La definicion activa queda en 13 mejoras: pasivas y rutas de armas siguen en
+  un catalogo tipado, con limites y prerequisitos data-driven.
+
+Validacion automatica de esta iteracion: typecheck correcto, 52 archivos de
+test y 135 pruebas pasando, incluidas curacion por pulso, vampirismo,
+experiencia bonificada, limites y previews. Pendiente humano: probar en
+movil una subida de nivel con cada carta, verificar que la barra de vida haga
+visible la recuperacion y confirmar que la experiencia acelera sin adelantar
+demasiado el primer nivel.
+
+## 48. Continuacion - pasivas defensivas y critico
+
+Fecha: 02-09-2026.
+
+- El HUD redondea el XP hacia abajo con `formatExperience`; la simulacion
+  conserva decimales para que el bonus de experiencia no pierda precision.
+- `critical_impact` suma 10% de probabilidad por acumulacion, hasta 3, y
+  aplica multiplicador fijo 2x a Projectile, Orbit y Chain Lightning. El azar
+  usa una semilla propia de simulacion y se reinicia con la run, por lo que no
+  depende del framerate ni de Pixi.
+- `recharging_shield` conserva una carga que bloquea un paquete de dano y se
+  recarga en 10 segundos. La carga protege contacto, Laser y boss; mientras se
+  recompone expone un progreso 0..1 para la vista.
+- Se retira `phase_shift`: su desplazamiento se solapaba con el escudo y no
+  aportaba una decision suficientemente distinta durante la primera run.
+- La presentacion mantiene un aura protectora cyan alrededor del jugador. Al
+  bloquear desaparece la carga completa, muestra un pulso dorado de impacto y
+  vuelve a llenarse de forma radial hasta recuperar el escudo.
+- El catalogo activo queda en 15 mejoras y conserva `UpgradeApplier` como
+  unico punto de aplicacion, con previews porcentuales para experiencia,
+  regeneracion, vampirismo y critico.
+
+Validacion automatica: `npm run typecheck` correcto; suite unitaria con 53
+archivos y 139 pruebas pasando; builds `local`, `poki` y `crazygames` en verde.
+El smoke Playwright ejecuto los 9 escenarios desktop/mobile correctamente; el
+proceso deja vivo el servidor de preview en este runner compartido y hubo que
+terminarlo despues de imprimir los nueve `ok`, sin fallos de asercion.
+
+Puerta humana: comprobar en movil que el XP ya no satura el HUD, que el escudo
+absorbe un impacto, desaparece visualmente y vuelve a llenarse durante 10
+segundos, y que los criticos se perciben sin volver dominante la carta.
+
+## 49. Continuacion - escudo visual y retirada de fase
+
+Fecha: 02-09-2026.
+
+- Se retira por completo `phase_shift`: desaparece del catalogo activo, sus
+  tipos, icono SVG, aplicador y pruebas. El pool queda en 15 mejoras.
+- `recharging_shield` conserva una unica carga, bloquea el siguiente paquete
+  de dano y se rearma tras 10 segundos. `PlayerModel.shieldChargeProgress`
+  expone una fraccion determinista 0..1 sin introducir estado de Pixi en la
+  simulacion.
+- `PlayerView` dibuja un aura cyan persistente con arco radial de carga; al
+  bloquear, el aura queda vacia y aparece un pulso dorado con fragmentos. El
+  arco se recompone durante la recarga y recupera un anillo completo al 100%.
+- La fachada `PixiGameView` y `Game` solo transportan el progreso y el evento;
+  las reglas siguen en `PlayerModel` y la carta sigue aplicandose únicamente
+  desde `UpgradeApplier`.
+
+Validacion automatica cerrada: typecheck correcto, suite con 53 archivos y 139
+pruebas pasando, builds `local`, `poki` y `crazygames` en verde, y los 9 smoke
+tests desktop/mobile completados sin aserciones fallidas (el servidor de
+preview se mantuvo vivo al terminar y se cerro manualmente). Puerta humana:
+comprobar el aura llena, el vaciado al recibir un impacto bloqueado y la
+recomposicion gradual en un telefono real.
+
+## 50. Continuacion - economia NOVA y laboratorio meta - 02-09-2026
+
+El usuario confirma que el preset Low/High ya fue probado en su movil de
+referencia y decide avanzar con contenido meta antes de producir mas armas o
+niveles.
+
+- Se crea la moneda blanda unica **NOVA**. Su emblema vive en
+  `src/assets/svg/ui/nova.svg` y se reutiliza en menu, laboratorio, compras de
+  cosmeticos y resumen de run. Es un SVG autocontenido, sin raster, filtros ni
+  referencias externas; los textos cercanos mantienen la lectura accesible.
+- `EconomyDefinitions` concentra nombre, simbolo, formato y recompensa. Cada
+  run entrega `max(1, bajas + floor(segundos/30))` NOVA, con limite por run y
+  sin decimales visibles.
+- El save pasa a schema v5 con `wallet.nova` y `metaUpgrades.levels`; las
+  partidas v1-v4 migran a cero NOVA y niveles vacios sin perder ajustes,
+  mejores ni loadouts.
+- Las cuatro skins de nucleo y canones usan precios data-driven de 250/600/1200
+  NOVA segun rareza; los fondos usan 150/350/700. La compra se bloquea si no
+  hay saldo y las apariencias siguen sin alterar gameplay.
+- El menu principal incorpora `Mejoras` y `MetaProgressionPanel`. Las dos
+  primeras mejoras permanentes son `weapon_damage` (+5% por nivel, 5 niveles)
+  y `weapon_cadence` (-3% intervalo, 5 niveles). Los modificadores se aplican
+  al comenzar o reiniciar la run y se separan de las cartas temporales.
+- Las armas nuevas, niveles y monetizacion real quedan intencionalmente fuera
+  de esta entrega. Los anuncios mantienen como siguiente frontera los puntos
+  de game over/reinicio y rewarded opcional, aislados por adaptadores de
+  plataforma.
+
+Validacion automatica de esta iteracion: typecheck correcto, 56 archivos y 145
+pruebas unitarias pasando, build local correcto y smoke browser desktop/mobile
+9/9 sin fallos de consola. Pendiente manual: abrir el Laboratorio en Pages,
+terminar una run para acumular NOVA, comprar una skin y una mejora, recargar y
+confirmar que cartera, loadout y niveles permanecen.
+
+## 51. Continuación - estabilización y plan maestro de expansión - 03-09-2026
+
+Se revisaron los cambios realizados con Grok y la investigación de futuro. La
+dirección aprobada no reemplaza el vertical slice: lo convierte en Acto I de
+una estructura Quick Act / Expedition / Overdrive. La sección 16 de
+`PLAN_DESARROLLO.md` es ahora el orden canónico para el trabajo futuro.
+
+Hallazgos corregidos en esta sesión:
+
+- `BackgroundView` actualiza `baseScale` y escala de nebulosas ya existentes al
+  cambiar el viewport; una prueba reproduce el cambio 1280→640.
+- Los 18 SVG guardados accidentalmente como Windows-1252 fueron convertidos a
+  UTF-8. Las pruebas de cañones y player rechazan el carácter de reemplazo para
+  impedir otra corrupción silenciosa.
+- Los glows de proyectil quedan presupuestados por calidad: Low 0, Medium 64 y
+  High 120; los proyectiles restantes siguen visibles sin duplicar hasta 300
+  sprites de glow.
+- `debug.log` sale del repositorio y queda ignorado. Sus mensajes `ReadPixels`
+  provenían de Chromium headless y no demostraban por sí mismos un fallo del
+  juego.
+- El bundle conserva su warning visible. No se oculta aumentando el límite:
+  debe medirse y dividirse por consumidores reales antes de sumar actos y
+  galerías.
+
+Decisiones fijadas:
+
+- Prioridad inmediata: validar NOVA/Laboratorio v1 en Pages y medir su poder
+  combinado; el objetivo meta es 10–15% de ventaja efectiva máxima.
+- Después se crea un contrato rewarded tipado y un simulador local. Los SDK
+  reales llegan sólo cuando success/error/cancel/timeout sean seguros.
+- Los únicos placements aprobados son revive, reroll, double NOVA y un
+  cosmético destacado con alternativa NOVA. Todos requieren pulsación expresa;
+  no habrá anuncios automáticos con la decisión actual.
+- Poki y CrazyGames conservan bundles/adaptadores separados. GitHub Pages nunca
+  pretende validar sus SDK reales.
+
+- Antes de añadir Vector Boomerang se extraen scheduler y behaviors desde
+  `CombatWeaponSystem`; la cuarta arma es el caso real que justifica hacerlo.
+- El arsenal futuro queda en Projectile, Orbit, Chain, Vector Boomerang, Pulse
+  Ring y Resonant Aura, cada uno con dos evoluciones mutuamente excluyentes y
+  presupuestos de DPS/cobertura detallados en el plan.
+- Acto I es Radial, Acto II Angular y Acto III Fracture. Expedition conserva la
+  build; Calibration permite empezar directamente en actos desbloqueados;
+  Overdrive es opcional y se implementa al final.
+
+Documentación oficial consultada el 03-09-2026: PokiSDK HTML5, CrazyGames Video
+Ads, Advertisement Requirements y Game Events. La integración debe conceder
+premio únicamente con `true`/`adFinished`, restaurar audio/UI/lifecycle en todo
+fallo y ocultar rewarded durante CrazyGames Basic Launch.
+
+Validación automática de la entrega: typecheck correcto; 56 archivos y 154
+tests pasando; SVG completos en UTF-8 válido; builds local, Poki y CrazyGames
+correctos. Los 9 smoke desktop/mobile reportaron `ok`, incluido resize y touch.
+El proceso Playwright todavía permanece vivo después de imprimir los resultados
+en este host Windows y se termina manualmente; se conserva como deuda del
+runner, no como fallo de una aserción del juego. El bundle principal queda en
+aproximadamente 555.3 kB minificado / 156.7 kB gzip y mantiene el warning de
+500 kB para vigilar crecimiento.
+
+Próximo paso después de publicar este commit:
+
+1. probar en Pages la rotación y cambio de tamaño con fondos Medium/High;
+2. terminar una run, comprobar cobro NOVA, comprar/equipar un cosmético y
+   recargar;
+3. comprar un nivel del Laboratorio, reiniciar y confirmar que se aplica;
+4. registrar cualquier parpadeo, texto corrupto o caída con
+   `?stress=1&profile=1`;
+5. con esa puerta humana aprobada, implementar primero el contrato rewarded
+   local, no los SDK reales ni una arma nueva.
+
+## 52. Inicio de prioridad 2 - rewarded local - 04-09-2026
+
+La prioridad 2 comenzo con un contrato rewarded local, sin red ni SDK externo.
+`AdService` reemplaza el anuncio generico por placements tipados (`revive`,
+`reroll`, `double-nova`, `cosmetic-unlock`) y resultados seguros
+(`rewarded`, `dismissed`, `unavailable`, `error`).
+
+`RewardedAdController` serializa solicitudes y `RewardedOfferLedger` aplica
+idempotencia por run: una cancelacion o error se puede reintentar, un exito no
+se consume dos veces y una respuesta tardia de otra run no altera el saldo.
+El resumen de partida ya ofrece `double-nova` solo tras comprobar disponibilidad
+y con pulsacion expresa; el saldo sigue limitado a `MAX_NOVA`.
+
+En Pages se pueden simular estados con `?ad=success` (por defecto),
+`?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`. El revive
+queda cableado como segundo consumidor: una sola vez por run, unicamente tras
+muerte, con 35% de vida y dos segundos de invulnerabilidad; no reinicia XP,
+bajas, arena ni build. Reroll, cosmetico y los adaptadores reales de
+Poki/CrazyGames quedan como siguientes incrementos, despues de aprobar la
+matriz local en movil.
+
+## 53. Reroll rewarded local - 04-09-2026
+
+El level-up ahora muestra una oferta opcional de reroll cuando existen tres
+alternativas validas. El resultado es determinista, excluye las cartas que ya
+se estaban mostrando y no consume el nivel pendiente. La oferta se consume
+una sola vez por run (equivalente al Acto I actual); una cancelacion, falta de
+inventario o error deja activas las cartas originales y permite reintentar.
+
+Mientras el anuncio esta pendiente se bloquean las cartas y el CTA para evitar
+doble input. El simulador sigue sin SDK externo y usa los mismos parametros
+`?ad=success`, `?ad=dismissed`, `?ad=unavailable`, `?ad=error` y `?ad=timeout`.
+
+## 54. Cosmetic unlock rewarded local - 04-09-2026
+
+El locker tiene una oferta unica y contextual en la franja `OFERTA DESTACADA ·
+REWARDED`. La pestaña activa elige el primer cosmetico bloqueado de su catalogo:
+nucleo, paquete de cañones/balas o fondo. La oferta informa el nombre y el
+precio NOVA alternativo; no cambia daño, fisica, cadencia, colisiones ni reglas.
+
+El resultado `rewarded` desbloquea y equipa el objeto de forma idempotente y lo
+persiste mediante `SaveStore`. Cancelacion, error o falta de inventario no
+conceden el objeto y dejan visible la alternativa de compra cuando corresponde.
+Mientras la solicitud esta pendiente se bloquea el CTA, y un token de vista
+ignora respuestas tardias si el usuario cierra el locker o empieza la partida.
+
+La disponibilidad se consulta antes de abrir el menu. En Pages se prueba con
+`?ad=success` (por defecto) o `?ad=unavailable`; las rutas de cancelacion/error
+comparten el contrato local ya validado en revive, double-NOVA y reroll. Los
+adaptadores reales de Poki/CrazyGames siguen pendientes de la puerta de SDK.
+
+Validacion de esta iteracion: typecheck correcto, 59 archivos y 170 tests
+unitarios/integracion, 11 smoke desktop/mobile y builds `local`, `poki` y
+`crazygames` correctos. El warning del bundle de aproximadamente 572 kB
+minificado sigue visible por decision del plan.
+
+## 55. Linea base reproducible del Acto I - 04-09-2026
+
+Se implemento el instrumento de medicion de la prioridad 3 sin tocar las
+reglas de la run. `?baseline=1` activa el profiler, el panel de debug y un
+panel local de reporte. Cada run terminada registra tiempo total, primera
+subida, llegada del boss, causa de muerte (contacto, laser o boss), cartas
+elegidas, NOVA, maximos de enemigos/proyectiles/FX y frame medio/p95. El
+registro vive en memoria y en `localStorage` bajo una clave separada del save,
+queda limitado a las ultimas diez runs y puede copiarse o borrarse desde Pages.
+
+Los eventos de dano ahora incluyen una fuente tipada; esto solo mejora la
+observabilidad y no cambia la cantidad ni el momento del dano. El contador FX
+consume exclusivamente contadores ya acotados de los pools de presentacion.
+La vista normal no muestra el panel ni crea overhead de medicion salvo que se
+use el flag.
+
+Validacion automatica: typecheck correcto, 60 archivos y 174 pruebas unitarias
+pasando, y 12 smoke desktop/mobile en verde (incluido `?baseline=1`). Falta la
+puerta humana: registrar diez runs en el mismo telefono, anotando navegador,
+preset de calidad y cualquier observacion de balance o rendimiento. No se
+considera congelada la linea base hasta completar ese registro.
+
+Prueba movil corta:
+
+1. abrir `https://mirobo137.github.io/geometry-survivor/?baseline=1`;
+2. jugar y terminar una run; el panel debe cambiar de `0/10` a `1/10`;
+3. repetir hasta diez runs sin borrar los datos;
+4. pulsar `Copiar reporte` y conservar el texto junto con modelo del telefono,
+   navegador y calidad;
+5. si se quiere descartar una sesion de prueba, pulsar `Borrar datos`.
+
+## 56. Extraccion de comportamientos de armas - 04-09-2026
+
+Se cerro el siguiente incremento arquitectonico sin agregar una arma nueva ni
+cambiar el balance. `CombatWeaponSystem` conserva la API que consume
+`CombatSimulation`, pero ahora compone:
+
+- `WeaponScheduler`: acumuladores y orden de disparo por cooldown;
+- `ProjectileBehavior`: targeting, origen de boca, pool, colisiones y snapshot
+  del ultimo disparo;
+- `OrbitBehavior`: blades, radio y cooldown por objetivo;
+- `ChainBehavior`: saltos, segmentos y exclusiones por cast.
+
+Todos los contratos permanecen en `simulation`, sin Pixi, DOM, audio o SDK.
+`StressCombatScenario` sigue usando los mismos pools y ahora reutiliza el
+behavior de proyectil para conservar origen, dano y senal visual. Los
+modificadores de cartas y Laboratorio siguen entrando por la fachada publica;
+no se duplicaron reglas en la UI.
+
+Validacion automatica de esta iteracion: typecheck correcto, suite completa y
+tests del scheduler/combat en verde. La suite queda en 61 archivos y 176
+pruebas; smoke desktop/mobile 12/12 y builds `local`, `poki` y `crazygames`
+tambien pasan. El warning del bundle se mantiene visible (aprox. 583 kB
+minificados) para vigilar crecimiento. La puerta humana de la linea base (diez
+runs) continua pendiente; el siguiente incremento despues de esta extraccion
+sera diseñar y probar Vector Boomerang con escenarios seeded antes de
+exponerlo en cartas.
+
+## 57. Tank de referencia y dirección artística SVG — 04-09-2026
+
+Entrega solicitada explícitamente después de la guía de ejecución. Se rediseña
+el Tank como Bastión de placas: proa truncada, hombros biselados, chasis,
+ranuras y reactor facetado empotrado. Conserva las cuatro piezas y su animación
+y muerte existentes; no se modifica simulación ni balance. El master y las
+piezas comparten 23 paths idénticos en orden; test de equivalencia nuevo.
+
+Low usa una textura compuesta cacheada en su único sprite visible en lugar de
+ocultar partes de la silueta. Añade una textura compartida 64×64, resolución 1,
+sin nuevos sprites por instancia, filtros ni partículas. Se conserva el flash
+existente de Medium/High. El test cubre Low/High y reutilización entre familias.
+
+La skill SVG enruta a `references/ship-art-direction.md`: planos de volumen,
+jerarquía de bordes, función/silueta, ensamblaje, Low y revisión comparativa.
+Ficha: `src/assets/svg/enemies/tank/README.md`. Lámina de desarrollo:
+`docs/visual/tank-reference.html` bajo Vite; incluye el master anterior conservado
+en docs, versión actual, piezas, tamaños y compositor Pixi. No se empaqueta en
+los builds de juego. El adaptador Grok sigue apuntando a la misma skill.
+
+Validación: typecheck; 178 tests en 61 archivos; builds local/Poki/CrazyGames
+correctos; `npx playwright test --reporter=line`: 12/12, exit code 0. El build
+local se ejecutó antes de añadir el último test de equivalencia; los builds
+posteriores ejecutaron los 178 tests y el código de producción no cambió entre
+ellos. XML de los cinco SVG válido y diff sin errores de whitespace.
+Chunk local principal: 588.51 kB / 163.76 kB gzip; warning 500 kB conservado.
+
+Inspección real realizada: exportación Inkscape de master a 512 px y 32 px.
+Se observa el ensamblaje y se conservan hombros/proa/reactor en pequeño. No
+hubo navegador de inspección disponible (ninguna superficie CUA), por lo que
+la lámina interactiva y la comparación visual Pixi no se declaran verificadas.
+Los smoke no sustituyen esa inspección ni miden GPU/frame time en teléfono.
+
+Estado: AUTOMÁTICO OK / ESPERA HUMANA para revisión artística en partida y
+perfil físico Low/High. Siguiente paso visual: abrir la lámina con `npm run dev`
+y comprobar Tank en `?stress=1`; solicitar aprobación antes de extender el
+lenguaje al resto. Próxima tarea principal sigue siendo EX-01a; esta petición
+no activa boss modular ni otros VIS. Sin commit, push o deploy.
+
+## 58. Flota, boss y cosméticos — extensión autorizada, 05-09-2026
+
+El usuario aprobó la dirección artística del Tank y pidió extender el trabajo
+a los demás enemigos, boss, cuatro skins, cañones y fondos. §57 es el registro
+histórico de la entrega anterior; su petición de autorización ya está resuelta
+para ESTE lote. No interpretar eso como aprobación humana de todo el resultado.
+
+### Implementado
+
+- Chaser, Fast y Elite: nuevas superficies facetadas, cavidades, motores y
+  siluetas propias. Tank aprobado preservado; tortuga histórica intacta.
+  Todos los comunes usan flat completo en Low y cuatro piezas animables en
+  Medium/High. Despiece existente reutilizado. Corregido reset del pool que
+  podía dejar textura de otra familia, y primera textura Low de Chaser.
+- Boss: asset propio con cuatro SVG y master 112×112, 21 paths. Una instancia
+  `BossShipVisual` fuera del pool: cuatro sprites detallados o uno completo Low.
+  Movimiento ambiental de maquinaria, impacto y separación terminal de 1.2 s.
+  Cableado a `playBossDefeat` y al reloj terminal (no al evento de enemigo común).
+  No modifica fases, HP, daño, telegraphs ni los 3 s antes del resumen.
+- Cuatro skins: cascos/core con planos de volumen grises multiplicados por
+  paleta. `PlayerHullSvg.ts` comparte fuentes entre UI y Pixi; se elimina el
+  segundo dibujo independiente de la preview. Firmas del mismo generador,
+  ajustadas al frame; cañones siguen separados del casco y de su tint.
+- Cuatro cañones: biseles, retornos oscuros y bordes jerarquizados, conservando
+  las bocas en ±27,-11 y nueve primitivas por lado. Sin cambios a proyectiles,
+  curva, estelas, cadencia o daño. Se reutiliza el registro UI/runtime existente.
+- Fondos: textura suave 128×128 horneada sin blur; composiciones propias por
+  tema y detalles periféricos. Low conserva dos nubes estáticas/12 estrellas,
+  sin actualización ambiental; no queda plano por eliminar capas esenciales.
+  Alpha decorativa de arena 0.84; borde, mundo e input no cambian.
+
+### Guía y ejemplos para cualquier agente
+
+La skill SVG ahora enruta obligatoriamente a
+`skills/geometry-survivor-svg/references/visual-family-direction.md`: ficha por
+rol, construcción, fuente compartida, orden/pivotes, tint, slots, Low, presupuesto,
+errores que rechazar y secuencia de validación. Leerla junto a la dirección
+general de naves. No duplicarla en prompts de modelos; adaptador Grok sin cambios.
+
+Lámina viva: `docs/visual/fleet-reference.html` con `npm run dev`. Muestra fuentes
+reales de 13 assets en 32/64/128 px, oscuro/claro/grises/silueta y compositor Pixi
+de los cuatro fondos. `node docs/visual/capture-reference.mjs` captura y verifica
+la lámina con el Playwright ya instalado. Todo es de desarrollo, fuera del build.
+`player-weapons.svg` queda histórico: los masters de casco no llevan cañones.
+
+### Evidencia automática y revisión visual
+
+- Typecheck correcto; 184 tests en 63 archivos, incluidos master/piezas,
+  fuentes UI compartidas, tint, reset Low, boss terminal y presupuesto de fondo.
+- Builds local/Poki/CrazyGames correctos. Chunk principal local 596.33 kB /
+  165.02 kB gzip (Tank previo: 588.51 / 163.76); +1.26 kB gzip aproximados.
+  Poki 596.28 / 164.98, CrazyGames 596.29 / 164.99. Warning de chunk >500 kB
+  conservado; ninguna dependencia añadida ni aumento de DPR.
+- XML y viewBox válidos en los 72 SVG fuente. `git diff --check` correcto.
+- Smoke Chromium: 14 casos, incluidos Pixel 5 emulado y dos casos nuevos que
+  recorren cuatro combinaciones skin/cañón/fondo con boss en Low y High.
+- Lámina: 13 assets, 39 muestras SVG inline sin IDs duplicados, cuatro modos de
+  inspección y ocho vistas de fondo. Capturas generadas en `test-results`, no
+  importadas al juego. Inspeccionadas capturas oscuras, claras y siluetas, además
+  del juego Pixi Low Cyan y High Emerald. En ellas se conservan proa, reactor,
+  planos y diferencias de familia. No equivalen a una run manual completa.
+
+### Qué sigue / qué NO está cerrado
+
+1. Usuario: revisar la nueva flota en PC/móvil con `?boss=1&quality=low` y High,
+   probar skins/cañones y confirmar contraste, movimiento y muerte del boss.
+   Comparar stress físico contra la misma línea base; falta medición CPU/GPU,
+   memoria/overdraw y tiempos de carga en teléfono. No certificar rendimiento
+   con FPS instantáneos de Chromium automatizado.
+2. VIS-01 parcial: ya hay asset/despiece; falta anticipación mecánica ligada a
+   fases si se decide continuar esa ficha. No duplicar `BossShipVisual`.
+3. VIS-02 espera validación física y aprobación. La tarjeta CSS del menú sigue
+   indicativa; la lámina usa el fondo exacto. No declarar paridad píxel a píxel
+   de tarjeta y runtime. No añadir más capas sin medir las actuales.
+4. VIS-03/resonancia no ejecutada. Ruta principal: EX-01a sigue pendiente;
+   después EX-02/EX-03 y puertas anteriores a Boomerang. El lote artístico no
+   sustituye esas validaciones de economía ni autoriza sistemas nuevos.
+
+Estado: IMPLEMENTADO Y VALIDADO AUTOMÁTICAMENTE / VALIDACIÓN HUMANA FÍSICA
+PENDIENTE. Sin commit, push, deploy ni publicación a portales.
+
+## 59. Prueba de continuidad SVG — quinta skin y quinto cañón, 05-09-2026
+
+El usuario solicitó comprobar que la guía artística detallada puede ser
+ejecutada por otro modelo. Se añadió `Obsidian Relay` (`obsidian`) como quinta
+skin y `Lattice Halo` (`lattice`) como quinto paquete de cañón/proyectil/estela.
+
+- Obsidian mantiene el contrato de casco por piezas: `body`, `core`, `ring` y
+  firma `quasar`; sus SVG usan frame `-32 -32 64 64`, IDs semánticos, planos
+  grises explícitos y cero filtros/URLs. La paleta runtime sigue siendo tint,
+  por lo que el arte no modifica colisión, stats ni balance.
+- Lattice tiene masters izquierdo/derecho y master compuesto, proyectil en
+  `-16 -16 32 32`, bocas exactamente en `(-27,-11)` y `(27,-11)`, además de un
+  collar rosa y núcleo de resonancia. Pixi rasteriza una vez las piezas y
+  cambia la textura del pool existente; la preview comparte los mismos masters.
+- La receta visual Lattice conserva el presupuesto: un haz, un cruce corto y
+  un punto por segmento activo (tres sprites como máximo). Low continúa con la
+  estela apagada por el presupuesto de calidad; no se toca la trayectoria real.
+- Se actualizaron contratos/selector/URL, CSS, galería, captura, README y la
+  guía canónica para contar cinco skins/cañones. La galería esperada queda en
+  15 assets y 45 muestras SVG inline.
+
+### Evidencia y siguiente puerta
+
+- Typecheck correcto; suite completa: 185 tests en 63 archivos. `git diff --check`
+  correcto. Se corrigieron también las expectativas del smoke para comprobar
+  cinco tarjetas y persistir explícitamente `obsidian`/`lattice`.
+- Builds local, Poki y CrazyGames correctos. El warning existente de chunk
+  principal grande permanece; no se añadió dependencia ni se elevó el presupuesto
+  de FX.
+- Galería ejecutada: 15 assets, 45 muestras SVG inline, IDs únicos, cuatro modos
+  de inspección y ocho vistas de fondo. Smoke Chromium completo: 14/14 casos,
+  incluidos Low/High con boss y el locker portrait móvil.
+- Después probar manualmente `?skin=obsidian&cannon=lattice&boss=1` en Low y
+  High, revisar lectura a 32/64/128 px, movimiento, trail, pausa y muerte del
+  boss. Repetir en móvil físico antes de afirmar que el nuevo paquete es una
+  aprobación visual humana.
+- Esta puerta quedó cerrada con la extensión premium documentada en §60; la
+  siguiente variante visual debe seguir el mismo contrato y no abrir gameplay.
+
+Estado: IMPLEMENTACIÓN COMPLETA / VALIDACIÓN AUTOMÁTICA COMPLETA / VALIDACIÓN
+HUMANA FÍSICA PENDIENTE.
+
+## 60. Proyectiles y estelas — dirección de continuidad
+
+Petición actual: rehacer balas y colas, conservar cañones y hacer visible el
+arco morado durante gameplay. Cinco SVG actualizados: aura tenue, cuerpo,
+faceta, núcleo y retorno direccional; misma fuente para locker y Pixi.
+
+Causa del arco imperceptible: el seno se repartía en 2,5 s de TTL, aunque los
+impactos cercanos terminaban mucho antes. Ahora el arco cosmético de salida
+dura 0,32 s, alcanza 14 px y regresa suavemente con sin². Tangente y estela
+usan la misma función; preview muestrea esa curva. Sigue siendo cosmético:
+la colisión es rectilínea, no hay homing ni ventaja por skin.
+
+Se sustituyen rectángulos blancos y puntos cuadrados por una cinta afilada
+con desvanecimiento longitudinal/transversal horneado en una fuente 128×32
+compartida (16 KiB RGBA teóricos). Cuatro bandas por proyectil, pool y límites
+FX conservados; no generar geometría por frame. Longitud limitada por edad
+real, 0,14 s y 64 unidades; jamás nace cola detrás del muzzle. Low no carga
+la textura de cola y conserva cabeza completa y curva. Reset/cambio de receta
+limpian continuidad y la raíz libera la fuente al destruirse.
+
+Guía canónica nueva:
+`skills/geometry-survivor-svg/references/projectile-direction.md`, enlazada
+desde la dirección por familias y el README de cañones. Incluye diferencias
+entre curva cosmética y física, contratos, presupuestos y pruebas obligatorias.
+Lámina Pixi reproducible: `docs/visual/projectile-reference.html`.
+Captura: `node docs/visual/capture-projectiles.mjs` con Vite en 5173.
+
+Extensión premium posterior: `Nova Warden` (`nova`) es la sexta skin con
+`body`, `core`, `ring`, master y firma `supernova`; `Helix Lance` (`helix`) es
+el sexto paquete de cañón/proyectil/estela. Helix usa una S de dos lóbulos,
+`11 × sin(2πt/T) × sin(πt/T)`, `T=0,46 s`, compartida por cabeza, tangente,
+estela y preview. Ambos conservan frames, tint, pools y separación de la
+simulación; la galería pasa a 17 assets/51 muestras. El usuario inspeccionó y
+aprobó visualmente las seis skins y los seis paquetes de cañón/bala como la
+referencia premium vigente. EX-01 automático quedó cerrado y la ruta principal
+continúa con EX-02; la medición
+de rendimiento y legibilidad en móvil físico queda como validación separada.
+
+Regla vigente para futuras extensiones: todo enemigo, skin, cañón o proyectil
+nuevo debe partir visualmente de las familias ya construidas, declarar cuál es
+su referencia y diferenciarse de ella de forma deliberada. No se permiten
+duplicados, recolores, escalas ni curvas aproximadas. Las referencias fijan el
+nivel de acabado y los contratos técnicos, pero cada variante nueva requiere
+sus propios tests, capturas a tamaño real y revisión humana.
+
+Verificado: 202 tests/65 archivos, typecheck, builds local/Poki/CrazyGames;
+14/14 smoke Chromium (incluye móvil emulado). Último ajuste de la ruta estática
+del preview validado con typecheck y sus tres tests específicos.
+capturas oscuras y claras inspeccionadas, curva visible en compositor real;
+carga de partida con morada en Low/High sin errores de runtime. Sin medición
+de teléfono físico: pendiente contrastar legibilidad de disparos cercanos,
+stress y sensación del arco con el usuario. No cerrar puertas EX por este arte.
+
+## 61. EX-01a/EX-01b — cierre provisional y liquidación idempotente
+
+La caracterización de la ruta muerte → revive → resultado definitivo encontró
+que la versión anterior acreditaba NOVA y cerraba baseline demasiado pronto.
+`Game` ahora conserva un terminal provisional: una muerte no guarda recompensa
+ni registro baseline hasta resolver el revive o reiniciar; una victoria se
+liquida inmediatamente. La liquidación usa las estadísticas definitivas y no
+puede repetirse.
+
+También quedó cubierto que el doble NOVA sólo aparece después de liquidar, que
+un callback de una terminal anterior no reabre la partida y que una victoria no
+acepta revive. Prueba específica: `npm test -- --run src/app/Game.test.ts`, 7/7.
+
+Estado: EX-01a y EX-01b AUTOMÁTICO OK. Siguiente tarea: EX-01c, validar reload,
+restart, restauración de audio/input y que un cierre definitivo genere un solo
+registro baseline. EX-01 completo permanece abierto hasta esa regresión.
+
+## 62. EX-01c — regresión de cierre, reload y baseline — 05-09-2026
+
+La regresión confirmó que una recompensa terminal liquidada permanece única al
+recargar `Game` con el mismo `SaveStore`; no aparece un segundo pago
+provisional. También confirmó que revivir limpia input retenido y restaura
+audio, música y lifecycle, y que reiniciar desde una terminal comienza un
+registro baseline nuevo sin alterar el registro cerrado anterior.
+
+El cambio de producción fue mínimo: `resetRunState()` llama a
+`baseline.beginRun()` para cubrir los reinicios explícitos. La cobertura nueva
+incluye 10/10 pruebas de `Game.test.ts` y la suite completa queda en 198/198.
+También pasaron typecheck, smoke browser 14/14 y los builds local, Poki y
+CrazyGames. Se conserva el aviso conocido del chunk principal mayor a 500 kB;
+la medición de rendimiento físico y la validación real de SDK/portal no se
+presentan como cubiertas por esta tarea.
+
+Estado: EX-01a/EX-01b/EX-01c AUTOMÁTICO OK. Próxima tarea: EX-02, Laboratorio:
+medir antes de ajustar.
+
+## 63. EX-02a — matriz reproducible del Laboratorio — 05-09-2026
+
+Se añadió el escenario de validación aislado
+`src/debug/BalanceCombatScenario.ts`, que utiliza los behaviors y pools reales
+sin levantar Pixi, DOM, audio ni director de oleadas. Con reloj fijo de 60 Hz,
+semilla `334462`, posición inicial y 20 segundos por pasada, compara meta 0 y
+meta 5 para Projectile, Orbit y Chain en layouts single, dispersed y dense.
+
+La salida separa una pasada de eliminación con Tanks de 72 HP y otra de DPS
+sostenido con 100000 HP. La matriz completa, la definición de cada posición y
+la lectura de los resultados están en
+`docs/balance/EX-02a-matrix.md`. El resultado clave es que Projectile sube de
+25.20 a 36.75 DPS en single-target (+45.8%), mientras Orbit y Chain quedan en
+0% de cambio con meta 5. Esto confirma la discrepancia de EX-02b; no autoriza
+todavía ajustar porcentajes ni extender el bonus a todas las armas.
+
+Para evitar que el instrumento mezclara armas, `CombatWeaponSystem` y
+`WeaponScheduler` aceptan habilitación selectiva sólo para esta medición; sus
+valores por defecto mantienen el runtime normal sin cambios.
+
+Evidencia: typecheck correcto, suite completa 202/202 en 65 archivos, smoke
+browser 14/14 y builds local/Poki/CrazyGames correctos. Se mantiene el warning
+conocido del chunk principal mayor a 500 kB. No se midieron rendimiento físico,
+GPU, memoria ni SDKs/portales.
+
+Estado: EX-02a y EX-02b AUTOMÁTICO OK. EX-02c queda PENDIENTE por decisión de
+producto; se retomará junto con el balance final de vida de enemigos y daño.
+La ruta documental pasa a META-01 y la siguiente puerta técnica es EX-03.
+
+## 64. UI premium — guía y lote de referencia
+
+Solicitud: extender la dirección premium a toda la UI mediante una guía
+concreta y ejemplos que otros agentes puedan seguir. Dirección canónica:
+`skills/geometry-survivor-svg/references/ui-art-direction.md`, enlazada desde
+la skill SVG y §22 del plan. Define materiales, construcción geométrica,
+presupuestos por categoría, responsive, accesibilidad, estados y continuidad.
+
+Integrado: once símbolos premium de cartas, marco de placa biselada, facetas
+del emblema inicial e iconos pausa/ajustes. El consumidor `LevelUpOverlay`
+utiliza los masters premium; los originales de cartas quedan como comparación.
+Guía preparada para paneles, botones, locker, Laboratorio, pausa/resultados y
+HUD; esas pantallas NO se presentan como completamente rediseñadas.
+
+Lámina: `docs/visual/ui-reference.html`, consumidor real de LevelUpOverlay,
+con antes/después, once símbolos, controles y preview de stats. Captura:
+`node docs/visual/capture-ui.mjs` con Vite en 5173; admite URL base como argumento.
+Capturas en `test-results/ui-reference`: oscuro/claro a 1200/390/320 px,
+foco y símbolos a 24/32/64 px. Inspeccionadas desktop oscuro, móvil claro y
+símbolos a 32 px. IDs únicos y sin overflow horizontal ni errores de página/red.
+
+Fuentes medidas: sprite de iconos 5202 bytes; marco 1057; emblema 2093.
+Sin nuevos filtros, gradientes, dependencias ni bucles de animación.
+Validación: typecheck, 202 tests/65 archivos, 14 smoke browser y tres builds
+correctos. El build Poki inicial tuvo timeout de 5 s en el test existente del
+Laboratorio al correr builds concurrentes; la repetición aislada pasó completa.
+Warning de chunk >500 kB conservado (local 615.64 kB, gzip 169.95 kB).
+
+Puerta: AUTOMÁTICO OK / aprobación artística humana pendiente. No se midieron
+frame times en móvil físico. Sin commit, push ni deploy. Ruta principal al
+retomar el plan: EX-02c; este encargo visual no cambia la puerta de balance.
+
+## 65. Pausa premium - panel, acciones y mezclador - 05-09-2026
+
+La pausa real ahora sigue la misma gramática de consola que la guía de Astra:
+una atmósfera de pantalla completa ligera en CSS y un panel interno con
+superficie, bisel superior, retorno inferior y marco estructural SVG. Se
+conservaron los IDs y los handlers existentes, pero la jerarquía visual ahora
+separa claramente continuar, configuración, reinicio y salida.
+
+Arte nuevo: `src/assets/svg/ui/pause-panel-frame.svg` para el marco responsive y
+`src/assets/svg/ui/pause-icons.svg` como sprite único con símbolos para
+continuar, reiniciar, menú y los tres controles de audio. `pause.svg` y
+`settings.svg` siguen siendo los masters directos del HUD y del toggle. Los
+sliders y el checkbox siguen siendo HTML nativo; los iconos son decorativos y
+los botones mantienen objetivos táctiles de al menos 44×44 CSS px.
+
+El cambio vive en `index.html`, `src/main.ts` y `src/styles.css`. La guía SVG
+ahora registra el consumidor real de pausa y la prueba visual reproducible es
+`node docs/visual/capture-pause.mjs http://127.0.0.1:5174`. Se inspeccionaron
+capturas de 1200 px oscuro, mezclador abierto, foco de teclado y 390/320 px móvil;
+no hubo overflow horizontal. La captura móvil midió `scrollWidth=390`,
+`clientWidth=390` y panel de `369.22` px.
+
+Validación: typecheck correcto, 203 tests en 65 archivos, smoke browser 14/14
+y builds local/Poki/CrazyGames correctos. La prueba específica comprueba seis
+símbolos, IDs únicos, recursos externos ausentes y presupuestos del sprite y
+marco. Se conserva el warning conocido del chunk principal mayor a 500 kB.
+Estado: AUTOMÁTICO OK / aprobación artística humana pendiente. Sin commit, push
+ni deploy. La ruta principal continúa en EX-02c.
+
+## 66. EX-02b — semántica de meta por arma — 05-09-2026
+
+Se cerró la discrepancia descubierta por EX-02a: los dos upgrades permanentes
+de combate ya tienen semántica explícita y común para las tres armas actuales.
+Daño afecta cada evento authored de daño: cada proyectil, cada contacto de una
+hoja orbital y cada salto de cadena. Cadencia afecta el intervalo authored de
+cada evento: disparo de proyectil, hit por objetivo de órbita y lanzamiento de
+cadena. No altera velocidad, targeting, TTL, radio, rotación orbital, cantidad
+de objetivos ni duración de segmentos.
+
+La fuente única vive en `src/content/meta/PermanentUpgradeDefinitions.ts`:
+`PERMANENT_UPGRADE_RULES` alimenta el runtime mediante
+`getPermanentCombatBonuses()` y alimenta el texto visible mediante
+`getPermanentUpgradeEffectLabel()` y `definition.effectLabel`. En nivel 5 la
+regla vigente es +25% daño base y -15% intervalo, con multiplicadores
+normalizados y sin tocar precios, niveles, guardado ni upgrades de run. La
+decisión completa está en `docs/balance/EX-02b-semantics.md`.
+
+El Laboratorio y la matriz reproducible ahora configuran las tres armas con la
+misma regla. Las pruebas cubren fórmulas, etiquetas, restauración tras reset,
+daño/cadencia por arma y ratios de la matriz: 24 pruebas específicas y 204 en
+la suite completa. Validación: `npm run build:local`, `npm run build:poki`,
+`npm run build:crazygames` y `npm run test:browser` correctos; smoke browser
+14/14 en desktop y móvil. Se conserva el warning conocido del chunk principal
+mayor a 500 kB. No se midieron frame times, GPU ni memoria en dispositivo
+físico.
+
+Estado: AUTOMÁTICO OK. EX-02c queda PENDIENTE por decisión de producto. Sin
+commit, push ni deploy.
+
+## 67. META-01 — tres actos y Overdrive definidos — 05-09-2026
+
+Por decisión del usuario se documentó el bucle meta y la campaña que deben
+guiar las siguientes implementaciones. La ficha canónica está en
+`docs/design/ACTOS_Y_META.md` y queda enlazada desde §16 y §22 del plan.
+
+La campaña principal se divide en tres actos con victorias claras: Acto I
+Radial (centro, borde y distancia; Core Sentinel), Acto II Angular (sectores,
+alineación y rotación; Orbital Warden) y Acto III Fracture (corredores,
+conexiones y barreras; Fracture Engine). `Expedition` conserva la build entre
+actos; `Quick Act` empieza limpio con Calibration. Completar el Acto III dentro
+de `Expedition` desbloquea `Overdrive`, un modo infinito opcional que mezcla las reglas por
+ciclos, aumenta presión con composición/densidad/patrones/espacio dentro de
+caps y conserva telegraphs y corredores seguros.
+
+La meta queda separada en desbloqueos de actos, Laboratorio de poder pequeño,
+investigación de contenido y colección cosmética. NOVA se liquida una sola vez
+por sesión; Overdrive no paga por ciclo. Los cosméticos no alteran gameplay y
+los porcentajes actuales del Laboratorio siguen provisionales.
+
+El contrato completo todavía no crea `ActDefinition`, campos nuevos de save,
+ciclos infinitos ni behaviors. Como slice exploratorio autorizado, sí se
+implementó la primera regla espacial del Acto I: círculo ↔ hexágono con aviso,
+morph gradual y frontera compartida por jugador y láser. La campaña completa
+queda en EX-06/EX-07/EX-10/EX-11 después de EX-03/EX-04/EX-05. EX-02c permanece
+pendiente para la pasada final de balance.
+
+Estado: ACT-I-PROTOTYPE AUTOMÁTICO OK / prueba humana pendiente. Siguiente
+puerta técnica: EX-03. Sin commit, push ni deploy.
+
+## 68. ACT-I-PROTOTYPE — arena radial cambiante — 05-09-2026
+
+Se implementó el primer slice jugable para comprobar el gancho diferencial
+antes de construir los tres actos completos. Acto I conserva el círculo y
+añade cambios authored, deterministas y legibles hacia el hexágono:
+
+- 02:12: círculo → hexágono, aviso 1.4 s y morph 0.85 s.
+- 03:30: hexágono → círculo, aviso 1.4 s y morph 0.85 s.
+- 04:48: círculo → hexágono, aviso 1.6 s y morph 1.05 s durante el tramo del boss.
+
+La frontera interpolada alimenta el clamp del jugador y el alcance del láser
+lineal; la vista dibuja la forma objetivo durante el aviso y redibuja una
+polilínea ligera sólo cuando cambia la geometría. No se añadieron todavía
+triángulo, rectángulo, selección de actos, save, Overdrive ni balance final.
+
+Prueba específica: **16/16** en cinco archivos. Falta validación humana en
+desktop y móvil para decidir si la lectura, el control y la presión se sienten
+divertidos y diferenciadores. Siguiente evidencia técnica: **EX-03**. EX-02c
+sigue pendiente junto con el balance final de vida y daño. Sin commit, push ni
+deploy.
+
+## 69. ACT-I-PROTOTYPE — presión dinámica de láser — 06-09-2026
+
+Se amplió el slice de arena cambiante para que el láser también sea parte de
+la identidad espacial. En círculo, uno de cada tres disparos realiza un barrido
+horario corto durante el telegraph y el inicio del attack. En la primera
+intervención hexagonal el intervalo authored baja a 14 s y el barrido aparece
+cada dos disparos; en la segunda baja a 10.5 s, aparece en cada disparo y
+recorre un arco mayor en menos tiempo.
+
+El ángulo visible y el ángulo de colisión se actualizan juntos. La colisión se
+comprueba durante `attack`, con la frontera actual de la arena y sin daño
+durante `telegraph`. El cambio conserva `telegraph → attack → recovery`, una
+respuesta perpendicular posible y no crea líneas simultáneas ni entidades
+nuevas por frame.
+
+Pruebas específicas: **19/19**; el build local, Poki y CrazyGames continúan
+compilando. El smoke browser aislado de los escenarios que habían perdido el
+servidor fue **5/5**. Falta la prueba humana para medir si el barrido se siente
+claro y si el incremento hexagonal es emocionante sin volverse injusto.
+Siguiente evidencia técnica: **EX-03**. Sin commit, push ni deploy.
+
+## 70. ACT-I-PROTOTYPE — detonación móvil durante el recorrido — 06-09-2026
+
+Se ajustó la semántica del barrido a la intención jugable: todos los láseres
+inician con el mismo `telegraph` estático. El jugador no sabe si un disparo es
+móvil hasta que entra en `active`. Si lo es, la fase de detonación dura lo que
+necesita su recorrido; el ángulo se actualiza durante todo ese tiempo y la
+colisión se comprueba en cada paso, hasta alcanzar el final del arco.
+
+Los láseres estáticos conservan su detonación corta. Los móviles usan las
+duraciones authored de cada identidad geométrica y continúan respetando
+`telegraph → attack → recovery`; no hacen daño durante el aviso y no saltan
+visualmente al ángulo final. Esto hace que la expectativa provenga de la
+lectura del hazard, no de una señal distinta para el disparo móvil.
+
+Pruebas específicas: **8/8** para perfiles y semántica de `LaserHazard`;
+suite completa: **215/215**; smoke browser: **14/14** en desktop y móvil;
+build local, Poki y CrazyGames correctos. Falta validar manualmente que el
+recorrido sea legible y que la duración adicional de la detonación no resulte
+opresiva en desktop y móvil. Sin commit, push ni deploy.
+
+## 71. ACT-I-LASER-VISUAL — detonación premium por capas — 06-09-2026
+
+Se elevó la presentación del láser sin tocar sus reglas de daño ni cadencia.
+El `telegraph` ahora es una línea ámbar estática con carga central, nodos y
+diamantes en los extremos. La detonación usa halo exterior, aura intermedia,
+núcleo caliente, centro blanco, pulsos y nodos de energía. Los barridos móviles
+añaden dos ecos de baja intensidad detrás del frente; los disparos estáticos no
+reciben esos ecos y el jugador no puede identificar el tipo durante el aviso.
+
+La vista reutiliza cuatro `Graphics` persistentes (`beamEcho`, `laser`, `pulse`,
+`nodes`) y cada línea, círculo o diamante independiente inicia `beginPath()`.
+No se agregaron SVG, blur ni partículas por frame; Low conserva la lectura
+crítica del hazard.
+
+Se corrigieron colores RGB fuera de rango detectados por la prueba visual y se
+añadió `src/presentation/pixi/HazardView.test.ts`. La prueba visual queda en
+**2/2**; suite completa **217/217**; smoke browser **14/14**; builds local,
+Poki y CrazyGames correctos. Falta aprobación humana de jerarquía, saturación
+y rendimiento percibido en desktop y móvil. Sin commit, push ni deploy.
+
+## 72. Solar Rail — revisión visual del láser y guía de FX — 06-09-2026
+
+El usuario no quedó satisfecho con la apariencia de §71. Se reemplazó sólo
+`HazardView`, sin cambiar simulación, daño, cadencia ni barrido activo:
+
+- Emisores mecánicos facetados, cavidades y biseles en la frontera real.
+- Aviso de raíles discontinuos y carga; plasma coral/dorado afinado con
+  núcleo marfil; encendido breve y filamentos contenidos en el haz.
+- Recuperación sin cuerpo sólido: segmentos débiles que se disipan.
+- Sin ecos angulares en zonas seguras. El aviso sigue sin revelar el barrido.
+- Geometría construida una vez y transformada por progreso de simulación.
+  Low conserva materiales y señal; sólo se omiten filamentos decorativos.
+
+La receta canónica de esta entrega está en `docs/design/EFECTOS_PREMIUM.md`,
+enlazada desde §22.1a del plan y la guía de ejecución. Leerla para futuros FX
+junto a las skills rendering/mobile-performance; no copiar simplemente más
+capas ni asumir que la aprobación de SVG aprueba también estos efectos.
+
+Referencia: `docs/visual/laser-reference.html`, con seis paneles del renderer
+real. `node docs/visual/capture-lasers.mjs` con Vite activo genera capturas
+desktop/móvil y gameplay Low en `test-results/laser-reference/`.
+Las capturas se inspeccionaron: fases diferenciadas, lectura sobre fondo claro
+y oscuro, acabado Low y láser activo con boss. No equivalen a prueba sostenida
+en móvil físico ni a aprobación del usuario.
+
+Validación: 218 tests, incluidos tres de HazardView; builds local, Poki y
+CrazyGames correctos; smoke browser 14/14. Permanece el warning conocido de
+chunk principal >500 kB. No se agregaron dependencias ni filtros. No se ha
+medido aquí una mejora de FPS; el presupuesto estructural es 11/15/17 Graphics
+persistentes según calidad, sin reconstrucción de paths por frame.
+
+Siguiente: aprobación humana del nuevo láser en PC/móvil (aviso, barrido,
+contraste y saturación en combate). EX-03 continúa como siguiente puerta del
+plan; EX-02c sigue diferida. Sin commit, push ni deploy.
+
+## 73. Prism Aegis - orbita geometrica premium - 06-09-2026
+
+Se aplico la guia de efectos premium a la orbita geometrica. La presentacion
+plana de un rombo fue reemplazada por cinco capas cacheadas: estela tangencial,
+halo de arcos rotos, carcasa facetada con cavidad oscura, acentos orbitales y
+nucleo hexagonal/romboidal. El root sigue state.x, state.y y state.angle; el
+nucleo y el halo tienen movimiento secundario determinista derivado del mismo
+angulo. No se cambio OrbitBehavior, radio de dano, cadencia, numero maximo ni
+colisiones.
+
+Low conserva carcasa, cavidad, acentos, nucleo y halo tenue; solo omite la
+estela decorativa. High aumenta la presencia de halo/estela sin filtros ni
+particulas por frame. Las texturas se generan una vez y se reutilizan por los
+seis modulos. La ficha canonica esta en
+docs/design/ORBITA_PREMIUM.md y la referencia ejecutable en
+docs/visual/orbit-reference.html. El script docs/visual/capture-orbit.mjs
+genera capturas desktop/movil con el renderer real.
+
+Validacion final: typecheck y suite completa correctos, 219 tests en 69 archivos;
+builds local, Poki y CrazyGames correctos; smoke browser 14/14. Capturas visuales
+desktop/movil de cuatro paneles del renderer real inspeccionadas. Falta inspeccion humana dentro de
+una partida con la orbita desbloqueada, especialmente jerarquia frente al
+player/enemigos y saturacion. El laser Solar Rail de §72 no se modifica.
+EX-03 continua como puerta del plan; EX-02c sigue diferida. Sin commit, push ni
+deploy.
+
+## 74. Boss FX - command rail y corredor seguro - 06-09-2026
+
+Se corrigio la causa por la que el boss seguia usando lasers viejos: sus
+patrones viven en `BossView`, separado de `HazardView`, que es la vista del
+laser de arena Solar Rail. `BossView` ahora comparte jerarquia de materiales
+pero conserva contratos propios para sweep y ring.
+
+- Sweep: aviso discontinuo, nucleo caliente, centro claro, emisores en ambos
+  extremos y fragmentos de recuperacion.
+- Ring: el aro peligroso se dibuja excluyendo el hueco seguro; no se pinta ya
+  una circunferencia completa debajo del hueco.
+- El hueco seguro se comunica desde telegraph con cuña translúcida de alpha
+  bajo, arco de ruta, brackets de entrada y ticks. En active aumenta contraste.
+- El radio, angulos y dano siguen perteneciendo a `BossSystem`; la vista no
+  crea una hitbox ni modifica `safeGapAngle`/`safeGapHalfAngle`.
+- Se conservan subpaths independientes y el caso wrap-around de 0/2pi.
+
+La ficha queda en `docs/design/BOSS_FX_PREMIUM.md`, enlazada desde la guía de
+efectos premium. La referencia real es
+`docs/visual/boss-laser-reference.html`; `node
+docs/visual/capture-boss-lasers.mjs` genera cinco paneles desktop/movil.
+La captura fue inspeccionada: el sweep activo tiene cuerpo/nucleo y el ring
+deja visible un corredor seguro sobre fondo oscuro y claro.
+
+Validacion: typecheck y suite 219/219 correctos; builds local, Poki y
+CrazyGames correctos; smoke browser 14/14; captura boss sin errores runtime.
+Falta prueba humana en el encuentro real con pausa, resize, Low/High y player
+rodeado de enemigos. EX-03 continua como puerta del plan; EX-02c sigue
+diferida. Sin commit, push ni deploy.
+
+## 75. Arc Relay - chain lightning premium - 06-09-2026
+
+Se reemplazo la linea plana del disparo en cadena por una transferencia
+angular entre origen y objetivo. La simulacion no cambio: `ChainBehavior`
+continua decidiendo objetivos, saltos, dano y `segmentLifetimeSeconds`.
+
+- Cada segmento usa underlay oscuro, cuerpo violeta, capa cian y nucleo
+  blanco, con alpha derivado de la vida real del segmento.
+- Dos quiebres perpendiculares y deterministas, alternados por indice,
+  mantienen la ruta estable y hacen visible que la energia salta entre nodos.
+- Nodos dorados en los quiebres, modulo hexagonal en el destino y pulso
+  romboidal direccional completan la lectura del relay.
+- Low conserva cuerpo, contraste y destino; Medium agrega el pulso; High
+  agrega el marcador transversal. No hay filtros ni particulas libres.
+- `WeaponView` conserva una `Graphics`, tres modulos de impacto y tres pulsos;
+  no crea arrays/objetos temporales dentro del render caliente y cada path
+  comienza en el origen real y termina en el destino real.
+
+La guia canonica queda en `docs/design/CHAIN_FX_PREMIUM.md`, enlazada desde
+`docs/design/EFECTOS_PREMIUM.md`. La referencia ejecutable es
+`docs/visual/chain-reference.html`; `node docs/visual/capture-chain.mjs`
+genera cuatro paneles del renderer real en desktop y movil.
+
+Validacion cerrada: `npm run typecheck`; `npm test -- --run` con 220/220;
+`npm run build:local`, `npm run build:poki` y `npm run build:crazygames`;
+smoke browser 14/14; y `node docs/visual/capture-chain.mjs` con cuatro
+paneles desktop/movil sin errores runtime. Permanece el warning conocido de
+chunk principal mayor a 500 kB. Falta inspeccion humana dentro de una cadena
+real en combate, especialmente saturacion con muchos enemigos y lectura en
+movil fisico. CHAIN-VISUAL queda registrado en `docs/PLAN_EJECUCION.md`;
+EX-03 continua como puerta del plan y EX-02c sigue diferida. Sin commit, push
+ni deploy.
+
+## 76. EX-03a - matriz automatica de rewarded - 06-09-2026
+
+Se retomo el plan por la puerta vigente EX-03. La cobertura automatica de
+rewarded se amplio para los cuatro placements (`revive`, `reroll`,
+`double-nova` y `cosmetic-unlock`): exito, unavailable, errores/timeout,
+concurrencia, excepciones, token tardio y settlement repetido.
+
+- `LocalAdService.test.ts`: 13 casos verifican el contrato local en cada
+  placement y sus modos de simulacion.
+- `RewardedAdController.test.ts`: 8 casos verifican disponibilidad, lock,
+  excepciones y exito por placement.
+- `RewardedOfferLedger.test.ts`: 5 casos verifican consumo unico, reintento y
+  callback repetido/tardio.
+- Resultado especifico: 3 archivos y 26 tests en verde.
+
+La ficha queda en `docs/balance/EX-03a-rewarded-matrix.md`. Se confirmo una
+deuda de producto: la alternativa de reroll con NOVA queda PENDIENTE DE
+VALIDACION. DEC-05 debe fijar coste y momento del debito antes de
+implementarla; no se invento un precio. Las diez runs ya fueron reportadas de
+forma cualitativa; falta conservar el reporte numerico, las pruebas fisicas de
+background/audio/input y la comparacion `stress/profile` Low vs Medium/High.
+EX-03 sigue pendiente por esas puertas. No se implementa
+Boomerang hasta cerrar EX-03 y conservar EX-04. Sin commit, push ni deploy.
+
+## 77. Handoff EX-03b/EX-03c - runs humanas y stress pendiente - 06-09-2026
+
+El usuario confirmo que ya realizo las diez runs en las calidades disponibles.
+El resultado cualitativo es positivo: no hubo softlocks, perdida de progreso,
+dano inevitable ni stutter; los controles, telegraphs y decisiones se
+entendieron; builds distintas cambiaron el recorrido; y una persona nueva
+entendio el juego desde la primera partida.
+
+El hallazgo que queda como requisito de controles es movil: con dedos gruesos
+el player puede quedar completamente cubierto. Antes de cerrar EX-03 hay que
+probar una segunda opcion de desplazamiento o dejar una decision explicita que
+resuelva esa condicion.
+
+Tambien se registro que Doble canon + disparo rapido domina el early, Chain con
+danio escala fuerte en late y la orbita geometrica se siente debil. Estos datos
+van a EX-02c; no tocar todavia dano, vida o resistencia de enemigos.
+
+Entorno confirmado: Samsung S25+ y PC; los moviles de menor gama solo tienen
+pruebas exploratorias. Para cerrar la evidencia faltan el reporte copiado de
+`?baseline=1`, commit/modelo/navegador exactos y la tabla de
+`?stress=1&profile=1` en Low/Medium/High. Las plantillas y preguntas estan en
+`docs/balance/EX-03b-human-observations.md` y
+`docs/performance/EX-03c-stress-pending.md`.
+
+La alternativa de reroll con NOVA permanece PENDIENTE DE VALIDACION por DEC-05;
+no implementar precio ni debito. Hasta recibir el reporte numerico y resolver
+la condicion de input movil, EX-03 no se cierra y Boomerang no se expone.
+Sin commit, push ni deploy.
+
+## 78. EX-03c - stress PC Low/Medium/High - 07-09-2026
+
+Se recibieron capturas del preset `?stress=1&profile=1` en una PC media con
+RTX 4060 Ti, Ryzen 7 y 32 GB de RAM. Las tres calidades mantuvieron el stress
+real en `250/250` enemigos y `300/300` proyectiles, con landscape, logico
+`1280x720`, viewport `1302x890`, scale `1.02` y DPR `1.00`.
+
+| Calidad | FPS | p95 | Max frame | Long frames | Heap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Low | 59.99 | 16.80 ms | 17.00 ms | 2 | 24.2 MB |
+| Medium | 59.88 | 16.80 ms | 16.80 ms | 3 | 29.0 MB |
+| High | 59.98 | 16.80 ms | 16.90 ms | 1 | 33.2 MB |
+
+La evidencia confirma estabilidad alrededor de 60 FPS en PC. Los long frames
+son bajos y los maximos se mantienen cerca de 17 ms; no se declara aun una
+medicion de headroom GPU ni de movil. En las tres capturas Orbit esta `0/6` y
+Chain Lightning aparece `locked`, por lo que el preset no ejercita los FX
+premium de esas armas. El panel tampoco expone maximo de FX en estas capturas.
+
+La tabla queda en `docs/performance/EX-03c-stress-pending.md`. La matriz de PC
+ya esta completa; en Samsung S25+ queda confirmacion cualitativa, pero faltan
+capturas/metricas, navegador/commit/duracion exactos y legibilidad sostenida.
+EX-03 queda parcialmente validado y no se cierra aun. Sin commit, push ni
+deploy.
+
+## 79. EX-03c - confirmacion cualitativa Samsung S25+ - 07-09-2026
+
+El usuario confirma que el juego tambien corre bien en el Samsung S25+. Se
+registra como validacion manual cualitativa positiva: no se reportan problemas
+practicos de rendimiento o estabilidad durante las pruebas realizadas.
+
+No se recibieron capturas ni numeros de FPS, p95, heap, duracion o conteos del
+panel del telefono. Por eso no se presentan metricas inventadas ni se declara
+que el S25+ tenga la misma matriz numerica que la PC. EX-03c queda validado
+cuantitativamente en PC y cualitativamente en S25+; la evidencia mas estricta
+del movil queda pendiente si despues se desea conservar el panel completo.
+
+La recomendacion actual es no optimizar mas la PC por ahora y concentrar el
+siguiente trabajo de producto en la segunda opcion de desplazamiento para dedos
+gruesos. El balance de armas continua reservado para EX-02c. Sin commit, push
+ni deploy.
+
+## 80. EX-03 - segunda modalidad de desplazamiento movil - 07-09-2026
+
+Se resolvio la condicion de dedos gruesos sin alterar el control existente ni la
+simulacion. `InputManager` ahora conserva cuatro valores compatibles de
+`controlScheme`:
+
+- `auto`: comportamiento historico, combinando teclado y tactil directo;
+- `touch`: tactil directo, donde el player sigue la posicion del dedo;
+- `relative-touch`: el primer punto del gesto fija un origen invisible y el
+  desplazamiento define la direccion, con zona muerta de 10 unidades y limite
+  de 120 unidades; el dedo puede permanecer lejos del player;
+- `keyboard`: ignora el puntero y conserva WASD/flechas.
+
+El selector de desplazamiento quedo disponible en configuracion de inicio y de
+pausa. La eleccion se migra de forma segura en `SaveStore`, se persiste sin
+cambiar el schema versionado y se aplica al input en caliente; al cambiar de
+modalidad se limpia cualquier gesto anterior para no arrastrar direccion stale.
+La presentacion no decide movimiento: solo emite la preferencia; el calculo
+continua en `InputManager` y el player recibe el mismo `MovementVector`.
+
+Validacion cerrada:
+
+- typecheck correcto;
+- 70 archivos unitarios, 237 tests en verde;
+- `InputManager.test.ts` cubre arrastre relativo sin consultar la posicion del
+  player, limpieza al soltar y compatibilidad tactil directa;
+- smoke mobile Pixel 5: 2/2, incluyendo seleccion en inicio, desplazamiento en
+  portrait, persistencia visible en pausa y cambio de vuelta a automatico;
+- smoke desktop: 12/12 tras actualizar la expectativa visual del cuarto icono;
+- build local correcto; permanece el warning conocido del chunk principal mayor
+  de 500 kB.
+
+Esto resuelve el hallazgo de controles moviles de EX-03, pero no cierra la
+puerta completa: sigue pendiente conservar el reporte numerico `?baseline=1`
+de las diez runs y completar los metadatos/duracion de la evidencia de stress.
+DEC-05 (reroll con NOVA) continua pendiente de validacion y no se implementa.
+El siguiente paso de plan es cerrar esas evidencias de EX-03; despues podra
+abrirse EX-04/EX-05 para el primer incremento de arsenal, sin tocar aun EX-02c.
+
+## 81. ARENA-VISUAL - identidad premium adaptable - 09-09-2026
+
+Se transformo la zona de movimiento de un circulo semitransparente plano a una
+composicion de sistema: campo profundo, dos contornos internos, riel oscuro de
+contraste, riel azul de armadura, filo claro, segmentos de energia, ocho nodos
+perimetrales y un nucleo central detras del player. La resonancia conserva el
+lenguaje del borde y el shockwave ahora reutiliza los puntos de la frontera
+activa en vez de dibujar siempre un circulo.
+
+La implementacion es presentation-only en `ArenaView`. `ArenaModel`,
+`ArenaBoundary`, `PlayerModel` y `LaserHazard` siguen siendo la autoridad de
+forma, radio, clamp, alcance y dano. No se activaron triangulo, rectangulo,
+rombo ni otras formas jugables; el renderer deriva sus capas de
+`getArenaBoundaryPoints`, asi que puede acompanar nuevas formas cuando exista
+su contrato de gameplay.
+
+La guia neutral para Luna esta en `docs/design/ARENA_FX_PREMIUM.md` y queda
+enlazada desde `docs/design/ACTOS_Y_META.md`, `docs/design/EFECTOS_PREMIUM.md` y
+`docs/PLAN_EJECUCION.md`. Incluye receta de materiales, regla de subpaths
+independientes de PixiJS 8, pausa/reduced-motion, limites Low, procedimiento
+para agregar futuras fronteras convexas y checklist de validacion.
+
+Validacion: typecheck; build local; 73 archivos y 246 pruebas unitarias; smoke
+browser completo 19/19, con desktop 16/16 y mobile 3/3. La evidencia confirma
+runtime, resize, pausa, boss y portrait sin errores; la presencia premium y el
+contraste sostenido en Android fisico quedan pendientes de aprobacion humana.
+Sigue vigente el warning conocido del bundle mayor de 500 kB. El siguiente paso
+del plan no cambia: cerrar el reporte numerico `?baseline=1` de EX-03 y sus
+metadatos. EX-02c, nuevas formas de gameplay y Overdrive no se abren por esta
+entrega.
+
+## 82. ARENA-VISUAL — Aster Loom, segunda dirección artística — 09-09-2026
+
+El usuario pidió superar el acabado de la sección 81. La receta vigente es
+Aster Loom: bastidor de 24 placas separadas, 12 anclajes facetados, cavidades
+con luz mint, marcas latón y seis pulsos que recorren la frontera real.
+El campo deja ver el fondo cosmético y concentra su sombreado junto al borde;
+una roseta tenue ocupa el centro. La forma sigue siendo círculo/hexágono y
+la simulación conserva el control de radio, morph, clamp y láser.
+
+`ArenaFrameArt.ts` contiene materiales y geometría; `ArenaView.ts` coordina
+animación. Son 15 Graphics persistentes en todas las calidades, sin filtros,
+texturas ni dependencias nuevas. Riel de 144 puntos; geometría estable
+cacheada. Aviso y resonancia reutilizan paths; la onda se dispara una vez por
+expansión. Pausa detiene pulsos; reduced motion conserva señal y elimina
+desplazamiento decorativo.
+
+Luna debe leer `docs/design/ARENA_FX_PREMIUM.md`, ahora reescrito con la receta
+vigente. La referencia real está en `/docs/visual/arena-reference.html` con
+Vite activo. `node docs/visual/capture-arena.mjs` regenera capturas en
+`test-results/arena-reference/` y mide CPU del renderer aislado.
+
+Validación de esta revisión: build local, typecheck, 248 tests en 73 archivos;
+cinco smoke seleccionados de arte Low/High, resize, boss y touch correctos.
+Capturas desktop, portrait, fondo claro, transformación y boss Low revisadas,
+sin errores de página. CPU orientativa headless: p95 0.10 ms estable y 1.60 ms
+en morph; excluye GPU y juego completo. No acredita FPS en Android físico.
+Bundle principal 651.50 kB (180.13 kB gzip); sigue el warning de 500 kB.
+Poki/CrazyGames no se recompilaron en esta segunda revisión.
+
+Pendiente: aprobación visual del usuario y prueba de coste en móvil durante
+morph y expansión. La revisión no cierra EX-03 ni altera el orden del plan.
+
+## 83. Fondo premium gratuito — Órbita de Nacre — 09-09-2026
+
+Solicitud: un fondo nuevo sorprendente, legible y ligero; elegir PNG/SVG tras
+leer la guía híbrida y dejar una receta reproducible para Luna.
+
+Se eligió SVG editable para planeta anillado, polvo nacarado y luna distante.
+El navegador rasteriza una vez a 768×768; Pixi muestra un Sprite inmóvil en
+todas las calidades. La fuente de 5,503 bytes (1.70 kB gzip) se comparte con
+tarjeta y preview CSS. Imagen base RGBA8: 2.25 MiB, más overhead/canvas; no es
+una medición de memoria GPU ni FPS. Se ocultan las capas ambientales de otros
+fondos mientras Nacre está seleccionado y se omite su actualización.
+
+Probar: Skins → Fondos → Órbita de Nacre → GRATIS · EQUIPAR. No necesita NOVA
+ni anuncio, no cambia el fondo equipado hasta seleccionarlo. Se guarda el
+nuevo ID nacre-orbit mediante el schema existente sin migración adicional.
+
+Código: NacreBackgroundView y BackgroundView, SVG en assets/svg/backgrounds.
+Guía: docs/design/FONDOS_PREMIUM.md; ficha junto al asset. La guía híbrida y la
+referencia de familias enlazan la nueva receta. Para el siguiente fondo elegir
+masa/silueta propia y medio según material, conservar espacio de lectura,
+medir textura/overdraw y compartir fuente entre preview y runtime.
+
+Referencia real: /docs/visual/background-reference.html con Vite.
+Capturas: node docs/visual/capture-background.mjs. Genera locker gratuito,
+composición landscape/portrait y boss Low/High; oculta sólo el panel debug en
+capturas artísticas de combate. Se inspeccionaron sin errores de página/HTTP.
+
+Validado: typecheck; 74 archivos/251 tests; smoke completo 20/20; builds local,
+Poki y CrazyGames. Pruebas de carga tardía/fallida/destrucción, reutilización,
+cartera cero y persistencia. Bundle local principal 653.38 kB, 180.84 kB gzip;
+continúa el warning conocido de 500 kB. Falta aprobación visual y perfil en
+móvil físico; no trasladar los resultados anteriores del S25 a este fondo.
+La entrega no altera las puertas EX ni el balance.
+
+## 84. Segundo fondo premium gratuito — Flor del Ocaso — 10-09-2026
+
+Solicitud: probar con Luna la guía de Astra mediante otro fondo premium,
+gratuito, diferente y de bajo coste.
+
+Se creó **Vesper Bloom / Flor del Ocaso**: una flor astral facetada y
+asimétrica en la periferia superior derecha. Sus seis pétalos combinan planos
+violeta apagados, biseles nacarados, núcleo rosado localizado y trazos teal
+tenues. El centro queda oscuro y libre para player, enemigos, arena y láseres.
+Se descartaron una catedral de obeliscos y un eclipse circular por acercarse
+demasiado a Crystal Field y Nacre.
+
+El SVG `src/assets/svg/backgrounds/vesper-bloom.svg` se comparte con la tarjeta
+CSS y `VesperBackgroundView`. El cargador común está en
+`StaticSvgBackgroundView.ts`: una rasterización a 768×768, una textura
+cacheada, un Sprite estático y sin actualización en el ticker. Low, Medium y
+High conservan la misma identidad. El precio es cero; no cobra NOVA ni abre
+anuncio. ID: `vesper-bloom`.
+
+La guía de construcción para Luna está en `docs/design/FONDOS_PREMIUM.md` y
+la ficha junto al asset en `src/assets/svg/backgrounds/README.md`. La galería
+real `/docs/visual/background-reference.html` muestra Nacre y Vesper en
+landscape, portrait y con Aster Loom. El script `node
+docs/visual/capture-background.mjs` verifica referencia, locker, selección y
+combate.
+
+Validado: typecheck; 75 archivos/253 tests; smoke completo 20/20; builds local,
+Poki y CrazyGames; y captura de referencia sin errores de página/HTTP. El SVG
+fuente mide 5.143 bytes; en build produce 5.14 kB, 1.69 kB gzip; la textura
+RGBA8 base de 768×768 equivale a 2.25 MiB y no se actualiza por frame. Sigue
+pendiente la aprobación visual y el perfil en móvil físico: hay que comprobar
+contraste en una run real, lectura de láseres y coste en el dispositivo. Esta
+entrega no modifica simulación, daño, arena, balance ni puertas EX.
+
+## 85. Corrección de smoke — configuración del menú — 10-09-2026
+
+> Rectificación: el reporte posterior de Actions volvió a fallar. La hipótesis
+> de scroll expuesta abajo no fue demostrada por las pruebas locales; ver §86.
+
+El smoke de GitHub Actions podía agotar sus 60 segundos al editar
+`#start-sfx` después de recorrer Skins y Meta. No era un valor inválido ni un
+fallo de audio: `.start-screen-panel` es una superficie con scroll y el
+cambio de vista podía conservar un offset o recalcular la rejilla mientras el
+segundo slider aún no era interactuable.
+
+`StartScreen` ahora devuelve el panel al scroll superior al cerrar Skins/Meta
+y, al abrir Configuración, desplaza el slider SFX a una zona interactuable en
+el siguiente frame. El smoke declara además explícitamente ese contrato con
+`scrollIntoViewIfNeeded()` y `toBeEditable()` antes de editar ambos sliders.
+
+Validado: typecheck; 75 archivos/253 tests; el caso específico 1/1; y smoke
+completo 20/20 en 2.3 minutos. No se modifican los valores de audio, la
+persistencia ni la simulación. El warning conocido del bundle principal mayor
+de 500 kB permanece sin relación con esta corrección.
+
+## 86. Estabilización de CI tras nuevo timeout — 10-09-2026
+
+El nuevo reporte muestra 19/20 casos correctos y timeout global de 60 s en
+el mismo recorrido, ahora esperando `scrollIntoViewIfNeeded`. §85 no demostró
+la causa: el pase local anterior tampoco demostraba que el parche funcionara
+en Ubuntu. Se retira el scroll asíncrono a SFX y la espera añadida al test.
+
+El recorrido monolítico se separó en cinco casos: skins, cañones, fondos,
+laboratorio y audio. Conservan las verificaciones de selección/save y añaden
+débito de cartera; audio mantiene el retorno desde Skins/Meta y jugar. Son
+24 casos browser, con el mismo límite de 60 s por caso y sin omitir puertas.
+CI usa `on-first-retry` para evitar grabar todas las trazas de DOM SVG;
+acciones limitadas a 15 s y navegación a 30 s. El workflow conserva reportes
+y trazas siete días incluso si un reintento pasa, con límites de job explícitos.
+
+Guía operativa: `docs/CI_DEPLOY.md`. Validado en Windows: tres builds,
+typecheck, 75 archivos/253 tests y `CI=true npx playwright test --reporter=line`:
+24/24 correctos, cero reintentos, 2.0 minutos, preview nuevo. Esta cifra no
+se compara directamente con los 9.2 minutos de Ubuntu: son entornos distintos.
+Falta ejecutar el commit en Actions y revisar duración/flaky en el reporte.
+No se hizo commit, push ni deploy. Continúa el warning conocido de 500 kB.
+
+## 87. Reporte numérico de las diez runs recibido — 10-09-2026
+
+Se rectifica el estado de EX-03: las diez runs no faltaban como ejecución. Ya
+estaban registradas cualitativamente en §§76–80 y el usuario acaba de entregar
+el texto numérico completo del panel `?baseline=1`. Queda registrado en
+`docs/balance/EX-03b-baseline-report-2026-09-10.md` y enlazado desde
+`docs/balance/EX-03b-human-observations.md`.
+
+Resumen de la muestra: 10/10 runs, 8 victorias, 2 game-over, 8 llegadas al
+boss, primera subida en 00:09, boss en 04:20, tiempo medio de las victorias
+04:25.5, máximo observado de 23 enemigos, 20 proyectiles y 52 FX. La
+distribución de calidad fue medium 4, low 1 y high 5.
+
+La línea `Run en curso: si` no es una undécima run que deba contarse: es el
+estado activo al momento de copiar el panel. No se requiere repetir la
+muestra.
+
+La puerta EX-03 queda avanzada pero no se declara cerrada todavía por dos
+motivos de trazabilidad: el texto no trae commit, modelo/build, sistema
+operativo, navegador/versión ni dispositivo exacto; además, las runs #6–#9
+dicen `FPS medio 16.67` junto a `frame medio 16.67 ms`, inconsistencia que no
+permite interpretar esos cuatro FPS como una caída real. El siguiente paso es
+completar esos metadatos y confirmar el origen de esas filas, no volver a jugar
+diez runs.
+
+## 88. Matriz de stress PC en las tres calidades recibida — 10-09-2026
+
+El usuario entregó tres capturas nuevas del modo `?stress=1` en un PC con RTX
+4060 Ti, Ryzen 7 y 32 GB de RAM. Las tres mantienen landscape, lógico
+`1280x720`, viewport `1302x890`, escala `1.02`, DPR `1.00`, `250/250` enemigos
+y `300/300` proyectiles.
+
+| Calidad | FPS mostrado | profile | p95/frame máximo/long frames/heap |
+| --- | ---: | --- | --- |
+| Low | 59.99 | off | n/a |
+| Medium | 60.00 | off | n/a |
+| High | 60.00 | off | n/a |
+
+La lectura válida es que el escenario sostiene aproximadamente 60 FPS en las
+tres calidades en ese PC. Como `profile` estaba apagado, estas capturas no
+aportan p95, frame máximo, long frames ni heap; no se inventan esos valores.
+Orbit estaba en `0/6`, Chain locked y el boss inactive, así que la evidencia
+prueba la carga declarada de enemigos/proyectiles, pero no una saturación con
+las armas o todos los FX activos.
+
+El registro completo está en
+`docs/performance/EX-03c-stress-pending.md`. Para cerrar EX-03 todavía faltan
+duración exacta, navegador/sistema operativo y confirmar la anomalía de FPS de
+las runs baseline #6–#9. No hace falta repetir las diez runs; para p95 sólo
+sería necesario repetir una matriz comparable con `profile=1` si se desea ese
+nivel adicional de rigor.
+
+## 89. EX-05 — Vector Boomerang base en curso — 10-09-2026
+
+Se implementó el primer consumidor posterior a la extracción de behaviors:
+`BoomerangBehavior`, `BoomerangPool`, scheduling opcional, snapshot de render,
+integración con `CombatSimulation`, carta `vector_boomerang` y enforcement de
+máximo tres armas. La ficha numérica/DEC-01 queda en
+`docs/balance/EX-05-vector-boomerang.md`.
+
+La pieza sale hacia el target más cercano, recorre 250 unidades y regresa
+apuntando por tick al player. Usa colisión barrida contra la spatial grid y dos
+ledgers por slot basados en `EnemyState.generation`: un enemigo recibe como
+máximo un impacto en salida y otro en retorno, incluso si se recicla el slot.
+Pool lleno, ausencia de target, player muerto, captura, TTL y reset tienen
+salidas finitas. El borde no crea una regla de daño nueva: la pieza siempre
+intenta volver y el TTL libera el slot.
+
+El asset `src/assets/svg/weapons/vector-boomerang.svg` conserva un frame
+explícito de 48x48 orientado a +X. `WeaponView` rasteriza el SVG una sola vez y
+reutiliza ocho roots con trail, aura, wake, cuerpo y núcleo; la dirección usa
+la velocidad real, y la fase de retorno cambia a una lectura violeta. Low
+mantiene una señal corta, sin crear objetos durante el render.
+
+Validación actual: `npm run typecheck` correcto; batería enfocada de 5 archivos
+y 20 tests correcta. El primer intento de Vitest fue bloqueado por permisos al
+resolver la configuración desde OneDrive; con permisos ampliados pasó. Los
+tests Pixi requieren mock de `Graphics.svg` porque la suite unitaria usa
+entorno Node y no debe introducir una dependencia DOM solo por esta vista.
+
+EX-03 queda cerrado por la confirmación humana del usuario. En ese momento EX-05
+seguía pendiente de la validación humana; la decisión posterior del usuario y
+su cierre están registrados en §§90–91. La suite de entonces quedó en 77
+archivos/261 tests; typecheck, builds local/Poki/CrazyGames y smoke browser
+24/24 pasaron. El warning conocido del chunk principal mayor de 500 kB
+permanece visible. No se hizo commit, push ni deploy.
+
+## 90. Cierre de EX-03 — 10-09-2026
+
+El usuario confirmó que las pruebas de baseline/stress se realizaron en PC con
+Chrome y Edge, y en Samsung S25+ usando Chrome. Compras, revive, reroll y
+duplicar NOVA funcionan correctamente; la build quedó correcta; la última
+sesión duró 5 minutos. La lectura de 16 FPS fue errónea: revisando las métricas,
+la caída real máxima observada fue de 56 FPS.
+
+Con esta evidencia, EX-03 queda **CERRADO**. El sistema operativo, versiones
+exactas de navegador y métricas numéricas del S25+ quedan como metadatos
+opcionales; no se inventan valores de p95 móvil ni se modifica el balance
+pendiente de EX-02c. EX-05 también queda aprobado para este hito por decisión
+de producto: la validación humana del Búmeran cubrió movimiento, otras armas
+activas y presión. EX-05e se difiere como auditoría no bloqueante.
+
+## 91. EX-06a — contrato Radial implementado — 10-09-2026
+
+El usuario aprobó el Búmeran por lo pronto y pidió continuar sin abrir todavía
+la pasada de balance de daño/vida de enemigos. Se implementó la primera unidad
+de EX-06: `ActDefinition` compone únicamente los datos authored del Acto I y
+`RadialActDirector` es su único consumidor. El director conserva exactamente
+las cadencias de spawn, la mezcla determinista de enemigos, el calendario de
+formas, la presión del láser y el contrato del Core Sentinel.
+
+`ArenaModel`, `EnemySystem`, `LaserHazard` y `CombatSimulation` consultan el
+director; no se añadieron actos vacíos, selección, save, nuevos polígonos ni el
+pulso radial. La prueba seeded usa 128 muestras para comparar cadencia y mezcla
+contra las funciones previas, además de los hitos de transición y boss.
+
+Validado tras el cambio: typecheck, batería enfocada de 36 tests, suite completa
+de 79 archivos/265 tests, builds `local`/`poki`/`crazygames` y smoke browser
+desktop/móvil 24/24 en 2.8 minutos. El warning conocido del chunk principal
+mayor de 500 kB permanece visible.
+No se hizo commit, push ni deploy. El siguiente ID de trabajo es **EX-06b**:
+especificar y probar el pulso radial, después de la validación humana del slice
+de arena existente. EX-02c y EX-05e siguen pendientes/diferidos respectivamente.
+
+## 92. EX-06b — pulso radial implementado — 10-09-2026
+
+Se implementó la siguiente unidad del plan: el Acto I ahora tiene una onda
+anular que alterna entre recorrido outward (bolsillo interior → bolsillo
+exterior) e inward (exterior → interior). Su contrato authored está en `RadialPulseDefinition`: primer aviso a
+92 s, intervalo de 52 s, último inicio a 250 s, telegraph de 1.1 s, ataque de
+1.6 s, recovery de 0.6 s, ancho 28, bolsillo interior de 54 u y daño provisional
+16. El radio exterior se calcula dejando espacio para el cuerpo del player. El deadline queda
+antes del boss a 260 s y el valor de daño no cierra ni modifica EX-02c.
+
+`RadialPulseHazard` conserva las fases explícitas, captura el radio al iniciar,
+aplica como máximo un impacto por cast y usa cruce barrido entre radios para no
+saltar la banda entre ticks. `CombatSimulation` publica el snapshot y registra
+`radial-pulse` como fuente de baseline. El láser no inicia durante un pulso y
+el pulso no inicia durante un láser; un ataque ya comenzado nunca se cancela y
+el boss/deadline descartan nuevas ondas.
+
+`RadialPulseView` representa telegraph, dirección, banda activa y residuo con
+cinco `Graphics` reutilizados. Low mantiene la información crítica y sólo
+reduce marcadores decorativos; no se pinta una zona segura opaca.
+
+Validado: typecheck; batería enfocada de 5 archivos / 30 tests; suite completa
+de 81 archivos / 272 tests; builds `local`, `poki` y `crazygames`; y smoke
+browser desktop/móvil 24/24 en 2.7 minutos. El warning conocido del chunk
+principal mayor de 500 kB permanece visible. Falta la validación humana en
+desktop/móvil de lectura, salida segura y diversión. No se hizo commit, push ni
+deploy. En ese momento, el siguiente ID era **EX-06c**: resultado de acto,
+recompensa única e intermisión. EX-02c sigue pendiente y EX-05e diferido.
+
+## 93. Corrección EX-06b — evasión real del pulso — 10-09-2026
+
+La prueba jugable detectó que la primera versión no tenía una evasión real:
+la banda viajaba desde el radio 0 hasta fuera del borde, así que cualquier
+posición legal del player terminaba siendo cruzada. No era falta de velocidad
+ni de lectura, sino una trayectoria que cubría todo el espacio jugable.
+
+La corrección deja dos bolsillos seguros explícitos. El centro conserva un
+radio interior de 72 u y la banda termina antes del borde, calculando el radio
+exterior con espacio para el cuerpo del player, el ancho del pulso y un margen.
+El jugador puede refugiarse en cualquiera de los dos bolsillos durante el
+telegraph; un jugador en la franja media sigue teniendo que decidir y moverse.
+El cálculo usa la menor distancia de la frontera actual, por lo que el bolsillo
+exterior también es válido contra el lado plano del hexágono. La vista muestra
+los bolsillos como guías finas, sin zonas opacas que tapen el combate.
+
+Validado: typecheck; tests específicos de hazard/vista 15/15; suite completa
+81 archivos / 274 tests; build `local`, `poki` y `crazygames`; smoke browser
+desktop/móvil 24/24 en 2.7 minutos. El warning conocido del chunk principal
+mayor de 500 kB permanece visible. Falta la comprobación humana final en una
+run real para confirmar que la señal y los dos refugios se sienten naturales.
+La siguiente tarea prevista tras esta corrección era **EX-06c**; su resultado
+está registrado en la sección 94. EX-02c sigue pendiente y EX-05e diferido.
+
+## 94. EX-06c — resultado del Acto I e intermisión segura — 10-09-2026
+
+- La victoria del Core Sentinel liquida su NOVA con el contrato idempotente ya
+  existente y, al abrir el resumen, pasa de `victory` a `act-intermission`.
+  La fase sólo detiene y encauza lifecycle: no contiene reglas de build,
+  economía ni campaña.
+- El resumen nombra **Acto I · Radial superado**, explica que la recompensa se
+  acreditó una sola vez y ofrece solamente **Repetir Acto I** y **Volver al
+  menú**. No existe botón `Continuar`, desbloqueo ficticio de Acto II, bonus
+  fijo adicional ni save de Expedición parcial. El doble de NOVA continúa
+  siendo la única oferta rewarded terminal ya autorizada.
+- Volver al menú invalida primero callbacks rewarded tardíos y después limpia
+  la presentación; repetir crea una run nueva. Así ninguna acción puede cobrar
+  de nuevo el resultado ni restaurar una build inexistente entre actos.
+- Validado: pruebas enfocadas `GameState` + `Game`, **19/19**; typecheck;
+  suite completa **81 archivos / 276 pruebas**; builds `local`, `poki` y
+  `crazygames`; y smoke browser desktop/móvil **24/24 en 2.8 minutos**. El
+  runner sólo emitió el aviso de consola `NO_COLOR`/`FORCE_COLOR`; Vite confirmó
+  el warning conocido del chunk principal: 675.77 kB minificado / 186.27 kB
+  gzip local (675.73 kB / 186.23 kB Poki/CrazyGames). Sigue como trabajo de
+  presupuesto separado. La ficha de contrato y guion humano está en
+  `docs/balance/EX-06c-act-intermission.md`.
+- Siguiente ID exacto: **EX-06d**, validación humana de **diez runs** del acto
+  actualizado con pulso, boss, resultado e intermisión; incluir una victoria
+  en desktop y otra en móvil si ambas plataformas están disponibles. EX-02c
+  sigue pendiente; EX-05e continúa diferido.
+
+## 95. Prototipo visual PNG de Magnetic Charge — 30-09-2026
+
+En la rama `codex/magnetic-charge-png-prototype` se amplió el prototipo del
+núcleo a todo el ciclo base: núcleo en vuelo, estela, baliza/campo de atracción,
+anillo de detonación y residuo de recuperación. Las cuatro texturas RGBA se
+cargan juntas al primer cast; sólo se usa la ruta PNG cuando todo el conjunto
+está listo. Un error conserva el fallback vectorial completo. Low mantiene el
+mismo contenido funcional con menor opacidad. No se tocaron daño, colisiones,
+radios, cadencia ni movimiento de enemigos. Event Horizon y Polar Collapse
+siguen vectoriales y bloqueadas hasta aprobar el aspecto base.
+
+El inventario, bytes, estimación de memoria y notas de procedencia/prompts están
+en [`src/assets/fx/README.md`](../../src/assets/fx/README.md). Los tres prompts nuevos
+se registran como briefs de regeneración porque el generador no exportó sus
+transcripciones literales; el prompt del núcleo sí quedó conservado.
+
+Acceso humano rápido: abrir `/?weapon=magnetic-charge&debug=1&quality=high`
+(cambiar a `low` para comparar). Capturas automatizadas High/Low:
+`test-results/magnetic-charge-prototype/high.png` y
+`test-results/magnetic-charge-prototype/low.png`.
+
+Validado en este entorno: `npm run build:local` (typecheck, 115 archivos de
+test / 528 pruebas y build Vite); smoke Playwright del arma en Low/High (2/2),
+con las cuatro respuestas de imágenes comprobadas en cada preset. La captura de
+browser confirma el anillo de detonación y el uso del drill; no se midió FPS ni
+se certifica rendimiento en un teléfono físico. Revisión humana aprobada para
+probar esta versión desplegada. Event Horizon y Polar Collapse siguen
+vectoriales; la adaptación de sus efectos requiere una revisión separada.
+
+## 96. Corrección de registro y profundidad de Magnetic Charge — 30-09-2026
+
+La revisión de la versión desplegada encontró que el núcleo quedaba unos
+píxeles fuera del centro óptico de la abertura de detonación y que el efecto
+se dibujaba por encima de los enemigos. El núcleo y el anillo usan ahora
+anchors registrados a sus focos visibles, y el contenedor de Magnetic Charge
+se dibuja debajo de las entidades para mantener a los enemigos al frente.
+Vista previa local: `test-results/magnetic-charge-centering-fix-final.png`.
+Corrección aprobada por el usuario para publicar en `main`.

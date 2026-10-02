@@ -2,14 +2,16 @@
 
 Prototipo web del MVP de *Geometry Survivor*. El juego está construido para ejecutarse primero en navegador y publicarse en GitHub Pages, con destinos separados para pruebas locales, Poki y CrazyGames.
 
-Para retomar el desarrollo desde otra sesión o agente, consulta [CONTINUACION.md](CONTINUACION.md). Resume el estado comprobado, la auditoría de modularidad y el siguiente hito recomendado sin reemplazar `PLAN_DESARROLLO.md`.
+Para retomar el desarrollo desde otra sesión o agente, consulta [CONTINUACION.md](CONTINUACION.md) y el [mapa documental](docs/README.md). El snapshot y la [guía de ejecución](docs/PLAN_EJECUCION.md) indican la tarea vigente; los historiales fechados no son una lista de trabajo pendiente ni reemplazan `PLAN_DESARROLLO.md`.
 
 ## Arranque local
 
 Usar Node.js 24 LTS (versión de referencia en `.node-version`), como en CI.
 Este archivo indica la versión; no instala ni actualiza Node automáticamente.
-Evitar Node 22.14.0 en Windows: la auditoría local encontró crecimiento de memoria
-del servidor Vite. Ver [diagnóstico y medición](docs/performance/VITE_MEMORY.md).
+Se documentó una incidencia de crecimiento de memoria en Windows con Node
+22.14.0. Usar la referencia actual y el watcher corregido; las pruebas breves
+no certifican una sesión de horas. Ver [diagnóstico y medición](docs/performance/VITE_MEMORY.md)
+y la [auditoría de recursos](docs/audits/AUDITORIA_RECURSOS_2026-10-02.md).
 
 ```bash
 npm install
@@ -38,23 +40,18 @@ npm run build:crazygames
 npm run preview
 ```
 
-Los artefactos quedan en `dist/local`, `dist/poki` y `dist/crazygames`. En esta primera fase Poki y CrazyGames usan todavía `LocalPlatform`; sus SDK se integrarán en adaptadores aislados cuando el MVP sea estable.
+Los artefactos quedan en `dist/local`, `dist/poki` y `dist/crazygames`. Los tres targets usan todavía `LocalPlatform`; sus SDK reales y QA de portales siguen pendientes en EX-09. Construir esas carpetas no demuestra integración comercial.
 
-`npm run test:browser` reconstruye `dist/local` y ejecuta el smoke de Playwright en Chromium (desktop y un proyecto emulado Pixel 5): carga, teclado/pointer/touch, pausa/reanudación, matriz de resize, level-up, almacenamiento local, context loss y errores de consola/red. El juego desbloquea la música procedural y los cues de audio después de la primera interacción; `?spike=audio` conserva la prueba técnica aislada.
+`npm run test:browser` reconstruye `dist/local` y ejecuta Playwright en Chromium (desktop y un proyecto emulado Pixel 5): carga, teclado/pointer/touch, pausa/reanudación, matriz de resize, level-up, almacenamiento local, context loss y errores de consola/red. El juego desbloquea audio después de la primera interacción; Howler reproduce la fuente musical del prototipo y ZzFX genera los efectos. `?spike=audio` conserva la prueba técnica aislada, no sustituye la ruta de audio del juego.
+
+Los scripts de build ejecutan typecheck y unitarios antes de compilar; `validate` y `test:browser` también encadenan verificaciones. Para diagnóstico de rendimiento, distinguir tiempo de tests, compilación, browser y despliegue. El contrato de CI está en [CI_DEPLOY](docs/CI_DEPLOY.md).
 
 La instalación de Chromium es necesaria una sola vez por máquina (`npx playwright install chromium`). El workflow de GitHub Actions la instala automáticamente.
 
-## Subir al repositorio remoto
+## Publicación y límites
 
-Después de crear el repositorio específico del juego:
+El repositorio y GitHub Pages ya están configurados: no ejecutar de nuevo el arranque histórico (`git init`, recrear remoto o bootstrap) para continuar.
 
-```bash
-git init
-git add .
-git commit -m "chore: bootstrap geometry survivor MVP"
-git branch -M main
-git remote add origin <URL_DEL_REPOSITORIO>
-git push -u origin main
-```
+El workflow `.github/workflows/deploy.yml` publica `dist/local` en GitHub Pages tras un push a `main` o ejecución manual, sólo después de typecheck, unitarios, tres builds y todos los shards browser. Una validación local no demuestra que el workflow remoto haya pasado. Commit, push y publicación requieren autorización de la solicitud vigente.
 
-El workflow `.github/workflows/deploy.yml` publica automáticamente `dist/local` en GitHub Pages cuando se hace push a `main`, sólo después de pasar el browser smoke y los builds Poki/CrazyGames. Antes del primer despliegue, activa `Settings > Pages > Build and deployment > Source: GitHub Actions` en el repositorio; esa configuración permite que `configure-pages` encuentre el sitio.
+GitHub Pages prueba el target local. Antes de publicar comercialmente faltan los adaptadores reales y pruebas en Poki Inspector/CrazyGames Preview, así como las puertas de carga, recursos y presupuestos descritas en el [plan vigente](docs/PLAN_EJECUCION.md).

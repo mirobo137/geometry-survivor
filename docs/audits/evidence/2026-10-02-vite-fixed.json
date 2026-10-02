@@ -1,0 +1,607 @@
+{
+  "mode": "fixed",
+  "node": "v24.19.0",
+  "uv": "1.52.1",
+  "pid": 20244,
+  "seconds": 180,
+  "samples": [
+    {
+      "elapsedSeconds": 0.1,
+      "phase": "boot",
+      "rssMiB": 130.06,
+      "heapTotalMiB": 75.45,
+      "heapUsedMiB": 55.46,
+      "externalMiB": 6.95,
+      "arrayBuffersMiB": 0.34,
+      "watchedDirectories": 3,
+      "watchedEntries": 3
+    },
+    {
+      "elapsedSeconds": 5.1,
+      "phase": "boot",
+      "rssMiB": 159.04,
+      "heapTotalMiB": 119.28,
+      "heapUsedMiB": 56.69,
+      "externalMiB": 6.83,
+      "arrayBuffersMiB": 0.23,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 10.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 248.78,
+      "heapTotalMiB": 211.54,
+      "heapUsedMiB": 115.29,
+      "externalMiB": 18.24,
+      "arrayBuffersMiB": 8.63,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 15.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 248.91,
+      "heapTotalMiB": 211.54,
+      "heapUsedMiB": 115.44,
+      "externalMiB": 18.25,
+      "arrayBuffersMiB": 8.64,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 20.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 137.74,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 66.81,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 25.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 137.96,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 66.96,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 30.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.12,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.11,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 35.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.26,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.26,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 40.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.48,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.45,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 45.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.61,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.6,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 50.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.77,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 66.89,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 55.2,
+      "phase": "idle-before-builds",
+      "rssMiB": 138.93,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.03,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 60.3,
+      "phase": "idle-before-builds",
+      "rssMiB": 139.07,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.18,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 65.3,
+      "phase": "idle-before-builds",
+      "rssMiB": 139.26,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.32,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 70.3,
+      "phase": "idle-before-builds",
+      "rssMiB": 139.38,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.47,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 75.3,
+      "phase": "idle-before-builds",
+      "rssMiB": 139.5,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.62,
+      "externalMiB": 10.19,
+      "arrayBuffersMiB": 0.58,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 80.4,
+      "phase": "idle-before-builds",
+      "rssMiB": 114.39,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.68,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 85.4,
+      "phase": "idle-before-builds",
+      "rssMiB": 114.39,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.82,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 90.4,
+      "phase": "idle-before-builds",
+      "rssMiB": 114.56,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.09,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 125,
+      "watchedEntries": 851
+    },
+    {
+      "elapsedSeconds": 95.4,
+      "phase": "idle-before-builds",
+      "rssMiB": 114.57,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.48,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 100.4,
+      "phase": "build-development",
+      "rssMiB": 114.65,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.85,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 105.4,
+      "phase": "build-development",
+      "rssMiB": 114.65,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.12,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 110.4,
+      "phase": "build-development",
+      "rssMiB": 114.65,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.26,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 115,
+      "phase": "build-development",
+      "rssMiB": 69.96,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.45,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 115.5,
+      "phase": "build-poki",
+      "rssMiB": 70.1,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.67,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 120.5,
+      "phase": "build-poki",
+      "rssMiB": 70.1,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.81,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.58,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 125.5,
+      "phase": "build-poki",
+      "rssMiB": 50.43,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.82,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 128.8,
+      "phase": "build-poki",
+      "rssMiB": 50.62,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.25,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 130.5,
+      "phase": "build-crazygames",
+      "rssMiB": 50.73,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.46,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 135.5,
+      "phase": "build-crazygames",
+      "rssMiB": 50.86,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.6,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 139.2,
+      "phase": "build-crazygames",
+      "rssMiB": 52.95,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.78,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.58,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 140.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 52.98,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.92,
+      "externalMiB": 10.19,
+      "arrayBuffersMiB": 0.58,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 145.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.2,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.23,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 150.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.2,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.38,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 155.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.2,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.52,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 160.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.21,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.67,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 165.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.45,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.39,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 170.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.45,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.53,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 175.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.45,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.67,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 180.6,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.45,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.82,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 185.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.45,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.96,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 190.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.47,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.26,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 195.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.51,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.41,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 200.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.51,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.55,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 205.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.51,
+      "heapTotalMiB": 70.56,
+      "heapUsedMiB": 67.7,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 852
+    },
+    {
+      "elapsedSeconds": 210.7,
+      "phase": "idle-after-builds",
+      "rssMiB": 54.15,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.27,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 853
+    },
+    {
+      "elapsedSeconds": 215.8,
+      "phase": "idle-after-builds",
+      "rssMiB": 54.15,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.41,
+      "externalMiB": 10.16,
+      "arrayBuffersMiB": 0.55,
+      "watchedDirectories": 126,
+      "watchedEntries": 853
+    },
+    {
+      "elapsedSeconds": 220.8,
+      "phase": "idle-after-builds",
+      "rssMiB": 54.15,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.56,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 853
+    },
+    {
+      "elapsedSeconds": 225.8,
+      "phase": "idle-after-builds",
+      "rssMiB": 53.99,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 67.71,
+      "externalMiB": 10.17,
+      "arrayBuffersMiB": 0.56,
+      "watchedDirectories": 126,
+      "watchedEntries": 853
+    },
+    {
+      "elapsedSeconds": 229.3,
+      "phase": "idle-after-builds",
+      "rssMiB": 56.96,
+      "heapTotalMiB": 71.56,
+      "heapUsedMiB": 68.08,
+      "externalMiB": 10.18,
+      "arrayBuffersMiB": 0.57,
+      "watchedDirectories": 126,
+      "watchedEntries": 853
+    }
+  ],
+  "events": [
+    {
+      "kind": "change",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\debug.log",
+      "phase": "idle-before-builds"
+    },
+    {
+      "kind": "addDir",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\archive",
+      "phase": "idle-before-builds"
+    },
+    {
+      "kind": "add",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\archive\\CONTINUACION_HASTA_2026-10-02.md",
+      "phase": "build-poki"
+    },
+    {
+      "kind": "add",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\archive\\PLAN_EJECUCION_HASTA_2026-10-02.md",
+      "phase": "build-poki"
+    },
+    {
+      "kind": "unlink",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\CONTINUACION.md",
+      "phase": "build-poki"
+    },
+    {
+      "kind": "unlink",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\PLAN_EJECUCION.md",
+      "phase": "build-poki"
+    },
+    {
+      "kind": "change",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\archive\\CONTINUACION_HASTA_2026-10-02.md",
+      "phase": "idle-after-builds"
+    },
+    {
+      "kind": "change",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\docs\\archive\\PLAN_EJECUCION_HASTA_2026-10-02.md",
+      "phase": "idle-after-builds"
+    },
+    {
+      "kind": "add",
+      "file": "C:\\PROYECTOS\\pruebas_geo\\scripts\\qa-resource-audit.mjs",
+      "phase": "idle-after-builds"
+    }
+  ],
+  "errors": []
+}

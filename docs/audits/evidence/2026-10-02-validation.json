@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-02",
+  "codeHead": "d793740",
+  "node": "v24.19.0",
+  "platform": "win32-x64",
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0
+  },
+  "unit": {
+    "command": "npm test -- --maxWorkers=2 --minWorkers=1",
+    "filesPassed": 120,
+    "testsPassed": 578,
+    "exitCode": 0
+  },
+  "builds": {
+    "probe": "node scripts/qa-vite-memory.mjs --watch=fixed --seconds=180 --builds",
+    "modesPassed": ["development", "poki", "crazygames"],
+    "warning": "Main chunk exceeds 500 kB"
+  },
+  "browser": {
+    "command": "node node_modules/@playwright/test/cli.js test --workers=1",
+    "testsPassed": 81,
+    "testsFailed": 0,
+    "exitCode": 0,
+    "reportedDuration": "16.5m",
+    "desktopSmokeFileReportedDuration": "9.1m",
+    "teardownAssisted": true,
+    "note": "All cases reported success; runner waited during webServer shutdown. Stopped only the two audit-owned server processes 20716 and 30340, after which the runner emitted its summary and exited 0. Cause not established; not evidence of normal automatic cleanup or Linux CI behavior."
+  },
+  "limits": [
+    "No long-running leak certification",
+    "No full VRAM measurement",
+    "No physical modest mobile device or Safari/iOS test",
+    "No SDK portal QA or publication approval"
+  ]
+}

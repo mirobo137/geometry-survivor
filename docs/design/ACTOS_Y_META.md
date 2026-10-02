@@ -1,6 +1,6 @@
 # Geometry Survivor — actos, meta y Overdrive
 
-Fecha de decisión original: 05-09-2026. Vigencia revisada: 28-09-2026.
+Fecha de decisión original: 05-09-2026. Vigencia operativa revisada: 02-10-2026.
 
 Este documento fija la dirección de producto que acompaña a
 `PLAN_DESARROLLO.md` §16. Sus fichas de diseño conservan contexto histórico;
@@ -9,6 +9,11 @@ el estado implementado actual y las decisiones posteriores registradas en
 Overdrive y sus flujos ya tienen consumidores reales; EX-09 de portales sigue
 pendiente. El contrato vigente del Laboratorio es
 [`LABORATORIO_META_V2.md`](LABORATORIO_META_V2.md).
+
+Para trabajo nuevo usar la [guía vigente](../PLAN_EJECUCION.md) y
+[CONTINUACION](../../CONTINUACION.md). Expedition fue eliminado; sus menciones
+en registros antiguos de esta ficha son contexto de diseño, no un modo,
+guardado o transición pendiente de construir.
 
 ## Estado de implementación — 28-09-2026
 
@@ -31,8 +36,10 @@ modo infinito opcional posterior llamado **Overdrive**.
   una calibración authored nueva; no hereda la build del acto anterior.
 - El selector de actos desbloqueados sólo es un acceso de repetición/prueba y
   ofrece las mismas tres calibraciones.
-- Overdrive comienza después de completar el Acto III dentro de `Expedition` y
-  mezcla las reglas ya aprendidas en ciclos cada vez más exigentes.
+- Overdrive se desbloquea tras vencer realmente el Acto III. Es una partida
+  independiente con build limpia (conserva meta permanente), según
+  [PLAN_INFINITO](PLAN_INFINITO.md), y mezcla las reglas ya aprendidas en ciclos
+  cada vez más exigentes; no depende de un modo Expedition.
 - Ningún modo obliga a jugar infinito para terminar la experiencia principal.
 
 El baseline de balance aceptado se conserva. No ampliar límites ni retocar

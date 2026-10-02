@@ -1,5 +1,13 @@
 # Auditoría de Overdrive después de EX-11.6/7 — 17-09-2026
 
+> EVIDENCIA HISTÓRICA. Hallazgos, reproducciones, «pendiente de push» y orden de
+> reparación corresponden al checkout de esta auditoría. No son una cola vigente
+> ni un diagnóstico del código posterior. Mantener los criterios de regresión,
+> pero reproducir el defecto en el checkout actual antes de reabrirlo. La
+> [guía vigente](../PLAN_EJECUCION.md) y [CONTINUACION](../../CONTINUACION.md)
+> indican la siguiente acción; la [auditoría de recursos](../audits/AUDITORIA_RECURSOS_2026-10-02.md)
+> documenta la revisión actual, sin inferir el cierre de un hallazgo desde la fecha.
+
 Estado: **NO CERRADO**. Auditoría solicitada tras observar una nave Core Sentinel
 con el nombre Orbital Warden durante la primera vuelta. Este informe no aplica
 correcciones a producción ni cambia el balance. Complementa la auditoría
@@ -164,7 +172,7 @@ No ejecutar una URL con una etapa extrema para probarlo: puede bloquear el hilo.
 
 ## Estado de correcciones de esta auditoria
 
-Estado actual: **CORREGIDO EN EL CHECKOUT LOCAL; PENDIENTE DE VALIDACION HUMANA Y PUSH**.
+Estado al registrar esta entrega (17-09-2026): **CORREGIDO EN EL CHECKOUT LOCAL; PENDIENTE DE VALIDACION HUMANA Y PUSH**.
 
 - OD-B01: la vista conserva la identidad de cada familia de boss al resetear.
 - OD-B02: el arbitro conserva participantes vivos y el ultimo boss puede volver a ejecutar especiales.

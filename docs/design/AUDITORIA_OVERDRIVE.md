@@ -1,7 +1,14 @@
 # Auditoría de Overdrive — 17-09-2026
 
+> EVIDENCIA HISTÓRICA de EX-11.1–5. Los próximos pasos y «estado actual» de este
+> informe describen su fecha, no la cola de trabajo presente. Conservar los
+> criterios como regresiones y contrastar cualquier defecto con el código/tests
+> de hoy. Para continuar usar [la guía vigente](../PLAN_EJECUCION.md),
+> [CONTINUACION](../../CONTINUACION.md) y la
+> [auditoría de recursos actual](../audits/AUDITORIA_RECURSOS_2026-10-02.md).
+
 Base auditada: `cdd3fa5` (EX-11.1–EX-11.5). Correcciones aplicadas después de
-la auditoría en la rama actual `b00fbdb` y en esta sesión. Esta sección conserva
+la auditoría en `b00fbdb` y en la sesión del 17-09-2026. Esta sección conserva
 la evidencia histórica de los hallazgos y sus criterios.
 
 **Estado de cierre OD-A01–OD-A08: CORREGIDOS.** La suite focalizada y la suite

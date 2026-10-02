@@ -1,0 +1,419 @@
+{
+  "node": "v24.19.0",
+  "schemaVersion": 2,
+  "scenarios": [
+    {
+      "kind": "six-weapons",
+      "quality": "low",
+      "samples": [
+        {
+          "label": "six-weapons-low-5s",
+          "elapsedMs": 6684,
+          "heapMiB": 12.603,
+          "documents": 2,
+          "nodes": 1739,
+          "jsEventListeners": 136,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9882840,
+          "gameplaySeconds": "00:05",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 5
+        },
+        {
+          "label": "six-weapons-low-15s",
+          "elapsedMs": 17045,
+          "heapMiB": 13.438,
+          "documents": 2,
+          "nodes": 2186,
+          "jsEventListeners": 184,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9882840,
+          "gameplaySeconds": "00:14",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 15
+        },
+        {
+          "label": "six-weapons-low-30s",
+          "elapsedMs": 32427,
+          "heapMiB": 13.771,
+          "documents": 2,
+          "nodes": 1941,
+          "jsEventListeners": 156,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 53,
+          "rgbaBaseBytesInScene": 9964760,
+          "gameplaySeconds": "00:28",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 30
+        },
+        {
+          "label": "six-weapons-low-60s",
+          "elapsedMs": 62898,
+          "heapMiB": 14.069,
+          "documents": 2,
+          "nodes": 1950,
+          "jsEventListeners": 162,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 53,
+          "rgbaBaseBytesInScene": 9964760,
+          "gameplaySeconds": "00:57",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 1161
+        },
+        {
+          "asset": "solar-crown-_OU0t4b1.png",
+          "elapsedMs": 1297
+        },
+        {
+          "asset": "event-horizon-CZ90SKcM.png",
+          "elapsedMs": 1297
+        },
+        {
+          "asset": "magnetic-singularity-core-CoQlwlw0.png",
+          "elapsedMs": 1298
+        },
+        {
+          "asset": "magnetic-charge-travel-CUOriCOL.png",
+          "elapsedMs": 1298
+        },
+        {
+          "asset": "magnetic-charge-detonation-CA8mKgWE.png",
+          "elapsedMs": 1298
+        },
+        {
+          "asset": "magnetic-charge-field-DDtR9GdF.png",
+          "elapsedMs": 1298
+        },
+        {
+          "asset": "closed-circuit-mqMelqOS.png",
+          "elapsedMs": 2184
+        },
+        {
+          "asset": "rail-lance-DHP6kLZ4.png",
+          "elapsedMs": 2202
+        },
+        {
+          "asset": "twin-comet-Cqw-UF8J.png",
+          "elapsedMs": 2487
+        },
+        {
+          "asset": "echo-shock-B6RcLt9i.png",
+          "elapsedMs": 4948
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 9142
+        },
+        {
+          "asset": "vampiric-core-C-W_xLcK.webp",
+          "elapsedMs": 9142
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 9142
+        },
+        {
+          "asset": "rail-lance-zlTPJguA.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "solar-crown-Ez9okb5y.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "twin-comet-DXv1gGl8.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "event-horizon-D9Qx8VGO.webp",
+          "elapsedMs": 10193
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 20985
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 32582
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 32582
+        },
+        {
+          "asset": "regenerative-reactor-BizLIJRS.webp",
+          "elapsedMs": 47059
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 47059
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 47059
+        }
+      ],
+      "errors": [],
+      "finalUi": "target: local\norientation: portrait\nlogical: 720×1280\nviewport: 390×844\nscale: 0.54\ndpr: 1.00\nquality: low\nprofile: on\nframeP95: 16.80 ms\nframeMax: 33.40 ms\nlongFrames: 199.00\nheap: 17.4 MB\nfps: 56.55\nmode: overdrive-stage-1\nhazards: chaos\nenemies: 2/250\nprojectiles: 2/300\norbit: 6/6\nchain: ready\npaused: playing\nlevel: 5.00\noverdriveArsenal: expanded 6\nweaponPath: off\narena: 270.0 | circle (stable) | expansión 0\nlaser: active | 1.83 rad\npulse: idle | outward | 0.0\nmagnetic: travel | 775,541\nevolution: none\ncalibration: none\norbiter: off\ncharger: off\nsplitter: off\nprism: off\nangular: off\nfracture: off\nresonance: 0.00\nboss: inactive\nplayer: 640.0, 360.0\nbaseline: off"
+    },
+    {
+      "kind": "six-weapons",
+      "quality": "high",
+      "samples": [
+        {
+          "label": "six-weapons-high-5s",
+          "elapsedMs": 68841,
+          "heapMiB": 13.869,
+          "documents": 2,
+          "nodes": 1741,
+          "jsEventListeners": 136,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 57,
+          "rgbaBaseBytesInScene": 10334424,
+          "gameplaySeconds": "00:05",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 5
+        },
+        {
+          "label": "six-weapons-high-15s",
+          "elapsedMs": 79360,
+          "heapMiB": 14.761,
+          "documents": 2,
+          "nodes": 2182,
+          "jsEventListeners": 183,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 57,
+          "rgbaBaseBytesInScene": 10334424,
+          "gameplaySeconds": "00:14",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 15
+        },
+        {
+          "label": "six-weapons-high-30s",
+          "elapsedMs": 94783,
+          "heapMiB": 15.17,
+          "documents": 2,
+          "nodes": 2015,
+          "jsEventListeners": 164,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 61,
+          "rgbaBaseBytesInScene": 10399960,
+          "gameplaySeconds": "00:28",
+          "levelUpVisible": true,
+          "gameOverVisible": false,
+          "scenarioSeconds": 30
+        },
+        {
+          "label": "six-weapons-high-60s",
+          "elapsedMs": 125287,
+          "heapMiB": 15.574,
+          "documents": 2,
+          "nodes": 2005,
+          "jsEventListeners": 163,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 61,
+          "rgbaBaseBytesInScene": 10399960,
+          "gameplaySeconds": "00:57",
+          "levelUpVisible": true,
+          "gameOverVisible": false,
+          "scenarioSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 63348
+        },
+        {
+          "asset": "solar-crown-_OU0t4b1.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "event-horizon-CZ90SKcM.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "magnetic-singularity-core-CoQlwlw0.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "magnetic-charge-travel-CUOriCOL.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "magnetic-charge-detonation-CA8mKgWE.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "magnetic-charge-field-DDtR9GdF.png",
+          "elapsedMs": 63464
+        },
+        {
+          "asset": "closed-circuit-mqMelqOS.png",
+          "elapsedMs": 64362
+        },
+        {
+          "asset": "rail-lance-DHP6kLZ4.png",
+          "elapsedMs": 64384
+        },
+        {
+          "asset": "twin-comet-Cqw-UF8J.png",
+          "elapsedMs": 64642
+        },
+        {
+          "asset": "echo-shock-B6RcLt9i.png",
+          "elapsedMs": 67097
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 71257
+        },
+        {
+          "asset": "critical-impact-1dkHLYYh.webp",
+          "elapsedMs": 71257
+        },
+        {
+          "asset": "rail-lance-zlTPJguA.webp",
+          "elapsedMs": 71257
+        },
+        {
+          "asset": "solar-crown-Ez9okb5y.webp",
+          "elapsedMs": 71992
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 71992
+        },
+        {
+          "asset": "twin-comet-DXv1gGl8.webp",
+          "elapsedMs": 71992
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 71992
+        },
+        {
+          "asset": "event-horizon-D9Qx8VGO.webp",
+          "elapsedMs": 71992
+        },
+        {
+          "asset": "regenerative-reactor-BizLIJRS.webp",
+          "elapsedMs": 82765
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 94381
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 94381
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 108955
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 108955
+        },
+        {
+          "asset": "regenerative-reactor-BizLIJRS.webp",
+          "elapsedMs": 108955
+        },
+        {
+          "asset": "rail-lance-zlTPJguA.webp",
+          "elapsedMs": 124873
+        },
+        {
+          "asset": "event-horizon-D9Qx8VGO.webp",
+          "elapsedMs": 124873
+        },
+        {
+          "asset": "recharging-shield-CyDu71Vx.webp",
+          "elapsedMs": 124873
+        }
+      ],
+      "errors": [],
+      "finalUi": "target: local\norientation: portrait\nlogical: 720×1280\nviewport: 390×844\nscale: 0.54\ndpr: 1.00\nquality: high\nprofile: on\nframeP95: 33.30 ms\nframeMax: 33.40 ms\nlongFrames: 390.00\nheap: 19.6 MB\nfps: 44.68\nmode: overdrive-stage-1\nhazards: chaos\nenemies: 1/250\nprojectiles: 4/300\norbit: 6/6\nchain: ready\npaused: level-up\nlevel: 6.00\noverdriveArsenal: expanded 6\nweaponPath: off\narena: 270.0 | circle (stable) | expansión 0\nlaser: active | 1.83 rad\npulse: idle | outward | 0.0\nmagnetic: travel | 775,541\nevolution: none\ncalibration: none\norbiter: off\ncharger: off\nsplitter: off\nprism: off\nangular: off\nfracture: off\nresonance: 0.00\nboss: inactive\nplayer: 640.0, 360.0\nbaseline: off"
+    },
+    {
+      "kind": "audio-suspended-gesture",
+      "before": "running",
+      "suspended": "suspended",
+      "afterGesture": "suspended",
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "elapsedMs": 130562
+}

@@ -1,5 +1,11 @@
 # Memoria del servidor de desarrollo — 02-10-2026
 
+> Auditoría posterior de este mismo día: [recursos y carga](../audits/AUDITORIA_RECURSOS_2026-10-02.md).
+> La repetición `fixed --seconds=180 --builds` completó los tres builds sin eventos
+> de dist ni crecimiento extremo (pico RSS muestreado 248.91 MiB, 229.3 s totales).
+> No vuelve a probar Node 22 ni atribuye definitivamente el episodio histórico.
+> Los resultados siguientes son antecedentes de la mitigación, no mediciones del juego.
+
 ## Incidencia y límites del diagnóstico
 
 Eventos Windows 2004 confirmaron agotamiento de memoria comprometida: Node

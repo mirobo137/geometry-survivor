@@ -1,20 +1,29 @@
 # EX-11 — Plan de implementación del modo Infinito
 
 Estado: **EX-11.1–EX-11.7 y OD-A01–OD-A08 implementados y validados por el usuario**
-Última actualización: 2026-09-22
+Contrato de implementación: 2026-09-22. Vigencia operativa revisada: 02-10-2026.
+
+Para la siguiente tarea usar [la guía vigente](../PLAN_EJECUCION.md) y
+[CONTINUACION](../../CONTINUACION.md); el orden de implementación y evidencias
+de esta ficha describen la entrega de EX-11, no una cola pendiente. El informe
+de [recursos/carga](../audits/AUDITORIA_RECURSOS_2026-10-02.md) contiene la revisión
+actual previa a plataformas. Las pruebas históricas no certifican memoria de
+sesión prolongada ni QA de portal.
 
 Puerta vigente: la auditoría OD-A01–OD-A08 está corregida y cubierta por
 regresiones. EX-11.6 ya soporta dos instancias de boss, slots reservados,
 arbitraje y finalización conjunta; EX-11.7 añade la entrada pública después
 del Acto III, retirada y liquidación única. El usuario confirma que Overdrive
-funciona correctamente. EX-09 y el balance EX-02c siguen pendientes como
-trabajos separados.
+funciona correctamente. EX-09 sigue pendiente como trabajo separado. EX-02c
+quedó cerrado por aprobación humana el 28-09-2026 según §22.16 del plan; esto
+no afirma una nueva medición cuantitativa ni acepta el QA táctil del Laboratorio.
 
 Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
 
 **Extensión futura, aún no implementada:** [OD-F01 — Ritmo por puntos](OVERDRIVE_RITMO_POR_PUNTOS.md)
-propone un Asalto opcional para llegar antes al boss por bajas tras calibrar
-Laboratorio y balance EX-02c. Las cadencias y entradas por tiempo descritas
+propone un Asalto opcional para llegar antes al boss por bajas. La antigua
+dependencia de EX-02c no reabre el baseline aprobado ni autoriza implementar
+Asalto: faltan aprobación de cuotas/reglas y validación propia. Las cadencias y entradas por tiempo descritas
 aquí siguen vigentes para Overdrive Normal.
 
 ## Estado de implementación de esta entrega

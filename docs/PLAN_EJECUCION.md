@@ -1,1383 +1,189 @@
-# Guía de ejecución — Geometry Survivor
+# Guía de ejecución vigente — Geometry Survivor
 
-Fecha: 05-09-2026. Referencia de código: `a3d0ccd`.
+Revisión operativa: 02-10-2026. Base de lectura: `d793740`.
+Desarrolla [§22 del plan](../PLAN_DESARROLLO.md#ejecucion-vigente); alcance y
+decisiones siguen en el plan maestro y los contratos canónicos. Esta guía
+reemplaza la cola de trabajo de septiembre, no sus reglas todavía vigentes.
 
-## 1. Para qué sirve y cómo empezar
+## 1. Cómo empezar una sesión
 
-Esta guía desarrolla [PLAN_DESARROLLO.md, §22](../PLAN_DESARROLLO.md#ejecucion-vigente).
-El alcance y los valores aprobados siguen en su **§16 PLAN MAESTRO REVISADO**.
-No sustituye las skills ni autoriza cambios de producto por conveniencia técnica.
+1. Leer `AGENTS.md`, [CONTINUACION.md](../CONTINUACION.md), la entrada §22 y el
+   contrato de la tarea. Cargar completas las skills requeridas.
+2. Comprobar Git, versión de Node, scripts, módulos y tests existentes. No
+   reconstruir features porque una ficha antigua dice «pendiente».
+3. Elegir una subtarea autorizada y anunciar objetivo/exclusiones. Una auditoría
+   no autoriza implementar sus soluciones ni publicar.
+4. Verificar proporcionalmente, separar resultado automático de aceptación
+   humana y registrar siguiente acción exacta en el snapshot.
 
-En cada sesión:
-
-1. Leer `AGENTS.md`, la cabecera operativa de `CONTINUACION.md`, §22 y la ficha
-   que corresponda. Leer completas las skills del dominio y sus referencias
-   requeridas. Para arquitectura importante, leer plan y visión completos.
-2. Revisar `git status --short`, `git log -5 --oneline` y los módulos/tests de
-   la ficha. Si el código avanzó, actualizar el estado con evidencia; no rehacerlo.
-3. Elegir **una sola subtarea** de la primera EX habilitada. Anunciar ID,
-   resultado esperado, archivos previstos y exclusiones antes de editar.
-4. Implementar y verificar esa unidad. No mezclar balance, arte y SDK en un diff.
-5. Registrar evidencia y próximo ID exacto en `CONTINUACION.md`. Distinguir
-   implementación, validación automática, validación humana y publicación.
-
-Una petición de revisar/planear sólo autoriza documentación y diagnóstico.
-Para implementar, debe existir una solicitud de cambio/continuación. Un bloqueo
-humano no se salva inventando resultados ni habilitando la siguiente feature.
-
-### Estados que se pueden declarar
-
-| Estado | Significado |
+| Estado | Qué demuestra |
 | --- | --- |
+| IMPLEMENTADO | hay consumidor runtime; no implica QA actual completo |
+| AUTOMÁTICO OK | comandos/aserciones identificados pasaron en una revisión concreta |
+| ESPERA HUMANA | falta dispositivo, run, arte o aceptación requerida |
 | PENDIENTE | no implementado o no comprobado |
-| EN CURSO | una subtarea concreta abierta |
-| AUTOMÁTICO OK | comandos y aserciones pertinentes pasaron, con evidencia |
-| ESPERA HUMANA | faltan dispositivo, prueba jugable o decisión indicada |
-| CERRADO | aceptación automática y humana aplicable satisfecha |
+| CERRADO | aceptación automática y humana aplicable satisfecha en su fecha |
 | PROPUESTA | no implementar sin aprobación explícita |
 
-No usar «terminado» para una tarea con una puerta requerida pendiente.
-Nombres de archivo nuevos en esta guía son destinos propuestos: primero buscar
-un módulo equivalente. No crear registros, managers o carpetas vacías por adelantado.
-
-## 2. Mapa de avance y dependencias
-
-| ID | Prioridad del plan | Entrega | Estado al redactar |
-| --- | --- | --- | --- |
-| EX-00 | 0 | comprobar estabilización y punto de partida | correcciones documentadas; no rehacer |
-| EX-01 | 1–2 | cierre económico y revive sin doble cobro | AUTOMÁTICO OK; validación externa en EX-03 |
-| EX-02 | 1 | Laboratorio medido y acotado | **BALANCE APROBADO POR VALIDACIÓN HUMANA — 28-09-2026**; árbol UI V2 automático OK; pruebas humanas del Laboratorio **APLAZADAS POR EL USUARIO — 29-09-2026** ([recordatorio](design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas)); EX-02d opcional |
-| META-01 | — | contrato de meta, tres actos y Overdrive | DECISIÓN FIJADA; implementación pendiente |
-| ACT-I-PROTOTYPE | — | arena radial círculo ↔ hexágono, frontera y láser coherentes | AUTOMÁTICO OK; prueba humana pendiente |
-| ARENA-VISUAL | — | Aster Loom: bastidor articulado, anclajes y energía conducida | AUTOMÁTICO OK; aprobación humana pendiente |
-| BACKGROUND-ATMOSPHERE | — | Nacre + Vesper: fondos premium gratuitos, fuentes compartidas y texturas estáticas | AUTOMÁTICO OK; aprobación humana pendiente |
-| ACT-I-LASER-VISUAL | — | detonación premium por capas y barrido legible | AUTOMÁTICO OK; prueba humana pendiente |
-| ORBIT-VISUAL | — | órbita Prism Aegis premium con identidad Low/High | AUTOMÁTICO OK; prueba humana pendiente |
-| BOSS-LASER-VISUAL | — | command rail y corredor seguro del boss | AUTOMÁTICO OK; prueba humana pendiente |
-| CHAIN-VISUAL | — | Arc Relay: cadena angular con transferencia legible | AUTOMÁTICO OK; prueba humana pendiente |
-| DAMAGE-FX-VISUAL | — | Hull Fracture y Breach Petals: impacto de enemigo y daño al player con silueta material, lectura Low/High y pools acotados | AUTOMÁTICO OK; aprobación visual humana pendiente |
-| EX-03 | 2–3 | matriz rewarded local y diez runs comparables | CERRADO; 10/10 runs, rewarded/economía, controles móviles y stress PC/S25+ validados |
-| EX-04 | 4 | conservar extracción de armas | implementada en `a3d0ccd`; no extraer otra vez |
-| EX-05 | 5 | Vector Boomerang base y entrada segura al arsenal | CERRADO POR DECISIÓN DE PRODUCTO; base automática/humana OK, EX-05e diferido como auditoría no bloqueante |
-| EX-06 | 6 | Acto I Radial y contrato de actos | VALIDADO en móvil; baseline EX-02 aprobado, ajustes futuros solo puntuales |
-| EX-07 | 7 | Acto II Angular y Calibration | **APROBADO/CERRADO** por validación humana; `VIS-A2-01` es deuda visual menor no bloqueante; baseline EX-02 aprobado |
-| EX-08 | 7/9 | rangos, evoluciones, rotación de arsenal y maestrías post-evolución | VALIDADO por el usuario; baseline de balance aprobado, ajustes futuros solo puntuales |
-| EX-09 | 8 | adaptadores reales y QA por portal | PENDIENTE; incluye preparación de publicación |
-| EX-10 | 9 | Acto III Fracture | VALIDADO en móvil; baseline EX-02 aprobado, ajustes futuros solo puntuales |
-| EX-11 | 10 | Overdrive y producción | VALIDADO por el usuario; baseline de balance aprobado; EX-09 sigue separado |
-| EX-11.1 | 10 | Contrato, estado de tramo, guardado y desbloqueo de Overdrive | AUTOMÁTICO OK; consumido por EX-11.2 |
-| EX-11.2 | 10 | Director de composición y ruta de inspección | AUTOMÁTICO OK; transición pendiente |
-
-EX-08 es una ficha transversal, no permiso para adelantar todas las evoluciones.
-Los identificadores EX no reemplazan el orden de prioridades del plan.
-
-## 3. Fichas inmediatas
-
-### EX-00 — Verificar estabilización, sin reabrir el proyecto
-
-- **Entrada:** checkout actual y estado Git preservado.
-- **Leer:** `BackgroundView.ts`, `VisualTokens.ts`, tests asociados, `.gitignore`,
-  `package.json`, workflow de deploy y §51–56 de `CONTINUACION.md`.
-- **Acción:** comprobar que resize de nebulosas, UTF-8 y caps de glow siguen
-  cubiertos. Registrar comandos disponibles y evidencia previa con su fecha.
-- **Salida:** lista de regresiones reproducidas, o confirmación de que no se
-  requiere implementación aquí. Sin refactor global ni cambio de dependencias.
-- **Límite:** el warning de chunk no equivale al peso inicial comprimido; no
-  ocultarlo elevando el umbral. El workflow leído no demuestra por sí solo que
-  exista una puerta dura de tamaño: verificarla antes de certificar producción.
-
-### EX-01 — Cierre económico de una misma run
-
-**Intención:** revivir no debe volver a pagar el progreso ya cobrado ni permitir
-duplicar recompensas. Cierra un riesgo de prioridades 1–2, no crea monetización.
-
-**Módulos:** `src/app/Game.ts`, `RunSummary.ts`, `GameState.ts`, sus tests,
-`src/platform/RewardedOfferLedger.ts`, `src/platform/save/SaveStore.ts`,
-`src/ui/GameOverOverlay.ts`, `src/debug/BaselineRunRecorder.ts` y tests.
-
-**Evidencia de entrada:** la revisión estática detectó que `finishRun()` podía
-acreditar NOVA y cerrar baseline antes de resolver el revive. La aserción de
-secuencia reprodujo el riesgo y habilitó la corrección mínima de EX-01b.
-
-Subtareas, en orden:
-
-1. **EX-01a, caracterización:** testear muerte → revive exitoso → muerte/victoria
-   con estadísticas crecientes; registrar saldo, recompensa base y número de
-   registros baseline. Añadir doble-NOVA → intento de revive, callbacks repetidos,
-   callback de run anterior, reload terminal y restart.
-2. **EX-01b, corrección mínima si falla:** aplicar §16.7: resolver la posibilidad
-   de revive antes de liquidar el resultado definitivo. El jugador puede
-   terminar/cobrar sin anuncio. Double-NOVA pertenece al resumen definitivo;
-   una run liquidada no vuelve a revivir. Cancelar/error no concede recompensa
-   y conserva la salida normal. Si esta secuencia requiere cambiar un contrato,
-   describirlo antes de editar; no introducir backend ni guardar una run activa.
-3. **EX-01c, regresión:** guardar saldo/desbloqueos de forma idempotente,
-   comprobar reload y restauración de audio/input. El ledger en memoria no
-   demuestra por sí solo idempotencia después de recargar. Un cierre definitivo
-   genera un único registro baseline; un intento revivible no cuenta como otra run.
-
-**Aceptación:** con saldo inicial S y recompensa final R, sin bonus el saldo
-final es `min(MAX_NOVA, S + R)`; con un double-NOVA válido es
-`min(MAX_NOVA, S + 2*R)`. No se suma nuevamente el resultado provisional previo
-al revive. Compra/cosméticos no forman parte de este test. Revive conserva
-build, reloj y XP, otorga 35% HP y 2 s de protección, una vez por run.
-
-**No hacer:** cambiar precios, porcentajes meta, timers visuales, daño del boss,
-SDKs o la dificultad para facilitar la prueba. Reutilizar reloj falso y mocks
-existentes. Si todos los casos ya pasan, documentarlo y no refactorizar.
-
-### Resultado actual EX-01a/EX-01b — 05-09-2026
-
-- **EX-01a AUTOMÁTICO OK:** `Game.test.ts` cubre muerte → revive → segunda
-  muerte con estadísticas crecientes, victoria, saldo, callbacks obsoletos,
-  doble NOVA y el bloqueo de revive después de victoria.
-- **EX-01b IMPLEMENTADO:** `Game` mantiene un terminal provisional. La muerte
-  no acredita NOVA ni registra baseline hasta que no hay revive disponible o el
-  jugador elige reiniciar; la victoria se liquida inmediatamente. La liquidación
-  es idempotente y usa el resumen definitivo, no suma el resultado provisional.
-- El callback de una terminal anterior queda invalidado al revivir y revive sólo
-  acepta la fase `game-over`; el doble NOVA sólo se ofrece después de liquidar.
-- Prueba específica: `npm test -- --run src/app/Game.test.ts` → 7/7.
-
-### Resultado actual EX-01c — 05-09-2026
-
-- **EX-01c AUTOMÁTICO OK:** la liquidación conserva el saldo al reconstruir
-  `Game` desde el mismo `SaveStore` y no vuelve a acreditar la recompensa
-  terminal. Un reinicio explícito comienza un registro baseline nuevo, sin
-  duplicar el registro de la run anterior.
-- La ruta de revive limpia el input retenido y restaura audio, música y
-  lifecycle una sola vez; el revive sigue siendo único por run y conserva el
-  contrato de 35% HP + 2 s de invulnerabilidad.
-- Cambio mínimo de producción: `resetRunState()` inicia `baseline.beginRun()`
-  para que un reinicio desde terminal o pausa tenga una nueva medición.
-- Regresión específica: `Game.test.ts` → 10/10. Validación completa: `npm run
-  typecheck`, `npm test -- --run` → 198/198, `npm run test:browser` → 14/14,
-  `npm run build:poki` y `npm run build:crazygames` en verde.
-- Los builds conservan el aviso conocido de chunk principal mayor a 500 kB;
-  no bloquea EX-01c y queda para la puerta de rendimiento correspondiente.
-
-EX-01 queda cerrado en su puerta automática. La validación humana de economía,
-rendimiento físico y SDKs/portales sigue perteneciendo a EX-03 y §16.1.
-
-**Siguiente ID:** `EX-02`, Laboratorio: medir antes de ajustar.
-
-### EX-02 — Laboratorio: medir antes de ajustar
-
-**Entrada:** EX-01 sin fallos de saldo/save. Skills gameplay + validation;
-architecture sólo si aparece una frontera compartida necesaria.
-
-**Módulos:** `src/content/meta/PermanentUpgradeDefinitions.ts`,
-`src/simulation/combat/CombatWeaponSystem.ts`, `ProjectileBehavior.ts`,
-`OrbitBehavior.ts`, `ChainBehavior.ts`, `src/ui/meta/MetaProgressionPanel.ts`.
-
-1. **EX-02a:** caracterizar meta 0 y máxima con idéntica semilla, posición,
-   duración y cartas. Escenarios: objetivo único, grupo disperso y grupo denso.
-   Medir daño aplicado por arma, golpes, tiempo de eliminación y cooldown mínimo.
-   Mantener también un blanco con HP suficiente para observar DPS sostenido.
-2. **EX-02b:** resolver la diferencia entre descripción general y bonus que
-   actualmente recibe sólo Projectile. Seguir el daño general acotado de §16.6;
-   no extender los porcentajes actuales a todas las armas sin recalibrar.
-   Cadencia debe tener una semántica explícita por arma (disparo o tick), sin
-   acelerar rotación ni duplicar aplicación. Fórmula y preview usan una fuente.
-3. **EX-02c — CERRADO POR APROBACIÓN HUMANA (28-09-2026):** el usuario aprueba
-   el balance jugable actual de actos y Overdrive. Las vidas aceptadas están
-   registradas en [`EX-02c-health-trial-actos-1-2.md`](balance/EX-02c-health-trial-actos-1-2.md)
-   y [`EX-02c-boss-health-trial.md`](balance/EX-02c-boss-health-trial.md).
-   Cualquier ajuste posterior debe responder a un caso concreto observado en
-   una run, no reabrir una recalibración global por defecto.
-4. **EX-02d — OPCIONAL:** conservar mediciones comparables adicionales cuando
-   ayuden a diagnosticar un problema concreto; no bloquean la aprobación humana
-   del baseline. No se afirma que el umbral numérico de ventaja haya sido
-   medido de nuevo en una matriz completa.
-
-**Aceptación vigente:** el usuario aprueba el baseline jugable actual mediante
-pruebas manuales. Esto sustituye la puerta de aceptación global pendiente; no
-presenta el objetivo histórico de ventaja efectiva 10–15% como medición
-verificada. Las fórmulas del Laboratorio siguen centralizadas y acotadas; una
-futura discrepancia se medirá con la ficha EX-02d si resulta necesaria.
-
-**Presentación vigente del Laboratorio:** el contrato V2 y el árbol de nodos
-están en [`LABORATORIO_META_V2.md`](design/LABORATORIO_META_V2.md). El viejo
-`PermanentUpgradeDefinitions`/`MetaProgressionPanel` dejó de ser código activo;
-el catálogo actual reside en `src/content/meta/LaboratoryDefinitions.ts`, la
-rotación en `LaboratoryProgression.ts` y el árbol DOM/SVG en
-`src/ui/meta/LaboratoryPanel.ts`. En la iteración del 29-09 la rueda radial se
-reorganizó como dos redes laterales (Arsenal y Nave/Piloto); Vitalidad rewarded
-queda en una isla dorada aparte, visible al alejar/desplazar el mapa. No ejecutar
-las instrucciones V1 de abajo como trabajo pendiente: se conservan sólo como
-evidencia histórica. Typecheck, build, transacciones y layout desktop/móvil
-emulado pasan; queda aceptación visual/táctil humana en teléfono físico, no
-balance aprobado ni otra migración de save.
-
-**No hacer:** borrar saves, regalar/reembolsar NOVA sin decisión, cambiar precios
-o añadir vida, crítico, vampirismo, XP o escudo permanentes. Si conservar compras
-requiere una política nueva de compensación, pedir esa decisión.
-
-### Resultado actual EX-02a — 05-09-2026
-
-- **EX-02a AUTOMÁTICO OK:** `BalanceCombatScenario` ejecuta 18 casos
-  reproducibles: Projectile, Orbit y Chain; layouts single, dispersed y dense;
-  meta 0 y meta 5. Mantiene semilla, posición, carta, duración y timestep.
-- Cada caso separa una pasada de eliminación (`72 HP`) y una pasada de DPS
-  sostenido (`100000 HP`). Reporta daño aplicado, golpes, bajas, primer tiempo
-  de eliminación, daño por paquete y cooldown mínimo en
-  [`docs/balance/EX-02a-matrix.md`](balance/EX-02a-matrix.md).
-- La matriz confirma el riesgo previsto: Projectile pasa de `25.20` a `36.75`
-  DPS en single-target (`+45.8%`) con meta 5, mientras Orbit y Chain no cambian
-  (`0%`) porque los bonuses permanentes actuales sólo se aplican a Projectile.
-  Esto es caracterización, no ajuste ni aceptación del objetivo final `10–15%`.
-- Para aislar contribuciones, `CombatWeaponSystem` y `WeaponScheduler` aceptan
-  la habilitación selectiva de cada arma; el valor por defecto conserva las tres
-  activas y el runtime no cambia.
-- Prueba específica: `npm test -- --run src/debug/BalanceCombatScenario.test.ts`
-  → 4/4. Validación completa: `npm run typecheck`, `npm test -- --run` →
-  202/202, `npm run test:browser` → 14/14, y builds Poki/CrazyGames en verde.
-- Se conserva el warning conocido del chunk principal mayor a 500 kB. No se
-  midieron FPS, GPU, memoria, móvil físico ni SDKs: no son parte de EX-02a.
-
-**Siguiente ID después de EX-02a:** `EX-02b`, definir semántica por arma y una
-única fuente para fórmula/preview antes de recalibrar porcentajes.
-
-### Resultado actual EX-02b — 05-09-2026
-
-- **EX-02b AUTOMÁTICO OK:** el daño permanente se aplica al evento de daño de
-  Projectile, a cada contacto de Orbit y a cada salto de Chain Lightning.
-- La cadencia se aplica al intervalo entre disparos de Projectile, al cooldown
-  por objetivo de Orbit y al intervalo entre casts de Chain. No acelera la
-  rotación orbital, no crea eventos duplicados ni cambia saltos, radios, TTL o
-  colisiones.
-- `PERMANENT_UPGRADE_RULES` es la fuente única para multiplicadores y labels;
-  `getPermanentCombatBonuses()` alimenta la simulación y `effectLabel` alimenta
-  el Laboratorio sin repetir porcentajes.
-- La matriz mantiene semilla, duración, layouts y cartas. En nivel 5 las tres
-  armas muestran `×1.25` de daño base y `×0.85` de intervalo authored. Los
-  valores numéricos y exclusiones están en
-  [`docs/balance/EX-02b-semantics.md`](balance/EX-02b-semantics.md).
-- Prueba específica: 24/24 entre definiciones, simulación y matriz. Falta la
-  recalibración de porcentajes y la aceptación de ventaja efectiva; no se cierra
-  todavía EX-02 completo.
-
-**Siguiente ID de evidencia:** `EX-03`; la recalibración `EX-02c` queda
-pendiente hasta la pasada final de balance.
-
-### Decisión de ruta EX-02c — 05-09-2026
-
-Por decisión del usuario, **EX-02c queda PENDIENTE**. La recalibración del
-Laboratorio se hará al final, en la misma pasada que balancee vida de enemigos,
-daño del jugador/armas y dificultad general. EX-02a y EX-02b permanecen como
-instrumentación y semántica válidas, pero los porcentajes actuales son
-provisionales y no cierran la aceptación 10–15%.
-
-La siguiente tarea documental es `META-01`: fijar la progresión de NOVA, los
-desbloqueos de los tres actos, `Quick Act`, `Expedition` y Overdrive. Su ficha
-está en [`docs/design/ACTOS_Y_META.md`](design/ACTOS_Y_META.md). Esta decisión
-no adelanta la implementación de actos por encima de EX-03, EX-04 y EX-05.
-
-### META-01 — contrato de meta, tres actos y Overdrive
-
-**Salida:** una experiencia principal de tres actos con victoria clara y un
-modo infinito opcional posterior. Acto I Radial enseña centro/borde/distancia;
-Acto II Angular enseña sectores/alineación; Acto III Fracture enseña
-corredores/conexiones. `Expedition` conserva la build entre actos, `Quick Act`
-no hereda estado y completar el Acto III dentro de `Expedition` desbloquea
-Overdrive.
-
-Overdrive mezcla reglas ya aprendidas por ciclos authored, aumenta la presión
-por composición/densidad/patrones/espacio dentro de caps y conserva
-`telegraph → attack → recovery`. No paga NOVA por ciclo, no exige jugarlo para
-terminar la campaña y no usa HP infinito como única dificultad.
-
-El contrato completo, los límites de save y las puertas de aceptación viven en
-[`docs/design/ACTOS_Y_META.md`](design/ACTOS_Y_META.md). Esta ficha documental
-no crea todavía `ActDefinition`, campos de save, ciclos ni nuevos behaviors;
-cada consumidor se implementará en su EX correspondiente.
-
-**Siguiente ID de evidencia:** `EX-03`; la ruta técnica conserva sus puertas.
-
-### ACT-I-PROTOTYPE — primer slice de arena cambiante
-
-Este slice fue autorizado para comprobar temprano el gancho del Acto I sin
-abrir todavía la campaña completa. Mantiene el círculo como lectura inicial y
-añade sólo círculo ↔ hexágono con calendario determinista:
-
-| Tiempo | Fase | Configuración |
-| ---: | --- | --- |
-| 02:12 | aviso 1.4 s + morph 0.85 s | círculo → hexágono |
-| 03:30 | aviso 1.4 s + morph 0.85 s | hexágono → círculo |
-| 04:48 | aviso 1.6 s + morph 1.05 s | círculo → hexágono, tramo de boss |
-
-La frontera interpolada es contrato compartido por clamp del jugador, alcance
-del láser lineal y dibujo de arena. El aviso y el morph son legibles; la forma
-no se elige con aleatoriedad pura ni genera daño inevitable. La vista usa una
-polilínea cacheada de baja complejidad y no añade objetos por entidad o por
-frame. Durante `telegraph` todos los disparos son iguales; en círculo uno de
-cada tres revela su barrido sólo al entrar en `active` y mantiene la detonación
-hasta terminar el recorrido. En el primer hexágono los disparos pasan a 14 s
-y en el segundo a 10.5 s, con barridos más frecuentes, amplios y rápidos. El
-daño se prueba contra el ángulo actual durante todo `attack`, no contra un
-salto visual al final.
-
-**Salida automática actual:** 19/19 pruebas específicas pasan en cinco
-archivos (`ArenaBoundary`, `ArenaShapeDefinitions`, `ArenaModel`,
-`LaserHazard`, `ArenaView`). Falta jugarlo y observar legibilidad, diversión,
-control y rendimiento en desktop y móvil. El resultado humano decidirá si el
-slice se conserva como regla del Acto I; no se deben agregar aún triángulo,
-rectángulo u otras formas por inferencia.
-
-En el momento de este prototipo no implementaba `ActDefinition`, save,
-selección de actos ni Overdrive. EX-06a ya añadió el contrato y el director
-Radial; save, selección de actos, pulso nuevo y Overdrive siguen fuera de
-alcance y las puertas EX-03–EX-06 continúan vigentes.
-
-### ARENA-VISUAL — identidad premium de la zona de movimiento
-
-Fondos complementarios entregados: **Órbita de Nacre** y **Flor del Ocaso**,
-gratuitos en el locker.
-Guía de construcción en [FONDOS_PREMIUM.md](design/FONDOS_PREMIUM.md).
-SVG rasterizado una vez; una lámina estática y centro de bajo contraste.
-Validación de la familia de fondos: 253 tests, 24 smoke y los tres builds
-correctos; aprobación visual y perfil en teléfono físico pendientes. Vesper
-Bloom añade un segundo fondo gratuito: 5.143 bytes de SVG fuente, 5.14 kB en
-build y 1.69 kB gzip; su textura RGBA8 de 768×768 se rasteriza una vez y no
-consume trabajo por frame.
-
-La segunda revisión **Aster Loom** sustituye el acabado inicial: 24 placas,
-12 anclajes facetados, ranuras luminosas, seis pulsos que siguen el borde,
-campo translúcido y roseta central discreta. `ArenaFrameArt` construye materiales;
-`ArenaView` coordina fases y animación. Todo consulta `ArenaBoundary`, con riel
-de 144 puntos y cache de geometría estable. La ficha y guía para futuras figuras están en
-[`ARENA_FX_PREMIUM.md`](design/ARENA_FX_PREMIUM.md).
-
-**Evidencia de esta revisión (09-09-2026):** 73 archivos y 248 pruebas unitarias,
-typecheck y build local; cinco smoke seleccionados de arte Low/High, resize,
-boss y touch. Capturas de renderer real en desktop/portrait, fondo claro,
-transformación y boss Low inspeccionadas, sin errores runtime. La aprobación del
-acabado visual en Android/desktop sigue siendo humana; no confundir la
-validación técnica con aprobación artística.
-
-### ACT-I-LASER-VISUAL — detonación premium por capas
-
-La revisión vigente **Solar Rail** reemplaza la apariencia anterior, que no
-satisfizo al usuario: mordazas mecánicas, plasma con extremos afinados y
-núcleo caliente, encendido breve y disipación fragmentada. Se eliminan los
-ecos angulares para no sugerir daño en espacio seguro. Sólo cambia presentación.
-
-La geometría se construye una vez: 11/15/17 Graphics en Low/Medium/High.
-Low conserva materiales y señal jugable. Para cualquier trabajo de efectos,
-leer [EFECTOS_PREMIUM.md](design/EFECTOS_PREMIUM.md) junto a rendering y
-mobile-performance. La lámina `/docs/visual/laser-reference.html` usa el
-renderer real y permite comparar fases, calidad, fondos y barrido.
-
-**Evidencia actual:** suite local 218/218 y build local correctos; tres tests
-de HazardView verifican fases, reutilización de geometría, reinicio y calidad.
-Builds Poki/CrazyGames correctos y smoke de navegador 14/14. Permanece el
-aviso de Vite sobre el chunk principal mayor de 500 kB.
-Capturas desktop/móvil de seis paneles inspeccionadas, sin errores runtime.
-Captura adicional del láser activo en gameplay Low con boss inspeccionada.
-Eso no constituye aprobación humana ni medición de FPS móvil. Apariencia,
-jerarquía y saturación en combate quedan sujetas a prueba del usuario.
-
-### EX-03 — Cerrar evidencia local y baseline humano
-
-**Entrada:** build candidato posterior a EX-02; no mezclar datos de balances
-anteriores. Módulos existentes: `LocalAdService`, `RewardedAdController`,
-`RewardedOfferLedger`, `BaselineRunRecorder`, `BaselinePanel`, `FrameProfiler`.
-
-1. **EX-03a:** matriz por placement de éxito, cancelación, unavailable, error,
-   timeout, doble clic, callback repetido/tardío, cierre de vista y retorno de
-   background. Comprobar saldo, CTA normal, audio, input y estado pausado.
-   Verificar alternativa NOVA de reroll requerida por §16.7; si falta, registrar
-   e implementar aquí con débito idempotente, no inventar precio silenciosamente.
-2. **EX-03b:** registrar diez runs normales en un mismo teléfono/navegador/preset
-   con `?baseline=1`; sin `?boss=1` ni stress. Adjuntar commit, modelo, navegador,
-   calidad, meta equipada, uso de revive/reroll y observaciones por run. No
-   comprar niveles ni cambiar balance entre las diez. Conservar reporte anterior
-   antes de borrar datos; no borrar el save del jugador para crear una prueba.
-3. **EX-03c:** sesión separada con `?stress=1&profile=1&quality=low`, y comparación
-   Medium/High. Registrar conteos reales, duración, legibilidad y frame times.
-   No afirmar «150 FX probados» si el escenario no los mantiene realmente activos.
-
-**Salida:** reporte en `docs/balance/` y perfil en `docs/performance/` con datos
-reales, no tablas rellenadas con valores objetivo. El instrumento actual usa
-p95 de una ventana rolling: etiquetarlo así, no como p95 de toda la run ni GPU.
-Si hace falta otro agregado, añadirlo como subtarea de instrumentación probada.
-
-**Puerta:** diez runs sin softlock/pérdida de progreso/daño inevitable observado;
-dos builds cambian el recorrido; controles y amenazas se entienden. El autor
-puede validar balance, pero para comprensión inicial pedir además una sesión
-de alguien nuevo, anotada aparte. Un fallo humano se reproduce y corrige antes
-de congelar la nueva línea base. Sin teléfono/reporte: ESPERA HUMANA; no inventar.
-
-**Resultado EX-03a (06-09-2026):** la matriz automática de los cuatro placements
-ya cubre éxito, unavailable, dismissed, error/timeout, concurrencia,
-excepciones y callbacks repetidos/tardíos; ver
-[`docs/balance/EX-03a-rewarded-matrix.md`](balance/EX-03a-rewarded-matrix.md).
-La alternativa de NOVA para reroll queda explícitamente PENDIENTE DE
-VALIDACIÓN por DEC-05: falta aprobar coste y momento del débito. El flujo
-activo conserva anuncio rewarded o elección de una carta actual. EX-03b y
-EX-03c siguen siendo evidencia humana real.
-
-**Observaciones humanas preliminares recibidas (06-09-2026):** el usuario
-reporta diez runs positivas en el sentido de la puerta: sin softlock, pérdida de
-progreso, daño inevitable ni stutter perceptible; controles, amenazas y cartas
-se entienden y builds distintas cambian el recorrido. La condición pendiente es
-una segunda opción de desplazamiento móvil porque dedos gruesos pueden cubrir al
-player. Samsung S25+ y PC fueron probados; faltan modelo/navegador/commit exactos,
-y los datos comparables de
-`?stress=1&profile=1` en Low/Medium/High. Ver
-[`docs/balance/EX-03b-human-observations.md`](balance/EX-03b-human-observations.md)
-y [`docs/performance/EX-03c-stress-pending.md`](performance/EX-03c-stress-pending.md).
-El stress ya fue capturado en PC media para Low, Medium y High con `250/250`
-enemigos y `300/300` proyectiles; la matriz complementaria más reciente
-(`profile=off`) muestra 59.99–60.00 FPS en las tres calidades. El usuario
-también confirma una ejecución positiva en Samsung S25+; queda
-como evidencia móvil cualitativa porque no hay captura ni métricas numéricas del
-panel. Duración y navegador exactos siguen pendientes.
-
-**Control móvil resuelto (07-09-2026):** la condición de dedos gruesos ya no
-bloquea la aceptación de controles. Se añadió `relative-touch` como segunda
-modalidad persistente en inicio y pausa: el gesto conserva un origen invisible,
-usa su desplazamiento para calcular dirección y no requiere mantener el dedo
-encima del player. `InputManager.test.ts`, smoke mobile Pixel 5 (2/2) y smoke
-desktop (12/12) cubren la ruta; `auto`/`touch` conservan el comportamiento
-anterior y `keyboard` sigue disponible. EX-03 queda cerrado con la confirmación
-del usuario sobre Chrome/Edge en PC, Chrome en Samsung S25+, economía/rewarded,
-build correcta, sesión de 5 minutos y la anomalía FPS como error de reporte.
-
-### EX-04 — Conservar lo ya extraído
-
-`WeaponScheduler`, `ProjectileBehavior`, `OrbitBehavior` y `ChainBehavior` ya
-existen. Verificar sus tests y fachada; no volver a extraerlos. El scheduler
-actual tiene callbacks concretos: no asumir que existe un registry genérico.
-Sólo ampliar lo necesario al entrar Boomerang. No crear behaviors de armas
-futuras ni un ECS antes de tener su consumidor.
-
-## 4. Arsenal y actos: ejecución por incrementos
-
-### EX-05 — Vector Boomerang, primero una pieza base
-
-La ficha numerica y el contrato de esta entrega estan en
-[`docs/balance/EX-05-vector-boomerang.md`](balance/EX-05-vector-boomerang.md).
-La base del codigo, los tests y la validacion humana del Bumeran quedan
-aprobados para este hito. Por decision del producto, EX-05e (comparacion de
-ticks y stress de combinaciones) se difiere y no bloquea EX-06; se conserva como
-auditoria tecnica futura, no como evidencia ya ejecutada.
-
-**Entrada:** EX-01–04 cerrados. Skills gameplay + rendering + mobile-performance
-+ validation; SVG para crear el asset, architecture para extender contratos.
-
-**Responsabilidades:** definición en `src/content/weapons/`; trayectoria y hits
-en `src/simulation/combat/BoomerangBehavior.ts` (nuevo consumidor); scheduling
-en `WeaponScheduler`; snapshots readonly en `CombatRenderState`; visual pooled
-en `src/presentation/pixi/`; cartas por `UpgradeDefinitions`/`UpgradeApplier`.
-
-1. **EX-05a, ficha numérica:** antes de producción cerrar DEC-01 (apartado 7).
-   Anotar rango, velocidad, retorno, daño, radio, cooldown, TTL y capacidad. No
-   derivar colisiones de la skin Arc Needle ni alterar esa skin para simularlo.
-2. **EX-05b, simulación aislada:** salida hacia target y regreso al player móvil,
-   una pieza; máximo un hit por enemigo en salida y otro en regreso. Ledger de
-   hits debe distinguir encarnaciones de un slot enemigo reciclado. Limpiar
-   estado al reset/liberar. Cubrir target muerto, ausencia de target, player
-   muerto, captura al regresar, TTL, borde y pool lleno. Definir colisión
-   barrida para no saltar enemigos entre pasos; broad-phase usa la grid actual.
-3. **EX-05c, representación:** sprite orientado con velocidad real, trail corto
-   por calidad y señal de regreso clara. No XML, texturas ni arrays nuevos por
-   frame/cast. Pausa/restart limpian FX y trayectoria. Cosméticos no cambian hits.
-4. **EX-05d, selección:** hacer cumplir máximo tres armas antes de exponer la
-   cuarta. Si hay tres equipadas, no ofrecer una cuarta adquisición; upgrades
-   de las equipadas siguen válidos. No expulsar un arma automáticamente. Si el
-   catálogo queda corto, resolver el fallback de cartas sin opciones inválidas.
-5. **EX-05e, auditoría futura:** casos seeded de blanco único/horda dispersa/densa, player
-   quieto/en movimiento y rendimiento de combinaciones de tres armas. Comparar
-   igual número de ticks bajo render 30/60/144 Hz. Una run móvil y una PC.
-   Esta auditoría queda diferida y no bloquea la apertura de EX-06.
-
-**Aceptación:** mover al player cambia útilmente la alineación de regreso;
-colisión y visual coinciden; no hay tercer hit por fase, bloqueos ni crecimiento
-de pools. La variante base entra al catálogo sólo tras las puertas previas.
-Twin Comet y Singularity Return son entregas separadas bajo EX-08.
-
-### EX-06 — Acto I Radial: formalizar y luego diferenciar
-
-**Módulos de entrada:** `ArenaModel`, `DifficultyDefinitions`, `BossDefinition`,
-`BossSystem`, `CombatSimulation`, `GameState`, `Game`, save y resúmenes.
-
-1. **EX-06a:** introducir `ActDefinition` con un único consumidor Radial que
-   reproduce exactamente tiempos, spawns y boss actuales. Test de equivalencia
-   por semilla antes de añadir la nueva regla. No crear actos vacíos en el menú.
-   La implementación vive en `src/content/run/ActDefinitions.ts` y
-   `src/simulation/acts/RadialActDirector.ts`; la equivalencia automática queda
-   cubierta antes de abrir EX-06b.
-2. **EX-06b:** especificar/probar un pulso radial conforme a DEC-02: una amenaza
-   nueva, respuesta posible y arbitraje con Laser/boss. Usar fases explícitas y
-   evitar ataques superpuestos que cierren toda salida. No añadir enemigos aquí.
-3. **EX-06c:** resultado de acto, recompensa única y estado de intermisión.
-   Mientras no exista Acto II jugable, mostrar terminar/victoria sin un botón
-   Continuar roto. No guardar una expedición parcialmente restaurable.
-4. **EX-06d:** comprobar regla entendida después de verla, builds y diez runs
-   del acto nuevo. Ajustar duración hacia Quick Act sólo en una tarea de balance
-   explícita, comparando con baseline; no recortar el reloj incidentalmente.
-
-**Salida:** acto corto que enseña distancia/centro/borde y tiene victoria clara.
-
-### Registro EX-06b — pulso radial
-
-EX-06b está implementado y automático OK. `RadialPulseHazard` añade una onda
-anular con `telegraph → active → recovery`, alternancia outward/inward,
-colisión barrida y un impacto máximo por cast. `LaserHazard` acepta el arbitraje
-de inicio para evitar solapamientos; el boss y el deadline de Acto I bloquean
-nuevos pulsos. La vista reutiliza cinco `Graphics` y conserva telegraph en Low.
-La ficha completa está en `docs/balance/EX-06b-radial-pulse.md`.
-
-### Resultado EX-06c — intermisión segura del Acto I
-
-La victoria del Core Sentinel pasa de `victory` a `act-intermission` cuando
-abre el resumen. La transición detiene simulación, conserva la liquidación
-terminal única ya existente y presenta explícitamente **Acto I · Radial
-superado**. El jugador sólo puede `Repetir Acto I` o `Volver al menú`; no se
-declara un Acto II desbloqueado, no se muestra `Continuar` y no existe save de
-expedición parcial. El doble de NOVA sigue siendo la oferta final ya acotada,
-no una segunda recompensa de acto.
-
-La salida a menú invalida callbacks rewarded tardíos antes de limpiar la
-presentación, sin volver a liquidar la recompensa. `GameState` contiene sólo
-la transición de lifecycle; Game sigue siendo dueño de economía, save y
-coordinación. Las pruebas de estado y Game cubren intermisión, las dos salidas
-seguras, la recompensa de victoria idempotente y la ausencia de continuación.
-La evidencia y el guion humano están en
-[`docs/balance/EX-06c-act-intermission.md`](balance/EX-06c-act-intermission.md).
-
-Siguiente ID: **EX-06d**, validación humana del acto completo. Antes de cerrar
-EX-06 falta validar comprensión del pulso, salida segura, presión y lectura en
-desktop/móvil.
-
-**Decisión de cadencia asociada a EX-06d:** el usuario probó y aprobó `chaos`
-como perfil principal; el juego lo selecciona por defecto y
-`?hazards=chaos&debug=1&quality=high` lo hace explícito. Reduce a un tercio los
-intervalos de láser y pulso, pero no modifica daño, vida, telegraph,
-recuperación, spawn, refugios ni boss. Las diez runs formales deben usar ahora
-este perfil en un baseline nuevo; `?hazards=authored` conserva el control
-histórico y no registra baseline. La ficha es
-[`docs/balance/EX-06d-hazard-cadence-experiment.md`](balance/EX-06d-hazard-cadence-experiment.md).
-
-**Decisión operativa — 11-09-2026:** las dos runs compartidas por el usuario
-se aceptan como evidencia reducida de estabilidad y cierre del Acto I: ambas
-fueron victorias con boss derrotado, calidad High, 59.97 FPS, 11–12 enemigos,
-20 proyectiles y 45–47 FX. No se presentan como una validación estadística de
-diez runs ni como aislamiento perfecto de la cadencia Chaos. Las ocho runs
-restantes quedan **PENDIENTES** por decisión de producto y no bloquean el
-trabajo estructural de EX-07a; no se modifica daño, vida ni spawn para
-compensar esta reducción de muestra.
-
-### EX-07a — contrato de Calibration
-
-Se inicia la subtarea con tres plantillas authored y deterministas:
-`projectile`, `orbit` y `chain`. Cada una declara su secuencia inicial de
-mejoras, máximo de tres armas activas, recompensa NOVA igual a cero,
-preservación de build para Expedition y reinicio de build para Quick Act. El
-contrato vive en `src/content/run/CalibrationDefinitions.ts` y sus invariantes
-en `CalibrationDefinitions.test.ts`.
-
-La entrada directa del consumidor quedó conectada mediante
-`?calibration=projectile|orbit|chain` y se aplica una sola vez al comenzar la
-run; `?debug=1` muestra la plantilla activa. La presentación de selección y el
-gating de desbloqueos esperan al primer consumidor Angular real: mostrarlos en
-el menú actual concedería una build de Acto II dentro del Acto I y contaminaría
-su balance validado. Todavía no se crean actos Angular vacíos, save de actos ni
-balance.
-
-### EX-07b — ficha Orbiter antes de código
-
-La primera familia Angular queda especificada en
-[`docs/design/EX-07b-orbiter.md`](design/EX-07b-orbiter.md). Orbiter persigue al
-player durante un reloj de 1.80 s y despues anuncia un arco local de 135 grados
-que puede lanzar desde cualquier distancia; hace daño por contacto con el casco
-en todo el ciclo y deja una abertura mínima documentada de 90 grados. Su cap es
-seis activos y un commit simultáneo mientras la lección inicial se valida.
-
-La primera implementación vive en `?orbiter=1&debug=1`: un drill aislado sin
-oleadas, boss, hazards radiales ni autofire, para leer el arco antes de que
-exista una composición Angular completa. Charger vive en `?charger=1&debug=1`
-y Splitter en `?splitter=1&debug=1`; este último conserva autofire para hacer
-visible la muerte y la fractura acotada. Los tres tienen comportamiento aislado,
-texturas SVG cacheadas y master completo Low. No cierra EX-07b ni la familia de
-enemigos: falta validación humana, consumidor Angular real y composición final;
-pueden añadirse más familias después de comprobarla.
-
-### EX-07 — Acto II Angular, sin producir todo a la vez
-
-1. **EX-07a:** tres plantillas Calibration por entrada directa, authored y
-   probadas. Respetan armas desbloqueadas, máximo tres y no conceden NOVA extra.
-   Expedition conserva la build; Quick Act inicia la plantilla sin estado previo.
-2. **EX-07b:** una familia enemiga angular primero; ficha de comportamiento,
-   silueta, telegraph, stats y cap antes de implementar. Incorporar Orbiter,
-   Charger y Splitter sucesivamente, no como tres cambios simultáneos. Un
-   Splitter respeta capacidad total y tiene profundidad de división acotada.
-3. **EX-07c:** Pulse Ring base y después sus rutas mediante EX-08. Test de un
-   hit por onda y target, radio barrido, empuje limitado y boss inmóvil por empuje.
-4. **EX-07d:** un hazard angular y Orbital Warden con patrones especificados en
-   DEC-02; interfaz de boss compartida sólo donde el segundo boss lo necesita.
-5. **EX-07e:** I→II, terminar sin derrota, recompensa/desbloqueo único, reroll
-   una vez por acto frente a revive una vez por run. Diez runs y resize en
-   intermisión; no reutilizar ciegamente `restartRun()` si borra la build.
-
-**Salida:** el jugador debe aprender sectores/alineación, no sólo más densidad.
-
-### Resultado actual EX-07c — Pulse Ring base
-
-Pulse Ring ya tiene un consumidor aislado mediante `?pulse=1&debug=1`. Su
-contrato puro combina una banda de radio barrido con una abertura angular que
-gira durante `active`; el jugador puede seguirla y escapar. El daño se limita a
-un hit por cast y el empuje radial está acotado por `ArenaBoundary`. La vista
-reutiliza `RadialPulseView` con un gap real en la geometría activa, bordes
-marcados y telegraph explícito, sin pintar una falsa zona segura.
-
-La integración añade el snapshot `pulseRing` sin cambiar `radialPulse`, no
-crea enemigos, boss, XP, NOVA ni selección de actos. `npm run typecheck`, la
-suite de simulación/vista y los tests de integración quedan como puerta
-automática. La aceptación visual y de evasión en desktop/móvil sigue pendiente.
-La ficha reproducible es
-[`docs/balance/EX-07c-pulse-ring.md`](balance/EX-07c-pulse-ring.md).
-
-**Siguiente ID:** `EX-07d`, hazard angular y Orbital Warden; el selector/gating
-queda después de que exista ese consumidor real de campaña.
-
-### Resultado actual EX-07d — hazard angular y Orbital Warden
-
-#### Movimiento ambiental y Charge comprometido — 12-09-2026
-
-Orbital Warden ahora deriva de forma suave en `intro`, `sweep`, `ring` y
-`recovery`, anclando la trayectoria al spawn o al endpoint real de Charge/Curve.
-Los patrones comprometidos conservan origen y ruta durante el aviso; Charge no
-se cancela si el jugador ya está dentro de su recorrido. El cambio queda
-cubierto por regresiones puras de `BossSystem` y no altera daño, vida, spawn ni
-balance de EX-02c. Sigue pendiente la validación humana de EX-07d.
-
-#### Incremento de familia del boss — 12-09-2026
-
-Revisión vigente: astrolabio de tres brazos, estelas laminadas y cámaras de
-lanzamiento; angular de láminas curvas. Charge/Curve conservan el endpoint.
-La receta actual sustituye los rombos/riel básicos descritos abajo:
-[ACTO_II_BOSS_FAMILY_PREMIUM.md](design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
-Esta nota histórica queda reemplazada por la aprobación integrada de EX-07e
-en §22.1i.
-
-Orbital Warden queda ampliado, todavía como consumidor aislado y sin cerrar la
-puerta humana. Su orden authored es `sweep → charge → curve → replicas → ring`.
-Charge fija y ejecuta una embestida telegrafiada tipo Charger; Curve recorre un
-arco corto alternado tipo Orbiter; Replicas anuncia y lanza dos copias
-destructibles tipo Splitter. Las dos copias usan el pool normal, no se dividen,
-y se pueden derrotar con las armas del drill. Los avisos se dibujan con rieles,
-narices direccionales, arcos limitados y marcadores de salida; no se usan líneas
-sólidas de alcance ni hitboxes desde presentación.
-
-El boss usa ahora una familia SVG propia modular y cacheada, con una familia
-miniatura separada para las réplicas. Los avisos de Charge, Curve y Replicas
-congelan el origen durante `telegraph`; la simulación conserva el daño y el
-renderer sólo consume el snapshot. La guía de construcción y mantenimiento es
-[`docs/design/ACTO_II_BOSS_FAMILY_PREMIUM.md`](design/ACTO_II_BOSS_FAMILY_PREMIUM.md).
-
-La validación dirigida nueva quedó inicialmente en 8 archivos y 46 pruebas
-verdes; la puerta completa posterior queda en 90 archivos y 321 pruebas
-verdes, con typecheck y build Vite correctos. Sigue
-en ese punto quedaba pendiente la comprobación humana del ciclo en
-desktop/móvil y Low/Medium/High. La aprobación integrada posterior de EX-07e
-cierra esa puerta; el balance numérico se conserva en EX-02c.
-
-EX-07d quedó implementado y **AUTOMÁTICO OK** en esta etapa; su puerta humana
-se cerró después mediante la aprobación del Acto II completo en EX-07e.
-`AngularSweepHazard` separa `telegraph → active → recovery`, compromete un
-sector, alterna el sentido y recorre como máximo un arco authored. La colisión
-usa la hoja angular actual, permite salir antes del daño y aplica como máximo un
-hit por cast. `AngularSweepView` conserva la receta premium en una geometría
-sectorial acotada, sin rellenar falsos refugios ni reconstruir paths por frame.
-
-`BossDefinition` ahora distingue `core-sentinel` y `orbital-warden`. El segundo
-reutiliza el `BossSystem` y `BossShipVisual` cacheados, pero su riel gira durante
-`sweep-active`, su corredor seguro se desplaza durante `ring-active` y la vista
-lo identifica como `ORBITAL WARDEN`. Core Sentinel conserva su órbita authored y
-sus hazards sin rotación, por lo que no cambia el Acto I.
-
-Los drills directos son `?angular=1&debug=1&quality=low|medium|high` y
-`?warden=1&debug=1&quality=low|medium|high`. El primero no crea enemigos; el
-segundo crea sólo el boss y el hazard angular, sin oleadas, economía, menú ni
-save de campaña. La ficha completa y la puerta humana viven en
-[`docs/balance/EX-07d-angular-warden.md`](balance/EX-07d-angular-warden.md).
-
-La implementación pasa typecheck, 12 tests específicos de hazard/boss/vista,
-build development y 2 smoke browser dirigidos en Chromium desktop. La
-inspección visual de capturas headless confirma lectura de Low, pero no es una
-medición de FPS. La aprobación humana integrada se registra en §22.1i.
-
-### 22.1i Estado de EX-07e — composición de campaña Angular — 12-09-2026
-
-EX-07e queda **APROBADO/CERRADO por validación humana — 12-09-2026**. El Acto II ya tiene
-un consumidor real mediante `ANGULAR_ACT_DEFINITION` y `AngularActDirector`:
-Orbiter, Charger, Splitter y Prism Weaver entran por perfiles authored; Pulse
-Ring y Angular Sweep funcionan durante la run normal; Orbital Warden aparece a
-los 260 s. Acto I conserva su composición radial y el balance final de EX-02c
-no se modifica.
-
-La experiencia pública se simplificó a un solo flujo. La campaña comienza en
-Radial; tras derrotar al boss, la intermisión ofrece tres calibraciones authored
-(`projectile`, `orbit`, `chain`) para iniciar Angular desde cero. No se hereda
-la build ni el nivel del Acto I. El selector de actos desbloqueados se conserva
-como acceso de repetición/prueba y usa las mismas calibraciones; ya no expone
-`Quick Act` ni `Expedition` como decisiones separadas. El guardado pasa a schema
-6 y sólo añade `unlockedActs`.
-
-El ataque de Prism Weaver se emite desde el cuerpo: simulación y telegraph usan
-`state.x/state.y`; el centro de arena sólo calcula sus anclas de aproximación.
-La ficha reproducible y sus exclusiones están en
-[`docs/balance/EX-07e-angular-campaign.md`](balance/EX-07e-angular-campaign.md),
-y el contrato específico del enemigo en
-[`docs/balance/EX-07f-prism-weaver.md`](balance/EX-07f-prism-weaver.md).
-
-La puerta automática cubre definición, spawn, boss, migración, selector,
-calibraciones y el anclaje visual/lógico del Prism Weaver. La aprobación del
-usuario confirma la composición, identidad espacial y game feel del acto. Las
-runs comparables adicionales se trasladan como evidencia para EX-02c, que
-mantiene pendiente la calibración final de daño, vida, resistencia y spawn.
-El siguiente bloque habilitado es EX-08; Acto III continúa en EX-10.
-
-#### Extensión de arena Angular — hexágono → cuadrado → círculo
-
-La composición de EX-07e incluye cinco intervenciones authored cada 40 s y un
-cierre pre-boss, sin abrir una segunda familia de hazards ni una recalibración
-de balance. Angular empieza en hexágono; a los 40, 80, 120, 160 y 200 s rota
-entre cuadrado, círculo, hexágono, cuadrado y hexágono. A los 248.05 s avisa y
-transforma a círculo en 0.75 s después del telegraph de 1.20 s; queda estable a
-los 250 s, diez segundos antes de que el Warden entre a los 260 s.
-
-`ActDefinition.initialArenaShape`, `ArenaModel` y `ArenaBoundary` son el
-contrato único. El cuadrado alineado a los ejes conserva el despeje mínimo del
-hexágono y abre esquinas diagonales; clamp, telegraphs y render consultan la
-misma frontera interpolada. No modificar por esta tarea timers, daño, HP,
-spawn, fases o rutas de Pulse Ring, Angular Sweep, familias enemigas o Warden.
-La puerta agrega pruebas unitarias de forma/calendario y una prueba humana en
-los lados, vértices y ambos morphs, en Low/Medium/High y touch.
-
-`VIS-A2-01` registra un destello leve no bloqueante durante el cuadrado. No es
-el antiguo pulso de opacidad: las ventanas cuadradas (`40–80 s` y `160–200 s`)
-contienen las expansiones de arena de `60 s` y `180 s`, que combinan redibujado
-de frontera durante `1.25 s`, resonancia de `2.8 s` y onda de `0.58 s`. No
-cambia colisión ni gameplay. La ruta futura es desacoplar la geometría estable
-del FX de expansión o medir `GraphicsContext`; no usar filtros ni retirar el
-feedback de expansión para esconderlo.
-
-#### Refinamiento Orbiter — cadencia temporal y arco ampliado — 14-09-2026
-
-La prueba de campaña mostró que el Orbiter anterior podía parecer que huía al
-seguir un objetivo lateral y que además esperaba estar cerca para atacar. El
-comportamiento vigente persigue directamente al player durante `approach`,
-acumula un `attackDelaySeconds` authored y lanza desde su posición actual sin
-comprobar distancia. Al comenzar `telegraph` captura un foco local de radio
-fijo, ángulo y sentido; `commit` empieza en la posición real de la nave y
-permanece comprometido aunque el player se mueva o se coloque delante.
-`recovery` continúa desde el endpoint, sigue al player y reinicia la espera del
-siguiente lanzamiento. El telegraph recibe esa ruta y traslada las plumas
-cacheadas, sin dibujar un anillo global.
-
-La entrega conserva el daño de contacto del casco, `commitCap = 1`, los pools y
-el balance provisional de EX-02c. Tests dirigidos y typecheck están verdes; la
-validación humana del usuario aprobó el drill `?orbiter=1&debug=1` y una run
-Angular, incluyendo el comportamiento en esquina, la cadencia temporal y la
-salida touch durante el arco.
-
-### EX-08b - Magnetic Charge de jugador
-
-La sexta familia activa es `magnetic_charge`, reemplazo uno por uno de la
-propuesta Resonant Aura. Su behavior puro lanza una carga a distancia larga a
-un punto determinista dentro de la arena, aunque no haya enemigos; ejecuta
-`travel → attract → detonate → recovery`, atrae enemigos comunes y detona en
-una banda entre 62 y 148 unidades con centro seguro. La detonación usa cooldown
-por objetivo; el boss puede recibir daño, pero nunca es desplazado.
-
-La carta respeta el límite de tres armas activas. `WeaponView` usa ocho capas
-Graphics persistentes: estela, baliza, campo de atracción, backplate, banda,
-rieles, núcleo y residuo. La geometría del destino se hornea por secuencia; Low
-conserva baliza, núcleo y banda, High agrega el campo, rieles y residuo sin
-cambiar la lectura jugable. La guía visual vive en
-[`MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md`](design/MAGNETIC_CHARGE_WEAPON_FX_PREMIUM.md)
-y el contrato en
-[`EX-08b-magnetic-charge-weapon.md`](balance/EX-08b-magnetic-charge-weapon.md).
-
-El acceso directo es `/?weapon=magnetic-charge&debug=1&quality=low|high`. El
-drill crea ocho blancos estáticos, apaga el resto del arsenal y hazards y
-muestra `mode: magnetic-charge-drill` junto a `magnetic: phase | x,y`. La
-validación humana de la base queda pendiente antes de abrir sus evoluciones:
-`event_horizon` y `polar_collapse`.
-
-### EX-08c - Cartas de armas en una run real
-
-Las cartas `pulse_ring` y `magnetic_charge` ya están en el catálogo ejecutable,
-con sus iconos premium y aplicación mediante `UpgradeApplier`. La rotación
-normal las presenta en los niveles 7 y 8, respectivamente, siempre que el
-jugador no haya alcanzado el máximo de tres armas activas.
-
-Para validación inmediata sin esperar esos niveles, el bootstrap acepta una
-entrada de desarrollo que conserva el overlay real de tres cartas y coloca la
-carta pedida primero:
-
-- `/?card=pulse-ring&debug=1&quality=low|high`
-- `/?card=magnetic-charge&debug=1&quality=low|high`
-
-El acceso sólo funciona con `debug=1`, no aplica la mejora automáticamente y
-no altera daño, cadencia, enemigos, hazards ni el límite de armas. Elegir la
-carta cierra el level-up y continúa la run normal para probarla en contexto.
-La siguiente puerta es validación humana de ambas cartas en PC/móvil y
-Low/High; sus evoluciones continúan bloqueadas.
-
-### EX-08 — Niveles y evoluciones, ficha reutilizable por arma
-
-### EX-08-R1 vigente — lote continuo de seis rutas — 14-09-2026
-
-La solicitud actual sustituye para esta entrega la secuencia histórica de una
-familia por vez. Ya están conectadas las seis rutas enfocadas: Projectile,
-Orbit, Chain, Boomerang, Pulse Ring y Magnetic Charge. Todas usan una partida
-normal con el director y enemigos reales, comienzan con su arma I, muestran una
-carta única por cada rango II→VI y, en la siguiente subida, una carta hito sin
-estadísticas que abre exactamente dos evoluciones.
-
-URLs de prueba:
-
-`/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`
-
-El rango VII de las tablas no aparece en la ruta: queda reservado para la
-integración normal futura. La URL directa
-`/?evolution=<slug>&scenario=single|mass&debug=1` conserva el laboratorio y
-ahora activa solo la familia de la evolución seleccionada. La validación
-automática no sustituye la revisión humana en PC/S25, Low/High y presión real;
-el balance de vida/daño de enemigos continúa diferido.
-
-Los nombres y porcentajes viven únicamente en §16.4–16.5 del plan. Este lote
-implementa las seis familias y sus doce ramas; el balance de combate sigue
-siendo una puerta posterior.
-
-Evidencia automatica de cierre de implementacion: `npm run test:browser`
-reconstruye el bundle y paso 97/97 archivos, 383/383 pruebas unitarias y
-44/44 pruebas browser en desktop/mobile. La capacidad de ocho segmentos de
-Chain/Closed Circuit esta compartida entre simulacion y `WeaponView` para
-evitar sprites fuera del pool.
-
-### EX-08-R2 - compositor normal de campaña y maestrías - 15-09-2026
-
-La progresión dejó de depender de la rotación fija histórica y ya consume el
-estado real de los tres actos. Mientras haya ranuras, cada mano de tres cartas
-incluye como máximo una oferta de arsenal escogida con el mismo peso entre las
-seis entradas jugables: `projectile_rank_2` (Doble cañón), Orbit, Chain,
-Boomerang, Pulse Ring y Magnetic Charge. No se prioriza Projectile; cuando se
-completa el límite de tres armas desaparecen las adquisiciones y permanecen
-rangos, evoluciones, maestrías y pasivas válidas.
-
-El rango de cada familia avanza II→VII. Al llegar a VII aparece en una mano
-normal una sola carta `Evolución disponible`; abrirla muestra las dos ramas y
-solo confirmar una consume la subida. Después de evolucionar aparecen las
-maestrías Potencia/Ritmo/Cobertura de esa familia. Con las tres armas
-evolucionadas, cada tercera mano puede presentar `Potencia calibrada`, que abre
-una segunda pantalla para elegir el arma evolucionada objetivo; no reabre las
-ramas. El reroll usa el mismo compositor y excluye la mano actual.
-
-QA directo de presentación: `/?debug=1&campaign=evolved&act=angular&quality=high`
-abre una build real de tres armas evolucionadas y la primera mano de campaña.
-Para revisar el reparto inicial basta jugar Acto I o II desde el menú; las
-adquisiciones disponibles tienen el mismo peso y el cap sigue siendo tres.
-Esta entrega no cambia daño/vida de enemigos ni la política futura del modo
-infinito.
-
-#### Corrección de auditoría — 16-09-2026
-
-El compositor ya no parte de una semilla fija en runs reales, conserva semillas
-inyectables en tests y no rellena manos con `UPGRADE_DEFINITIONS` completo. Así
-se evita el retorno de cartas legacy, se limita a una adquisición por mano y se
-reserva de forma rotativa una evolución/rango pendiente. `Potencia calibrada`
-requiere objetivo, tiene cap real de tres, conserva su cadencia y bloquea reroll
-mientras el jugador decide el objetivo. Los previews post-evolución muestran la
-estadística que cambia; Cobertura respeta Solar Crown fijo y extiende las ramas
-de alcance fijo aplicables.
-
-Durante esta validación queda suspendida la oferta pública de calibraciones de
-entrada a Angular: Acto II empieza limpio desde intermisión y selector. Los
-parámetros `?calibration=...` sobreviven exclusivamente para QA. Typecheck,
-397 pruebas unitarias/integración, build local y los 2 smoke browser afectados
-pasaron; la validación humana de rotación y balance sigue pendiente.
-
-### Correccion vigente dentro de EX-08-R1 - 14-09-2026
-
-- `solar_crown` reemplaza la emision espiral por seis cuchillas activas a
-  radio fijo 94u; la evolucion suma tres cuchillas a la formacion.
-- `compression_wave` captura el eje al comenzar el aviso, conserva esa
-  direccion durante el cast y extiende el frente a 320u. La vista limita el
-  aro al mismo cono de110 grados y la colision considera el radio del enemigo
-  en el borde.
-- `polar_collapse` conserva tres frentes de ancho fisico24u, atrae durante0.3 s
-  hacia un destino remoto seguro y mantiene el nucleo0.42 s. El nucleo de0.43
-  del radio exterior (aprox.64u en base) entrega dos pulsos retrasados.
-- La suite de combate comprueba dano real en las doce ramas y movimiento/
-  expiracion por TTL de Rail Lance. Esto es una puerta automatica de contrato,
-  no una aprobacion humana de balance o sensacion.
-
-### Registro historico de entregas anteriores (no vigente)
-
-**Estado registrado (EX-08a):** Pulse Ring de jugador es la primera arma faltante
-implementada. Su carta es `pulse_ring`, el behavior es puro y su vista premium
-está separada del hazard `PulseRingHazard` del Acto II. Probar primero
-`/?weapon=pulse-ring&debug=1&quality=low|high`; el drill usa siete blancos
-estáticos y desactiva el resto del arsenal. La ficha de contrato vive en
-[`EX-08a-pulse-ring-weapon.md`](balance/EX-08a-pulse-ring-weapon.md) y la
-receta visual en
-[`PULSE_RING_WEAPON_FX_PREMIUM.md`](design/PULSE_RING_WEAPON_FX_PREMIUM.md).
-La automatización de esta entrega está OK: typecheck, suite completa y smoke
-browser dirigido del drill High (1/1). Por instrucción explícita del usuario,
-la validación humana de Pulse Ring sigue pendiente pero no bloquea la siguiente
-implementación de arma. Las evoluciones siguen cerradas hasta validar las armas
-base.
-
-1. Diseñar mapeo explícito de las cartas existentes a niveles 1–7 sin duplicar
-   bonus de stacks. Guardar fixtures de las builds anteriores. Hacerlo antes de
-   presentar la primera evolución; no cambiar todas las cartas durante EX-05b.
-2. Probar elegibilidad al nivel 7, dos rutas ofrecidas en la siguiente ocasión,
-   exclusión mutua, aplicación única y comportamiento de reroll. DEC-03 cierra
-   el layout de dos rutas frente a las tres cartas normales antes de UI.
-3. Implementar las rutas en orden de dependencia real: modificaciones de
-   Projectile/Orbit primero; Boomerang tras EX-05; Pulse y Magnetic Charge tras
-   validar sus armas base. No abrir evoluciones mientras la base siga pendiente.
-   Closed Circuit espera un estado de borde cargado definido y probado; no
-   deduce carga de colores ni inventa un segundo estado de arena en render.
-4. Comparar contra nivel 7 base: objetivo +30–45% de contribución ideal, techo
-   1.6× single-target y 2× cobertura del plan. Registrar daño sostenido, cobertura
-   y seguridad; testear todos los niveles y meta máxima que puedan romper caps.
-5. Verificar cooldown por target, tope de entidades, boss inmune a fuerzas y
-   una run por ruta. Si una ruta domina daño/control/seguridad, recalibrar antes
-   de seguir. No usar su aspecto más brillante como evidencia de diferenciación.
-
-### EX-08-R — ejecución vigente tras feedback humano
-
-Prevalece [plan §22.1r](../PLAN_DESARROLLO.md) y
-[EVOLUCIONES_V2.md](design/EVOLUCIONES_V2.md). Solo Rail Lance/Pulse Volley
-están aprobadas. Cinco rutas fueron cuestionadas explícitamente por falta de
-utilidad/lectura o atracción peligrosa; las otras cinco no están aprobadas.
-R0 completó únicamente el plan; el código actual sigue siendo v1.
-
-Orden: R1 laboratorio aislado + rango propio de arma + selección atómica;
-R2 Pulse Ring; R3 Magnetic; R4 Boomerang; R5 Orbit; R6 Chain; R7 integración.
-R1 aplica [PROGRESION_ARMAS_V2.md](design/PROGRESION_ARMAS_V2.md): seis tablas
-I–VII, oferta del siguiente rango, retiro de upgrades antiguos paralelos y
-calibración explícita IV/II/II. La pareja Projectile conserva arte/mecánica,
-con regresión de potencia sobre sus nuevos rangos base. Valores de prototipo.
-Cada pareja requiere prueba humana antes de abrir la siguiente. La guía define
-las funciones, visuales, límites y pruebas, sin reabrir balance EX-02c.
-No ejecutar el antiguo contrato de porcentajes como rediseño premium ni
-interpretar los tests de EX-08d como aprobación de las nuevas propuestas.
-
-### EX-08-R — ruta vigente arma por arma
-
-R1 añade una ruta de partida normal enfocada en una sola familia. La primera
-ruta disponible es `/?weapon-path=projectile&debug=1&quality=low|medium|high`:
-cada level-up ofrece únicamente el siguiente rango Projectile I→VI. En el nivel
-7 aparece una sola carta hito `Evolucion disponible`; al seleccionarla se abren
-las dos evoluciones con `Volver`, y solo confirmar una rama consume la subida.
-El rango VII queda reservado para la futura integración normal. No usa escenarios aislados, no concede XP y no
-modifica el pool normal ni el guardado. Probar los seis rangos, el hito y ambas
-evoluciones antes de construir la siguiente familia. La implementación,
-definición de cartas y pruebas están en [PROGRESION_ARMAS_V2.md](design/PROGRESION_ARMAS_V2.md).
-
-### EX-08d - histórico del lote implementado, sustituido por EX-08-R
-
-La solicitud de esa entrega autorizó implementar todas las evoluciones del arsenal
-antes de la prueba humana, aunque la ficha historica describa una ruta por
-entrega. El lote conserva el contrato de §16.4-§16.5: nivel 7, dos cartas por
-familia, exclusion mutua, tres armas activas como maximo, pools fijos y sin
-reroll en la pareja.
-
-Se puede abrir cada pareja desde una run real con
-`/?evolution=<slug>&debug=1&quality=low|high`. Los doce slugs y el checklist
-estan en [`EX-08d-weapon-evolutions-batch.md`](balance/EX-08d-weapon-evolutions-batch.md).
-Los tests puros cubren las seis familias; `WeaponView` cubre sus pulsos,
-explosiones, rail/volley y capas de lectura; el smoke browser recorre las doce
-entradas, verifica dos cartas sin reroll y aplica la primera opcion; el smoke
-completo queda en 37/37 e incluye las 24 variantes de laboratorio.
-
-Para probar una ruta ya aplicada, se puede anadir `scenario=single` para un
-blanco durable o `scenario=mass` para 56 blancos durables en tres anillos. Estos
-escenarios aislan hazards y boss, muestran su modo en debug y sirven para leer
-la cobertura de cada evolucion; no reemplazan una run real de balance.
-
-Estado: AUTOMATICO OK. La validacion humana en PC/movil, Low/High y el juicio
-de balance quedan pendientes. EX-02c sigue diferido; no ajustar dano o vida de
-enemigos durante esta pasada.
-
-## 5. Plataforma y producción
-
-### EX-09 — SDKs, uno por build y por entrega
-
-**Entrada:** EX-07 cerrado y flujo rewarded local seguro. Cargar skill platforms
-+ validation; consultar en ese momento documentación oficial, con fecha/URLs.
-
-1. Auditar primero aislamiento real de build, lifecycle, guardado y textos
-   i18n/inglés. Los directorios `dist/poki` y `dist/crazygames` no son SDKs.
-2. Implementar Poki tras su adaptador y probar éxito/fallo/init/adblock sin
-   tocar simulación. Implementar CrazyGames en otra entrega con su Data Module.
-3. Probar contrato local y real: callbacks duplicados/tardíos, timeout, no fill,
-   muting, pausa, blur, regreso y save. Ocultar CTA cuando el destino no soporte
-   rewarded; nunca activar anuncios automáticos para satisfacer una suposición.
-4. Registrar el artefacto exacto en Inspector/Preview, errores, red y tamaño.
-   Medir descarga fría y assets/audio diferidos; hacer efectiva la puerta de
-   presupuesto en CI si aún falta. No subir su límite sólo para dejarla verde.
-
-**Salida:** evidencia por portal; credenciales, subida o acuerdos requieren
-autorización pertinente. Sin acceso: entregar adaptador probado localmente y
-marcar QA de portal pendiente, no declarar integración comercial cerrada.
-
-### EX-10 — Acto III Fracture
-
-Estado vigente (16-09-2026): implementado por solicitud explícita del usuario,
-adelantado respecto a EX-09 porque esta entrega no incorpora SDK ni publicación
-comercial. La campaña ya puede abrir Acto III directamente cuando está
-desbloqueado y el acceso de QA puede omitir el desbloqueo.
-
-La composición implementada es: arena octagonal al inicio, morphs a rectángulo
-horizontal, rombo, círculo, hexágono, rectángulo vertical y octágono con
-intervenciones cada 25 s; pulso radial, Pulse Ring, Angular Sweep y láser como
-hazards concurrentes; Fracture Gunner, Thorn Bastion, Zigzag Reaver y Rift
-Miner como familias enemigas; y Fracture Engine como boss a los 250 s. El boss
-reutiliza los verbos del acto: batería de proyectiles, púas radiales, embestida
-zigzag y minas desplegables. Sus ataques conservan telegraph → active →
-recovery y su munición usa pools fijos de 48 proyectiles y 12 minas.
-
-Accesos de QA:
-
-- `/?debug=1&act=fracture&quality=high` — Acto III completo, build limpia.
-- `/?debug=1&act=fracture&boss=1&quality=high` — entrada directa al boss.
-- `/?debug=1&fracture-drill=gunner|thorn|zigzag|miner&quality=high` — una
-  familia aislada, conservando el loop real de simulación.
-
-La transición pública II→III y el desbloqueo persistente están conectados.
-La entrada del Acto III es limpia: no hereda las armas ni cartas del acto
-anterior. El balance final de vida/daño de enemigos permanece en EX-02c.
-La validación automática está cubierta; faltan pruebas humanas visuales en
-Low/Medium/High, touch y las diez runs comparables antes de declarar EX-10
-CERRADO.
-
-Barreras no nacen bajo el player; telegraph inicial mínimo 0.8 s y corredor de
-cuatro diámetros del player. Probar transitabilidad con combinaciones activas,
-no sólo dibujar un hueco. Magnetic Charge tiene centro seguro, destino remoto,
-atracción sin boss y cooldown por target; sus evoluciones deben conservar un
-solo cast activo. Reutilizar los límites globales; no aumentar
-enemigos/proyectiles para aparentar progresión.
-
-### EX-11 — Overdrive y preparación de lanzamiento
-
-**Futuro, sin implementar:** [OD-F01 — Ritmo por puntos](design/OVERDRIVE_RITMO_POR_PUNTOS.md)
-define un perfil opcional de Overdrive con boss por cuota de bajas y spawns
-más frecuentes. Depende de cerrar EX-02c y medir las bajas al boss por tramo;
-no cambia el contrato Normal vigente de EX-11.
-
-**Puerta vigente, 17-09-2026:** OD-A01–OD-A08 de [la auditoría](design/AUDITORIA_OVERDRIVE.md)
-están corregidos y cubiertos por regresiones. EX-11.1–7 quedan cerrados en
-automático y la validación manual previa de Overdrive en Pages/móvil fue
-aprobada por el usuario; el watchdog del proyectil congelado también quedó
-cubierto. Falta validar el nuevo flujo público y la sesión larga con bosses
-dobles.
-
-Entrada: tres actos y sus puertas cerrados. Es una continuación opcional tras
-III, con partida independiente y build limpia; Expedition fue eliminado.
-El contrato vigente es `design/PLAN_INFINITO.md`. Definir tabla de ciclos con composición,
-patrones, presión y caps; no multiplicadores de HP sin límite ni daño inevitable
-como única forma de acabar. Probar sesiones prolongadas, contadores, memoria,
-save y recompensa una sola vez. La dificultad puede ser extremadamente alta,
-pero no romper números ni volver inútiles los telegraphs.
-
-Después, y en tareas propias: economía observada, metadatos/capturas, acceso
-comercial y analítica sólo con autorización. No añadir logros, retos diarios,
-cuentas, moneda premium o sincronización propia como «parte implícita» de release.
-
-### EX-11.1 — Contrato y guardado del modo Infinito
-
-Implementado el primer bloque de EX-11 sin activar todavía el flujo jugable.
-`src/content/run/OverdriveDefinitions.ts` contiene el modo `campaign | overdrive`,
-el estado acotado de tramo, la normalización de etapa/semilla, la relación
-vuelta-tramo, la secuencia de actos de la primera vuelta y las fórmulas de vida
-y presión aprobadas por `PLAN_INFINITO.md`. El módulo no importa Pixi, DOM,
-audio ni plataforma.
-
-`SaveStore` usa ahora el esquema 7 y persiste `overdrive.unlocked`,
-`bestTotalTimeSeconds`, `maxStages` y `bestKills`. Los esquemas anteriores
-quedan bloqueados aunque tengan Acto III disponible: la disponibilidad del acto
-no prueba una victoria real. El desbloqueo queda detrás de `unlockOverdrive()`
-para conectarlo únicamente al resultado real del boss de Acto III. Los récords
-se combinan con `mergeOverdriveRecord()` sin reducir valores existentes.
-
-La subtarea tiene tests unitarios para normalización, primeros doce
-multiplicadores, primera vuelta, migración y combinación de récords. Esta puerta
-no incluye menú, director, transición, cartas, bosses múltiples ni recompensas;
-se implementarán sólo cuando exista su consumidor runtime correspondiente.
-
-### EX-11.2 — Director de composición y ruta de inspección
-
-El director `OverdriveActDirector` reutiliza el contrato de los directores
-actuales para elegir de forma determinista el perfil de arena, la rotación de
-boss y las familias normales. La primera vuelta conserva exactamente Radial,
-Angular y Fracture. En las vueltas 2 y 3 mezcla invitados al 20% y 35%; desde el
-tramo 10 elige acto y familia normal con distribución uniforme. El intervalo
-de spawn sigue la cadencia de la familia principal hasta el tramo 9 y adopta
-la cronología Acto III desde el tramo 10; aplica la presión aprobada con mínimo
-de 0,20 s. Bosses, réplicas e
-hijos siguen fuera de la selección normal.
-
-La simulación y la campaña consumen el mismo contrato; EX-11.3 ya aplica el
-multiplicador de vida y la transición sólo en la ruta Overdrive. Para inspección
-reproducible se habilitó, sólo con `debug=1`,
-`/?debug=1&mode=overdrive&od-stage=4&seed=305441741&quality=low`. Muestra el
-perfil de arena y el modo en el panel debug sin modificar guardado, desbloqueos
-ni recompensas. La prueba browser asociada queda sujeta a la estabilidad del
-runner local; las pruebas unitarias y de integración del director son la puerta
-automática de esta subtarea.
-
-### EX-11.3 - Vida escalada y transición segura
-
-`RadialActDirector` ofrece el multiplicador neutral `1`; `OverdriveActDirector`
-lo enlaza a `OverdriveStageState`. Al configurar cada entidad, `EnemySystem`
-escala una vez la vida base de normales, Splitter hijos, réplicas y boss. El
-resto de estadísticas permanece authored. El director se puede mover de etapa
-sin sustituir el sistema: `CombatSimulation.reconfigureOverdriveStage()` limpia
-los pools y casts transitorios, reinicia el reloj de tramo y vuelve a enlazar
-hazards/boss, pero no llama al reset de run de armas ni toca XP, cartas,
-modificadores, kills o acumuladores de scheduler.
-
-`GameState.overdrive-transition` detiene la simulación. `Game` muestra el
-handoff `Vuelta X - Tramo Y` durante 3 s, cura 25% de vida máxima sólo si el
-player sigue vivo, limita su posición a la nueva arena y reanuda. Si al cerrar
-el handoff hay level-up pendiente, se abre el flujo de cartas entonces. La ruta
-se mantiene de desarrollo (`debug=1`) y la victoria de campaña sigue usando su
-intermission existente.
-
-Pruebas a ejecutar: `npm run typecheck`; tests focalizados de
-`OverdriveActDirector`, `GameState` y `CombatSimulation`; suite completa con un
-worker; builds de local/Poki/CrazyGames con sourcemaps desactivados si el runner
-se queda sin memoria; y smoke manual en Pages. No declarar la puerta humana
-cerrada sin observar al menos una derrota de boss y una reanudación real.
-
-### EX-11.4 — Arsenal de seis armas y cartas de Overdrive
-
-`UpgradeApplier` conserva el límite de tres armas para `campaign` y recibe el
-modo explícito para `overdrive`. En Overdrive las tres familias iniciales deben
-estar evolucionadas antes de abrir el límite de seis; la apertura es monotónica
-durante la run y no depende de que la cuarta adquisición se haya elegido todavía.
-La composición mantiene una sola carta de adquisición por mano, peso uniforme
-entre familias nuevas y la rotación de rangos/evoluciones ya probada. La
-campaña no consume esta ampliación.
-
-La ruta de QA `?debug=1&mode=overdrive&od-build=three-evolved` muestra el estado
-justo al abrir el arsenal; `od-build=six-evolved` prepara las seis familias con
-una evolución cada una. Son atajos efímeros: no escriben `SaveStore`, no pagan
-NOVA y no desbloquean el modo. Sin `od-build`, Overdrive comienza con Projectile
-como build limpia.
-
-Archivos de contrato/consumo: `UpgradeApplier`, `Game` y `main`. La Definition
-of Done de esta subtarea exige tests focalizados de los dos límites y de la
-apertura irreversible, typecheck y suite completa en un worker. La prueba visual
-de las manos en Pages queda pendiente; todavía no se implementan cartas de
-reserva, encuentros dobles ni liquidación de recompensa.
-
-### EX-11.5 — Cartas de reserva post-evolución
-
-Las reservas se declaran en `OVERDRIVE_RESERVE_DEFINITIONS`, separadas de los
-contenidos de campaña. `UpgradeApplier` sólo las compone en Overdrive después
-de que no exista ninguna adquisición, mejora de rango, evolución, maestría,
-pasiva o marcador universal aplicable. La misma frontera se respeta en rerolls;
-un run normal nunca puede ver un `overdrive_*`.
-
-Hay seis cartas de potencia, una por familia evolucionada. Suman `+0.05` al
-multiplicador independiente de esa familia y afectan el daño primario y
-secundario de su behavior. El multiplicador está limitado a `x1000` y se
-restaura a `x1` al reset. Para alcanzar la transferencia de forma determinista,
-`swift_step` y `reinforced_core` se limitan a 6 y 9 stacks respectivamente sólo
-en Overdrive; la campaña conserva sus reglas.
-
-`Reparación Overdrive` cura 25% de vida máxima y sólo es elegible con vida
-incompleta. La composición ofrece tres potencias con vida completa o dos
-potencias más reparación con vida incompleta. Si una familia llega al cap o no
-hay una carta válida, se ofrecen menos cartas; no se inventa una carta neutra.
-La conversión a NOVA queda para EX-11.7.
-
-Definition of Done: pruebas focalizadas de agotamiento, exclusión de campaña,
-las seis aplicaciones/cap/reset y reparación condicionada; `npm run typecheck`;
-suite Vitest con un worker; builds `local`, `poki` y `crazygames` sin sourcemaps.
-La inspección humana de la mano en Pages permanece pendiente; EX-11.7 abre ya
-el acceso público y su comprobación queda registrada abajo.
-
-### EX-11.6 — Dos bosses, arbitraje y presupuestos
-
-`OverdriveActDirector.getBossEncounter()` conserva la rotación principal y
-añade, desde el tramo 10, una segunda definición con selección determinista;
-`od-pair` fuerza las tres parejas para QA. `CombatSimulation` mantiene dos
-`BossSystem` acotados, reserva dos posiciones del pool, conserva el alias de
-campaña de un solo boss y sólo emite la transición cuando todos los bosses del
-encuentro fueron derrotados. Cada entidad lleva `bossId`, `instanceId`, barra,
-nave y estado independientes. Las réplicas del Warden sólo se limpian al
-retirar su propia instancia.
-
-Durante una pareja, `PairedBossAttackGate` serializa telegraph/attack,
-alterna prioridad y espera 0,35 s más la cola de proyectiles/minas antes del
-siguiente especial. Los hazards de arena no inician nuevos ciclos mientras
-la pareja está activa, pero las amenazas ya anunciadas continúan y conservan
-su daño. `FractureThreatView`, `BossView` y `CombatEntitiesView` representan
-ambos slots sin duplicar pools ni crear otro loop.
-
-### EX-11.7 — Entrada pública, retirada y liquidación única
-
-La victoria real del Acto III llama a `unlockOverdrive()` y habilita el botón
-Infinito del menú. `?mode=overdrive` abre el flujo público con build limpia y
-las mejoras permanentes guardadas; las rutas `?debug=1&mode=overdrive...`
-siguen siendo diagnósticas y no escriben guardado. Pausa ofrece
-`Retirarse y cobrar` sólo en Overdrive, con confirmación.
-
-Muerte o retirada liquidan una sola vez: no hay victoria terminal por boss ni
-se reinician revive/contadores entre tramos. Una derrota definitiva puede
-ofrecer doble NOVA una vez por run, incluso después de haber usado el revive;
-retirarse liquida sin revive ni duplicación. Los récords de tiempo, tramos y
-bajas se guardan en `SaveData.overdrive`. La campaña mantiene su límite de tres
-armas y su flujo de intermisión.
-
-Validación automática registrada: `npm run typecheck`; `npm run build:local`
-con suite Vitest, 107 archivos / 470 tests; y builds `poki` y `crazygames`.
-Playwright ejecutó 64 tests: 61 pasaron en la corrida completa; los tres fallos
-fueron smokes que intentaban mover durante la entrada premium, y pasaron en
-reintento focalizado después de enseñar al helper a omitirla. La suite browser
-completa no se repitió junta tras ese ajuste. La prueba pública de entrada y
-retirada de Overdrive está cubierta; la cobertura automatizada de parejas de
-bosses y estos resultados no sustituyen validación física ni mediciones de
-sesión larga en PC/móvil. Los builds no son QA dentro de portales reales.
-
-## 6. Fichas visuales y estado de ejecución
-
-Origen: propuestas de la revisión del 04-09. La solicitud del 05-09 y §22.5
-autorizan flota/cosméticos: VIS-01 tiene asset modular y despiece implementados,
-pero falta anticipación por fase; VIS-02 tiene tratamiento visual implementado
-y espera medición física/aprobación. VIS-03 sigue PROPUESTA. No ejecutar de
-nuevo las partes terminadas. Requieren rendering + SVG
-cuando corresponda + mobile-performance + validation. No bloquean EX-01–03.
-
-### VIS-01 — Boss modular y legible
-
-- Objetivo: igualar el acabado de las naves actuales conservando Core Sentinel.
-- Leer `CombatEntitiesView.ts` (dueño actual del sprite), `BossView.ts`
-  (telegraphs/barra), `EnemyShipVisual`, `SvgTextureFactory`, `TerminalFxView`.
-- Estado 05-09: `BossShipVisual` ya compone cuatro piezas y un flat Low,
-  con reloj terminal de despiece. Ver la guía artística por familias. No crear
-  otra instancia ni rehacer el asset al retomar la anticipación por fases.
-- Propuesta acotada: núcleo + placas + aro segmentado, máximo ocho piezas
-  visibles. Producir ficha/silueta y después SVGs alineados; no duplicar el boss
-  entre dos vistas ni crear un segundo slot de gameplay.
-- Mapear animaciones a `BossRenderState.phase/progress`: carga antes de barrido,
-  apertura antes de anillo, recuperación y colapso. La animación sigue el
-  telegraph existente, nunca lo retrasa ni amplía daño/radio/HP.
-- Aceptar sólo si se distingue en móvil/Low, el hueco seguro sigue visible,
-  frames y anclas coinciden, restart no deja piezas y no cambia la secuencia
-  seeded de combate. No prolongar los 3 s terminales existentes.
-
-### VIS-02 — Fondo integrado, no más partículas
-
-- Leer `BackgroundView.ts`, `ArenaView.ts`, definiciones y previews del locker.
-- Comparar baseline con una textura de nebulosa suave cacheada desde una fuente
-  compatible y reutilizada. Empezar con los conteos actuales; no añadir capas
-  animadas. Ensayo implementado: alpha de arena 0.84 (antes 0.92), textura suave
-  y composición periférica; Low conserva dos nubes estáticas. No sumar capas
-  antes de medir este ensayo. El menú CSS sigue siendo una indicación de tema,
-  la lámina Pixi es la referencia exacta; alineación total del menú pendiente.
-- No introducir imagen enorme, blur por frame, otra simulación ni cambio de
-  mundo. Alinear preview y runtime; todas las atmósferas son cosméticas.
-- Aceptación: cuatro temas legibles, landscape/portrait/resize, peligro visible
-  en escala de grises y sin regresión medida. Si reduce contraste, revertir el
-  ensayo propio aunque se vea mejor en una captura vacía.
-
-### VIS-03 — Resonancia coordinada
-
-- Sincronizar borde, onda, una respuesta del core y cue existente sobre el
-  evento de expansión; usar relojes de presentación y tokens, no timers nuevos
-  que gobiernen gameplay. No añadir daño ni buff por el aspecto de la onda.
-- Reutilizar `ArenaView`, `PlayerView`, `ScreenFxView` y `AudioCueDefinitions`;
-  un máximo de una secuencia de expansión activa. No aumentar voces, pools o
-  shake global por iniciativa propia. Verificar deduplicación durante crecimiento.
-- Pausa y reduced-motion mantienen señal informativa sin movimientos grandes.
-  Comparar el momento completo, no sólo una captura de máxima luminosidad.
-
-## 7. Decisiones que el ejecutor no debe inventar
-
-Las siguientes fichas son planificación habilitada; su resultado debe quedar
-aprobado antes de implementar el contenido ambiguo. No hace falta pedirlas
-todas ahora: resolver sólo la que bloquea la próxima subtarea.
-
-| ID | Antes de | Debe quedar escrito |
-| --- | --- | --- |
-| DEC-01 | EX-05a | parámetros Boomerang, retorno/captura, TTL/cap, origen y regla al borde; propuesta comparada con Projectile base |
-| DEC-02 | regla nueva de cada acto | cronología, geometría, daño, respuesta segura, prioridad frente a hazards existentes y parámetros de cada enemigo/boss; un acto a la vez |
-| DEC-03 | primera evolución | mapeo niveles/cartas, cuándo aparecen dos rutas, interacción con reroll y Calibration; conservar máximo tres armas |
-| DEC-04 | metaprogresión adicional | si se desean cosméticos por dominio/investigación y condiciones; no crear sistema de logros por inferencia |
-| DEC-05 | alternativa NOVA de reroll si falta precio | coste authored y momento del débito; no cambiar precios de cosméticos para financiarlo |
-
-La ficha de decisión contiene: problema, opción recomendada, alternativa,
-impacto en el control de un dedo, coste/caps, pruebas y aprobación del usuario.
-El ejecutor puede escoger detalles locales reversibles (nombres privados,
-organización de tests), no cambiar la regla de producto para evitar preguntar.
-
-## 8. Validación y traspaso obligatorio
-
-### Comandos y evidencia
-
-Para un cambio de código: prueba específica primero, luego `npm run typecheck`,
-`npm test`, `npm run test:browser`, `npm run build:poki` y
-`npm run build:crazygames`. `test:browser` ya construye local según package.json;
-verificar scripts actuales antes de duplicar trabajo. Documentar comandos,
-exit codes y entorno. Si el runner imprime tests OK pero no termina, informar
-el problema del proceso; no convertirlo en exit code 0 supuesto.
-
-Para documentación sola: revisar diff, whitespace, rutas/enlaces locales,
-numeración/IDs, dependencias y coherencia con la fuente de verdad. No afirmar
-que se probó el juego si no se ejecutó. No es necesario reconstruir runtime.
-
-Para rendimiento: mismo dispositivo, navegador, commit, preset, viewport y
-escenario; separar calentamiento y medición. Como protocolo inicial, tres
-muestras de 60 s por variante tras 15 s de calentamiento, anotando temperatura
-o ahorro de energía si afecta. Informar media/p95/frames largos y conteos reales;
-GPU/GC/draw calls sólo cuando estén medidos por herramienta apropiada. Una
-regresión repetida obliga a investigar antes de aumentar presupuesto. Meta 60
-FPS y mínimo jugable 30 no son una promesa sobre cualquier teléfono.
-
-### Formato de cierre en CONTINUACION.md
-
-```text
-Fecha y commit de partida:
-ID / subtarea:
-Objetivo y exclusiones:
-Archivos cambiados:
-Pruebas ejecutadas y resultados:
-Evidencia humana / dispositivo / reporte:
-Puerta: AUTOMÁTICO OK / ESPERA HUMANA / CERRADO
-Pendiente concreto y condición para avanzar:
-Siguiente ID habilitado:
-Publicación: sin publicar / artefacto y commit verificados
-```
-
-No copiar el plan completo al snapshot. Actualizar su cabecera para que una
-nota vieja al final no sea el único lugar que contiene el estado real.
-
-### Cuándo detenerse
-
-- Falla una prueba relacionada: resolverla o explicar bloqueo, no abrir otra EX.
-- El diff alcanza una responsabilidad ajena: separar la tarea y justificarla.
-- Falta especificación de daño/patrón/economía: abrir la DEC pertinente.
-- Falta móvil, QA de portal o aprobación visual: marcar ESPERA HUMANA; se puede
-  preparar documentación, no certificar ni saltar a gameplay dependiente.
-- El worktree contiene cambios ajenos incompatibles: preservar y pedir dirección.
-- Un test exige manipular internals desde UI/render: revisar la frontera, no
-  introducir atajos de producción para que el test pase.
-
-Prompt breve de continuación sugerido:
-
-> Lee AGENTS.md, CONTINUACION.md y la entrada §22 del plan. Sigue la primera
-> subtarea EX habilitada en docs/PLAN_EJECUCION.md. Indica su ID, conserva lo ya
-> implementado, no actives propuestas VIS/DEC sin aprobación y entrega evidencia
-> de sus pruebas con el siguiente paso exacto. No hagas commit ni push salvo
-> que esta solicitud lo autorice expresamente.
+Los informes fechados no prueban el estado Git, procesos activos o publicación
+de hoy. La fuente de evidencia actual es la
+[auditoría de recursos del 02-10-2026](audits/AUDITORIA_RECURSOS_2026-10-02.md).
+
+## 2. Mapa de avance que se conserva
+
+| ID | Estado documentado y regla al retomar |
+| --- | --- |
+| EX-00 | Estabilización inicial entregada; sólo reabrir con regresión reproducible. |
+| EX-01 | Cierre económico/revive implementado y cubierto; no volver a liquidar una run ni reiniciar sus ofertas entre tramos. |
+| EX-02 | Laboratorio V2 implementado. EX-02c balance aprobado por el usuario el 28-09; prueba visual/táctil del Laboratorio aplazada el 29-09. EX-02d es diagnóstico opcional, no recalibración global obligatoria. |
+| META-01 | Consumidores reales de meta/actos/Overdrive entregados; ya no es una implementación pendiente. Expedition está eliminado. |
+| EX-03 | Baseline/rewarded local y stress PC/S25+ aceptados en septiembre. Esa evidencia no certifica el móvil modesto, memoria prolongada ni builds actuales. |
+| EX-04 | Extracción de armas existente; no hacer otra capa equivalente. |
+| EX-05 | Vector Boomerang base entregado; variaciones vigentes en contratos del arsenal. |
+| EX-06 | Acto I Radial entregado y validado por el usuario. |
+| EX-07 | Acto II Angular entregado y validado por el usuario. |
+| EX-08 | Seis familias, rangos, dos evoluciones por arma y maestrías entregados/validados. No ejecutar instrucciones V1 antiguas. |
+| EX-09 | PENDIENTE: SDKs, presupuestos, artefactos y QA de portales. |
+| EX-10 | Acto III Fracture entregado y validado por el usuario. |
+| EX-11.1–EX-11.7 | Contrato/save, director, transición, seis armas, reservas, parejas y entrada pública/retirada entregados. Auditorías OD-A/OD-B se conservan como criterios de regresión, no otra cola pendiente. |
+| OD-F01 | PROPUESTA futura de Asalto por puntos; Normal conserva sus reglas. |
+
+La aprobación de contenido registrada en [§22.15–17 del plan](../PLAN_DESARROLLO.md)
+no equivale a aprobación comercial, suite actual completa o ausencia de fugas.
+
+## 3. Cola inmediata antes de publicación
+
+### AUD-RES — Auditoría de recursos y carga (sesión actual)
+
+**Estado:** informe y evidencias entregados el 02-10-2026. Hallazgos abiertos;
+no se implementaron correcciones. Browser: 81 casos correctos con teardown
+asistido QA-01; estabilidad de larga duración y cierre local automático pendientes.
+
+**Objetivo:** distinguir memoria Node/Vite, recursos Chromium/Pixi y preparación
+de imágenes. Localizar problemas reproducibles con severidad, evidencia y
+regresiones propuestas; no etiquetar toda caché retenida como fuga.
+
+**Lectura:** [informe actual](audits/AUDITORIA_RECURSOS_2026-10-02.md),
+[diagnóstico Vite](performance/VITE_MEMORY.md), skills validation +
+mobile-performance/rendering según el área. Seguir sus resultados antes de
+prometer qué cambio resolverá el síntoma.
+
+**Salida:** hallazgos con dueño, reproducción, impacto y prioridad; resultados
+de comandos separados de límites de medición. El episodio histórico de Node
+no debe adjudicarse al juego ni a la versión sin evidencia suficiente.
+
+### AUD-RES-CORR — Correcciones de los hallazgos
+
+**Entrada:** solicitud de implementación y selección de un hallazgo del informe.
+Corregir un riesgo por entrega, preservando arquitectura, balance, saves y arte.
+
+1. Resolver bloqueantes/altos de ciclo de vida, descarga o integridad primero.
+2. Añadir una regresión que reproduzca el fallo antes de la solución cuando sea
+   posible: carga fría, error de red, cambio de skin, navegación/reinicio repetido
+   o limpieza de vista. No convertir la precarga de todo el catálogo en solución
+   por defecto: medir red, memoria decodificada y tiempo de primer estado útil.
+3. Repetir el escenario corregido con mismo artefacto, viewport/calidad y cache.
+   Separar Node de browser/GPU y estabilización tras GC de crecimiento sostenido.
+4. Volver a validar las fronteras del consumidor afectado; no ampliar pools ni
+   borrar fallback para esconder la carga tardía.
+
+**Salida:** condición del hallazgo resuelta o bloqueo explicado, pruebas y
+riesgo residual. No reclamar «sin fugas» con un smoke breve.
+
+### EX-02-HUM — Aceptación del Laboratorio aplazada
+
+Retomar únicamente cuando el usuario pueda comprobarlo. Usar el
+[recordatorio V2](design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas):
+desbloqueo real tras Fracture, ofertas actuales, compra/persistencia, rango
+siguiente, paneo/pinch/zoom/recentrado, modal y Vitalidad rewarded tras tres
+compras NOVA. No confundir este QA con reabrir el baseline EX-02c.
+
+### PERF-RELEASE — Carga y sesión prolongada
+
+- Carga fría y caché en Inicio, Actos, Skins, inicio/reinicio de run y primer cast
+  de cada arma/evolución. Documentar latencia hasta imagen lista y primera
+  respuesta; un PNG descargado puede aún requerir decode/subida de textura.
+- Ciclos repetidos de menús/equipado/reinicio y una sesión larga de Overdrive,
+  incluyendo pareja y transición. Registrar nodos/recursos y memoria en momentos
+  comparables, no sólo un valor máximo aislado.
+- Android real Low/High con rotación y background/foreground; cuando haya
+  teléfono modesto, verificar mínimo jugable y densidad real. El S25+ no sustituye
+  esa puerta y Chromium emulado no mide VRAM/dispositivo físico.
+- Verificar descarga inicial y completa de cada build con criterio explícito;
+  warning de chunk JavaScript no equivale a puerta de descarga comprimida.
+
+Usar los presupuestos de [§9 del plan](../PLAN_DESARROLLO.md). Un incremento
+medido requiere investigación, no subir límites para aprobar.
+
+## 4. EX-09 — Plataformas, una por entrega
+
+**Estado:** pendiente. `src/main.ts` crea `LocalPlatform` en los tres targets;
+los directorios `dist/poki`/`dist/crazygames` no son integraciones reales.
+
+**Entrada:** riesgos bloqueantes de esta auditoría resueltos, flow rewarded
+local seguro, skill platforms + validation y documentación oficial consultada
+en la fecha de la integración. No implementar ambos portales en un diff masivo.
+
+1. Auditar selección real de build, imports/requests del SDK, lifecycle/save y
+   textos i18n/inglés. No permitir que el destino local cargue SDK comercial.
+2. Poki: adaptador aislado, init/fallo/adblock, game start/pause/resume y contrato
+   de rewarded. CrazyGames en una entrega posterior, con su Data Module vigente.
+3. En ambos: callback duplicado/tardío, timeout/no fill, pausa/audio/blur/retorno
+   y guardado seguro. Ocultar CTA cuando el destino no soporte rewarded.
+4. Mantener aceptación explícita para revive, reroll, doble NOVA, cosmético y
+   Vitalidad conforme a producto; nunca abrir anuncios automáticos por inferencia.
+5. Hacer efectivas las puertas de tamaño/validación pendientes en CI. Registrar
+   las peticiones permitidas y descarga fría/diferida; no elevar el presupuesto
+   sólo para pasar el check.
+6. Registrar commit/artefacto exacto y evidencia Poki Inspector/CrazyGames Preview.
+   Sin acceso real: marcar QA de portal pendiente, no integración comercial cerrada.
+
+Subida comercial, credenciales, contratos, analítica y publicación requieren la
+autorización pertinente; GitHub Pages prueba el target local, no estas condiciones.
+
+## 5. Fuentes canónicas por dominio
+
+| Tema | Entrada actual |
+| --- | --- |
+| Alcance/puertas/fronteras | [PLAN_DESARROLLO.md](../PLAN_DESARROLLO.md), [AGENTS.md](../AGENTS.md) y `skills/` |
+| Campaña/Overdrive | [ACTOS_Y_META](design/ACTOS_Y_META.md), [PLAN_INFINITO](design/PLAN_INFINITO.md) |
+| Rangos/evoluciones/cartas | [PROGRESION_ARMAS_V2](design/PROGRESION_ARMAS_V2.md), [EVOLUCIONES_V2](design/EVOLUCIONES_V2.md) y definiciones/tests actuales |
+| Meta/NOVA/Laboratorio | [LABORATORIO_META_V2](design/LABORATORIO_META_V2.md) |
+| Raster/SVG/identidad | [ARTE_HIBRIDO](design/ARTE_HIBRIDO.md), [NAVES_PNG](design/NAVES_PNG.md), READMEs de assets/prompts y skill SVG/rendering |
+| Carga/recursos | [auditoría actual](audits/AUDITORIA_RECURSOS_2026-10-02.md), [VITE_MEMORY](performance/VITE_MEMORY.md) |
+| Audio | [AUDIO_SFX_ZZFX](design/AUDIO_SFX_ZZFX.md) |
+| CI y fallos browser | [CI_DEPLOY](CI_DEPLOY.md), scripts/configuración actuales |
+
+Expedition, tienda meta V1, estados antiguos de «evoluciones pendientes» y
+recomendaciones de Node anteriores no vuelven a ser vigentes por aparecer en un
+archivo histórico. Ante contradicción material, aplican las fuentes de verdad
+de `AGENTS.md`; actualizar el contrato correcto con autorización, no copiar reglas.
+
+## 6. Validación y traspaso
+
+Para lógica: caso focalizado → `npm run typecheck` → `npm test`. Para una vista,
+añadir smoke pertinente, errores de consola/red, resize, pausa y cleanup. La
+puerta final incluye los tres builds y suite browser completa. Inspeccionar
+`package.json`: los scripts de build/test:browser repiten comprobaciones, por lo
+que se puede ejecutar `npx vite build --mode ...` después de typecheck/tests sin
+afirmar que se ejecutaron scripts diferentes ni omitir pruebas necesarias.
+
+Para docs solamente: diff/whitespace, enlaces locales, IDs y coherencia. Para
+rendimiento: misma máquina, navegador, commit, calidad, viewport y escenario;
+calentamiento separado de medición. Informar p95/frames largos/recursos sólo
+cuando estén medidos. Una suite verde no demuestra diversión, seguridad de un
+portal ni estabilidad durante horas.
+
+Al cerrar, conservar en `CONTINUACION.md`: fecha/base, ID, objetivo/exclusiones,
+archivos, comandos y resultados, evidencia humana, puerta, pendiente concreto,
+siguiente ID y publicación verificada o «sin publicar». Detenerse ante una prueba
+relacionada fallida, autoridad nueva necesaria o cambios ajenos incompatibles.
+
+## 7. Historial consultable, no tareas pendientes
+
+Las fichas completas EX/VIS/DEC, ensayos de balance y entregas se conservaron
+en el [archivo de ejecución anterior](archive/PLAN_EJECUCION_HASTA_2026-10-02.md).
+VIS-01–03 y DEC-01–05 no se activan por consultarlas: comprobar primero la
+implementación/decisión posterior y una solicitud vigente.
+Las [sesiones previas](archive/CONTINUACION_HASTA_2026-10-02.md) contienen la
+evidencia fechada original. Índice general: [docs/README.md](README.md).

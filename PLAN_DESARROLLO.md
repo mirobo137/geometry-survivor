@@ -2,9 +2,9 @@
 
 > Estado: vertical slice funcional; prioridades de expansión revisadas y fijadas en la sección 16.
 >
-> **Continuación vigente — 04-09-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
+> **Continuación vigente — 02-10-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La auditoría de recursos de §22.18 antecede al cierre de publicación. La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
 >
-> Fecha de revisión de documentación externa: 2026-09-03.
+> Revisión externa base: 2026-09-03; Node/Vite, recursos Pixi y requisitos de publicación reconsultados el 2026-10-02 en la auditoría enlazada desde §22.18.
 >
 > Fuente de visión: [proyecto.md](proyecto.md). Si ambos documentos difieren, este archivo manda en decisiones de ejecución y `proyecto.md` manda en la visión del juego.
 
@@ -3727,3 +3727,33 @@ El 29-09-2026 el usuario aplaza las pruebas humanas del Laboratorio para
 retomarlas después. Conservar implementación y resultados automáticos; la
 aceptación manual sigue pendiente según el
 [recordatorio del contrato V2](docs/design/LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).
+
+## 22.18 Auditoría de recursos y documentación — 02-10-2026
+
+Por solicitud del usuario se revisaron Node/Vite, carga tardía, retención de recursos
+y riesgos prepublicación. El dictamen, evidencia, límites y regresiones están en
+[AUDITORIA_RECURSOS_2026-10-02](docs/audits/AUDITORIA_RECURSOS_2026-10-02.md).
+Es una entrega de diagnóstico: **no se corrigió código de producción ni se aprobó
+publicación**. El nuevo script de QA no forma parte del runtime del juego.
+
+No se reprodujo el crecimiento extremo del servidor con Node 24.19.0 y el watcher
+actual; una repetición breve no descarta fugas de larga duración ni demuestra el
+disparador histórico. Sí se confirmó readiness visual incompleta: Inicio revela
+arte pendiente, los menús cargan al abrir y los poderes solicitan recursos en su
+primer render. También se reprodujo recuperación incompleta de audio después del
+unlock inicial. No confundir estas condiciones con una fuga por disparo o reinicio.
+
+Antes del cierre premium, abordar RES-01/02 (preparación selectiva), RES-03 (menús/
+cartas) y RES-05 (audio); resolver la duplicación RES-04 al unificar la adquisición.
+Después medir y reducir costes RES-06/07/09 y observar sesiones largas. RES-08 sólo
+exige destroy reutilizable cuando exista desmontaje/remontaje real. Cada corrección
+debe registrar escenario, regresión y comparación antes/después en el informe.
+
+EX-09 sigue pendiente: los tres targets usan LocalPlatform y no se certificaron
+SDKs reales, inglés/i18n ni QA de portales. Se conserva el balance aprobado en
+§22.16 y la aceptación humana aplazada del Laboratorio; esta auditoría no los reabre
+ni los sustituye. No agregar contenido o infraestructura ajena a esos consumidores.
+
+CONTINUACION y la guía operativa se compactaron conservando íntegros sus históricos
+en docs/archive. [docs/README.md](docs/README.md) distingue contratos activos,
+evidencia fechada y propuestas; no ejecutar los archivos archivados como pendientes.

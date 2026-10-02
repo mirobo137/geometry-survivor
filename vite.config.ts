@@ -15,7 +15,20 @@ export default defineConfig(({ mode }) => {
       __BUILD_TARGET__: JSON.stringify(target)
     },
     server: {
-      host: true
+      host: true,
+      watch: {
+        // All platform outputs must be excluded, not only the active outDir.
+        // Rebuilding another target must not reload the game or watch generated files.
+        ignored: [
+          '**/dist/**',
+          '**/coverage/**',
+          '**/playwright-report/**',
+          '**/test-results/**',
+          '**/.tmp/**',
+          '**/tmp/**',
+          '**/.kilo/**'
+        ]
+      }
     }
   };
 });

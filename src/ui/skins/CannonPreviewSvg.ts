@@ -1,11 +1,12 @@
 import { getCannonSkinDefinition } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
-import { CANNON_SKIN_RASTER_ART, LINKED_CANNON_LAYOUT, PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
+import { CANNON_SKIN_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
 import { PROJECTILE_MUZZLE_OFFSETS } from '../../content/weapons/WeaponDefinitions';
 import { CANNON_PROJECTILE_SVG, extractSvgGraphicMarkup } from '../../assets/svg/cannons/CannonSvgMarkup';
 
 export interface CannonPreviewOptions {
   readonly animated?: boolean;
+  readonly layout?: 'thumbnail' | 'modal';
 }
 
 const toHex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
@@ -24,44 +25,42 @@ const roundTripSkin = (skin: CannonSkinId): keyof typeof CANNON_PROJECTILE_SVG =
   skin === 'spearhead' ? 'basic' : skin
 );
 
-/** Preview the actual linked PNG modules, with their saved projectile/trail package. */
+/** Isolated cannon PNG modules with their projectile/trail package; no hull or cables. */
 export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPreviewOptions = {}): string => {
   const definition = getCannonSkinDefinition(skin);
   const animated = options.animated !== false;
   const animationClass = animated ? ' is-animated' : ' is-static';
   const accent = toHex(definition.accent);
-  const ship = PLAYER_SHIP_RASTER_ART.spearhead;
   const cannon = CANNON_SKIN_RASTER_ART[skin];
   const bullet = extractSvgGraphicMarkup(CANNON_PROJECTILE_SVG[roundTripSkin(skin)]);
-  const cable = PROJECTILE_MUZZLE_OFFSETS.map((muzzle, index) => {
-    const side = index === 0 ? -1 : 1;
-    const rear = muzzle.y + cannon.height * (cannon.cableAnchorY - cannon.anchorY);
-    return `<path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#304451" stroke-width="2.7"/><path d="M${side * LINKED_CANNON_LAYOUT.cablePortX} ${LINKED_CANNON_LAYOUT.cablePortY}Q${side * 20} 13 ${muzzle.x} ${rear}" fill="none" stroke="#75d9eb" stroke-width=".7"/>`;
-  }).join('');
-  const shots = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => {
-    const body = `<g transform="translate(${muzzle.x} -46) rotate(-90)">${bullet}</g>`;
+  // Cards use one horizontal sample; the modal retains the paired firing package.
+  const thumbnail = options.layout === 'thumbnail';
+  const muzzles = thumbnail ? [{ x: 0, y: -11 }] : PROJECTILE_MUZZLE_OFFSETS;
+  const shots = muzzles.map(muzzle => {
+    const body = `<g class="cannon-preview-projectile" transform="translate(${muzzle.x} -46) rotate(-90)">${bullet}</g>`;
     return animated
       ? `<g class="cannon-preview-shot">${body}</g>`
       : `<g>${body}</g>`;
   }).join('');
-  const trails = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => trailMarkup(skin, muzzle.x, accent)).join('');
+  const trails = muzzles.map(muzzle => trailMarkup(skin, muzzle.x, accent)).join('');
   const muzzleFlashes = animated
-    ? PROJECTILE_MUZZLE_OFFSETS.map(muzzle => `<circle class="cannon-preview-muzzle-flash" cx="${muzzle.x}" cy="-11" r="3.5" fill="${accent}"/>`).join('')
+    ? muzzles.map(muzzle => `<circle class="cannon-preview-muzzle-flash" cx="${muzzle.x}" cy="-11" r="3.5" fill="${accent}"/>`).join('')
     : '';
-  const cannonImages = PROJECTILE_MUZZLE_OFFSETS.map(muzzle => (
+  const cannonImages = muzzles.map(muzzle => (
     `<image href="${cannon.url}" x="${muzzle.x - cannon.width * cannon.anchorX}" y="${muzzle.y - cannon.height * cannon.anchorY}" width="${cannon.width}" height="${cannon.height}" preserveAspectRatio="none"/>`
   )).join('');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-45 -53 90 97" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
+  const viewBox = thumbnail ? '-22 -22 92 44' : '-45 -64 90 91';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
+  <g${thumbnail ? ' transform="rotate(90)"' : ''}>
   <g class="cannon-preview-scene${animationClass}">
     <g class="cannon-preview-routes">${trails}</g>
     ${shots}
     <g class="cannon-preview-craft">
-      <g class="cannon-preview-cables">${cable}</g>
-      <image href="${ship.url}" x="-28" y="-32" width="56" height="64" preserveAspectRatio="none"/>
       ${cannonImages}
       ${muzzleFlashes}
     </g>
+  </g>
   </g>
 </svg>`;
 };

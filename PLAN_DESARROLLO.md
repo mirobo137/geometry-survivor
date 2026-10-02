@@ -549,12 +549,16 @@ Prueba adicional autorizada de nave/cañones vinculados: adaptar la nave de
 portada a un único PNG completo (propulsor integrado) y dos módulos PNG unidos
 por cables visuales. La versión de casco/propulsor separados queda sustituida
 por petición del usuario; cañones/cables conservan su tratamiento aprobado.
-Opt-in `?ship-preview=tether`; no es una migración del catálogo ni del guardado.
+Atajo de prueba `?ship-preview=tether`; fuerza Ivory Spear sin cambiar el guardado.
 Mantiene hitbox, apuntado y bocas de disparo actuales; sin física de cuerda.
 El usuario aprueba la nave de UNA imagen y autoriza migrar todas las naves y
-cañones a PNG en la próxima sesión, conservando guardados/IDs y elección de
-cañón. En esta entrega sólo añadir Ivory Spear (`spearhead`) GRATIS/equipable;
-no ejecutar aún la migración completa. Guía vigente:
+cañones a PNG, conservando guardados/IDs y elección de cañón. La migración de
+ocho naves y ocho cañones llegó a `main` en `e22d837` (01-10-2026); Ivory Spear
+(`spearhead`) y su cañón son gratuitos. Ajuste solicitado tras la auditoría:
+tarjetas/modales de Naves muestran sólo el casco completo; Cañones muestra sólo
+los módulos con disparos y estelas, sin nave ni cables. Los previews conservan
+las proporciones lógicas de combate y se escalan sin recortar al cambiar tamaño.
+Esto no altera cañones/cables de la partida. Guía vigente:
 [Naves PNG](docs/design/NAVES_PNG.md). Contrato, prompts, carga, coste y rutas:
 [Nave vinculada](src/assets/skins/tethered/README.md).
 Evaluar después la nave equipada como arte del menú y propulsión localizada;

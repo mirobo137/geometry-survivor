@@ -7,9 +7,11 @@ describe('CannonPreviewSvg', () => {
   it('uses each production cannon PNG and the original projectile package in its preview', () => {
     for (const definition of CANNON_SKIN_DEFINITIONS) {
       const svg = createCannonPreviewSvg(definition.id);
-      expect(svg).toContain('viewBox="-45 -53 90 97"');
+      expect(svg).toContain('viewBox="-45 -64 90 91"');
       expect(svg).toContain(`href="${CANNON_SKIN_RASTER_ART[definition.id].url}"`);
-      expect(svg).toContain(`href="${PLAYER_SHIP_RASTER_ART.spearhead.url}"`);
+      expect(svg).not.toContain(`href="${PLAYER_SHIP_RASTER_ART.spearhead.url}"`);
+      expect(svg.match(/<image /g)).toHaveLength(2);
+      expect(svg).not.toContain('cannon-preview-cables');
       expect(svg.match(/class="cannon-preview-shot"/g)).toHaveLength(2);
       expect(svg).toContain('cannon-preview-muzzle-flash');
       expect(svg).not.toMatch(/<script|filter=|mask=/i);
@@ -17,10 +19,22 @@ describe('CannonPreviewSvg', () => {
   });
 
   it('can render a quiet card thumbnail without animation', () => {
-    const svg = createCannonPreviewSvg('rainbow', { animated: false });
+    const svg = createCannonPreviewSvg('rainbow', { animated: false, layout: 'thumbnail' });
+    expect(svg).toContain('viewBox="-22 -22 92 44"');
+    expect(svg).toContain('transform="rotate(90)"');
+    expect(svg.match(/<image /g)).toHaveLength(1);
+    expect(svg.match(/class="cannon-preview-projectile"/g)).toHaveLength(1);
     expect(svg).toContain('is-static');
     expect(svg).not.toContain('cannon-preview-shot');
     expect(svg).toContain('#ff668f');
+    expect(svg).not.toContain('cannon-preview-muzzle-flash');
+  });
+
+  it('keeps two vertical cannons in a reduced-motion modal', () => {
+    const svg = createCannonPreviewSvg('basic', { animated: false });
+    expect(svg).toContain('viewBox="-45 -64 90 91"');
+    expect(svg).not.toContain('transform="rotate(90)"');
+    expect(svg.match(/<image /g)).toHaveLength(2);
     expect(svg).not.toContain('cannon-preview-muzzle-flash');
   });
 
@@ -31,10 +45,10 @@ describe('CannonPreviewSvg', () => {
     expect(svg).not.toContain('cannon-preview-trail-curve');
   });
 
-  it('orders cables, the Ivory Spear hull, and the real linked cannon images', () => {
+  it('isolates the two real cannon images without a hull or dangling cables', () => {
     const svg = createCannonPreviewSvg('basic');
-    expect(svg.indexOf('cannon-preview-cables')).toBeLessThan(svg.indexOf(`href="${PLAYER_SHIP_RASTER_ART.spearhead.url}"`));
-    expect(svg.indexOf(`href="${PLAYER_SHIP_RASTER_ART.spearhead.url}"`)).toBeLessThan(svg.indexOf(`href="${CANNON_SKIN_RASTER_ART.basic.url}"`));
+    expect(svg).not.toContain('cannon-preview-cables');
+    for (const ship of Object.values(PLAYER_SHIP_RASTER_ART)) expect(svg).not.toContain(ship.url);
     expect(svg.match(new RegExp(`href="${CANNON_SKIN_RASTER_ART.basic.url}"`, 'g'))).toHaveLength(2);
   });
 });

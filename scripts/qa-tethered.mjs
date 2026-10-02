@@ -10,7 +10,7 @@ const inspect = () => {
   const nodes = [];
   const visit = node => { nodes.push(node); for (const c of node.children ?? []) visit(c); };
   visit(globalThis.__tetherQaApp.stage);
-  const root = nodes.find(n => n.label === 'tethered-ship-prototype');
+  const root = nodes.find(n => n.label === 'raster-player-skin');
   const part = label => root.children.find(n => n.label === label);
   const global = node => { const p = node.toGlobal({ x: 0, y: 0 }); return { x: p.x, y: p.y }; };
   return root && {
@@ -42,7 +42,7 @@ try {
         if (!r.ok()) errors.push('HTTP ' + r.status());
       }
     });
-    await page.goto('http://127.0.0.1:4173/?ship-preview=tether&act=radial&cannon=basic&skin=cyan&debug=1&quality=' + quality);
+    await page.goto('http://127.0.0.1:4173/?ship-preview=tether&act=radial&cannon=spearhead&skin=cyan&debug=1&quality=' + quality);
     await page.locator('#boot-status').waitFor({ state: 'hidden' });
     await page.waitForFunction(() => {
       let ready = false;
@@ -56,6 +56,7 @@ try {
     await page.waitForTimeout(700);
     await page.locator('#pause-toggle').click();
     const before = await page.evaluate(inspect);
+    assert(before, 'Raster player compositor was not found');
     assert(before.visible && before.count === 5);
     assert.equal(before.left.source, before.rightSource);
     assert.equal(pngs.size, 2);
@@ -87,20 +88,31 @@ try {
     console.log(JSON.stringify(results.at(-1)));
     await context.close();
   }
-  // Ordinary routes must never download the opt-in art. Failure keeps vector hull/guns.
+  // Ordinary skins also use PNG now. A failed equipped asset keeps vector hull/guns.
   for (const failure of [false, true]) {
     const context = await browser.newContext();
     await context.addInitScript(() => { globalThis.__PIXI_APP_INIT__ = app => { globalThis.__tetherQaApp = app; }; });
     const page = await context.newPage();
     const pngs = [];
-    page.on('request', r => { if (/tether-(ship|cannon)-.*\.png/.test(r.url())) pngs.push(r.url()); });
+    page.on('request', r => { if (/(cyan|tether-ship|tether-cannon)-.*\.png/.test(r.url())) pngs.push(r.url()); });
     if (failure) await page.route('**/tether-cannon-*.png', r => r.abort());
-    await page.goto('http://127.0.0.1:4173/?act=radial&skin=cyan' + (failure ? '&ship-preview=tether' : ''));
+    await page.goto('http://127.0.0.1:4173/?act=radial&skin=cyan&cannon=spearhead' + (failure ? '&ship-preview=tether' : ''));
     await page.locator('#boot-status').waitFor({ state: 'hidden' });
     await page.waitForTimeout(350);
-    if (!failure) assert.equal(pngs.length, 0);
+    if (!failure) {
+      await page.waitForFunction(() => {
+        const visit = n => n.label === 'raster-player-skin' && n.visible
+          || (n.children ?? []).some(visit);
+        return globalThis.__tetherQaApp && visit(globalThis.__tetherQaApp.stage);
+      });
+      const ordinary = await page.evaluate(inspect);
+      assert(ordinary?.visible, 'Ordinary ship did not load its PNG compositor');
+      assert.match(ordinary.left.source, /tether-cannon-/);
+      assert.equal(pngs.length, 2);
+    }
     else {
       const failed = await page.evaluate(inspect);
+      assert(failed, 'Raster fallback compositor was not found');
       assert.equal(failed.visible, false);
       assert.equal(failed.fallbackVisible, true);
     }

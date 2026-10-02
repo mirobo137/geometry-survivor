@@ -31,8 +31,7 @@ test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y ca
   expect(mantaAlignment.width).toBeLessThan(1);
   expect(mantaAlignment.center).toBeLessThan(1);
   await expect.poll(() => page.locator('#start-cosmetic-preview img').evaluateAll(images =>
-    images.length === 3 && images.filter(image => (image as HTMLImageElement).naturalWidth === 256).length === 1
-      && images.filter(image => (image as HTMLImageElement).naturalWidth === 128).length === 2
+    images.length === 1 && (images[0] as HTMLImageElement).naturalWidth === 256
   )).toBe(true);
   await page.locator('#start-cosmetic-preview').screenshot({ path: testInfo.outputPath('manta-preview.png') });
   expect(new Set(textures).size).toBe(2);
@@ -246,7 +245,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Eclipse Prism');
-  await expect(page.locator('#start-cosmetic-preview svg')).toBeVisible();
+  await expect(page.locator('#start-cosmetic-preview .tethered-preview-ship')).toBeVisible();
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('#start-cosmetic-close').click();
   await expect(page.locator('#start-cosmetic-dialog')).toBeHidden();
@@ -281,7 +280,7 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Arc Needle');
-  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg image')).toHaveCount(3);
+  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg image')).toHaveCount(2);
   await page.mouse.click(2, 2);
   await expect(page.locator('#start-cosmetic-dialog')).toBeHidden();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);

@@ -25,6 +25,99 @@ export const readRasterPlayerArt = (page: Page) => page.evaluate(() => {
 });
 
 export const registerTetheredShipChecks = (): void => {
+  test('previews separados conservan proporción y encuadre al cambiar de tamaño', async ({ page }, testInfo) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/?quality=low');
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await page.locator('#start-skins').click();
+    // Cover the full matrix across projects without duplicating expensive UI traversal.
+    const viewports = testInfo.project.name === 'mobile'
+      ? [{ width: 320, height: 568 }, { width: 390, height: 844 }]
+      : [{ width: 800, height: 450 }, { width: 1280, height: 720 }];
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.locator('#start-player-skins-tab').click();
+      const cards = await page.locator('.skin-card-art').evaluateAll(artworks => artworks.map(artwork => {
+        const image = artwork.querySelector('img')!;
+        const frame = artwork.getBoundingClientRect();
+        const hull = image.getBoundingClientRect();
+        return { images: artwork.querySelectorAll('img').length, ratio: hull.width / hull.height,
+          inside: hull.left >= frame.left - 1 && hull.right <= frame.right + 1
+            && hull.top >= frame.top - 1 && hull.bottom <= frame.bottom + 1 };
+      }));
+      expect(cards).toHaveLength(8);
+      for (const card of cards) {
+        expect(card.images).toBe(1);
+        expect(card.ratio).toBeCloseTo(56 / 64, 2);
+        expect(card.inside).toBe(true);
+      }
+      await page.locator('.skin-card[data-skin="manta"] button').click();
+      const preview = page.locator('#start-cosmetic-preview');
+      await expect(preview.locator('img')).toHaveCount(1);
+      await expect(preview.locator('svg, .tethered-preview-gun')).toHaveCount(0);
+      await expect.poll(() => preview.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBe(256);
+      const layout = await preview.evaluate(element => {
+        const frame = element.getBoundingClientRect();
+        const hull = element.querySelector('img')!.getBoundingClientRect();
+        return { ratio: hull.width / hull.height,
+          center: Math.abs(frame.left + frame.width / 2 - hull.left - hull.width / 2),
+          inside: hull.left >= frame.left && hull.right <= frame.right
+            && hull.top >= frame.top && hull.bottom <= frame.bottom };
+      });
+      expect(layout.ratio).toBeCloseTo(56 / 64, 2);
+      expect(layout.center).toBeLessThan(1);
+      expect(layout.inside).toBe(true);
+      if (!process.env.CI && viewport.width === 390) await preview.screenshot({ path: testInfo.outputPath('ship-only.png') });
+      await page.locator('#start-cosmetic-close').click();
+      await page.locator('#start-cannon-skins-tab').click();
+      await expect(page.locator('.cannon-card-art svg image')).toHaveCount(8);
+      const thumbnails = await page.locator('.cannon-card-art').evaluateAll(artworks => artworks.map(artwork => {
+        const frame = artwork.getBoundingClientRect();
+        const cannon = artwork.querySelector('image')!.getBoundingClientRect();
+        const shot = artwork.querySelector('.cannon-preview-projectile')!.getBoundingClientRect();
+        return { images: artwork.querySelectorAll('image').length,
+          shots: artwork.querySelectorAll('.cannon-preview-projectile').length,
+          ratio: cannon.width / cannon.height,
+          firesRight: shot.left + shot.width / 2 > cannon.left + cannon.width / 2,
+          inside: [cannon, shot].every(box => box.left >= frame.left - 1 && box.right <= frame.right + 1
+            && box.top >= frame.top - 1 && box.bottom <= frame.bottom + 1) };
+      }));
+      for (const thumbnail of thumbnails) {
+        expect(thumbnail.images).toBe(1);
+        expect(thumbnail.shots).toBe(1);
+        expect(thumbnail.ratio).toBeCloseTo(26 / 20, 2);
+        expect(thumbnail.firesRight).toBe(true);
+        expect(thumbnail.inside).toBe(true);
+      }
+      if (!process.env.CI && (viewport.width === 390 || viewport.width === 1280)) {
+        await page.screenshot({ path: testInfo.outputPath('horizontal-cannon-cards.png') });
+      }
+      await page.locator('.cannon-card[data-cannon="curve"] button').click();
+      await expect(preview.locator('svg image')).toHaveCount(2);
+      const cannons = await preview.locator('svg image').evaluateAll(images => images.map(image => {
+        const box = image.getBoundingClientRect();
+        return { url: image.getAttribute('href'), ratio: box.width / box.height };
+      }));
+      for (const cannon of cannons) {
+        expect(cannon.url).toContain('curve');
+        expect(cannon.ratio).toBeCloseTo(20 / 26, 2);
+      }
+      await expect(preview.locator('.cannon-preview-cables')).toHaveCount(0);
+      expect(await preview.evaluate(element => {
+        const frame = element.getBoundingClientRect();
+        return [...element.querySelectorAll('.cannon-preview-projectile')].every(projectile => {
+          const box = projectile.getBoundingClientRect();
+          return box.left >= frame.left && box.right <= frame.right
+            && box.top >= frame.top && box.bottom <= frame.bottom;
+        });
+      })).toBe(true);
+      if (!process.env.CI && viewport.width === 390) await preview.screenshot({ path: testInfo.outputPath('cannons-only.png') });
+      await page.locator('#start-cosmetic-close').click();
+    }
+    expect(errors).toEqual([]);
+  });
   test('Ivory Spear se equipa gratis en skins y persiste sin URL de prototipo', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const errors: string[] = [];
@@ -40,7 +133,7 @@ export const registerTetheredShipChecks = (): void => {
     await expect(card).toContainText('GRATIS');
     await card.locator('button').click();
     await expect(page.locator('#start-cosmetic-title')).toHaveText('Ivory Spear');
-    await expect(page.locator('#start-cosmetic-preview img')).toHaveCount(3);
+    await expect(page.locator('#start-cosmetic-preview img')).toHaveCount(1);
     await expect.poll(() => page.locator('#start-cosmetic-preview img').evaluateAll(images => images.every(node => {
       const image = node as HTMLImageElement;
       return image.complete && image.naturalWidth > 0;

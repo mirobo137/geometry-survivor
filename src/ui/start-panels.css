@@ -523,6 +523,7 @@
 .cosmetic-dialog-stage {
   position: relative;
   display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
   height: clamp(9rem, 30dvh, 15rem);
   overflow: hidden;
@@ -533,11 +534,12 @@
 }
 .cosmetic-dialog-stage .skin-preview,
 .cosmetic-dialog-stage .cannon-preview,
-.cosmetic-dialog-stage .cosmetic-background-frame { width: 100%; height: 100%; }
+.cosmetic-dialog-stage .cosmetic-background-frame { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.cosmetic-dialog-stage .cannon-preview { grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
 .cosmetic-dialog-stage .skin-preview > svg,
 .cosmetic-dialog-stage .skin-preview > .tethered-preview { width: min(72%, 13rem); }
 .cosmetic-dialog-stage .manta-preview > svg { width: 100%; height: 100%; }
-.cosmetic-dialog-stage .cannon-preview svg { width: min(94%, 30rem); }
+.cosmetic-dialog-stage .cannon-preview svg { width: min(94%, 30rem); min-width: 0; min-height: 0; }
 
 .cosmetic-dialog-copy { display: grid; gap: .28rem; min-width: 0; }
 .cosmetic-dialog-copy h3 { margin: 0; font-size: clamp(1.35rem, 5vw, 1.85rem); line-height: 1.1; }

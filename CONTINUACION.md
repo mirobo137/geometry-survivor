@@ -1,13 +1,34 @@
 # Geometry Survivor — estado y continuación
 
-## Estado actual: flota PNG completa para revisión visual — 01-10-2026
+## Estado actual: mitigación de memoria Node/Vite — 02-10-2026
 
-Solicitud vigente: leer el diseño de skins y Ivory Spear, crear siete naves y
-siete cañones originales, reemplazar las ilustraciones anteriores, mostrar los
-ocho elementos en cada pestaña, verificar el juego y preparar capturas antes de
-pasar cambios a `main`.
+Solicitud vigente: ejecutar los pasos de mitigación tras la auditoría de memoria.
+Node global actualizado a 24.19.0 LTS / libuv 1.52.1, sin tocar runtimes de Codex.
+`vite.config.ts` excluye todos los outputs de plataformas, reportes y temporales
+del watcher. `.node-version` y README documentan el runtime; no instalar versiones
+antiguas por las instrucciones históricas de este snapshot.
 
-Implementación local completa en `codex/fix-naves-png-smoke`. Ocho naves PNG
+Guía y evidencia: [VITE_MEMORY](docs/performance/VITE_MEMORY.md).
+Diagnóstico acotado: `node scripts/qa-vite-memory.mjs --watch=fixed --seconds=180 --builds`.
+Comparaciones original/corregida/off sobre Node 24 pasaron; el caso ampliado
+terminó con 149.54 MiB RSS y muestras de memoria privada estables en 184.86 MiB
+tras la recarga de config. Esto no certifica horas ni demuestra el disparador
+histórico exacto. Typecheck, 120 archivos / 578 unitarios y builds de tres targets
+pasaron. Sólo se comprobaron sesiones de menú, no la suite browser completa.
+
+El Vite antiguo PID 1588 fue detenido con permiso. Todos los procesos de prueba
+se cerraron y 5173/5175 quedaron apagados; el estado «servidor iniciado» de abajo
+es histórico. Para probar, usar `npm run dev` con `node --version` en v24.
+No se hizo commit/push; se conservan los cambios locales de previews anteriores.
+
+## Estado anterior: flota PNG en main y corrección de previews — 01-10-2026
+
+Solicitud anterior: corregir los hallazgos de la auditoría del pull, mostrar
+sólo naves en Naves y sólo cañones en Cañones, y dejar Vite local para probar.
+No hay autorización de commit/push en esta entrega.
+
+Migración recibida en `main` mediante pull fast-forward `73a00c8 → e22d837`.
+Los commits nuevos fueron `adaa683` y `e22d837`. Ocho naves PNG
 RGBA completas, cada una de 256×256; ocho PNG de cañón de 128×128. Ivory Spear y
 sus cañones originales son las entradas base gratuitas. Se conservan IDs,
 precios, selecciones y desbloqueos anteriores. Guardados viejos reciben la
@@ -15,34 +36,56 @@ nave/cañón gratis sin cambiar su elección ni actualizar el schema.
 
 El mismo compositor carga la nave y los dos cañones seleccionados; sólo una
 textura por modelo equipado se comparte por ambos cañones y por el flash. El
-locker y los modales muestran esos PNG. Las siluetas SVG anteriores no se
+locker y los modales muestran esos PNG. El ajuste local separa los previews:
+Naves sólo casco completo; Cañones sólo módulos, disparos y estelas. Ninguna
+de las dos categorías incluye cables sueltos. La nave DOM conserva proporción
+56/64 y límites de ancho/alto para no sobresalir de tarjetas estrechas. El
+ensamblaje con cañones/cables en gameplay permanece intacto.
+Por solicitud posterior, las tarjetas de Cañones usan un solo cañón y un
+disparo/estela horizontal, sin recortes; el modal conserva los dos módulos
+verticales. La composición se elige explícitamente, no por reduced-motion.
+Este ajuste pasó typecheck, 8 unitarios, build local y 3 smoke enfocados;
+capturas PC/móvil revisadas y encuadre de las ocho miniaturas en cuatro tamaños.
+Las siluetas SVG anteriores no se
 usaron para diseñar la nueva flota; sólo se consultaron sus paletas. Sin cambios
 de combate, hitbox o slots. Guía canónica: [NAVES_PNG](docs/design/NAVES_PNG.md);
 prompts completos y procedencia: `scripts/fleet-skin-image-sources.json`.
 
-Assets nuevos: 741,025 bytes (~723.7 KiB); las dos texturas activas son 320 KiB
+Catálogo raster: 741,025 bytes (~723.7 KiB); las dos texturas activas son 320 KiB
 RGBA8 teóricos. Esto no equivale a medición de FPS/VRAM total.
 
-Verificación: `npm run build:local` pasó (typecheck, 120 archivos y 577 tests,
-compilación local; permanece la advertencia conocida de chunk JS mayor de
-500 kB). Pasaron los smoke de las ocho parejas de nave/cañón en partida high,
-Manta en low/high, selección y persistencia de naves/cañones, cañón gratuito
-rewarded, Ivory Spear base con pausa/resize/reinicio, locker portrait y
-alineación móvil. `git diff --check` pasó.
+Auditoría antes del ajuste: typecheck, 120 archivos / 577 tests, 19 smoke
+enfocados (desktop/móvil emulado), builds local/Poki/CrazyGames y diff check.
+Advertencia preexistente de chunk JS >500 kB. No se ejecutó toda la suite ni
+se midió rendimiento en móvil físico. El ajuste incorpora regresiones para
+proporción, aislamiento y encuadre en cuatro tamaños.
 
-Playwright no pudo descargar su Chromium porque el CDN devolvió HTTP 403; estas
-pruebas usaron `/usr/bin/chromium` mediante una configuración local temporal,
-ya eliminada. La pasada amplia de 79 smoke no terminó: detectó expectativas
-viejas de guardados/selectores (corregidas y repetidas con éxito) y luego
-timeouts/stream en escenarios generales de Laboratorio/Overdrive ajenos al
-locker. No se reporta esa pasada como suite completa.
+Validación del ajuste en Windows: typecheck, 577 pruebas en 120 archivos y los
+tres builds pasaron. Pasada enfocada: 11 smoke de skins, compras, persistencia,
+pausa/resize/reinicio y locker portrait. Tras revisar capturas, se añadió margen
+para no cortar los proyectiles del preview de cañones y se corrigió el mínimo
+intrínseco del grid en modales bajos. Repetición final: 3 smoke verdes (previews
+desktop/móvil y compra/guardado de fondos); 7 unitarios de previews repetidos.
+Diagnóstico `qa-tethered.mjs`: cuatro sesiones Low/High desktop/móvil y dos
+casos de carga normal/fallida pasaron. No equivale a la suite browser completa.
+Vite dev queda iniciado en `http://localhost:5173/`, con raíz del proyecto y
+acceso LAN; no se hizo commit, push ni despliegue.
+
+El problema de descarga Chromium HTTP 403 correspondía al entorno remoto.
+La auditoría local de Windows utilizó el Chromium normal de Playwright, sin
+configuración alternativa. La suite amplia remota de 79 smoke no terminó;
+no se presenta ni esa ejecución ni el subconjunto local como suite completa.
 
 Capturas revisadas: `test-results/skin-refresh/ships-contact.png`,
 `cannons-contact.png`, `ships-locker.png`, `cannons-locker.png` y
 `combat-manta-bloom.png`.
 
-Sin commit, push ni publicación. La revisión de arte/código de la persona usuaria
-queda pendiente; no pasar a `main` hasta recibir esa revisión.
+Correcciones locales aún sin commit/push; la migración anterior sí está en main.
+La revisión visual del nuevo encuadre y móvil físico queda para el usuario.
+`scripts/qa-tethered.mjs` actualizado al nodo `raster-player-skin`, cañón de
+prueba explícito y carga PNG normal; conserva pausa/resize/reinicio y fallback.
+Ejecutar contra preview en 4173 después de Playwright. Shaders, nave elegida
+en portada, nueva derrota y pruebas humanas del Laboratorio siguen pendientes.
 
 ## Prueba de nave y cañones vinculados — 30-09-2026
 

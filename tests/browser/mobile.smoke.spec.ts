@@ -147,10 +147,10 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
     preview: 'none',
     previewAnimated: true,
     previewCraft: 'tethered-preview-float',
-    previewImages: [256, 128, 128],
+    previewImages: [256],
     cardPreviewStatic: true,
     cardCraft: 'none',
-    cardImages: 3
+    cardImages: 1
   });
   const modalBounds = await page.locator('#start-cosmetic-dialog').evaluate(dialog => {
     const rect = dialog.getBoundingClientRect();
@@ -254,25 +254,27 @@ test('mantiene estática la vista previa de fondo en calidad low', async ({ page
     getComputedStyle(element).animationName)).toBe('none');
 });
 
-test('mantiene alineadas la nave y los cañones PNG de Manta en móvil', async ({ page }, testInfo) => {
+test('mantiene centrada y sin deformación la nave PNG de Manta en móvil', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/?quality=medium');
   await page.locator('#start-skins').click();
   await page.locator('.skin-card[data-skin="manta"] button').click();
   await expect.poll(() => page.locator('#start-cosmetic-preview img').evaluateAll(images => images.map(image => (image as HTMLImageElement).naturalWidth)))
-    .toEqual([256, 128, 128]);
+    .toEqual([256]);
   const alignment = await page.locator('#start-cosmetic-preview .tethered-preview').evaluate(element => {
     const frame = element.getBoundingClientRect();
     const craft = element.querySelector('.tethered-preview-craft')!.getBoundingClientRect();
     const hull = element.querySelector('.tethered-preview-ship')!.getBoundingClientRect();
     return {
       x: Math.abs(frame.x - craft.x), width: Math.abs(frame.width - craft.width),
-      center: Math.abs(frame.x + frame.width / 2 - hull.x - hull.width / 2)
+      center: Math.abs(frame.x + frame.width / 2 - hull.x - hull.width / 2),
+      ratio: hull.width / hull.height
     };
   });
   expect(alignment.x).toBeLessThan(1);
   expect(alignment.width).toBeLessThan(1);
   expect(alignment.center).toBeLessThan(1);
+  expect(alignment.ratio).toBeCloseTo(56 / 64, 2);
   if (!process.env.CI) await page.locator('#start-cosmetic-preview').screenshot({ path: testInfo.outputPath('manta-modal-mobile.png') });
 });
 

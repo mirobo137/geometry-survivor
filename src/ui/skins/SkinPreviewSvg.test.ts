@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { PLAYER_SKIN_DEFINITIONS } from '../../content/visual/SkinDefinitions';
-import { CANNON_SKIN_RASTER_ART, PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
+import { PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 
 describe('SkinPreviewSvg', () => {
-  it('shows the equipped ship PNG and two instances of the same base cannon PNG', () => {
+  it('shows only the equipped ship PNG using its combat aspect ratio', () => {
     const card = createPlayerSkinPreviewSvg('spearhead');
     const selected = createPlayerSkinPreviewSvg('spearhead', { animated: true });
     const images = [...card.matchAll(/<img[^>]*src="([^"]+)"/g)].map(match => match[1]);
-    expect(images).toHaveLength(3);
+    expect(images).toHaveLength(1);
     expect(images[0]).toBe(PLAYER_SHIP_RASTER_ART.spearhead.url);
-    expect(images[1]).toBe(CANNON_SKIN_RASTER_ART.spearhead.url);
-    expect(images[1]).toBe(images[2]);
+    expect(card).toContain('--ship-preview-aspect: 56 / 64');
+    expect(card).not.toMatch(/tethered-preview-gun|<svg|<path/);
     expect(card).toContain('is-static');
     expect(selected).toContain('is-animated');
     expect(selected).not.toMatch(/tether-engine|tether-hull|<script/);
@@ -24,10 +24,9 @@ describe('SkinPreviewSvg', () => {
       const card = createPlayerSkinPreviewSvg(definition.id);
       const preview = createPlayerSkinPreviewSvg(definition.id, { animated: true });
       const images = [...card.matchAll(/<img[^>]*src="([^"]+)"/g)].map(match => match[1]);
-      expect(images).toHaveLength(3);
+      expect(images).toHaveLength(1);
       expect(images[0]).toBe(PLAYER_SHIP_RASTER_ART[definition.id].url);
-      expect(images[1]).toBe(CANNON_SKIN_RASTER_ART.spearhead.url);
-      expect(images[1]).toBe(images[2]);
+      expect(card).not.toMatch(/tethered-preview-gun|<svg|<path/);
       expect(card).toContain('is-static');
       expect(preview).toContain('is-animated');
       expect(card).not.toMatch(/<script|tether-engine|tether-hull/i);

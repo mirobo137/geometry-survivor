@@ -81,7 +81,7 @@ export class CannonSelectPanel {
       const art = document.createElement('span');
       art.className = 'cannon-card-art';
       art.setAttribute('aria-hidden', 'true');
-      art.insertAdjacentHTML('afterbegin', createCannonPreviewSvg(cannon.id, { animated: false }));
+      art.insertAdjacentHTML('afterbegin', createCannonPreviewSvg(cannon.id, { animated: false, layout: 'thumbnail' }));
       button.append(art);
 
       const copy = document.createElement('span');

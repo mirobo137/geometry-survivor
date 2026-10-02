@@ -6,7 +6,10 @@ Para retomar el desarrollo desde otra sesión o agente, consulta [CONTINUACION.m
 
 ## Arranque local
 
-Requiere Node.js 20+.
+Usar Node.js 24 LTS (versión de referencia en `.node-version`), como en CI.
+Este archivo indica la versión; no instala ni actualiza Node automáticamente.
+Evitar Node 22.14.0 en Windows: la auditoría local encontró crecimiento de memoria
+del servidor Vite. Ver [diagnóstico y medición](docs/performance/VITE_MEMORY.md).
 
 ```bash
 npm install

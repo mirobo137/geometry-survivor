@@ -59,4 +59,24 @@ describe('lazy arsenal texture ownership', () => {
     expect(image.onerror).toBeNull();
     expect(getArsenalTexture('recharging_shield')).toBe(Texture.WHITE);
   });
+
+  it('shares explicit preparation with lazy render and the magnetic pack', async () => {
+    const { getArsenalTexture, loadArsenalTexture, MAGNETIC_ART_IDS } = await import('./ArsenalTextures');
+    getArsenalTexture('magnetic_core');
+    const first = loadArsenalTexture('magnetic_core');
+    expect(loadArsenalTexture('magnetic_core')).toBe(first);
+    const all = Promise.all(MAGNETIC_ART_IDS.map(loadArsenalTexture));
+    expect(FakeImage.instances).toHaveLength(4);
+    for (const image of FakeImage.instances) await image.onload?.();
+    expect(await first).toBe(Texture.WHITE);
+    expect(await all).toEqual([Texture.WHITE, Texture.WHITE, Texture.WHITE, Texture.WHITE]);
+    expect(Texture.from).toHaveBeenCalledTimes(4);
+  });
+
+  it('prepares only the selected recipe with a finite deadline for a hanging image', async () => {
+    const { getWeaponArtIds, prepareArsenalTextures } = await import('./ArsenalTextures');
+    expect(getWeaponArtIds('chain', 'thunderhead')).toEqual(['thunderhead', 'magnetic_core', 'thunderhead_burst']);
+    await prepareArsenalTextures(['projectile', 'projectile'], 5);
+    expect(FakeImage.instances).toHaveLength(1);
+  });
 });

@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks({ includeDesktopViewport: false });
+registerResourceChecks();
 registerTetheredShipChecks();
 
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
@@ -23,10 +25,12 @@ test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ pag
   expect(skip!.y).toBeGreaterThanOrEqual(0);
   expect(skip!.x + skip!.width).toBeLessThanOrEqual(viewport!.width);
   expect(skip!.y + skip!.height).toBeLessThanOrEqual(viewport!.height);
-  if (!process.env.CI) await page.screenshot({ path: testInfo.outputPath('run-intro-mobile.png') });
   await skipButton.click();
   await expect(page.locator('#run-transition')).toBeHidden();
   await expect(page.locator('#pause-toggle')).toBeVisible();
+  // The intro expires on its own. A diagnostic screenshot before this click
+  // can outlast it on a slow renderer; capture only after the skip is verified.
+  if (!process.env.CI) await page.screenshot({ path: testInfo.outputPath('run-start-mobile.png') });
   expect(failures).toEqual([]);
 });
 

@@ -9,6 +9,7 @@ import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
+import { observeVisibleImages } from '../ImageReadiness';
 
 export interface CannonSelectPanelOptions {
   readonly state: CannonSkinSaveData;
@@ -49,6 +50,7 @@ export class CannonSelectPanel {
     this.walletHandler = options.onWalletChange;
     this.cards.scrollTop = 0;
     this.render();
+    observeVisibleImages(this.cards);
   }
 
   public close(): void {

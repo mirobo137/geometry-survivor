@@ -1,0 +1,1220 @@
+{
+  "node": "v24.19.0",
+  "schemaVersion": 2,
+  "scenarios": [
+    {
+      "kind": "cold-delayed-images",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "delayMsPerImage": 2000,
+      "samples": [
+        {
+          "phase": "boot-hidden",
+          "elapsedMs": 3788,
+          "images": [
+            {
+              "src": "orbital-sanctuary-BU5yY-wp.webp",
+              "ready": true,
+              "width": 1200
+            },
+            {
+              "src": "orbital-sanctuary-BU5yY-wp.webp",
+              "ready": true,
+              "width": 1200
+            },
+            {
+              "src": "survivor-core-zxyzJFcj.png",
+              "ready": true,
+              "width": 512
+            }
+          ]
+        },
+        {
+          "phase": "skins-open",
+          "elapsedMs": 6824,
+          "images": [
+            {
+              "src": "tether-ship-B8RBxf0R.png",
+              "ready": true,
+              "width": 256
+            }
+          ]
+        },
+        {
+          "phase": "skins-settled",
+          "elapsedMs": 9137,
+          "images": [
+            {
+              "src": "tether-ship-B8RBxf0R.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "cyan-D2xzJLoh.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "violet-CagowjQe.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "amber-CvYI48VI.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "emerald-CnbOz4G-.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "obsidian-Df5A7Dmd.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "nova-SotJ2V63.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "manta-B1MbLYNi.png",
+              "ready": true,
+              "width": 256
+            }
+          ]
+        },
+        {
+          "phase": "acts-open",
+          "elapsedMs": 9346,
+          "images": [
+            {
+              "src": "radial-0sqeETq6.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "angular-CTWt2OpA.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "fracture-DeAEIbKd.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "overdrive-B3AHZfq3.png",
+              "ready": false,
+              "width": 0
+            }
+          ]
+        },
+        {
+          "phase": "acts-settled",
+          "elapsedMs": 11658,
+          "images": [
+            {
+              "src": "radial-0sqeETq6.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "angular-CTWt2OpA.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "fracture-DeAEIbKd.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "overdrive-B3AHZfq3.png",
+              "ready": true,
+              "width": 160
+            }
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 1193
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 1194
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "orbital-sanctuary-BU5yY-wp.webp",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "act-radial-DRhDnFFR.webp",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "swift-step-C11CgeKO.webp",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 1195
+        },
+        {
+          "asset": "cyan-D2xzJLoh.png",
+          "elapsedMs": 6820
+        },
+        {
+          "asset": "violet-CagowjQe.png",
+          "elapsedMs": 6820
+        },
+        {
+          "asset": "amber-CvYI48VI.png",
+          "elapsedMs": 6821
+        },
+        {
+          "asset": "emerald-CnbOz4G-.png",
+          "elapsedMs": 6822
+        },
+        {
+          "asset": "obsidian-Df5A7Dmd.png",
+          "elapsedMs": 6822
+        },
+        {
+          "asset": "nova-SotJ2V63.png",
+          "elapsedMs": 6822
+        },
+        {
+          "asset": "manta-B1MbLYNi.png",
+          "elapsedMs": 6822
+        },
+        {
+          "asset": "orbital-gate-B2LWc4eg.webp",
+          "elapsedMs": 9336
+        },
+        {
+          "asset": "act-angular-DNWc1a9Z.webp",
+          "elapsedMs": 9336
+        },
+        {
+          "asset": "act-fracture-DG19rDfz.webp",
+          "elapsedMs": 9337
+        },
+        {
+          "asset": "act-overdrive-CvFf7z6k.webp",
+          "elapsedMs": 9337
+        },
+        {
+          "asset": "radial-0sqeETq6.png",
+          "elapsedMs": 9345
+        },
+        {
+          "asset": "angular-CTWt2OpA.png",
+          "elapsedMs": 9346
+        },
+        {
+          "asset": "fracture-DeAEIbKd.png",
+          "elapsedMs": 9346
+        },
+        {
+          "asset": "overdrive-B3AHZfq3.png",
+          "elapsedMs": 9346
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "cold-delayed-images",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "delayMsPerImage": 2000,
+      "samples": [
+        {
+          "phase": "boot-hidden",
+          "elapsedMs": 14976,
+          "images": [
+            {
+              "src": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+              "ready": true,
+              "width": 720
+            },
+            {
+              "src": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+              "ready": true,
+              "width": 720
+            },
+            {
+              "src": "survivor-core-zxyzJFcj.png",
+              "ready": true,
+              "width": 512
+            }
+          ]
+        },
+        {
+          "phase": "skins-open",
+          "elapsedMs": 17786,
+          "images": [
+            {
+              "src": "tether-ship-B8RBxf0R.png",
+              "ready": true,
+              "width": 256
+            }
+          ]
+        },
+        {
+          "phase": "skins-settled",
+          "elapsedMs": 20142,
+          "images": [
+            {
+              "src": "tether-ship-B8RBxf0R.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "cyan-D2xzJLoh.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "violet-CagowjQe.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "amber-CvYI48VI.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "emerald-CnbOz4G-.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "obsidian-Df5A7Dmd.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "nova-SotJ2V63.png",
+              "ready": true,
+              "width": 256
+            },
+            {
+              "src": "manta-B1MbLYNi.png",
+              "ready": true,
+              "width": 256
+            }
+          ]
+        },
+        {
+          "phase": "acts-open",
+          "elapsedMs": 20331,
+          "images": [
+            {
+              "src": "radial-0sqeETq6.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "angular-CTWt2OpA.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "fracture-DeAEIbKd.png",
+              "ready": false,
+              "width": 0
+            },
+            {
+              "src": "overdrive-B3AHZfq3.png",
+              "ready": false,
+              "width": 0
+            }
+          ]
+        },
+        {
+          "phase": "acts-settled",
+          "elapsedMs": 22637,
+          "images": [
+            {
+              "src": "radial-0sqeETq6.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "angular-CTWt2OpA.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "fracture-DeAEIbKd.png",
+              "ready": true,
+              "width": 160
+            },
+            {
+              "src": "overdrive-B3AHZfq3.png",
+              "ready": true,
+              "width": 160
+            }
+          ]
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "act-radial-DRhDnFFR.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "swift-step-C11CgeKO.webp",
+          "elapsedMs": 12822
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 12823
+        },
+        {
+          "asset": "cyan-D2xzJLoh.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "violet-CagowjQe.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "amber-CvYI48VI.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "emerald-CnbOz4G-.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "obsidian-Df5A7Dmd.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "nova-SotJ2V63.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "manta-B1MbLYNi.png",
+          "elapsedMs": 17785
+        },
+        {
+          "asset": "orbital-gate-B2LWc4eg.webp",
+          "elapsedMs": 20327
+        },
+        {
+          "asset": "act-angular-DNWc1a9Z.webp",
+          "elapsedMs": 20327
+        },
+        {
+          "asset": "act-fracture-DG19rDfz.webp",
+          "elapsedMs": 20327
+        },
+        {
+          "asset": "act-overdrive-CvFf7z6k.webp",
+          "elapsedMs": 20327
+        },
+        {
+          "asset": "radial-0sqeETq6.png",
+          "elapsedMs": 20330
+        },
+        {
+          "asset": "angular-CTWt2OpA.png",
+          "elapsedMs": 20331
+        },
+        {
+          "asset": "fracture-DeAEIbKd.png",
+          "elapsedMs": 20331
+        },
+        {
+          "asset": "overdrive-B3AHZfq3.png",
+          "elapsedMs": 20331
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "retained-memory",
+      "menuPasses": 20,
+      "cosmeticModalPasses": 60,
+      "runRestarts": 10,
+      "samples": [
+        {
+          "label": "initial-menu",
+          "elapsedMs": 25397,
+          "heapMiB": 10.098,
+          "documents": 2,
+          "nodes": 1738,
+          "jsEventListeners": 122,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "menu-1",
+          "elapsedMs": 27342,
+          "heapMiB": 10.623,
+          "documents": 2,
+          "nodes": 2825,
+          "jsEventListeners": 157,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "menu-5",
+          "elapsedMs": 32222,
+          "heapMiB": 10.794,
+          "documents": 2,
+          "nodes": 2823,
+          "jsEventListeners": 157,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "menu-10",
+          "elapsedMs": 38272,
+          "heapMiB": 10.938,
+          "documents": 2,
+          "nodes": 2823,
+          "jsEventListeners": 157,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "menu-20",
+          "elapsedMs": 48360,
+          "heapMiB": 11.036,
+          "documents": 2,
+          "nodes": 2823,
+          "jsEventListeners": 157,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "run-1",
+          "elapsedMs": 53238,
+          "heapMiB": 12.039,
+          "documents": 3,
+          "nodes": 2855,
+          "jsEventListeners": 158,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "run-5",
+          "elapsedMs": 72324,
+          "heapMiB": 12.605,
+          "documents": 3,
+          "nodes": 2856,
+          "jsEventListeners": 158,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        },
+        {
+          "label": "run-10",
+          "elapsedMs": 93732,
+          "heapMiB": 12.901,
+          "documents": 3,
+          "nodes": 2856,
+          "jsEventListeners": 158,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9430564,
+          "gameplaySeconds": "00:00",
+          "levelUpVisible": false,
+          "gameOverVisible": false
+        }
+      ],
+      "errors": [],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "orbital-sanctuary-BU5yY-wp.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "act-radial-DRhDnFFR.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "swift-step-C11CgeKO.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 23615
+        },
+        {
+          "asset": "cyan-D2xzJLoh.png",
+          "elapsedMs": 25614
+        },
+        {
+          "asset": "violet-CagowjQe.png",
+          "elapsedMs": 25614
+        },
+        {
+          "asset": "amber-CvYI48VI.png",
+          "elapsedMs": 25614
+        },
+        {
+          "asset": "emerald-CnbOz4G-.png",
+          "elapsedMs": 25618
+        },
+        {
+          "asset": "obsidian-Df5A7Dmd.png",
+          "elapsedMs": 25618
+        },
+        {
+          "asset": "nova-SotJ2V63.png",
+          "elapsedMs": 25618
+        },
+        {
+          "asset": "manta-B1MbLYNi.png",
+          "elapsedMs": 25618
+        },
+        {
+          "asset": "basic-Jbz3Tr7c.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "curve-C8Z5wNoX.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "smoke-D4eI-Sv6.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "rainbow-BfB4ucjR.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "lattice-CqNaT0qf.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "helix-C-PJQ6Ax.png",
+          "elapsedMs": 25707
+        },
+        {
+          "asset": "nacre-orbit-preview-BA8ziqof.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "vesper-bloom-preview-CA9Ab2xY.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "tidal-veil-DUvCTz-Q.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "tidal-veil-currents-preview-3-9fhrho.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "deep-space-preview-BkhdvCQv.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "ion-storm-preview-BiIIGpYF.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "solar-drift-preview-vyqNpBKu.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "crystal-field-preview-DmJ94KI0.webp",
+          "elapsedMs": 25935
+        },
+        {
+          "asset": "nacre-orbit-BM6d77Lf.webp",
+          "elapsedMs": 26083
+        },
+        {
+          "asset": "orbital-gate-B2LWc4eg.webp",
+          "elapsedMs": 26592
+        },
+        {
+          "asset": "act-angular-DNWc1a9Z.webp",
+          "elapsedMs": 26592
+        },
+        {
+          "asset": "act-fracture-DG19rDfz.webp",
+          "elapsedMs": 26592
+        },
+        {
+          "asset": "act-overdrive-CvFf7z6k.webp",
+          "elapsedMs": 26592
+        },
+        {
+          "asset": "radial-0sqeETq6.png",
+          "elapsedMs": 26613
+        },
+        {
+          "asset": "angular-CTWt2OpA.png",
+          "elapsedMs": 26613
+        },
+        {
+          "asset": "fracture-DeAEIbKd.png",
+          "elapsedMs": 26613
+        },
+        {
+          "asset": "overdrive-B3AHZfq3.png",
+          "elapsedMs": 26613
+        },
+        {
+          "asset": "projectile-EQZPVp0q.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "orbit-DwGr6BN_.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "event-horizon-CZ90SKcM.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "chain-Bos30zro.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "magnetic-singularity-core-CoQlwlw0.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "boomerang-mFMLAoFk.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "magnetic-charge-travel-CUOriCOL.png",
+          "elapsedMs": 48409
+        },
+        {
+          "asset": "pulse-ring-DhXuz7VO.png",
+          "elapsedMs": 48410
+        },
+        {
+          "asset": "magnetic-charge-field-DDtR9GdF.png",
+          "elapsedMs": 48410
+        },
+        {
+          "asset": "magnetic-charge-detonation-CA8mKgWE.png",
+          "elapsedMs": 48410
+        }
+      ]
+    },
+    {
+      "kind": "six-weapons",
+      "quality": "low",
+      "samples": [
+        {
+          "label": "six-weapons-low-5s",
+          "elapsedMs": 99773,
+          "heapMiB": 12.132,
+          "documents": 2,
+          "nodes": 1739,
+          "jsEventListeners": 132,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9882840,
+          "gameplaySeconds": "00:05",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 5
+        },
+        {
+          "label": "six-weapons-low-15s",
+          "elapsedMs": 110228,
+          "heapMiB": 13.112,
+          "documents": 2,
+          "nodes": 2180,
+          "jsEventListeners": 180,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 48,
+          "rgbaBaseBytesInScene": 9882840,
+          "gameplaySeconds": "00:14",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 15
+        },
+        {
+          "label": "six-weapons-low-30s",
+          "elapsedMs": 125556,
+          "heapMiB": 13.409,
+          "documents": 2,
+          "nodes": 2011,
+          "jsEventListeners": 161,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 53,
+          "rgbaBaseBytesInScene": 9964760,
+          "gameplaySeconds": "00:28",
+          "levelUpVisible": true,
+          "gameOverVisible": false,
+          "scenarioSeconds": 30
+        },
+        {
+          "label": "six-weapons-low-60s",
+          "elapsedMs": 156100,
+          "heapMiB": 13.601,
+          "documents": 2,
+          "nodes": 2186,
+          "jsEventListeners": 182,
+          "sceneNodes": 2928,
+          "textureSourcesInScene": 53,
+          "rgbaBaseBytesInScene": 9964760,
+          "gameplaySeconds": "00:56",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "rail-lance-DHP6kLZ4.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "solar-crown-_OU0t4b1.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "event-horizon-CZ90SKcM.png",
+          "elapsedMs": 94064
+        },
+        {
+          "asset": "closed-circuit-mqMelqOS.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "magnetic-singularity-core-CoQlwlw0.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "twin-comet-Cqw-UF8J.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "magnetic-charge-travel-CUOriCOL.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "echo-shock-B6RcLt9i.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "magnetic-charge-field-DDtR9GdF.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "magnetic-charge-detonation-CA8mKgWE.png",
+          "elapsedMs": 94065
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 102235
+        },
+        {
+          "asset": "vampiric-core-C-W_xLcK.webp",
+          "elapsedMs": 102235
+        },
+        {
+          "asset": "critical-impact-1dkHLYYh.webp",
+          "elapsedMs": 102235
+        },
+        {
+          "asset": "rail-lance-zlTPJguA.webp",
+          "elapsedMs": 103112
+        },
+        {
+          "asset": "solar-crown-Ez9okb5y.webp",
+          "elapsedMs": 103112
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 103125
+        },
+        {
+          "asset": "twin-comet-DXv1gGl8.webp",
+          "elapsedMs": 103125
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 103125
+        },
+        {
+          "asset": "event-horizon-D9Qx8VGO.webp",
+          "elapsedMs": 103125
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 113910
+        },
+        {
+          "asset": "resonant-core-QsDTJShB.webp",
+          "elapsedMs": 113910
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 125394
+        },
+        {
+          "asset": "hardened-shell-E8M1Fhx8.webp",
+          "elapsedMs": 125394
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 139765
+        },
+        {
+          "asset": "vampiric-core-C-W_xLcK.webp",
+          "elapsedMs": 139765
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 139765
+        },
+        {
+          "asset": "solar-crown-Ez9okb5y.webp",
+          "elapsedMs": 140683
+        },
+        {
+          "asset": "twin-comet-DXv1gGl8.webp",
+          "elapsedMs": 140683
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 140713
+        },
+        {
+          "asset": "event-horizon-D9Qx8VGO.webp",
+          "elapsedMs": 140713
+        }
+      ],
+      "errors": [],
+      "finalUi": "target: local\norientation: portrait\nlogical: 720×1280\nviewport: 390×844\nscale: 0.54\ndpr: 1.00\nquality: low\nprofile: on\nframeP95: 50.10 ms\nframeMax: 66.70 ms\nlongFrames: 1221.00\nheap: 18.4 MB\nfps: 29.95\nmode: overdrive-stage-1\nhazards: chaos\nenemies: 1/250\nprojectiles: 6/300\norbit: 6/6\nchain: ready\npaused: playing\nlevel: 5.00\noverdriveArsenal: expanded 6\nweaponPath: off\narena: 270.0 | circle (stable) | expansión 0\nlaser: telegraph | 1.83 rad\npulse: idle | outward | 0.0\nmagnetic: idle\nevolution: none\ncalibration: none\norbiter: off\ncharger: off\nsplitter: off\nprism: off\nangular: off\nfracture: off\nresonance: 0.00\nboss: inactive\nplayer: 640.0, 360.0\nbaseline: off"
+    },
+    {
+      "kind": "six-weapons",
+      "quality": "high",
+      "samples": [
+        {
+          "label": "six-weapons-high-5s",
+          "elapsedMs": 163006,
+          "heapMiB": 13.382,
+          "documents": 2,
+          "nodes": 1741,
+          "jsEventListeners": 132,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 57,
+          "rgbaBaseBytesInScene": 10334424,
+          "gameplaySeconds": "00:05",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 5
+        },
+        {
+          "label": "six-weapons-high-15s",
+          "elapsedMs": 173401,
+          "heapMiB": 14.172,
+          "documents": 2,
+          "nodes": 1927,
+          "jsEventListeners": 157,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 57,
+          "rgbaBaseBytesInScene": 10334424,
+          "gameplaySeconds": "00:15",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 15
+        },
+        {
+          "label": "six-weapons-high-30s",
+          "elapsedMs": 189068,
+          "heapMiB": 14.796,
+          "documents": 2,
+          "nodes": 1948,
+          "jsEventListeners": 154,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 61,
+          "rgbaBaseBytesInScene": 10399960,
+          "gameplaySeconds": "00:29",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 30
+        },
+        {
+          "label": "six-weapons-high-60s",
+          "elapsedMs": 219315,
+          "heapMiB": 15.123,
+          "documents": 2,
+          "nodes": 1949,
+          "jsEventListeners": 153,
+          "sceneNodes": 3953,
+          "textureSourcesInScene": 61,
+          "rgbaBaseBytesInScene": 10399960,
+          "gameplaySeconds": "00:59",
+          "levelUpVisible": false,
+          "gameOverVisible": false,
+          "scenarioSeconds": 60
+        }
+      ],
+      "requests": [
+        {
+          "asset": "deep-space-DWKHTtVL.webp",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "tidal-veil-current-a-CbKELsf1.webp",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "tidal-veil-current-b-C7qCaumR.webp",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "tether-ship-B8RBxf0R.png",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "tether-cannon-uK-0PTMQ.png",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "orbital-sanctuary-portrait-DtOPNLsb.webp",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "survivor-core-zxyzJFcj.png",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "rail-lance-DHP6kLZ4.png",
+          "elapsedMs": 156793
+        },
+        {
+          "asset": "solar-crown-_OU0t4b1.png",
+          "elapsedMs": 156794
+        },
+        {
+          "asset": "event-horizon-CZ90SKcM.png",
+          "elapsedMs": 156794
+        },
+        {
+          "asset": "closed-circuit-mqMelqOS.png",
+          "elapsedMs": 156794
+        },
+        {
+          "asset": "magnetic-singularity-core-CoQlwlw0.png",
+          "elapsedMs": 156794
+        },
+        {
+          "asset": "twin-comet-Cqw-UF8J.png",
+          "elapsedMs": 156794
+        },
+        {
+          "asset": "magnetic-charge-travel-CUOriCOL.png",
+          "elapsedMs": 156798
+        },
+        {
+          "asset": "echo-shock-B6RcLt9i.png",
+          "elapsedMs": 156798
+        },
+        {
+          "asset": "magnetic-charge-field-DDtR9GdF.png",
+          "elapsedMs": 156798
+        },
+        {
+          "asset": "magnetic-charge-detonation-CA8mKgWE.png",
+          "elapsedMs": 156798
+        },
+        {
+          "asset": "regenerative-reactor-BizLIJRS.webp",
+          "elapsedMs": 165145
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 165145
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 165145
+        },
+        {
+          "asset": "rail-lance-zlTPJguA.webp",
+          "elapsedMs": 175960
+        },
+        {
+          "asset": "closed-circuit-Du_1pIRl.webp",
+          "elapsedMs": 175960
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 175960
+        },
+        {
+          "asset": "hardened-shell-E8M1Fhx8.webp",
+          "elapsedMs": 187501
+        },
+        {
+          "asset": "echo-shock-BEy41QgQ.webp",
+          "elapsedMs": 187501
+        },
+        {
+          "asset": "reinforced-core-DAbyct6n.webp",
+          "elapsedMs": 201562
+        },
+        {
+          "asset": "universal-mastery-enx7zMlj.webp",
+          "elapsedMs": 201562
+        }
+      ],
+      "errors": [],
+      "finalUi": "target: local\norientation: portrait\nlogical: 720×1280\nviewport: 390×844\nscale: 0.54\ndpr: 1.00\nquality: high\nprofile: on\nframeP95: 33.40 ms\nframeMax: 33.40 ms\nlongFrames: 891.00\nheap: 22.0 MB\nfps: 49.30\nmode: overdrive-stage-1\nhazards: chaos\nenemies: 1/250\nprojectiles: 6/300\norbit: 6/6\nchain: ready\npaused: playing\nlevel: 5.00\noverdriveArsenal: expanded 6\nweaponPath: off\narena: 270.0 | circle (stable) | expansión 0\nlaser: idle | 1.83 rad\npulse: idle | outward | 0.0\nmagnetic: attract | 775,541\nevolution: none\ncalibration: none\norbiter: off\ncharger: off\nsplitter: off\nprism: off\nangular: off\nfracture: off\nresonance: 0.00\nboss: inactive\nplayer: 640.0, 360.0\nbaseline: off"
+    },
+    {
+      "kind": "audio-suspended-gesture",
+      "before": "running",
+      "suspended": "suspended",
+      "afterGesture": "running",
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "elapsedMs": 221616
+}

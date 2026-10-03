@@ -1,5 +1,12 @@
 # UI ilustrada: selector de actos
 
+Seguimiento 02-10-2026: consumidores de placas usan WebP RGB 640×426 q88/method6,
+derivado por `scripts/derive-act-plates.py`. PNG originales/prompts conservados.
+Total publicado de las cuatro placas: 246.590 bytes (antes 1.750.591). Comparación
+visual realizada, sin cambio de composición o resolución; la memoria RGBA teórica
+no baja al comprimir. [Medidas y pruebas](../../../../../docs/audits/CORRECCIONES_RECURSOS_2026-10-02.md).
+Las cifras/formato del apartado original siguiente documentan aquella entrega.
+
 Prueba vigente adicional: los cuatro emblemas del selector usan PNG RGBA
 transparentes generados (160×160, 127,724 bytes entre todos), con SVG previo
 como fallback. [Iconos transparentes: prompts y contrato](icons/README.md).

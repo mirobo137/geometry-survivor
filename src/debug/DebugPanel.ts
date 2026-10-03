@@ -14,4 +14,6 @@ export class DebugPanel {
       .map(([key, value]) => `${key}: ${typeof value === 'number' ? value.toFixed(2) : value}`)
       .join('\n');
   }
+
+  public get isEnabled(): boolean { return this.enabled; }
 }

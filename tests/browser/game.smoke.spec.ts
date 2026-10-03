@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks();
+registerResourceChecks();
 registerTetheredShipChecks();
 
 test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y cañones', async ({ page }, testInfo) => {

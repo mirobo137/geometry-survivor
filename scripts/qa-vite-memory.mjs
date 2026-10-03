@@ -89,7 +89,8 @@ try {
   if (mode === 'off' && samples.some(row => row.watchedEntries !== 0)) {
     throw new Error('Watcher-off comparison still watches files.');
   }
-  const output = resolve(root, 'test-results/vite-memory');
+  // Playwright clears test-results at startup; keep independent observations.
+  const output = resolve(root, '.tmp/vite-memory');
   await mkdir(output, { recursive: true });
   await writeFile(resolve(output, mode + '.json'), JSON.stringify({ mode, node: process.version, uv: process.versions.uv,
     pid: process.pid, seconds, samples, events, errors }, null, 2));

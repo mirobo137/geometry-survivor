@@ -1,6 +1,6 @@
 # Guía de ejecución vigente — Geometry Survivor
 
-Revisión operativa: 02-10-2026. Base de lectura: `d793740`.
+Revisión operativa: 02-10-2026. Base de correcciones: `76a6c78`.
 Desarrolla [§22 del plan](../PLAN_DESARROLLO.md#ejecucion-vigente); alcance y
 decisiones siguen en el plan maestro y los contratos canónicos. Esta guía
 reemplaza la cola de trabajo de septiembre, no sus reglas todavía vigentes.
@@ -27,7 +27,8 @@ reemplaza la cola de trabajo de septiembre, no sus reglas todavía vigentes.
 
 Los informes fechados no prueban el estado Git, procesos activos o publicación
 de hoy. La fuente de evidencia actual es la
-[auditoría de recursos del 02-10-2026](audits/AUDITORIA_RECURSOS_2026-10-02.md).
+[auditoría de recursos del 02-10-2026](audits/AUDITORIA_RECURSOS_2026-10-02.md)
+y su [seguimiento de correcciones](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
 
 ## 2. Mapa de avance que se conserva
 
@@ -55,9 +56,11 @@ no equivale a aprobación comercial, suite actual completa o ausencia de fugas.
 
 ### AUD-RES — Auditoría de recursos y carga (sesión actual)
 
-**Estado:** informe y evidencias entregados el 02-10-2026. Hallazgos abiertos;
-no se implementaron correcciones. Browser: 81 casos correctos con teardown
-asistido QA-01; estabilidad de larga duración y cierre local automático pendientes.
+**Estado original:** informe y evidencias entregados el 02-10-2026, sin correcciones
+en aquella revisión. Browser: 81 casos correctos con teardown asistido QA-01.
+La entrega posterior autorizada y el estado vigente por ID están en
+[correcciones](audits/CORRECCIONES_RECURSOS_2026-10-02.md); no repetir el diagnóstico
+original como si fuera la cola vigente. La prueba larga sigue pendiente.
 
 **Objetivo:** distinguir memoria Node/Vite, recursos Chromium/Pixi y preparación
 de imágenes. Localizar problemas reproducibles con severidad, evidencia y
@@ -74,8 +77,15 @@ no debe adjudicarse al juego ni a la versión sin evidencia suficiente.
 
 ### AUD-RES-CORR — Correcciones de los hallazgos
 
-**Entrada:** solicitud de implementación y selección de un hallazgo del informe.
-Corregir un riesgo por entrega, preservando arquitectura, balance, saves y arte.
+**Entrada:** solicitud de implementación y alcance autorizado por el usuario.
+Corregir cada riesgo con regresión identificable, preservando arquitectura,
+balance, saves y arte. Esta revisión autoriza el conjunto de correcciones de
+recursos; no la publicación ni la ejecución automática de puertas futuras.
+
+Seguimiento autorizado el 02-10: [estado de correcciones por ID](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
+RES-01–07, parte aplicable de RES-08, peso/CI de RES-09 y protección de rewarded
+de RES-10 implementados; RES-11/SDKs reales y puertas humanas no se cierran por
+esta entrega. No volver a ejecutar la auditoría anterior como si fuera pendiente.
 
 1. Resolver bloqueantes/altos de ciclo de vida, descarga o integridad primero.
 2. Añadir una regresión que reproduzca el fallo antes de la solución cuando sea

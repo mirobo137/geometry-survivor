@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-const output = resolve(root, 'test-results/resource-audit');
+const output = resolve(root, '.tmp/resource-audit');
 const audioOnly = process.argv.includes('--audio-only');
 const combatOnly = process.argv.includes('--combat-only');
 const reportPath = resolve(output, audioOnly ? 'audio-report.json' : combatOnly ? 'combat-report.json' : 'report.json');
@@ -123,12 +123,23 @@ try {
     await page.locator('#boot-status').waitFor({ state: 'hidden' });
     await delay(1500);
     const samples = [];
-    const row = { kind: 'retained-memory', menuPasses: 20, runRestarts: 10, samples, errors, requests };
+    const row = { kind: 'retained-memory', menuPasses: 20, cosmeticModalPasses: 60,
+      runRestarts: 10, samples, errors, requests };
     samples.push(await memory(page, session, 'initial-menu'));
     for (let pass = 1; pass <= 20; pass++) {
       await page.locator('#start-skins').click();
-      for (const tab of ['cannon-skins', 'backgrounds', 'player-skins'])
+      // Exercise discarded preview DOM as well as persistent collections. This
+      // extends the original audit; compare the plateau, not identical heaps.
+      for (const [tab, card] of [
+        ['cannon-skins', '.cannon-card button'],
+        ['backgrounds', '.background-card button'],
+        ['player-skins', '.skin-card[data-skin="spearhead"] button']
+      ]) {
         await page.locator(`#start-${tab}-tab`).click();
+        await page.locator(card).first().click();
+        await page.locator('#start-cosmetic-close').click();
+        await page.locator('#start-cosmetic-dialog').waitFor({ state: 'hidden' });
+      }
       await page.locator('#start-skins-back').click();
       await page.locator('#start-level').click();
       await page.locator('#start-act-back').click();

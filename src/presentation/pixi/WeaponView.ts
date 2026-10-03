@@ -7,10 +7,7 @@ import { createTexture } from './TextureFactory';
 import { createSvgTexture } from './SvgTextureFactory';
 import vectorBoomerangSvg from '../../assets/svg/weapons/vector-boomerang.svg?raw';
 import { BOOMERANG_POOL_CAPACITY, CHAIN_SEGMENT_POOL_CAPACITY } from '../../config/constants';
-import magneticChargeCoreUrl from '../../assets/fx/magnetic-singularity-core.png';
-import magneticChargeFieldUrl from '../../assets/fx/magnetic-charge-field.png';
-import magneticChargeTravelUrl from '../../assets/fx/magnetic-charge-travel.png';
-import magneticChargeDetonationUrl from '../../assets/fx/magnetic-charge-detonation.png';
+import { getArsenalTexture, loadArsenalTexture, MAGNETIC_ART_IDS } from './weapons/ArsenalTextures';
 import { RasterArsenalView } from './weapons/RasterArsenalView';
 
 const PRISM_INK = 0x0d1025;
@@ -45,14 +42,6 @@ const MAGNETIC_DETONATION_APERTURE_ANCHOR = { x: 0.5075, y: 0.5023 };
 const MAGNETIC_FIELD_ART_RADIUS = 110.5;
 const MAGNETIC_DETONATION_ART_RADIUS = 110.3;
 const FULL_CIRCLE = Math.PI * 2;
-
-const loadMagneticChargeImage = (url: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
-  const image = new Image();
-  image.decoding = 'async';
-  image.addEventListener('load', () => resolve(image), { once: true });
-  image.addEventListener('error', () => reject(new Error(`Unable to load Magnetic Charge image: ${url}`)), { once: true });
-  image.src = url;
-});
 
 interface OrbitBladeVisual {
   readonly root: Container;
@@ -320,7 +309,7 @@ export class WeaponView {
     this.raster.render(combat);
     const orbitPulse = combat.orbitPulse;
     this.orbitPulseLayer.clear();
-    this.orbitPulseLayer.visible = orbitPulse?.active === true && !this.raster.ready('event_horizon');
+    this.orbitPulseLayer.visible = orbitPulse?.active === true && !this.raster.ready('event_horizon', 'orbit-pulse');
     if (orbitPulse?.active && this.orbitPulseLayer.visible) {
       const progress = clamp01(orbitPulse.progress);
       const radius = orbitPulse.radius * (0.32 + progress * 0.68);
@@ -350,7 +339,7 @@ export class WeaponView {
     for (let index = 0; index < this.boomerangVisuals.length; index += 1) {
       const visual = this.boomerangVisuals[index];
       const state = boomerangs[index];
-      visual.root.visible = state?.active === true && !this.raster.ready(state.fragment ? 'singularity_shard' : state.evolution ?? 'boomerang');
+      visual.root.visible = state?.active === true && !this.raster.ready(state.fragment ? 'singularity_shard' : state.evolution ?? 'boomerang', `boomerang-${index}`);
       if (!visual.root.visible || !state?.active) {
         visual.trail.clear();
         continue;
@@ -399,7 +388,7 @@ export class WeaponView {
 
     this.boomerangPulseLayer.clear();
     const boomerangPulse = combat.boomerangPulse;
-    this.boomerangPulseLayer.visible = boomerangPulse?.active === true && !this.raster.ready('singularity_split');
+    this.boomerangPulseLayer.visible = boomerangPulse?.active === true && !this.raster.ready('singularity_split', 'boomerang-pulse');
     if (boomerangPulse?.active && this.boomerangPulseLayer.visible) {
       const progress = clamp01(boomerangPulse.progress);
       const intensity = 1 - progress;
@@ -455,7 +444,7 @@ export class WeaponView {
       if (!this.previousChainActive[index]) this.onChainImpact?.();
       this.previousChainActive[index] = true;
       const alpha = Math.max(0, Math.min(1, segment.lifeSeconds / WEAPON_DEFINITIONS.chainLightning.segmentLifetimeSeconds));
-      const rasterChain = this.raster.ready(combat.chainEvolution ?? 'chain');
+      const rasterChain = this.raster.ready(combat.chainEvolution ?? 'chain', `chain-${index}`);
       if (!rasterChain) this.drawChainBeam(segment, alpha, index);
       const sprite = this.chainImpactSprites[index];
       sprite.position.set(segment.x2, segment.y2);
@@ -484,11 +473,12 @@ export class WeaponView {
       const alpha = explosion.phase === 'telegraph'
         ? 0.4 + progress * 0.35
         : (1 - progress) * 0.9;
-      if (!this.raster.ready('thunderhead_burst')) drawSegmentedPulse(this.chainLayer, radius, alpha, 0xff92a3, 0xffd978, explosion.x, explosion.y);
+      if (!this.raster.ready('thunderhead_burst', `explosion-${index}`)) drawSegmentedPulse(this.chainLayer, radius, alpha, 0xff92a3, 0xffd978, explosion.x, explosion.y);
     }
   }
 
   public reset(): void {
+    this.raster.clearCastArt();
     this.raster.reset();
     this.chainLayer.clear();
     this.chainLayer.visible = false;
@@ -557,7 +547,7 @@ export class WeaponView {
       this.pulseRingLayer.visible = false;
       return;
     }
-    if (this.raster.ready(state.evolution ?? 'pulse_ring')) {
+    if (this.raster.ready(state.evolution ?? 'pulse_ring', 'pulse')) {
       this.pulseRingLayer.visible = false;
       return;
     }
@@ -632,7 +622,8 @@ export class WeaponView {
 
     this.magneticChargeUnderlay.visible = true;
     this.magneticChargeUnderlay.position.set(0, 0);
-    if (!state.evolution && this.magneticChargeImagePackReady) {
+    if (!state.evolution && this.magneticChargeImagePackReady
+      && MAGNETIC_ART_IDS.every(id => this.raster.ready(id, 'magnetic'))) {
       this.renderMagneticChargeImages(state);
       return;
     }
@@ -859,18 +850,10 @@ export class WeaponView {
   private requestMagneticChargeImagePack(): void {
     if (this.magneticChargeImagePackRequested || typeof window === 'undefined') return;
     this.magneticChargeImagePackRequested = true;
-    void Promise.all([
-      loadMagneticChargeImage(magneticChargeCoreUrl),
-      loadMagneticChargeImage(magneticChargeFieldUrl),
-      loadMagneticChargeImage(magneticChargeTravelUrl),
-      loadMagneticChargeImage(magneticChargeDetonationUrl)
-    ]).then(([coreImage, fieldImage, travelImage, detonationImage]) => {
+    const configure = ([coreTexture, fieldTexture, travelTexture, detonationTexture]: readonly (Texture | null)[]): void => {
       if (this.root.destroyed) return;
+      if (!coreTexture || !fieldTexture || !travelTexture || !detonationTexture) return;
       try {
-        const coreTexture = Texture.from(coreImage);
-        const fieldTexture = Texture.from(fieldImage);
-        const travelTexture = Texture.from(travelImage);
-        const detonationTexture = Texture.from(detonationImage);
         this.magneticChargeCoreSprite.texture = coreTexture;
         this.magneticChargeFieldSprite.texture = fieldTexture;
         this.magneticChargeTravelSprite.texture = travelTexture;
@@ -879,7 +862,10 @@ export class WeaponView {
       } catch {
         // Stay on the complete vector rendering path if a texture cannot be created.
       }
-    }).catch(() => {
+    };
+    const prepared = MAGNETIC_ART_IDS.map(id => this.raster.ready(id, 'magnetic') ? getArsenalTexture(id) : null);
+    if (prepared.every(Boolean)) { configure(prepared); return; }
+    void Promise.all(MAGNETIC_ART_IDS.map(loadArsenalTexture)).then(configure).catch(() => {
       // Stay on the complete vector rendering path if any base image fails to load.
     });
   }

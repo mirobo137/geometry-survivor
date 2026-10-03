@@ -1,0 +1,7 @@
+/* Geometry is supplied by each existing art container, not the network image.
+   Hide broken/undecoded media only; icons, copy and actions remain available. */
+img[data-art-state="queued"], img[data-art-state="loading"], img[data-art-state="fallback"],
+svg image[data-art-state="queued"], svg image[data-art-state="loading"], svg image[data-art-state="fallback"] { opacity: 0; }
+img[data-art-state="ready"], svg image[data-art-state="ready"] { opacity: 1; }
+#start-act-view .act-card-button[data-plate-state="loading"]::before,
+#start-act-view .act-card-button[data-plate-state="fallback"]::before { opacity: 0; }

@@ -9,7 +9,9 @@ Leer [AGENTS](../AGENTS.md) → [CONTINUACION](../CONTINUACION.md) →
 [§22 del plan](../PLAN_DESARROLLO.md#ejecucion-vigente) →
 [guía corta de ejecución](PLAN_EJECUCION.md) y la skill de la tarea.
 La [auditoría de recursos](audits/AUDITORIA_RECURSOS_2026-10-02.md) es la entrada
-para memoria/carga y preparación de publicación. EX-09 continúa pendiente.
+para memoria/carga y preparación de publicación. Su
+[seguimiento de correcciones](audits/CORRECCIONES_RECURSOS_2026-10-02.md)
+distingue cambios comprobados de puertas aún pendientes. EX-09 continúa pendiente.
 
 ## Contratos y referencias activas
 

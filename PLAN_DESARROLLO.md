@@ -3757,3 +3757,23 @@ ni los sustituye. No agregar contenido o infraestructura ajena a esos consumidor
 CONTINUACION y la guía operativa se compactaron conservando íntegros sus históricos
 en docs/archive. [docs/README.md](docs/README.md) distingue contratos activos,
 evidencia fechada y propuestas; no ejecutar los archivos archivados como pendientes.
+
+## 22.19 Correcciones autorizadas de recursos — 02-10-2026
+
+El usuario autorizó corregir los hallazgos. Se implementaron preparación visual
+selectiva con deadline/fallback, material estable por ataque, ownership único del
+paquete magnético, recuperación de contexto de audio desde gesto, reducción de
+trabajo del mundo oculto y fallback SVG por demanda. Shutdown cancela selección
+pendiente y ofertas async; no añade un contrato de remontaje inexistente.
+
+Actos utiliza derivados WebP conservando los PNG/prompts; CI aplica el límite de
+15 MB al artefacto completo y browser comprueba descarga inicial ≤5 MB sin
+compresión. Los targets no locales ya no conceden rewarded simulado. Esto **no**
+integra SDKs reales ni cierra inglés/i18n, QA de portales, móvil físico o prueba
+larga. EX-09 y aceptación humana del Laboratorio conservan sus puertas.
+
+Estado, regresiones y límites por ID:
+[CORRECCIONES_RECURSOS_2026-10-02](docs/audits/CORRECCIONES_RECURSOS_2026-10-02.md).
+No se cambian balance, economía, migraciones, reglas de armas ni catálogo. Sin
+commit/push/publicación en esta entrega. No repetir los hallazgos históricos como
+si describieran el runtime corregido; conservar la comparación fechada.

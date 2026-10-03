@@ -6,7 +6,11 @@ import { getArsenalTexture } from './ArsenalTextures';
 import { RechargeableShieldView } from '../characters/player/RechargeableShieldView';
 import { BoomerangPool } from '../../../simulation/combat/EntityPools';
 
-vi.mock('./ArsenalTextures', () => ({ getArsenalTexture: vi.fn(() => Texture.WHITE) }));
+vi.mock('./ArsenalTextures', () => ({
+  getArsenalTexture: vi.fn(() => Texture.WHITE),
+  loadArsenalTexture: vi.fn(async () => Texture.WHITE),
+  MAGNETIC_ART_IDS: ['magnetic_core', 'magnetic_field', 'magnetic_travel', 'magnetic_burst']
+}));
 const base = (): ArsenalRenderInput => ({ orbitBlades: [], chainSegments: [] });
 const sprite = (view: RasterArsenalView, label: string): Sprite =>
   [...view.root.children, ...view.underlay.children].find(child => child.label === label) as Sprite;

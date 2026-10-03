@@ -3,7 +3,8 @@ import type { CombatRenderState } from '../../../simulation/combat/CombatRenderS
 import type { FxQuality } from '../../../content/visual/VisualTokens';
 import { BOOMERANG_POOL_CAPACITY, CHAIN_SEGMENT_POOL_CAPACITY } from '../../../config/constants';
 import { CHAIN_EVOLUTION_TUNING } from '../../../content/weapons/WeaponEvolutionDefinitions';
-import { getArsenalTexture, type ArsenalArtId } from './ArsenalTextures';
+import { MAGNETIC_ART_IDS, type ArsenalArtId } from './ArsenalTextures';
+import { CastArt } from './CastArt';
 
 export type ArsenalRenderInput = Pick<CombatRenderState, 'orbitBlades' | 'chainSegments'>
   & Partial<Pick<CombatRenderState, 'orbitEvolution' | 'chainEvolution' | 'orbitPulse' | 'chainExplosions'
@@ -49,11 +50,15 @@ export class RasterArsenalView {
     this.underlay.addChild(this.boundary);
   }
 
-  public ready(id: ArsenalArtId): boolean { return getArsenalTexture(id) !== null; }
+  private readonly castArt = new CastArt();
+  private scope = 'orbit';
+  public ready(id: ArsenalArtId, scope = 'orbit'): boolean { return this.castArt.get(scope, id) !== null; }
+  public clearCastArt(): void { this.castArt.clear(); }
 
   public render(state: ArsenalRenderInput): void {
     if (this.root.destroyed || this.underlay.destroyed) return;
     this.reset();
+    this.scope = 'orbit';
     const orbitId = state.orbitEvolution ?? 'orbit';
     for (let i = 0; i < this.orbit.length; i++) {
       const blade = state.orbitBlades[i];
@@ -62,6 +67,8 @@ export class RasterArsenalView {
     }
     for (let i = 0; i < this.boomerangs.length; i++) {
       const blade = state.boomerangs?.[i];
+      this.scope = `boomerang-${i}`;
+      this.castArt.begin(this.scope, blade?.active === true, blade?.ageSeconds ?? 0);
       if (!blade?.active) continue;
       const id = blade.fragment ? 'singularity_shard' : blade.evolution ?? 'boomerang';
       const angle = Math.atan2(blade.vy, blade.vx);
@@ -74,15 +81,21 @@ export class RasterArsenalView {
       }
     }
     const orbitPulse = state.orbitPulse;
+    this.scope = 'orbit-pulse';
+    this.castArt.begin(this.scope, orbitPulse?.active === true, 0, orbitPulse?.sequence);
     if (orbitPulse?.active) this.ring(this.orbitPulse, 'event_horizon', orbitPulse.x, orbitPulse.y,
       orbitPulse.radius * (0.32 + clamp(orbitPulse.progress) * 0.68), (1 - clamp(orbitPulse.progress)) * 0.65);
     const burst = state.boomerangPulse;
+    this.scope = 'boomerang-pulse';
+    this.castArt.begin(this.scope, burst?.active === true, 0, burst?.sequence);
     if (burst?.active) this.ring(this.boomerangPulse, 'singularity_split', burst.x, burst.y, burst.radius,
       (1 - clamp(burst.progress)) * 0.85);
 
     const chainId = state.chainEvolution ?? 'chain';
     for (let i = 0; i < this.chains.length; i++) {
       const segment = state.chainSegments[i];
+      this.scope = `chain-${i}`;
+      this.castArt.begin(this.scope, segment?.active === true, -(segment?.lifeSeconds ?? 0));
       if (segment?.active) {
         const alpha = segment.persistent ? 0.72 : clamp(segment.lifeSeconds / 0.14);
         this.beam(this.chains[i], chainId, segment.x1, segment.y1, segment.x2, segment.y2,
@@ -93,6 +106,8 @@ export class RasterArsenalView {
         }
       }
       const explosion = state.chainExplosions?.[i];
+      this.scope = `explosion-${i}`;
+      this.castArt.begin(this.scope, explosion?.active === true, 0, explosion?.sequence);
       if (explosion?.active) {
         const p = clamp(explosion.progress);
         this.ring(this.explosions[i], 'thunderhead_burst', explosion.x, explosion.y,
@@ -102,12 +117,20 @@ export class RasterArsenalView {
           .stroke({ color: 0xffe7ad, width: 1.2, alpha: (1 - p) * 0.4 });
       }
     }
+    this.scope = 'pulse';
+    this.castArt.begin(this.scope, state.pulseRingWeapon?.active === true, 0, state.pulseRingWeapon?.sequence);
     this.renderPulse(state.pulseRingWeapon);
+    this.scope = 'magnetic';
+    this.castArt.begin(this.scope, state.magneticCharge?.active === true, 0, state.magneticCharge?.sequence);
+    // Snapshot the complete pack even for the base renderer owned by WeaponView.
+    for (const id of MAGNETIC_ART_IDS) {
+      if (state.magneticCharge?.active) this.ready(id, 'magnetic');
+    }
     this.renderMagnetic(state.magneticCharge);
   }
 
   private renderPulse(state: ArsenalRenderInput['pulseRingWeapon']): void {
-    if (!state?.active || state.phase === 'idle' || !this.ready(state.evolution ?? 'pulse_ring')) return;
+    if (!state?.active || state.phase === 'idle' || !this.ready(state.evolution ?? 'pulse_ring', 'pulse')) return;
     const id = state.evolution ?? 'pulse_ring';
     const p = clamp(state.progress);
     const radius = state.phase === 'telegraph' ? state.startRadius : state.radius;
@@ -139,11 +162,11 @@ export class RasterArsenalView {
 
   public magneticReady(state: ArsenalRenderInput['magneticCharge']): boolean {
     if (!state?.evolution) return false;
-    const material = this.ready(state.evolution);
-    const core = this.ready('magnetic_core');
-    const travel = this.ready('magnetic_travel');
-    const burst = this.ready('magnetic_burst');
-    const field = this.ready('magnetic_field');
+    const material = this.ready(state.evolution, 'magnetic');
+    const core = this.ready('magnetic_core', 'magnetic');
+    const travel = this.ready('magnetic_travel', 'magnetic');
+    const burst = this.ready('magnetic_burst', 'magnetic');
+    const field = this.ready('magnetic_field', 'magnetic');
     return material && core && travel && burst && field;
   }
 
@@ -193,7 +216,7 @@ export class RasterArsenalView {
   }
 
   private body(sprite: Sprite, id: ArsenalArtId, x: number, y: number, diameter: number, rotation: number): void {
-    const texture = getArsenalTexture(id);
+    const texture = this.castArt.get(this.scope, id);
     if (!texture) return;
     sprite.texture = texture;
     sprite.anchor.set(0.5);
@@ -212,7 +235,7 @@ export class RasterArsenalView {
   }
 
   private beam(sprite: Sprite, id: ArsenalArtId, x1: number, y1: number, x2: number, y2: number, width: number, alpha: number): void {
-    const texture = getArsenalTexture(id);
+    const texture = this.castArt.get(this.scope, id);
     if (!texture) return;
     sprite.texture = texture;
     sprite.anchor.set(0.5);

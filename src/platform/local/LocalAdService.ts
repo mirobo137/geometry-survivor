@@ -14,13 +14,17 @@ const getLocalAdMode = (): LocalAdMode => {
 };
 
 export class LocalAdService implements AdService {
+  public constructor(private readonly simulationEnabled = true) {}
+
   public async isRewardedAvailable(_placement: RewardedPlacement): Promise<boolean> {
+    if (!this.simulationEnabled) return false;
     // An adapter can be available and still fail while opening/finishing.
     // Keeping `error` available makes that path testable from the UI.
     return getLocalAdMode() !== 'unavailable';
   }
 
   public async showRewarded(_placement: RewardedPlacement): Promise<RewardedAdResult> {
+    if (!this.simulationEnabled) return 'unavailable';
     const mode = getLocalAdMode();
     if (mode === 'unavailable') return 'unavailable';
     if (mode === 'error') return 'error';

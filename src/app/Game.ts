@@ -11,6 +11,8 @@ import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
 import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type LaboratorySaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
+import { loadShipSkinArt } from '../presentation/pixi/characters/player/TetheredShipView';
+import { ART_FAMILIES, getWeaponArtIds, getUpgradeArtIds, prepareArsenalTextures } from '../presentation/pixi/weapons/ArsenalTextures';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
@@ -274,6 +276,7 @@ export class Game {
   private startScreenRequestToken = 0;
   private hitStopSeconds = 0;
   private baselinePanelSeconds = 0;
+  private menuDebugAt = Number.NEGATIVE_INFINITY;
   private calibrationApplied = false;
   private weaponPathStepIndex = 0;
   private weaponPathEvolutionPending = false;
@@ -562,6 +565,23 @@ export class Game {
   };
 
   private readonly onTick = (ticker: Ticker): void => {
+    // The menu is DOM/CSS. Do not traverse combat pools or rebuild hidden HUD
+    // and diagnostic strings while waiting here; resize has its own observer.
+    if (this.gameState.phase === 'menu') {
+      // Opt-in diagnostics still describe menu/resize/quality, without running
+      // the hidden world. Ordinary players do not construct this object.
+      const now = performance.now();
+      if (this.debug.isEnabled && now - this.menuDebugAt >= 250) {
+        this.menuDebugAt = now;
+        const state = this.viewport.state;
+        this.debug.update({ target: this.buildTarget, paused: 'menu', quality: this.fxQuality,
+          orientation: state.orientation, logical: `${state.logicalWidth}×${state.logicalHeight}`,
+          viewport: `${state.cssWidth}×${state.cssHeight}`, scale: state.scale, dpr: state.dpr,
+          mode: this.runMode === 'overdrive' ? `overdrive-stage-${this.overdriveStage}` : `${this.combat.actId}-act`,
+          baseline: this.baselineMode ? `${this.baseline.records.length}/10` : 'off' });
+      }
+      return;
+    }
     this.profiler.record(ticker.deltaMS);
     const frameDeltaSeconds = Math.min(ticker.deltaMS / 1000, 0.1);
     if (this.gameState.isRunIntro && !this.lifecyclePaused) {
@@ -777,6 +797,19 @@ export class Game {
       this.activateRun(false);
       if (this.startWithBasicIntro) this.beginRunIntro('basic');
     }
+    // Prepare only visible home/equipped essentials. Never wait indefinitely
+    // or fetch the full catalogue before handing control to the player.
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        Promise.all([
+          loadShipSkinArt(this.playerSkin, this.cannonSkin),
+          this.startOnMenu ? this.startScreen?.prepareVisibleArt() : this.prepareCombatArt()
+        ]),
+        new Promise<void>(resolve => { deadline = setTimeout(resolve, 3000); })
+      ]);
+    } finally { clearTimeout(deadline); }
+    if (this.stopped) return;
     this.app.ticker.add(this.onTick);
   }
 
@@ -801,6 +834,10 @@ export class Game {
       root.removeEventListener('change', this.onUiControlChange);
     }
     this.startScreen?.close();
+    this.levelUpRequestToken += 1;
+    this.levelUp.close();
+    this.pause.close();
+    this.gameOver.close();
     this.runTransition?.close();
     this.view.closeLevelUpFx();
     this.audio.shutdown();
@@ -957,6 +994,7 @@ export class Game {
       this.frames = 0;
       this.fpsTime = now;
     }
+    if (!this.debug.isEnabled) return;
     const state = this.viewport.state;
     const profile = this.profiler.snapshot(now);
     this.debug.update({
@@ -1061,6 +1099,7 @@ export class Game {
     requestToken: number,
     navigation: LevelUpNavigationOptions = {}
   ): Promise<void> {
+    void prepareArsenalTextures(choices.flatMap(choice => getUpgradeArtIds(choice, this.getSelectedWeaponEvolutions())));
     const hasEvolutionOffer = choices.some((choice) => choice.effect.type === 'evolutionOffer');
     const rerollAvailable = choices.length === 3
       && !hasEvolutionOffer
@@ -1114,6 +1153,7 @@ export class Game {
         ? this.upgradeApplier.applyUniversalMastery(upgradeId)
         : this.upgradeApplier.apply(upgradeId);
       if (!applied) return;
+      void this.prepareCombatArt();
       this.baseline.noteUpgrade(navigation.masteryTarget === true ? 'universal_weapon_mastery' : upgradeId);
       this.advanceWeaponPath(upgradeId);
       this.progression.consumeLevelUp();
@@ -1199,6 +1239,7 @@ export class Game {
   }
 
   private activateRun(unlockAudio: boolean): void {
+    this.view.root.visible = true;
     this.baseline.beginRun(this.fxQuality);
     this.applyCalibration();
     if (this.runMode === 'overdrive' && this.overdriveBuild !== 'starter') {
@@ -1229,6 +1270,15 @@ export class Game {
     } else if (this.campaignBuild === 'three-evolved') {
       this.openLevelUp(null, undefined, 20);
     }
+    void this.prepareCombatArt();
+  }
+
+  private async prepareCombatArt(): Promise<void> {
+    const selected = this.getSelectedWeaponEvolutions();
+    const ids = ART_FAMILIES.filter(family => this.combat.getWeaponPathRank(family) > 0)
+      .flatMap(family => getWeaponArtIds(family, selected[family]));
+    if (this.player.hasShield) ids.push('recharging_shield');
+    await prepareArsenalTextures(ids);
   }
 
   private beginRunIntro(variant: RunTransitionVariant): void {
@@ -1318,6 +1368,8 @@ export class Game {
         : Promise.resolve(false)
     ]);
     if (this.stopped || requestToken !== this.startScreenRequestToken || this.gameState.phase !== 'menu') return;
+    this.view.root.visible = false;
+    this.baselinePanel?.render(this.baseline);
     const saved = this.saveStore.load();
     this.startScreen.open({
       settings: saved.settings,

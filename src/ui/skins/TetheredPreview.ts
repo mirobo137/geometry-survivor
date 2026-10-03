@@ -13,7 +13,7 @@ export const createTetheredPreview = (
 
   return `<span class="player-skin-preview tethered-preview ${animated ? 'is-animated' : 'is-static'}" role="img" aria-label="${accessibleName}">
     <span class="tethered-preview-craft">
-      <img class="tethered-preview-ship" src="${ship.url}" style="--ship-preview-aspect: ${ship.width} / ${ship.height}" alt="" width="256" height="256" loading="lazy" decoding="async" draggable="false"/>
+      <img class="tethered-preview-ship" src="${ship.url}" style="--ship-preview-aspect: ${ship.width} / ${ship.height}" alt="" width="256" height="256" loading="${animated ? 'eager' : 'lazy'}" decoding="async" draggable="false"/>
     </span>
   </span>`;
 };

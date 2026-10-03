@@ -7,7 +7,11 @@ import { LocalSaveStore } from './LocalSaveStore';
 export class LocalPlatform implements PlatformAdapter {
   public readonly name = 'local';
   public readonly lifecycle = new LocalPlatformLifecycle();
-  public readonly ads = new LocalAdService();
+  public readonly ads: LocalAdService;
   public readonly saveStore = new LocalSaveStore();
   public readonly audio = new AudioManager();
+
+  public constructor(simulateRewardedAds = true) {
+    this.ads = new LocalAdService(simulateRewardedAds);
+  }
 }

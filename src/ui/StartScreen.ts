@@ -1,4 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
+import { prepareImage, observeVisibleImages, prepareActPlates } from './ImageReadiness';
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/images/ui/home/orbital-sanctuary.webp?url';
 import heroPortraitUrl from '../assets/images/ui/home/orbital-sanctuary-portrait.webp?url';
@@ -426,6 +427,14 @@ export class StartScreen {
     host.append(mark);
   }
 
+  public async prepareVisibleArt(): Promise<void> {
+    // Only the currently selected picture source and the home emblem; never
+    // eagerly load the acts, locker or the other portrait/landscape variant.
+    await Promise.all([...this.root.querySelectorAll<HTMLImageElement>(
+      '.home-scene-image, .home-exterior-image, .home-mark-image'
+    )].map(image => prepareImage(image)));
+  }
+
   private mountScene(): void {
     const host = this.root.querySelector<HTMLElement>('#start-scene');
     if (!host || host.firstElementChild) return;
@@ -475,6 +484,8 @@ export class StartScreen {
     this.closeEntrySelector();
     this.mainView.hidden = true;
     this.actView.hidden = false;
+    observeVisibleImages(this.actView);
+    prepareActPlates(this.actView);
     this.actView.querySelector<HTMLElement>('.console-body')?.scrollTo(0, 0);
     this.root.classList.add('is-act-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-act-open');

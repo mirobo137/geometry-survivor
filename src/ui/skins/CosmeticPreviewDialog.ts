@@ -1,3 +1,5 @@
+import { observeVisibleImages, stopObservingImages } from '../ImageReadiness';
+
 export interface CosmeticPreviewOptions {
   readonly kind: string;
   readonly rarity: string;
@@ -58,6 +60,7 @@ export class CosmeticPreviewDialog {
     });
     dialog.addEventListener('close', () => {
       if (dialog.open) return;
+      stopObservingImages(this.preview);
       this.preview.replaceChildren();
       this.onAction = null;
       if (this.opener?.isConnected) this.opener.focus({ preventScroll: true });
@@ -79,9 +82,11 @@ export class CosmeticPreviewDialog {
     this.preview.replaceChildren(options.preview);
     this.onAction = options.onAction;
     this.dialog.showModal();
+    observeVisibleImages(this.preview);
   }
 
   public close(): void {
+    stopObservingImages(this.preview);
     if (this.dialog.open) this.dialog.close();
   }
 }

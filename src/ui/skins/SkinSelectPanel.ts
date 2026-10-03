@@ -9,6 +9,7 @@ import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
+import { observeVisibleImages } from '../ImageReadiness';
 
 export interface SkinSelectPanelOptions {
   readonly state: SkinSaveData;
@@ -49,6 +50,7 @@ export class SkinSelectPanel {
     this.walletHandler = options.onWalletChange;
     this.cards.scrollTop = 0;
     this.render();
+    observeVisibleImages(this.cards);
   }
 
   public close(): void {

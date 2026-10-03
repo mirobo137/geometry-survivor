@@ -220,7 +220,9 @@ const bootstrap = async (): Promise<void> => {
     && !stressMode
     ? requestedWeaponPath
     : undefined;
-  const platform = new LocalPlatform();
+  // Commercial adapters remain an EX-09 release gate. Never award a simulated
+  // local ad in a portal artifact while that integration is still pending.
+  const platform = new LocalPlatform(__BUILD_TARGET__ === 'local');
   const publicOverdriveUnlocked = platform.saveStore.load().overdrive.unlocked;
   const overdriveBossDebugMode = diagnosticOverdrive && searchParams.get('od-pair') !== null;
   const overdriveBossStartSeconds = overdriveStage >= 10

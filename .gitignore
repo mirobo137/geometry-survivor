@@ -4,6 +4,8 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.tmp/resource-audit/
+.tmp/vite-memory/
 .env
 .env.*
 !.env.example

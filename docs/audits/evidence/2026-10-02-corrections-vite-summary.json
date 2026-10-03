@@ -1,0 +1,21 @@
+{
+  "kind": "bounded-vite-observation-summary",
+  "date": "2026-10-02",
+  "baseCommit": "76a6c78",
+  "workingTree": "corrections in progress; HMR/source changes during observation",
+  "command": "node scripts/qa-vite-memory.mjs --watch=fixed --seconds=600",
+  "node": "24.19.0",
+  "uv": "1.52.1",
+  "pid": 20260,
+  "exitCode": 0,
+  "observedSamplesFromStdout": [
+    { "elapsedSeconds": 5.1, "rssMiB": 229.67, "heapUsedMiB": 94.76 },
+    { "elapsedSeconds": 10.1, "rssMiB": 132.63, "heapUsedMiB": 67.29 },
+    { "elapsedSeconds": 300.5, "rssMiB": 151.2, "heapUsedMiB": 68.82 },
+    { "elapsedSeconds": 596, "rssMiB": 150.36, "heapUsedMiB": 69.08 },
+    { "elapsedSeconds": 601.9, "rssMiB": 151.76, "heapUsedMiB": 69.15 }
+  ],
+  "windowsPrivateMiBSeparateSamples": [171.46, 191.98, 191.82],
+  "assertionsPassed": ["no page errors", "no dist events reached fixed watcher", "source directories still watched", "RSS stayed below 768 MiB safety stop", "play button still visible"],
+  "limits": "Summary from command output, not full raw series. Raw test-results report was removed by a subsequent Playwright run. No sampled private peak, historical cause or hours-long stability certification. External builds occurred, rather than the script's --builds phase."
+}

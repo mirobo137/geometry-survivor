@@ -1,4 +1,5 @@
 import { Container, Sprite, Texture } from 'pixi.js';
+import { CastArt } from './weapons/CastArt';
 import type { Renderer } from 'pixi.js';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import type { BossId } from '../../content/bosses/BossDefinition';
@@ -79,7 +80,6 @@ import { SpawnPortalView } from './enemies/SpawnPortalView';
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
 import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
 import { BLOOM_TRAIL_ASSET } from '../../assets/skins/cannons/bloom/BloomAssets';
-import { getArsenalTexture } from './weapons/ArsenalTextures';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -273,6 +273,7 @@ class EnemyVisual {
 }
 
 export class CombatEntitiesView {
+  private readonly projectileArt = new CastArt();
   public readonly root = new Container();
   private readonly enemyLayer = new Container();
   private readonly projectileLayer = new Container();
@@ -482,6 +483,7 @@ export class CombatEntitiesView {
       const state = combat.projectiles[index];
       const sprite = this.projectileSprites[index];
       const glow = this.projectileGlows[index] ?? null;
+      this.projectileArt.begin(index, state.active, state.ageSeconds);
       sprite.visible = state.active;
       if (glow) glow.visible = state.active;
       if (!state.active) continue;
@@ -501,7 +503,7 @@ export class CombatEntitiesView {
       const evolutionScale = state.radius / 7;
       const evolutionTint = state.evolution === 'rail_lance'
         ? 0xffd978 : state.evolution === 'pulse_volley' ? 0x9fffe8 : 0xffffff;
-      const art = getArsenalTexture(state.evolution ?? 'projectile');
+      const art = this.projectileArt.get(index, state.evolution ?? 'projectile');
       // Cosmetic packages keep their authored head/trail identity. Evolved shots
       // and the default emitter use PNG bodies; other packages receive PNG glow.
       const rasterBody = art && (this.cannonSkin === 'basic' || state.evolution);
@@ -543,6 +545,7 @@ export class CombatEntitiesView {
   }
 
   public reset(): void {
+    this.projectileArt.clear();
     for (const boss of Object.values(this.bosses)) boss.reset();
     this.enemyImpactFx.clear();
     this.enemyDefeatFx.clear();

@@ -118,6 +118,52 @@ describe('AudioManager', () => {
     }).not.toThrow();
   });
 
+  it('recovers a context suspended after the initial unlock without recreating the backend', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    const context = mocks.context!;
+    service.playCue('ui-click');
+    const firstBufferCount = context.createBuffer.mock.calls.length;
+    context.state = 'suspended';
+    await service.unlock();
+    expect(context.state).toBe('running');
+    expect(context.resume).toHaveBeenCalledTimes(2);
+    context.currentTime = 1;
+    service.playCue('ui-click');
+    expect(context.createBuffer.mock.calls.length).toBe(firstBufferCount);
+    expect(mocks.howlPlay).not.toHaveBeenCalled();
+    service.shutdown();
+  });
+
+  it('retries a null context on a later gesture', async () => {
+    mocks.allowContext = false;
+    const service = new AudioManager();
+    await service.unlock();
+    mocks.context = new FakeAudioContext();
+    mocks.masterGain = mocks.context.createGain();
+    await service.unlock();
+    service.playCue('ui-click');
+    expect(mocks.context.createBufferSource).toHaveBeenCalledOnce();
+    service.shutdown();
+  });
+
+  it('recovers suspended audio in pause without resuming combat or music', async () => {
+    const service = new AudioManager();
+    await service.unlock();
+    service.startMusic();
+    service.pause();
+    const context = mocks.context!;
+    context.state = 'suspended';
+    mocks.howlPlay.mockClear();
+    await service.unlock();
+    service.playCue('laser-sustain');
+    expect(context.createBufferSource).not.toHaveBeenCalled();
+    service.playCue('ui-click');
+    expect(context.createBufferSource).toHaveBeenCalledOnce();
+    expect(mocks.howlPlay).not.toHaveBeenCalled();
+    service.shutdown();
+  });
+
   it('caches layered synthesis and disposes finished sources', async () => {
     const service = new AudioManager();
     await service.unlock();

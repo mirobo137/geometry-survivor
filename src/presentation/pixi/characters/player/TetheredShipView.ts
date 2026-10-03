@@ -25,10 +25,14 @@ const loadTexture = (url: string): Promise<Texture | undefined> => {
   pending = new Promise<Texture | undefined>(resolve => {
     const image = new Image();
     image.decoding = 'async';
-    image.onload = () => {
-      try { resolve(Texture.from(image)); } catch { resolve(undefined); }
+    image.onload = async () => {
+      try {
+        await image.decode();
+        image.onload = image.onerror = null;
+        resolve(Texture.from(image));
+      } catch { image.onload = image.onerror = null; resolve(undefined); }
     };
-    image.onerror = () => resolve(undefined);
+    image.onerror = () => { image.onload = image.onerror = null; resolve(undefined); };
     image.src = url;
   }).then(texture => {
     if (!texture && texturePromises.get(url) === pending) texturePromises.delete(url);
@@ -96,6 +100,9 @@ export class TetheredShipView {
       this.configure(this.right, art.cannon, CANNON_SKIN_RASTER_ART[requestedCannon]);
       this.damage.blendMode = 'add';
       this.loaded = true;
+      // Compose once when assets commit, including while the hidden world has
+      // no ticker work. The next real frame still supplies its actual pose/time.
+      this.render(0, 0, 0, 0, 0, 0, 0);
       this.lastSeconds = null;
     }).catch(() => { /* Keep the existing player visible on unexpected decode errors. */ });
   }

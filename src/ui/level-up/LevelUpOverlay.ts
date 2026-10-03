@@ -1,4 +1,5 @@
 import type { UpgradeDefinition, UpgradeId } from '../../content/upgrades/UpgradeDefinitions';
+import { observeVisibleImages, stopObservingImages } from '../ImageReadiness';
 import type { UpgradePreview, UpgradePreviewStat } from '../../simulation/progression/UpgradePreview';
 import cardFrameSvg from '../../assets/svg/ui/level-up/premium-card-frame.svg?raw';
 import upgradeIconsSvg from '../../assets/svg/ui/level-up/premium-icons.svg?raw';
@@ -179,6 +180,7 @@ export class LevelUpOverlay {
       this.backButton.hidden = this.backHandler === null;
       this.backButton.disabled = false;
     }
+    stopObservingImages(this.options);
     this.options.replaceChildren();
     choices.forEach((choice, index) => {
       const visual = getCardVisual(choice);
@@ -248,6 +250,7 @@ export class LevelUpOverlay {
         image.width = 768;
         image.height = 384;
         image.decoding = 'async';
+        image.loading = 'lazy';
         image.draggable = false;
         const label = document.createElement('span');
         label.className = 'upgrade-card-art-label';
@@ -318,6 +321,7 @@ export class LevelUpOverlay {
       button.append(frame, content);
       this.options.appendChild(button);
     });
+    observeVisibleImages(this.options);
     this.rerollHandler = rewarded.onReroll ?? null;
     const canReroll = rewarded.rerollAvailable === true && this.rerollHandler !== null;
     this.rewardedSection.hidden = !canReroll;
@@ -388,6 +392,7 @@ export class LevelUpOverlay {
   }
 
   public close(): void {
+    stopObservingImages(this.options);
     this.cancelPendingSelection();
     this.root.hidden = true;
     this.rerollHandler = null;

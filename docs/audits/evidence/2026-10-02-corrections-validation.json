@@ -1,0 +1,42 @@
+{
+  "kind": "validation-summary-from-command-results",
+  "date": "2026-10-02",
+  "baseCommit": "76a6c78",
+  "revision": "local resource-audit corrections; no commit or push",
+  "typecheck": { "command": "node node_modules/typescript/bin/tsc --noEmit", "exitCode": 0 },
+  "unit": {
+    "command": "node node_modules/vitest/vitest.mjs run",
+    "exitCode": 0,
+    "filesPassed": 123,
+    "testsPassed": 595
+  },
+  "builds": {
+    "commands": ["vite build --mode development", "vite build --mode poki", "vite build --mode crazygames"],
+    "exitCodes": [0, 0, 0],
+    "completeArtifactBytes": { "local": 12163071, "poki": 7259136, "crazygames": 7259142 },
+    "budgetBytes": 15000000,
+    "budgetGuardExitCode": 0,
+    "existingChunkWarning": true
+  },
+  "browser": {
+    "command": "node node_modules/@playwright/test/cli.js test --reporter=line --max-failures=1",
+    "exitCode": 0,
+    "testsPassed": 89,
+    "desktop": 71,
+    "mobile": 18,
+    "reportedDurationMinutes": 9.4,
+    "workers": 1,
+    "lastRunStatus": "passed",
+    "failedTests": [],
+    "assistedTeardown": false
+  },
+  "resourceAudit": {
+    "command": "node scripts/qa-resource-audit.mjs",
+    "exitCode": 0,
+    "scenarios": 6,
+    "elapsedMs": 221616,
+    "rawEvidence": "2026-10-02-corrections-browser.json"
+  },
+  "cleanup": { "matchingQaNodeProcessesAfterExit": 0, "listeningQaPortsAfterExit": [], "checkedPorts": [4173, 4175, 5175] },
+  "limits": ["Chromium emulation is not physical mobile or iOS QA", "Bounded probes do not certify hours-long stability", "Real platform SDKs and full i18n remain release gates"]
+}

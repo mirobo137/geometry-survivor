@@ -33,68 +33,45 @@ export const PLAYER_TEXTURE_FRAME: SvgTextureFrame = {
 
 
 
+const lazyMap = <K extends string, V>(keys: readonly K[], build: (key: K) => V): Record<K, V> => {
+  const cache = new Map<K, V>();
+  const result = {} as Record<K, V>;
+  for (const key of keys) Object.defineProperty(result, key, { enumerable: true, get: () => {
+    if (!cache.has(key)) cache.set(key, build(key));
+    return cache.get(key)!;
+  } });
+  return result;
+};
+
 const rasterizeSkinMap = (
   renderer: Renderer,
   pick: (hull: (typeof PLAYER_HULL_SVG)[PlayerSkinId]) => string
 ): Record<PlayerSkinId, Texture> => {
-  const textures = Object.fromEntries(
-    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).filter(skin => skin !== 'spearhead').map((skin) => [
-      skin,
-      createSvgTexture(renderer, pick(PLAYER_HULL_SVG[skin]), PLAYER_TEXTURE_FRAME)
-    ])
-  ) as Record<PlayerSkinId, Texture>;
-  textures.spearhead = textures.cyan;
+  const textures: Record<PlayerSkinId, Texture> = lazyMap(Object.keys(PLAYER_SKINS) as PlayerSkinId[], skin =>
+    skin === 'spearhead' ? textures.cyan : createSvgTexture(renderer, pick(PLAYER_HULL_SVG[skin]), PLAYER_TEXTURE_FRAME));
   return textures;
 };
 
 const rasterizeSignatures = (renderer: Renderer): Record<PlayerSkinId, Texture> => {
-  const textures = Object.fromEntries(
-    (Object.keys(PLAYER_SKINS) as PlayerSkinId[]).filter(skin => skin !== 'spearhead').map(skin => [
-      skin, createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME)
-    ])
-  ) as Record<PlayerSkinId, Texture>;
-  textures.spearhead = textures.cyan;
+  const textures: Record<PlayerSkinId, Texture> = lazyMap(Object.keys(PLAYER_SKINS) as PlayerSkinId[], skin =>
+    skin === 'spearhead' ? textures.cyan : createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME));
   return textures;
 };
 
-/** Rasterizes each player piece once while retaining the SVG masters in src/. */
+const rasterizeCannons = (renderer: Renderer): Record<CannonSkinId, CannonTexturePair> => {
+  const textures: Record<CannonSkinId, CannonTexturePair> = lazyMap(
+    [...Object.keys(CANNON_BARREL_SVG), 'spearhead'] as CannonSkinId[], skin => skin === 'spearhead' ? textures.basic : {
+      left: createSvgTexture(renderer, CANNON_BARREL_SVG[skin].left, PLAYER_TEXTURE_FRAME),
+      right: createSvgTexture(renderer, CANNON_BARREL_SVG[skin].right, PLAYER_TEXTURE_FRAME)
+    });
+  return textures;
+};
+
+/** Only rasterize pieces actually requested, once, retaining the SVG masters. */
 export const createPlayerTextures = (renderer: Renderer): PlayerTextureSet => ({
   shadow: createSvgTexture(renderer, playerShadowSvg, PLAYER_TEXTURE_FRAME),
   ring: rasterizeSkinMap(renderer, (hull) => hull.ring),
-  weapons: {
-    basic: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.right, PLAYER_TEXTURE_FRAME)
-    },
-    curve: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.curve.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.curve.right, PLAYER_TEXTURE_FRAME)
-    },
-    smoke: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.smoke.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.smoke.right, PLAYER_TEXTURE_FRAME)
-    },
-    rainbow: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.rainbow.right, PLAYER_TEXTURE_FRAME)
-    },
-    lattice: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.lattice.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.lattice.right, PLAYER_TEXTURE_FRAME)
-    },
-    helix: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.helix.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.helix.right, PLAYER_TEXTURE_FRAME)
-    },
-    bloom: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.bloom.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.bloom.right, PLAYER_TEXTURE_FRAME)
-    },
-    spearhead: {
-      left: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.left, PLAYER_TEXTURE_FRAME),
-      right: createSvgTexture(renderer, CANNON_BARREL_SVG.basic.right, PLAYER_TEXTURE_FRAME)
-    }
-  },
+  weapons: rasterizeCannons(renderer),
   body: rasterizeSkinMap(renderer, (hull) => hull.body),
   core: rasterizeSkinMap(renderer, (hull) => hull.core),
   accent: createSvgTexture(renderer, playerAccentSvg, PLAYER_TEXTURE_FRAME),

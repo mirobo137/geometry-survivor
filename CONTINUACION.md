@@ -1,33 +1,29 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 02-10-2026. Base inspeccionada: `d793740` (`node solucion`).
+Actualizado: 02-10-2026. Base de correcciones: `76a6c78` (`auditoria general`).
 Este archivo es un snapshot, no reemplaza `PLAN_DESARROLLO.md` ni el estado Git.
 
 ## Solicitud vigente y siguiente acción
 
-Auditar memoria Node/Vite, recursos del juego, carga tardía de imágenes/ataques
-y preparación para plataformas; documentar los hallazgos y depurar documentación.
-La solicitud autoriza diagnóstico y limpieza documental, no corregir producción,
-instalar dependencias ni publicar automáticamente.
+El usuario autorizó solucionar los hallazgos de la auditoría. Correcciones de
+carga, material por ataque, caché/texturas, audio, trabajo oculto del menú,
+fallback selectivo, shutdown aplicable, peso/CI y cierre de QA implementadas.
+No se autorizaron commit/push/publicación ni se reabrió balance/economía/saves.
 
 Entrada de esta sesión: [auditoría de recursos](docs/audits/AUDITORIA_RECURSOS_2026-10-02.md).
 Antes de continuar, leer su evidencia, límites y prioridades. No declarar la
 publicación lista ni avanzar a contenido nuevo mientras existan bloqueantes.
 La [guía de ejecución](docs/PLAN_EJECUCION.md) contiene la cola vigente.
 
-Auditoría entregada: typecheck, 578 unitarias y tres builds correctos; 81 casos
-browser correctos con cierre de preview asistido (QA-01), no cierre automático
-certificado. Los servidores propios de QA en 4173/4175/5175 quedaron cerrados.
-Los hallazgos siguen abiertos: próxima implementación, si se autoriza, RES-01/02
-y consolidación RES-04; después menús RES-03 y audio RES-05. No rehacer esta
-auditoría breve como sustituto de la prueba larga pendiente.
-
-Auditoría entregada: typecheck, 578 unitarias y tres builds correctos; 81 casos
-browser correctos con cierre de preview asistido (QA-01), no cierre automático
-certificado. Los servidores propios de QA en 4173/4175/5175 quedaron cerrados.
-Los hallazgos siguen abiertos: próxima implementación, si se autoriza, RES-01/02
-y consolidación RES-04; después menús RES-03 y audio RES-05. No rehacer esta
-auditoría breve como sustituto de la prueba larga pendiente.
+Seguimiento: [correcciones por ID y evidencia](docs/audits/CORRECCIONES_RECURSOS_2026-10-02.md).
+Typecheck, 595 unitarias y tres builds correctos (~7,26 MB runtime por target;
+local completo con mapas: ~12,16 MB). Suite browser completa: 89 correctas / 9,4 min,
+exit 0, cierre automático sin ayuda. Diagnóstico de recursos: 6 escenarios,
+20 recorridos + 60 modales + 10 reinicios, cero errores. Vite completó 601,9 s, RSS final ~152 MiB,
+sin errores ni eventos dist; no certifica una sesión de horas.
+SDKs reales e i18n completo siguen EX-09, no cerrados. Los anuncios simulados
+ya no conceden recompensas fuera del target local. No sustituir prueba larga ni
+aceptación humana con estos checks; sin publicar.
 
 ## Estado que no hay que reconstruir
 

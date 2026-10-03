@@ -171,6 +171,12 @@ resultado local en Windows no predice el rendimiento Ubuntu.
 
 ## Reproducir y diagnosticar
 
+Corrección 02-10-2026: `playwright.config.ts` inicia `node scripts/qa-preview.mjs`
+con un único proceso Node/API Vite (sin npx padre), strictPort y cierre acotado.
+CI falla si `scripts/check-build-budget.mjs` encuentra un artefacto completo >15 MB;
+la descarga inicial ≤5 MB se verifica en los nuevos checks browser de recursos.
+Esto no certifica un portal ni FPS de móvil físico. [Seguimiento](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
+
 1. Ejecutar `npm run build:local` para que preview sirva el código actual.
 2. En PowerShell: `$env:CI='true'` y después `npx playwright test`.
    En bash: `CI=true npx playwright test`.

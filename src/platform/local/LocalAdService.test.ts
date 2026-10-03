@@ -19,6 +19,13 @@ describe('LocalAdService', () => {
     await expect(ads.showRewarded('double-nova')).resolves.toBe('rewarded');
   });
 
+  it.each(placements)('fails closed for %s outside the local target even with ?ad=rewarded', async placement => {
+    setSearch('?ad=rewarded');
+    const ads = new LocalAdService(false);
+    await expect(ads.isRewardedAvailable(placement)).resolves.toBe(false);
+    await expect(ads.showRewarded(placement)).resolves.toBe('unavailable');
+  });
+
   it.each(placements)('keeps the successful local contract for %s', async (placement) => {
     setSearch('');
     const ads = new LocalAdService();

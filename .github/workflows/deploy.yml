@@ -38,6 +38,8 @@ jobs:
         run: npx vite build --mode poki
       - name: Build CrazyGames
         run: npx vite build --mode crazygames
+      - name: Enforce complete build size
+        run: node scripts/check-build-budget.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload artifact

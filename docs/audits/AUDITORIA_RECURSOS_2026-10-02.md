@@ -4,6 +4,10 @@ Fecha: 02-10-2026. Código inspeccionado: `d793740` (`node solucion`).
 Windows x64; Node **24.19.0**, libuv **1.52.1**, npm **11.17.0**, Vite **7.3.6**,
 PixiJS **8.20.0**, Chromium de Playwright.
 
+Seguimiento posterior autorizado: [correcciones y estado por hallazgo](CORRECCIONES_RECURSOS_2026-10-02.md).
+Las observaciones y cifras de este informe describen la base anterior, no el
+código corregido del seguimiento.
+
 Alcance autorizado: diagnosticar Node/Vite, recursos del juego y carga tardía,
 documentar riesgos prepublicación y depurar documentación. Esta entrega **no
 corrige producción, no cambia versiones/balance/saves y no publica**. Se añade

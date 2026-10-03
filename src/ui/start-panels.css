@@ -324,17 +324,17 @@
   background: #081421;
   color: #eef8ff;
 }
-#start-act-radial { --route-art: url('../assets/images/ui/menus/act-radial.png'); }
+#start-act-radial { --route-art: url('../assets/images/ui/menus/act-radial.webp'); }
 #start-act-view #start-act-angular {
-  --route-art: url('../assets/images/ui/menus/act-angular.png');
+  --route-art: url('../assets/images/ui/menus/act-angular.webp');
   --route-accent: #b7c8ff;
 }
 #start-act-view #start-act-fracture {
-  --route-art: url('../assets/images/ui/menus/act-fracture.png');
+  --route-art: url('../assets/images/ui/menus/act-fracture.webp');
   --route-accent: #efb5ff;
 }
 #start-act-view #start-overdrive {
-  --route-art: url('../assets/images/ui/menus/act-overdrive.png');
+  --route-art: url('../assets/images/ui/menus/act-overdrive.webp');
   --route-accent: #ffe39a;
 }
 #start-act-view .act-card-button::before {

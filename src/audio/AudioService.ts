@@ -32,6 +32,7 @@ export class AudioManager implements AudioService {
   private settings: AudioSettings = { musicVolume: 1, sfxVolume: 1, muted: false };
   private readonly music = new HowlerMusicBackend();
   private sfx: ZzfxSfxBackend | null = null;
+  private sfxContext: AudioContext | null = null;
   private unlocked = false;
   private lifecyclePaused = false;
   // Music begins only when Game activates a run, never while browsing the menu.
@@ -50,12 +51,8 @@ export class AudioManager implements AudioService {
 
   public unlock(): Promise<void> {
     if (this.shutdownRequested) return Promise.resolve();
-    if (this.unlocked) {
-      // A click in the pause panel may unlock UI SFX, but must not resume the
-      // gameplay bus or music until the user explicitly resumes the run.
-      if (!this.lifecyclePaused) this.resume();
-      return Promise.resolve();
-    }
+    // Every valid gesture may recover Howler's auto-suspended context. Recovery
+    // must not reopen the combat gate or resume a paused run/music.
     if (this.unlockPromise) return this.unlockPromise;
     this.unlockPromise = this.unlockFromGesture().finally(() => { this.unlockPromise = null; });
     return this.unlockPromise;
@@ -65,8 +62,14 @@ export class AudioManager implements AudioService {
     try {
       const context = await this.music.unlock();
       if (this.shutdownRequested) return;
-      this.sfx = context ? new ZzfxSfxBackend(context) : null;
+      if (!context) { this.unlocked = false; return; }
+      if (context !== this.sfxContext) {
+        this.sfx?.shutdown();
+        this.sfx = new ZzfxSfxBackend(context);
+        this.sfxContext = context;
+      }
       if (this.lifecyclePaused) this.sfx?.pause();
+      else this.sfx?.resume();
       this.unlocked = true;
       this.applySettings();
       if (this.musicRequested && !this.lifecyclePaused) this.music.play();
@@ -111,6 +114,7 @@ export class AudioManager implements AudioService {
     this.lifecyclePaused = false;
     this.sfx?.shutdown();
     this.sfx = null;
+    this.sfxContext = null;
     this.music.shutdown();
     this.unlocked = false;
   }

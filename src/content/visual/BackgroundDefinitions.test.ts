@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { BACKGROUND_DEFINITIONS, getBackgroundDefinition, isBackgroundId } from './BackgroundDefinitions';
 
 describe('BackgroundDefinitions', () => {
-  it('keeps seven bounded, presentation-only background identities', () => {
-    expect(BACKGROUND_DEFINITIONS).toHaveLength(7);
-    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(7);
+  it('keeps ten bounded, presentation-only background identities', () => {
+    expect(BACKGROUND_DEFINITIONS).toHaveLength(10);
+    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(10);
     for (const definition of BACKGROUND_DEFINITIONS) {
       expect(definition.name.length).toBeGreaterThan(0);
+      expect(isBackgroundId(definition.id)).toBe(true);
       expect(definition.tokens.pattern).toMatch(/^(constellation|nebula|solar|crystal)$/);
       expect(definition.tokens.base).toBeGreaterThanOrEqual(0);
     }

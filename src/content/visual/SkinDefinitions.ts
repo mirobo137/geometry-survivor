@@ -121,6 +121,18 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     palette: PLAYER_SKINS.manta,
     acquisition: 'nova',
     signature: 'manta'
+  },
+  {
+    id: 'corsair', name: 'Scarlet Corsair', subtitle: 'Dos proas, una señal',
+    description: 'Un catamarán de cerámica escarlata: dos pontones abiertos y motores gemelos de hielo.',
+    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 3600,
+    palette: PLAYER_SKINS.corsair, acquisition: 'nova', signature: 'aurora'
+  },
+  {
+    id: 'nautilus', name: 'Nautilus Ark', subtitle: 'La espiral del abismo',
+    description: 'Una concha blindada de cobalto y latón abraza un reactor turquesa excéntrico.',
+    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 4200,
+    palette: PLAYER_SKINS.nautilus, acquisition: 'nova', signature: 'quasar'
   }
 ] as const;
 

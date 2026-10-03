@@ -4,11 +4,13 @@ import { registerHomeChecks } from './home.checks';
 import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
+import { registerCatalogChecks } from './catalog.checks';
 
 registerHomeChecks();
 registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
+registerCatalogChecks();
 
 test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y cañones', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
@@ -86,7 +88,7 @@ const RESIZE_MATRIX = [
   { width: 412, height: 915 }
 ] as const;
 
-test('carga las ocho naves PNG y ocho canones con boss en high', async ({ page }, testInfo) => {
+test('carga las diez naves PNG y diez canones con boss en high', async ({ page }, testInfo) => {
     test.setTimeout(150_000);
     const quality = 'high';
     const failures = captureRuntimeFailures(page);
@@ -97,9 +99,9 @@ test('carga las ocho naves PNG y ocho canones con boss en high', async ({ page }
       if (response.url().includes('smoke-trail-') && response.ok()) smokeAssetResponses.push(response.url());
       if (response.url().includes('bloom-trail-') && response.ok()) bloomAssetResponses.push(response.url());
     });
-    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead'];
-    const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
-    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead'];
+    const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead', 'corsair', 'nautilus'];
+    const backgrounds = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field', 'silent-archive', 'lunar-fault', 'leviathan-wake'];
+    const cannons = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead', 'gyre', 'razor'];
     for (let index = 0; index < skins.length; index += 1) {
       const shipAsset = skins[index] === 'spearhead' ? 'tether-ship-' : `${skins[index]}-`;
       const cannonAsset = cannons[index] === 'spearhead' ? 'tether-cannon-' : `${cannons[index]}-`;
@@ -251,7 +253,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('.skin-preview-stage')).toHaveCount(0);
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(8);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(10);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Eclipse Prism');
@@ -284,7 +286,7 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await page.locator('#start-cannon-skins-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(8);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(10);
   expect(await page.locator('#start-cannon-cards .cannon-card-art').evaluateAll((artworks) =>
     artworks.every((artwork) => getComputedStyle(artwork).overflowX === 'hidden' && getComputedStyle(artwork).overflowY === 'hidden')
   )).toBe(true);

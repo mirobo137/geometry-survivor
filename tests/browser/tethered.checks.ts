@@ -47,7 +47,7 @@ export const registerTetheredShipChecks = (): void => {
           inside: hull.left >= frame.left - 1 && hull.right <= frame.right + 1
             && hull.top >= frame.top - 1 && hull.bottom <= frame.bottom + 1 };
       }));
-      expect(cards).toHaveLength(8);
+      expect(cards).toHaveLength(10);
       for (const card of cards) {
         expect(card.images).toBe(1);
         expect(card.ratio).toBeCloseTo(56 / 64, 2);
@@ -72,7 +72,7 @@ export const registerTetheredShipChecks = (): void => {
       if (!process.env.CI && viewport.width === 390) await preview.screenshot({ path: testInfo.outputPath('ship-only.png') });
       await page.locator('#start-cosmetic-close').click();
       await page.locator('#start-cannon-skins-tab').click();
-      await expect(page.locator('.cannon-card-art svg image')).toHaveCount(24);
+      await expect(page.locator('.cannon-card-art svg image')).toHaveCount(30);
       const thumbnails = await page.locator('.cannon-card-art').evaluateAll(artworks => artworks.map(artwork => {
         const frame = artwork.getBoundingClientRect();
         const cannon = artwork.querySelector('.cannon-preview-module')!.getBoundingClientRect();

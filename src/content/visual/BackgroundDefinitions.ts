@@ -1,4 +1,4 @@
-export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil';
+export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil' | 'silent-archive' | 'lunar-fault' | 'leviathan-wake';
 export type BackgroundPattern = 'constellation' | 'nebula' | 'solar' | 'crystal';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -100,12 +100,31 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     tier: 'epic',
     priceNova: 700,
     tokens: { base: 0x100b20, glow: 0x38205b, accent: 0xd2a8ff, secondary: 0x75e6ff, pattern: 'crystal' }
+  },
+  {
+    id: 'silent-archive', name: 'Archivo Silente', subtitle: 'Bóvedas que olvidaron las estrellas',
+    description: 'Arcos monumentales de cerámica erosionada descansan sobre un abismo teal.',
+    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 1200, acquisition: 'nova',
+    tokens: { base: 0x070e16, glow: 0x243f45, accent: 0xa0c1bc, secondary: 0xb8ad91, pattern: 'constellation' }
+  },
+  {
+    id: 'lunar-fault', name: 'Falla Lunar', subtitle: 'El silencio de una corteza rota',
+    description: 'Terrazas de cráter y basalto ceniciento enmarcan un golfo oscuro con luz rasante.',
+    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 1800, acquisition: 'nova',
+    tokens: { base: 0x0c0e15, glow: 0x343b44, accent: 0xb1b7c2, secondary: 0xa58268, pattern: 'solar' }
+  },
+  {
+    id: 'leviathan-wake', name: 'Estela del Leviatán', subtitle: 'Un fósil entre las mareas negras',
+    description: 'Costillas colosales de jade y nácar se pierden en una profundidad azul abisal.',
+    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 2400, acquisition: 'nova',
+    tokens: { base: 0x050d17, glow: 0x183f41, accent: 0x82bcaf, secondary: 0x91aabd, pattern: 'nebula' }
   }
 ] as const;
 
 export const isBackgroundId = (value: unknown): value is BackgroundId => (
   value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field'
   || value === 'nacre-orbit' || value === 'vesper-bloom' || value === 'tidal-veil'
+  || value === 'silent-archive' || value === 'lunar-fault' || value === 'leviathan-wake'
 );
 
 export const getBackgroundDefinition = (id: BackgroundId): BackgroundDefinition => (

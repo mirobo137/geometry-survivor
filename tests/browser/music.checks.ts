@@ -34,7 +34,7 @@ const readMusic = (page: Page) => page.evaluate(() => {
 });
 
 export const registerMusicChecks = (): void => {
-  test('música general conserva una pista y mezcla menú 70% / partida 35% con pausa y retorno', async ({ page }) => {
+  test('música general conserva una pista y mezcla menú 50% / partida 20% con pausa y retorno', async ({ page }) => {
     const errors: string[] = [];
     const requests: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -49,7 +49,7 @@ export const registerMusicChecks = (): void => {
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.time ?? 0).toBeGreaterThan(0);
     const menu = await readMusic(page);
     expect(menu.tracks).toHaveLength(1);
-    expect(menu.tracks[0].volume).toBeCloseTo(0.7, 2);
+    expect(menu.tracks[0].volume).toBeCloseTo(0.5, 2);
     expect(menu.tracks[0].duration).toBeGreaterThan(359);
     // Howler may close/recreate its initial context once for its sample-rate fix.
     expect(menu.contexts).toBeGreaterThanOrEqual(1);
@@ -59,7 +59,7 @@ export const registerMusicChecks = (): void => {
     await page.locator('#start-settings-toggle').click();
     await page.locator('#start-play').click();
     await page.locator('[data-run-transition-skip]').click();
-    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.35, 2);
+    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.2, 2);
     expect((await readMusic(page)).tracks[0].time).toBeGreaterThan(menu.tracks[0].time);
     await page.locator('#pause-toggle').click();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(true);
@@ -70,7 +70,7 @@ export const registerMusicChecks = (): void => {
     await page.locator('#pause-menu').click();
     await expect(page.locator('#start-screen')).toBeVisible();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(false);
-    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.7, 2);
+    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.5, 2);
     expect((await readMusic(page)).tracks[0].index).toBe(menu.tracks[0].index);
     expect((await readMusic(page)).tracks[0].time).toBeGreaterThanOrEqual(pausedTime);
 
@@ -83,15 +83,15 @@ export const registerMusicChecks = (): void => {
       (element as HTMLInputElement).value = '50';
       element.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.35, 2);
+    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.25, 2);
     await page.locator('#start-muted').check();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(true);
     await page.locator('#start-muted').uncheck();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(false);
-    expect((await readMusic(page)).tracks[0].volume).toBeCloseTo(0.35, 2);
+    expect((await readMusic(page)).tracks[0].volume).toBeCloseTo(0.25, 2);
     await page.locator('#start-settings-toggle').click();
     await page.locator('#start-play').click();
-    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.175, 2);
+    await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.1, 2);
     const final = await readMusic(page);
     expect(final.tracks).toHaveLength(1);
     expect(final.tracks[0].index).toBe(menu.tracks[0].index);
@@ -138,7 +138,7 @@ export const registerMusicChecks = (): void => {
       await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(true);
       await page.locator('#pause-resume').click();
       await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(false);
-      await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.35, 2);
+      await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.2, 2);
       expect((await readMusic(page)).tracks).toHaveLength(1);
       expect(errors).toEqual([]);
     } finally { release(); }

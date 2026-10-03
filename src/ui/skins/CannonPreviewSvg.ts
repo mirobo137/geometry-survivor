@@ -3,7 +3,7 @@ import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import { CANNON_SKIN_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
 import { PROJECTILE_ART_URLS, PROJECTILE_HEAD_SIZE, PROJECTILE_SKIN_ART } from '../../assets/fx/projectiles/ProjectileRasterAssets';
 import { PROJECTILE_MUZZLE_OFFSETS } from '../../content/weapons/WeaponDefinitions';
-import { CANNON_PROJECTILE_SVG, extractSvgGraphicMarkup } from '../../assets/svg/cannons/CannonSvgMarkup';
+import { CANNON_PROJECTILE_SVG, extractSvgGraphicMarkup, getCannonFallbackId } from '../../assets/svg/cannons/CannonSvgMarkup';
 
 export interface CannonPreviewOptions {
   readonly animated?: boolean;
@@ -23,7 +23,7 @@ const trailMarkup = (skin: CannonSkinId, x: number, accent: string): string => {
 };
 
 const roundTripSkin = (skin: CannonSkinId): keyof typeof CANNON_PROJECTILE_SVG => (
-  skin === 'spearhead' ? 'basic' : skin
+  getCannonFallbackId(skin)
 );
 
 /** Isolated cannon PNG modules with their projectile/trail package; no hull or cables. */
@@ -41,7 +41,7 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
   const shots = muzzles.map(muzzle => {
     const body = `<g class="cannon-preview-projectile" transform="translate(${muzzle.x} -46) rotate(-90)"><image class="cannon-preview-head-art" href="${PROJECTILE_ART_URLS[material.headId]}" x="${-PROJECTILE_HEAD_SIZE.width / 2}" y="${-PROJECTILE_HEAD_SIZE.height / 2}" width="${PROJECTILE_HEAD_SIZE.width}" height="${PROJECTILE_HEAD_SIZE.height}" preserveAspectRatio="none"/><g class="cannon-preview-fallback">${bullet}</g></g>`;
     return animated
-      ? `<g class="cannon-preview-shot">${body}</g>`
+      ? `<g class="cannon-preview-shot"><g class="cannon-preview-weave">${body}</g></g>`
       : `<g>${body}</g>`;
   }).join('');
   const trails = muzzles.map(muzzle => `<g class="cannon-preview-trail-material"><image class="cannon-preview-trail-art cannon-preview-trail" href="${PROJECTILE_ART_URLS[material.trailId]}" x="-15.5" y="-6" width="31" height="12" transform="translate(${muzzle.x} -31.5) rotate(-90)" preserveAspectRatio="none"/><g class="cannon-preview-fallback">${trailMarkup(skin, muzzle.x, accent)}</g></g>`).join('');
@@ -52,8 +52,8 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
     `<image class="cannon-preview-module" href="${cannon.url}" x="${muzzle.x - cannon.width * cannon.anchorX}" y="${muzzle.y - cannon.height * cannon.anchorY}" width="${cannon.width}" height="${cannon.height}" preserveAspectRatio="none"/>`
   )).join('');
 
-  const viewBox = thumbnail ? '-22 -22 92 44' : '-45 -68 90 100';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
+  const viewBox = thumbnail ? '-28 -22 98 44' : '-45 -68 90 100';
+  return `<svg xmlns="http://www.w3.org/2000/svg" data-cannon="${skin}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
   <g${thumbnail ? ' transform="rotate(90)"' : ''}>
   <g class="cannon-preview-scene${animationClass}">
     <g class="cannon-preview-routes">${trails}</g>

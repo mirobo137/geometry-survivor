@@ -15,6 +15,21 @@ const projectile = (ageSeconds: number, muzzle: 0 | 1 = 0): ProjectileRenderStat
 });
 
 describe('ProjectileMotionVisual', () => {
+  it.each(['gyre', 'razor'] as const)('keeps %s motion bounded, mirrored and tangent-aligned without mutating simulation', kind => {
+    const original = projectile(.173);
+    const saved = { ...original };
+    const delta = .000001;
+    const numerical = (getProjectileCurveOffset(projectile(.173 + delta), kind)
+      - getProjectileCurveOffset(projectile(.173 - delta), kind)) / (2 * delta);
+    expect(getProjectileCurveVelocity(original, kind)).toBeCloseTo(numerical, 3);
+    expect(getProjectileCurveOffset(projectile(.173, 1), kind)).toBeCloseTo(-getProjectileCurveOffset(original, kind));
+    for (let i = 0; i <= 100; i++) expect(Math.abs(getProjectileCurveOffset(projectile(i / 100), kind))).toBeLessThanOrEqual(10);
+    expect(getProjectileCurveOffset(projectile(0), kind)).toBeCloseTo(0);
+    expect(getProjectileCurveVelocity(projectile(0), kind)).toBeCloseTo(0);
+    expect(getProjectileCurveOffset(projectile(1), kind)).toBeCloseTo(0);
+    expect(getProjectileCurveVelocity(projectile(1), kind)).toBeCloseTo(0);
+    expect(original).toEqual(saved);
+  });
   it('keeps the curve visual-only and returns to the logical line at the ends', () => {
     expect(getProjectileCurveOffset(projectile(0), 'curve')).toBeCloseTo(0);
     expect(getProjectileCurveOffset(projectile(0.16), 'curve')).toBeCloseTo(14);

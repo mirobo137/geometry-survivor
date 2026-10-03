@@ -1,28 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Texture } from 'pixi.js';
+import { Sprite, Texture } from 'pixi.js';
 import { PlayerView } from './PlayerView';
-
-interface GraphicsInstruction {
-  readonly action: string;
-  readonly data: {
-    readonly path?: {
-      readonly instructions: readonly {
-        readonly action: string;
-        readonly data: { readonly x: number; readonly y: number };
-      }[];
-    };
-  };
-}
-
-const firstShotFlashMove = (view: PlayerView): readonly [number, number] => {
-  const flash = (view as unknown as {
-    shotFlash: { context: { instructions: readonly GraphicsInstruction[] } };
-  }).shotFlash;
-  const stroke = flash.context.instructions.find((instruction) => instruction.action === 'stroke');
-  const move = stroke?.data.path?.instructions.find((instruction) => instruction.action === 'moveTo');
-  if (!move) throw new Error('Expected a muzzle flash moveTo path');
-  return move.data as unknown as readonly [number, number];
-};
 
 const skinTextures = {
   spearhead: Texture.WHITE,
@@ -32,7 +10,9 @@ const skinTextures = {
   amber: Texture.WHITE,
   emerald: Texture.WHITE,
   obsidian: Texture.WHITE,
-  nova: Texture.WHITE
+  nova: Texture.WHITE,
+  corsair: Texture.WHITE,
+  nautilus: Texture.WHITE
 };
 
 const cannonPair = () => ({ left: Texture.WHITE, right: Texture.WHITE });
@@ -48,7 +28,9 @@ const textures = {
     lattice: cannonPair(),
     helix: cannonPair(),
     bloom: cannonPair(),
-    spearhead: cannonPair()
+    spearhead: cannonPair(),
+    gyre: cannonPair(),
+    razor: cannonPair()
   },
   body: skinTextures,
   core: skinTextures,
@@ -115,11 +97,10 @@ describe('PlayerView', () => {
     view.setCannonSkin('bloom');
     view.render(state(320, 400, 80), 0.5);
     const bloomWeapons = view.root.children[4] as { children: { visible: boolean }[] };
-    expect(bloomWeapons.children).toHaveLength(3);
-    expect(bloomWeapons.children[2].visible).toBe(true);
+    expect(bloomWeapons.children).toHaveLength(2);
     view.playDamage(20, 0.4);
     view.render(state(320, 400, 80), 0.45);
-    const flash = view.root.children[8] as { alpha: number };
+    const flash = view.root.children.find(child => child.label === 'player-damage-flash')!;
     expect(flash.alpha).toBeGreaterThan(0);
     view.playShot(0.6, {
       sequence: 1,
@@ -132,7 +113,7 @@ describe('PlayerView', () => {
       rightOriginY: 0
     });
     view.render(state(320, 400, 80), 0.63);
-    const shotFlash = view.root.children[9] as { visible: boolean };
+    const shotFlash = view.root.children.find(child => child.label === 'cannon-feedback')!;
     expect(shotFlash.visible).toBe(true);
     const weapons = view.root.children[4] as { children: { position: { x: number; y: number } }[] };
     expect(weapons.children[0].position.y).toBeGreaterThan(0);
@@ -196,9 +177,11 @@ describe('PlayerView', () => {
 
     view.render(state(320, 400), 0.13);
 
-    // The world flash rotation is zero in this setup, so the local path must
-    // preserve the muzzle vector (-27, -11), rather than rotate it again by
-    // the hull's 90-degree movement facing.
-    expect(firstShotFlashMove(view)).toEqual([-29, -11]);
+    const feedback = view.root.children.find(child => child.label === 'cannon-feedback')!;
+    const flare = feedback.children.find(child => child.label === 'cannon-flare-0') as Sprite;
+    const world = flare.toGlobal({ x: 0, y: 0 });
+    expect(world.x).toBeCloseTo(293);
+    expect(world.y).toBeCloseTo(389);
+    expect(flare.rotation + view.root.rotation).toBeCloseTo(Math.PI);
   });
 });

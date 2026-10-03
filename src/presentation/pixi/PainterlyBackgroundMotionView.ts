@@ -21,7 +21,10 @@ export const PAINTERLY_MOTION_STYLES: Readonly<Record<PainterlyBackgroundMotionI
   'solar-drift': { tint: 0xf2a05a, opacity: 0.86, speed: 0.99, phase: 2.05 },
   'crystal-field': { tint: 0xb994ed, opacity: 0.9, speed: 1.09, phase: 2.75 },
   'nacre-orbit': { tint: 0x8cb9c2, opacity: 0.8, speed: 0.95, phase: 1.65 },
-  'vesper-bloom': { tint: 0xc48ab7, opacity: 0.88, speed: 1.07, phase: 3.4 }
+  'vesper-bloom': { tint: 0xc48ab7, opacity: 0.88, speed: 1.07, phase: 3.4 },
+  'silent-archive': { tint: 0xa0c1bc, opacity: 0.8, speed: 0.96, phase: 4.1 },
+  'lunar-fault': { tint: 0xb1b7c2, opacity: 0.76, speed: 1.02, phase: 4.9 },
+  'leviathan-wake': { tint: 0x82bcaf, opacity: 0.86, speed: 1.06, phase: 5.7 }
 };
 
 interface CurrentLayer {

@@ -3,7 +3,7 @@ import type { FxQuality } from '../../../../content/visual/VisualTokens';
 import { PLAYER_SPEED } from '../../../../config/constants';
 import type { PlayerState } from '../../../../simulation/PlayerModel';
 import type { ShotRenderState } from '../../../../simulation/combat/CombatRenderState';
-import { getCannonSkinDefinition, type CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
+import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import {
   PLAYER_SKINS,
   PLAYER_SKIN_MOTION,
@@ -13,8 +13,8 @@ import {
 import type { PlayerTextureSet } from './PlayerVisualAssets';
 import { RechargeableShieldView } from './RechargeableShieldView';
 import { TetheredShipView } from './TetheredShipView';
-
-const BLOOM_SOCKET_X = [-27, 27] as const;
+import { PlayerPropulsionView } from './PlayerPropulsionView';
+import { CannonFeedbackView } from './CannonFeedbackView';
 
 /**
  * Modular player presentation. Every piece shares the SVG frame and is
@@ -24,19 +24,18 @@ export class PlayerView {
   public readonly root = new Container();
   private readonly textures: PlayerTextureSet;
   private readonly shadow: Sprite;
-  private readonly movementTrail: Graphics;
+  private readonly propulsion: PlayerPropulsionView;
   private readonly ring: Sprite;
   private readonly weapons = new Container();
   private readonly weaponLeft: Sprite;
   private readonly weaponRight: Sprite;
-  private readonly cannonSocketFx: Graphics;
   private readonly body: Sprite;
   private readonly core: Sprite;
   private readonly accent: Sprite;
   private readonly damageFlash: Sprite;
   private readonly guardFx: Graphics;
   private readonly rechargeableShield: RechargeableShieldView;
-  private readonly shotFlash: Graphics;
+  private readonly cannonFeedback: CannonFeedbackView;
   private readonly signature: Sprite;
   private tetheredShip?: TetheredShipView;
   private skin: PlayerSkinId = 'cyan';
@@ -46,14 +45,8 @@ export class PlayerView {
   private lastY: number | null = null;
   private damageAtSeconds = Number.NEGATIVE_INFINITY;
   private damageStrength = 0;
-  private shotAtSeconds = Number.NEGATIVE_INFINITY;
   private shotDirectionX = 0;
   private shotDirectionY = -1;
-  private shotMuzzleMask = 0;
-  private shotLeftOriginX = 0;
-  private shotLeftOriginY = 0;
-  private shotRightOriginX = 0;
-  private shotRightOriginY = 0;
   private aimHeld = false;
   private defeatProgress = -1;
   private readonly quality: FxQuality;
@@ -72,17 +65,16 @@ export class PlayerView {
     this.textures = textures;
     this.quality = quality;
     this.shadow = new Sprite(textures.shadow);
-    this.movementTrail = new Graphics();
+    this.propulsion = new PlayerPropulsionView(quality, skin);
     this.ring = new Sprite(textures.ring[skin]);
     this.weaponLeft = new Sprite(textures.weapons[cannonSkin].left);
     this.weaponRight = new Sprite(textures.weapons[cannonSkin].right);
-    this.cannonSocketFx = new Graphics();
-    this.weapons.addChild(this.weaponLeft, this.weaponRight, this.cannonSocketFx);
+    this.weapons.addChild(this.weaponLeft, this.weaponRight);
     this.body = new Sprite(textures.body[skin]);
     this.core = new Sprite(textures.core[skin]);
     this.accent = new Sprite(textures.accent);
-    this.damageFlash = new Sprite(textures.body[skin]);
-    this.shotFlash = new Graphics();
+    this.damageFlash = new Sprite({ texture: textures.body[skin], label: 'player-damage-flash' });
+    this.cannonFeedback = new CannonFeedbackView(quality, cannonSkin);
     this.guardFx = new Graphics();
     this.rechargeableShield = new RechargeableShieldView(quality);
     this.signature = new Sprite(textures.signature.cyan);
@@ -91,7 +83,7 @@ export class PlayerView {
     for (const part of [this.shadow, this.signature, this.ring, this.weaponLeft, this.weaponRight, this.body, this.core, this.accent, this.damageFlash]) {
       part.anchor.set(0.5);
     }
-    this.root.addChild(this.shadow, this.movementTrail, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.shotFlash, this.guardFx);
+    this.root.addChild(this.shadow, this.propulsion.root, this.signature, this.ring, this.weapons, this.body, this.core, this.accent, this.damageFlash, this.cannonFeedback.root, this.guardFx);
     this.root.addChild(this.rechargeableShield.root);
     this.setCannonSkin(cannonSkin);
     this.setSkin(skin);
@@ -100,6 +92,7 @@ export class PlayerView {
   public setSkin(skin: PlayerSkinId): void {
     this.skin = skin;
     const rasterSkin = this.tetheredPrototype ? 'spearhead' : skin;
+    this.propulsion.setSkin(rasterSkin);
     if (!this.tetheredShip) {
       this.tetheredShip = new TetheredShipView(this.quality, rasterSkin, this.cannonSkin);
       this.root.addChildAt(this.tetheredShip.root, 5);
@@ -136,6 +129,7 @@ export class PlayerView {
   /** Cannon cosmetics are independent from the hull skin and only affect presentation. */
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
+    this.cannonFeedback.setSkin(cannonSkin);
     const barrels = this.textures.weapons[cannonSkin];
     this.weaponLeft.texture = barrels.left;
     this.weaponRight.texture = barrels.right;
@@ -157,14 +151,9 @@ export class PlayerView {
 
   /** Presentation-only recoil signal; weapon cadence still belongs to simulation. */
   public playShot(animationSeconds: number, shot: Readonly<ShotRenderState>): void {
-    this.shotAtSeconds = animationSeconds;
+    this.cannonFeedback.playShot(animationSeconds, shot);
     this.shotDirectionX = shot.directionX;
     this.shotDirectionY = shot.directionY;
-    this.shotMuzzleMask = shot.muzzleMask;
-    this.shotLeftOriginX = shot.leftOriginX;
-    this.shotLeftOriginY = shot.leftOriginY;
-    this.shotRightOriginX = shot.rightOriginX;
-    this.shotRightOriginY = shot.rightOriginY;
     this.aimHeld = true;
   }
 
@@ -206,11 +195,6 @@ export class PlayerView {
     const damagePulse = damageProgress < 1 ? (1 - damageProgress) ** 2 * this.damageStrength : 0;
     const guardAge = animationSeconds - this.guardAtSeconds;
     const guardProgress = guardAge >= 0 ? Math.min(1, guardAge / 0.42) : 1;
-    const shotAge = animationSeconds - this.shotAtSeconds;
-    const shotProgress = shotAge >= 0
-      ? Math.min(1, shotAge / PLAYER_VISUAL_TOKENS.shotFlashSeconds)
-      : 1;
-    const shotPulse = shotProgress < 1 ? Math.sin(shotProgress * Math.PI) : 0;
     const shotAimRotation = Math.atan2(this.shotDirectionY, this.shotDirectionX)
       - this.root.rotation
       + Math.PI / 2;
@@ -228,9 +212,8 @@ export class PlayerView {
     this.animateSkinSignature(animationSeconds, motion, targetMovementStrength);
     this.ring.visible = true;
     this.weapons.position.set(defeat * 26, defeat * 8);
-    const kick = shotPulse * PLAYER_VISUAL_TOKENS.shotRecoilDistance;
-    const leftKick = (this.shotMuzzleMask & 1) !== 0 ? kick : 0;
-    const rightKick = (this.shotMuzzleMask & 2) !== 0 ? kick : 0;
+    const leftKick = this.cannonFeedback.recoilAt(0, animationSeconds);
+    const rightKick = this.cannonFeedback.recoilAt(1, animationSeconds);
     this.weaponLeft.position.set(leftKick * 0.88, leftKick * 0.47);
     this.weaponRight.position.set(-rightKick * 0.88, rightKick * 0.47);
     this.weaponLeft.rotation = -leftKick * 0.02;
@@ -243,9 +226,7 @@ export class PlayerView {
     this.damageFlash.alpha = damagePulse * 0.72;
     this.damageFlash.scale.set(1 + damagePulse * 0.04);
     this.renderGuardFx(guardProgress, shieldChargeProgress, animationSeconds);
-    this.renderMovementTrail(animationSeconds);
-    this.renderCannonSocketFx(animationSeconds, shotPulse);
-    this.renderShotFlash(shotPulse, state);
+    let rasterReady = false;
     if (this.tetheredShip) {
       const ready = this.tetheredShip.render(animationSeconds, this.weapons.rotation,
         this.movementStrength, defeat, damagePulse, leftKick, rightKick);
@@ -253,9 +234,12 @@ export class PlayerView {
       this.damageFlash.visible = !ready;
       this.accent.visible = !ready && this.skin !== 'manta';
       this.ring.visible = !ready;
-      // The intact raster ship already carries the short engine plume.
-      if (ready) this.movementTrail.visible = false;
+      rasterReady = ready;
     }
+    this.propulsion.render(animationSeconds, targetMovementStrength, this.defeatProgress < 0 && state.health > 0, rasterReady);
+    this.cannonFeedback.render(animationSeconds, state.x, state.y, this.root.rotation,
+      this.defeatProgress < 0 && state.health > 0, rasterReady ? this.tetheredShip : undefined,
+      this.root.scale.x, this.root.scale.y);
     this.root.alpha = defeat > 0 ? 1 - defeat : state.health > 0 ? 1 : 0.72;
   }
 
@@ -295,14 +279,8 @@ export class PlayerView {
     this.damageAtSeconds = Number.NEGATIVE_INFINITY;
     this.damageStrength = 0;
     this.guardAtSeconds = Number.NEGATIVE_INFINITY;
-    this.shotAtSeconds = Number.NEGATIVE_INFINITY;
     this.shotDirectionX = 0;
     this.shotDirectionY = -1;
-    this.shotMuzzleMask = 0;
-    this.shotLeftOriginX = 0;
-    this.shotLeftOriginY = 0;
-    this.shotRightOriginX = 0;
-    this.shotRightOriginY = 0;
     this.aimHeld = false;
     this.defeatProgress = -1;
     this.root.rotation = 0;
@@ -323,14 +301,8 @@ export class PlayerView {
     this.core.position.set(0, 0);
     this.accent.position.set(0, 0);
     this.damageFlash.alpha = 0;
-    this.movementTrail.clear();
-    this.movementTrail.visible = false;
-    this.shotFlash.clear();
-    this.shotFlash.visible = false;
-    this.shotFlash.position.set(0, 0);
-    this.shotFlash.rotation = 0;
-    this.cannonSocketFx.clear();
-    this.cannonSocketFx.visible = false;
+    this.propulsion.reset();
+    this.cannonFeedback.reset();
   }
 
   /**
@@ -378,127 +350,6 @@ export class PlayerView {
       this.ring.rotation = -t * motion.signatureSpin * 0.4 + Math.sin(t * 3.3) * 0.04;
       this.ring.alpha = 0.6 + movementStrength * 0.3;
     }
-  }
-
-  private renderShotFlash(pulse: number, state: PlayerState): void {
-    this.shotFlash.clear();
-    if (pulse <= 0 || this.shotMuzzleMask === 0) {
-      this.shotFlash.visible = false;
-      return;
-    }
-    const color = getCannonSkinDefinition(this.cannonSkin).accent;
-    const alpha = pulse * 0.9;
-    this.shotFlash.visible = true;
-    // The flash geometry lives inside a child that is rotated independently
-    // from the hull. Transform each muzzle from world space into that child's
-    // effective world rotation; using only root.rotation double-rotates the
-    // origin whenever movement facing and firing direction differ.
-    const flashWorldRotation = Math.atan2(this.shotDirectionY, this.shotDirectionX) + Math.PI / 2;
-    const inverseRoot = -this.root.rotation;
-    this.shotFlash.rotation = flashWorldRotation + inverseRoot;
-    const localCos = Math.cos(-flashWorldRotation);
-    const localSin = Math.sin(-flashWorldRotation);
-    this.renderMuzzleFlash(
-      this.shotLeftOriginX,
-      this.shotLeftOriginY,
-      state,
-      color,
-      pulse,
-      alpha,
-      localCos,
-      localSin,
-      (this.shotMuzzleMask & 1) !== 0
-    );
-    this.renderMuzzleFlash(
-      this.shotRightOriginX,
-      this.shotRightOriginY,
-      state,
-      color,
-      pulse,
-      alpha,
-      localCos,
-      localSin,
-      (this.shotMuzzleMask & 2) !== 0
-    );
-  }
-
-  /** Bloomwake's two muzzle sockets stay readable even when the transient shot flash is over. */
-  private renderCannonSocketFx(animationSeconds: number, shotPulse: number): void {
-    this.cannonSocketFx.clear();
-    if (this.cannonSkin !== 'bloom') {
-      this.cannonSocketFx.visible = false;
-      return;
-    }
-    const idlePulse = 0.5 + Math.sin(animationSeconds * 4.8) * 0.5;
-    const pulse = Math.max(shotPulse, 0.34 + idlePulse * 0.26);
-    const radius = 3.1 + pulse * 1.15;
-    const alpha = 0.42 + pulse * 0.4;
-    this.cannonSocketFx.visible = true;
-    for (const x of BLOOM_SOCKET_X) {
-      this.cannonSocketFx
-        .beginPath()
-        .circle(x, -11, radius)
-        .stroke({ color: 0xff8fd8, width: 1.15 + pulse * 0.7, alpha });
-      this.cannonSocketFx
-        .beginPath()
-        .circle(x, -11, 1.15 + pulse * 0.72)
-        .fill({ color: 0xfff7ec, alpha: 0.45 + pulse * 0.45 });
-    }
-  }
-
-  private renderMovementTrail(animationSeconds: number): void {
-    this.movementTrail.clear();
-    const qualityAlpha = this.quality === 'high' ? 0.44 : this.quality === 'medium' ? 0.3 : 0;
-    if (qualityAlpha <= 0 || this.movementStrength <= 0.01) {
-      this.movementTrail.visible = false;
-      return;
-    }
-
-    const thrust = 0.78 + Math.sin(animationSeconds * 22) * 0.22;
-    const alpha = qualityAlpha * this.movementStrength * thrust;
-    const length = 7 + this.movementStrength * 15;
-    const width = 1.3 + this.movementStrength * 1.5;
-    const color = PLAYER_SKINS[this.skin].accent;
-    for (let index = 0; index < 2; index += 1) {
-      const x = index === 0 ? -5 : 5;
-      this.movementTrail
-        .beginPath()
-        .moveTo(x, 13)
-        .lineTo(x, 13 + length)
-        .stroke({ color, width, alpha });
-    }
-    this.movementTrail.visible = true;
-  }
-
-  private renderMuzzleFlash(
-    originX: number,
-    originY: number,
-    state: PlayerState,
-    color: number,
-    pulse: number,
-    alpha: number,
-    localCos: number,
-    localSin: number,
-    visible: boolean
-  ): void {
-    if (!visible) return;
-    const relativeX = originX - state.x;
-    const relativeY = originY - state.y;
-    const localX = relativeX * localCos - relativeY * localSin;
-    const localY = relativeX * localSin + relativeY * localCos;
-    const length = 10 + pulse * 12;
-    this.shotFlash
-      .beginPath()
-      .moveTo(localX - 2, localY)
-      .lineTo(localX, localY - length)
-      .lineTo(localX + 2, localY)
-      .lineTo(localX, localY - length * 0.42)
-      .lineTo(localX - 2, localY)
-      .stroke({ color, width: 2.4 + pulse * 1.6, alpha });
-    this.shotFlash
-      .beginPath()
-      .circle(localX, localY, 2.2 + pulse * 2.4)
-      .fill({ color: 0xffffff, alpha: alpha * 0.85 });
   }
 
   private renderGuardFx(blockProgress: number, shieldChargeProgress: number, animationSeconds: number): void {

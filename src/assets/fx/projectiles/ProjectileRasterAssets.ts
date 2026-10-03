@@ -14,6 +14,10 @@ import bloomHead from './bloom-head.png';
 import bloomTrail from './bloom-trail.png';
 import spearheadHead from './spearhead-head.png';
 import spearheadTrail from './spearhead-trail.png';
+import gyreHead from './gyre-head.png';
+import gyreTrail from './gyre-trail.png';
+import razorHead from './razor-head.png';
+import razorTrail from './razor-trail.png';
 import type { CannonSkinId } from '../../../content/visual/CannonSkinDefinitions';
 
 /** URLs only: importing the catalogue does not decode or upload its images. */
@@ -25,7 +29,9 @@ export const PROJECTILE_ART_URLS = {
   shot_lattice: latticeHead, wake_lattice: latticeTrail,
   shot_helix: helixHead, wake_helix: helixTrail,
   shot_bloom: bloomHead, wake_bloom: bloomTrail,
-  shot_spearhead: spearheadHead, wake_spearhead: spearheadTrail
+  shot_spearhead: spearheadHead, wake_spearhead: spearheadTrail,
+  shot_gyre: gyreHead, wake_gyre: gyreTrail,
+  shot_razor: razorHead, wake_razor: razorTrail
 } as const;
 
 export const PROJECTILE_SKIN_ART = {
@@ -36,7 +42,9 @@ export const PROJECTILE_SKIN_ART = {
   lattice: { headId: 'shot_lattice', trailId: 'wake_lattice' },
   helix: { headId: 'shot_helix', trailId: 'wake_helix' },
   bloom: { headId: 'shot_bloom', trailId: 'wake_bloom' },
-  spearhead: { headId: 'shot_spearhead', trailId: 'wake_spearhead' }
+  spearhead: { headId: 'shot_spearhead', trailId: 'wake_spearhead' },
+  gyre: { headId: 'shot_gyre', trailId: 'wake_gyre' },
+  razor: { headId: 'shot_razor', trailId: 'wake_razor' }
 } as const satisfies Record<CannonSkinId, { headId: keyof typeof PROJECTILE_ART_URLS; trailId: keyof typeof PROJECTILE_ART_URLS }>;
 
 export const PROJECTILE_HEAD_SIZE = { width: 36, height: 18 } as const;

@@ -823,6 +823,26 @@ body {
   animation: cannon-preview-shot-pulse 1.25s ease-in-out infinite;
 }
 
+/* Bounded cosmetic gestures; static thumbnails and reduced motion stay still. */
+@media (prefers-reduced-motion: no-preference) {
+  svg[data-cannon="gyre"] .is-animated .cannon-preview-weave {
+    animation: cannon-preview-gyre 1.25s linear infinite;
+  }
+  svg[data-cannon="razor"] .is-animated .cannon-preview-weave {
+    animation: cannon-preview-razor 1.25s linear infinite;
+  }
+}
+@keyframes cannon-preview-gyre {
+  0%, 100% { transform: translateX(0); }
+  15%, 48%, 81% { transform: translateX(3px); }
+  31%, 64%, 94% { transform: translateX(-3px); }
+}
+@keyframes cannon-preview-razor {
+  0%, 100% { transform: translateX(0); }
+  13%, 38%, 63%, 88% { transform: translateX(2px); }
+  25%, 50%, 75% { transform: translateX(-2px); }
+}
+
 .cannon-preview-scene.is-animated .cannon-preview-muzzle-flash {
   animation: cannon-preview-muzzle-pulse 1.25s ease-in-out infinite;
   transform-box: fill-box;
@@ -1225,6 +1245,54 @@ body {
   content: "";
   opacity: 0.62;
   pointer-events: none;
+}
+
+[data-background="silent-archive"] {
+  --background-accent: #a0c1bc;
+  --background-line: #a0c1bc70;
+  background-color: #070e16;
+}
+.background-preview[data-background="silent-archive"],
+.background-card-art[data-background="silent-archive"] {
+  background-image: url('./assets/images/backgrounds/silent-archive-preview.webp');
+}
+.background-preview[data-background="silent-archive"]::before,
+.background-preview[data-background="silent-archive"]::after,
+.background-card-art[data-background="silent-archive"]::before,
+.background-card-art[data-background="silent-archive"]::after {
+  display: none;
+}
+
+[data-background="lunar-fault"] {
+  --background-accent: #b1b7c2;
+  --background-line: #b1b7c270;
+  background-color: #0c0e15;
+}
+.background-preview[data-background="lunar-fault"],
+.background-card-art[data-background="lunar-fault"] {
+  background-image: url('./assets/images/backgrounds/lunar-fault-preview.webp');
+}
+.background-preview[data-background="lunar-fault"]::before,
+.background-preview[data-background="lunar-fault"]::after,
+.background-card-art[data-background="lunar-fault"]::before,
+.background-card-art[data-background="lunar-fault"]::after {
+  display: none;
+}
+
+[data-background="leviathan-wake"] {
+  --background-accent: #82bcaf;
+  --background-line: #82bcaf70;
+  background-color: #050d17;
+}
+.background-preview[data-background="leviathan-wake"],
+.background-card-art[data-background="leviathan-wake"] {
+  background-image: url('./assets/images/backgrounds/leviathan-wake-preview.webp');
+}
+.background-preview[data-background="leviathan-wake"]::before,
+.background-preview[data-background="leviathan-wake"]::after,
+.background-card-art[data-background="leviathan-wake"]::before,
+.background-card-art[data-background="leviathan-wake"]::after {
+  display: none;
 }
 
 [data-background="deep-space"] {

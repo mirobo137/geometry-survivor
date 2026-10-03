@@ -2,7 +2,7 @@ import { Texture } from 'pixi.js';
 import { describe, expect, it } from 'vitest';
 import { createPainterlyBackgroundViews, type PainterlyBackgroundId } from './PainterlyBackgroundViews';
 
-const IDS: readonly PainterlyBackgroundId[] = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field'];
+const IDS: readonly PainterlyBackgroundId[] = ['deep-space', 'ion-storm', 'solar-drift', 'crystal-field', 'silent-archive', 'lunar-fault', 'leviathan-wake'];
 
 describe('painterly legacy background plates', () => {
   it('loads only the selected plate and lays it out with a uniform cover crop', async () => {

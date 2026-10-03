@@ -4,11 +4,13 @@ import { registerHomeChecks } from './home.checks';
 import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
+import { registerCatalogChecks } from './catalog.checks';
 
 registerHomeChecks({ includeDesktopViewport: false });
 registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
+registerCatalogChecks();
 
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
@@ -191,7 +193,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
   await page.locator('.cannon-card[data-cannon="basic"] button').click();
   await expect(page.locator('#start-cosmetic-preview .cannon-preview svg')).toBeVisible();
   await page.locator('#start-cosmetic-close').click();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(8);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(10);
   const cannonScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

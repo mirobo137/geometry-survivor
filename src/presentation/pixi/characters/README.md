@@ -10,7 +10,10 @@ characters/
    └─ PlayerVisualAssets.ts
 ```
 
-`PlayerView` compone las piezas SVG cacheadas, aplica hull y firma por skin y
-anima idle, orientacion, recoil y flash de daño. `PlayerVisualAssets` es la unica
-frontera que rasteriza los masters con el frame comun. No contienen reglas de
-daño, movimiento, upgrades o input.
+`PlayerView` compone la nave PNG y los cañones enlazados de `TetheredShipView`,
+con las piezas SVG cacheadas como fallback. `PlayerPropulsionView` anima motores
+y `CannonFeedbackView` consume el disparo aceptado para recoil, flare y pulso
+de cable. Ambas usan sprites fijos y fuentes pequeñas con ownership explícito.
+`PlayerVisualAssets` rasteriza los masters del fallback con el frame común.
+No contienen reglas de daño, movimiento, upgrades o input. Contratos y extensión
+del catálogo: [Naves PNG](../../../../docs/design/NAVES_PNG.md).

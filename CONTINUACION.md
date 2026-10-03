@@ -1,17 +1,115 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 03-10-2026. Base Git de esta entrega: `7df6c92` (`arreglos auditoria`).
+Actualizado: 03-10-2026. Base Git de este ajuste: `c54f737` (`music`).
 Este archivo es un snapshot, no reemplaza `PLAN_DESARROLLO.md` ni el estado Git.
 
 ## Solicitud vigente y siguiente acción
 
-El usuario solicita usar su música para todo el juego. Integración local del
+Catálogo solicitado el 03-10-2026 completado localmente: **10 naves, 10 cañones,
+10 fondos**. Nuevas naves Scarlet Corsair/Nautilus Ark; cañones Gyre Coil/Rift
+Saw con balas de triple onda/vibración angular; fondos Archivo Silente,
+Falla Lunar/Estela del Leviatán. Contrato de batalla y guardado existente,
+sin cambios de balance ni reinicio de Vite. Guía y evidencia:
+[CATALOGO_DIEZ](docs/design/CATALOGO_DIEZ.md), §22.20 del plan.
+
+Build local + 624 unitarias/126 archivos y siete smoke PC/móvil correctos.
+QA de los tres fondos Low/High correcto. Los WebP antiguos se regeneran
+desde sus PNG intactos (Q82), ahorro 483,096 bytes. Artefactos completos:
+local 14,964,288; Poki 10,012,364; CrazyGames 10,012,370 bytes. Mapas y límite
+de 15 MB intactos. Margen local 35,712 bytes: revisar presupuesto antes de
+otra ampliación. Siguiente paso: probar el arte y las trayectorias en local/
+teléfono físico; después retomar planes pendientes por indicación del usuario.
+No hacer commit/push automáticamente. El refinamiento siguiente es la entrega
+anterior ya aprobada, no una tarea nueva.
+
+Refinamiento solicitado por feedback: los ocho cañones crecen 25% (30×39)
+en combate y Skins; thumbnail 98×44 conserva encuadre. Cables con curva cúbica,
+holgura según distancia, controles amortiguados y puertos fijos del casco.
+Ocho segmentos y dos buffers de puntos reutilizados (144 bytes), sin solver.
+Vapor breve en la boca con el mismo atlas de 16 KiB: una bocanada por emisor
+Low/Medium, dos en High, ninguna con movimiento reducido. Pool vigente
+4/8/12 sprites (dos en reduced-motion); fade total <0.5 s. Se afinó tamaño/
+opacidad tras revisar capturas para que se perciba mejor.
+
+Verificado: build local con typecheck/suite unitaria, pruebas enfocadas tras
+el ajuste de anclajes/vapor, builds de tres targets bajo 15 MB, cuatro smoke
+de encuadre/pausa/resize/reinicio PC/móvil (14.5 s), veinte escenarios QA y
+dos repeticiones finales de vapor PC/móvil. Capturas revisadas y cero errores JS.
+En stress con/sin feedback: Low 11→12, High 12→13 draw calls (SwiftShader).
+No son FPS físicos ni comparación con la versión antigua completa.
+Artefactos finales: local 14,894,370 bytes con mapas; Poki 9,955,107;
+CrazyGames 9,955,113. Margen local ~105 KB; warning previo JS >500 KB.
+QA final: `node scripts/qa-cannon-feedback.mjs --vapor-only`, capturas/report
+en `test-results/cannon-vapor/`; matriz completa en `test-results/cannon-feedback/`.
+Siguiente acción: aceptación humana del tamaño/cables/vapor en local y móvil.
+Guía vigente: [Naves PNG](docs/design/NAVES_PNG.md#respuesta-reactiva-de-cañones).
+Sin commit/push ni reinicio del Vite del usuario.
+
+## Respuesta de cañones: primera entrega
+
+El usuario solicita una respuesta visual de cañones comparable a los propulsores.
+Entregado localmente: retroceso inmediato/retorno suave por emisor, fogonazo
+por cosmético y pulso de energía que recorre el cable visible en recuperación.
+`CannonFeedbackView` copia el descriptor pooled de disparo y usa un atlas de
+64×64 RGBA8 (16 KiB) con 2/6/8 sprites fijos según calidad; elimina el fogonazo
+y sockets Bloomwake Graphics reconstruidos por frame. Cambios cosméticos:
+cadencia, trayectoria, daño, evoluciones y guardado conservan sus contratos.
+Guía para nuevos cañones/perfiles: [Respuesta reactiva](docs/design/NAVES_PNG.md#respuesta-reactiva-de-cañones).
+
+Verificado: typecheck, suite completa de 126 archivos unitarios y tres builds;
+26 pruebas enfocadas de player/feedback/cables/motores; cinco smoke enfocados
+(1.2 min) cubren ocho parejas PNG, compra/selección, las doce evoluciones y
+pausa/resize/reinicio PC/móvil. QA específico de 20 casos pasó: ocho cañones
+Low/High, Medium, reduced-motion y stress; capturas revisadas, pool fijo/fuente
+compartida y cero errores JS. En la misma escena stress pausada, con/sin la
+nueva vista: Low 9→10 draw calls, High 10→11 (ANGLE/SwiftShader). Ese dato no
+mide FPS ni GPU física. Prueba humana del feel y móvil físico pendientes.
+Artefactos completos: local 14,888,843 bytes con mapas; Poki 9,953,914;
+CrazyGames 9,953,920, bajo 15 MB. Margen local ~111 KB; warning previo JS >500 KB.
+Capturas/report: `test-results/cannon-feedback/`; diagnóstico reproducible:
+`node scripts/qa-cannon-feedback.mjs` tras build local y después de Playwright.
+Probar `/?weapon-path=projectile&cannon=bloom&quality=high` y cambiar el ID de
+cañón para comparar. Vite 5173 del usuario respondió HTTP 200 y se conservó;
+los previews de prueba cierran su servidor/navegador. Sin commit/push/deploy.
+
+## Propulsores: entrega anterior conservada
+
+El usuario delega una mejora visual de coste mínimo. Entregado localmente:
+propulsores reactivos para las ocho naves, conservando el casco PNG completo.
+Crece el chorro al moverse y decae al detenerse, con puertos/paleta por nave.
+Pool fijo 3/6/9 sprites según calidad y una textura RGBA8 de 8 KiB por vista;
+sin partículas acumulativas, filtros ni cambios de gameplay. Se elimina la
+estela Graphics anterior que se reconstruía antes de ocultarse con el PNG.
+Contrato: [Propulsión](docs/design/NAVES_PNG.md#propulsión-reactiva).
+
+Verificado: typecheck y suite unitaria del build local, builds local/Poki/
+CrazyGames, cuatro smoke de nave PC/móvil (22.7 s) y los 13 casos del diagnóstico
+`scripts/qa-propulsion.mjs` (ocho skins, Low/Medium, reduced-motion, stress).
+Pausa, apagado al parar, pool fijo, fuente compartida y ausencia de errores JS
+comprobados; capturas revisadas. En stress congelado aumentaron dos draw calls:
+Low 9→11 y High 10→12. Chromium usó SwiftShader; los tiempos de render quedaron
+en el ruido de resolución del reloj y no permiten afirmar un coste en ms/FPS.
+No equivale a medición de GPU móvil física ni a toda la suite browser.
+Artefactos: local 14,875,831 bytes con mapas; Poki 9,951,222; CrazyGames 9,951,228.
+Todos bajo 15 MB; margen local ~124 KB. Warning previo JS >500 KB persiste.
+Siguiente: probar moviéndose/parando en local y validar presencia visual en móvil.
+Sin commit/push ni reinicio del Vite del usuario.
+
+## Música: entrega anterior conservada
+
+El usuario solicitó usar su música para todo el juego. Integración local del
 03-10: `src/assets/audio/music/general-theme.mp3`, misma pista en loop para
-Inicio/consolas/resumen (70%) y actos/Overdrive (35%), multiplicados por el
+Inicio/consolas/resumen (50%) y actos/Overdrive (20%), multiplicados por el
 control musical persistente. Fade de 450 ms; menú/partida no reinician el seek.
 No modifica los SFX ni el save. Pausa/background detiene audio; recuperar foco
 retoma sólo pantallas no jugables, no reanuda una partida pausada.
 Contrato/procedencia: [Música general](src/assets/audio/music/README.md).
+
+Ajuste posterior del 03-10 por feedback del usuario: 50% menú / 20% partida.
+Verificado con typecheck, 37 unitarias de audio/Game y cuatro smoke de música
+PC/Pixel 5 emulado (24.5 s); build local correcto, 14,866,006 bytes con mapas.
+No se repitió la suite completa ni los builds de portales para este cambio
+de dos constantes; sigue pendiente audición humana de los nuevos niveles.
 
 Original del usuario intacto fuera del repo: 8,788,430 bytes / 359.760 s
 (el nombre dice 36.3s, pero dura casi seis minutos). Copia MP3 con pérdida a
@@ -19,11 +117,12 @@ Original del usuario intacto fuera del repo: 8,788,430 bytes / 359.760 s
 Web Audio de seis minutos. Nada de MP3/AudioContext antes del primer gesto;
 una pista/nodo musical y un contexto vivo compartido con SFX; sin timers
 de reintento tras error. Prueba siguiente: aceptación auditiva del usuario de
-compresión, volumen 35% en combate, fatiga/loop largo y móvil físico.
+compresión, volumen 20% en combate, fatiga/loop largo y móvil físico.
 Verificar derechos comerciales antes de distribución; metadatos Suno no
 equivalen a permiso. Sin commit/push/publicación autorizado.
 
-Verificación: typecheck, 124 archivos / 607 unitarias verdes y tres builds;
+Verificación de la integración inicial (70%/35%, antes del ajuste de volumen):
+typecheck, 124 archivos / 607 unitarias verdes y tres builds;
 14 smoke enfocados verdes (1.1 min) más dos RES-01 (7.7 s), desktop/Pixel 5
 emulado: niveles nativos 0.70/0.35, slider/mute, posición continua, menú desde
 pausa, blur/focus, red fallida/tardía, contexto suspendido y cero decodificación

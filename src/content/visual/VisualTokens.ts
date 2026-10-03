@@ -1,4 +1,4 @@
-export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead' | 'corsair' | 'nautilus';
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -67,6 +67,14 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   spearhead: {
     shadow: 0x050e18, outer: 0x75e6ff, body: 0xffefd9,
     bodyDetail: 0x446477, core: 0x75e6ff, accent: 0xffd978
+  },
+  corsair: {
+    shadow: 0x140812, outer: 0xff809e, body: 0xa32f4b,
+    bodyDetail: 0x49273a, core: 0x9ce8ff, accent: 0xffecef
+  },
+  nautilus: {
+    shadow: 0x060e1b, outer: 0x91dacd, body: 0x34659e,
+    bodyDetail: 0x8f774d, core: 0x8effdc, accent: 0xffecc5
   }
 } as const;
 
@@ -84,7 +92,9 @@ export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionT
   obsidian: { signatureSpin: 0.22, signaturePulse: 0.018 },
   nova: { signatureSpin: -0.26, signaturePulse: 0.021 },
   manta: { signatureSpin: 0, signaturePulse: 0.012 },
-  spearhead: { signatureSpin: 0, signaturePulse: 0 }
+  spearhead: { signatureSpin: 0, signaturePulse: 0 },
+  corsair: { signatureSpin: 0, signaturePulse: 0 },
+  nautilus: { signatureSpin: 0, signaturePulse: 0 }
 } as const;
 
 export interface FxQualityTokens {
@@ -119,14 +129,16 @@ export const PROJECTILE_VISUAL_TOKENS = {
   curveDurationSeconds: 0.32,
   /** A two-lobed S curve for the premium Helix Lance package. */
   helixAmplitude: 11,
-  helixDurationSeconds: 0.46
+  helixDurationSeconds: 0.46,
+  gyreAmplitude: 10,
+  gyreDurationSeconds: 0.65,
+  razorAmplitude: 9,
+  razorDurationSeconds: 0.55
 } as const;
 
 export const PLAYER_VISUAL_TOKENS = {
   idlePulseAmplitude: 0.012,
   movementTiltRadians: 0.07,
   damageFlashSeconds: 0.1,
-  damageSquash: 0.035,
-  shotFlashSeconds: 0.09,
-  shotRecoilDistance: 4
+  damageSquash: 0.035
 } as const;

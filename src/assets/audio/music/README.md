@@ -33,8 +33,9 @@ independiente para la música. Howler puede cerrar/recrear su contexto inicial
 una vez por su corrección de sample rate; sólo queda un contexto vivo compartido
 con SFX y los cambios de pantalla no crean más.
 
-Mezcla: volumen musical configurado por el jugador × 0.70 en Inicio/consolas y
-resumen, × 0.35 en actos/Overdrive y sus transiciones/level-up. Cambio de escena
+Mezcla (ajuste del 03-10 tras prueba del usuario): volumen musical configurado
+por el jugador × 0.50 en Inicio/consolas y resumen, × 0.20 en actos/Overdrive y
+sus transiciones/level-up. Cambio de escena
 con fade de 450 ms, sin reiniciar la posición. Silencio y control musical siguen
 siendo persistentes y tienen prioridad; volumen cero/mute no inicia la pista.
 Pausa, blur y segundo plano suspenden el audio. Volver a la ventana sólo retoma

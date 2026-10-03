@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture, type PointData } from 'pixi.js';
 import {
   CANNON_SKIN_RASTER_ART,
   LINKED_CANNON_LAYOUT,
@@ -7,6 +7,7 @@ import {
 import { PROJECTILE_MUZZLE_OFFSETS } from '../../../../content/weapons/WeaponDefinitions';
 import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import type { FxQuality, PlayerSkinId } from '../../../../content/visual/VisualTokens';
+import { CANNON_FEEDBACK_TIMING } from '../../../../content/visual/CannonFeedbackDefinitions';
 
 export interface TetheredShipTextures { readonly ship: Texture; readonly cannon: Texture }
 export type TetheredShipArtLoader = (
@@ -67,6 +68,10 @@ export class TetheredShipView {
   private generation = 0;
   private lastSeconds: number | null = null;
   private lastDefeat = -1;
+  private readonly cableCurves = [
+    { c1x: 0, c1y: 0, c2x: 0, c2y: 0, ready: false, points: new Float32Array((LINKED_CANNON_LAYOUT.cableSegments + 1) * 2) },
+    { c1x: 0, c1y: 0, c2x: 0, c2y: 0, ready: false, points: new Float32Array((LINKED_CANNON_LAYOUT.cableSegments + 1) * 2) }
+  ];
   private shipSkin: PlayerSkinId;
   private cannonSkin: CannonSkinId;
   private readonly reducedMotion = typeof window !== 'undefined'
@@ -129,9 +134,10 @@ export class TetheredShipView {
     // PlayerView still renders during pause. Do not let its movement smoothing
     // silently change cables while the presentation clock is frozen.
     if (this.lastSeconds === seconds && this.lastDefeat === defeat) return true;
+    const dt = this.lastSeconds === null ? 1 / 60 : Math.min(0.1, Math.max(0, seconds - this.lastSeconds));
     this.lastSeconds = seconds;
     this.lastDefeat = defeat;
-    const wave = this.reducedMotion ? 0 : Math.sin(seconds * 3.4);
+    const wave = this.reducedMotion ? 0 : Math.sin(seconds * 1.7) * 0.6;
     this.ship.position.set(0, -defeat * 9);
     this.ship.rotation = 0;
     this.damage.position.copyFrom(this.ship.position);
@@ -143,9 +149,10 @@ export class TetheredShipView {
     this.placeCannon(this.right, 1, aim, cos, sin, rightKick, defeat);
     this.cables.clear();
     this.cables.visible = defeat < 0.9;
-    const leftPort = this.left.x <= this.right.x ? -1 : 1;
-    this.drawCable(this.left, leftPort, aim, wave, movement, defeat);
-    this.drawCable(this.right, -leftPort, aim, -wave, movement, defeat);
+    // A physical tether keeps its hull socket when the gun crosses behind the ship.
+    const leftPort = -1;
+    this.drawCable(this.left, 0, leftPort, aim, wave, movement, defeat, dt);
+    this.drawCable(this.right, 1, -leftPort, aim, -wave, movement, defeat, dt);
     return true;
   }
 
@@ -153,12 +160,12 @@ export class TetheredShipView {
     const mouth = PROJECTILE_MUZZLE_OFFSETS[index];
     // The image pivot IS the barrel tip, so its world origin matches simulation.
     // Recoil retreats along the barrel, never smooths or changes shot targeting.
-    sprite.position.set(mouth.x * cos - mouth.y * sin - recoil * sin * 0.24 + (index === 0 ? -1 : 1) * defeat * 20,
-      mouth.x * sin + mouth.y * cos + recoil * cos * 0.24 + defeat * 12);
+    sprite.position.set(mouth.x * cos - mouth.y * sin - recoil * sin * CANNON_FEEDBACK_TIMING.rasterRecoilScale + (index === 0 ? -1 : 1) * defeat * 20,
+      mouth.x * sin + mouth.y * cos + recoil * cos * CANNON_FEEDBACK_TIMING.rasterRecoilScale + defeat * 12);
     sprite.rotation = aim;
   }
 
-  private drawCable(sprite: Sprite, side: number, aim: number, wave: number, movement: number, defeat: number): void {
+  private drawCable(sprite: Sprite, index: 0 | 1, side: number, aim: number, wave: number, movement: number, defeat: number, dt: number): void {
     // Each cannon has a distinct rear socket and its own hull port.
     const cannonArt = CANNON_SKIN_RASTER_ART[this.cannonSkin];
     const x0 = side * LINKED_CANNON_LAYOUT.cablePortX;
@@ -169,20 +176,46 @@ export class TetheredShipView {
     const dx = x1 - x0;
     const dy = y1 - y0;
     const length = Math.max(1, Math.hypot(dx, dy));
-    const flex = (this.quality === 'low' ? 2 : 3) + wave * (1 + movement);
-    const bendX = -dy / length * flex * side;
-    const bendY = dx / length * flex * side;
+    // Slack decreases with separation. Handles trail gently while endpoints remain exact.
+    const slack = Math.max(3, Math.min(15, 18 - length * 0.22));
+    const curve = this.cableCurves[index];
+    const settle = !curve.ready || this.reducedMotion ? 1 : 1 - Math.exp(-dt * 12);
+    const sway = this.quality === 'low' ? 0 : wave;
+    curve.c1x += (side * slack - curve.c1x) * settle;
+    curve.c1y += (8 + movement * 5 + sway - curve.c1y) * settle;
+    curve.c2x += (-Math.sin(aim) * 10 + side * slack * 0.45 - curve.c2x) * settle;
+    curve.c2y += (Math.cos(aim) * 10 + movement * 4 - curve.c2y) * settle;
+    curve.ready = true;
+    const steps = LINKED_CANNON_LAYOUT.cableSegments;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, u = 1 - t;
+      curve.points[i * 2] = u ** 3 * x0 + 3 * u * u * t * (x0 + curve.c1x)
+        + 3 * u * t * t * (x1 + curve.c2x) + t ** 3 * x1;
+      curve.points[i * 2 + 1] = u ** 3 * y0 + 3 * u * u * t * (y0 + curve.c1y)
+        + 3 * u * t * t * (y1 + curve.c2y) + t ** 3 * y1;
+    }
     // One graphics object, two short polylines, no link sprites or physics objects.
     for (let pass = 0; pass < 2; pass += 1) {
       this.cables.beginPath().moveTo(x0, y0);
       for (let i = 1; i <= LINKED_CANNON_LAYOUT.cableSegments; i += 1) {
-        const t = i / LINKED_CANNON_LAYOUT.cableSegments;
-        const curve = Math.sin(t * Math.PI);
-        this.cables.lineTo(x0 + dx * t + bendX * curve, y0 + dy * t + bendY * curve);
+        this.cables.lineTo(curve.points[i * 2], curve.points[i * 2 + 1]);
       }
-      this.cables.stroke({ color: pass === 0 ? 0x304451 : 0x75d9eb,
-        width: pass === 0 ? 2.7 : 0.7, alpha: pass === 0 ? 0.95 : 0.65 });
+      this.cables.stroke({ color: pass === 0 ? 0x243641 : 0x9bb4bc,
+        width: pass === 0 ? 3.3 : 1.1, alpha: pass === 0 ? 0.95 : 0.8, cap: 'round', join: 'round' });
     }
+  }
+
+  /** Writes into a reusable point on the exact cable polyline; no geometry or allocation. */
+  public sampleCable(index: 0 | 1, progress: number, target: PointData): boolean {
+    if (!this.root.visible || !this.cables.visible) return false;
+    const curve = this.cableCurves[index];
+    const t = Math.min(1, Math.max(0, progress));
+    const steps = LINKED_CANNON_LAYOUT.cableSegments;
+    const segment = Math.min(steps - 1, Math.floor(t * steps));
+    const weight = t * steps - segment;
+    target.x = curve.points[segment * 2] * (1 - weight) + curve.points[(segment + 1) * 2] * weight;
+    target.y = curve.points[segment * 2 + 1] * (1 - weight) + curve.points[(segment + 1) * 2 + 1] * weight;
+    return true;
   }
 
   public reset(): void {
@@ -190,6 +223,7 @@ export class TetheredShipView {
     this.lastDefeat = -1;
     this.root.visible = false;
     this.cables.clear();
+    for (const curve of this.cableCurves) curve.ready = false;
     this.damage.alpha = 0;
   }
 }

@@ -16,7 +16,7 @@ describe('CannonPreviewSvg', () => {
       expect(svg).toContain(`href="${PROJECTILE_ART_URLS[art.headId]}"`);
       expect(svg).toContain(`href="${PROJECTILE_ART_URLS[art.trailId]}"`);
       expect(svg.match(/class="cannon-preview-fallback"/g)).toHaveLength(4);
-      expect(svg).toContain('width="24" height="31.2"');
+      expect(svg).toContain('width="30" height="39"');
       expect(svg).not.toContain('cannon-preview-cables');
       expect(svg.match(/class="cannon-preview-shot"/g)).toHaveLength(2);
       expect(svg).toContain('cannon-preview-muzzle-flash');
@@ -26,7 +26,7 @@ describe('CannonPreviewSvg', () => {
 
   it('can render a quiet card thumbnail without animation', () => {
     const svg = createCannonPreviewSvg('rainbow', { animated: false, layout: 'thumbnail' });
-    expect(svg).toContain('viewBox="-22 -22 92 44"');
+    expect(svg).toContain('viewBox="-28 -22 98 44"');
     expect(svg).toContain('transform="rotate(90)"');
     expect(svg.match(/<image /g)).toHaveLength(3);
     expect(svg.match(/class="cannon-preview-projectile"/g)).toHaveLength(1);

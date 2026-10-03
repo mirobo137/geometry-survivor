@@ -79,7 +79,7 @@ import { ChargerTelegraphView } from './ChargerTelegraphView';
 import { PrismWeaverTelegraphView } from './PrismWeaverTelegraphView';
 import { SpawnPortalView } from './enemies/SpawnPortalView';
 
-import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
+import { CANNON_PROJECTILE_SVG, getCannonFallbackId } from '../../assets/svg/cannons/CannonSvgMarkup';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -378,7 +378,7 @@ export class CombatEntitiesView {
 
   /** Keep the authored vector fallback, rasterized only when its skin is selected. */
   private getProjectileFallback(skin: CannonSkinId): Texture {
-    const id = skin === 'spearhead' ? 'basic' : skin;
+    const id = getCannonFallbackId(skin);
     const existing = this.projectileTextures.get(id);
     if (existing) return existing;
     const texture = createSvgTexture(this.renderer, CANNON_PROJECTILE_SVG[id], PROJECTILE_TEXTURE_FRAME);

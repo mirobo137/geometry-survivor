@@ -3,10 +3,10 @@ import { PLAYER_HULL_SVG } from '../../../../assets/svg/characters/player/Player
 import playerAccentSvg from '../../../../assets/svg/characters/player/player-accent.svg?raw';
 import playerShadowSvg from '../../../../assets/svg/characters/player/player-shadow.svg?raw';
 import { createPlayerSkinSignatureSvg } from '../../../../assets/svg/characters/player/SkinSignatureSvg';
-import { CANNON_BARREL_SVG } from '../../../../assets/svg/cannons/CannonSvgMarkup';
+import { CANNON_BARREL_SVG, getCannonFallbackId } from '../../../../assets/svg/cannons/CannonSvgMarkup';
 import { PLAYER_SKINS } from '../../../../content/visual/VisualTokens';
 import type { PlayerSkinId } from '../../../../content/visual/VisualTokens';
-import type { CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
+import { CANNON_SKIN_DEFINITIONS, type CannonSkinId } from '../../../../content/visual/CannonSkinDefinitions';
 import { createSvgTexture, type SvgTextureFrame } from '../../SvgTextureFactory';
 
 export interface CannonTexturePair {
@@ -48,19 +48,19 @@ const rasterizeSkinMap = (
   pick: (hull: (typeof PLAYER_HULL_SVG)[PlayerSkinId]) => string
 ): Record<PlayerSkinId, Texture> => {
   const textures: Record<PlayerSkinId, Texture> = lazyMap(Object.keys(PLAYER_SKINS) as PlayerSkinId[], skin =>
-    skin === 'spearhead' ? textures.cyan : createSvgTexture(renderer, pick(PLAYER_HULL_SVG[skin]), PLAYER_TEXTURE_FRAME));
+    skin === 'spearhead' || skin === 'corsair' || skin === 'nautilus' ? textures.cyan : createSvgTexture(renderer, pick(PLAYER_HULL_SVG[skin]), PLAYER_TEXTURE_FRAME));
   return textures;
 };
 
 const rasterizeSignatures = (renderer: Renderer): Record<PlayerSkinId, Texture> => {
   const textures: Record<PlayerSkinId, Texture> = lazyMap(Object.keys(PLAYER_SKINS) as PlayerSkinId[], skin =>
-    skin === 'spearhead' ? textures.cyan : createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME));
+    skin === 'spearhead' || skin === 'corsair' || skin === 'nautilus' ? textures.cyan : createSvgTexture(renderer, createPlayerSkinSignatureSvg(skin), PLAYER_TEXTURE_FRAME));
   return textures;
 };
 
 const rasterizeCannons = (renderer: Renderer): Record<CannonSkinId, CannonTexturePair> => {
   const textures: Record<CannonSkinId, CannonTexturePair> = lazyMap(
-    [...Object.keys(CANNON_BARREL_SVG), 'spearhead'] as CannonSkinId[], skin => skin === 'spearhead' ? textures.basic : {
+    CANNON_SKIN_DEFINITIONS.map(definition => definition.id), skin => getCannonFallbackId(skin) !== skin ? textures[getCannonFallbackId(skin)] : {
       left: createSvgTexture(renderer, CANNON_BARREL_SVG[skin].left, PLAYER_TEXTURE_FRAME),
       right: createSvgTexture(renderer, CANNON_BARREL_SVG[skin].right, PLAYER_TEXTURE_FRAME)
     });

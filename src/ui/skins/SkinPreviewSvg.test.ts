@@ -17,9 +17,9 @@ describe('SkinPreviewSvg', () => {
     expect(selected).not.toMatch(/tether-engine|tether-hull|<script/);
   });
 
-  it('replaces all seven existing ship appearances while retaining their IDs', () => {
+  it('covers ten complete raster ships while retaining existing IDs', () => {
     expect(PLAYER_SKIN_DEFINITIONS.map(skin => skin.id)).toContain('spearhead');
-    expect(PLAYER_SKIN_DEFINITIONS).toHaveLength(8);
+    expect(PLAYER_SKIN_DEFINITIONS).toHaveLength(10);
     for (const definition of PLAYER_SKIN_DEFINITIONS) {
       const card = createPlayerSkinPreviewSvg(definition.id);
       const preview = createPlayerSkinPreviewSvg(definition.id, { animated: true });

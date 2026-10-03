@@ -1,3 +1,4 @@
+import type { CannonSkinId } from '../../../content/visual/CannonSkinDefinitions';
 import cannonBasicLeftSvg from './cannon-basic-left.svg?raw';
 import cannonBasicRightSvg from './cannon-basic-right.svg?raw';
 import cannonCurveLeftSvg from './cannon-curve-left.svg?raw';
@@ -24,6 +25,13 @@ export interface CannonBarrelSvgPair {
   readonly left: string;
   readonly right: string;
 }
+
+/** Existing safe fallback only: generated packages do not need new SVG masters. */
+export const getCannonFallbackId = (skin: CannonSkinId): keyof typeof CANNON_BARREL_SVG => {
+  if (skin === 'spearhead' || skin === 'gyre') return 'basic';
+  if (skin === 'razor') return 'curve';
+  return skin;
+};
 
 /** Strips the SVG root, title and desc so a piece can be inlined into another document. */
 export const extractSvgGraphicMarkup = (svg: string): string => (

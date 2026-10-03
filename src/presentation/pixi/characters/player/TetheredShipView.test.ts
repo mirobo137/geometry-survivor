@@ -83,6 +83,30 @@ describe('TetheredShipView visual trial', () => {
     expect(view.render(0.1, 0, 0, 0, 0, 0, 0)).toBe(true);
   });
 
+  it('samples each actual cable without allocation, including rotated aim and recoil', async () => {
+    const view = await loaded();
+    const target = { x: 0, y: 0 };
+    for (const aim of [0, 0.73, Math.PI]) {
+      view.render(aim + 1, aim, 1, 0, 0, 4, 0);
+      const strokes = (view.root.children[0] as Graphics).context.instructions as unknown as {
+        data: { path: { instructions: { action: string; data: number[] }[] } }
+      }[];
+      for (const index of [0, 1] as const) {
+        const points = strokes[index * 2].data.path.instructions;
+        for (const t of [0, 0.5, 1]) {
+          expect(view.sampleCable(index, t, target)).toBe(true);
+          if (t === 0) expect(target.x).toBe(index === 0 ? -11 : 11);
+          const point = points[Math.round(t * 8)].data;
+          expect(target.x).toBeCloseTo(point[0]);
+          expect(target.y).toBeCloseTo(point[1]);
+        }
+      }
+    }
+    view.reset();
+    expect(view.sampleCable(0, 0.5, target)).toBe(false);
+    view.root.destroy({ children: true });
+  });
+
   it('falls back on failure and never attaches art after disposal', async () => {
     const failed = new TetheredShipView('low', 'spearhead', 'spearhead', async () => undefined);
     await Promise.resolve();

@@ -592,6 +592,9 @@
 .cosmetic-background-frame[data-background="crystal-field"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(55deg) saturate(1.05); --current-opacity: .9; }
 .cosmetic-background-frame[data-background="nacre-orbit"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(-12deg) saturate(.72); --current-opacity: .8; }
 .cosmetic-background-frame[data-background="vesper-bloom"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(75deg) saturate(.78); --current-opacity: .88; }
+.cosmetic-background-frame[data-background="silent-archive"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(-10deg) saturate(.65); --current-opacity: .8; }
+.cosmetic-background-frame[data-background="lunar-fault"] .cosmetic-background-atmosphere { --current-tint: saturate(.15); --current-opacity: .76; }
+.cosmetic-background-frame[data-background="leviathan-wake"] .cosmetic-background-atmosphere { --current-tint: hue-rotate(-18deg) saturate(.8); --current-opacity: .86; }
 .cosmetic-background-current {
   position: absolute;
   display: block;

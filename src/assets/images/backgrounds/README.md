@@ -1,8 +1,24 @@
 # Velo de Marea / Tidal Veil
 
+## Catálogo y entrega vigentes — 03-10-2026
+
+Ahora son diez fondos. Los siete originales conservan sus PNG, arte, resolución,
+colores y animación; sus derivados de entrega fueron regenerados con WebP Q82
+desde esos másteres, no desde una recomprensión del WebP. Las cifras siguientes
+son históricas salvo esta sección. Script: `scripts/optimize-background-delivery.py
+82 --apply`; ahorro de trece derivados: 483,096 bytes. Corrientes transparentes
+sin cambios. Diferencia PSNR respecto al WebP previo: placas 40.87–45.90 dB,
+previews 39.62–44.06 dB; esto no demuestra equivalencia perceptual absoluta.
+
+Los tres nuevos conservan PNG original, WebP runtime 1254² Q78 y preview 512² Q76.
+Cada uno recibe placa respirada + cuatro esquinas con las mismas dos texturas
+de humo. Low/reduced-motion estáticos, Medium/High animados.
+[Catálogo diez](../../../../docs/design/CATALOGO_DIEZ.md) registra motivos,
+prompts, bytes, pruebas y límites. No se genera una textura de humo por tema.
+
 ## Regla para nuevos fondos generados con imágenes GPT
 
-Antes de generar, comparar la idea con los siete fondos del catálogo y anotar
+Antes de generar, comparar la idea con todos los fondos vigentes del catálogo y anotar
 qué la distingue. Debe cambiar el motivo principal o la composición y al menos
 dos ejes adicionales (paleta, material/textura, dirección de luz o ritmo de las
 masas); no aceptar un mero cambio cromático, más brillo o un halo añadido.

@@ -64,9 +64,9 @@ const assertRgbaAsset = (path: URL, size: number): number => {
 };
 
 describe('PNG ship and cannon skin contract', () => {
-  it('ships eight square RGBA ships with true transparency and bounded file size', () => {
+  it('ships ten square RGBA ships with true transparency and bounded file size', () => {
     const ids = Object.keys(PLAYER_SHIP_RASTER_ART) as (keyof typeof PLAYER_SHIP_RASTER_ART)[];
-    expect(ids).toEqual(['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead']);
+    expect(ids).toEqual(['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead', 'corsair', 'nautilus']);
     let bytes = 0;
     for (const id of ids) {
       const path = id === 'spearhead'
@@ -75,23 +75,23 @@ describe('PNG ship and cannon skin contract', () => {
       bytes += assertRgbaAsset(path, 256);
       expect(PLAYER_SHIP_RASTER_ART[id]).toMatchObject({ width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 });
     }
-    expect(bytes).toBeLessThan(700_000);
+    expect(bytes).toBeLessThan(850_000);
     expect(existsSync(new URL('./tether-hull.png', import.meta.url))).toBe(false);
     expect(existsSync(new URL('./tether-engine.png', import.meta.url))).toBe(false);
   });
 
-  it('ships eight square RGBA cannons while sharing one texture per two barrels', () => {
+  it('ships ten square RGBA cannons while sharing one texture per two barrels', () => {
     const ids = Object.keys(CANNON_SKIN_RASTER_ART) as (keyof typeof CANNON_SKIN_RASTER_ART)[];
-    expect(ids).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead']);
+    expect(ids).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead', 'gyre', 'razor']);
     let bytes = 0;
     for (const id of ids) {
       const path = id === 'spearhead'
         ? new URL('./tether-cannon.png', import.meta.url)
         : new URL(`../cannons/${id}.png`, import.meta.url);
       bytes += assertRgbaAsset(path, 128);
-      expect(CANNON_SKIN_RASTER_ART[id]).toMatchObject({ width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08 });
+      expect(CANNON_SKIN_RASTER_ART[id]).toMatchObject({ width: 30, height: 39, anchorX: 0.5, anchorY: 0.08 });
     }
-    expect(bytes).toBeLessThan(130_000);
+    expect(bytes).toBeLessThan(190_000);
     expect(CANNON_SKIN_RASTER_ART.spearhead.url).toContain('tether-cannon');
     expect(CANNON_SKIN_RASTER_ART.basic.cableAnchorY).toBe(0.9);
     expect(CANNON_SKIN_RASTER_ART.spearhead.cableAnchorY).toBe(0.84);

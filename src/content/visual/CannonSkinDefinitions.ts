@@ -1,5 +1,5 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'spearhead';
-export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'spearhead' | 'gyre' | 'razor';
+export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'gyre' | 'razor';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export interface CannonSkinDefinition {
@@ -121,11 +121,23 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     trail: 'straight',
     accent: 0x75e6ff,
     projectileAccent: 0xfff6a8
+  },
+  {
+    id: 'gyre', name: 'Gyre Coil', subtitle: 'Resonador de inducción',
+    description: 'Una cápsula de anillos menta traza tres ondas suaves antes de recuperar su eje.',
+    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 3600, acquisition: 'nova',
+    trail: 'gyre', accent: 0x91e8d2, projectileAccent: 0xc5ffe8
+  },
+  {
+    id: 'razor', name: 'Rift Saw', subtitle: 'Mandíbulas de corte',
+    description: 'Una esquirla serrada dibuja una vibración angular y deja una cinta de cortes rosados.',
+    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 4200, acquisition: 'nova',
+    trail: 'razor', accent: 0xff8faa, projectileAccent: 0xffdae9
   }
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom' || value === 'spearhead'
+  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom' || value === 'spearhead' || value === 'gyre' || value === 'razor'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

@@ -89,8 +89,7 @@ const PATTERN_BEHAVIOR: Readonly<Record<BackgroundPattern, AmbientBehavior>> = {
 };
 
 const isStaticArtworkBackground = (id: BackgroundId): boolean => (
-  id === 'deep-space' || id === 'ion-storm' || id === 'solar-drift' || id === 'crystal-field'
-  || id === 'nacre-orbit' || id === 'vesper-bloom' || id === 'tidal-veil'
+  id === 'tidal-veil' || id in PAINTERLY_MOTION_STYLES
 );
 
 /** Selects a lazy painted plate with a shared, low-cost atmospheric motion layer. */

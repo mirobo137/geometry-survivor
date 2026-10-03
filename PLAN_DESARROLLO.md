@@ -566,9 +566,30 @@ Ampliación autorizada el 03-10-2026: Inicio muestra el PNG y nombre de la nave
 equipada, con la misma URL/proporción del catálogo y combate. Se actualiza al
 equipar/comprar o recibir un cosmético rewarded, al volver al menú y al recargar;
 inspeccionar sin equipar no cambia la portada. Reutiliza `skins.selected`, sin
-nuevo guardado, catálogo precargado, texturas Pixi o loop. Shaders, propulsión
-localizada y nueva derrota siguen fuera de alcance. Contrato y carga/fallback:
+nuevo guardado, catálogo precargado, texturas Pixi o loop. Shaders y nueva
+derrota siguen fuera de alcance. Contrato y carga/fallback:
 [Portada de Inicio](src/assets/images/ui/home/README.md).
+
+Ampliación visual autorizada el 03-10-2026: propulsión reactiva localizada en
+las ocho naves, conservando un único PNG de casco. Sustituye la estela vectorial
+que se reconstruía incluso estando oculta. Pool fijo de 3/6/9 sprites en
+Low/Medium/High y una textura RGBA8 de 32×64 (8 KiB) por PlayerView, sin partículas
+acumulativas, filtros, timers ni cambios de simulación. Pausa congela el efecto;
+movimiento reducido conserva sólo el núcleo sin oscilación. Puertos, ciclo de
+vida y comprobaciones: [Naves PNG](docs/design/NAVES_PNG.md#propulsión-reactiva).
+
+Ampliación visual autorizada el 03-10-2026: los ocho cañones reciben retroceso
+inmediato y recuperación independiente por emisor, fogonazo raster por paquete
+y pulso sobre su cable real. `CannonFeedbackView` sustituye los destellos y
+sockets Graphics reconstruidos por frame por un atlas procedural compartido
+de 64×64 RGBA8 (16 KiB). Refinamiento posterior solicitado: cañones +25%
+(frame 30×39 en combate/Skins), cables cúbicos con holgura, respuesta suave
+y puertos fijos; vapor breve que reutiliza el atlas. El pool vigente es de
+4/8/12 sprites en Low/Medium/High, dos con movimiento reducido. Origen y
+dirección provienen del descriptor de disparo aceptado; las mecánicas de balas,
+evoluciones y apuntado conservan sus contratos. Pausa congela la respuesta y
+reduced-motion acorta destello/retroceso. Mantenimiento de nuevos cañones,
+timing y coste: [Respuesta de cañones](docs/design/NAVES_PNG.md#respuesta-reactiva-de-cañones).
 
 Ampliación autorizada el 03-10-2026: los ocho paquetes de disparo reciben
 cabeza/estela PNG originales. Los cañones crecen visualmente un 20% tanto en
@@ -724,7 +745,8 @@ La matriz vigente de efectos, categorías, pausa y contrato de recetas ZzFX est�
 en [Audio SFX con ZzFX](docs/design/AUDIO_SFX_ZZFX.md). Howler conserva en
 exclusiva la música de fondo. La pista general provisional del 03-10-2026 usa
 [este contrato](src/assets/audio/music/README.md): una pista HTML5 Audio en loop,
-70% en menú/resumen y 35% en partida, multiplicados por el ajuste persistente;
+50% en menú/resumen y 20% en partida, tras el ajuste auditivo del usuario del
+03-10-2026, multiplicados por el ajuste persistente;
 fade de 450 ms y misma posición entre pantallas. No decodificar la pista larga
 completa en Web Audio ni duplicarla por acto. La aceptación auditiva y los
 derechos de distribución comercial siguen pendientes.
@@ -3803,3 +3825,18 @@ Estado, regresiones y límites por ID:
 No se cambian balance, economía, migraciones, reglas de armas ni catálogo. Sin
 commit/push/publicación en esta entrega. No repetir los hallazgos históricos como
 si describieran el runtime corregido; conservar la comparación fechada.
+
+## 22.20 Catálogo de diez por familia — 03-10-2026
+
+Ampliación solicitada: 8 naves / 8 cañones / 7 fondos → **10/10/10**.
+Dos naves completas PNG, dos cañones con cabeza/cinta propias y tres fondos
+con motivos distintos del catálogo existente. Reusar propulsión, cable,
+retroceso/vapor, paneo y cuatro corrientes; las dos nuevas ondas de bala son
+cosméticas. No cambia simulación ni balance ni resetea localStorage.
+
+Identidad, prompts literales, precios de nuevos cosméticos, costes, derivados,
+validaciones, URLs de prueba y límites: [CATALOGO_DIEZ](docs/design/CATALOGO_DIEZ.md).
+Se optimizan los derivados WebP anteriores desde PNG intactos para mantener el
+artefacto completo bajo 15 MB, conservando mapas y el guard de CI. El margen
+local continúa estrecho; otro lote exige revisar presupuesto antes de generar.
+No cierra EX-09, aceptación humana del Laboratorio, móvil físico ni publicación.

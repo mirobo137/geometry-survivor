@@ -1,6 +1,6 @@
 # Balas y estelas PNG — 03-10-2026
 
-Extensión visual solicitada por el usuario para los ocho cañones. No cambia
+Extensión visual solicitada por el usuario para los diez cañones. No cambia
 balance, targeting, cadencia, daño, muzzle slots, colisiones, precios ni saves.
 Contrato de producción: [Arte híbrido](../../../../docs/design/ARTE_HIBRIDO.md).
 
@@ -16,6 +16,14 @@ Contrato de producción: [Arte híbrido](../../../../docs/design/ARTE_HIBRIDO.md
 | `helix` / Helix Lance | Lanza helada con conductores dorados | Doble hélice cian/oro |
 | `bloom` / Bloomwake | Semilla menta y pétalos de nácar | Filamento con pétalos rosa |
 | `spearhead` / Ivory Spear | Esquirla de marfil con alas cortas | Dos pistas blancas sobre ion cian |
+| `gyre` / Gyre Coil | Cápsula concéntrica de latón/menta | Trenza de tres ondas azul/menta |
+| `razor` / Rift Saw | Esquirla serrada plateada/escarlata | Cinta rosa con chevrones de corte |
+
+Lote adicional: [Catálogo diez](../../../../docs/design/CATALOGO_DIEZ.md).
+Gyre recorre tres oscilaciones amortiguadas (hasta 10 px, 0.65 s); Razor una
+onda angular suavizada (hasta 9 px, 0.55 s). Derivada analítica alinea la punta
+con su estela; ambos vuelven al eje y alternan lado por boca. No hay targeting,
+simulación ni interpolación física nueva. Los veinte PNG suman 110,666 bytes.
 
 Se compararon masas compactas, agujas y cuerpos con aletas/jaulas para asignar
 una firma apropiada a cada paquete. No son cambios de color de la misma bala.

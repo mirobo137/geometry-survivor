@@ -1,6 +1,6 @@
 export type MusicScene = 'menu' | 'gameplay';
 /** Scene attenuation is multiplied by the persistent player music setting. */
-export const MUSIC_SCENE_VOLUMES: Readonly<Record<MusicScene, number>> = { menu: 0.70, gameplay: 0.35 };
+export const MUSIC_SCENE_VOLUMES: Readonly<Record<MusicScene, number>> = { menu: 0.50, gameplay: 0.20 };
 export const MUSIC_SCENE_FADE_MS = 450;
 
 export interface MusicStep {

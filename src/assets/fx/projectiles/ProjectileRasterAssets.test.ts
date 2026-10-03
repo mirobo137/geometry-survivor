@@ -6,8 +6,8 @@ import { CANNON_SKIN_DEFINITIONS } from '../../../content/visual/CannonSkinDefin
 describe('generated bullet material contract', () => {
   it('covers every cannon with unique bounded RGBA head and trail, not a renamed SVG', () => {
     const directory = new URL('./', import.meta.url);
-    expect(readdirSync(directory).filter(name => name.endsWith('.png'))).toHaveLength(16);
-    expect(new Set(Object.values(PROJECTILE_ART_URLS)).size).toBe(16);
+    expect(readdirSync(directory).filter(name => name.endsWith('.png'))).toHaveLength(20);
+    expect(new Set(Object.values(PROJECTILE_ART_URLS)).size).toBe(20);
     let total = 0;
     for (const { id } of CANNON_SKIN_DEFINITIONS) {
       const art = PROJECTILE_SKIN_ART[id];

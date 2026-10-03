@@ -11,7 +11,7 @@ const server = await preview({ mode: 'development', preview: { host: '127.0.0.1'
 let browser;
 const results = [];
 const stressOnly = process.argv.includes('--stress-only');
-const skins = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead'];
+const skins = ['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead', 'gyre', 'razor'];
 const snapshot = () => {
   const host = globalThis.__projectileQaApp;
   if (!host) return null;
@@ -74,7 +74,7 @@ try {
       const state = await page.evaluate(snapshot);
       if (state.heads !== 300 || state.trailPool !== (quality === 'low' ? 0 : 480)) errors.push('Pool grew or changed');
       if (!state.visibleHeads.length || state.visibleHeads.some(head => head.textureWidth !== 96 || head.textureHeight !== 48 || !head.source.includes(`${skin}-head-`))) errors.push('Wrong bullet material');
-      if (state.guns?.some(gun => Math.abs(gun.width - 24) > 0.01 || Math.abs(gun.height - 31.2) > 0.01 || gun.anchorY !== 0.08)) errors.push('Cannon frame or muzzle pivot changed');
+      if (state.guns?.some(gun => Math.abs(gun.width - 30) > 0.01 || Math.abs(gun.height - 39) > 0.01 || gun.anchorY !== 0.08)) errors.push('Cannon frame or muzzle pivot changed');
       if (quality === 'low' && [...pngs].some(name => skins.some(id => name.includes(`${id}-trail-`)))) errors.push('Low downloaded an invisible trail');
       await page.addStyleTag({ content: '#debug-panel, #pause-overlay { visibility: hidden !important; }' });
       await page.locator('#game-container canvas').screenshot({ path: `${out}/${skin}-${quality}.png` });

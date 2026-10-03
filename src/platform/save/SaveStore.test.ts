@@ -30,6 +30,22 @@ class MemoryStorage implements StorageAdapter {
 }
 
 describe('LocalSaveStore', () => {
+  it('round-trips the new ship, cannon and background IDs without changing legacy ownership', () => {
+    const store = new LocalSaveStore(new MemoryStorage());
+    const base = createDefaultSaveData();
+    for (const selected of ['corsair', 'nautilus'] as const) {
+      store.save({ ...base, skins: { selected, unlocked: [...base.skins.unlocked, 'corsair', 'nautilus'] },
+        cannonSkins: { selected: 'gyre', unlocked: [...base.cannonSkins.unlocked, 'gyre', 'razor'] },
+        backgrounds: { selected: 'leviathan-wake', unlocked: [...base.backgrounds.unlocked, 'silent-archive', 'lunar-fault', 'leviathan-wake'] } });
+      const restored = store.load();
+      expect(restored.skins.selected).toBe(selected);
+      expect(restored.skins.unlocked).toEqual(expect.arrayContaining([...base.skins.unlocked]));
+      expect(restored.cannonSkins.selected).toBe('gyre');
+      expect(restored.cannonSkins.unlocked).toContain('razor');
+      expect(restored.backgrounds.selected).toBe('leviathan-wake');
+      expect(restored.backgrounds.unlocked).toEqual(expect.arrayContaining(['silent-archive', 'lunar-fault']));
+    }
+  });
   it('persists the free Ivory Spear skin without spending Nova or changing cannon choice', () => {
     const store = new LocalSaveStore(new MemoryStorage());
     const defaults = createDefaultSaveData();

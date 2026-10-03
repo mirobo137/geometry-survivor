@@ -1,5 +1,11 @@
 # Fondos premium — composición, legibilidad y presupuesto
 
+Catálogo vigente desde el 03-10-2026: **diez placas**. Archivo Silente, Falla Lunar
+y Estela del Leviatán siguen todos los contratos de esta guía; no agregan otro
+sistema de animación. Motivos, procedencia y entrega:
+[Catálogo diez](CATALOGO_DIEZ.md). Las cifras anteriores describen sus entregas
+fechadas; los derivados actuales se recomprimieron desde los PNG originales.
+
 Referencias originales: **Órbita de Nacre** y **Flor del Ocaso**, creadas como
 SVG code-first el 09-09-2026. El 26-09-2026 los seis fondos pintados
 (Deep Space, Ion Storm, Solar Drift, Crystal Field, Nacre Orbit y Vesper Bloom)

@@ -122,25 +122,25 @@ describe('AudioManager', () => {
     expect(mocks.howlOptions[0]).toMatchObject({ html5: true, format: ['mp3'], loop: true, preload: false, pool: 1 });
   });
 
-  it('mixes menu at 70% and gameplay at 35% without restarting or changing SFX volume', async () => {
+  it('mixes menu at 50% and gameplay at 20% without restarting or changing SFX volume', async () => {
     const service = new AudioManager();
     service.startMusic('menu');
     expect(mocks.howlOptions).toHaveLength(0);
     await service.unlock();
-    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.7);
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.5);
     service.startMusic('gameplay');
-    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.7, 0.35, 450);
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.5, 0.2, 450);
     await service.unlock();
-    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.7); // No gesture cancels the fade.
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.5); // No gesture cancels the fade.
     service.startMusic('menu');
-    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.35, 0.7, 450);
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.2, 0.5, 450);
     expect(mocks.howlPlay).toHaveBeenCalledOnce();
     expect(mocks.howlStop).not.toHaveBeenCalled();
     expect(mocks.howlOptions).toHaveLength(1);
     service.configure({ musicVolume: 0.5, sfxVolume: 0.8, muted: false });
-    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.35);
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.25);
     service.startMusic('gameplay');
-    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.35, 0.175, 450);
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.25, 0.1, 450);
     service.shutdown();
   });
 
@@ -186,7 +186,7 @@ describe('AudioManager', () => {
     expect(mocks.howlOptions).toHaveLength(1);
     await service.unlock();
     expect(mocks.howlOptions).toHaveLength(2);
-    expect(mocks.howlOptions[1].volume).toBe(0.35);
+    expect(mocks.howlOptions[1].volume).toBe(0.2);
     mocks.howlOptions[0].onplayerror?.(1001, 'stale');
     expect(mocks.howlUnload).toHaveBeenCalledOnce();
     service.shutdown();

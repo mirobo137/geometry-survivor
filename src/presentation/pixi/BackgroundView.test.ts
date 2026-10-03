@@ -31,11 +31,12 @@ describe('BackgroundView', () => {
     expect(typeof BackgroundView).toBe('function');
   });
 
-  it('selects the common atmospheric motion layer for all six other painted themes', () => {
+  it('selects the common atmospheric motion layer for all nine other painted themes', () => {
     const view = new BackgroundView(fakeRenderer, 'deep-space', 'high');
     const motionLayer = view.root.children.at(-1)!;
     const paintedThemes = [
-      'deep-space', 'ion-storm', 'solar-drift', 'crystal-field', 'nacre-orbit', 'vesper-bloom'
+      'deep-space', 'ion-storm', 'solar-drift', 'crystal-field', 'nacre-orbit', 'vesper-bloom',
+      'silent-archive', 'lunar-fault', 'leviathan-wake'
     ] as const;
 
     for (const theme of paintedThemes) {

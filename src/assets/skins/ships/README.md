@@ -24,6 +24,14 @@ se usaron como referencia de forma.
 | `obsidian` | Obsidian Relay | Cometa furtiva oscura con tres puntas de señal rosa | 1,800 |
 | `nova` | Nova Warden | Escudo radial de seis caras alrededor de una estrella | 3,000 |
 | `manta` | Manta Veil | Ala continua de manta, nácar y reflejos marinos | 0 |
+| `corsair` | Scarlet Corsair | Catamarán escarlata con canal abierto y motores gemelos | 3,600 |
+| `nautilus` | Nautilus Ark | Concha cobalto/latón con turbina espiral | 4,200 |
+
+Catálogo actual: diez naves. El lote adicional y sus prompts se documentan en
+[Catálogo diez](../../../../docs/design/CATALOGO_DIEZ.md). Una textura RGBA 256²
+por nave; puertos de propulsión de Corsair ±10/28 y Nautilus ±3/28 en el frame
+56×64. No cambia hitbox, bocas, cables ni estadísticas. Suma de las diez
+imágenes runtime: 761,427 bytes; sólo se prepara la elegida.
 
 Se preservan los siete IDs, precios, nombres de catálogo, selección, propiedad y
 progreso ya guardado. Los perfiles nuevos empiezan con Ivory Spear y sus cañones

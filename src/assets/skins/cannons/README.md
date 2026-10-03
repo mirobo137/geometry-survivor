@@ -5,7 +5,7 @@ no se ha publicado. Prompts y procedencia están en
 [`scripts/fleet-skin-image-sources.json`](../../../../scripts/fleet-skin-image-sources.json).
 La guía canónica es [`docs/design/NAVES_PNG.md`](../../../../docs/design/NAVES_PNG.md).
 
-## Ocho modelos intercambiables
+## Diez modelos intercambiables
 
 Los siete modelos ya existentes reciben arte nuevo sin cambiar IDs, precios
 ni dueño. La entrega original conservó proyectiles/estelas; desde el 03-10 son
@@ -23,22 +23,31 @@ como octavo modelo gratuito. Cualquier cañón funciona con cualquier nave.
 | `helix` | Helix Lance | Lanza central envuelta por dos rieles helicoidales | 3,000 |
 | `bloom` | Bloomwake | Cáliz de cuatro pétalos de nácar y canales menta | 0 |
 | `spearhead` | Ivory Spear | Módulos de marfil originales con gema cian | 0 |
+| `gyre` | Gyre Coil | Resonador circular de latón y anillos menta | 3,600 |
+| `razor` | Rift Saw | Mandíbulas serradas de titanio y cerámica escarlata | 4,200 |
+
+Los dos adicionales siguen frame/pivote/cable/feedback de la flota.
+[Catálogo diez](../../../../docs/design/CATALOGO_DIEZ.md) registra generación,
+derivados y validación. Suma de los diez PNG runtime: 164,642 bytes.
+Cada pareja reutiliza una sola textura 128²; no crece el pool de fogonazo/vapor.
 
 ## Pivote y composición en combate
 
 | Propiedad | Contrato |
 | --- | --- |
 | Archivos nuevos | Siete PNG RGBA de 128×128 |
-| Frame en mundo | 24×31.2 desde el 03-10 (+20%); anchor `(0.5, 0.08)` en la punta |
+| Frame en mundo | 30×39, +25% respecto a 24×31.2 por feedback del 03-10; anchor `(0.5, 0.08)` en la punta |
 | Cable | Ancla trasera por modelo (`0.9` en los siete nuevos, `0.84` Ivory) |
 | Boca | Slots de simulación `(−27, −11)` y `(27, −11)` |
 | Dos módulos | Comparten un `Texture` y siguen el apuntado real e independiente |
-| Cable al casco | Puertos `(±11, 7)`, ocho segmentos decorativos, sin física |
+| Cable al casco | Puertos fijos `(±11, 7)`, curva cúbica de ocho segmentos con holgura y respuesta suave |
 
 La imagen completa del cañón se usa dos veces en `TetheredShipView`; el cable
 queda debajo del casco y el PNG del módulo encima. El retroceso sólo transforma
 el sprite existente. No se añaden bocas, colisión, daño, cadencia, filtros o
-partículas. La línea de cable conserva el tratamiento aprobado.
+partículas acumulativas. El fogonazo y vapor breve usan un pool fijo y atlas
+de 16 KiB compartido: contrato vigente en la sección de respuesta reactiva de
+la guía canónica. Los cables tienen cuerpo oscuro y un reflejo metálico fino.
 
 `CannonSelectPanel` enseña sólo un cañón real y su bala/estela en horizontal,
 sin nave/cables. El modal muestra dos módulos y anima; las tarjetas son estáticas.

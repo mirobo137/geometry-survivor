@@ -6,6 +6,8 @@ import obsidianShipUrl from './ships/obsidian.png';
 import novaShipUrl from './ships/nova.png';
 import mantaShipUrl from './ships/manta.png';
 import spearheadShipUrl from './tethered/tether-ship.png';
+import corsairShipUrl from './ships/corsair.png';
+import nautilusShipUrl from './ships/nautilus.png';
 import basicCannonUrl from './cannons/basic.png';
 import curveCannonUrl from './cannons/curve.png';
 import smokeCannonUrl from './cannons/smoke.png';
@@ -14,6 +16,8 @@ import latticeCannonUrl from './cannons/lattice.png';
 import helixCannonUrl from './cannons/helix.png';
 import bloomCannonUrl from './cannons/bloom.png';
 import spearheadCannonUrl from './tethered/tether-cannon.png';
+import gyreCannonUrl from './cannons/gyre.png';
+import razorCannonUrl from './cannons/razor.png';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 
@@ -39,19 +43,23 @@ export const PLAYER_SHIP_RASTER_ART: Readonly<Record<PlayerSkinId, ShipRasterArt
   obsidian: { url: obsidianShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   nova: { url: novaShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   manta: { url: mantaShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
-  spearhead: { url: spearheadShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 }
+  spearhead: { url: spearheadShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
+  corsair: { url: corsairShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
+  nautilus: { url: nautilusShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 }
 };
 
-/** One interchangeable 128px cannon image; +20% visual size, unchanged muzzle anchor. */
+/** One interchangeable 128px cannon image; shared combat/locker frame, unchanged muzzle anchor. */
 export const CANNON_SKIN_RASTER_ART: Readonly<Record<CannonSkinId, CannonRasterArt>> = {
-  basic: { url: basicCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  curve: { url: curveCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  smoke: { url: smokeCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  rainbow: { url: rainbowCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  lattice: { url: latticeCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  helix: { url: helixCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  bloom: { url: bloomCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  spearhead: { url: spearheadCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.84 }
+  basic: { url: basicCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  curve: { url: curveCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  smoke: { url: smokeCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  rainbow: { url: rainbowCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  lattice: { url: latticeCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  helix: { url: helixCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  bloom: { url: bloomCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  spearhead: { url: spearheadCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.84 },
+  gyre: { url: gyreCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  razor: { url: razorCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 }
 };
 
 export const LINKED_CANNON_LAYOUT = {

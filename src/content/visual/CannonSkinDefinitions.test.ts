@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CANNON_SKIN_DEFINITIONS, isCannonSkinId } from './CannonSkinDefinitions';
 
 describe('CannonSkinDefinitions', () => {
-  it('keeps the seven packages and adds Ivory Spear cannons as the eighth', () => {
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead']);
-    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'straight']);
+  it('keeps ten packages, including two distinct moving raster bullets', () => {
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.id)).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead', 'gyre', 'razor']);
+    expect(CANNON_SKIN_DEFINITIONS.map((definition) => definition.trail)).toEqual(['straight', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'straight', 'gyre', 'razor']);
     expect(CANNON_SKIN_DEFINITIONS.every((definition) => Number.isInteger(definition.accent))).toBe(true);
     expect(CANNON_SKIN_DEFINITIONS[7].priceNova).toBe(0);
     expect(CANNON_SKIN_DEFINITIONS[7].acquisition).toBe('default');
@@ -15,6 +15,7 @@ describe('CannonSkinDefinitions', () => {
     expect(isCannonSkinId('lattice')).toBe(true);
     expect(isCannonSkinId('helix')).toBe(true);
     expect(isCannonSkinId('spearhead')).toBe(true);
+    for (const definition of CANNON_SKIN_DEFINITIONS) expect(isCannonSkinId(definition.id)).toBe(true);
     expect(isCannonSkinId('plasma')).toBe(false);
   });
 });

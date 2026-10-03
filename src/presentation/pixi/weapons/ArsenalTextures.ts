@@ -26,6 +26,7 @@ import magneticBurstUrl from '../../../assets/fx/magnetic-charge-detonation.png'
 import thunderheadBurstUrl from '../../../assets/fx/arsenal/thunderhead-burst.png';
 import singularitySplitUrl from '../../../assets/fx/arsenal/singularity-split.png';
 import singularityShardUrl from '../../../assets/fx/arsenal/singularity-shard.png';
+import { PROJECTILE_ART_URLS } from '../../../assets/fx/projectiles/ProjectileRasterAssets';
 
 /** Fixed catalogue, owned by the presentation session, never by individual sprites. */
 export const ARSENAL_ART = {
@@ -53,7 +54,8 @@ export const ARSENAL_ART = {
   magnetic_burst: magneticBurstUrl,
   thunderhead_burst: thunderheadBurstUrl,
   singularity_split: singularitySplitUrl,
-  singularity_shard: singularityShardUrl
+  singularity_shard: singularityShardUrl,
+  ...PROJECTILE_ART_URLS
 } as const;
 export type ArsenalArtId = keyof typeof ARSENAL_ART;
 const cache = new Map<ArsenalArtId, Texture | null>();

@@ -160,6 +160,47 @@ describe('Game', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('pauses ambient menu music on blur and resumes only its audio on focus', () => {
+    vi.stubGlobal('document', { visibilityState: 'visible' });
+    const platform = createPlatform();
+    const game = new Game({ ...createOptions(), platform, startOnMenu: true });
+    const runtime = game as unknown as {
+      onWindowBlur: () => void; onWindowFocus: () => void; gameState: { phase: string };
+    };
+    // This DOM-free fixture has no StartScreen; select its menu phase explicitly.
+    runtime.gameState.phase = 'menu';
+    runtime.onWindowBlur();
+    runtime.onWindowBlur();
+    expect(platform.audio.pause).toHaveBeenCalledOnce();
+    expect(runtime.gameState.phase).toBe('menu');
+    runtime.onWindowFocus();
+    expect(platform.audio.resume).toHaveBeenCalledOnce();
+    expect(runtime.gameState.phase).toBe('menu');
+    expect(platform.lifecycle.onGameResume).not.toHaveBeenCalled();
+  });
+
+  it('focus does not resume a paused run or hidden menu audio', () => {
+    vi.stubGlobal('document', { visibilityState: 'visible' });
+    const platform = createPlatform();
+    const game = new Game({ ...createOptions(), platform });
+    const runtime = game as unknown as {
+      onWindowBlur: () => void; onWindowFocus: () => void; gameState: { phase: string };
+    };
+    runtime.onWindowBlur();
+    runtime.onWindowFocus();
+    expect(runtime.gameState.phase).toBe('paused');
+    expect(platform.audio.resume).not.toHaveBeenCalled();
+    const menuPlatform = createPlatform();
+    const menu = new Game({ ...createOptions(), platform: menuPlatform, startOnMenu: true }) as unknown as typeof runtime;
+    menu.gameState.phase = 'menu';
+    menu.onWindowBlur();
+    vi.stubGlobal('document', { visibilityState: 'hidden' });
+    menu.onWindowFocus();
+    expect(menu.gameState.phase).toBe('menu');
+    expect(menuPlatform.audio.resume).not.toHaveBeenCalled();
   });
 
   it('announces a continued campaign act without advancing combat behind the card', () => {
@@ -314,11 +355,14 @@ describe('Game', () => {
 
   it('waits for terminal presentation before opening the victory summary', async () => {
     vi.useFakeTimers();
-    const game = new Game(createOptions());
+    const platform = createPlatform();
+    const game = new Game({ ...createOptions(), platform });
     const finishRun = (game as unknown as { finishRun: (outcome: 'victory') => void }).finishRun;
 
     finishRun.call(game, 'victory');
 
+    expect(platform.audio.stopMusic).not.toHaveBeenCalled();
+    expect(platform.audio.startMusic).not.toHaveBeenCalled();
     expect(mocks.gameOverOpen).not.toHaveBeenCalled();
     vi.advanceTimersByTime(2_999);
     expect(mocks.gameOverOpen).not.toHaveBeenCalled();
@@ -327,6 +371,8 @@ describe('Game', () => {
     await Promise.resolve();
     expect(mocks.gameOverOpen).toHaveBeenCalledTimes(1);
     expect(mocks.gameOverOpen.mock.calls[0][0]).toMatchObject({ outcome: 'victory' });
+    expect(platform.audio.startMusic).toHaveBeenCalledWith('menu');
+    expect(platform.audio.resume).toHaveBeenCalledOnce();
   });
 
   it('collapses a burst of simulation shots into one presentation pulse per frame', () => {

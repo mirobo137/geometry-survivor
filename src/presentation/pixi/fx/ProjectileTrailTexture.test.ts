@@ -1,5 +1,15 @@
 import { expect, it } from 'vitest';
-import { createProjectileTrailTextures } from './ProjectileTrailTexture';
+import { Texture } from 'pixi.js';
+import { createProjectileTrailTextures, sliceProjectileTrailTexture } from './ProjectileTrailTexture';
+
+it('caches four views of a PNG without making another source or allocating per frame', () => {
+  const base = createProjectileTrailTextures();
+  const texture = new Texture({ source: base[0].source });
+  const slices = sliceProjectileTrailTexture(texture);
+  expect(sliceProjectileTrailTexture(texture)).toBe(slices);
+  expect(slices.every(slice => slice.source === texture.source)).toBe(true);
+  expect(slices.map(slice => slice.frame.x)).toEqual([0, 32, 64, 96]);
+});
 
 it('bakes a pointed transparent tail with continuous age bands on a shared source', () => {
   const textures = createProjectileTrailTextures();

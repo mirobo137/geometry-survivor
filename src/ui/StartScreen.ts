@@ -3,7 +3,7 @@ import { prepareImage, observeVisibleImages, prepareActPlates } from './ImageRea
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/images/ui/home/orbital-sanctuary.webp?url';
 import heroPortraitUrl from '../assets/images/ui/home/orbital-sanctuary-portrait.webp?url';
-import startMarkUrl from '../assets/images/ui/home/survivor-core.png?url';
+import { PLAYER_SHIP_RASTER_ART } from '../assets/skins/SkinRasterAssets';
 import startMarkFallbackUrl from '../assets/svg/ui/start/mark.svg?url';
 import radialEmblemFallbackUrl from '../assets/svg/ui/start/radial.svg?url';
 import angularEmblemFallbackUrl from '../assets/svg/ui/start/angular.svg?url';
@@ -12,7 +12,7 @@ import overdriveEmblemFallbackUrl from '../assets/svg/ui/start/overdrive.svg?url
 import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, LaboratorySaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
-import { PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
+import { getPlayerSkinDefinition, PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
 import { CANNON_SKIN_DEFINITIONS } from '../content/visual/CannonSkinDefinitions';
 import { BACKGROUND_DEFINITIONS } from '../content/visual/BackgroundDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
@@ -150,10 +150,12 @@ export class StartScreen {
   private cosmeticTarget: CosmeticUnlockTarget | null = null;
   private overdrivePlayHandler: (() => void) | null = null;
   private overdriveUnlocked = false;
+  private homeMarkReady: Promise<boolean> | null = null;
 
   private readonly onSkinStateChange = (state: SkinSaveData): void => {
     this.skinState = state;
     this.skinStateHandler?.(state);
+    this.updateHomeShip();
     this.updateCosmeticOffer();
   };
 
@@ -274,7 +276,6 @@ export class StartScreen {
     this.metaBack = metaBack;
     this.metaView = metaView;
     this.mountScene();
-    this.mountMark();
     for (const [button, fallbackUrl] of [
       [radialActButton, radialEmblemFallbackUrl],
       [angularActButton, angularEmblemFallbackUrl],
@@ -339,6 +340,7 @@ export class StartScreen {
     this.laboratoryVitalityAdHandler = options.onLaboratoryVitalityAd;
     this.laboratoryVitalityAdAvailable = options.laboratoryVitalityAdAvailable;
     this.skinState = options.skins;
+    this.updateHomeShip();
     this.cannonSkinState = options.cannonSkins;
     this.backgroundState = options.backgrounds;
     this.wallet = options.wallet;
@@ -412,27 +414,44 @@ export class StartScreen {
     this.closeEntrySelector();
   }
 
-  private mountMark(): void {
+  private updateHomeShip(): void {
     const host = this.root.querySelector<HTMLElement>('#start-mark');
-    if (!host || host.firstElementChild) return;
+    if (!host || (host.dataset.skin === this.skinState.selected && host.firstElementChild)) return;
+    const skin = this.skinState.selected;
+    const art = PLAYER_SHIP_RASTER_ART[skin];
     const mark = new Image();
-    mark.src = startMarkUrl;
     mark.alt = '';
     mark.className = 'home-mark-image';
-    mark.width = 512;
-    mark.height = 512;
+    mark.dataset.skin = skin;
+    mark.width = art.width;
+    mark.height = art.height;
+    mark.style.aspectRatio = `${art.width} / ${art.height}`;
     mark.decoding = 'async';
-    mark.addEventListener('error', () => { mark.src = startMarkFallbackUrl; }, { once: true });
-    if (mark.complete && mark.naturalWidth === 0) mark.src = startMarkFallbackUrl;
-    host.append(mark);
+    mark.draggable = false;
+    mark.addEventListener('error', () => {
+      if (!mark.isConnected) return;
+      mark.style.aspectRatio = '1';
+      mark.src = startMarkFallbackUrl;
+    }, { once: true });
+    // One live image, replaced only on equipment changes. A late decode or
+    // timeout belongs to the detached old image, never to the newer selection.
+    host.replaceChildren(mark);
+    host.dataset.skin = skin;
+    mark.src = art.url;
+    this.homeMarkReady = prepareImage(mark);
+    const name = this.root.querySelector<HTMLElement>('#start-equipped-ship');
+    if (name) name.textContent = `NAVE EQUIPADA · ${getPlayerSkinDefinition(skin).name}`;
   }
 
   public async prepareVisibleArt(): Promise<void> {
-    // Only the currently selected picture source and the home emblem; never
+    // Only the currently selected picture source and equipped ship; never
     // eagerly load the acts, locker or the other portrait/landscape variant.
-    await Promise.all([...this.root.querySelectorAll<HTMLImageElement>(
-      '.home-scene-image, .home-exterior-image, .home-mark-image'
-    )].map(image => prepareImage(image)));
+    await Promise.all([
+      this.homeMarkReady,
+      ...[...this.root.querySelectorAll<HTMLImageElement>(
+        '.home-scene-image, .home-exterior-image'
+      )].map(image => prepareImage(image))
+    ]);
   }
 
   private mountScene(): void {

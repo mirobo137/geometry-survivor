@@ -4,6 +4,10 @@ Contrato vigente: revisión del 26-09-2026. Howler conserva exclusivamente la
 música; todos los efectos aquí descritos se generan con ZzFXMicro 1.3.2
 (MIT, aviso en `public/third-party-licenses/zzfx.txt`).
 
+La música general incorporada el 03-10-2026 tiene su contrato separado en
+[Música general](../../src/assets/audio/music/README.md). Sus niveles de escena
+no alteran las recetas ni el volumen configurado de los SFX de este documento.
+
 ## Identidad y criterio de aceptación
 
 Cada sonido debe comunicar **qué ocurre y cuándo**. El aviso anuncia; el

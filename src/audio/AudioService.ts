@@ -1,6 +1,7 @@
 import { HowlerMusicBackend } from './HowlerMusicBackend';
 import { ZzfxSfxBackend } from './ZzfxSfxBackend';
 import { AUDIO_CUE_DEFINITIONS, type AudioCue } from '../content/audio/AudioCueDefinitions';
+import { MUSIC_SCENE_VOLUMES, MUSIC_SCENE_FADE_MS, type MusicScene } from '../content/audio/MusicDefinitions';
 
 export type { AudioCue } from '../content/audio/AudioCueDefinitions';
 
@@ -15,7 +16,7 @@ export interface AudioService {
   unlock(): Promise<void>;
   pause(): void;
   resume(): void;
-  startMusic(): void;
+  startMusic(scene?: MusicScene): void;
   stopMusic(): void;
   playCue(cue: AudioCue): void;
   shutdown(): void;
@@ -35,8 +36,9 @@ export class AudioManager implements AudioService {
   private sfxContext: AudioContext | null = null;
   private unlocked = false;
   private lifecyclePaused = false;
-  // Music begins only when Game activates a run, never while browsing the menu.
+  // Scene requests never create audio before the first valid user gesture.
   private musicRequested = false;
+  private musicScene: MusicScene = 'gameplay';
   private unlockPromise: Promise<void> | null = null;
   private shutdownRequested = false;
 
@@ -47,6 +49,7 @@ export class AudioManager implements AudioService {
       muted: settings.muted
     };
     this.applySettings();
+    this.syncMusicPlayback();
   }
 
   public unlock(): Promise<void> {
@@ -63,7 +66,8 @@ export class AudioManager implements AudioService {
       const context = await this.music.unlock();
       if (this.shutdownRequested) return;
       if (!context) { this.unlocked = false; return; }
-      if (context !== this.sfxContext) {
+      const contextChanged = context !== this.sfxContext;
+      if (contextChanged) {
         this.sfx?.shutdown();
         this.sfx = new ZzfxSfxBackend(context);
         this.sfxContext = context;
@@ -71,8 +75,9 @@ export class AudioManager implements AudioService {
       if (this.lifecyclePaused) this.sfx?.pause();
       else this.sfx?.resume();
       this.unlocked = true;
-      this.applySettings();
-      if (this.musicRequested && !this.lifecyclePaused) this.music.play();
+      // Repeated UI gestures must not cancel an in-progress scene volume fade.
+      if (contextChanged) this.applySettings();
+      this.syncMusicPlayback();
     } catch {
       // Audio is optional. A platform rejection must never block gameplay.
       this.unlocked = false;
@@ -88,12 +93,15 @@ export class AudioManager implements AudioService {
   public resume(): void {
     this.lifecyclePaused = false;
     this.sfx?.resume();
-    if (this.unlocked && this.musicRequested) this.music.play();
+    this.syncMusicPlayback();
   }
 
-  public startMusic(): void {
+  public startMusic(scene: MusicScene = 'gameplay'): void {
+    const changed = this.musicScene !== scene;
+    this.musicScene = scene;
     this.musicRequested = true;
-    if (this.unlocked && !this.lifecyclePaused) this.music.play();
+    if (changed) this.applySettings(MUSIC_SCENE_FADE_MS);
+    this.syncMusicPlayback();
   }
 
   public stopMusic(): void {
@@ -119,8 +127,14 @@ export class AudioManager implements AudioService {
     this.unlocked = false;
   }
 
-  private applySettings(): void {
-    this.music.configure(this.settings.muted ? 0 : this.settings.musicVolume);
+  private syncMusicPlayback(): void {
+    if (!this.unlocked || !this.musicRequested || this.lifecyclePaused
+      || this.settings.muted || this.settings.musicVolume <= 0) this.music.pause();
+    else this.music.play();
+  }
+
+  private applySettings(fadeMs = 0): void {
+    this.music.configure(this.settings.muted ? 0 : this.settings.musicVolume * MUSIC_SCENE_VOLUMES[this.musicScene], fadeMs);
     this.sfx?.configure(this.settings.muted ? 0 : this.settings.sfxVolume);
   }
 }

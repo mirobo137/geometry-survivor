@@ -89,7 +89,7 @@ describe('PNG ship and cannon skin contract', () => {
         ? new URL('./tether-cannon.png', import.meta.url)
         : new URL(`../cannons/${id}.png`, import.meta.url);
       bytes += assertRgbaAsset(path, 128);
-      expect(CANNON_SKIN_RASTER_ART[id]).toMatchObject({ width: 20, height: 26, anchorX: 0.5, anchorY: 0.08 });
+      expect(CANNON_SKIN_RASTER_ART[id]).toMatchObject({ width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08 });
     }
     expect(bytes).toBeLessThan(130_000);
     expect(CANNON_SKIN_RASTER_ART.spearhead.url).toContain('tether-cannon');

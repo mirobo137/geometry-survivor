@@ -43,7 +43,9 @@
 #start-title { margin-top: .6rem; font-size: clamp(1.8rem, 7.5vw, 2.8rem); line-height: 1; letter-spacing: .025em; text-shadow: 0 3px 14px #020611; }
 #start-title span { margin-top: .2rem; color: #ffe4a2; font-size: .64em; letter-spacing: .23em; }
 #start-mark { position: absolute; width: 12rem; max-width: 56%; right: .2rem; bottom: .1rem; filter: none; contain: layout paint; }
-.home-mark-image { display: block; width: 100%; height: 100%; object-fit: contain; transform-origin: center; }
+/* Match the logical combat frame, not the square PNG's natural aspect ratio.
+   A square reserved host keeps every hull inside the existing cover bounds. */
+.home-mark-image { display: block; width: auto; max-width: 100%; height: 100%; object-fit: fill; transform-origin: center; }
 .home-cover-caption { position: absolute; left: 1.35rem; bottom: 1.5rem; max-width: 40%; z-index: 2; }
 .home-cover-caption span { display: block; color: #bbf6ee; font: 700 .56rem/1.6 ui-monospace, monospace; letter-spacing: .12em; }
 .home-cover-caption p { color: #c5d8e4; font: 400 .73rem/1.5 system-ui, sans-serif; margin: .35rem 0 0; }

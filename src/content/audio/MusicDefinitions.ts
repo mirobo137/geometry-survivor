@@ -1,3 +1,8 @@
+export type MusicScene = 'menu' | 'gameplay';
+/** Scene attenuation is multiplied by the persistent player music setting. */
+export const MUSIC_SCENE_VOLUMES: Readonly<Record<MusicScene, number>> = { menu: 0.70, gameplay: 0.35 };
+export const MUSIC_SCENE_FADE_MS = 450;
+
 export interface MusicStep {
   readonly lead: number;
   readonly bass: number;
@@ -5,7 +10,7 @@ export interface MusicStep {
 }
 
 /**
- * Short deterministic score for the prototype. Keeping notes in content
+ * Historical score, no longer used by the music runtime. Keeping notes in content
  * makes it possible to replace the score or a future local audio asset
  * without changing the Web Audio adapter or the simulation.
  */

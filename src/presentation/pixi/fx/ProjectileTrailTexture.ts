@@ -1,5 +1,20 @@
 import { BufferImageSource, Rectangle, Texture } from 'pixi.js';
 
+const sharedSlices = new WeakMap<Texture, readonly Texture[]>();
+
+/** Four views of a shared session-owned PNG; never recreate or own its source. */
+export const sliceProjectileTrailTexture = (texture: Texture): readonly Texture[] => {
+  const existing = sharedSlices.get(texture);
+  if (existing) return existing;
+  const width = texture.frame.width / 4;
+  const slices = Array.from({ length: 4 }, (_, index) => new Texture({
+    source: texture.source,
+    frame: new Rectangle(texture.frame.x + index * width, texture.frame.y, width, texture.frame.height)
+  }));
+  sharedSlices.set(texture, slices);
+  return slices;
+};
+
 /** One 128x32 white energy ribbon, sliced into four connected age bands.
  * CPU baking happens once per view; no canvas, filters or per-frame uploads.
  */

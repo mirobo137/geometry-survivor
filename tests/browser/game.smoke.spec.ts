@@ -1,10 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks();
+registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
 
@@ -92,7 +94,7 @@ test('carga las ocho naves PNG y ocho canones con boss en high', async ({ page }
     const smokeAssetResponses: string[] = [];
     const bloomAssetResponses: string[] = [];
     page.on('response', (response) => {
-      if (response.url().includes('projectile-smoke-puff-') && response.ok()) smokeAssetResponses.push(response.url());
+      if (response.url().includes('smoke-trail-') && response.ok()) smokeAssetResponses.push(response.url());
       if (response.url().includes('bloom-trail-') && response.ok()) bloomAssetResponses.push(response.url());
     });
     const skins = ['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead'];
@@ -121,7 +123,13 @@ const captureRuntimeFailures = (page: Page): string[] => {
     if (message.type() === 'error') failures.push(`console: ${message.text()}`);
   });
   page.on('pageerror', (error) => failures.push(`pageerror: ${error.message}`));
-  page.on('requestfailed', (request) => failures.push(`requestfailed: ${request.url()}`));
+  page.on('requestfailed', (request) => {
+    // Chromium cancels a buffered HTML5 stream and later requests another byte range.
+    // Keep real music errors (404/network/decode) and all other asset failures visible.
+    if (request.resourceType() === 'media' && /\/general-theme[^/]*\.mp3$/.test(request.url())
+      && request.failure()?.errorText === 'net::ERR_ABORTED') return;
+    failures.push(`requestfailed: ${request.url()} (${request.failure()?.errorText})`);
+  });
   page.on('response', (response) => {
     if (response.status() >= 400) failures.push(`response ${response.status()}: ${response.url()}`);
   });
@@ -266,6 +274,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
   expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'spearhead', 'violet', 'nova'] });
   expect(saved.wallet.nova).toBeLessThan(20000);
+  await expect(page.locator('.home-mark-image')).toHaveAttribute('data-skin', 'nova');
   expect(failures).toEqual([]);
 });
 
@@ -282,7 +291,7 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
   await page.locator('.cannon-card[data-cannon="curve"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Arc Needle');
-  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg image')).toHaveCount(2);
+  await expect(page.locator('#start-cosmetic-preview .cannon-preview svg image')).toHaveCount(6);
   await page.mouse.click(2, 2);
   await expect(page.locator('#start-cosmetic-dialog')).toBeHidden();
   await expect(page.locator('.cannon-card[data-cannon="curve"]')).toHaveClass(/is-locked/);
@@ -634,6 +643,7 @@ test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) =
 
   const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
   expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet'] });
+  await expect(page.locator('.home-mark-image')).toHaveAttribute('data-skin', 'violet');
   expect(failures).toEqual([]);
 });
 

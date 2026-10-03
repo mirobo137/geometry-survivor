@@ -72,10 +72,10 @@ export const registerTetheredShipChecks = (): void => {
       if (!process.env.CI && viewport.width === 390) await preview.screenshot({ path: testInfo.outputPath('ship-only.png') });
       await page.locator('#start-cosmetic-close').click();
       await page.locator('#start-cannon-skins-tab').click();
-      await expect(page.locator('.cannon-card-art svg image')).toHaveCount(8);
+      await expect(page.locator('.cannon-card-art svg image')).toHaveCount(24);
       const thumbnails = await page.locator('.cannon-card-art').evaluateAll(artworks => artworks.map(artwork => {
         const frame = artwork.getBoundingClientRect();
-        const cannon = artwork.querySelector('image')!.getBoundingClientRect();
+        const cannon = artwork.querySelector('.cannon-preview-module')!.getBoundingClientRect();
         const shot = artwork.querySelector('.cannon-preview-projectile')!.getBoundingClientRect();
         return { images: artwork.querySelectorAll('image').length,
           shots: artwork.querySelectorAll('.cannon-preview-projectile').length,
@@ -85,7 +85,7 @@ export const registerTetheredShipChecks = (): void => {
             && box.top >= frame.top - 1 && box.bottom <= frame.bottom + 1) };
       }));
       for (const thumbnail of thumbnails) {
-        expect(thumbnail.images).toBe(1);
+        expect(thumbnail.images).toBe(3);
         expect(thumbnail.shots).toBe(1);
         expect(thumbnail.ratio).toBeCloseTo(26 / 20, 2);
         expect(thumbnail.firesRight).toBe(true);
@@ -95,8 +95,8 @@ export const registerTetheredShipChecks = (): void => {
         await page.screenshot({ path: testInfo.outputPath('horizontal-cannon-cards.png') });
       }
       await page.locator('.cannon-card[data-cannon="curve"] button').click();
-      await expect(preview.locator('svg image')).toHaveCount(2);
-      const cannons = await preview.locator('svg image').evaluateAll(images => images.map(image => {
+      await expect(preview.locator('svg image')).toHaveCount(6);
+      const cannons = await preview.locator('.cannon-preview-module').evaluateAll(images => images.map(image => {
         const box = image.getBoundingClientRect();
         return { url: image.getAttribute('href'), ratio: box.width / box.height };
       }));
@@ -185,6 +185,12 @@ export const registerTetheredShipChecks = (): void => {
     expect((await readRasterPlayerArt(page))?.parts).toBe(5);
     await page.locator('#pause-toggle').click();
     await page.screenshot({ path: testInfo.outputPath('ivory-spear-game.png') });
+    const combatShip = (await readRasterPlayerArt(page))?.shipSource;
+    await page.locator('#pause-menu').click();
+    await expect(page.locator('#start-screen')).toBeVisible();
+    await expect(page.locator('.home-mark-image')).toHaveAttribute('data-skin', 'spearhead');
+    await expect(page.locator('.home-mark-image')).toHaveAttribute('data-art-state', 'ready');
+    expect(await page.locator('.home-mark-image').evaluate(image => (image as HTMLImageElement).currentSrc)).toBe(combatShip);
     expect(errors).toEqual([]);
   });
   test('prueba de nave vinculada carga dos PNG y conserva pausa, resize y reinicio', async ({ page }, testInfo) => {

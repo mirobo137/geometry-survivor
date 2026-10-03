@@ -20,9 +20,9 @@ describe('lazy arsenal texture ownership', () => {
   });
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-  it('has all twenty-one new assets, fetches only the used recipe once and decodes before Texture.from', async () => {
+  it('has a finite catalogue, fetches only the used recipe once and decodes before Texture.from', async () => {
     const { ARSENAL_ART, getArsenalTexture } = await import('./ArsenalTextures');
-    expect(Object.keys(ARSENAL_ART)).toHaveLength(25);
+    expect(Object.keys(ARSENAL_ART)).toHaveLength(41);
     expect(FakeImage.instances).toHaveLength(0);
     expect(getArsenalTexture('rail_lance')).toBeNull();
     getArsenalTexture('rail_lance');
@@ -78,5 +78,21 @@ describe('lazy arsenal texture ownership', () => {
     expect(getWeaponArtIds('chain', 'thunderhead')).toEqual(['thunderhead', 'magnetic_core', 'thunderhead_burst']);
     await prepareArsenalTextures(['projectile', 'projectile'], 5);
     expect(FakeImage.instances).toHaveLength(1);
+  });
+
+  it('decodes only the equipped bullet pack once and Low requests only its head', async () => {
+    const { prepareArsenalTextures, getArsenalTexture } = await import('./ArsenalTextures');
+    const { getProjectileSkinArtIds } = await import('../../../assets/fx/projectiles/ProjectileRasterAssets');
+    expect(getProjectileSkinArtIds('helix', false)).toEqual(['shot_helix']);
+    await prepareArsenalTextures(getProjectileSkinArtIds('helix', false), 5);
+    expect(FakeImage.instances).toHaveLength(1);
+    await FakeImage.instances[0].onload?.();
+    const high = prepareArsenalTextures(getProjectileSkinArtIds('helix'));
+    expect(FakeImage.instances).toHaveLength(2);
+    await FakeImage.instances[1].onload?.();
+    await high;
+    for (let i = 0; i < 300; i++) getArsenalTexture('shot_helix');
+    expect(FakeImage.instances).toHaveLength(2);
+    expect(Texture.from).toHaveBeenCalledTimes(2);
   });
 });

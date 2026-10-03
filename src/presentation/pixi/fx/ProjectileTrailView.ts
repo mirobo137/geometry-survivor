@@ -3,7 +3,9 @@ import { FX_QUALITY, PROJECTILE_TRAIL_TOKENS, type FxQuality } from '../../../co
 import { getCannonSkinDefinition, type CannonSkinId } from '../../../content/visual/CannonSkinDefinitions';
 import type { ProjectileRenderState } from '../../../simulation/combat/CombatRenderState';
 import { getProjectileCurveOffset } from './ProjectileMotionVisual';
-import { createProjectileTrailTextures } from './ProjectileTrailTexture';
+import { createProjectileTrailTextures, sliceProjectileTrailTexture } from './ProjectileTrailTexture';
+import { PROJECTILE_SKIN_ART } from '../../../assets/fx/projectiles/ProjectileRasterAssets';
+import { CastArt } from '../weapons/CastArt';
 
 const SPECTRUM = [0xff668f, 0xffb86b, 0x65f2c2, 0x75e6ff] as const;
 
@@ -12,6 +14,9 @@ export class ProjectileTrailView {
   public readonly root = new Container();
   private readonly segments: Sprite[];
   private readonly previousActive: boolean[];
+  private readonly previousAges: number[];
+  private readonly castArt = new CastArt();
+  private cannonSkin: CannonSkinId;
   private readonly ribbonTextures: readonly Texture[];
   private smokeTexture?: Texture;
   private bloomTexture?: Texture;
@@ -27,9 +32,11 @@ export class ProjectileTrailView {
     bloomTexture?: Texture
   ) {
     this.definition = getCannonSkinDefinition(cannonSkin);
+    this.cannonSkin = cannonSkin;
     this.smokeTexture = smokeTexture;
     this.bloomTexture = bloomTexture;
     this.previousActive = Array.from({ length: Math.max(0, Math.floor(capacity)) }, () => false);
+    this.previousAges = this.previousActive.map(() => 0);
     const limit = FX_QUALITY[quality].projectileTrailLimit;
     const textures = limit > 0 ? createProjectileTrailTextures() : [];
     this.ribbonTextures = textures;
@@ -64,6 +71,7 @@ export class ProjectileTrailView {
 
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.definition = getCannonSkinDefinition(cannonSkin);
+    this.cannonSkin = cannonSkin;
     this.clear();
   }
 
@@ -72,16 +80,22 @@ export class ProjectileTrailView {
     this.visibleSegments = 0;
     this.activeSegments = 0;
     const { projectileTrailAlpha: alpha, projectileTrailLimit: limit } = FX_QUALITY[this.quality];
+    if (limit === 0 || alpha <= 0) { this.root.visible = false; return; }
     const recipe = this.definition.trail;
     for (let index = 0; index < this.previousActive.length; index += 1) {
       const state = projectiles[index];
+      this.castArt.begin(index, Boolean(state?.active), state?.ageSeconds ?? 0);
       if (!state?.active) {
         this.previousActive[index] = false;
         continue;
       }
       const speed = Math.hypot(state.vx, state.vy);
+      if (state.ageSeconds < this.previousAges[index]) this.previousActive[index] = false;
       const railLance = state.evolution === 'rail_lance';
       const pulseVolley = state.evolution === 'pulse_volley';
+      // Snapshot before warmup, so a late decode cannot change this shot's material.
+      const material = alpha > 0 ? this.castArt.get(index, PROJECTILE_SKIN_ART[this.cannonSkin].trailId) : null;
+      const rasterSlices = material ? sliceProjectileTrailTexture(material) : null;
       if (alpha > 0 && this.previousActive[index] && this.activeSegments < limit && speed > 0.5) {
         // A newborn shot cannot have a tail behind its muzzle.
         const trailLength = railLance ? PROJECTILE_TRAIL_TOKENS.maxLength * 1.22 : PROJECTILE_TRAIL_TOKENS.maxLength;
@@ -100,7 +114,7 @@ export class ProjectileTrailView {
           const endY = state.y - state.vy * behind + normalY * offset;
           const sprite = this.segments[this.activeSegments * 4 + band];
           const bitmap = recipe === 'smoke' ? this.smokeTexture : recipe === 'bloom' ? this.bloomTexture : undefined;
-          if (bitmap) {
+          if (bitmap && !rasterSlices) {
             sprite.texture = bitmap;
             sprite.anchor.set(0.5, 0.5);
             sprite.position.set((x + endX) * 0.5, (y + endY) * 0.5);
@@ -112,13 +126,15 @@ export class ProjectileTrailView {
             sprite.tint = recipe === 'bloom' ? [0xffb8e6, 0x9fffe8, 0xffcf72, 0xffffff][band] : 0xffd6b8;
             sprite.alpha = alpha * (recipe === 'bloom' ? 0.62 + band * 0.1 : 0.72 + band * 0.08);
           } else {
-            sprite.texture = this.ribbonTextures[band];
+            sprite.texture = rasterSlices?.[band] ?? this.ribbonTextures[band];
             sprite.anchor.set(0, 0.5);
             sprite.position.set(x, y);
             sprite.rotation = Math.atan2(endY - y, endX - x);
             sprite.width = Math.max(0.01, Math.hypot(endX - x, endY - y));
-            sprite.height = railLance ? 10 : recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : recipe === 'bloom' ? 6 : 8;
-            sprite.tint = railLance ? (band % 2 === 0 ? 0xfff0cf : 0xffb86b) : pulseVolley ? 0x9fffe8 : recipe === 'rainbow' ? SPECTRUM[band]
+            sprite.height = rasterSlices ? (railLance ? 16 : recipe === 'smoke' ? 14 : recipe === 'curve' ? 10 : 12)
+              : railLance ? 10 : recipe === 'smoke' ? 11 : recipe === 'curve' ? 6 : recipe === 'helix' ? 7 : recipe === 'bloom' ? 6 : 8;
+            sprite.tint = rasterSlices ? (railLance ? 0xffe0a8 : pulseVolley ? 0x9fffe8 : 0xffffff)
+              : railLance ? (band % 2 === 0 ? 0xfff0cf : 0xffb86b) : pulseVolley ? 0x9fffe8 : recipe === 'rainbow' ? SPECTRUM[band]
               : recipe === 'lattice' && band % 2 === 0 ? 0xd3e8ff
                 : recipe === 'helix' && band % 2 === 0 ? this.definition.accent
                   : this.definition.projectileAccent;
@@ -131,6 +147,7 @@ export class ProjectileTrailView {
         this.activeSegments += 1;
       }
       this.previousActive[index] = true;
+      this.previousAges[index] = state.ageSeconds;
     }
     this.visibleSegments = this.activeSegments * 4;
     this.root.visible = this.activeSegments > 0;
@@ -142,5 +159,7 @@ export class ProjectileTrailView {
     this.activeSegments = 0;
     this.root.visible = false;
     this.previousActive.fill(false);
+    this.previousAges.fill(0);
+    this.castArt.clear();
   }
 }

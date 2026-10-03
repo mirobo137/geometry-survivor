@@ -13,6 +13,7 @@ import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type Bac
 import { PixiGameView } from '../presentation/PixiGameView';
 import { loadShipSkinArt } from '../presentation/pixi/characters/player/TetheredShipView';
 import { ART_FAMILIES, getWeaponArtIds, getUpgradeArtIds, prepareArsenalTextures } from '../presentation/pixi/weapons/ArsenalTextures';
+import { getProjectileSkinArtIds } from '../assets/fx/projectiles/ProjectileRasterAssets';
 import type { LevelUpCardAnchor } from '../presentation/pixi/ui/level-up/LevelUpFxView';
 import { ViewportTransform } from '../presentation/viewport/ViewportTransform';
 import { ArenaModel } from '../simulation/ArenaModel';
@@ -197,7 +198,7 @@ export class Game {
   private readonly overdriveBuild: 'starter' | 'three-evolved' | 'six-evolved';
   private readonly diagnosticOverdrive: boolean;
   private readonly playerSkin: PlayerSkinId;
-  private readonly cannonSkin: CannonSkinId;
+  private cannonSkin: CannonSkinId;
   private readonly background: BackgroundId;
   private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
@@ -277,6 +278,7 @@ export class Game {
   private hitStopSeconds = 0;
   private baselinePanelSeconds = 0;
   private menuDebugAt = Number.NEGATIVE_INFINITY;
+  private ambientAudioPaused = false;
   private calibrationApplied = false;
   private weaponPathStepIndex = 0;
   private weaponPathEvolutionPending = false;
@@ -293,9 +295,18 @@ export class Game {
 
   private readonly onVisibilityChange = (): void => {
     if (document.visibilityState === 'hidden') this.pauseForLifecycle();
+    else this.resumeAmbientAudio();
   };
 
   private readonly onWindowBlur = (): void => this.pauseForLifecycle();
+  private readonly onWindowFocus = (): void => this.resumeAmbientAudio();
+
+  private readonly resumeAmbientAudio = (): void => {
+    if (this.stopped || !this.ambientAudioPaused || this.lifecyclePaused
+      || document.visibilityState === 'hidden') return;
+    this.ambientAudioPaused = false;
+    this.audio.resume();
+  };
 
   private readonly onLevelUpInteraction = (interaction: LevelUpCardInteraction): void => {
     this.view.handleLevelUpInteraction(interaction.kind, interaction.index);
@@ -308,6 +319,7 @@ export class Game {
     if (!button || button.closest('[hidden]') || button.getAttribute('aria-disabled') === 'true'
       || (button instanceof HTMLButtonElement && button.disabled)) return;
     const cue = getUiAudioCue(button);
+    this.resumeAmbientAudio();
     // This listener runs in the same user gesture as the click, so Howler can
     // unlock its shared context before the first menu sound is synthesized.
     void this.audio.unlock().then(() => this.audio.playCue(cue));
@@ -317,6 +329,7 @@ export class Game {
     const source = event.target;
     if (!(source instanceof HTMLInputElement || source instanceof HTMLSelectElement)
       || source.disabled || source.closest('[hidden]')) return;
+    this.resumeAmbientAudio();
     void this.audio.unlock().then(() => this.audio.playCue('ui-adjust'));
   };
 
@@ -412,6 +425,7 @@ export class Game {
     const saved = this.saveStore.load();
     if (!cannonSkins.unlocked.includes(cannonSkins.selected)) return;
     this.saveStore.save({ ...saved, cannonSkins });
+    this.cannonSkin = cannonSkins.selected;
     this.view.setCannonSkin(cannonSkins.selected);
   };
 
@@ -778,6 +792,7 @@ export class Game {
     window.addEventListener('orientationchange', this.queueResize, { passive: true });
     document.addEventListener('visibilitychange', this.onVisibilityChange);
     window.addEventListener('blur', this.onWindowBlur);
+    window.addEventListener('focus', this.onWindowFocus);
     this.app.canvas.addEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.addEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.addEventListener('click', this.onPauseButton);
@@ -826,6 +841,7 @@ export class Game {
     window.removeEventListener('orientationchange', this.queueResize);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     window.removeEventListener('blur', this.onWindowBlur);
+    window.removeEventListener('focus', this.onWindowFocus);
     this.app.canvas.removeEventListener('webglcontextlost', this.onWebglContextLost);
     this.app.canvas.removeEventListener('webglcontextrestored', this.onWebglContextRestored);
     this.pauseButton?.removeEventListener('click', this.onPauseButton);
@@ -1227,7 +1243,15 @@ export class Game {
   private pauseForLifecycle(message = 'La partida se detuvo al salir de la ventana.'): void {
     const wasTransitioning = this.gameState.isTransitioning;
     const wasIntro = this.gameState.isRunIntro;
-    if (this.lifecyclePaused || !this.gameState.enterPause()) return;
+    if (this.stopped || this.lifecyclePaused) return;
+    if (!this.gameState.enterPause()) {
+      // These screens have no simulation to pause, but music must stop in background.
+      if (!this.ambientAudioPaused) {
+        this.ambientAudioPaused = true;
+        this.audio.pause();
+      }
+      return;
+    }
     if (wasTransitioning) this.pauseOverdriveTransitionTimer();
     if (wasTransitioning || wasIntro) this.runTransition?.setPaused(true);
     this.lifecyclePaused = true;
@@ -1277,6 +1301,7 @@ export class Game {
     const selected = this.getSelectedWeaponEvolutions();
     const ids = ART_FAMILIES.filter(family => this.combat.getWeaponPathRank(family) > 0)
       .flatMap(family => getWeaponArtIds(family, selected[family]));
+    ids.push(...getProjectileSkinArtIds(this.cannonSkin, this.fxQuality !== 'low'));
     if (this.player.hasShield) ids.push('recharging_shield');
     await prepareArsenalTextures(ids);
   }
@@ -1400,6 +1425,7 @@ export class Game {
       cosmeticUnlockAvailable,
       onCosmeticUnlock: this.onStartCosmeticUnlock
     });
+    this.audio.startMusic('menu');
   }
 
   private beginOverdriveStageTransition(): void {
@@ -1457,7 +1483,7 @@ export class Game {
     const transitioned = outcome === 'victory' ? this.gameState.winRun() : this.gameState.endRun();
     if (!transitioned) return;
     this.input.reset();
-    this.audio.stopMusic();
+    // Keep the same track/position through the terminal animation.
     this.lifecycle.onGameOver();
     const summary = createRunSummary(outcome, this.combat.stats);
     const terminalCause = outcome === 'game-over' ? this.nextTerminalCause : 'defeat';
@@ -1602,6 +1628,9 @@ export class Game {
     const nextActName = this.actId === 'radial' ? 'Acto II' : this.actId === 'angular' ? 'Acto III' : 'Overdrive';
     if (isActVictory && this.gameState.phase === 'victory') this.gameState.enterActIntermission();
     if (isActVictory && this.gameState.phase !== 'act-intermission') return;
+    this.lifecyclePaused = false;
+    this.audio.startMusic('menu');
+    if (!this.ambientAudioPaused) this.audio.resume();
     this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
       this.restartRun();
     }, {
@@ -1710,6 +1739,7 @@ export class Game {
     } else if (target.kind === 'cannon' && isCannonSkinId(target.id)) {
       const unlocked = Array.from(new Set<CannonSkinId>([...current.cannonSkins.unlocked, target.id]));
       this.saveStore.save({ ...current, cannonSkins: { selected: target.id, unlocked } });
+      this.cannonSkin = target.id;
       this.view.setCannonSkin(target.id);
     } else if (target.kind === 'background' && isBackgroundId(target.id)) {
       const unlocked = Array.from(new Set<BackgroundId>([...current.backgrounds.unlocked, target.id]));
@@ -1814,10 +1844,10 @@ export class Game {
     this.clearRunPresentation();
     this.baseline.cancelRun();
     this.input.detach();
-    this.audio.stopMusic();
+    this.audio.startMusic('menu');
     // Leaving a paused run is a lifecycle transition, not a final pause. Clear
     // the SFX backend's pause gate so the next run can emit gameplay cues.
-    // stopMusic() above keeps the menu silent until a new run is activated.
+    // The same track returns to the menu mix without resetting its seek.
     this.audio.resume();
     this.lifecycle.onGamePause();
     this.hudElement.hidden = true;

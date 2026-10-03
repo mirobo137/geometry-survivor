@@ -2,15 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { CANNON_SKIN_DEFINITIONS } from '../../content/visual/CannonSkinDefinitions';
 import { CANNON_SKIN_RASTER_ART, PLAYER_SHIP_RASTER_ART } from '../../assets/skins/SkinRasterAssets';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
+import { PROJECTILE_ART_URLS, PROJECTILE_SKIN_ART } from '../../assets/fx/projectiles/ProjectileRasterAssets';
 
 describe('CannonPreviewSvg', () => {
   it('uses each production cannon PNG and the original projectile package in its preview', () => {
     for (const definition of CANNON_SKIN_DEFINITIONS) {
       const svg = createCannonPreviewSvg(definition.id);
-      expect(svg).toContain('viewBox="-45 -64 90 91"');
+      expect(svg).toContain('viewBox="-45 -68 90 100"');
       expect(svg).toContain(`href="${CANNON_SKIN_RASTER_ART[definition.id].url}"`);
       expect(svg).not.toContain(`href="${PLAYER_SHIP_RASTER_ART.spearhead.url}"`);
-      expect(svg.match(/<image /g)).toHaveLength(2);
+      expect(svg.match(/<image /g)).toHaveLength(6);
+      const art = PROJECTILE_SKIN_ART[definition.id];
+      expect(svg).toContain(`href="${PROJECTILE_ART_URLS[art.headId]}"`);
+      expect(svg).toContain(`href="${PROJECTILE_ART_URLS[art.trailId]}"`);
+      expect(svg.match(/class="cannon-preview-fallback"/g)).toHaveLength(4);
+      expect(svg).toContain('width="24" height="31.2"');
       expect(svg).not.toContain('cannon-preview-cables');
       expect(svg.match(/class="cannon-preview-shot"/g)).toHaveLength(2);
       expect(svg).toContain('cannon-preview-muzzle-flash');
@@ -22,7 +28,7 @@ describe('CannonPreviewSvg', () => {
     const svg = createCannonPreviewSvg('rainbow', { animated: false, layout: 'thumbnail' });
     expect(svg).toContain('viewBox="-22 -22 92 44"');
     expect(svg).toContain('transform="rotate(90)"');
-    expect(svg.match(/<image /g)).toHaveLength(1);
+    expect(svg.match(/<image /g)).toHaveLength(3);
     expect(svg.match(/class="cannon-preview-projectile"/g)).toHaveLength(1);
     expect(svg).toContain('is-static');
     expect(svg).not.toContain('cannon-preview-shot');
@@ -32,9 +38,9 @@ describe('CannonPreviewSvg', () => {
 
   it('keeps two vertical cannons in a reduced-motion modal', () => {
     const svg = createCannonPreviewSvg('basic', { animated: false });
-    expect(svg).toContain('viewBox="-45 -64 90 91"');
+    expect(svg).toContain('viewBox="-45 -68 90 100"');
     expect(svg).not.toContain('transform="rotate(90)"');
-    expect(svg.match(/<image /g)).toHaveLength(2);
+    expect(svg.match(/<image /g)).toHaveLength(6);
     expect(svg).not.toContain('cannon-preview-muzzle-flash');
   });
 

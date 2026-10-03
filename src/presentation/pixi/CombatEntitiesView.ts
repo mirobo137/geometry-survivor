@@ -1,5 +1,7 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import { CastArt } from './weapons/CastArt';
+import { prepareArsenalTextures } from './weapons/ArsenalTextures';
+import { getProjectileSkinArtIds, PROJECTILE_HEAD_SIZE, PROJECTILE_SKIN_ART } from '../../assets/fx/projectiles/ProjectileRasterAssets';
 import type { Renderer } from 'pixi.js';
 import type { EnemyKind } from '../../content/enemies/EnemyDefinitions';
 import type { BossId } from '../../content/bosses/BossDefinition';
@@ -78,8 +80,6 @@ import { PrismWeaverTelegraphView } from './PrismWeaverTelegraphView';
 import { SpawnPortalView } from './enemies/SpawnPortalView';
 
 import { CANNON_PROJECTILE_SVG } from '../../assets/svg/cannons/CannonSvgMarkup';
-import smokeParticleUrl from '../../assets/fx/projectile-smoke-puff.png?url';
-import { BLOOM_TRAIL_ASSET } from '../../assets/skins/cannons/bloom/BloomAssets';
 
 const ENEMY_TEXTURE_FRAME: SvgTextureFrame = {
   x: -32,
@@ -291,12 +291,7 @@ export class CombatEntitiesView {
   private readonly damageNumbers: DamageNumberView;
   private readonly healthBars: HealthBarView;
   private readonly projectileTrails: ProjectileTrailView;
-  private readonly projectileTextures: Readonly<Record<CannonSkinId, Texture>>;
-  private readonly quality: FxQuality;
-  private smokeTexture?: Texture;
-  private smokeTextureLoading = false;
-  private bloomTexture?: Texture;
-  private bloomTextureLoading = false;
+  private readonly projectileTextures = new Map<CannonSkinId, Texture>();
   private cannonSkin: CannonSkinId;
   private readonly projectileGlowLimit: number;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
@@ -304,18 +299,17 @@ export class CombatEntitiesView {
   private readonly previousGeneration = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
   private readonly entranceAt = Array.from({ length: ENEMY_POOL_CAPACITY }, () => Number.NEGATIVE_INFINITY);
 
-  public constructor(renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
-    this.quality = quality;
+  public constructor(private readonly renderer: Renderer, quality: FxQuality = 'medium', cannonSkin: CannonSkinId = 'basic') {
     this.cannonSkin = cannonSkin;
     this.projectileGlowLimit = FX_QUALITY[quality].projectileGlowLimit;
+    this.projectileLayer.label = 'player-projectiles';
     this.enemyImpactFx = new EnemyImpactFxView(renderer, quality);
     this.damageNumbers = new DamageNumberView(quality);
     this.healthBars = new HealthBarView(ENEMY_POOL_CAPACITY, quality);
-    // Keep the normal menu/game boot free of the bitmap request. Medium/High
-    // load it only for the smoke cosmetic and reuse it across the pool.
+    // Only the selected cosmetic enters the shared decoder/cache, never the gallery.
     this.projectileTrails = new ProjectileTrailView(PROJECTILE_POOL_CAPACITY, quality, cannonSkin);
-    if (cannonSkin === 'smoke') this.loadSmokeTexture();
-    if (cannonSkin === 'bloom') this.loadBloomTexture();
+    this.projectileTrails.root.label = 'player-projectile-trails';
+    void prepareArsenalTextures(getProjectileSkinArtIds(cannonSkin, this.projectileGlowLimit > 0));
     this.enemyTextures = createEnemyTextures(renderer);
     this.bosses = {
       'core-sentinel': new BossShipVisual(this.enemyTextures.boss, quality),
@@ -346,16 +340,7 @@ export class CombatEntitiesView {
     );
     // Put energy ribbons behind their heads, never over the white focal core.
     this.root.swapChildren(this.projectileLayer, this.projectileTrails.root);
-    this.projectileTextures = {
-      basic: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.basic, PROJECTILE_TEXTURE_FRAME),
-      curve: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.curve, PROJECTILE_TEXTURE_FRAME),
-      smoke: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.smoke, PROJECTILE_TEXTURE_FRAME),
-      rainbow: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.rainbow, PROJECTILE_TEXTURE_FRAME),
-      lattice: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.lattice, PROJECTILE_TEXTURE_FRAME),
-      helix: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.helix, PROJECTILE_TEXTURE_FRAME),
-      bloom: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.bloom, PROJECTILE_TEXTURE_FRAME),
-      spearhead: createSvgTexture(renderer, CANNON_PROJECTILE_SVG.basic, PROJECTILE_TEXTURE_FRAME)
-    };
+    const fallback = this.getProjectileFallback(cannonSkin);
     for (let index = 0; index < ENEMY_POOL_CAPACITY; index += 1) {
       const visual = new EnemyVisual(this.enemyTextures, index * 0.713, quality, this.bosses);
       this.enemyVisuals.push(visual);
@@ -363,7 +348,8 @@ export class CombatEntitiesView {
     }
     for (let index = 0; index < PROJECTILE_POOL_CAPACITY; index += 1) {
       if (index < this.projectileGlowLimit) {
-        const glow = new Sprite(this.projectileTextures[cannonSkin]);
+        const glow = new Sprite(fallback);
+        glow.label = 'projectile-glow';
         glow.anchor.set(0.5);
         glow.visible = false;
         glow.alpha = 0.28;
@@ -371,7 +357,8 @@ export class CombatEntitiesView {
         this.projectileGlows.push(glow);
         this.projectileLayer.addChild(glow);
       }
-      const sprite = new Sprite(this.projectileTextures[cannonSkin]);
+      const sprite = new Sprite(fallback);
+      sprite.label = 'projectile-head';
       sprite.anchor.set(0.5);
       sprite.visible = false;
       this.projectileSprites.push(sprite);
@@ -382,44 +369,21 @@ export class CombatEntitiesView {
   public setCannonSkin(cannonSkin: CannonSkinId): void {
     this.cannonSkin = cannonSkin;
     this.projectileTrails.setCannonSkin(cannonSkin);
-    if (cannonSkin === 'smoke') this.loadSmokeTexture();
-    if (cannonSkin === 'bloom') this.loadBloomTexture();
-    const texture = this.projectileTextures[cannonSkin];
+    this.projectileArt.clear();
+    void prepareArsenalTextures(getProjectileSkinArtIds(cannonSkin, this.projectileGlowLimit > 0));
+    const texture = this.getProjectileFallback(cannonSkin);
     for (const sprite of this.projectileSprites) sprite.texture = texture;
     for (const glow of this.projectileGlows) glow.texture = texture;
   }
 
-  /** Pixi v8 accepts a decoded image in Texture.from, not a URL string. */
-  private loadSmokeTexture(): void {
-    if (this.smokeTexture || this.smokeTextureLoading || this.quality === 'low' || typeof window === 'undefined') return;
-    this.smokeTextureLoading = true;
-    const image = new Image();
-    image.decoding = 'async';
-    image.addEventListener('load', () => {
-      this.smokeTexture = Texture.from(image);
-      this.smokeTextureLoading = false;
-      this.projectileTrails.setSmokeTexture(this.smokeTexture);
-    }, { once: true });
-    image.addEventListener('error', () => {
-      // Keep the existing procedural ribbon as a cosmetic-only fallback.
-      this.smokeTextureLoading = false;
-    }, { once: true });
-    image.src = smokeParticleUrl;
-  }
-
-  /** Bloomwake keeps its generated bitmap optional; the SVG/procedural fallback is always valid. */
-  private loadBloomTexture(): void {
-    if (this.bloomTexture || this.bloomTextureLoading || this.quality === 'low' || typeof window === 'undefined') return;
-    this.bloomTextureLoading = true;
-    const image = new Image();
-    image.decoding = 'async';
-    image.addEventListener('load', () => {
-      this.bloomTexture = Texture.from(image);
-      this.bloomTextureLoading = false;
-      this.projectileTrails.setBloomTexture(this.bloomTexture);
-    }, { once: true });
-    image.addEventListener('error', () => { this.bloomTextureLoading = false; }, { once: true });
-    image.src = BLOOM_TRAIL_ASSET.url;
+  /** Keep the authored vector fallback, rasterized only when its skin is selected. */
+  private getProjectileFallback(skin: CannonSkinId): Texture {
+    const id = skin === 'spearhead' ? 'basic' : skin;
+    const existing = this.projectileTextures.get(id);
+    if (existing) return existing;
+    const texture = createSvgTexture(this.renderer, CANNON_PROJECTILE_SVG[id], PROJECTILE_TEXTURE_FRAME);
+    this.projectileTextures.set(id, texture);
+    return texture;
   }
 
   /** Bounded presentation count used by the local baseline profiler. */
@@ -503,20 +467,20 @@ export class CombatEntitiesView {
       const evolutionScale = state.radius / 7;
       const evolutionTint = state.evolution === 'rail_lance'
         ? 0xffd978 : state.evolution === 'pulse_volley' ? 0x9fffe8 : 0xffffff;
-      const art = this.projectileArt.get(index, state.evolution ?? 'projectile');
-      // Cosmetic packages keep their authored head/trail identity. Evolved shots
-      // and the default emitter use PNG bodies; other packages receive PNG glow.
-      const rasterBody = art && (this.cannonSkin === 'basic' || state.evolution);
-      sprite.texture = rasterBody ? art : this.projectileTextures[this.cannonSkin];
-      sprite.tint = rasterBody ? 0xffffff : evolutionTint;
-      sprite.scale.set(pulse * evolutionScale * (rasterBody ? 32 / art.width : 1));
+      // Evolution bodies keep their approved art; base shots use the chosen pack.
+      const art = this.projectileArt.get(index, state.evolution ?? PROJECTILE_SKIN_ART[this.cannonSkin].headId);
+      const width = state.evolution ? 32 : PROJECTILE_HEAD_SIZE.width;
+      const scale = pulse * evolutionScale * (art ? width / art.width : 1);
+      sprite.texture = art ?? this.getProjectileFallback(this.cannonSkin);
+      sprite.tint = art ? 0xffffff : evolutionTint;
+      sprite.scale.set(scale);
       if (glow) {
         glow.position.set(px, py);
         glow.rotation = rot;
-        glow.texture = art ?? this.projectileTextures[this.cannonSkin];
+        glow.texture = sprite.texture;
         glow.tint = art ? cannonDefinition.accent : evolutionTint;
-        glow.scale.set(pulse * 1.9 * evolutionScale * (art ? 32 / art.width : 1));
-        glow.alpha = 0.22 + Math.sin(state.ageSeconds * 14) * 0.06;
+        glow.scale.set(scale * (art ? 1.5 : 1.9));
+        glow.alpha = art ? 0.1 + Math.sin(state.ageSeconds * 14) * 0.025 : 0.22 + Math.sin(state.ageSeconds * 14) * 0.06;
       }
     }
   }

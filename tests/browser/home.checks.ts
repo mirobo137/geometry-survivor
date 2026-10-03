@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PLAYER_SKIN_DEFINITIONS } from '../../src/content/visual/SkinDefinitions';
 
 export const registerHomeChecks = (options: { includeDesktopViewport?: boolean } = {}): void => {
   const viewports = options.includeDesktopViewport === false
@@ -253,5 +254,112 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     await expect(page.locator('#start-screen')).toBeHidden();
     await expect(page.locator('#game-hud')).toBeVisible();
     expect(errors).toEqual([]);
+  });
+
+  test('Inicio muestra la nave equipada, no la inspeccionada, y conserva la selección', async ({ page }, testInfo) => {
+    const errors: string[] = [];
+    const requests: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('request', request => requests.push(request.url()));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(ids => {
+      if (localStorage.getItem('geometry-survivor:save')) return;
+      localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 8,
+        skins: { selected: 'manta', unlocked: ids }, wallet: { nova: 1234 } }));
+    }, PLAYER_SKIN_DEFINITIONS.map(skin => skin.id));
+    await page.goto('/?quality=low');
+    await expect(page.locator('#boot-status')).toBeHidden();
+    const mark = page.locator('.home-mark-image');
+    await expect(mark).toHaveAttribute('data-skin', 'manta');
+    await expect(mark).toHaveAttribute('data-art-state', 'ready');
+    expect(await mark.evaluate(image => (image as HTMLImageElement).currentSrc)).toContain('/manta-');
+    // Home requests only the saved hull. It does not fetch the old cover ship
+    // or briefly load the default ship before restoring the save.
+    const hullRequests = [...new Set(requests.filter(url =>
+      /\/(cyan|violet|amber|emerald|obsidian|nova|manta|tether-ship)-[^/]+\.png$/.test(url)))];
+    expect(hullRequests).toHaveLength(1);
+    expect(hullRequests[0]).toContain('/manta-');
+    expect(requests.some(url => url.includes('survivor-core'))).toBe(false);
+
+    // Cover all eight selections across the two CI projects, without duplicating
+    // an entire locker traversal or extending the global timeout.
+    const ids = testInfo.project.name === 'mobile'
+      ? ['obsidian', 'nova', 'manta', 'spearhead'] : ['cyan', 'violet', 'amber', 'emerald'];
+    let previous = 'manta';
+    for (const id of ids) {
+      await page.locator('#start-skins').click();
+      await page.locator(`.skin-card[data-skin="${id}"] button`).click();
+      const previewSrc = await page.locator('#start-cosmetic-preview img').getAttribute('src');
+      await expect(mark).toHaveAttribute('data-skin', previous);
+      await page.locator('#start-cosmetic-action').click();
+      await expect(mark).toHaveAttribute('data-skin', id);
+      await page.locator('#start-skins-back').click();
+      await expect(mark).toHaveAttribute('data-art-state', 'ready');
+      expect(await mark.evaluate(image => (image as HTMLImageElement).currentSrc)).toBe(new URL(previewSrc!, page.url()).href);
+      await expect(page.locator('#start-equipped-ship')).toContainText(PLAYER_SKIN_DEFINITIONS.find(skin => skin.id === id)!.name);
+      const layout = await mark.evaluate(image => {
+        const frame = image.parentElement!.getBoundingClientRect();
+        const hull = image.getBoundingClientRect();
+        return { ratio: hull.width / hull.height, centered: Math.abs(hull.left + hull.width / 2 - frame.left - frame.width / 2) < 1,
+          inside: hull.left >= frame.left - 1 && hull.right <= frame.right + 1 && hull.top >= frame.top - 1 && hull.bottom <= frame.bottom + 1 };
+      });
+      expect(layout.ratio).toBeCloseTo(56 / 64, 2);
+      expect(layout).toMatchObject({ centered: true, inside: true });
+      await expect(page.locator('#start-mark img')).toHaveCount(1);
+      if (!process.env.CI && (id === 'violet' || id === 'obsidian')) {
+        await page.screenshot({ path: testInfo.outputPath(`home-${id}.png`) });
+      }
+      previous = id;
+    }
+    await page.reload();
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(mark).toHaveAttribute('data-skin', previous);
+    await expect(mark).toHaveAttribute('data-art-state', 'ready');
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save')!).wallet.nova)).toBe(1234);
+    expect(errors).toEqual([]);
+  });
+
+  test('Inicio recupera una nave fallida sin que su carga tardía reemplace la selección nueva', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 8,
+      skins: { selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet', 'manta'] } })));
+    await page.route(/\/violet-[^/]+\.png$/, route => route.abort());
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const pending: Promise<void>[] = [];
+    await page.route(/\/manta-[^/]+\.png$/, route => {
+      const load = gate.then(() => route.continue()).catch(() => {});
+      pending.push(load);
+      return load;
+    });
+    try {
+      await page.goto('/?quality=low');
+      await expect(page.locator('#boot-status')).toBeHidden();
+      const mark = page.locator('.home-mark-image');
+      await expect(mark).toHaveAttribute('data-art-state', 'ready');
+      expect(await mark.evaluate(image => (image as HTMLImageElement).currentSrc)).toMatch(/^data:image\/svg\+xml|\/mark-[^/]+\.svg$/);
+      await page.locator('#start-skins').click();
+      for (const id of ['manta', 'cyan']) {
+        await page.locator(`.skin-card[data-skin="${id}"] button`).click();
+        await page.locator('#start-cosmetic-action').click();
+        await expect(mark).toHaveAttribute('data-skin', id);
+      }
+      await page.locator('#start-skins-back').click();
+      await expect(mark).toHaveAttribute('data-art-state', 'ready');
+      release();
+      await Promise.all(pending);
+      // Let the detached image's readiness deadline elapse; it cannot hide or
+      // overwrite the successful current ship, nor append a second hull.
+      await page.waitForTimeout(2600);
+      await expect(mark).toHaveAttribute('data-skin', 'cyan');
+      await expect(mark).toHaveAttribute('data-art-state', 'ready');
+      expect(await mark.evaluate(image => (image as HTMLImageElement).currentSrc)).toContain('/cyan-');
+      await expect(page.locator('#start-mark img')).toHaveCount(1);
+      await page.locator('#start-play').click();
+      await expect(page.locator('#start-screen')).toBeHidden();
+      expect(errors).toEqual([]);
+    } finally { release(); }
   });
 };

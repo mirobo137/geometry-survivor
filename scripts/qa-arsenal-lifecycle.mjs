@@ -18,7 +18,7 @@ const freezeImage = async (page, id) => page.waitForFunction(id => {
   return ready;
 }, id, { timeout: 20000 });
 const cases = [
-  ['projectile', 'weapon-path=projectile'],
+  ['spearhead-head', 'weapon-path=projectile&cannon=spearhead'],
   ['orbit', 'weapon-path=orbit'],
   ['chain', 'weapon-path=chain'],
   ['boomerang', 'weapon-path=boomerang'],

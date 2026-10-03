@@ -561,8 +561,22 @@ las proporciones lógicas de combate y se escalan sin recortar al cambiar tamañ
 Esto no altera cañones/cables de la partida. Guía vigente:
 [Naves PNG](docs/design/NAVES_PNG.md). Contrato, prompts, carga, coste y rutas:
 [Nave vinculada](src/assets/skins/tethered/README.md).
-Evaluar después la nave equipada como arte del menú y propulsión localizada;
-no implementar personalización, shaders o derrota nueva en esta prueba.
+La prueba inicial dejó fuera la personalización, shaders y derrota nueva.
+Ampliación autorizada el 03-10-2026: Inicio muestra el PNG y nombre de la nave
+equipada, con la misma URL/proporción del catálogo y combate. Se actualiza al
+equipar/comprar o recibir un cosmético rewarded, al volver al menú y al recargar;
+inspeccionar sin equipar no cambia la portada. Reutiliza `skins.selected`, sin
+nuevo guardado, catálogo precargado, texturas Pixi o loop. Shaders, propulsión
+localizada y nueva derrota siguen fuera de alcance. Contrato y carga/fallback:
+[Portada de Inicio](src/assets/images/ui/home/README.md).
+
+Ampliación autorizada el 03-10-2026: los ocho paquetes de disparo reciben
+cabeza/estela PNG originales. Los cañones crecen visualmente un 20% tanto en
+combate como en Skins (frame 24×31.2, mismo pivote/slots). Se mantienen las
+mecánicas y el arte propio de las evoluciones, Low sin cintas y el pool existente
+de cuatro bandas, con texturas decodificadas/cacheadas y material estable por
+disparo. No autoriza filtros, shaders, balance ni cambios de guardado. Contrato,
+prompts, coste, fallback y rutas: [Balas PNG](src/assets/fx/projectiles/README.md).
 
 El usuario aprueba el prototipo PNG de Magnetic Charge y solicita extenderlo
 a las seis familias, sus doce evoluciones y el escudo recargable. Se autoriza
@@ -650,7 +664,9 @@ Los números son puertas de ingeniería iniciales y se ajustarán con medición.
 - puerta CrazyGames móvil: **≤ 20 MB** inicial;
 - build completo del MVP: objetivo **≤ 15 MB**;
 - todos los paths relativos;
-- música y contenido no necesario se cargan después del primer estado jugable;
+- música general diferida hasta el primer gesto válido (incluido el menú, por
+  solicitud del 03-10-2026); el resto de contenido no necesario se carga después
+  del primer estado jugable. No solicitar el MP3 durante el boot;
 - Vite genera nombres con hash; no añadir service worker al MVP.
 
 ## Runtime
@@ -706,7 +722,12 @@ Fase posterior:
 
 La matriz vigente de efectos, categorías, pausa y contrato de recetas ZzFX está
 en [Audio SFX con ZzFX](docs/design/AUDIO_SFX_ZZFX.md). Howler conserva en
-exclusiva la música de fondo.
+exclusiva la música de fondo. La pista general provisional del 03-10-2026 usa
+[este contrato](src/assets/audio/music/README.md): una pista HTML5 Audio en loop,
+70% en menú/resumen y 35% en partida, multiplicados por el ajuste persistente;
+fade de 450 ms y misma posición entre pantallas. No decodificar la pista larga
+completa en Web Audio ni duplicarla por acto. La aceptación auditiva y los
+derechos de distribución comercial siguen pendientes.
 
 ---
 
@@ -1171,8 +1192,8 @@ Se incorporó el primer consumidor real de la skill SVG code-first:
 Se reemplaza la frase programada mediante `setTimeout` por una arquitectura con una pista continua y efectos independientes:
 
 - `AudioManager` mantiene el contrato que consume `Game`; simulación y contenido no importan Howler, ZzFX ni Web Audio;
-- `HowlerMusicBackend` crea su `Howl` sólo dentro de `unlock()`, es decir, durante la primera interacción válida. La pista actual es una fuente WAV generada localmente en memoria: permite verificar loop, pausa, reinicio, volumen y recuperación sin CDN ni asset binario provisional;
-- al licenciar la música final, se sustituirá esa fuente por archivos locales `WebM/Opus` y `MP3` ordenados en `src/assets/audio/music/`. Howler elegirá el primer formato compatible; no usar WAV como formato de publicación salvo clips muy cortos;
+- `HowlerMusicBackend` crea su `Howl` sólo dentro de `unlock()`, es decir, durante la primera interacción válida. La fuente WAV procedural del spike del 28-08 permitió verificar loop, pausa, reinicio, volumen y recuperación; fue sustituida el 03-10 por el MP3 local aportado por el usuario, según §10 y su contrato. El score antiguo permanece sólo como referencia, fuera del runtime;
+- la pista provisional vive en `src/assets/audio/music/`, con reproducción HTML5 para no decodificar seis minutos completos en memoria. Al licenciar música final se podrán ofrecer formatos locales alternativos con presupuesto medido; no usar WAV para pistas largas ni incluir duplicados sin un consumidor;
 - `ZzfxSfxBackend` usa recetas ZzFX tipadas en `content/audio/AudioCueDefinitions.ts`, un bus propio conectado al contexto que ya abrió Howler y un máximo de ocho voces. No crea un segundo `AudioContext`, condición necesaria para Safari/iOS y reinicios fiables;
 - cada cue tiene cooldown propio. Los eventos masivos como `enemy-defeated` pasan por 80 ms de rate limit; daño, level-up y boss tienen prioridades perceptuales superiores mediante sus recetas y cooldowns;
 - para añadir un efecto futuro: (1) definir la receta y cooldown en `AudioCueDefinitions`, (2) emitir la clave desde la frontera existente de eventos en `Game`, (3) añadir test de comportamiento si abre una ruta nueva, (4) probar pausa, mute, restart y móvil. No se llama a ninguna librería desde sistemas de simulación.
@@ -3484,6 +3505,11 @@ máximo. Contrato y secuencia de extensión:
 [dirección de proyectiles](skills/geometry-survivor-svg/references/projectile-direction.md).
 No cambia daño, cadencia, targeting ni colisiones. Low conserva las cabezas y
 el arco; las estelas siguen limitadas a Medium/High. EX mantiene su orden.
+
+Este bloque conserva la entrega SVG histórica. La solicitud del 03-10-2026
+extiende a **ocho paquetes PNG** y aumento visual del cañón; la representación
+vigente es [Balas PNG](src/assets/fx/projectiles/README.md). Los maestros SVG
+siguen como fallback, no como apariencia principal cuando el PNG está listo.
 
 ## 22.8 Prueba premium — sexta skin y sexto cañón, 05-09-2026
 

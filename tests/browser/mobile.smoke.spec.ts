@@ -1,10 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { registerHomeChecks } from './home.checks';
+import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 
 registerHomeChecks({ includeDesktopViewport: false });
+registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
 
@@ -91,7 +93,13 @@ const captureRuntimeFailures = (page: Page): string[] => {
     if (message.type() === 'error') failures.push(`console: ${message.text()}`);
   });
   page.on('pageerror', (error) => failures.push(`pageerror: ${error.message}`));
-  page.on('requestfailed', (request) => failures.push(`requestfailed: ${request.url()}`));
+  page.on('requestfailed', (request) => {
+    // Chromium cancels a buffered HTML5 stream and later requests another byte range.
+    // Keep real music errors (404/network/decode) and all other asset failures visible.
+    if (request.resourceType() === 'media' && /\/general-theme[^/]*\.mp3$/.test(request.url())
+      && request.failure()?.errorText === 'net::ERR_ABORTED') return;
+    failures.push(`requestfailed: ${request.url()} (${request.failure()?.errorText})`);
+  });
   page.on('response', (response) => {
     if (response.status() >= 400) failures.push(`response ${response.status()}: ${response.url()}`);
   });

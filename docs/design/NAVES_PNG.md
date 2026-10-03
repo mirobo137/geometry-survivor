@@ -24,7 +24,8 @@ Dirección de producción: [Arte híbrido](ARTE_HIBRIDO.md).
   Es una separación del locker, no un cambio de ensamblaje durante combate.
 - La nave DOM obtiene su proporción de `PLAYER_SHIP_RASTER_ART` (56/64),
   con ancho/alto automáticos y máximos relativos para caber sin deformarse.
-  Los cañones comparten el frame lógico 20×26 en un SVG DOM escalado uniformemente.
+  Los cañones comparten el frame lógico 24×31.2 (aumento visual del 20% solicitado
+  el 03-10) en un SVG DOM escalado uniformemente, conservando el pivote real.
   La composición `thumbnail` rota el conjunto 90° y usa un viewBox 92×44 para
   aprovechar la tarjeta ancha sin recortar. Es independiente de `animated`:
   reducir movimiento no cambia la composición del modal.
@@ -52,6 +53,10 @@ Tamaños/coste y fichas por catálogo:
 [cañones](../../src/assets/skins/cannons/README.md). Los dieciséis PNG suman
 741,025 bytes (~723.7 KiB); las texturas Pixi equipadas representan 320 KiB
 RGBA8 teóricos. Eso no mide caché de miniaturas, memoria total o FPS.
+
+Extensión del 03-10: balas y estelas raster originales por cosmético, incluyendo
+Ivory Spear con identidad propia. No sustituye el arte propio de las evoluciones
+ni amplía hitboxes. Contrato, coste añadido y rutas: [Balas PNG](../../src/assets/fx/projectiles/README.md).
 
 ## Validación de la migración y revisión pendiente
 
@@ -106,6 +111,12 @@ Las capturas de 1280×720 y 390×844 se revisaron; la regresión comprueba los
 ocho cañones y proyectiles dentro de su tarjeta también a 320×568 y 800×450.
 El modal ampliado conserva dos cañones incluso con movimiento reducido.
 
-Fuera del bloque: la nave equipada en la portada de Inicio, shaders o propulsión
-separada, nueva derrota, física/hitboxes de cables, cambios de balance y prueba
-en móvil físico.
+Extensión autorizada el 03-10: la portada de Inicio muestra la nave equipada y
+su nombre, usando el PNG y frame lógico existentes (56/64). Cambia sólo al
+confirmar equipamiento, también en compras/rewarded; se restaura desde el save
+al recargar y al regresar de combate. No añade una segunda preferencia guardada.
+El compositor DOM de Inicio no crea texturas Pixi ni precarga la flota;
+contrato de encuadre, carga y fallback: [Inicio](../../src/assets/images/ui/home/README.md).
+
+Fuera del bloque: shaders o propulsión separada, nueva derrota, física/hitboxes
+de cables, cambios de balance y prueba en móvil físico.

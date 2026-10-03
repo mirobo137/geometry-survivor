@@ -7,8 +7,10 @@ La guía canónica es [`docs/design/NAVES_PNG.md`](../../../../docs/design/NAVES
 
 ## Ocho modelos intercambiables
 
-Los siete modelos ya existentes reciben arte nuevo sin cambiar IDs, precios,
-dueño, proyectiles ni estelas. Ivory Spear reaprovecha el PNG aprobado y se añade
+Los siete modelos ya existentes reciben arte nuevo sin cambiar IDs, precios
+ni dueño. La entrega original conservó proyectiles/estelas; desde el 03-10 son
+[PNG propios por paquete](../../fx/projectiles/README.md), sin cambios de combate.
+Ivory Spear reaprovecha el PNG aprobado y se añade
 como octavo modelo gratuito. Cualquier cañón funciona con cualquier nave.
 
 | ID | Modelo | Firma de silueta/material | NOVA |
@@ -27,7 +29,7 @@ como octavo modelo gratuito. Cualquier cañón funciona con cualquier nave.
 | Propiedad | Contrato |
 | --- | --- |
 | Archivos nuevos | Siete PNG RGBA de 128×128 |
-| Frame en mundo | 20×26; anchor `(0.5, 0.08)` en la punta |
+| Frame en mundo | 24×31.2 desde el 03-10 (+20%); anchor `(0.5, 0.08)` en la punta |
 | Cable | Ancla trasera por modelo (`0.9` en los siete nuevos, `0.84` Ivory) |
 | Boca | Slots de simulación `(−27, −11)` y `(27, −11)` |
 | Dos módulos | Comparten un `Texture` y siguen el apuntado real e independiente |
@@ -38,10 +40,11 @@ queda debajo del casco y el PNG del módulo encima. El retroceso sólo transform
 el sprite existente. No se añaden bocas, colisión, daño, cadencia, filtros o
 partículas. La línea de cable conserva el tratamiento aprobado.
 
-`CannonSelectPanel` enseña el PNG real, montado en la nave base real. El modal
-animado sólo añade la estela/proyectil vectorial que ya corresponde al ID; las
-tarjetas son estáticas. El octavo modelo Ivory Spear conserva el proyectil básico
-y la estela recta, sin tocar el paquete elegido en el guardado. La carga de Pixi
+`CannonSelectPanel` enseña sólo un cañón real y su bala/estela en horizontal,
+sin nave/cables. El modal muestra dos módulos y anima; las tarjetas son estáticas.
+Cabezas/cintas usan sus PNG propios y el vector anterior como fallback durante
+carga/error. Ivory Spear tiene su propia esquirla de marfil y wake cian, sin tocar
+la mecánica ni el paquete elegido en el guardado. La carga de Pixi
 usa la textura seleccionada; las dos instancias comparten esa textura cacheada.
 
 ## Coste medido y respaldo
@@ -53,15 +56,15 @@ suman **320 KiB RGBA8** teóricos. El HTML del locker puede descargar miniaturas
 no se infiere FPS de su tamaño o del conteo de archivos.
 
 Si el PNG de nave o cañón no carga, `PlayerView` deja visibles los emisores SVG
-de respaldo existentes; los proyectiles y estelas siguen usando sus maestros
-SVG actuales. La textura no se destruye desde cada vista porque se comparte.
+de respaldo existentes; cabeza SVG y cinta procedural son fallback si falla
+su PNG. La textura no se destruye desde cada vista porque se comparte.
 Maestros/proyectiles vectoriales y las estelas PNG híbridas permanecen para
 fallback y propiedad explícita; no se eliminó el catálogo de efectos.
 
 ## Validación
 
 `TetheredAssets.test.ts` inspecciona RGBA real, pivotes, slots y presupuesto.
-`CannonPreviewSvg.test.ts` comprueba que el preview usa la nave Ivory Spear y dos
-referencias al PNG del modelo elegido. La matriz de gameplay y locker Low/High,
+`CannonPreviewSvg.test.ts` comprueba aislamiento sin nave y dos referencias al
+PNG del cañón, cabeza y cinta (seis imágenes en modal; tres en tarjeta). La matriz de gameplay y locker Low/High,
 persistencia, fallback y requests se documenta en `CONTINUACION.md` cuando se
 termine la revisión browser.

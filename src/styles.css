@@ -800,6 +800,17 @@ body {
   opacity: 0.82;
 }
 
+/* Shared DOM image readiness chooses one complete material, including errors. */
+.cannon-preview-head-art:not([data-art-state="ready"]),
+.cannon-preview-trail-art:not([data-art-state="ready"]) {
+  visibility: hidden;
+}
+
+.cannon-preview-head-art[data-art-state="ready"] + .cannon-preview-fallback,
+.cannon-preview-trail-art[data-art-state="ready"] + .cannon-preview-fallback {
+  display: none;
+}
+
 .cannon-preview-scene.is-animated .cannon-preview-trail {
   animation: cannon-preview-trail-pulse 1.25s ease-in-out infinite;
 }

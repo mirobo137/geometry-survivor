@@ -42,16 +42,16 @@ export const PLAYER_SHIP_RASTER_ART: Readonly<Record<PlayerSkinId, ShipRasterArt
   spearhead: { url: spearheadShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 }
 };
 
-/** One interchangeable 128px cannon image; both live muzzle slots share it. */
+/** One interchangeable 128px cannon image; +20% visual size, unchanged muzzle anchor. */
 export const CANNON_SKIN_RASTER_ART: Readonly<Record<CannonSkinId, CannonRasterArt>> = {
-  basic: { url: basicCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  curve: { url: curveCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  smoke: { url: smokeCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  rainbow: { url: rainbowCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  lattice: { url: latticeCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  helix: { url: helixCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  bloom: { url: bloomCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
-  spearhead: { url: spearheadCannonUrl, width: 20, height: 26, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.84 }
+  basic: { url: basicCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  curve: { url: curveCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  smoke: { url: smokeCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  rainbow: { url: rainbowCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  lattice: { url: latticeCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  helix: { url: helixCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  bloom: { url: bloomCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
+  spearhead: { url: spearheadCannonUrl, width: 24, height: 31.2, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.84 }
 };
 
 export const LINKED_CANNON_LAYOUT = {

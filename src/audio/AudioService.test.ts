@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { HowlOptions } from 'howler';
 
 const mocks = vi.hoisted(() => ({
-  howlPlay: vi.fn(() => 1001),
+  howlPlay: vi.fn((_id?: number) => 1001),
   howlPause: vi.fn(),
   howlStop: vi.fn(),
   howlUnload: vi.fn(),
   howlVolume: vi.fn(),
+  howlFade: vi.fn(),
+  howlOptions: [] as HowlOptions[],
+  autoPlayEvents: true,
   createBufferSource: vi.fn(),
   context: null as FakeAudioContext | null,
   masterGain: null as GainNode | null,
@@ -49,17 +53,36 @@ vi.mock('howler', () => {
     get masterGain() { return mocks.masterGain; }
   };
   class Howl {
-    public constructor() {
+    private active = false;
+    private currentVolume: number;
+    public constructor(private readonly options: HowlOptions) {
+      mocks.howlOptions.push(options);
+      this.currentVolume = options.volume ?? 1;
       if (!mocks.allowContext) return;
       mocks.context ??= new FakeAudioContext();
       mocks.masterGain ??= mocks.context.createGain() as unknown as GainNode;
     }
-    public playing = vi.fn(() => false);
-    public play = mocks.howlPlay;
-    public pause = mocks.howlPause;
-    public stop = mocks.howlStop;
+    public playing = vi.fn(() => this.active);
+    public play = (id?: number): number => {
+      const result = mocks.howlPlay(id);
+      if (mocks.autoPlayEvents) { this.active = true; this.options.onplay?.(result); }
+      return result;
+    };
+    public pause = (id?: number): void => {
+      mocks.howlPause(id);
+      this.active = false;
+      if (mocks.autoPlayEvents) this.options.onpause?.(id ?? 1001);
+    };
+    public stop = (): void => { this.active = false; mocks.howlStop(); };
     public unload = mocks.howlUnload;
-    public volume = mocks.howlVolume;
+    public volume = (value?: number): number => {
+      if (value !== undefined) { this.currentVolume = value; mocks.howlVolume(value); }
+      return this.currentVolume;
+    };
+    public fade = (from: number, to: number, milliseconds: number): void => {
+      mocks.howlFade(from, to, milliseconds);
+      this.currentVolume = to;
+    };
   }
   return { Howl, Howler };
 });
@@ -76,6 +99,9 @@ describe('AudioManager', () => {
     mocks.howlStop.mockClear();
     mocks.howlUnload.mockClear();
     mocks.howlVolume.mockClear();
+    mocks.howlFade.mockClear();
+    mocks.howlOptions.length = 0;
+    mocks.autoPlayEvents = true;
   });
 
   it('creates audio only on unlock and resumes one persistent background track', async () => {
@@ -91,6 +117,80 @@ describe('AudioManager', () => {
     expect(mocks.howlPause).toHaveBeenCalledTimes(1);
     service.resume();
     expect(mocks.howlPlay).toHaveBeenCalledTimes(2);
+    expect(mocks.howlPlay).toHaveBeenLastCalledWith(1001);
+    expect(mocks.howlOptions).toHaveLength(1);
+    expect(mocks.howlOptions[0]).toMatchObject({ html5: true, format: ['mp3'], loop: true, preload: false, pool: 1 });
+  });
+
+  it('mixes menu at 70% and gameplay at 35% without restarting or changing SFX volume', async () => {
+    const service = new AudioManager();
+    service.startMusic('menu');
+    expect(mocks.howlOptions).toHaveLength(0);
+    await service.unlock();
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.7);
+    service.startMusic('gameplay');
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.7, 0.35, 450);
+    await service.unlock();
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.7); // No gesture cancels the fade.
+    service.startMusic('menu');
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.35, 0.7, 450);
+    expect(mocks.howlPlay).toHaveBeenCalledOnce();
+    expect(mocks.howlStop).not.toHaveBeenCalled();
+    expect(mocks.howlOptions).toHaveLength(1);
+    service.configure({ musicVolume: 0.5, sfxVolume: 0.8, muted: false });
+    expect(mocks.howlVolume).toHaveBeenLastCalledWith(0.35);
+    service.startMusic('gameplay');
+    expect(mocks.howlFade).toHaveBeenLastCalledWith(0.35, 0.175, 450);
+    service.shutdown();
+  });
+
+  it('does not fetch/play muted music and resumes the same sound after unmute', async () => {
+    const service = new AudioManager();
+    service.configure({ musicVolume: 1, sfxVolume: 1, muted: true });
+    service.startMusic('menu');
+    await service.unlock();
+    expect(mocks.howlPlay).not.toHaveBeenCalled();
+    service.configure({ musicVolume: 1, sfxVolume: 1, muted: false });
+    expect(mocks.howlPlay).toHaveBeenCalledOnce();
+    service.configure({ musicVolume: 0, sfxVolume: 1, muted: false });
+    expect(mocks.howlPause).toHaveBeenCalledOnce();
+    service.configure({ musicVolume: 1, sfxVolume: 1, muted: false });
+    expect(mocks.howlPlay).toHaveBeenLastCalledWith(1001);
+    expect(mocks.howlOptions).toHaveLength(1);
+    service.shutdown();
+    expect(mocks.howlUnload).toHaveBeenCalledOnce();
+  });
+
+  it('bounds pending plays and honors pause when a delayed play finally arrives', async () => {
+    mocks.autoPlayEvents = false;
+    const service = new AudioManager();
+    service.startMusic('menu');
+    await service.unlock();
+    await service.unlock();
+    service.startMusic('gameplay');
+    expect(mocks.howlPlay).toHaveBeenCalledOnce();
+    service.pause();
+    mocks.howlOptions[0].onplay?.(1001);
+    expect(mocks.howlPause).toHaveBeenCalledTimes(2);
+    expect(mocks.howlPlay).toHaveBeenCalledOnce();
+    service.shutdown();
+  });
+
+  it('disposes failed playback and retries only on a later gesture with current scene gain', async () => {
+    const service = new AudioManager();
+    service.startMusic('menu');
+    await service.unlock();
+    mocks.howlOptions[0].onloaderror?.(1001, 'network');
+    expect(mocks.howlUnload).toHaveBeenCalledOnce();
+    service.startMusic('gameplay');
+    expect(mocks.howlOptions).toHaveLength(1);
+    await service.unlock();
+    expect(mocks.howlOptions).toHaveLength(2);
+    expect(mocks.howlOptions[1].volume).toBe(0.35);
+    mocks.howlOptions[0].onplayerror?.(1001, 'stale');
+    expect(mocks.howlUnload).toHaveBeenCalledOnce();
+    service.shutdown();
+    expect(mocks.howlUnload).toHaveBeenCalledTimes(2);
   });
 
   it('routes procedural cues through the shared unlocked context and respects mute', async () => {

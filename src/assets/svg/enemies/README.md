@@ -1,45 +1,48 @@
 # Enemy SVG masters
 
-Los enemigos se organizan por identidad dentro de `enemies/<id>`. Cada grupo
-mantiene su master, piezas, ficha y pruebas. Usan un `viewBox` centrado y se
-convierten una sola vez en texturas Pixi cacheadas. La simulacion conserva sus
-radios y reglas; el SVG solo define la representacion visual.
+Los masters SVG originales se conservan como referencias editables. En combate
+los cuerpos completos usan los PNG transparentes versionados en
+`src/assets/images/enemies/`; las entradas modulares de bosses mantienen sus
+piezas SVG. La simulacion conserva sus radios y reglas; el arte solo define la
+representacion visual.
 
 El [Tank de referencia](tank/README.md) demuestra blindaje por planos, cavidad
-de reactor y ensamblaje. Su master compuesto se utiliza también en Low para
-conservar la silueta. La extensión autorizada a Chaser, Fast, Elite y boss
-se detalla en [la guía por familias](../../../../skills/geometry-survivor-svg/references/visual-family-direction.md).
-Los cuatro enemigos comunes tienen master Low completo; el boss usa una
-instancia modular independiente con frame 112×112. Lámina viva:
+de reactor y ensamblaje. La guía histórica por familias está en
+[visual-family-direction](../../../../skills/geometry-survivor-svg/references/visual-family-direction.md).
+Las 13 familias comunes y tres bosses tienen un PNG de cuerpo completo. Los
+bosses conservan su instancia modular de entrada en frame 112×112. Lámina viva:
 `docs/visual/fleet-reference.html` desde la raíz del repositorio.
 Seguir la referencia `ship-art-direction.md` enlazada desde la skill SVG antes
 de construir otra nave. No copiar la silueta del Tank a todos los roles.
 
 | Asset | Rol | ViewBox | Ancla | Render | Instancias |
 | --- | --- | --- | --- | --- | --- |
-| `chaser/chaser.svg` | scout / enemigo comun (master de nave) | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `chaser/chaser-rear.svg` | motores y sombra del scout | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por scout |
-| `chaser/chaser-wings.svg` | alas del scout | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por scout |
-| `chaser/chaser-hull.svg` | casco del scout | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por scout |
-| `chaser/chaser-cockpit.svg` | cabina y nucleo del scout | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | una por scout |
+| `chaser/chaser.svg` | scout / enemigo comun (master de nave) | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `chaser/chaser-rear.svg` | motores y sombra del scout | `-32 -32 64 64` | `(0, 0)` | referencia SVG | no runtime |
+| `chaser/chaser-wings.svg` | alas del scout | `-32 -32 64 64` | `(0, 0)` | referencia SVG | no runtime |
+| `chaser/chaser-hull.svg` | casco del scout | `-32 -32 64 64` | `(0, 0)` | referencia SVG | no runtime |
+| `chaser/chaser-cockpit.svg` | cabina y nucleo del scout | `-32 -32 64 64` | `(0, 0)` | referencia SVG | no runtime |
 | `turtle/turtle.svg` | referencia visual y base historica | `-32 -32 64 64` | `(0, 0)` | textura Pixi | no se instancia en combate |
 | `turtle/turtle-shell.svg` | caparazon de referencia | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | referencia |
 | `turtle/turtle-limbs-front.svg` | patas delanteras de referencia | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | referencia |
 | `turtle/turtle-limbs-rear.svg` | patas traseras de referencia | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | referencia |
 | `turtle/turtle-head.svg` | cabeza direccional de referencia | `-32 -32 64 64` | `(0, 0)` | textura Pixi cacheada | referencia |
-| `fast/fast.svg` | Fast / perseguidor veloz | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `tank/tank.svg` | Tank / resistente | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `elite/elite.svg` | Elite / amenaza prioritaria | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `orbiter/orbiter.svg` | Orbiter / arco angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `charger/charger.svg` | Charger / ariete angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `splitter/splitter.svg` | Splitter / nave de fractura angular | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | hasta 250 |
-| `prism-weaver/prism-weaver.svg` | Prism Weaver / controlador de tres radios | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | cap authored 3 |
-| `boss/orbital-warden.svg` | Orbital Warden / boss angular | `-56 -56 112 112` | `(0, 0)` | 4 texturas + flat Low | 1 |
-| `warden-replica/warden-replica.svg` | replica destructible del Warden | `-32 -32 64 64` | `(0, 0)` | 4 texturas Pixi | 2 |
+| `fast/fast.svg` | Fast / perseguidor veloz | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `tank/tank.svg` | Tank / resistente | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `elite/elite.svg` | Elite / amenaza prioritaria | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `orbiter/orbiter.svg` | Orbiter / arco angular | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `charger/charger.svg` | Charger / ariete angular | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `splitter/splitter.svg` | Splitter / nave de fractura angular | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | hasta 250 |
+| `prism-weaver/prism-weaver.svg` | Prism Weaver / controlador de tres radios | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | cap authored 3 |
+| `boss/boss.svg` | Core Sentinel / boss centinela | `-56 -56 112 112` | `(0, 0)` | PNG de cuerpo + SVG de entrada/fallback | 1 |
+| `boss/orbital-warden.svg` | Orbital Warden / boss angular | `-56 -56 112 112` | `(0, 0)` | PNG de cuerpo + SVG de entrada | 1 |
+| `warden-replica/warden-replica.svg` | replica destructible del Warden | `-32 -32 64 64` | `(0, 0)` | PNG compartido + SVG fallback | 2 |
 
 Todas las naves estan orientadas hacia `-Y` y se rotan como contenedor segun el
-vector de movimiento. Sus colores son explicitos porque Pixi no consume CSS
-externo; el contorno y la silueta mantienen la lectura sobre la arena oscura.
+vector de movimiento. Las piezas comunes bajo `enemies/<id>/` siguen disponibles
+para edición y comparación, pero sus SVG independientes ya no se cargan al
+runtime. `FractureEnemySvgMarkup` sigue ensamblando esos cuatro masters SVG de
+fallback mientras se decodifican los PNG.
 La tortuga se conserva como referencia de composicion y contrato, pero el
 `chaser` activo usa la nave scout para respetar la tematica espacial.
 
@@ -49,12 +52,10 @@ telegraph fuera del SVG dibuja tres sectores separados. El SVG no contiene el
 alcance del peligro ni decide colisiones; esa lectura pertenece a
 `PrismWeaverTelegraphView` y `PrismWeaverBehavior`.
 
-Cada master de nave se divide en cuatro piezas alineadas al mismo viewBox y se
-convierte en texturas una sola vez. El runtime anima motores, alas, casco y
-cabina mediante `position`, `rotation`, `scale` y `alpha`, sin reconstruir XML.
-La rasterizacion pasa explicitamente el frame `(-32, -32, 64, 64)`; depender de
-los limites visibles de cada pieza cambiaria su centro y destruiria la
-composicion.
+Los componentes SVG comunes siguen documentando la construcción de cada master,
+pero la animación actual aplica `position`, `rotation`, `scale` y `alpha` sobre
+una sola imagen. La rasterización PNG conserva explícitamente el frame
+`(-32, -32, 64, 64)`; depender de los límites visibles alteraría su centro.
 
 La replica del Warden conserva las coordenadas de la familia grande reducidas
 explicitamente al 55% en cada `d`. Esto es obligatorio: el parser

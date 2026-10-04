@@ -558,6 +558,21 @@ independientemente de la imagen SVG/PNG, reutilizando los pools actuales.
 Contrato/QA y siguiente paso:
 [Enemigos de una imagen](docs/design/ENEMIGOS_IMAGEN_UNICA.md).
 
+### Cuerpos PNG transparentes para enemigos — 04-10-2026
+
+Completada la generación e integración solicitadas para **13 enemigos comunes
+y 3 bosses**. Cada cuerpo usa un PNG transparente procedente de un render del
+master SVG como referencia visual; frames 64×64 y 112×112, orientación `-Y`,
+centro `(0,0)`, **46,427 bytes** en total. Prompts de regeneración, procedencia,
+archivos y dimensiones: [assets de enemigos](src/assets/images/enemies/README.md).
+
+El loader comparte texturas tras `Image.decode()` y mantiene el SVG completo de
+fallback. Los fragmentos usan la fuente PNG al cargar. El ensamblaje actual de
+bosses conserva sus capas SVG y no cambia de tiempo. No se modifican hitboxes,
+ataques, animaciones, balance, entradas ni gameplay. El bundle no se midió de
+nuevo; referencia previa Local **14,980,401 bytes** bajo el límite de 15 MB.
+Revisión visual humana pendiente; sin capturas de juego a solicitud del usuario.
+
 Prueba adicional autorizada de nave/cañones vinculados: adaptar la nave de
 portada a un único PNG completo (propulsor integrado) y dos módulos PNG unidos
 por cables visuales. La versión de casco/propulsor separados queda sustituida
@@ -3877,3 +3892,20 @@ No se implementaron eventos, sorteo, Bitácora, assets ni migraciones por regist
 este plan. No fija importes/probabilidades ni autoriza servicios externos,
 publicación o aperturas de pago/anuncios. RET-00–06 son entregas futuras que
 requieren indicación explícita; EX-09, recursos y QA humano conservan sus puertas.
+
+## 22.22 Cuerpos PNG transparentes para enemigos — 04-10-2026
+
+El usuario solicita producir la totalidad del arte de enemigos en PNG sin fondo
+y usar esas imágenes en el juego. Entregados localmente 13 enemigos comunes y
+los tres bosses; la referencia disponible fue el master SVG de cada identidad.
+Fichas, briefs reproducibles y procedencia: [assets enemigos](src/assets/images/enemies/README.md).
+
+`CombatEntitiesView` decodifica las imágenes con `Image` antes de `Texture.from`;
+los SVG completos sirven de fallback y los bosses conservan las cuatro capas de
+su entrada actual. La muerte compartida fragmenta la textura raster recién
+cargada. Sin cambios de gameplay, ataques, timings o arte de entrada de bosses.
+
+Se verificaron dimensiones, alpha transparente/parcial, bytes y `git diff --check`.
+No se ejecutaron tests/build ni se capturó el juego; el usuario hará la revisión
+visual y decidirá si se integra a `main`. El presupuesto del build se debe volver
+a medir antes de publicar. Sin commit, push o deploy.

@@ -6,7 +6,7 @@ import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderSt
 import { createDefeatFragments, defeatCompression, ENEMY_DEFEAT_SECONDS, poseDefeatFragments } from './SingleImageDefeat';
 
 export interface BossShipTextures {
-  readonly flat: Texture;
+  flat: Texture;
   readonly parts: readonly [Texture, Texture, Texture, Texture];
 }
 
@@ -62,6 +62,15 @@ export class BossShipVisual {
     }
   }
 
+  /** Apply a decoded body without interrupting an entrance already assembling. */
+  public refreshBodyTexture(previousFlat: Texture): void {
+    const body = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
+    this.prepareFragments(body);
+    if (this.quality === 'low' || this.pieces[0].texture === previousFlat) {
+      this.pieces[0].texture = body;
+    }
+  }
+
   public beginFrame(): void {
     if (this.defeatAge < 0) this.root.visible = false;
   }
@@ -81,7 +90,7 @@ export class BossShipVisual {
     if (this.quality === 'low') return;
     if (progress >= 1) {
       // Keep the existing modular entrance, but use a complete body once
-      // assembled. Future PNGs replace only this flat texture.
+      // assembled. PNG bodies replace only this flat texture.
       this.pieces[0].texture = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
       this.pieces[0].visible = true;
       this.pieces[0].position.set(0, 0);

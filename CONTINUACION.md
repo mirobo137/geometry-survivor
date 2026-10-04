@@ -1,67 +1,56 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 03-10-2026. Base Git de esta entrega: `7d9ec8f` (`10 de 10`).
-Este archivo es un snapshot, no reemplaza `PLAN_DESARROLLO.md` ni el estado Git.
+Actualizado: 04-10-2026. Base Git de la entrega: `db0e714`
+(`efectos antes de png enemigos`). Esta entrega queda integrada en `main`
+local; no se hizo push ni publicación. Este snapshot no reemplaza
+`PLAN_DESARROLLO.md` ni el estado Git.
 
 ## Solicitud vigente y siguiente acción
 
-Refinamiento solicitado después de aprobar la muerte común: **descarga del
-reactor integrada**. Destello blanco-dorado (~110 ms), resplandor azul y seis
-rayos finos acompañan los fragmentos hasta 420 ms; chispas 8/5/3 High/Medium/Low.
-Es independiente del asset del enemigo: al pasar a PNG se conserva automáticamente.
-Usa los tres Graphics por slot y el pool de partículas existentes; contextos
-cacheados nuevos, capacidades intactas. Movimiento reducido conserva brillo
-estático atenuado. La muerte tiene prioridad sobre un impacto común saturado.
+Entrega solicitada: generar y conectar **16 PNG transparentes** como reemplazo
+físico de los cuerpos SVG: 13 enemigos comunes y Core Sentinel, Orbital Warden
+y Fracture Engine. Imágenes y briefs de regeneración:
+[src/assets/images/enemies](src/assets/images/enemies/README.md). Los PNG
+conservan el frame completo (64×64 comunes, 112×112 bosses), centro `(0,0)`,
+frente `-Y` y suman **46,427 bytes**. ImageMagick/Lanczos y paleta RGBA de
+hasta 128 entradas; se verificó canal alpha real en cada archivo.
 
-Verificación de este refinamiento: typecheck, **689 unitarias / 127 archivos**,
-19 pruebas específicas repetidas tras afinar geometría y **96 casos browser**
-de las 16 familias con seis configuraciones. Cero errores JS/HTTP; capturas
-del destello y de la ruptura revisadas. Builds Local/Poki/CrazyGames correctos:
-**14,980,401 / 10,016,486 / 10,016,492 bytes**. Margen local actual **19,599 bytes**
-bajo 15 MB. La prueba de cinco smoke que sigue abajo corresponde a la entrega
-anterior; no se repitió para este refinamiento visual. Revisión humana del
-efecto nuevo y rendimiento de móvil físico pendientes. Sin commit/push.
+`EnemyRasterTextures` decodifica PNG por `Image` y luego crea las texturas Pixi.
+El cuerpo conserva el SVG completo mientras carga o si una imagen falla. Las
+muertes fragmentan el mismo PNG cargado. En bosses sólo cambia el cuerpo al
+terminar el ensamblaje: su entrada modular SVG y su ventana no atacante siguen
+intactas. Sin cambios de mecánicas, animación, ataques, colisión o balance.
 
-### Base implementada en la entrega anterior
+La siguiente acción es la revisión del usuario en juego; no hace falta un nuevo
+prompt o rediseño de entradas de boss para esta aprobación. Para abrir la galería
+existente en Vite 5173: `/docs/visual/tank-defeat.html?quality=high` (selector de
+16 familias; la ruta conserva el nombre por compatibilidad). No se generó una
+captura de gameplay. En esta entrega no se ejecutó test/build; el último tamaño
+Local medido antes de estos cambios fue 14,980,401 bytes y el presupuesto actual
+debe confirmarse al validar el paquete. Sin push/deploy.
 
-El usuario aprobó la muerte Tank y autorizó extenderla a **todos los enemigos
-y bosses antes de generar sus PNG**. Implementado el 03-10-2026: 13 familias
-comunes y tres bosses usan master completo y ruptura de 420 ms por cuatro
+Las entradas especiales de bosses quedan pendientes de diseño dedicado. Los
+masters SVG de cuerpos continúan en el repositorio; las piezas comunes ya no se
+importan al runtime, y las piezas SVG de entrada de bosses sí se mantienen.
+Overdrive/retención, revisión humana del FX anterior, prueba humana del
+Laboratorio y rendimiento en móvil físico conservan sus pendientes.
+
+### Base implementada antes de los PNG — 03-10-2026
+
+El usuario aprobó la muerte Tank y autorizó extenderla a todos los enemigos y
+bosses. Las 13 familias comunes y tres bosses usan ruptura de 420 ms por cuatro
 recortes de una sola fuente. Conserva pose (incluidas escala de hijos/réplicas,
-orientación y entrada/punch) e identidad capturada antes de liberar/reciclar
-el enemigo. Bosses reutilizan sus sprites; no superponen el colapso antiguo.
-Pool común High 18×4 / Medium 12×4; Low/reduced-motion sin fragmentos, con
+orientación y entrada/punch) e identidad capturada antes de liberar/reciclar el
+enemigo. Bosses reutilizan sus sprites; no superponen el colapso antiguo. Pool
+común High 18×4 / Medium 12×4; Low/reduced-motion sin fragmentos, con
 bloom/chispas según preset. Pausa/level-up congelan; victoria/transición dejan
-terminar el efecto. La limpieza inicial de tramo conserva las muertes activas;
-al completar los 3 s de transición se limpia normalmente. No cambian ataques,
-HP, XP, guardado, duración de transición ni balance.
+terminar el efecto. No cambian ataques, HP, XP, guardado ni balance.
 
-Siguiente acción: revisión humana de la extensión y, cuando el usuario autorice,
-generar un PNG transparente/diferenciado por enemigo siguiendo
-[ENEMIGOS_IMAGEN_UNICA](docs/design/ENEMIGOS_IMAGEN_UNICA.md).
-Entradas especiales de bosses **pendientes de diseño dedicado**; conservan su
-ensamblaje actual y todas sus habilidades, incluidas réplicas de Orbital Warden.
-No borrar masters/piezas SVG todavía. Overdrive/retención y prueba humana del
-Laboratorio mantienen sus pendientes. Sin commit/push/deploy.
-
-Probar con el Vite local existente 5173:
-`/docs/visual/tank-defeat.html?quality=high` (selector de 16 familias,
-Destruir/Restaurar/pausa/cámara lenta). La ruta conserva su nombre por compatibilidad.
-En combate: `/?stress=1&debug=1&quality=high`.
-Diagnóstico: `node scripts/qa-tank-defeat.mjs`; evidencia/capturas en
-`test-results/tank-defeat/`, ejecutar después del smoke general.
-
-Verificado: typecheck, **127 archivos/687 unitarias**, builds Local/Poki/
-CrazyGames, cinco smoke de carga/input/pausa/resize/touch, patrones de bosses
-y escenario Overdrive (41.7 s), y **96 casos** de las 16 familias en PC High/Medium/Low, móvil
-portrait emulado High/Low y reduced-motion High. Fuente única, pose,
-compresión/separación/fade, pausa/resize, 60 ciclos por caso, identidad obsoleta,
-saturación/limpieza y reset de transición; cero errores JS/HTTP. Capturas revisadas.
-Tamaños completos local **14,971,967** bytes (con mapas), Poki **10,014,716**,
-CrazyGames **10,014,722**. Margen local **28,033 bytes** bajo 15 MB: no ampliar
-arte sin revisar presupuesto. Warning previo JS >500 KB permanece.
-No se corrió la suite browser completa ni se certificaron FPS/GPU en teléfono
-físico. Los servidores/navegadores QA se cerraron; no se reinició/duplicó Vite 5173.
+Evidencia de esa entrega anterior: typecheck, 689 unitarias / 127 archivos, 96
+casos browser de las 16 familias con seis configuraciones, cero errores JS/HTTP
+y builds Local/Poki/CrazyGames en 14,980,401 / 10,016,486 / 10,016,492 bytes.
+No se certificaron FPS/GPU en teléfono físico. El diagnóstico de la muerte común
+es `node scripts/qa-tank-defeat.mjs`; esta entrega de PNG no volvió a ejecutarlo.
 
 ## Retención — entrega documental anterior
 

@@ -1,16 +1,20 @@
 # Vistas Pixi de enemigos
 
 Contrato vigente: [Enemigos de una imagen](../../../../docs/design/ENEMIGOS_IMAGEN_UNICA.md).
-Las 13 familias comunes y tres bosses muestran su cuerpo completo en combate
-y comparten la muerte de 420 ms aprobada a partir de Tank. Los masters SVG
-se conservan; PNG nuevos y entradas especiales de bosses siguen pendientes.
+Las 13 familias comunes y tres bosses usan un PNG transparente como cuerpo
+completo y comparten la muerte de 420 ms aprobada a partir de Tank. Catálogo,
+procedencia y briefs de generación: [assets enemigos](../../../assets/images/enemies/README.md).
 
-`EnemyShipVisual` usa `flat` como cuerpo completo en todos los presets.
+`EnemyShipVisual` empieza con el master `flat` SVG de fallback; al decodificar
+su PNG correspondiente cambia la textura del sprite existente. Mantiene el
+cuerpo completo en todos los presets.
 Medium/High aplican transforms secundarios a la imagen; Low/movimiento reducido
 los omiten. Splitter conserva la escala de sus hijos y Warden Replica la suya.
-Las capas modulares siguen cacheadas como fuente/fallback de contratos antiguos,
-no como varias imágenes nuevas por enemigo. Los bosses mantienen las cuatro
-capas de su entrada actual y pasan al cuerpo completo al acabar el ensamblaje.
+Los masters SVG completos se conservan como fallback. Los SVG separados de
+piezas comunes se conservan como fuentes, pero ya no se cargan al runtime;
+`FractureEnemySvgMarkup` sigue ensamblando sus masters de fallback.
+Los bosses mantienen las cuatro capas de su entrada actual y pasan al PNG al
+acabar el ensamblaje.
 
 `SingleImageDefeat` define la partición y movimiento compartidos.
 `EnemyDefeatFxView` reutiliza 18×4 sprites High / 12×4 Medium; cada
@@ -32,4 +36,4 @@ el contrato vigente detalla límites y degradación.
 
 Prueba visual: `/docs/visual/tank-defeat.html`, ahora con las 16 familias.
 Diagnóstico: `node scripts/qa-tank-defeat.mjs`; ver contrato para evidencia
-y pasos del futuro reemplazo PNG.
+y el flujo de sustitución actual. El usuario revisará el arte en su juego.

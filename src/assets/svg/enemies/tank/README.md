@@ -7,10 +7,10 @@
 - Frente: `-Y`; ancla `(0,0)`; frame compartido `-32 -32 64 64`.
 - Lectura: proa truncada, hombros anchos, dos motores traseros y reactor pequeño.
 - Cuatro piezas: rear (chasis/motores), wings (blindaje lateral), hull
-  (proa/quilla/cavidad), cockpit (reactor). Se conservan como fuente/fallback,
-  no se borran durante la prueba de una imagen autorizada el 03-10-2026.
+  (proa/quilla/cavidad), cockpit (reactor). Se conservan como fuente editable;
+  el runtime usa el master SVG como fallback del PNG.
 - Master: concatenación exacta de primitivas en el orden de esas cuatro piezas.
-- Low/Medium/High: master completo en el sprite hull; no se pierden hombros.
+- Low/Medium/High: cuerpo completo en el sprite hull; no se pierden hombros.
   Medium/High animan el cuerpo por transforms, sin montar alas independientes.
   Low/movimiento reducido omiten respiración/balanceo. Sin cambio de daño,
   colisión, HP, velocidad, spawn, drops ni capacidad de pools.
@@ -21,9 +21,11 @@ El usuario **aprobó** el prototipo Tank y autorizó extender su muerte a las
 13 familias y los tres bosses. Su receta se centraliza en
 `SingleImageDefeat.ts`: cuatro recortes de una fuente, contracción/separación/
 giro/apagado hasta 420 ms, con pose capturada por índice/generación.
-No se generan PNG todavía. Las entradas especiales de bosses quedan pendientes.
+El cuerpo PNG de Tank se incorporó el 04-10-2026; su ficha de generación está
+en `src/assets/images/enemies/README.md`. Las entradas especiales de bosses
+quedan pendientes.
 
-Contrato vigente, recursos, siguiente sustitución PNG y evidencia:
+Contrato vigente, recursos PNG y evidencia:
 [Enemigos de una imagen](../../../../../docs/design/ENEMIGOS_IMAGEN_UNICA.md).
 Sustituye el antiguo estado «sólo Tank»; no mantener una segunda receta aquí.
 Masters y piezas SVG siguen intactos.

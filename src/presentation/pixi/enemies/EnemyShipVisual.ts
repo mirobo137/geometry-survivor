@@ -9,7 +9,7 @@ type LegacyEnemyShipKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'c
 
 export interface EnemyShipTextureSet {
   /** Complete centered body, shared by living sprite and death fragments. */
-  readonly flat?: Texture;
+  flat?: Texture;
   readonly rear: Texture;
   readonly wings: Texture;
   readonly hull: Texture;
@@ -214,7 +214,12 @@ export class EnemyShipVisual {
     const phase = animationSeconds * profile.cycleSeconds + this.phaseSeed;
     const bob = Math.sin(phase) * profile.bobAmplitude * (0.45 + movement * 0.55);
     const pulse = Math.sin(phase * 1.7 + 0.4) * profile.hullPulse;
-    if ((this.textures[this.kind] ?? this.textures.chaser).flat) {
+    const activeTextures = this.textures[this.kind] ?? this.textures.chaser;
+    if (activeTextures.flat && this.hull.texture !== activeTextures.flat) {
+      // PNG bodies replace their vector fallback after asynchronous decode.
+      this.hull.texture = activeTextures.flat;
+    }
+    if (activeTextures.flat) {
       this.rear.visible = this.wings.visible = this.cockpit.visible = false;
       this.hitFlash.visible = false;
       this.hull.position.set(0, this.reducedMotion || !this.detailedPartsEnabled ? 0 : bob);

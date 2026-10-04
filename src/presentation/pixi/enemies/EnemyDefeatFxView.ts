@@ -57,6 +57,15 @@ export class EnemyDefeatFxView {
     return this.slots.reduce((count, slot) => count + (slot.root.visible ? 1 : 0), 0);
   }
 
+  /** Register fragment textures for bodies decoded after this pooled view was built. */
+  public refreshTextures(): void {
+    if (this.slots.length === 0) return;
+    for (const set of Object.values(this.textures)) {
+      const body = set.flat ?? set.hull;
+      if (!this.fragments.has(body)) this.fragments.set(body, createDefeatFragments(body));
+    }
+  }
+
   public play(x: number, y: number, kind: EnemyShipKind, pose?: Readonly<EnemyDefeatPose>): void {
     const slot = this.slots.find(candidate => !candidate.root.visible);
     if (!slot) return;

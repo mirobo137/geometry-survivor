@@ -9,9 +9,9 @@ import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/cons
 import { FX_QUALITY, type FxQuality } from '../../content/visual/VisualTokens';
 import { getCannonSkinDefinition, type CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { CombatRenderState, EnemyRenderState } from '../../simulation/combat/CombatRenderState';
-import chaserRearSvg from '../../assets/svg/enemies/chaser/chaser-rear.svg?raw';
 import chaserSvg from '../../assets/svg/enemies/chaser/chaser.svg?raw';
 import fastSvg from '../../assets/svg/enemies/fast/fast.svg?raw';
+import tankSvg from '../../assets/svg/enemies/tank/tank.svg?raw';
 import eliteSvg from '../../assets/svg/enemies/elite/elite.svg?raw';
 import bossSvg from '../../assets/svg/enemies/boss/boss.svg?raw';
 import bossRearSvg from '../../assets/svg/enemies/boss/boss-rear.svg?raw';
@@ -19,55 +19,25 @@ import bossWingsSvg from '../../assets/svg/enemies/boss/boss-wings.svg?raw';
 import bossHullSvg from '../../assets/svg/enemies/boss/boss-hull.svg?raw';
 import bossCockpitSvg from '../../assets/svg/enemies/boss/boss-cockpit.svg?raw';
 import { BossShipVisual, type BossShipTextures } from './enemies/BossShipVisual';
-import chaserWingsSvg from '../../assets/svg/enemies/chaser/chaser-wings.svg?raw';
-import chaserHullSvg from '../../assets/svg/enemies/chaser/chaser-hull.svg?raw';
-import chaserCockpitSvg from '../../assets/svg/enemies/chaser/chaser-cockpit.svg?raw';
-import fastRearSvg from '../../assets/svg/enemies/fast/fast-rear.svg?raw';
-import fastWingsSvg from '../../assets/svg/enemies/fast/fast-wings.svg?raw';
-import fastHullSvg from '../../assets/svg/enemies/fast/fast-hull.svg?raw';
-import fastCockpitSvg from '../../assets/svg/enemies/fast/fast-cockpit.svg?raw';
-import tankRearSvg from '../../assets/svg/enemies/tank/tank-rear.svg?raw';
-import tankSvg from '../../assets/svg/enemies/tank/tank.svg?raw';
-import tankWingsSvg from '../../assets/svg/enemies/tank/tank-wings.svg?raw';
-import tankHullSvg from '../../assets/svg/enemies/tank/tank-hull.svg?raw';
-import tankCockpitSvg from '../../assets/svg/enemies/tank/tank-cockpit.svg?raw';
-import eliteRearSvg from '../../assets/svg/enemies/elite/elite-rear.svg?raw';
-import eliteWingsSvg from '../../assets/svg/enemies/elite/elite-wings.svg?raw';
-import eliteHullSvg from '../../assets/svg/enemies/elite/elite-hull.svg?raw';
-import eliteCockpitSvg from '../../assets/svg/enemies/elite/elite-cockpit.svg?raw';
 import orbiterSvg from '../../assets/svg/enemies/orbiter/orbiter.svg?raw';
-import orbiterRearSvg from '../../assets/svg/enemies/orbiter/orbiter-rear.svg?raw';
-import orbiterWingsSvg from '../../assets/svg/enemies/orbiter/orbiter-wings.svg?raw';
-import orbiterHullSvg from '../../assets/svg/enemies/orbiter/orbiter-hull.svg?raw';
-import orbiterCockpitSvg from '../../assets/svg/enemies/orbiter/orbiter-cockpit.svg?raw';
 import chargerSvg from '../../assets/svg/enemies/charger/charger.svg?raw';
-import chargerRearSvg from '../../assets/svg/enemies/charger/charger-rear.svg?raw';
-import chargerWingsSvg from '../../assets/svg/enemies/charger/charger-wings.svg?raw';
-import chargerHullSvg from '../../assets/svg/enemies/charger/charger-hull.svg?raw';
-import chargerCockpitSvg from '../../assets/svg/enemies/charger/charger-cockpit.svg?raw';
 import splitterSvg from '../../assets/svg/enemies/splitter/splitter.svg?raw';
-import splitterRearSvg from '../../assets/svg/enemies/splitter/splitter-rear.svg?raw';
-import splitterWingsSvg from '../../assets/svg/enemies/splitter/splitter-wings.svg?raw';
-import splitterHullSvg from '../../assets/svg/enemies/splitter/splitter-hull.svg?raw';
-import splitterCockpitSvg from '../../assets/svg/enemies/splitter/splitter-cockpit.svg?raw';
 import prismWeaverSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver.svg?raw';
-import prismWeaverRearSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-rear.svg?raw';
-import prismWeaverWingsSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-wings.svg?raw';
-import prismWeaverHullSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-hull.svg?raw';
-import prismWeaverCockpitSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver-cockpit.svg?raw';
 import wardenReplicaSvg from '../../assets/svg/enemies/warden-replica/warden-replica.svg?raw';
-import wardenReplicaRearSvg from '../../assets/svg/enemies/warden-replica/warden-replica-rear.svg?raw';
-import wardenReplicaWingsSvg from '../../assets/svg/enemies/warden-replica/warden-replica-wings.svg?raw';
-import wardenReplicaHullSvg from '../../assets/svg/enemies/warden-replica/warden-replica-hull.svg?raw';
-import wardenReplicaCockpitSvg from '../../assets/svg/enemies/warden-replica/warden-replica-cockpit.svg?raw';
 import orbitalWardenSvg from '../../assets/svg/enemies/boss/orbital-warden.svg?raw';
 import orbitalWardenRearSvg from '../../assets/svg/enemies/boss/orbital-warden-rear.svg?raw';
 import orbitalWardenWingsSvg from '../../assets/svg/enemies/boss/orbital-warden-wings.svg?raw';
 import orbitalWardenHullSvg from '../../assets/svg/enemies/boss/orbital-warden-hull.svg?raw';
 import orbitalWardenCockpitSvg from '../../assets/svg/enemies/boss/orbital-warden-cockpit.svg?raw';
 import { FRACTURE_BOSS_SVGS, FRACTURE_ENEMY_SVGS } from '../../assets/svg/enemies/FractureEnemySvgMarkup';
+import {
+  ENEMY_RASTER_BOSS_IDS,
+  ENEMY_RASTER_COMMON_IDS,
+  loadEnemyRasterTextures,
+  type EnemyRasterAssetId
+} from './enemies/EnemyRasterTextures';
 import { EnemyDefeatFxView } from './enemies/EnemyDefeatFxView';
-import { EnemyShipVisual, type EnemyShipTextureMap } from './enemies/EnemyShipVisual';
+import { EnemyShipVisual, type EnemyShipTextureMap, type EnemyShipTextureSet } from './enemies/EnemyShipVisual';
 import { createSvgTexture, type SvgTextureFrame } from './SvgTextureFactory';
 import { EnemyImpactFxView } from './fx/EnemyImpactFxView';
 import { DamageNumberView } from './fx/DamageNumberView';
@@ -100,99 +70,28 @@ interface EnemyTextureSet {
   readonly boss: Readonly<Record<BossId, BossShipTextures>>;
 }
 
+const createEnemyFallback = (renderer: Renderer, svg: string): EnemyShipTextureSet => {
+  const body = createSvgTexture(renderer, svg, ENEMY_TEXTURE_FRAME);
+  // Common enemies already render as one image. Aliasing keeps their SVG body
+  // as a fallback without embedding or rasterizing four unused component SVGs.
+  return { flat: body, rear: body, wings: body, hull: body, cockpit: body };
+};
+
 const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
   ships: {
-    chaser: {
-      flat: createSvgTexture(renderer, chaserSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, chaserRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, chaserWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, chaserHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, chaserCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    fast: {
-      flat: createSvgTexture(renderer, fastSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, fastRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, fastWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, fastHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, fastCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    tank: {
-      flat: createSvgTexture(renderer, tankSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, tankRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, tankWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, tankHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, tankCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    elite: {
-      flat: createSvgTexture(renderer, eliteSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, eliteRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, eliteWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, eliteHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, eliteCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    orbiter: {
-      flat: createSvgTexture(renderer, orbiterSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, orbiterRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, orbiterWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, orbiterHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, orbiterCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    charger: {
-      flat: createSvgTexture(renderer, chargerSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, chargerRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, chargerWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, chargerHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, chargerCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    splitter: {
-      flat: createSvgTexture(renderer, splitterSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, splitterRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, splitterWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, splitterHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, splitterCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    'prism-weaver': {
-      flat: createSvgTexture(renderer, prismWeaverSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, prismWeaverRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, prismWeaverWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, prismWeaverHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, prismWeaverCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    'warden-replica': {
-      flat: createSvgTexture(renderer, wardenReplicaSvg, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, wardenReplicaRearSvg, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, wardenReplicaWingsSvg, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, wardenReplicaHullSvg, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, wardenReplicaCockpitSvg, ENEMY_TEXTURE_FRAME)
-    },
-    'fracture-gunner': {
-      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].flat, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].rear, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].wings, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].hull, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].cockpit, ENEMY_TEXTURE_FRAME)
-    },
-    'thorn-bastion': {
-      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].flat, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].rear, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].wings, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].hull, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].cockpit, ENEMY_TEXTURE_FRAME)
-    },
-    'zigzag-reaver': {
-      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].flat, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].rear, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].wings, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].hull, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].cockpit, ENEMY_TEXTURE_FRAME)
-    },
-    'rift-miner': {
-      flat: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].flat, ENEMY_TEXTURE_FRAME),
-      rear: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].rear, ENEMY_TEXTURE_FRAME),
-      wings: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].wings, ENEMY_TEXTURE_FRAME),
-      hull: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].hull, ENEMY_TEXTURE_FRAME),
-      cockpit: createSvgTexture(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].cockpit, ENEMY_TEXTURE_FRAME)
-    }
+    chaser: createEnemyFallback(renderer, chaserSvg),
+    fast: createEnemyFallback(renderer, fastSvg),
+    tank: createEnemyFallback(renderer, tankSvg),
+    elite: createEnemyFallback(renderer, eliteSvg),
+    orbiter: createEnemyFallback(renderer, orbiterSvg),
+    charger: createEnemyFallback(renderer, chargerSvg),
+    splitter: createEnemyFallback(renderer, splitterSvg),
+    'prism-weaver': createEnemyFallback(renderer, prismWeaverSvg),
+    'warden-replica': createEnemyFallback(renderer, wardenReplicaSvg),
+    'fracture-gunner': createEnemyFallback(renderer, FRACTURE_ENEMY_SVGS['fracture-gunner'].flat),
+    'thorn-bastion': createEnemyFallback(renderer, FRACTURE_ENEMY_SVGS['thorn-bastion'].flat),
+    'zigzag-reaver': createEnemyFallback(renderer, FRACTURE_ENEMY_SVGS['zigzag-reaver'].flat),
+    'rift-miner': createEnemyFallback(renderer, FRACTURE_ENEMY_SVGS['rift-miner'].flat)
   },
   boss: {
     'core-sentinel': {
@@ -302,6 +201,7 @@ export class CombatEntitiesView {
   private readonly projectileTextures = new Map<CannonSkinId, Texture>();
   private cannonSkin: CannonSkinId;
   private readonly projectileGlowLimit: number;
+  private destroyed = false;
   private readonly previousActive = Array.from({ length: ENEMY_POOL_CAPACITY }, () => false);
   private readonly previousHealth = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
   private readonly previousGeneration = Array.from({ length: ENEMY_POOL_CAPACITY }, () => 0);
@@ -371,6 +271,30 @@ export class CombatEntitiesView {
       sprite.visible = false;
       this.projectileSprites.push(sprite);
       this.projectileLayer.addChild(sprite);
+    }
+    this.root.once('destroyed', () => { this.destroyed = true; });
+    void loadEnemyRasterTextures().then(textures => this.applyEnemyRasterTextures(textures));
+  }
+
+  private applyEnemyRasterTextures(textures: Partial<Record<EnemyRasterAssetId, Texture>>): void {
+    if (this.destroyed) return;
+    let commonTexturesChanged = false;
+    for (const kind of ENEMY_RASTER_COMMON_IDS) {
+      const raster = textures[kind];
+      const set = this.enemyTextures.ships[kind];
+      if (!raster || !set || set.flat === raster) continue;
+      set.flat = raster;
+      commonTexturesChanged = true;
+    }
+    if (commonTexturesChanged) this.enemyDefeatFx.refreshTextures();
+
+    for (const bossId of ENEMY_RASTER_BOSS_IDS) {
+      const raster = textures[bossId];
+      const set = this.enemyTextures.boss[bossId];
+      if (!raster || !set || set.flat === raster) continue;
+      const previousFlat = set.flat;
+      set.flat = raster;
+      this.bosses[bossId].refreshBodyTexture(previousFlat);
     }
   }
 

@@ -1,9 +1,10 @@
 # Enemigos — cuerpo único y muerte compartida
 
-Estado al 03-10-2026: **implementado con los masters SVG actuales**.
-El usuario aprobó la prueba de Tank y autorizó extender su muerte a todas las
-familias. Generación PNG y nuevas entradas de bosses **pendientes**; esta
-entrega no crea imágenes ni modifica ataques, dificultad, recompensas o save.
+Estado al 04-10-2026: **13 enemigos comunes y 3 bosses usan un PNG transparente
+como cuerpo completo**; el SVG completo queda de fallback y fuente editable.
+Las entradas modulares actuales de bosses siguen intactas hasta que se diseñen
+entradas dedicadas. La presentación no altera ataques, dificultad, recompensas,
+guardado, hitboxes ni radios.
 Este contrato sustituye las recetas antiguas de desarme modular de enemigos
 y el colapso exclusivo de bosses; los registros fechados conservan su historia.
 
@@ -19,8 +20,8 @@ y el colapso exclusivo de bosses; los registros fechados conservan su historia.
   movimiento reducido omiten respiración/balanceo. Los telegraphs, orientación,
   escalas de réplicas/hijos, entrada y reacción de impacto siguen presentes.
 - Los bosses conservan su ensamblaje de entrada con las capas SVG actuales.
-  Después del ensamblaje se muestra el master completo. **No borrar esas
-  capas ni migrar las entradas al generar PNG sin una entrega específica.**
+  Después del ensamblaje se muestra su PNG completo. **No borrar esas capas ni
+  migrar las entradas al PNG en esta entrega.**
 - Todos mueren con la receta aprobada del Tank: contracción breve, separación
   amortiguada de cuatro regiones del mismo cuerpo, giro pequeño, oscurecimiento
   y fade; duración total **420 ms**. En bosses la distancia de fragmentación
@@ -82,34 +83,42 @@ completo ocurre al finalizar la transición existente de 3 s, sin alargarla.
 Reset restaura familia, tint y transforms; destroy libera sólo las vistas con
 `destroy(false)`, nunca la fuente compartida.
 
-Las capas SVG antiguas siguen cacheadas como fuente/fallback y para las entradas
-de bosses. No atribuir ahorro de memoria GPU medido a esta entrega. Sí se
-elimina la superposición de la muerte antigua del boss en `TerminalFxView`;
-esa vista conserva exclusivamente la derrota/tono del player.
+Los masters SVG completos siguen cacheados como fallback; las cuatro piezas de
+entrada de bosses siguen siendo texturas activas. Los SVG separados de piezas
+comunes quedan como referencias editables y dejan de cargarse al runtime.
+`FractureEnemySvgMarkup` conserva su ensamblaje para producir los masters SVG
+usados como fallback.
+No atribuir ahorro de memoria GPU medido a esta entrega. Sí se elimina la
+superposición de la muerte antigua del boss en `TerminalFxView`; esa vista
+conserva exclusivamente la derrota/tono del player.
 
-## Próxima entrega: un PNG transparente por enemigo
+## Sustitución por PNG — 04-10-2026
 
-1. Aplicar [Arte híbrido](ARTE_HIBRIDO.md): identidad diferenciada, procedencia,
-   transparencia real, optimización y validación de legibilidad en combate.
-2. Casco completo, centro/ancla 0.5, frente -Y; sin fondo ni partes PNG.
-   Conservar masters SVG originales. El arte nuevo no redefine hitbox o radio.
-3. Sustituir `flat` en el catálogo de texturas, antes de construir las vistas.
-   Normalizar tamaño lógico **64×64 comunes / 112×112 bosses**. Más píxeles
-   sólo con resolución/escala normalizada; nunca usar el tamaño físico del PNG
-   como tamaño de combate.
-4. Frame entero, sin trim ni rotación de atlas. Los recortes normalizados y
-   la animación se aplican automáticamente; no crear una receta por silueta.
-   Si cambia el catálogo de texturas, reconstruir la vista, no sus fragmentos
-   durante un combate. La partición es rectangular, no fractura física irregular.
-5. Bosses: diseñar después entradas particulares espectaculares que funcionen
-   con el PNG único y respeten la ventana no atacante actual. Hasta entonces
-   conservar las piezas usadas por la entrada existente.
-6. Revisar presupuesto total antes de añadir arte. Local incluye source maps;
-   margen tras el refinamiento de descarga: **19,599 bytes** bajo 15,000,000. El arte
-   futuro necesitará optimización/presupuesto explícito, no quitar mapas o
-   elevar el límite silenciosamente.
+- Artefactos: [PNG y ficha de procedencia](../../src/assets/images/enemies/README.md).
+  Los 16 finales mantienen el frame entero, frente `-Y` y centro `(0,0)`:
+  64×64 comunes, 112×112 bosses, con transparencia alpha; suman **46,427 bytes**.
+- El catálogo decodifica PNG con `Image` antes de crear `Texture.from(image)`.
+  Mientras carga o si falla, cada cuerpo conserva su SVG completo de fallback.
+  Los assets PNG viven como texturas compartidas de la sesión.
+- `EnemyShipVisual` cambia la textura del sprite existente al completarse la
+  carga. `EnemyDefeatFxView` registra los fragmentos para cada fuente PNG;
+  las muertes ya activas conservan las subtexturas que estaban usando.
+- Los bosses registran fragmentos desde el PNG y cambian el cuerpo final al
+  terminar el ensamblaje. Si la entrada está en curso, sus capas SVG siguen
+  animándose sin interrupción. Las cuatro piezas SVG de entrada se conservan.
+- Los SVG de componentes de enemigos comunes permanecen como masters en el
+  repositorio. Ya no se importan en runtime: el cuerpo SVG único basta como
+  fallback y los sprites comunes ya se muestran como una imagen completa.
+- No cambian tamaño de combate, orientación, telegraphs, movimiento, animación,
+  ataques o ventana no atacante de bosses. No se capturó un preview de juego en
+  esta entrega; el usuario revisará el resultado en su entorno.
+- Los PNG se derivaron a sus frames con Lanczos y paleta RGBA de hasta 128
+  entradas.
+  La inspección de archivo confirma canal alpha y píxeles transparentes. El
+  bundle no se midió de nuevo en esta entrega; la última medida local previa
+  fue 14,980,401 bytes y el build vigente debe confirmar el presupuesto.
 
-## Prueba y evidencia de esta entrega
+## Evidencia histórica de la muerte común — 03-10-2026
 
 Con Vite: `/docs/visual/tank-defeat.html?quality=high`. El nombre de ruta se
 conserva por compatibilidad; ahora su selector contiene las **16 familias**.

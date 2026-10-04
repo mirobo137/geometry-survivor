@@ -560,18 +560,28 @@ Contrato/QA y siguiente paso:
 
 ### Cuerpos PNG transparentes para enemigos — 04-10-2026
 
-Completada la generación e integración solicitadas para **13 enemigos comunes
-y 3 bosses**. Cada cuerpo usa un PNG transparente procedente de un render del
-master SVG como referencia visual; frames 64×64 y 112×112, orientación `-Y`,
-centro `(0,0)`, **46,427 bytes** en total. Prompts de regeneración, procedencia,
-archivos y dimensiones: [assets de enemigos](src/assets/images/enemies/README.md).
+Completado el rediseño solicitado de **13 enemigos comunes y 3 bosses** tras
+aprobar el concepto de Tank: naves militares originales y amenazantes, con
+materiales, masas y siluetas diferenciados; no versiones ornamentadas del SVG.
+Fracture Gunner tiene su boca de cañón central y un canal frontal despejado,
+alineado con el origen actual de sus balas. Se reutiliza el Tank aprobado.
+Prompts, procedencia y derivación: [assets de enemigos](src/assets/images/enemies/README.md).
 
-El loader comparte texturas tras `Image.decode()` y mantiene el SVG completo de
-fallback. Los fragmentos usan la fuente PNG al cargar. El ensamblaje actual de
-bosses conserva sus capas SVG y no cambia de tiempo. No se modifican hitboxes,
-ataques, animaciones, balance, entradas ni gameplay. El bundle no se midió de
-nuevo; referencia previa Local **14,980,401 bytes** bajo el límite de 15 MB.
-Revisión visual humana pendiente; sin capturas de juego a solicitud del usuario.
+PNG maestros RGBA8 de 128×128 / 224×224; descarga WebP de 96×96 / 168×168,
+alpha exacto y **85,586 bytes** entre las 16 imágenes. Imports `?no-inline`
+evitan duplicar base64 en JS/source maps. Resolución de fuente 1.5 conserva
+frames lógicos de 64×64 / 112×112, centro `(0,0)` y frente `-Y`, incluidos
+los recortes al morir. No se modifican sprites/pools, hitboxes, ataques o balance.
+El loader comparte texturas tras `Image.decode()` y conserva el SVG de respaldo.
+Las entradas de bosses mantienen capas SVG y tiempos; su rediseño sigue pendiente.
+
+Typecheck, **695 unitarias / 128 archivos** y **96 casos browser** correctos
+con el arte final; las pruebas exigen raster cargado y verifican muerte,
+pausa/resize, ciclos, fuentes y limpieza. Builds Local/Poki/CrazyGames:
+**14,997,754 / 10,073,008 / 10,073,014 bytes**. Margen Local **2,246 bytes**:
+revisar presupuesto antes de ampliar, sin relajar el límite en esta entrega.
+Revisión humana en batalla/móvil físico pendiente; no se certificaron FPS/GPU.
+Galería `/docs/visual/tank-defeat.html?quality=high`; sin commit, push o deploy.
 
 Prueba adicional autorizada de nave/cañones vinculados: adaptar la nave de
 portada a un único PNG completo (propulsor integrado) y dos módulos PNG unidos
@@ -3895,17 +3905,23 @@ requieren indicación explícita; EX-09, recursos y QA humano conservan sus puer
 
 ## 22.22 Cuerpos PNG transparentes para enemigos — 04-10-2026
 
-El usuario solicita producir la totalidad del arte de enemigos en PNG sin fondo
-y usar esas imágenes en el juego. Entregados localmente 13 enemigos comunes y
-los tres bosses; la referencia disponible fue el master SVG de cada identidad.
-Fichas, briefs reproducibles y procedencia: [assets enemigos](src/assets/images/enemies/README.md).
+El primer lote basado en masters SVG queda sustituido por petición del usuario.
+Entregados localmente **13 enemigos comunes y los tres bosses** con el enfoque
+artístico del Tank aprobado: flota militar amenazante y diferenciada. El cañón
+de Fracture Gunner queda central para representar su origen de disparo real.
+Fichas, prompts y procedencia: [assets enemigos](src/assets/images/enemies/README.md).
 
-`CombatEntitiesView` decodifica las imágenes con `Image` antes de `Texture.from`;
-los SVG completos sirven de fallback y los bosses conservan las cuatro capas de
-su entrada actual. La muerte compartida fragmenta la textura raster recién
-cargada. Sin cambios de gameplay, ataques, timings o arte de entrada de bosses.
+Un cuerpo completo por enemigo, PNG maestro y WebP runtime transparente;
+`Image.decode()` precede a `Texture.from({resource,resolution})`. El frame
+lógico y la fragmentación mantienen 64/112 pese a los 96/168 píxeles físicos.
+Los SVG completos sirven de fallback; bosses conservan las cuatro capas y
+tiempos de entrada. Esas entradas dedicadas siguen pendientes, no se ejecutan
+en este lote. Sin cambios de gameplay, balance, ataques, timings o guardado.
 
-Se verificaron dimensiones, alpha transparente/parcial, bytes y `git diff --check`.
-No se ejecutaron tests/build ni se capturó el juego; el usuario hará la revisión
-visual y decidirá si se integra a `main`. El presupuesto del build se debe volver
-a medir antes de publicar. Sin commit, push o deploy.
+Verificados typecheck, **695 unitarias / 128 archivos**, **96 casos browser**
+con el raster final, alpha/dimensiones/fuentes, ciclos y limpieza. Builds
+Local/Poki/CrazyGames correctos: **14,997,754 / 10,073,008 / 10,073,014 bytes**.
+Margen Local **2,246 bytes**; requiere revisar presupuesto antes de ampliar.
+Galería y capturas de QA disponibles; aprobación humana en batalla y móvil
+físico pendiente. No se midieron FPS/GPU ni se ejecutó toda la suite browser.
+Sin commit, push o deploy; no reabre retención, Overdrive o Laboratorio.

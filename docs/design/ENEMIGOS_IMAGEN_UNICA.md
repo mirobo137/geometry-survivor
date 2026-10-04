@@ -1,7 +1,8 @@
 # Enemigos — cuerpo único y muerte compartida
 
-Estado al 04-10-2026: **13 enemigos comunes y 3 bosses usan un PNG transparente
-como cuerpo completo**; el SVG completo queda de fallback y fuente editable.
+Estado al 04-10-2026: **13 enemigos comunes y 3 bosses usan un cuerpo raster
+transparente de diseño militar original**. PNG maestros y WebP runtime;
+el SVG completo queda de fallback y fuente editable.
 Las entradas modulares actuales de bosses siguen intactas hasta que se diseñen
 entradas dedicadas. La presentación no altera ataques, dificultad, recompensas,
 guardado, hitboxes ni radios.
@@ -20,8 +21,9 @@ y el colapso exclusivo de bosses; los registros fechados conservan su historia.
   movimiento reducido omiten respiración/balanceo. Los telegraphs, orientación,
   escalas de réplicas/hijos, entrada y reacción de impacto siguen presentes.
 - Los bosses conservan su ensamblaje de entrada con las capas SVG actuales.
-  Después del ensamblaje se muestra su PNG completo. **No borrar esas capas ni
-  migrar las entradas al PNG en esta entrega.**
+  Después del ensamblaje se muestra su cuerpo raster completo. **No borrar esas
+  capas ni migrar las entradas en esta entrega.** El salto visual entre entrada
+  antigua y casco militar nuevo es un pendiente de diseño conocido.
 - Todos mueren con la receta aprobada del Tank: contracción breve, separación
   amortiguada de cuatro regiones del mismo cuerpo, giro pequeño, oscurecimiento
   y fade; duración total **420 ms**. En bosses la distancia de fragmentación
@@ -92,31 +94,49 @@ No atribuir ahorro de memoria GPU medido a esta entrega. Sí se elimina la
 superposición de la muerte antigua del boss en `TerminalFxView`; esa vista
 conserva exclusivamente la derrota/tono del player.
 
-## Sustitución por PNG — 04-10-2026
+## Rediseño militar y sustitución por raster — 04-10-2026
 
 - Artefactos: [PNG y ficha de procedencia](../../src/assets/images/enemies/README.md).
-  Los 16 finales mantienen el frame entero, frente `-Y` y centro `(0,0)`:
-  64×64 comunes, 112×112 bosses, con transparencia alpha; suman **46,427 bytes**.
-- El catálogo decodifica PNG con `Image` antes de crear `Texture.from(image)`.
+  El primer lote derivado de SVG queda sustituido por las 16 naves originales
+  solicitadas tras aprobar Tank: se diferencian masas, siluetas y materiales,
+  no sólo colores. Fracture Gunner tiene la boca central con espacio abierto
+  hacia delante para que el disparo desde `(state.x,state.y)` salga del cañón.
+- PNG maestros RGBA8: 128×128 comunes / 224×224 bosses, **621,078 bytes**.
+  Runtime WebP: 96×96 / 168×168, calidad 55, alpha exacto, **85,586 bytes**.
+  Importar con `?no-inline` evita duplicación base64 en JS/source maps; los
+  PNG maestros no se importan al build.
+- Frame lógico entero: **64×64 / 112×112**, frente `-Y`, centro `(0,0)`.
+  El catálogo decodifica con `Image` y crea `Texture.from({resource,resolution})`
+  con resolución 1.5. Píxeles extra mejoran detalle, no tamaño del cuerpo o FX.
   Mientras carga o si falla, cada cuerpo conserva su SVG completo de fallback.
-  Los assets PNG viven como texturas compartidas de la sesión.
+  Los assets raster viven como texturas compartidas de la sesión.
 - `EnemyShipVisual` cambia la textura del sprite existente al completarse la
-  carga. `EnemyDefeatFxView` registra los fragmentos para cada fuente PNG;
+  carga. `EnemyDefeatFxView` registra los fragmentos para cada fuente raster;
   las muertes ya activas conservan las subtexturas que estaban usando.
-- Los bosses registran fragmentos desde el PNG y cambian el cuerpo final al
+- Los bosses registran fragmentos desde el raster y cambian el cuerpo final al
   terminar el ensamblaje. Si la entrada está en curso, sus capas SVG siguen
   animándose sin interrupción. Las cuatro piezas SVG de entrada se conservan.
 - Los SVG de componentes de enemigos comunes permanecen como masters en el
   repositorio. Ya no se importan en runtime: el cuerpo SVG único basta como
   fallback y los sprites comunes ya se muestran como una imagen completa.
 - No cambian tamaño de combate, orientación, telegraphs, movimiento, animación,
-  ataques o ventana no atacante de bosses. No se capturó un preview de juego en
-  esta entrega; el usuario revisará el resultado en su entorno.
-- Los PNG se derivaron a sus frames con Lanczos y paleta RGBA de hasta 128
-  entradas.
-  La inspección de archivo confirma canal alpha y píxeles transparentes. El
-  bundle no se midió de nuevo en esta entrega; la última medida local previa
-  fue 14,980,401 bytes y el build vigente debe confirmar el presupuesto.
+  ataques o ventana no atacante de bosses. La muerte conserva el corte y
+  descarga aprobados; no añade filtros, shaders ni sprites por enemigo.
+- Derivación mecánica con Lanczos, sin trim/recolor/alpha pintado. Procedencia
+  y prompts en `scripts/enemy-image-sources.json`; `prepare-enemy-art.py` usa
+  originales disponibles o los PNG versionados en otro equipo. Verifica que el
+  alpha decodificado de WebP sea idéntico al derivado sin compresión.
+- Verificados typecheck y **695 unitarias / 128 archivos**; seis pruebas nuevas
+  cubren caché, resolución, errores, entorno sin Image y archivos reales.
+  Repetidos **96 casos browser** con raster cargado (16 familias, seis presets),
+  muerte, pausa/resize, saturación, 60 ciclos, reset y limpieza; cero errores
+  JS/HTTP. Galería y capturas de QA disponibles, no aprobación humana.
+- Builds Local/Poki/CrazyGames: **14,997,754 / 10,073,008 / 10,073,014 bytes**.
+  Margen Local **2,246 bytes** bajo 15 MB, con source maps intactos. Revisar
+  presupuesto antes de ampliar; no se relajó la puerta de esta entrega.
+  RGBA8 runtime calculado: **817,920 bytes**, sin overhead/fallbacks; no es
+  memoria GPU medida. FPS/GPU y aceptación humana en móvil físico pendientes.
+  No se ejecutó toda la suite browser. Sin commit, push o deploy.
 
 ## Evidencia histórica de la muerte común — 03-10-2026
 

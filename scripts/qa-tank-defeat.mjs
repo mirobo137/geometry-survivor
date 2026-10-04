@@ -25,6 +25,15 @@ try {
     page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
     await page.goto(`http://127.0.0.1:5184/docs/visual/tank-defeat.html?quality=${entry.quality}`);
     await page.waitForFunction(() => Boolean(window.__tankTrial));
+    // This audit must exercise the PNGs, not silently pass with SVG fallbacks.
+    await page.waitForFunction(() => {
+      const t = window.__tankTrial;
+      return t.enemyIds.every(id => {
+        const texture = ['core-sentinel','orbital-warden','fracture-engine'].includes(id)
+          ? t.view.enemyTextures.boss[id].flat : t.view.enemyTextures.ships[id].flat;
+        return texture.source.resource instanceof HTMLImageElement;
+      });
+    });
     const families = await page.evaluate(() => window.__tankTrial.enemyIds);
     for (const family of families) {
       await page.setViewportSize(entry.mobile ? { width: 393, height: 851 } : { width: 900, height: 900 });
@@ -32,6 +41,9 @@ try {
       const isBoss = ['core-sentinel','orbital-warden','fracture-engine'].includes(family);
       const before = await page.evaluate(() => { const t = window.__tankTrial;t.freeze();t.reset();return {inspect:t.inspect(),pose:{...t.pose()}}; });
       assert.equal(before.inspect.bodySprites, 1);
+      assert.equal(before.inspect.raster, true);
+      assert.equal(before.inspect.textureSize, isBoss ? 112 : 64);
+      assert.equal(before.inspect.physicalSize, isBoss ? 168 : 96);
       const capacity = entry.reduced || entry.quality === 'low' ? 0 : isBoss ? 1 : entry.quality === 'high' ? 18 : 12;
       assert.equal(before.inspect.capacity, capacity);
       assert.equal(before.inspect.totalSprites, isBoss ? (entry.quality === 'low' ? 1 : 4) : capacity * 4);

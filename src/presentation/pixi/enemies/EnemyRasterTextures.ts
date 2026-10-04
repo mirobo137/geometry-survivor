@@ -1,20 +1,20 @@
 import { Texture } from 'pixi.js';
-import chaserUrl from '../../../assets/images/enemies/chaser.png';
-import fastUrl from '../../../assets/images/enemies/fast.png';
-import tankUrl from '../../../assets/images/enemies/tank.png';
-import eliteUrl from '../../../assets/images/enemies/elite.png';
-import orbiterUrl from '../../../assets/images/enemies/orbiter.png';
-import chargerUrl from '../../../assets/images/enemies/charger.png';
-import splitterUrl from '../../../assets/images/enemies/splitter.png';
-import prismWeaverUrl from '../../../assets/images/enemies/prism-weaver.png';
-import wardenReplicaUrl from '../../../assets/images/enemies/warden-replica.png';
-import fractureGunnerUrl from '../../../assets/images/enemies/fracture-gunner.png';
-import thornBastionUrl from '../../../assets/images/enemies/thorn-bastion.png';
-import zigzagReaverUrl from '../../../assets/images/enemies/zigzag-reaver.png';
-import riftMinerUrl from '../../../assets/images/enemies/rift-miner.png';
-import coreSentinelUrl from '../../../assets/images/enemies/core-sentinel.png';
-import orbitalWardenUrl from '../../../assets/images/enemies/orbital-warden.png';
-import fractureEngineUrl from '../../../assets/images/enemies/fracture-engine.png';
+import chaserUrl from '../../../assets/images/enemies/chaser.webp?no-inline';
+import fastUrl from '../../../assets/images/enemies/fast.webp?no-inline';
+import tankUrl from '../../../assets/images/enemies/tank.webp?no-inline';
+import eliteUrl from '../../../assets/images/enemies/elite.webp?no-inline';
+import orbiterUrl from '../../../assets/images/enemies/orbiter.webp?no-inline';
+import chargerUrl from '../../../assets/images/enemies/charger.webp?no-inline';
+import splitterUrl from '../../../assets/images/enemies/splitter.webp?no-inline';
+import prismWeaverUrl from '../../../assets/images/enemies/prism-weaver.webp?no-inline';
+import wardenReplicaUrl from '../../../assets/images/enemies/warden-replica.webp?no-inline';
+import fractureGunnerUrl from '../../../assets/images/enemies/fracture-gunner.webp?no-inline';
+import thornBastionUrl from '../../../assets/images/enemies/thorn-bastion.webp?no-inline';
+import zigzagReaverUrl from '../../../assets/images/enemies/zigzag-reaver.webp?no-inline';
+import riftMinerUrl from '../../../assets/images/enemies/rift-miner.webp?no-inline';
+import coreSentinelUrl from '../../../assets/images/enemies/core-sentinel.webp?no-inline';
+import orbitalWardenUrl from '../../../assets/images/enemies/orbital-warden.webp?no-inline';
+import fractureEngineUrl from '../../../assets/images/enemies/fracture-engine.webp?no-inline';
 
 export const ENEMY_RASTER_COMMON_IDS = [
   'chaser', 'fast', 'tank', 'elite', 'orbiter', 'charger', 'splitter',
@@ -50,7 +50,7 @@ const ENEMY_RASTER_ASSETS: Readonly<Record<EnemyRasterAssetId, string>> = {
 
 const texturePromises = new Map<EnemyRasterAssetId, Promise<Texture | null>>();
 
-/** Decode PNGs before creating shared Pixi textures; failed loads keep the SVG body. */
+/** Decode raster bodies before creating shared textures; failed loads keep SVG. */
 const loadTexture = (id: EnemyRasterAssetId): Promise<Texture | null> => {
   const cached = texturePromises.get(id);
   if (cached) return cached;
@@ -67,7 +67,15 @@ const loadTexture = (id: EnemyRasterAssetId): Promise<Texture | null> => {
     image.onload = async () => {
       try {
         await image.decode();
-        settle(Texture.from(image));
+        if (image.naturalWidth <= 0 || image.naturalWidth !== image.naturalHeight) {
+          settle(null);
+          return;
+        }
+        // Physical pixels carry extra art detail, not a larger combat hull.
+        // Source resolution keeps the sprite AND its death fragments in the
+        // same 64/112 logical frame as the authored SVG fallback.
+        const logicalSize = (ENEMY_RASTER_BOSS_IDS as readonly string[]).includes(id) ? 112 : 64;
+        settle(Texture.from({ resource: image, resolution: image.naturalWidth / logicalSize }));
       } catch {
         settle(null);
       }
@@ -79,7 +87,7 @@ const loadTexture = (id: EnemyRasterAssetId): Promise<Texture | null> => {
   return promise;
 };
 
-/** Shared session textures; each SVG remains visible until its matching PNG decodes. */
+/** Shared session textures; each SVG remains until its matching image decodes. */
 export const loadEnemyRasterTextures = async (): Promise<Partial<Record<EnemyRasterAssetId, Texture>>> => {
   const textures: Partial<Record<EnemyRasterAssetId, Texture>> = {};
   await Promise.all((Object.keys(ENEMY_RASTER_ASSETS) as EnemyRasterAssetId[]).map(async (id) => {

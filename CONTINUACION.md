@@ -1,39 +1,49 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 04-10-2026. Base Git de la entrega: `db0e714`
-(`efectos antes de png enemigos`). Esta entrega queda integrada en `main`
-local; no se hizo push ni publicación. Este snapshot no reemplaza
+Actualizado: 04-10-2026. Base Git de la entrega: `e66273c` en `main`,
+sincronizada con remoto al iniciar. El rediseño descrito aquí queda como cambios
+locales sin commit, push o publicación. Este snapshot no reemplaza
 `PLAN_DESARROLLO.md` ni el estado Git.
 
 ## Solicitud vigente y siguiente acción
 
-Entrega solicitada: generar y conectar **16 PNG transparentes** como reemplazo
-físico de los cuerpos SVG: 13 enemigos comunes y Core Sentinel, Orbital Warden
-y Fracture Engine. Imágenes y briefs de regeneración:
-[src/assets/images/enemies](src/assets/images/enemies/README.md). Los PNG
-conservan el frame completo (64×64 comunes, 112×112 bosses), centro `(0,0)`,
-frente `-Y` y suman **46,427 bytes**. ImageMagick/Lanczos y paleta RGBA de
-hasta 128 entradas; se verificó canal alpha real en cada archivo.
+Entrega solicitada: sustituir el primer lote similar a SVG por **16 naves
+militares originales** con el enfoque artístico del Tank aprobado: 13 enemigos
+comunes y Core Sentinel, Orbital Warden y Fracture Engine. Tank reutiliza la
+imagen aprobada; las otras 15 son nuevas y diferenciadas. Fracture Gunner tiene
+la boca del cañón central y canal frontal despejado para su disparo real.
+Catálogo, procedencia y prompts:
+[src/assets/images/enemies](src/assets/images/enemies/README.md),
+`scripts/enemy-image-sources.json` y `scripts/prepare-enemy-art.py`.
 
-`EnemyRasterTextures` decodifica PNG por `Image` y luego crea las texturas Pixi.
-El cuerpo conserva el SVG completo mientras carga o si una imagen falla. Las
-muertes fragmentan el mismo PNG cargado. En bosses sólo cambia el cuerpo al
-terminar el ensamblaje: su entrada modular SVG y su ventana no atacante siguen
-intactas. Sin cambios de mecánicas, animación, ataques, colisión o balance.
+PNG maestros versionados de 128×128 / 224×224 (**621,078 bytes**); runtime
+WebP transparente de 96×96 / 168×168 (**85,586 bytes**, calidad 55, alpha exacto).
+El script usa originales disponibles o PNG versionados en otra PC. Full-frame
+Lanczos sin trim/recolor; no hay dependencia de una carpeta privada al jugar.
+Imports `?no-inline` evitan duplicación base64 en JS/source maps.
+`EnemyRasterTextures` decodifica por Image y normaliza la resolución a 1.5:
+frames lógicos 64×64 / 112×112, centro `(0,0)`, frente `-Y`, también al morir.
+Cache compartida y SVG de respaldo. No cambian ataques, hitboxes, balance,
+sprites/pools ni receta de muerte. Bosses conservan su entrada modular SVG y
+ventana no atacante; sus entradas dedicadas siguen pendientes de diseño.
 
-La siguiente acción es la revisión del usuario en juego; no hace falta un nuevo
-prompt o rediseño de entradas de boss para esta aprobación. Para abrir la galería
-existente en Vite 5173: `/docs/visual/tank-defeat.html?quality=high` (selector de
-16 familias; la ruta conserva el nombre por compatibilidad). No se generó una
-captura de gameplay. En esta entrega no se ejecutó test/build; el último tamaño
-Local medido antes de estos cambios fue 14,980,401 bytes y el presupuesto actual
-debe confirmarse al validar el paquete. Sin push/deploy.
+Verificados typecheck, **695 unitarias / 128 archivos** (reporte JSON en
+`test-results/enemy-art-units.json`) y **96 casos browser** con el arte final
+cargado, no fallback: fuentes/dimensiones, muerte, pausa/resize, saturación,
+60 ciclos, reset de tramo y limpieza; cero errores JS/HTTP. Capturas en
+`test-results/tank-defeat`. Builds Local/Poki/CrazyGames correctos:
+**14,997,754 / 10,073,008 / 10,073,014 bytes**. Margen Local **2,246 bytes**:
+revisar presupuesto antes de crecer, sin relajar el límite de 15 MB.
+No se ejecutó toda la suite browser ni se midieron FPS/GPU en móvil físico.
 
-Las entradas especiales de bosses quedan pendientes de diseño dedicado. Los
-masters SVG de cuerpos continúan en el repositorio; las piezas comunes ya no se
-importan al runtime, y las piezas SVG de entrada de bosses sí se mantienen.
-Overdrive/retención, revisión humana del FX anterior, prueba humana del
-Laboratorio y rendimiento en móvil físico conservan sus pendientes.
+Siguiente acción: revisión humana en batalla/móvil. Galería en Vite 5173:
+`/docs/visual/tank-defeat.html?quality=high` (selector de 16 familias, tamaño
+real, pausa y muerte; `&enemy=fracture-gunner` selecciona al artillero).
+Prueba en batalla: `/?fracture-drill=gunner&debug=1&quality=high`.
+El servidor del usuario sigue disponible; no se reinició en esta entrega.
+Las piezas SVG de entrada de bosses siguen en runtime; los masters de cuerpos
+permanecen en el repositorio. Overdrive/retención, aprobación humana del FX
+anterior y prueba humana del Laboratorio conservan sus pendientes.
 
 ### Base implementada antes de los PNG — 03-10-2026
 
@@ -50,7 +60,8 @@ Evidencia de esa entrega anterior: typecheck, 689 unitarias / 127 archivos, 96
 casos browser de las 16 familias con seis configuraciones, cero errores JS/HTTP
 y builds Local/Poki/CrazyGames en 14,980,401 / 10,016,486 / 10,016,492 bytes.
 No se certificaron FPS/GPU en teléfono físico. El diagnóstico de la muerte común
-es `node scripts/qa-tank-defeat.mjs`; esta entrega de PNG no volvió a ejecutarlo.
+es `node scripts/qa-tank-defeat.mjs`; el rediseño militar volvió a ejecutarlo
+con los 96 casos y texturas runtime finales (evidencia vigente arriba).
 
 ## Retención — entrega documental anterior
 

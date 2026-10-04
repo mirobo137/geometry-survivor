@@ -17,8 +17,9 @@
 <body><main>
   <p>GEOMETRY SURVIVOR / PRUEBA VISUAL</p>
   <h1>Enemigos · ruptura del reactor</h1>
-  <p>El cuerpo completo y sus cuatro fragmentos comparten la misma imagen SVG rasterizada.
-    Es la vista de combate real, no una animación alternativa para esta página. Todavía no hay arte PNG nuevo.</p>
+  <p>Las trece naves enemigas y los tres bosses usan su nuevo casco PNG de arte militar.
+    El cuerpo y sus fragmentos comparten una fuente. Esta es la vista de combate real,
+    con el mismo tamaño y muerte del juego; el SVG sólo sirve como respaldo de carga.</p>
   <div id="preview"></div>
   <div class="controls">
     <label>Enemigo <select id="enemy"></select></label>
@@ -75,6 +76,8 @@
       active:boss ? Number(boss.isDefeatActive) : fx.activeCount,
       totalSprites:boss ? boss.root.children.length : fx.root.children.reduce((n,node)=>n+node.children.length,0),
       bodySource:body.source.uid, bodyVisible:tank.active,
+      textureSize:body.width, physicalSize:body.source.pixelWidth,
+      raster:body.source.resource instanceof HTMLImageElement,
       bodySprites:(boss ? boss.root.children : view.enemyVisuals[0].ship.root.children).filter(node=>node.visible).length,
       root:roots[0] ? {x:roots[0].x,y:roots[0].y,rotation:roots[0].rotation,scaleX:roots[0].scale.x,scaleY:roots[0].scale.y,alpha:roots[0].alpha} : null,
       pieces:roots[0]?.children.map(node=>({x:node.x,y:node.y,rotation:node.rotation,tint:node.tint,source:node.texture.source.uid,

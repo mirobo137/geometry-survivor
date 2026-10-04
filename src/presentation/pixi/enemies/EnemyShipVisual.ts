@@ -8,12 +8,22 @@ export type EnemyShipKind = Exclude<EnemyKind, 'boss'>;
 type LegacyEnemyShipKind = 'chaser' | 'fast' | 'tank' | 'elite' | 'orbiter' | 'charger' | 'splitter' | 'prism-weaver' | 'warden-replica';
 
 export interface EnemyShipTextureSet {
-  /** Optional flattened source for Low: preserve silhouette with one sprite. */
+  /** Complete centered body, shared by living sprite and death fragments. */
   readonly flat?: Texture;
   readonly rear: Texture;
   readonly wings: Texture;
   readonly hull: Texture;
   readonly cockpit: Texture;
+}
+
+/** Reused presentation snapshot, copied into the defeat pool before reuse. */
+export interface EnemyDefeatPose {
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  offsetX: number;
+  offsetY: number;
+  alpha: number;
 }
 
 export type EnemyShipTextureMap = Readonly<Record<LegacyEnemyShipKind, EnemyShipTextureSet>>
@@ -111,7 +121,7 @@ const MOTION_PROFILES: Readonly<Record<EnemyShipKind, EnemyShipMotionProfile>> =
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** Composes a pooled enemy ship and animates only its cached SVG pieces. */
+/** Pooled single-image bodies; modular fallback for older isolated fixtures. */
 export class EnemyShipVisual {
   public readonly root = new Container();
   private readonly rear: Sprite;
@@ -122,6 +132,11 @@ export class EnemyShipVisual {
   private readonly detailedPartsEnabled: boolean;
   private kind: EnemyShipKind = 'chaser';
   private facing = 0;
+  private readonly reducedMotion = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  private readonly defeatPose: EnemyDefeatPose = {
+    rotation: 0, scaleX: 1, scaleY: 1, offsetX: 0, offsetY: 0, alpha: 1
+  };
 
   public constructor(
     private readonly textures: EnemyShipTextureMap,
@@ -131,7 +146,7 @@ export class EnemyShipVisual {
     this.detailedPartsEnabled = quality !== 'low';
     this.rear = new Sprite(textures.chaser.rear);
     this.wings = new Sprite(textures.chaser.wings);
-    this.hull = new Sprite(!this.detailedPartsEnabled && textures.chaser.flat ? textures.chaser.flat : textures.chaser.hull);
+    this.hull = new Sprite(textures.chaser.flat ?? textures.chaser.hull);
     this.cockpit = new Sprite(textures.chaser.cockpit);
     this.hitFlash = new Sprite(textures.chaser.hull);
     for (const part of [this.rear, this.wings, this.hull, this.cockpit, this.hitFlash]) part.anchor.set(0.5);
@@ -142,6 +157,20 @@ export class EnemyShipVisual {
 
   public get currentKind(): EnemyShipKind {
     return this.kind;
+  }
+
+  public captureDefeatPose(parentScale = 1, parentAlpha = 1): EnemyDefeatPose {
+    const scale = this.root.scale.x * parentScale;
+    const cosine = Math.cos(this.root.rotation);
+    const sine = Math.sin(this.root.rotation);
+    const pose = this.defeatPose;
+    pose.rotation = this.root.rotation + this.hull.rotation;
+    pose.scaleX = scale * this.hull.scale.x;
+    pose.scaleY = scale * this.hull.scale.y;
+    pose.offsetX = scale * (cosine * this.hull.x - sine * this.hull.y);
+    pose.offsetY = scale * (sine * this.hull.x + cosine * this.hull.y);
+    pose.alpha = this.root.alpha * parentAlpha;
+    return pose;
   }
 
   public render(state: EnemyRenderState, animationSeconds: number, hitPulse = 0): void {
@@ -185,6 +214,27 @@ export class EnemyShipVisual {
     const phase = animationSeconds * profile.cycleSeconds + this.phaseSeed;
     const bob = Math.sin(phase) * profile.bobAmplitude * (0.45 + movement * 0.55);
     const pulse = Math.sin(phase * 1.7 + 0.4) * profile.hullPulse;
+    if ((this.textures[this.kind] ?? this.textures.chaser).flat) {
+      this.rear.visible = this.wings.visible = this.cockpit.visible = false;
+      this.hitFlash.visible = false;
+      this.hull.position.set(0, this.reducedMotion || !this.detailedPartsEnabled ? 0 : bob);
+      this.hull.rotation = this.reducedMotion || !this.detailedPartsEnabled ? 0 : Math.sin(phase * 0.7) * 0.006;
+      const breathing = this.reducedMotion || !this.detailedPartsEnabled ? 0 : pulse;
+      const compression = this.reducedMotion || !this.detailedPartsEnabled ? 0 : hitPulse;
+      // Whole-body charge/recoil keeps phase feedback; accurate warning
+      // geometry remains in the dedicated telegraph/threat views.
+      const action = this.kind === 'orbiter' ? state.orbiterPhase : this.kind === 'charger' ? state.chargerPhase
+        : this.kind === 'prism-weaver' ? state.prismWeaverPhase : state.fracturePhase;
+      const progress = this.kind === 'orbiter' ? state.orbiterProgress : this.kind === 'charger' ? state.chargerProgress
+        : this.kind === 'prism-weaver' ? state.prismWeaverProgress : state.fractureProgress;
+      const warning = action === 'telegraph' ? Math.sin((progress ?? 0) * Math.PI) : 0;
+      const active = action === 'active' || action === 'charge' || action === 'commit';
+      const accent = this.reducedMotion || !this.detailedPartsEnabled ? 0 : warning * 0.025;
+      if (this.kind === 'fracture-gunner' && active && !this.reducedMotion && this.detailedPartsEnabled) this.hull.y += 1.4;
+      this.hull.scale.set(1 + breathing - compression * 0.025 + accent,
+        1 - breathing * 0.65 + compression * 0.015 + accent * 0.5);
+      return;
+    }
     const wingWave = Math.sin(phase * 1.22 + 0.8) * profile.wingSway * (0.35 + movement * 0.65);
     const wingRotation = Math.sin(phase * 1.12 + 1.4) * profile.wingRotation * (0.35 + movement * 0.65);
 
@@ -313,7 +363,7 @@ export class EnemyShipVisual {
     const textures = this.textures[kind] ?? this.textures.chaser;
     this.rear.texture = textures.rear;
     this.wings.texture = textures.wings;
-    this.hull.texture = !this.detailedPartsEnabled && textures.flat ? textures.flat : textures.hull;
+    this.hull.texture = textures.flat ?? textures.hull;
     this.cockpit.texture = textures.cockpit;
     this.hitFlash.texture = textures.hull;
   }

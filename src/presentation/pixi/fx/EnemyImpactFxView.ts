@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import type { Renderer, Texture } from 'pixi.js';
 import { ENEMY_DEFINITIONS, type EnemyKind } from '../../../content/enemies/EnemyDefinitions';
 import { FX_QUALITY, type FxQuality } from '../../../content/visual/VisualTokens';
@@ -7,7 +7,6 @@ import { FxPool } from './FxPool';
 import { DamageBloomView } from './DamageBloomView';
 
 const FULL_CIRCLE = Math.PI * 2;
-const DEATH_RING_SECONDS = 0.34;
 const DUST_COLOR = 0xffd29b;
 
 interface ParticleRecipe {
@@ -21,35 +20,9 @@ interface ParticleRecipe {
   readonly alpha?: number;
 }
 
-interface RingSlot {
-  active: boolean;
-  x: number;
-  y: number;
-  startRadius: number;
-  endRadius: number;
-  lifeSeconds: number;
-  maxLifeSeconds: number;
-  color: number;
-  width: number;
-}
-
-const createRingSlot = (): RingSlot => ({
-  active: false,
-  x: 0,
-  y: 0,
-  startRadius: 0,
-  endRadius: 0,
-  lifeSeconds: 0,
-  maxLifeSeconds: 0,
-  color: 0xffffff,
-  width: 2
-});
-
 /** Presentation-only enemy impact and defeat recipes. Simulation stays untouched. */
 export class EnemyImpactFxView {
   public readonly root = new Container();
-  private readonly rings = new Graphics();
-  private readonly ringSlots: RingSlot[];
   private readonly particles: FxPool;
   private readonly hits: DamageBloomView;
   private readonly dustTexture: Texture;
@@ -63,7 +36,6 @@ export class EnemyImpactFxView {
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const tokens = FX_QUALITY[quality];
     this.hits = new DamageBloomView('enemy', quality === 'low' ? 8 : quality === 'medium' ? 12 : 16);
-    this.ringSlots = Array.from({ length: Math.max(8, Math.floor(tokens.poolCapacity / 8)) }, createRingSlot);
     const particleTexture = createTexture(renderer, (graphics) => {
       graphics.regularPoly(0, 0, 4, 4, Math.PI / 4).fill({ color: 0xffffff });
     });
@@ -75,11 +47,11 @@ export class EnemyImpactFxView {
     this.particles = new FxPool(particleTexture, Math.max(24, Math.floor(tokens.poolCapacity * 0.55)));
     this.root.eventMode = 'none';
     this.root.visible = false;
-    this.root.addChild(this.rings, this.particles.root, this.hits.root);
+    this.root.addChild(this.particles.root, this.hits.root);
   }
 
   public get activeBurstCount(): number {
-    return this.hits.activeCount + this.ringSlots.reduce((count, ring) => count + (ring.active ? 1 : 0), 0);
+    return this.hits.activeCount;
   }
 
   public get activeParticleCount(): number {
@@ -111,22 +83,16 @@ export class EnemyImpactFxView {
   }
 
   /** Starts a bounded defeat burst; fragments never interact with gameplay. */
-  public playDefeat(x: number, y: number, kind: EnemyKind): void {
-    const definition = ENEMY_DEFINITIONS[kind];
-    const radius = definition.radius;
-    this.hits.play(x, y, radius * 1.35);
-    this.spawnRing(x, y, radius * 0.58, radius * 1.85, DEATH_RING_SECONDS, definition.color, 3);
+  public playDefeat(x: number, y: number, kind: EnemyKind, radius = ENEMY_DEFINITIONS[kind].radius): void {
+    // Shared bloom slots switch recipes; neither recipe reads the hull texture.
+    this.hits.play(x, y, Math.min(56, radius) * 1.35, true);
     this.root.visible = true;
     if (this.reducedMotion) return;
-
-    const baseCount = kind === 'elite' ? 5 : kind === 'tank' ? 4 : kind === 'splitter' ? 4 : 3;
-    const count = Math.min(FX_QUALITY[this.quality].particleCount, baseCount);
-    this.spawnParticles(x, y, definition.color, count, {
-      minSpeed: 58,
-      maxSpeed: 88,
-      lifeSeconds: 0.28,
-      drag: 0.8,
-      scale: Math.max(0.55, radius / 24)
+    const size = Math.min(2.4, Math.max(0.7, radius / 20));
+    this.spawnParticles(x, y, DUST_COLOR, FX_QUALITY[this.quality].particleCount, {
+      minSpeed: 160 * Math.sqrt(size), maxSpeed: 280 * Math.sqrt(size),
+      lifeSeconds: 0.34, drag: 0.985, spawnRadius: radius * 0.18,
+      scale: size, texture: this.dustTexture, alpha: 1
     });
   }
 
@@ -135,55 +101,13 @@ export class EnemyImpactFxView {
     if (delta <= 0) return;
     this.particles.update(delta);
     this.hits.update(delta);
-    this.rings.clear();
-    let hasActiveRing = false;
-    for (const ring of this.ringSlots) {
-      if (!ring.active) continue;
-      ring.lifeSeconds -= delta;
-      if (ring.lifeSeconds <= 0) {
-        ring.active = false;
-        continue;
-      }
-      hasActiveRing = true;
-      const progress = 1 - ring.lifeSeconds / ring.maxLifeSeconds;
-      const radius = ring.startRadius + (ring.endRadius - ring.startRadius) * progress;
-      const alpha = (1 - progress) * 0.72;
-      this.rings
-        .beginPath()
-        .circle(ring.x, ring.y, radius)
-        .stroke({ color: ring.color, width: ring.width, alpha });
-    }
-    this.root.visible = hasActiveRing || this.hits.activeCount > 0 || this.particles.activeCount > 0;
+    this.root.visible = this.hits.activeCount > 0 || this.particles.activeCount > 0;
   }
 
   public clear(): void {
-    for (const ring of this.ringSlots) ring.active = false;
     this.particles.clear();
     this.hits.clear();
-    this.rings.clear();
     this.root.visible = false;
-  }
-
-  private spawnRing(
-    x: number,
-    y: number,
-    startRadius: number,
-    endRadius: number,
-    lifeSeconds: number,
-    color: number,
-    width: number
-  ): void {
-    const ring = this.ringSlots.find((candidate) => !candidate.active);
-    if (!ring) return;
-    ring.active = true;
-    ring.x = x;
-    ring.y = y;
-    ring.startRadius = Math.max(1, startRadius);
-    ring.endRadius = Math.max(ring.startRadius, endRadius);
-    ring.lifeSeconds = lifeSeconds;
-    ring.maxLifeSeconds = lifeSeconds;
-    ring.color = color;
-    ring.width = width;
   }
 
   private spawnParticles(

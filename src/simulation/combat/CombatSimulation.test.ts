@@ -542,6 +542,43 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.boss.experience);
   });
 
+  it.each(['tank', 'chaser', 'splitter', 'warden-replica'] as const)('identifies defeated %s before a released slot can be reused by its children', (kind) => {
+    const combat = new CombatSimulation();
+    const player = new PlayerModel();
+    const enemy = combat.enemies.acquire()!;
+    enemy.kind = kind;
+    enemy.x = player.state.x + 65;
+    enemy.y = player.state.y;
+    enemy.health = enemy.maxHealth = 1;
+    enemy.radius = ENEMY_DEFINITIONS[kind].radius;
+    enemy.speed = enemy.contactDamage = 0;
+    const enemyIndex = combat.enemies.states.indexOf(enemy);
+    const generation = enemy.generation;
+    if (kind === 'splitter') {
+      // Only the parent slot is free at death: force immediate recycling.
+      let filler = combat.enemies.acquire();
+      while (filler) {
+        filler.x = player.state.x + 200;
+        filler.y = player.state.y;
+        filler.health = filler.maxHealth = 10000;
+        filler.radius = 10;
+        filler.speed = filler.contactDamage = 0;
+        filler = combat.enemies.acquire();
+      }
+    }
+    let event: Extract<(typeof combat.events)[number], { type: 'enemyDefeated' }> | undefined;
+    for (let i = 0; i < 120 && !event; i++) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      event = combat.events.find(e => e.type === 'enemyDefeated' && e.kind === kind) as typeof event;
+    }
+    expect(event).toMatchObject({ enemyIndex, generation, kind, experience: ENEMY_DEFINITIONS[kind].experience });
+    if (kind === 'splitter') {
+      expect(combat.enemies.states[enemyIndex].generation).toBeGreaterThan(generation);
+      expect(combat.enemies.states[enemyIndex].active).toBe(true);
+    }
+    expect(Object.values(event!)).not.toContain(enemy);
+  });
+
   it('projects authored weapon rank damage after permanent and family research modifiers', () => {
     const combat = new CombatSimulation({
       permanentBonuses: getLaboratoryCombatBonuses({

@@ -81,6 +81,9 @@ export type CombatEvent =
     readonly y: number;
     readonly kind: EnemyKind;
     readonly experience: number;
+    /** Presentation identity for single-image defeats; not combat rules. */
+    readonly enemyIndex?: number;
+    readonly generation?: number;
   }
   | {
     readonly type: 'bossDefeated';
@@ -1013,6 +1016,9 @@ export class CombatSimulation {
     const y = enemy.y;
     const kind = enemy.kind;
     const splitterDepth = enemy.splitterDepth;
+    // Splitter children can reuse the released parent slot immediately.
+    const enemyIndex = this.enemies.states.indexOf(enemy);
+    const generation = enemy.generation;
     const experience = ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
     this.enemies.release(enemy);
     this.stats.kills += 1;
@@ -1034,7 +1040,8 @@ export class CombatSimulation {
     if (kind === 'splitter') {
       this.enemySystem.spawnSplitterChildren(x, y, splitterDepth, this.currentArenaRadius);
     }
-    this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience });
+    this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience,
+      enemyIndex, generation });
   }
 }
 

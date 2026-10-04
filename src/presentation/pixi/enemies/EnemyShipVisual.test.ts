@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Texture } from 'pixi.js';
 import type { EnemyRenderState } from '../../../simulation/combat/CombatRenderState';
 import { EnemyShipVisual, type EnemyShipTextureMap } from './EnemyShipVisual';
+import { ENEMY_DEFINITIONS, type EnemyKind } from '../../../content/enemies/EnemyDefinitions';
 
 const textures: EnemyShipTextureMap = {
   chaser: { rear: Texture.WHITE, wings: Texture.WHITE, hull: Texture.WHITE, cockpit: Texture.WHITE },
@@ -28,6 +29,18 @@ const state = (kind: EnemyRenderState['kind'], vx = 80, vy = 0): EnemyRenderStat
 });
 
 describe('EnemyShipVisual', () => {
+  it.each(Object.keys(ENEMY_DEFINITIONS).filter(kind => kind !== 'boss') as EnemyKind[])('renders %s as a complete body with its heading and child scale', (kind) => {
+    const map = { ...textures, [kind]: { ...textures.chaser, flat: Texture.EMPTY } };
+    const view = new EnemyShipVisual(map, 0, 'high');
+    view.render({ ...state(kind), splitterDepth: kind === 'splitter' ? 1 : 0 }, 0);
+    expect(view.root.children.map(child => child.visible)).toEqual([false, false, true, false, false]);
+    expect(view.root.rotation).toBeCloseTo(Math.PI / 2);
+    expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
+    const expectedScale = kind === 'warden-replica' ? 0.72 : kind === 'splitter' ? 0.74 : 1;
+    expect(view.root.scale.x).toBe(expectedScale);
+    expect(view.captureDefeatPose().scaleX).toBeCloseTo(expectedScale * view.root.children[2].scale.x);
+    view.root.destroy({ children: true });
+  });
   it('aims the Gunner barrel at its captured target while retreating and recoils axially', () => {
     const view = new EnemyShipVisual(textures, 0, 'high');
     const gunner = { ...state('fracture-gunner', -40, 0), fractureAimX: 500, fractureAimY: 240 };
@@ -70,7 +83,7 @@ describe('EnemyShipVisual', () => {
     high.reset();
     high.render(state('chaser'), 2);
     expect(high.currentKind).toBe('chaser');
-    expect((high.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
+    expect((high.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
   });
   it('composes four pieces, follows movement direction and animates locally', () => {
     const view = new EnemyShipVisual(textures, 0.7);
@@ -113,6 +126,27 @@ describe('EnemyShipVisual', () => {
     expect((view.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
     const detailed = new EnemyShipVisual(map, 0, 'high');
     detailed.render(state('tank'), 0);
+    expect((detailed.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.EMPTY);
+    expect(detailed.root.children.map(child => child.visible)).toEqual([false, false, true, false, false]);
+    detailed.render(state('fast'), 0);
     expect((detailed.root.children[2] as import('pixi.js').Sprite).texture).toBe(Texture.WHITE);
+    expect(detailed.root.children[1].visible).toBe(true);
+  });
+
+  it('captures the complete Tank pose without allocating or retaining a later mutation', () => {
+    const map = { ...textures, tank: { ...textures.tank, flat: Texture.EMPTY } };
+    const view = new EnemyShipVisual(map, 0, 'high');
+    view.render(state('tank', 0, -50), 0.7, 0.6);
+    const body = view.root.children[2];
+    const pose = view.captureDefeatPose(0.8, 0.6);
+    expect(pose.rotation).toBeCloseTo(view.root.rotation + body.rotation);
+    expect(pose.scaleX).toBeCloseTo(0.8 * body.scale.x);
+    expect(pose.scaleY).toBeCloseTo(0.8 * body.scale.y);
+    expect(pose.alpha).toBeCloseTo(0.6);
+    expect(pose.offsetY).toBeCloseTo(0.8 * body.y);
+    expect(view.captureDefeatPose()).toBe(pose);
+    view.reset();
+    view.render(state('chaser'), 0);
+    expect(view.root.children[1].visible).toBe(true);
   });
 });

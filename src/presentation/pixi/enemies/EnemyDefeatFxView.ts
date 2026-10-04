@@ -1,50 +1,55 @@
 import { Container, Sprite } from 'pixi.js';
 import type { Texture } from 'pixi.js';
 import type { FxQuality } from '../../../content/visual/VisualTokens';
-import type { EnemyShipKind, EnemyShipTextureMap } from './EnemyShipVisual';
-
-const DEFEAT_SECONDS = 0.42;
+import type { EnemyDefeatPose, EnemyShipKind, EnemyShipTextureMap } from './EnemyShipVisual';
+import { createDefeatFragments, defeatCompression, ENEMY_DEFEAT_SECONDS, poseDefeatFragments } from './SingleImageDefeat';
 
 interface EnemyDefeatSlot {
   readonly root: Container;
   readonly parts: readonly Sprite[];
   lifeSeconds: number;
-  kind: EnemyShipKind;
+  body: Texture;
+  alpha: number;
+  scaleX: number;
+  scaleY: number;
 }
 
-const createPart = (texture: Texture): Sprite => {
-  const sprite = new Sprite(texture);
-  sprite.anchor.set(0.5);
-  return sprite;
-};
-
-/** Pooled disassembly for every playable enemy ship family. */
+/** Bounded rupture pool: every family shares the same single-image recipe. */
 export class EnemyDefeatFxView {
   public readonly root = new Container();
   private readonly slots: EnemyDefeatSlot[];
-  private readonly reducedMotion: boolean;
+  private readonly fragments = new Map<Texture, readonly Texture[]>();
 
-  public constructor(textures: EnemyShipTextureMap, quality: FxQuality = 'medium') {
-    this.textures = textures;
-    this.reducedMotion = typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const capacity = quality === 'high' ? 18 : quality === 'medium' ? 12 : 0;
+  public constructor(private readonly textures: EnemyShipTextureMap, quality: FxQuality = 'medium') {
+    const reducedMotion = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    const capacity = reducedMotion ? 0 : quality === 'high' ? 18 : quality === 'medium' ? 12 : 0;
+    if (capacity) {
+      for (const set of Object.values(textures)) {
+        const body = set.flat ?? set.hull;
+        if (!this.fragments.has(body)) this.fragments.set(body, createDefeatFragments(body));
+      }
+    }
+    const initial = textures.chaser.flat ?? textures.chaser.hull;
     this.slots = Array.from({ length: capacity }, () => {
       const root = new Container();
-      const parts = [
-        createPart(textures.chaser.rear),
-        createPart(textures.chaser.wings),
-        createPart(textures.chaser.hull),
-        createPart(textures.chaser.cockpit)
-      ] as const;
+      const parts = Array.from({ length: 4 }, () => {
+        const sprite = new Sprite(initial);
+        sprite.anchor.set(0.5);
+        root.addChild(sprite);
+        return sprite;
+      });
       root.visible = false;
       root.eventMode = 'none';
-      root.addChild(...parts);
       this.root.addChild(root);
-      return { root, parts, lifeSeconds: 0, kind: 'chaser' };
+      return { root, parts, lifeSeconds: 0, body: initial, alpha: 1, scaleX: 1, scaleY: 1 };
     });
     this.root.eventMode = 'none';
+    this.root.label = 'enemy-defeat-fragments';
+    this.root.once('destroyed', () => {
+      for (const fragments of this.fragments.values()) for (const texture of fragments) texture.destroy(false);
+      this.fragments.clear();
+    });
     this.root.visible = false;
   }
 
@@ -52,24 +57,23 @@ export class EnemyDefeatFxView {
     return this.slots.reduce((count, slot) => count + (slot.root.visible ? 1 : 0), 0);
   }
 
-  public play(x: number, y: number, kind: EnemyShipKind): void {
-    if (this.reducedMotion) return;
-    const slot = this.slots.find((candidate) => !candidate.root.visible);
+  public play(x: number, y: number, kind: EnemyShipKind, pose?: Readonly<EnemyDefeatPose>): void {
+    const slot = this.slots.find(candidate => !candidate.root.visible);
     if (!slot) return;
-    const textures = this.textures[kind] ?? this.textures.chaser;
-    const [rear, wings, hull, cockpit] = slot.parts;
-    rear.texture = textures.rear;
-    wings.texture = textures.wings;
-    hull.texture = textures.hull;
-    cockpit.texture = textures.cockpit;
-    slot.lifeSeconds = DEFEAT_SECONDS;
-    slot.kind = kind;
+    const set = this.textures[kind] ?? this.textures.chaser;
+    slot.body = set.flat ?? set.hull;
+    const fragments = this.fragments.get(slot.body)!;
+    for (let index = 0; index < slot.parts.length; index += 1) slot.parts[index].texture = fragments[index];
+    slot.lifeSeconds = ENEMY_DEFEAT_SECONDS;
     slot.root.visible = true;
-    slot.root.position.set(x, y);
-    slot.root.rotation = ((Math.abs(x * 0.021 + y * 0.037) % 1) - 0.5) * 0.8;
-    slot.root.alpha = 1;
-    slot.root.scale.set(1);
-    this.applyPose(slot, 0, kind);
+    slot.root.position.set(x + (pose?.offsetX ?? 0), y + (pose?.offsetY ?? 0));
+    slot.root.rotation = pose?.rotation ?? 0;
+    slot.alpha = pose?.alpha ?? 1;
+    slot.scaleX = pose?.scaleX ?? 1;
+    slot.scaleY = pose?.scaleY ?? 1;
+    slot.root.alpha = slot.alpha;
+    slot.root.scale.set(slot.scaleX, slot.scaleY);
+    poseDefeatFragments(slot.parts, slot.body, 0);
     this.root.visible = true;
   }
 
@@ -80,15 +84,13 @@ export class EnemyDefeatFxView {
     for (const slot of this.slots) {
       if (!slot.root.visible) continue;
       slot.lifeSeconds -= delta;
-      if (slot.lifeSeconds <= 0) {
-        slot.root.visible = false;
-        continue;
-      }
+      if (slot.lifeSeconds <= 0) { slot.root.visible = false; continue; }
       hasActive = true;
-      const progress = 1 - slot.lifeSeconds / DEFEAT_SECONDS;
-      this.applyPose(slot, progress, slot.kind);
-      slot.root.alpha = Math.max(0, 1 - progress * progress);
-      slot.root.scale.set(1 - progress * 0.1);
+      const progress = 1 - slot.lifeSeconds / ENEMY_DEFEAT_SECONDS;
+      poseDefeatFragments(slot.parts, slot.body, progress);
+      slot.root.alpha = slot.alpha * Math.max(0, 1 - progress * progress);
+      const compression = defeatCompression(progress);
+      slot.root.scale.set(slot.scaleX * compression, slot.scaleY * compression);
     }
     this.root.visible = hasActive;
   }
@@ -96,31 +98,14 @@ export class EnemyDefeatFxView {
   public clear(): void {
     for (const slot of this.slots) {
       slot.lifeSeconds = 0;
-      slot.kind = 'chaser';
       slot.root.visible = false;
       slot.root.alpha = 1;
       slot.root.position.set(0, 0);
       slot.root.rotation = 0;
       slot.root.scale.set(1);
-      this.applyPose(slot, 0, 'chaser');
+      slot.alpha = slot.scaleX = slot.scaleY = 1;
+      poseDefeatFragments(slot.parts, slot.body, 0);
     }
     this.root.visible = false;
   }
-
-  private applyPose(slot: EnemyDefeatSlot, progress: number, kind: EnemyShipKind): void {
-    const spread = kind === 'tank' ? 0.78 : kind === 'fast' ? 1.15 : kind === 'elite' ? 1.05 : kind === 'splitter' ? 1.18 : kind === 'prism-weaver' ? 1.08 : kind === 'thorn-bastion' ? 0.78 : kind === 'zigzag-reaver' ? 1.15 : kind === 'rift-miner' ? 1.08 : kind === 'fracture-gunner' ? 1.1 : 1;
-    const distance = progress * 24 * spread;
-    const [rear, wings, hull, cockpit] = slot.parts;
-    rear.position.set(-distance * 0.55, distance * 0.62);
-    rear.rotation = -progress * 0.45;
-    wings.position.set(distance * 0.85, distance * 0.25);
-    wings.rotation = progress * 0.62;
-    hull.position.set(-distance * 0.08, distance * 0.12);
-    hull.rotation = -progress * 0.18;
-    hull.scale.set(1 - progress * 0.14, 1 - progress * 0.04);
-    cockpit.position.set(-distance * 0.12, -distance * 1.08);
-    cockpit.rotation = progress * 0.54;
-  }
-
-  private readonly textures: EnemyShipTextureMap;
 }

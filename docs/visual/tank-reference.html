@@ -8,11 +8,11 @@
 <p>Blindaje escalonado, chasis oscuro y reactor hundido. Cuatro piezas animables; los biseles son planos de color dentro de la textura, no filtros.</p>
 <div class="grid"><section><h2>Antes · referencia histórica</h2><img class="hero" src="tank-before.svg" alt="Tank anterior, cuña con contornos claros"></section>
 <section><h2>Ahora · SVG master</h2><img class="hero" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Nuevo Tank, placas laterales y reactor facetado"></section>
-<section><h2>Pixi · piezas de producción</h2><div id="pixi"></div><button id="motion" type="button">Pausar movimiento</button></section></div>
+<section><h2>Pixi · cuerpo completo (prueba)</h2><div id="pixi"></div><button id="motion" type="button">Pausar movimiento</button></section></div>
 <section><h2>Tamaño real · 32 / 48 / 64 / 96 px</h2><div class="sizes" id="sizes"></div></section>
 <div class="grid"><section class="light"><h2>Silueta sin color</h2><img class="hero silhouette" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Silueta negra"></section><section><h2>Jerarquía de valores</h2><img class="hero gray" src="../../src/assets/svg/enemies/tank/tank.svg" alt="Tank en escala de grises"></section><section><h2>Low · un sprite compuesto</h2><div id="low"></div></section></div>
 <section><h2>Ensamblaje · rear → wings → hull → cockpit</h2><div class="parts" id="parts"></div></section>
-<p>Esta lámina es documentación de desarrollo, no se importa en el juego. La aprobación artística y el perfil en teléfono físico siguen siendo pruebas humanas.</p>
+<p>Esta lámina conserva el despiece fuente. La prueba vigente de cuerpo completo y muerte está en <a href="tank-defeat.html">Tank · ruptura con una imagen</a>. La aprobación artística y el perfil en teléfono físico siguen siendo pruebas humanas.</p>
 </main><script type="module">
 import { Application } from 'pixi.js';
 import { createSvgTexture } from '../../src/presentation/pixi/SvgTextureFactory.ts';
@@ -25,7 +25,7 @@ import flat from '../../src/assets/svg/enemies/tank/tank.svg?raw';
 for(const size of [32,48,64,96]){const img=document.createElement('img');img.src='../../src/assets/svg/enemies/tank/tank.svg';img.width=size;img.height=size;img.alt=`Tank ${size}px`;document.querySelector('#sizes').append(img);}
 for(const part of ['rear','wings','hull','cockpit']){const f=document.createElement('figure');const img=document.createElement('img');img.src=`../../src/assets/svg/enemies/tank/tank-${part}.svg`;img.alt=part;const label=document.createElement('figcaption');label.textContent=part;f.append(img,label);document.querySelector('#parts').append(f);}
 let moving=!matchMedia('(prefers-reduced-motion: reduce)').matches;
-const button=document.querySelector('#motion');const label=()=>button.textContent=moving?'Pausar movimiento':'Animar piezas';label();button.onclick=()=>{moving=!moving;label();};
+const button=document.querySelector('#motion');const label=()=>button.textContent=moving?'Pausar movimiento':'Animar nave';label();button.onclick=()=>{moving=!moving;label();};
 for(const [id,quality] of [['pixi','high'],['low','low']]){
  const app=new Application();await app.init({width:240,height:220,backgroundAlpha:0,preference:'webgl',resolution:1});document.getElementById(id).append(app.canvas);
  const frame={x:-32,y:-32,width:64,height:64};const textures=Object.fromEntries(Object.entries({rear,wings,hull,cockpit,flat}).map(([key,svg])=>[key,createSvgTexture(app.renderer,svg,frame)]));

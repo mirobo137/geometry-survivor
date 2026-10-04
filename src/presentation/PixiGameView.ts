@@ -126,8 +126,8 @@ export class PixiGameView {
     this.fractureThreatView.render(combat, arenaRadius, deltaSeconds);
   }
 
-  public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind']): void {
-    this.entitiesView.playEnemyDefeat(x, y, kind);
+  public playEnemyDefeat(x: number, y: number, kind: CombatRenderState['enemies'][number]['kind'], enemyIndex?: number, generation?: number): void {
+    this.entitiesView.playEnemyDefeat(x, y, kind, enemyIndex, generation);
     if (kind === 'tank' || kind === 'elite') this.screenFxView.play('enemy-defeat');
   }
 
@@ -207,8 +207,7 @@ export class PixiGameView {
   }
 
   public playBossDefeat(x: number, y: number, radius: number, bossId?: BossId): void {
-    this.entitiesView.playBossDefeat(x, y, bossId);
-    this.terminalFxView.playBossDefeat(x, y, radius);
+    this.entitiesView.playBossDefeat(x, y, bossId, radius);
     this.screenFxView.play('boss-defeat');
   }
 
@@ -237,11 +236,11 @@ export class PixiGameView {
     this.terminalFxView.update(deltaSeconds);
   }
 
-  public resetPresentation(): void {
+  public resetPresentation(preserveDefeatFx = false): void {
     this.playerView.reset();
     this.impactFxView.clear();
     this.terminalFxView.clear();
-    this.entitiesView.reset();
+    this.entitiesView.reset(preserveDefeatFx);
     this.arenaView.reset();
     this.hazardView.reset();
     this.radialPulseView.reset();

@@ -1,9 +1,85 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 03-10-2026. Base Git de este ajuste: `c54f737` (`music`).
+Actualizado: 03-10-2026. Base Git de esta entrega: `7d9ec8f` (`10 de 10`).
 Este archivo es un snapshot, no reemplaza `PLAN_DESARROLLO.md` ni el estado Git.
 
 ## Solicitud vigente y siguiente acción
+
+Refinamiento solicitado después de aprobar la muerte común: **descarga del
+reactor integrada**. Destello blanco-dorado (~110 ms), resplandor azul y seis
+rayos finos acompañan los fragmentos hasta 420 ms; chispas 8/5/3 High/Medium/Low.
+Es independiente del asset del enemigo: al pasar a PNG se conserva automáticamente.
+Usa los tres Graphics por slot y el pool de partículas existentes; contextos
+cacheados nuevos, capacidades intactas. Movimiento reducido conserva brillo
+estático atenuado. La muerte tiene prioridad sobre un impacto común saturado.
+
+Verificación de este refinamiento: typecheck, **689 unitarias / 127 archivos**,
+19 pruebas específicas repetidas tras afinar geometría y **96 casos browser**
+de las 16 familias con seis configuraciones. Cero errores JS/HTTP; capturas
+del destello y de la ruptura revisadas. Builds Local/Poki/CrazyGames correctos:
+**14,980,401 / 10,016,486 / 10,016,492 bytes**. Margen local actual **19,599 bytes**
+bajo 15 MB. La prueba de cinco smoke que sigue abajo corresponde a la entrega
+anterior; no se repitió para este refinamiento visual. Revisión humana del
+efecto nuevo y rendimiento de móvil físico pendientes. Sin commit/push.
+
+### Base implementada en la entrega anterior
+
+El usuario aprobó la muerte Tank y autorizó extenderla a **todos los enemigos
+y bosses antes de generar sus PNG**. Implementado el 03-10-2026: 13 familias
+comunes y tres bosses usan master completo y ruptura de 420 ms por cuatro
+recortes de una sola fuente. Conserva pose (incluidas escala de hijos/réplicas,
+orientación y entrada/punch) e identidad capturada antes de liberar/reciclar
+el enemigo. Bosses reutilizan sus sprites; no superponen el colapso antiguo.
+Pool común High 18×4 / Medium 12×4; Low/reduced-motion sin fragmentos, con
+bloom/chispas según preset. Pausa/level-up congelan; victoria/transición dejan
+terminar el efecto. La limpieza inicial de tramo conserva las muertes activas;
+al completar los 3 s de transición se limpia normalmente. No cambian ataques,
+HP, XP, guardado, duración de transición ni balance.
+
+Siguiente acción: revisión humana de la extensión y, cuando el usuario autorice,
+generar un PNG transparente/diferenciado por enemigo siguiendo
+[ENEMIGOS_IMAGEN_UNICA](docs/design/ENEMIGOS_IMAGEN_UNICA.md).
+Entradas especiales de bosses **pendientes de diseño dedicado**; conservan su
+ensamblaje actual y todas sus habilidades, incluidas réplicas de Orbital Warden.
+No borrar masters/piezas SVG todavía. Overdrive/retención y prueba humana del
+Laboratorio mantienen sus pendientes. Sin commit/push/deploy.
+
+Probar con el Vite local existente 5173:
+`/docs/visual/tank-defeat.html?quality=high` (selector de 16 familias,
+Destruir/Restaurar/pausa/cámara lenta). La ruta conserva su nombre por compatibilidad.
+En combate: `/?stress=1&debug=1&quality=high`.
+Diagnóstico: `node scripts/qa-tank-defeat.mjs`; evidencia/capturas en
+`test-results/tank-defeat/`, ejecutar después del smoke general.
+
+Verificado: typecheck, **127 archivos/687 unitarias**, builds Local/Poki/
+CrazyGames, cinco smoke de carga/input/pausa/resize/touch, patrones de bosses
+y escenario Overdrive (41.7 s), y **96 casos** de las 16 familias en PC High/Medium/Low, móvil
+portrait emulado High/Low y reduced-motion High. Fuente única, pose,
+compresión/separación/fade, pausa/resize, 60 ciclos por caso, identidad obsoleta,
+saturación/limpieza y reset de transición; cero errores JS/HTTP. Capturas revisadas.
+Tamaños completos local **14,971,967** bytes (con mapas), Poki **10,014,716**,
+CrazyGames **10,014,722**. Margen local **28,033 bytes** bajo 15 MB: no ampliar
+arte sin revisar presupuesto. Warning previo JS >500 KB permanece.
+No se corrió la suite browser completa ni se certificaron FPS/GPU en teléfono
+físico. Los servidores/navegadores QA se cerraron; no se reinició/duplicó Vite 5173.
+
+## Retención — entrega documental anterior
+
+RET-F01 documentado por solicitud del usuario: [plan de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md),
+§22.21 del plan y guía de ejecución. **Pendiente de implementar**: Bitácora,
+retos semanales y cápsula gratuita cada 24 horas. Los duelos conservan el kit
+completo del boss; Orbital Warden mantiene sus réplicas. Ajustes de vida/ritmo
+son locales al evento y no quitan identidad ni alteran campaña/Overdrive.
+
+Esta entrega sólo modifica documentación/índices: sin runtime, arte, migración,
+commit/push, build o reinicio de Vite. Importes, probabilidades, garantía,
+calendario/acceso y perfiles de combate requieren decisiones/pruebas; el azar
+requiere revisión del portal. RET-00–06 son pendientes futuros, no ejecución
+autorizada. Siguiente paso: escoger una entrega cuando el usuario lo indique.
+EX-09, prueba humana del Laboratorio y aceptación móvil del catálogo siguen
+pendientes. Verificación documental: diff/whitespace, enlaces y estados.
+
+## Catálogo de diez — entrega anterior
 
 Catálogo solicitado el 03-10-2026 completado localmente: **10 naves, 10 cañones,
 10 fondos**. Nuevas naves Scarlet Corsair/Nautilus Ark; cañones Gyre Coil/Rift

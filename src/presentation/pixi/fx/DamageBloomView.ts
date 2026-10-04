@@ -1,14 +1,17 @@
 import { Container, Graphics, GraphicsContext } from 'pixi.js';
+import { createDefeatBloomContexts, DEFEAT_BLOOM_UNITS } from './DefeatBloomContexts';
 
 /** Two consumers, one bounded transform-only impact lifecycle. No hitbox. */
 export class DamageBloomView {
   public readonly root = new Container();
   private readonly slots: {
     root: Container; core: Graphics; seam: Graphics; shell: Graphics;
-    age: number; radius: number;
+    age: number; radius: number; defeat: boolean; duration: number;
   }[] = [];
   private readonly reducedMotion: boolean;
   private readonly duration: number;
+  private readonly hitContexts: readonly GraphicsContext[];
+  private readonly defeatContexts: readonly GraphicsContext[] | null;
 
   public constructor(private readonly kind: 'enemy' | 'player', capacity: number) {
     this.reducedMotion = typeof window !== 'undefined'
@@ -41,17 +44,23 @@ export class DamageBloomView {
         core.poly(transform([.64,-.1,.82,0,.64,.1,.72,0])).fill(0xffefe3);
       }
     }
+    this.hitContexts = [shell, seam, core];
+    this.defeatContexts = kind === 'enemy' ? createDefeatBloomContexts() : null;
     this.root.eventMode = 'none';
     for (let i = 0; i < capacity; i += 1) {
       const root = new Container();
-      const slot = { root, shell: new Graphics(shell), seam: new Graphics(seam), core: new Graphics(core), age: this.duration, radius: 1 };
+      const slot = { root, shell: new Graphics(shell), seam: new Graphics(seam), core: new Graphics(core),
+        age: this.duration, radius: 1, defeat: false, duration: this.duration };
       root.addChild(slot.shell, slot.seam, slot.core);
       root.visible = false;
       this.root.addChild(root);
       this.slots.push(slot);
     }
     // Contexts are shared by this pool only; destruction has one explicit owner.
-    this.root.on('destroyed', () => { core.destroy(); seam.destroy(); shell.destroy(); });
+    this.root.on('destroyed', () => {
+      for (const context of this.hitContexts) context.destroy();
+      if (this.defeatContexts) for (const context of this.defeatContexts) context.destroy();
+    });
   }
 
   public get activeCount(): number {
@@ -60,11 +69,25 @@ export class DamageBloomView {
     return count;
   }
 
-  public play(x: number, y: number, radius: number): void {
-    const slot = this.slots.find(candidate => !candidate.root.visible);
-    if (!slot) return; // Drop decoration on saturation, never allocate/recycle a live hit.
+  public play(x: number, y: number, radius: number, defeat = false): void {
+    let slot = this.slots.find(candidate => !candidate.root.visible);
+    // A confirmed death takes precedence over an ordinary contact flash.
+    // Other deaths are never displaced; the same fixed pool remains the limit.
+    if (!slot && defeat && this.defeatContexts) {
+      for (const candidate of this.slots) {
+        if (!candidate.defeat && (!slot || candidate.age > slot.age)) slot = candidate;
+      }
+    }
+    if (!slot) return;
     slot.age = 0;
     slot.radius = radius;
+    slot.defeat = defeat && this.defeatContexts !== null;
+    slot.duration = slot.defeat ? 0.42 : this.duration;
+    const contexts = slot.defeat ? this.defeatContexts! : this.hitContexts;
+    slot.shell.context = contexts[0];
+    slot.seam.context = contexts[1];
+    slot.core.context = contexts[2];
+    slot.shell.blendMode = slot.seam.blendMode = slot.core.blendMode = slot.defeat ? 'add' : 'normal';
     slot.root.position.set(x, y);
     // This is a material fracture axis, not a claim about projectile direction.
     slot.root.rotation = this.kind === 'enemy' ? -0.5 + Math.sin(x * .13 + y * .17) * .8 : 0;
@@ -78,7 +101,7 @@ export class DamageBloomView {
     for (const slot of this.slots) {
       if (!slot.root.visible) continue;
       slot.age += delta;
-      if (slot.age >= this.duration) { slot.root.visible = false; continue; }
+      if (slot.age >= slot.duration) { slot.root.visible = false; continue; }
       this.pose(slot);
     }
   }
@@ -88,9 +111,20 @@ export class DamageBloomView {
   }
 
   private pose(slot: typeof this.slots[number]): void {
-    const p = slot.age / this.duration;
+    const p = slot.age / slot.duration;
     const release = this.reducedMotion ? 0 : 1 - (1 - p) ** 3;
     slot.root.scale.set(slot.radius);
+    if (slot.defeat) {
+      const intensity = this.reducedMotion ? 0.55 : 1;
+      slot.shell.scale.set((0.55 + release * 1.2) / DEFEAT_BLOOM_UNITS);
+      slot.shell.alpha = (1 - p) ** 2 * intensity;
+      slot.seam.scale.set((0.5 + release * 0.95) / DEFEAT_BLOOM_UNITS);
+      slot.seam.alpha = this.reducedMotion ? 0
+        : Math.min(1, p / 0.1) * (1 - p) ** 1.4 * 0.9;
+      slot.core.scale.set((0.8 + release * 0.35) / DEFEAT_BLOOM_UNITS);
+      slot.core.alpha = Math.max(0, 1 - p / 0.26) * intensity;
+      return;
+    }
     slot.shell.scale.set(this.kind === 'player' ? 1 + release * .22 : .8 + release * .4);
     slot.shell.alpha = (1 - p) ** 2;
     slot.seam.scale.set(this.kind === 'player' ? 1 + release * .22 : 1 + release * .5);

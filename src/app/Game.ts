@@ -884,7 +884,7 @@ export class Game {
       if (event.type !== 'enemyDefeated') continue;
       this.player.applyVampirism();
       this.audio.playCue('enemy-defeated');
-      this.view.playEnemyDefeat(event.x, event.y, event.kind);
+      this.view.playEnemyDefeat(event.x, event.y, event.kind, event.enemyIndex, event.generation);
       if (event.kind === 'tank' || event.kind === 'elite') {
         this.triggerHitStop(HIT_STOP_SECONDS.enemyDefeat);
       }
@@ -975,8 +975,12 @@ export class Game {
     this.view.renderFractureThreats(this.combat.renderState, this.arena.state.radius, presentationDelta);
     this.syncShotFeedback();
     this.view.renderPlayer(this.player.state, this.presentationTime, this.player.shieldChargeProgress);
-    this.view.renderImpactFx(this.gameState.isSimulationRunning ? deltaSeconds : 0);
-    this.view.updateTerminalFx(deltaSeconds);
+    // Deaths may finish during victory/Overdrive transition, but must freeze
+    // with all other feedback in pause, level-up, menu and the run intro.
+    const defeatDelta = this.gameState.phase === 'paused' || this.gameState.phase === 'level-up'
+      || this.gameState.phase === 'menu' || this.gameState.isRunIntro ? 0 : deltaSeconds;
+    this.view.renderImpactFx(defeatDelta);
+    this.view.updateTerminalFx(defeatDelta);
     this.view.renderLevelUpFx(deltaSeconds);
     if (this.combat.renderState.boss.active) this.baseline.noteBoss(this.combat.stats.elapsedSeconds);
     this.hud.update({
@@ -1439,7 +1443,8 @@ export class Game {
     this.actDirector.setStage(nextStage, this.overdriveSeed);
     this.actId = this.actDirector.definition.id;
     this.combat.reconfigureOverdriveStage();
-    this.view.resetPresentation();
+    // Clear the old stage, but let the last defeated boss finish its rupture.
+    this.view.resetPresentation(true);
     this.arena.reset();
     this.arena.update(0);
     this.resetAudioFeedbackTrackers();
@@ -1464,6 +1469,7 @@ export class Game {
       // transition state intact and let the lifecycle resume schedule it.
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       if (this.stopped || !this.gameState.completeOverdriveTransition()) return;
+      this.view.resetPresentation();
       this.runTransition?.close();
       this.audio.playCue('stage-entry');
       if (!this.lifecyclePaused && this.progression.state.pendingLevelUps > 0) this.openLevelUp();

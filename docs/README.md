@@ -1,6 +1,6 @@
 # Documentación — mapa vigente
 
-Revisión de navegación: 02-10-2026. Este índice clasifica contratos, evidencia y
+Revisión de navegación: 03-10-2026. Este índice clasifica contratos, evidencia y
 propuestas; no certifica pruebas del juego ni sustituye el plan maestro.
 
 ## Para trabajar ahora
@@ -26,6 +26,7 @@ distingue cambios comprobados de puertas aún pendientes. EX-09 continúa pendie
 | Audio | [AUDIO_SFX_ZZFX](design/AUDIO_SFX_ZZFX.md), [laboratorio de escucha](audio/sound-lab.html) | Recetas/categorías, Howler música y ZzFX efectos. |
 | Arte | [ARTE_HIBRIDO](design/ARTE_HIBRIDO.md), [NAVES_PNG](design/NAVES_PNG.md), [ESTUDIO_ARTE_GENERADO](design/ESTUDIO_ARTE_GENERADO.md) | Identidad, generación/optimización, transparencia, ownership y costes. |
 | Catálogo de lanzamiento | [CATALOGO_DIEZ](design/CATALOGO_DIEZ.md) | Diez naves, diez cañones y diez fondos; identidad, procedencia, precios y validaciones del lote adicional. |
+| Enemigos y muerte | [ENEMIGOS_IMAGEN_UNICA](design/ENEMIGOS_IMAGEN_UNICA.md) | Cuerpo único y ruptura compartida de las 13 familias y tres bosses. PNG y nuevas entradas de bosses pendientes. |
 | Fondos/entrada | [FONDOS_PREMIUM](design/FONDOS_PREMIUM.md), [TRANSICIONES_ENTRADA](design/TRANSICIONES_ENTRADA.md), [PORTALES_APARICION](design/PORTALES_APARICION.md) | Composición y transiciones de presentación. |
 | Rendimiento Node | [VITE_MEMORY](performance/VITE_MEMORY.md) | Incidente histórico, hipótesis y diagnóstico reproducible; separado de memoria del navegador. |
 | CI/Pages | [CI_DEPLOY](CI_DEPLOY.md) | Contrato de checks y diagnóstico; cifras de casos/duración son evidencia fechada, consultar configuración actual. |
@@ -64,6 +65,13 @@ eliminar un registro de generación no reduce la memoria runtime.
   vigente; validar un defecto actual antes de reabrirlo.
 
 ## Propuestas sin implementar
+
+[RET-F01 — Retención, eventos y recompensas](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md):
+**pendiente de implementar**. Bitácora, retos semanales con colección exclusiva
+y cápsula gratuita de 24 horas. Los duelos conservan ataques e invocaciones,
+incluidas las réplicas de Orbital Warden; vida/ritmo se calibran sólo en el evento.
+Dirección documentada, no código, precios/probabilidades fijados ni permiso de
+portal. Retomar únicamente una entrega autorizada, según §22.21 del plan.
 
 [OD-F01 — Asalto por puntos](design/OVERDRIVE_RITMO_POR_PUNTOS.md) no modifica
 Overdrive Normal. La dependencia antigua de EX-02c no autoriza implementación:

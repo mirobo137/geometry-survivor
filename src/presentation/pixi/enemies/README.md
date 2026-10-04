@@ -1,33 +1,35 @@
 # Vistas Pixi de enemigos
 
-Cada enemigo comun se compone con piezas SVG cacheadas y una sola vista pooled.
-La antigua tortuga queda conservada unicamente como master SVG de referencia en
-`src/assets/svg/enemies/turtle/`; ya no tiene una ruta de rendering en runtime.
+Contrato vigente: [Enemigos de una imagen](../../../../docs/design/ENEMIGOS_IMAGEN_UNICA.md).
+Las 13 familias comunes y tres bosses muestran su cuerpo completo en combate
+y comparten la muerte de 420 ms aprobada a partir de Tank. Los masters SVG
+se conservan; PNG nuevos y entradas especiales de bosses siguen pendientes.
 
-```text
-enemies/
-└─ turtle/
-   ├─ TurtleVisual.ts
-   └─ TurtleVisual.test.ts
-```
+`EnemyShipVisual` usa `flat` como cuerpo completo en todos los presets.
+Medium/High aplican transforms secundarios a la imagen; Low/movimiento reducido
+los omiten. Splitter conserva la escala de sus hijos y Warden Replica la suya.
+Las capas modulares siguen cacheadas como fuente/fallback de contratos antiguos,
+no como varias imágenes nuevas por enemigo. Los bosses mantienen las cuatro
+capas de su entrada actual y pasan al cuerpo completo al acabar el ensamblaje.
 
-`EnemyShipVisual` usa cuatro texturas por familia (`rear`, `wings`, `hull` y
-`cockpit`) y aplica transforms locales al contrato `EnemyRenderState`. Splitter
-usa `splitterDepth` para escalar sus hijos por transform, no para crear otra
-textura. En
-calidad Low queda activo el casco, que conserva la entidad real y su silueta,
-pero se omiten piezas decorativas, flash y animacion secundaria.
+`SingleImageDefeat` define la partición y movimiento compartidos.
+`EnemyDefeatFxView` reutiliza 18×4 sprites High / 12×4 Medium; cada
+`BossShipVisual` reutiliza sus propios sprites y conserva identidad tras reset.
+Low/movimiento reducido no crean fragmentos. Las vistas de textura comparten
+la fuente del cuerpo; destroy no destruye esa fuente.
 
-Prism Weaver sigue el mismo ensamblaje y añade un telegraph pooled independiente
-en `PrismWeaverTelegraphView`: tres radios facetados comparten un solo root que
-rota durante `active`. La geometria se construye al cambiar el cast o el radio,
-no por frame. Low conserva base, core y nodos esenciales; Medium/High agregan
-la capa de borde sin filtros ni texturas nuevas.
+Prism Weaver conserva su telegraph pooled independiente en
+`PrismWeaverTelegraphView`; Charger, Orbiter y amenazas Fracture mantienen sus
+vistas de warning. La muerte/cambio de cuerpo no altera los ataques.
 
-`CombatEntitiesView` coordina el pool; las vistas por enemigo solo aplican
-texturas, capas y transforms al contrato `EnemyRenderState`.
+`CombatEntitiesView` coordina pools, handoff de pose por índice/generación y
+limpieza. Las vistas no deciden daño, XP, colisiones ni reglas.
+El feedback transversal en `../fx/EnemyImpactFxView.ts` reutiliza bloom y
+chispas. La muerte añade descarga del reactor (destello blanco-dorado,
+resplandor azul y seis rayos breves) desde contextos cacheados, independientes
+del cuerpo SVG/PNG. Reutiliza los tres Graphics por slot y el pool de partículas;
+el contrato vigente detalla límites y degradación.
 
-El feedback transversal vive en `../fx/EnemyImpactFxView.ts`: recibe impactos
-detectados por cambios de vida y derrotas confirmadas por `Game`, y reutiliza
-anillos/fragmentos con un presupuesto fijo. Las vistas por enemigo no deciden
-daño, XP, colisiones ni la vida útil de esos efectos.
+Prueba visual: `/docs/visual/tank-defeat.html`, ahora con las 16 familias.
+Diagnóstico: `node scripts/qa-tank-defeat.mjs`; ver contrato para evidencia
+y pasos del futuro reemplazo PNG.

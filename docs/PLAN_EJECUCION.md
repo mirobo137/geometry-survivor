@@ -1,6 +1,6 @@
 # Guía de ejecución vigente — Geometry Survivor
 
-Revisión operativa: 02-10-2026. Base de correcciones: `76a6c78`.
+Revisión operativa: 03-10-2026. Base de correcciones del 02-10: `76a6c78`.
 Desarrolla [§22 del plan](../PLAN_DESARROLLO.md#ejecucion-vigente); alcance y
 decisiones siguen en el plan maestro y los contratos canónicos. Esta guía
 reemplaza la cola de trabajo de septiembre, no sus reglas todavía vigentes.
@@ -48,6 +48,7 @@ y su [seguimiento de correcciones](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
 | EX-10 | Acto III Fracture entregado y validado por el usuario. |
 | EX-11.1–EX-11.7 | Contrato/save, director, transición, seis armas, reservas, parejas y entrada pública/retirada entregados. Auditorías OD-A/OD-B se conservan como criterios de regresión, no otra cola pendiente. |
 | OD-F01 | PROPUESTA futura de Asalto por puntos; Normal conserva sus reglas. |
+| RET-F01 | PENDIENTE DE IMPLEMENTAR: plan documental de Bitácora, retos semanales y cápsula diaria; duelos conservan el kit completo del boss, incluidas réplicas. No iniciar sin nueva indicación explícita. |
 
 La aprobación de contenido registrada en [§22.15–17 del plan](../PLAN_DESARROLLO.md)
 no equivale a aprobación comercial, suite actual completa o ausencia de fugas.
@@ -151,6 +152,16 @@ en la fecha de la integración. No implementar ambos portales en un diff masivo.
 Subida comercial, credenciales, contratos, analítica y publicación requieren la
 autorización pertinente; GitHub Pages prueba el target local, no estas condiciones.
 
+### RET-F01 — Retención futura, no cola automática
+
+Guía detallada y estado: [retención/eventos/recompensas](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md),
+enlazada desde §22.21 del plan. La entrega del 03-10 sólo documenta; no contiene
+runtime ni arte nuevo. RET-00–06 separan decisiones, duelo piloto, evasión,
+rotación/otros bosses, Bitácora, cápsula y validación de regreso.
+Al retomar, elegir una entrega expresamente autorizada. El permiso comercial del
+azar bloquea la cápsula, no los retos de habilidad; ninguna entrega cierra EX-09.
+Los ajustes locales de HP/ritmo no eliminan réplicas ni ataques definitorios.
+
 ## 5. Fuentes canónicas por dominio
 
 | Tema | Entrada actual |
@@ -159,6 +170,7 @@ autorización pertinente; GitHub Pages prueba el target local, no estas condicio
 | Campaña/Overdrive | [ACTOS_Y_META](design/ACTOS_Y_META.md), [PLAN_INFINITO](design/PLAN_INFINITO.md) |
 | Rangos/evoluciones/cartas | [PROGRESION_ARMAS_V2](design/PROGRESION_ARMAS_V2.md), [EVOLUCIONES_V2](design/EVOLUCIONES_V2.md) y definiciones/tests actuales |
 | Meta/NOVA/Laboratorio | [LABORATORIO_META_V2](design/LABORATORIO_META_V2.md) |
+| Retención futura | [RETENCION_EVENTOS_Y_RECOMPENSAS](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md): pendiente de implementar, no contrato runtime vigente. |
 | Raster/SVG/identidad | [ARTE_HIBRIDO](design/ARTE_HIBRIDO.md), [NAVES_PNG](design/NAVES_PNG.md), READMEs de assets/prompts y skill SVG/rendering |
 | Carga/recursos | [auditoría actual](audits/AUDITORIA_RECURSOS_2026-10-02.md), [VITE_MEMORY](performance/VITE_MEMORY.md) |
 | Audio | [AUDIO_SFX_ZZFX](design/AUDIO_SFX_ZZFX.md) |

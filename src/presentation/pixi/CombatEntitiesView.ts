@@ -220,6 +220,7 @@ class EnemyVisual {
   public readonly root = new Container();
   private readonly ship: EnemyShipVisual;
   private hitAtSeconds = Number.NEGATIVE_INFINITY;
+  private generation = -1;
   private readonly motionReduced = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
@@ -245,6 +246,7 @@ class EnemyVisual {
       return;
     }
     this.root.position.set(state.x, state.y);
+    this.generation = state.generation ?? 0;
     const hitAge = animationSeconds - this.hitAtSeconds;
     const hitProgress = hitAge >= 0 ? Math.min(1, hitAge / 0.12) : 1;
     const punch = hitProgress < 1 ? 1 + Math.sin(hitProgress * Math.PI) * 0.045 : 1;
@@ -264,8 +266,14 @@ class EnemyVisual {
     this.hitAtSeconds = animationSeconds;
   }
 
+  public captureDefeatPose(kind: EnemyKind, generation?: number) {
+    if (!this.root.visible || this.ship.currentKind !== kind || generation !== this.generation) return undefined;
+    return this.ship.captureDefeatPose(this.root.scale.x, this.root.alpha);
+  }
+
   public reset(): void {
     this.hitAtSeconds = Number.NEGATIVE_INFINITY;
+    this.generation = -1;
     this.root.visible = false;
     this.root.scale.set(1);
     this.ship.reset();
@@ -391,6 +399,9 @@ export class CombatEntitiesView {
     return this.enemyImpactFx.activeParticleCount
       + this.enemyImpactFx.activeBurstCount
       + this.enemyDefeatFx.activeCount
+      + Number(this.bosses['core-sentinel'].isDefeatActive)
+      + Number(this.bosses['orbital-warden'].isDefeatActive)
+      + Number(this.bosses['fracture-engine'].isDefeatActive)
       + this.spawnPortals.activeCount
       + this.damageNumbers.activeCount
       + this.projectileTrails.activeSegmentCount;
@@ -485,13 +496,18 @@ export class CombatEntitiesView {
     }
   }
 
-  public playEnemyDefeat(x: number, y: number, kind: EnemyKind): void {
+  public playEnemyDefeat(x: number, y: number, kind: EnemyKind, enemyIndex?: number, generation?: number): void {
     this.enemyImpactFx.playDefeat(x, y, kind);
-    if (kind !== 'boss') this.enemyDefeatFx.play(x, y, kind);
+    if (kind !== 'boss') {
+      const pose = enemyIndex !== undefined
+        ? this.enemyVisuals[enemyIndex]?.captureDefeatPose(kind, generation) : undefined;
+      this.enemyDefeatFx.play(x, y, kind, pose);
+    }
   }
 
-  public playBossDefeat(x: number, y: number, bossId: BossId = 'core-sentinel'): void {
+  public playBossDefeat(x: number, y: number, bossId: BossId = 'core-sentinel', radius?: number): void {
     this.bosses[bossId].playDefeat(x, y);
+    this.enemyImpactFx.playDefeat(x, y, 'boss', radius);
   }
 
   public setVisibleWorldBounds(left: number, top: number, right: number, bottom: number): void {
@@ -508,11 +524,15 @@ export class CombatEntitiesView {
     this.damageNumbers.update(deltaSeconds);
   }
 
-  public reset(): void {
+  public reset(preserveDefeatFx = false): void {
     this.projectileArt.clear();
-    for (const boss of Object.values(this.bosses)) boss.reset();
-    this.enemyImpactFx.clear();
-    this.enemyDefeatFx.clear();
+    for (const boss of Object.values(this.bosses)) {
+      if (!preserveDefeatFx || !boss.isDefeatActive) boss.reset();
+    }
+    if (!preserveDefeatFx) {
+      this.enemyImpactFx.clear();
+      this.enemyDefeatFx.clear();
+    }
     this.spawnPortals.reset();
     this.orbiterTelegraphs.reset();
     this.chargerTelegraphs.reset();

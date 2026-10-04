@@ -2,7 +2,7 @@
 
 > Estado: vertical slice funcional; prioridades de expansión revisadas y fijadas en la sección 16.
 >
-> **Continuación vigente — 02-10-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La auditoría de recursos de §22.18 antecede al cierre de publicación. La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
+> **Continuación vigente — 03-10-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La auditoría de recursos de §22.18 antecede al cierre de publicación. §22.21 registra el plan futuro de retención, todavía sin implementar. La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
 >
 > Revisión externa base: 2026-09-03; Node/Vite, recursos Pixi y requisitos de publicación reconsultados el 2026-10-02 en la auditoría enlazada desde §22.18.
 >
@@ -544,6 +544,19 @@ La nueva portada espera aprobación visual; esto no autoriza migrar toda la UI.
 No cambia progresión ni combate, y las pruebas humanas del Laboratorio siguen aplazadas.
 
 ### Extensión de combate autorizada — 30-09-2026
+
+Muerte de enemigos autorizada el 03-10-2026, tras aprobar la prueba de Tank:
+las 13 familias y los tres bosses usan cuerpo completo y la misma ruptura
+de 420 ms por cuatro recortes de una fuente compartida. Conserva pose por
+índice/generación y reutiliza impacto/chispas sin gran anillo, sin cambios de
+balance, recompensa, capacidades, save o gameplay. Los bosses mantienen su
+entrada modular actual; nuevas entradas particulares y generación PNG
+**pendientes**. Esta decisión sustituye las recetas antiguas de desarme/colapso
+de muerte, no los ataques ni las invocaciones. Refinamiento posterior solicitado:
+destello blanco-dorado, descarga azul y chispas acompañan la ruptura,
+independientemente de la imagen SVG/PNG, reutilizando los pools actuales.
+Contrato/QA y siguiente paso:
+[Enemigos de una imagen](docs/design/ENEMIGOS_IMAGEN_UNICA.md).
 
 Prueba adicional autorizada de nave/cañones vinculados: adaptar la nave de
 portada a un único PNG completo (propulsor integrado) y dos módulos PNG unidos
@@ -1327,6 +1340,10 @@ Las recetas históricas de abajo conservan sus reglas de gameplay y caps.
   será de 8/16/24 barras visibles en Low/Medium/High y se medirá en móvil.
 
 #### Muerte de enemigos
+
+Las recetas históricas siguientes quedan sustituidas por la muerte compartida
+aprobada el 03-10-2026: [contrato vigente](docs/design/ENEMIGOS_IMAGEN_UNICA.md).
+La entrada de cada boss se rediseñará aparte; no confundirla con su muerte.
 
 - Chaser/Fast: shrink suave más fade y un burst de 3–5 fragmentos geométricos,
   220–320 ms, con dirección determinista basada en la posición del impacto.
@@ -3840,3 +3857,23 @@ Se optimizan los derivados WebP anteriores desde PNG intactos para mantener el
 artefacto completo bajo 15 MB, conservando mapas y el guard de CI. El margen
 local continúa estrecho; otro lote exige revisar presupuesto antes de generar.
 No cierra EX-09, aceptación humana del Laboratorio, móvil físico ni publicación.
+
+## 22.21 RET-F01 — Plan futuro de retención — 03-10-2026
+
+**PENDIENTE DE IMPLEMENTAR. Entrega exclusivamente documental solicitada.**
+Dirección aceptada: Bitácora permanente, retos semanales con cosméticos propios
+y cápsula/gachapón gratuito cada 24 horas (NOVA o skin exclusiva). Colecciones
+finitas, eventos recurrentes y NOVA al completar sus premios; catálogo base intacto.
+Reglas, economía abierta, calendario/guardado, validación de portal y entregas:
+[RETENCION_EVENTOS_Y_RECOMPENSAS](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md).
+
+Corrección explícita de producto: los duelos eliminan oleadas comunes, **no el
+kit del boss**. Orbital Warden conserva todas sus réplicas y ataques; invocaciones,
+minas y proyectiles propios son parte del encuentro. Se puede calibrar vida,
+ritmo o comportamiento local si el duelo resulta tedioso, conservando identidad,
+patrones y respuesta justa. No mutar el balance aprobado de campaña/Overdrive.
+
+No se implementaron eventos, sorteo, Bitácora, assets ni migraciones por registrar
+este plan. No fija importes/probabilidades ni autoriza servicios externos,
+publicación o aperturas de pago/anuncios. RET-00–06 son entregas futuras que
+requieren indicación explícita; EX-09, recursos y QA humano conservan sus puertas.

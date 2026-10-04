@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Enemigos · ruptura con una imagen</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#070e1b;color:#e9e4f5;font:16px system-ui;padding:24px}
+    main{max-width:760px;margin:auto}h1{font-size:clamp(24px,5vw,34px)}p{color:#afbed1;line-height:1.6}
+    #preview{border:1px solid #425169;border-radius:16px;background:radial-gradient(ellipse,#1a2340,#090e1a);overflow:hidden}
+    canvas{display:block;width:100%;height:auto}.controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+    button,select{min-height:44px;padding:10px 14px;border:1px solid #9b83b7;border-radius:8px;background:#24223b;color:#f2eaff;font:inherit}
+    button{cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #8ceaff;outline-offset:3px}
+    #kill{background:#c6acf0;color:#171226}output{display:block;color:#a6dfdf;font:14px monospace;line-height:1.5}
+  </style>
+</head>
+<body><main>
+  <p>GEOMETRY SURVIVOR / PRUEBA VISUAL</p>
+  <h1>Enemigos · ruptura del reactor</h1>
+  <p>El cuerpo completo y sus cuatro fragmentos comparten la misma imagen SVG rasterizada.
+    Es la vista de combate real, no una animación alternativa para esta página. Todavía no hay arte PNG nuevo.</p>
+  <div id="preview"></div>
+  <div class="controls">
+    <label>Enemigo <select id="enemy"></select></label>
+    <button id="kill" type="button">Destruir</button>
+    <button id="reset" type="button">Restaurar</button>
+    <button id="pause" type="button">Pausar</button>
+    <button id="zoom" type="button">Tamaño real</button>
+    <label>Calidad <select id="quality"><option value="high">Alta</option><option value="medium">Media</option><option value="low">Baja</option></select></label>
+    <label>Velocidad <select id="speed"><option value="1">Normal</option><option value="0.25">Cámara lenta</option></select></label>
+  </div>
+  <output id="status" aria-live="polite"></output>
+  <p>La muerte dura 0,42 s: destello del reactor, descarga azul, chispas y ruptura del casco.
+    La descarga es independiente del arte y se conservará al cambiar a PNG. En Baja y con movimiento reducido
+    quedan el destello y, si corresponde, las chispas, sin fragmentos. La ampliación es sólo para inspección.
+    Todos los enemigos y los tres bosses usan esta muerte en el juego. Las entradas de los bosses siguen pendientes de rediseño.</p>
+  <a href="/?stress=1&debug=1&quality=high" style="color:#8ceaff">Probar dentro del combate de estrés</a>
+</main>
+<script type="module">
+  import { Application } from 'pixi.js';
+  import { CombatEntitiesView } from '../../src/presentation/pixi/CombatEntitiesView.ts';
+  import { ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../src/config/constants.ts';
+  import { ENEMY_DEFINITIONS } from '../../src/content/enemies/EnemyDefinitions.ts';
+  const bossIds = ['core-sentinel','orbital-warden','fracture-engine'];
+  const enemyIds = [...Object.keys(ENEMY_DEFINITIONS).filter(kind=>kind!=='boss'),...bossIds];
+  document.querySelector('#enemy').innerHTML=enemyIds.map(id=>`<option value="${id}">${id}</option>`).join('');
+  let selected = new URLSearchParams(location.search).get('enemy') || 'tank';
+  if(!enemyIds.includes(selected))selected='tank';
+  document.querySelector('#enemy').value=selected;
+  const quality = ['low','medium','high'].includes(new URLSearchParams(location.search).get('quality'))
+    ? new URLSearchParams(location.search).get('quality') : 'high';
+  document.querySelector('#quality').value = quality;
+  document.querySelector('#quality').onchange = event => { location.search = `?quality=${event.target.value}`; };
+  const app = new Application();
+  await app.init({ width:640, height:320, backgroundAlpha:0, preference:'webgl', resolution:1 });
+  document.querySelector('#preview').append(app.canvas);
+  const view = new CombatEntitiesView(app.renderer, quality);
+  view.root.pivot.set(320,160);view.root.position.set(320,160);view.root.scale.set(2.4);
+  app.stage.addChild(view.root);
+  const enemies = Array.from({length:ENEMY_POOL_CAPACITY}, () => ({
+    active:false,generation:0,kind:'chaser',x:320,y:160,vx:0,vy:0,radius:18,health:100,maxHealth:100
+  }));
+  const tank = enemies[0];
+  const combat = { enemies, projectiles:Array.from({length:PROJECTILE_POOL_CAPACITY}, () => ({active:false})),
+    boss:{active:false}, bosses:[] };
+  let seconds = 1, paused = false, zoom = 2.4;
+  const isBoss = () => bossIds.includes(selected);
+  const inspect = () => {
+    const fx = view.enemyDefeatFx;
+    const boss = isBoss() ? view.bosses[selected] : null;
+    const enabled = quality!=='low' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const roots = boss ? (boss.isDefeatActive ? [boss.root] : []) : fx.root.children.filter(node => node.visible);
+    const body = boss ? view.enemyTextures.boss[selected].flat : view.enemyVisuals[0].ship.root.children[2].texture;
+    return { selected, bodySize:isBoss()?112:64, capacity:boss ? (enabled?1:0) : fx.root.children.length,
+      active:boss ? Number(boss.isDefeatActive) : fx.activeCount,
+      totalSprites:boss ? boss.root.children.length : fx.root.children.reduce((n,node)=>n+node.children.length,0),
+      bodySource:body.source.uid, bodyVisible:tank.active,
+      bodySprites:(boss ? boss.root.children : view.enemyVisuals[0].ship.root.children).filter(node=>node.visible).length,
+      root:roots[0] ? {x:roots[0].x,y:roots[0].y,rotation:roots[0].rotation,scaleX:roots[0].scale.x,scaleY:roots[0].scale.y,alpha:roots[0].alpha} : null,
+      pieces:roots[0]?.children.map(node=>({x:node.x,y:node.y,rotation:node.rotation,tint:node.tint,source:node.texture.source.uid,
+        frame:{x:node.texture.frame.x,y:node.texture.frame.y,width:node.texture.frame.width,height:node.texture.frame.height}})) ?? [],
+      bursts:view.enemyImpactFx.activeBurstCount, particles:view.enemyImpactFx.activeParticleCount };
+  };
+  const status = () => { document.querySelector('#status').textContent =
+    `${selected} · ${quality.toUpperCase()} · ${zoom===1?'tamaño real':'ampliado ×2,4'} · ${tank.active?'cuerpo completo':'destruido'} · fragmentaciones ${inspect().active}/${inspect().capacity}`; };
+  const reset = () => {
+    view.reset();tank.active=true;tank.kind=isBoss()?'boss':selected;tank.bossId=isBoss()?selected:undefined;
+    tank.radius=ENEMY_DEFINITIONS[tank.kind].radius;tank.generation++;tank.vx=22;tank.vy=-52;
+    combat.boss={active:isBoss(),bossId:selected,phase:'inactive',progress:1,x:320,y:160,radius:tank.radius};
+    combat.bosses=isBoss()?[combat.boss]:[];
+    seconds=0;view.render(combat,0);seconds=1;view.render(combat,seconds);status();
+  };
+  const select = id => { if(!enemyIds.includes(id))throw Error('Unknown enemy');selected=id;document.querySelector('#enemy').value=id;reset(); };
+  document.querySelector('#enemy').onchange = event=>select(event.target.value);
+  const kill = (index=0,generation=tank.generation) => {
+    if(!tank.active)return;
+    if(isBoss())view.playBossDefeat(tank.x,tank.y,selected,tank.radius);
+    else view.playEnemyDefeat(tank.x,tank.y,selected,index,generation);
+    combat.boss.active=false;
+    tank.active=false;view.render(combat,seconds);status();
+  };
+  const advance = delta => {seconds+=delta;if(tank.active)view.render(combat,seconds);view.updateFx(delta);view.updateBossDefeat(delta);status();};
+  const freeze = () => {paused=true;document.querySelector('#pause').textContent='Reanudar';};
+  reset();
+  document.querySelector('#kill').onclick=()=>kill();
+  document.querySelector('#reset').onclick=reset;
+  document.querySelector('#pause').onclick=()=>{paused=!paused;document.querySelector('#pause').textContent=paused?'Reanudar':'Pausar';};
+  document.querySelector('#zoom').onclick=()=>{zoom=zoom===1?2.4:1;view.root.scale.set(zoom);document.querySelector('#zoom').textContent=zoom===1?'Ampliar':'Tamaño real';status();};
+  app.ticker.add(t=>{if(!paused&&!document.hidden)advance(Math.min(t.deltaMS/1000,0.1)*Number(document.querySelector('#speed').value));});
+  // Development-only harness. This document is not an input of the builds.
+  window.__tankTrial = { app, view, tank, reset, kill, advance, freeze, inspect, select, enemyIds,
+    pose:()=>isBoss()?{rotation:view.bosses[selected].root.rotation,scaleX:view.bosses[selected].root.scale.x,
+      scaleY:view.bosses[selected].root.scale.y,alpha:view.bosses[selected].root.alpha,offsetX:0,offsetY:0}
+      :view.enemyVisuals[0].ship.captureDefeatPose(view.enemyVisuals[0].root.scale.x,view.enemyVisuals[0].root.alpha) };
+  window.addEventListener('pagehide',()=>app.destroy(true,{children:true}),{once:true});
+</script>
+</body></html>

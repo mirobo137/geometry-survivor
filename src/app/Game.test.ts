@@ -137,6 +137,26 @@ const createOptions = (overrides: PlatformOverrides = {}): GameOptions => ({
 });
 
 describe('Game', () => {
+  it.each([
+    ['playing', 0.1], ['paused', 0], ['level-up', 0], ['menu', 0], ['run-intro', 0],
+    ['victory', 0.1], ['game-over', 0.1], ['act-intermission', 0.1], ['overdrive-transition', 0.1]
+  ] as const)('updates deaths during %s with delta %s without advancing paused effects', (phase, expectedDelta) => {
+    const game = new Game(createOptions());
+    const impact = vi.fn(), terminal = vi.fn();
+    const runtime = game as unknown as {
+      view: unknown; hud: unknown;
+      gameState: { phase: string };
+      renderFrame: (delta: number) => void;
+    };
+    runtime.view = new Proxy({ renderImpactFx: impact, updateTerminalFx: terminal, activeFxCount: 0 }, {
+      get: (target, key) => key in target ? target[key as keyof typeof target] : vi.fn()
+    });
+    runtime.hud = { update: vi.fn() };
+    runtime.gameState.phase = phase;
+    runtime.renderFrame(0.1);
+    expect(impact).toHaveBeenCalledWith(expectedDelta);
+    expect(terminal).toHaveBeenCalledWith(expectedDelta);
+  });
   beforeEach(() => {
     mocks.gameOverOpen.mockReset();
     mocks.gameOverClose.mockReset();
@@ -291,9 +311,11 @@ describe('Game', () => {
       pauseForLifecycle: () => void;
       resumeFromLifecycle: () => void;
       gameState: { phase: string; isPausedFromTransition: boolean };
+      view: { resetPresentation: ReturnType<typeof vi.fn> };
     };
 
     runtime.beginOverdriveStageTransition.call(game);
+    expect(runtime.view.resetPresentation).toHaveBeenLastCalledWith(true);
     expect(mocks.transitionOpenStage).toHaveBeenCalledOnce();
     vi.advanceTimersByTime(1_000);
     runtime.pauseForLifecycle.call(game);
@@ -308,6 +330,7 @@ describe('Game', () => {
     expect(runtime.gameState.phase).toBe('overdrive-transition');
     vi.advanceTimersByTime(1);
     expect(runtime.gameState.phase).toBe('playing');
+    expect(runtime.view.resetPresentation).toHaveBeenLastCalledWith();
   });
 
   it('resolves lethal damage before a same-tick boss defeat', () => {
@@ -330,6 +353,24 @@ describe('Game', () => {
     runtime.updateSimulation.call(game);
 
     expect(runtime.gameState.phase).toBe('game-over');
+  });
+
+  it('forwards the defeated Tank identity to presentation without changing its position', () => {
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      combat: { update: () => void; events: Array<{
+        type: 'enemyDefeated'; x: number; y: number; kind: 'tank'; experience: number;
+        enemyIndex: number; generation: number;
+      }> };
+      view: { playEnemyDefeat: ReturnType<typeof vi.fn> };
+      updateSimulation: () => void;
+    };
+    runtime.combat.update = () => {
+      runtime.combat.events.push({ type: 'enemyDefeated', x: 320, y: 260, kind: 'tank',
+        experience: 10, enemyIndex: 3, generation: 7 });
+    };
+    runtime.updateSimulation();
+    expect(runtime.view.playEnemyDefeat).toHaveBeenCalledWith(320, 260, 'tank', 3, 7);
   });
 
   it('rebuilds the initial Overdrive stage and debug build after restart', () => {

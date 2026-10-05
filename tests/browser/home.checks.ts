@@ -240,7 +240,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
               && [...text.getClientRects()].every((rect) => rect.left >= bounds.left && rect.right <= bounds.right + 1);
           })
         ));
-        expect(buttonLayout).toHaveLength(5);
+        expect(buttonLayout).toHaveLength(7); // Existing five actions plus Retos/Bitácora and daily wheel.
         expect(buttonLayout.every(Boolean)).toBe(true);
         await page.locator('#start-settings-toggle').click();
         await expect(page.locator('#start-settings')).toBeVisible();

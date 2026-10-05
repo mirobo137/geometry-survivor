@@ -20,6 +20,7 @@ const FULL_CIRCLE = Math.PI * 2;
 const SWEEP_ANGLE_STEP = 0.741;
 const SAFE_GAP_ANGLE_STEP = 1.913;
 const EPSILON = 0.000001;
+const BOSS_BODY_CONTACT_COOLDOWN_SECONDS = 0.45;
 // Replica positions are simulation coordinates, but must leave enough room
 // for the 64px visual frame after its 0.72 runtime scale. This prevents a
 // complete copy from being placed beyond the arena edge and appearing cut.
@@ -47,6 +48,7 @@ export class BossSystem {
   private replicaRightY = ARENA_CENTER.y;
   private enabled = true;
   private retryPattern = false;
+  private bodyContactCooldownSeconds = 0;
   private reservedProjectiles = 0;
   private reservedMines = 0;
   private reservedReplicaSlots = 0;
@@ -132,6 +134,7 @@ export class BossSystem {
     }
 
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
+    this.bodyContactCooldownSeconds = Math.max(0, this.bodyContactCooldownSeconds - dt);
     this.previousX = this.boss.x;
     this.previousY = this.boss.y;
 
@@ -161,6 +164,22 @@ export class BossSystem {
       this.updatePatternGeometry(step);
       this.updateAttackMovement();
       this.syncState();
+
+      // Boss hulls hurt independently of their authored attack pattern. Use
+      // the swept segment so a fast committed movement cannot tunnel through
+      // the player between simulation steps.
+      if (this.bodyContactCooldownSeconds <= EPSILON
+        && this.distanceToSegment(
+          player.x,
+          player.y,
+          segmentStartX,
+          segmentStartY,
+          this.boss.x,
+          this.boss.y
+        ) <= player.radius + this.boss.radius) {
+        this.bodyContactCooldownSeconds = BOSS_BODY_CONTACT_COOLDOWN_SECONDS;
+        damage = Math.max(damage, this.definition.damage);
+      }
 
       if (!this.hitApplied && this.intersectsCurrentPattern(
         player,
@@ -208,6 +227,7 @@ export class BossSystem {
     this.phaseTimer = 0;
     this.attackIndex = 0;
     this.hitApplied = false;
+    this.bodyContactCooldownSeconds = 0;
     this.arenaRadius = 0;
     this.movementAngle = -Math.PI / 2;
     this.movementWasLocked = true;

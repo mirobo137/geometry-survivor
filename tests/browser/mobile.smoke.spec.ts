@@ -5,12 +5,16 @@ import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 import { registerCatalogChecks } from './catalog.checks';
+import { registerDailyWheelChecks } from './daily-wheel.checks';
+import { registerLogbookChecks } from './logbook.checks';
 
 registerHomeChecks({ includeDesktopViewport: false });
 registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
 registerCatalogChecks();
+registerDailyWheelChecks();
+registerLogbookChecks();
 
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);

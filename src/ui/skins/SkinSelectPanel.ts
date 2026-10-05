@@ -121,8 +121,15 @@ export class SkinSelectPanel {
       entry.card.classList.toggle('is-locked', !unlocked);
       entry.button.setAttribute('aria-label', unlocked
         ? `Ver ${skin.name}, ${selected ? 'equipada' : 'disponible'}`
-        : `Ver ${skin.name}, ${skin.priceNova === 0 ? 'gratis' : `${formatNova(skin.priceNova)} NOVA`}`);
-      if (!unlocked && skin.priceNova === 0) {
+        : skin.acquisition === 'daily-wheel' ? `Ver ${skin.name}, exclusiva de ruleta diaria`
+        : skin.acquisition === 'event'
+          ? `Ver ${skin.name}, exclusiva de reto semanal`
+          : `Ver ${skin.name}, ${skin.priceNova === 0 ? 'gratis' : `${formatNova(skin.priceNova)} NOVA`}`);
+      if (!unlocked && skin.acquisition === 'daily-wheel') {
+        entry.action.textContent = 'RULETA DIARIA · VER';
+      } else if (!unlocked && skin.acquisition === 'event') {
+        entry.action.textContent = 'RETO SEMANAL · VER';
+      } else if (!unlocked && skin.priceNova === 0) {
         entry.action.textContent = 'GRATIS · VER';
       } else if (selected || unlocked) {
         entry.action.textContent = selected ? 'EQUIPADA · VER' : 'VER Y EQUIPAR';
@@ -158,10 +165,14 @@ export class SkinSelectPanel {
       kind: 'NAVE / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
       subtitle: definition.subtitle, description: definition.description, preview,
       actionLabel: selected ? 'Equipada' : unlocked ? 'Equipar nave'
+        : definition.acquisition === 'daily-wheel' ? 'Disponible en la ruleta diaria'
+        : definition.acquisition === 'event' ? 'Completa el reto semanal'
         : definition.priceNova === 0 ? 'Desbloquear gratis y equipar'
           : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
-      actionDisabled: selected || (!unlocked && !affordable),
+      actionDisabled: selected || (!unlocked && (definition.acquisition === 'event' || definition.acquisition === 'daily-wheel' || !affordable)),
       status: selected ? 'Equipada actualmente' : unlocked ? 'Desbloqueada'
+        : definition.acquisition === 'daily-wheel' ? 'Ruleta diaria gratis o con video · probabilidad creciente de 1% a 20%'
+        : definition.acquisition === 'event' ? 'Recompensa exclusiva de la rotación semanal'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
       onAction: () => this.select(id)
     }, button);
@@ -170,6 +181,7 @@ export class SkinSelectPanel {
   private select(id: PlayerSkinId): void {
     const definition = getPlayerSkinDefinition(id);
     const unlocked = this.state.unlocked.includes(id);
+    if (!unlocked && (definition.acquisition === 'event' || definition.acquisition === 'daily-wheel')) return;
     if (!unlocked && this.wallet.nova < definition.priceNova) return;
     const next: SkinSaveData = unlocked
       ? { ...this.state, selected: id }

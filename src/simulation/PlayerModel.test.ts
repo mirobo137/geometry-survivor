@@ -24,6 +24,22 @@ describe('PlayerModel', () => {
     expect(distance).toBeLessThanOrEqual(ARENA_RADIUS - PLAYER_RADIUS + 0.0001);
   });
 
+  it('cannot enter the center barrier supplied by a challenge arena', () => {
+    const player = new PlayerModel();
+    const arena = {
+      radius: ARENA_RADIUS,
+      shapeFrom: 'circle' as const,
+      shapeTo: 'circle' as const,
+      morphProgress: 0,
+      centerExclusionRadius: 112
+    };
+    player.update({ x: 0, y: 0 }, 0, arena);
+    for (let index = 0; index < 120; index += 1) player.update({ x: 0, y: 1 }, 1 / 60, arena);
+
+    const distance = Math.hypot(player.state.x - ARENA_CENTER.x, player.state.y - ARENA_CENTER.y);
+    expect(distance).toBeGreaterThanOrEqual(112 + PLAYER_RADIUS - 0.0001);
+  });
+
   it('uses the current arena radius when the arena expands', () => {
     const player = new PlayerModel();
 

@@ -9,10 +9,12 @@ import { isCannonSkinId, type CannonSkinId } from '../../content/visual/CannonSk
 import { isBackgroundId, type BackgroundId } from '../../content/visual/BackgroundDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import { normalizeLaboratorySaveData, type LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
+import { createDefaultRetentionSaveData, normalizeRetentionSaveData, type RetentionSaveData } from '../../content/retention/RetentionDefinitions';
+import { createDefaultDailyWheel, normalizeDailyWheel, type DailyWheelSaveData } from '../../content/retention/DailyWheelDefinitions';
 
 export type { LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 9 as const;
+export const SAVE_SCHEMA_VERSION = 13 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -75,6 +77,9 @@ export interface SaveData {
   readonly overdrive: OverdriveSaveData;
   /** Menu preference only: never resumes an active run or an Overdrive stage. */
   readonly lastSelectedRoute: StartRouteId;
+  /** Bounded, local-only journal and weekly event receipts. */
+  readonly retention: RetentionSaveData;
+  readonly dailyWheel: DailyWheelSaveData;
 }
 
 export interface StorageAdapter {
@@ -86,6 +91,8 @@ export interface StorageAdapter {
 export interface SaveStore {
   load(): SaveData;
   save(data: SaveData): boolean;
+  /** Returns true only when the normalized payload was durably written and read back. */
+  saveDurably?(data: SaveData): boolean;
   clear(): void;
 }
 
@@ -148,7 +155,9 @@ export const createDefaultSaveData = (): SaveData => ({
     bestTotalTimeSeconds: 0,
     maxStages: 0,
     bestKills: 0
-  }
+  },
+  retention: createDefaultRetentionSaveData(),
+  dailyWheel: createDefaultDailyWheel()
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -193,6 +202,8 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const rawWallet = isRecord(value.wallet) ? value.wallet : {};
   const rawLaboratory = isRecord(value.laboratory) ? value.laboratory : {};
   const rawOverdrive = version >= 7 && isRecord(value.overdrive) ? value.overdrive : {};
+  const rawRetention = version >= 10 && isRecord(value.retention)
+    ? version < 13 ? { ...value.retention, objectiveCycles: undefined } : value.retention : null;
   const rawUnlockedActs = Array.isArray(value.unlockedActs) ? value.unlockedActs : [];
   const legacyBestTime = value.bestTimeSeconds;
   const legacyBestScore = value.bestScore;
@@ -269,7 +280,9 @@ export const migrateSaveData = (value: unknown): SaveData => {
       bestTotalTimeSeconds: Math.max(0, finiteOr(rawOverdrive.bestTotalTimeSeconds, defaults.overdrive.bestTotalTimeSeconds)),
       maxStages: readNonNegativeInt(rawOverdrive.maxStages, defaults.overdrive.maxStages, Number.MAX_SAFE_INTEGER),
       bestKills: readNonNegativeInt(rawOverdrive.bestKills, defaults.overdrive.bestKills, Number.MAX_SAFE_INTEGER)
-    }
+    },
+    retention: normalizeRetentionSaveData(rawRetention),
+    dailyWheel: normalizeDailyWheel(version >= 11 ? value.dailyWheel : null)
   };
 };
 

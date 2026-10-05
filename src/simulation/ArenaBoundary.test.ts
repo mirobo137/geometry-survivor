@@ -40,6 +40,19 @@ describe('ArenaBoundary', () => {
     expect(clampPointToArena(ARENA_CENTER.x, ARENA_CENTER.y, PLAYER_RADIUS, HEXAGON_BOUNDARY)).toEqual(ARENA_CENTER);
   });
 
+  it('keeps the player outside a challenge-only central containment ring', () => {
+    const boundary = { ...HEXAGON_BOUNDARY, centerExclusionRadius: 112 };
+    const atCenter = clampPointToArena(ARENA_CENTER.x, ARENA_CENTER.y, PLAYER_RADIUS, boundary);
+    const nearCenter = clampPointToArena(ARENA_CENTER.x + 10, ARENA_CENTER.y, PLAYER_RADIUS, boundary);
+    const centerDistance = Math.hypot(atCenter.x - ARENA_CENTER.x, atCenter.y - ARENA_CENTER.y);
+    const nearDistance = Math.hypot(nearCenter.x - ARENA_CENTER.x, nearCenter.y - ARENA_CENTER.y);
+
+    expect(centerDistance).toBeCloseTo(112 + PLAYER_RADIUS);
+    expect(nearDistance).toBeCloseTo(112 + PLAYER_RADIUS);
+    expect(clampPointToArena(ARENA_CENTER.x + 180, ARENA_CENTER.y, PLAYER_RADIUS, boundary))
+      .toEqual({ x: ARENA_CENTER.x + 180, y: ARENA_CENTER.y });
+  });
+
   it('interpolates the boundary during a shape transition', () => {
     const transition = {
       radius: ARENA_RADIUS,

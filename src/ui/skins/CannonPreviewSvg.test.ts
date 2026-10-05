@@ -55,6 +55,6 @@ describe('CannonPreviewSvg', () => {
     const svg = createCannonPreviewSvg('basic');
     expect(svg).not.toContain('cannon-preview-cables');
     for (const ship of Object.values(PLAYER_SHIP_RASTER_ART)) expect(svg).not.toContain(ship.url);
-    expect(svg.match(new RegExp(`href="${CANNON_SKIN_RASTER_ART.basic.url}"`, 'g'))).toHaveLength(2);
+    expect(svg.split(`href="${CANNON_SKIN_RASTER_ART.basic.url}"`)).toHaveLength(3);
   });
 });

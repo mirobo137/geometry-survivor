@@ -63,6 +63,58 @@ describe('LocalSaveStore', () => {
     expect(store.load().wallet.nova).toBe(0);
     expect(store.load().skins).toEqual(defaults.skins);
   });
+
+  it('migrates schema 9 without discarding campaign data and starts the new logbook empty', () => {
+    const migrated = migrateSaveData({
+      schemaVersion: 9,
+      best: { timeSeconds: 321, score: 9_876 },
+      skins: { selected: 'manta', unlocked: ['cyan', 'spearhead', 'manta'] },
+      wallet: { nova: 1_234 },
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 800, maxStages: 8, bestKills: 900 },
+      lastSelectedRoute: 'overdrive'
+    });
+
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION);
+    expect(migrated.best).toEqual({ timeSeconds: 321, score: 9_876 });
+    expect(migrated.skins).toEqual({ selected: 'manta', unlocked: ['cyan', 'spearhead', 'manta'] });
+    expect(migrated.wallet.nova).toBe(1_234);
+    expect(migrated.overdrive.unlocked).toBe(true);
+    expect(migrated.lastSelectedRoute).toBe('overdrive');
+    expect(migrated.retention.runsCompleted).toBe(0);
+    expect(migrated.retention.completedObjectiveIds).toEqual([]);
+  });
+
+  it('persists bounded retention progress and confirms prize writes by reading them back', () => {
+    const storage = new MemoryStorage();
+    const store = new LocalSaveStore(storage);
+    const defaults = createDefaultSaveData();
+    const awarded = {
+      ...defaults,
+      wallet: { nova: 250 },
+      skins: { selected: defaults.skins.selected, unlocked: [...defaults.skins.unlocked, 'asterion' as const] },
+      retention: {
+        ...defaults.retention,
+        runsCompleted: 10,
+        completedObjectiveIds: ['first-flight', 'ten-flights'] as const,
+        weeklyClaimIds: ['rf1-20261005-core-duel']
+      }
+    };
+
+    expect(store.saveDurably(awarded)).toBe(true);
+    expect(store.load()).toMatchObject({
+      wallet: { nova: 250 },
+      skins: { unlocked: expect.arrayContaining(['asterion']) },
+      retention: {
+        runsCompleted: 10,
+        completedObjectiveIds: ['first-flight', 'ten-flights'],
+        weeklyClaimIds: ['rf1-20261005-core-duel']
+      }
+    });
+
+    storage.failWrites = true;
+    expect(store.saveDurably({ ...awarded, wallet: { nova: 500 } })).toBe(false);
+    expect(store.load().wallet.nova).toBe(250);
+  });
   it('returns safe defaults and round-trips a bounded versioned payload', () => {
     const storage = new MemoryStorage();
     const store = new LocalSaveStore(storage);
@@ -88,6 +140,7 @@ describe('LocalSaveStore', () => {
     })).toBe(true);
     expect(storage.values.has(SAVE_STORAGE_KEY)).toBe(true);
     expect(store.load()).toEqual({
+      ...defaults,
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { ...defaults.settings, sfxVolume: 0.35, quality: 'low' },
       best: { timeSeconds: 302.5, score: 8400 },
@@ -114,6 +167,7 @@ describe('LocalSaveStore', () => {
       settings: { musicVolume: 4, sfxVolume: -1, quality: 'unknown' },
       tutorialSeen: true
     })).toEqual({
+      ...createDefaultSaveData(),
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: {
         musicVolume: 1,
@@ -201,7 +255,7 @@ describe('LocalSaveStore', () => {
     const legacy = { ...defaults, schemaVersion: 8, wallet: { nova: 1234 },
       laboratory: { ...defaults.laboratory, levels: { global_damage: 2 } },
       unlockedActs: ['radial', 'angular'], overdrive: { ...defaults.overdrive, unlocked: true } };
-    expect(migrateSaveData(legacy)).toMatchObject({ schemaVersion: 9, lastSelectedRoute: 'radial',
+    expect(migrateSaveData(legacy)).toMatchObject({ schemaVersion: SAVE_SCHEMA_VERSION, lastSelectedRoute: 'radial',
       wallet: legacy.wallet, laboratory: legacy.laboratory, unlockedActs: legacy.unlockedActs, overdrive: legacy.overdrive });
   });
 

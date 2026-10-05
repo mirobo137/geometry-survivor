@@ -171,4 +171,12 @@ export class GameState {
     this.pausedPhase = null;
     return true;
   }
+
+  /** Leaves a definitive terminal result for an isolated retention event. */
+  public returnToMenuFromTerminal(): boolean {
+    if (this.phase !== 'game-over' && this.phase !== 'victory') return false;
+    this.phase = 'menu';
+    this.pausedPhase = null;
+    return true;
+  }
 }

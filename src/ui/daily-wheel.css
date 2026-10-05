@@ -1,0 +1,85 @@
+.start-engagement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+#start-screen .start-engagement-grid .start-secondary { min-height: 4.8rem; position: relative; display: flex; flex-direction: column; align-items: start; justify-content: end; gap: .35rem; padding: .8rem; text-align: left; overflow: hidden; }
+#start-screen .start-engagement-grid .home-action-copy { min-width: 0; position: relative; z-index: 1; }
+#start-screen .start-engagement-grid strong { font-size: clamp(.76rem, 1.35vw, .95rem); }
+#start-screen .start-engagement-grid small { font-size: .5rem; line-height: 1.4; white-space: normal; }
+#start-screen .start-engagement-grid .retention-entry-mark { position: absolute; top: .45rem; right: .6rem; color: #a9e8fa; opacity: .5; }
+#start-screen .start-wheel-entry { border-color: #bb9254; background: radial-gradient(ellipse at 100% 0, #8b653955, transparent 72%), #0c1826; }
+.wheel-entry-icon { position: absolute; right: .4rem; top: .15rem; width: 3.2rem; height: 3.2rem; opacity: .55; pointer-events: none; }
+.daily-wheel-dialog {
+  color: #e9f3ff; background: radial-gradient(ellipse at 15% 20%, #163b56 0, transparent 52%), linear-gradient(125deg, #0a1a2a, #0c111e 70%, #2b221d);
+  border: 1px solid #b9975d; border-radius: 1.1rem; padding: 0; width: min(64rem, calc(100vw - 1.5rem)); max-width: none;
+  max-height: calc(100dvh - 1.5rem); box-shadow: 0 24px 90px #000a, inset 0 0 0 5px #080f1a, inset 0 0 0 6px #e3be7030;
+  overscroll-behavior: contain; overflow: auto; scrollbar-color: #8c794f #0b1928; box-sizing: border-box;
+}
+.daily-wheel-dialog::backdrop { background: #020712df; }
+.daily-wheel-header { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 4.5rem 1rem 1.5rem; border-bottom: 1px solid #b9975d38; }
+.daily-wheel-heading { min-width: 0; }
+.daily-wheel-eyebrow { display: block; margin: 0 0 .35rem; font: 800 .64rem/1.3 ui-monospace, monospace; letter-spacing: .16em; color: #edc884; }
+.daily-wheel-heading h2 { margin: 0 0 .25rem; font-size: clamp(1.25rem, 3vw, 1.9rem); letter-spacing: -.03em; }
+.daily-wheel-intro { margin: 0; color: #aec5da; font-size: .8rem; line-height: 1.5; }
+.daily-wheel-wallet { white-space: nowrap; font: 800 .75rem/1.2 ui-monospace, monospace; color: #ffe6a1; }
+.daily-wheel-close { position: absolute; top: 1rem; right: 1rem; width: 2.75rem; height: 2.75rem; border: 1px solid #829bb2; background: #142738; border-radius: .5rem; color: #e6f6ff; font-size: 1.65rem; cursor: pointer; }
+.daily-wheel-body { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 1.4rem; padding: 1.15rem 1.5rem 1.5rem; }
+.daily-wheel-orbit { display: flex; flex-direction: column; align-items: center; justify-content: start; min-width: 0; gap: .7rem; }
+.daily-wheel-mode { color: #87e2ff; font: 800 .65rem/1.3 ui-monospace, monospace; letter-spacing: .2em; }
+.daily-wheel { position: relative; width: min(100%, 28rem); aspect-ratio: 1; flex: none; isolation: isolate; }
+.daily-wheel-rim { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.daily-wheel-disk { position: absolute; inset: 11.5%; border-radius: 50%; overflow: hidden; box-shadow: inset 0 0 24px #0008; }
+.daily-wheel-disk::after { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, transparent 38%, #07101b55 85%), repeating-conic-gradient(from -16.3636deg, #b7eaff5c 0deg .4deg, transparent .4deg 32.7273deg); }
+.daily-wheel-slot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 21%; height: 22%; gap: .08rem; font: 900 clamp(.6rem, 1.55vw, .92rem)/1 ui-monospace, monospace; color: #e9f8ff; text-shadow: 0 1px 3px #000; }
+.daily-wheel-slot.is-rare { color: #ffe2a1; }
+.daily-wheel-slot-coin { width: 1.2em; height: 1.2em; object-fit: contain; }
+.daily-wheel-slot-ship { width: 1.9rem; height: 2rem; object-fit: contain; }
+.daily-wheel-slot small { font-size: .52rem; line-height: 1; }
+.daily-wheel-hub { position: absolute; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .1rem; z-index: 2; inset: 39%; border: 2px solid #c3a363; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #41667a, #102035 65%); box-shadow: 0 0 0 4px #030e22, 0 3px 14px #000b; color: #fce3a2; font: 800 clamp(.4rem, 1vw, .6rem)/1 ui-monospace, monospace; letter-spacing: .13em; }
+.daily-wheel-hub img { width: 47%; height: 47%; }
+.daily-wheel-pointer { position: absolute; left: 50%; top: 7%; z-index: 4; transform: translateX(-50%); width: 6%; height: 8%; background: linear-gradient(90deg, #b58736, #fff1b8 47%, #be8e3f); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.daily-wheel-odds-note { max-width: 25rem; margin: 0; color: #adc2d6; font-size: .66rem; line-height: 1.5; text-align: center; }
+.daily-wheel-side { min-width: 0; display: flex; flex-direction: column; gap: .6rem; }
+.daily-wheel-prize { display: grid; grid-template-columns: 42% minmax(0, 1fr); gap: .2rem .9rem; align-items: center; padding: .5rem .9rem .75rem; border: 1px solid #e2b9675c; border-radius: .7rem; background: radial-gradient(ellipse at 25% 45%, #9b6a2733, transparent 65%), #0a1625a6; }
+.daily-wheel-ship { width: 100%; height: 9rem; object-fit: contain; }
+.daily-wheel-prize-copy h3 { margin: 0; color: #fff0c8; font-size: clamp(1.12rem, 2.2vw, 1.6rem); line-height: 1.1; }
+.daily-wheel-prize-copy > p { color: #bfccd9; font-size: .75rem; margin: .4rem 0; }
+.daily-wheel-prize-note { grid-column: 1 / -1; margin: .15rem 0 0; color: #efcf8f; font-size: .72rem; line-height: 1.45; }
+.daily-wheel-free, .daily-wheel-video, .daily-wheel-equip, .daily-wheel-skip { min-height: 2.85rem; border-radius: .5rem; font: 800 .76rem/1.35 ui-monospace, monospace; padding: .65rem .9rem; cursor: pointer; }
+.daily-wheel-free { color: #102231; background: linear-gradient(100deg, #fff0b8, #e1b666); border: 1px solid #fff3c0; box-shadow: inset 0 -3px #9e6b33; }
+.daily-wheel-video, .daily-wheel-equip { color: #bcf6ff; background: #163344; border: 1px solid #70b0c4; }
+.daily-wheel-video::before { content: '▶'; margin-right: .55rem; font-size: .72rem; }
+.daily-wheel-skip { background: #142a3f; color: #d2e7f6; border: 1px solid #577e93; }
+.daily-wheel-dialog button:disabled { opacity: .5; cursor: default; box-shadow: none; }
+.daily-wheel-dialog button:focus-visible, .daily-wheel-odds summary:focus-visible { outline: 3px solid #ffe0a1; outline-offset: 3px; }
+.daily-wheel-countdown { margin: -.05rem 0 .15rem; text-align: center; font: 700 .67rem/1.4 ui-monospace, monospace; color: #a8c4d9; }
+.daily-wheel-extra-note { color: #9fb7c9; font-size: .7rem; line-height: 1.45; margin: -.2rem .2rem .15rem; }
+.daily-wheel-message { color: #fce4ad; font-size: .78rem; line-height: 1.5; margin: 0; }
+.daily-wheel-message:empty { display: none; }
+.daily-wheel-result { padding: .9rem; border: 1px solid #68e0c0; background: #14362f9c; border-radius: .65rem; }
+.daily-wheel-result > strong { display: block; font-size: 1.2rem; color: #bdffe9; }
+.daily-wheel-result > p { font-size: .75rem; color: #c6e4de; margin: .3rem 0 0; }
+.daily-wheel-result[data-kind="skin"] { background: #5a382969; border-color: #e6bf69; }
+.daily-wheel-result[data-kind="skin"] > strong { color: #ffe5a5; }
+.daily-wheel-equip { margin-top: .65rem; width: 100%; }
+.daily-wheel-odds { border-top: 1px solid #66849a55; color: #b7cadb; font-size: .72rem; line-height: 1.5; }
+.daily-wheel-odds summary { cursor: pointer; padding: .65rem .15rem; min-height: 2.5rem; box-sizing: border-box; }
+.daily-wheel-odds-list { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem; list-style: none; padding: 0; margin: .3rem 0; font-family: ui-monospace, monospace; }
+.daily-wheel-odds-list li:last-child { grid-column: 1 / -1; color: #f5d18c; }
+.daily-wheel-dialog [hidden] { display: none !important; }
+@media (max-width: 650px) {
+  .daily-wheel-dialog { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); border-radius: .8rem; }
+  .daily-wheel-header { padding: 1rem 3.6rem .8rem 1rem; align-items: start; flex-direction: column; gap: .35rem; }
+  .daily-wheel-header .daily-wheel-eyebrow { font-size: .53rem; }
+  .daily-wheel-heading h2 { font-size: 1.3rem; }
+  .daily-wheel-intro { font-size: .7rem; }
+  .daily-wheel-close { top: .65rem; right: .65rem; }
+  .daily-wheel-wallet { font-size: .68rem; }
+  .daily-wheel-body { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding: .8rem 1rem 1rem; }
+  .daily-wheel { width: min(100%, 20rem); }
+  .daily-wheel-orbit { gap: .4rem; }
+  .daily-wheel-slot { font-size: .77rem; }
+  .daily-wheel-prize { grid-template-columns: 5.5rem minmax(0, 1fr); }
+  .daily-wheel-ship { height: 5.8rem; }
+  .daily-wheel-prize-copy h3 { font-size: 1.25rem; }
+  .daily-wheel-prize-note { font-size: .68rem; }
+  .daily-wheel-mode { font-size: .58rem; }
+}
+@media (max-width: 359px) { .daily-wheel-slot { font-size: .68rem; } .daily-wheel-slot-ship { width: 1.6rem; height: 1.7rem; } }

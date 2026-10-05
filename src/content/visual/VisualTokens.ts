@@ -1,4 +1,4 @@
-export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead' | 'corsair' | 'nautilus';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead' | 'corsair' | 'nautilus' | 'asterion' | 'solstice';
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -75,6 +75,14 @@ export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
   nautilus: {
     shadow: 0x060e1b, outer: 0x91dacd, body: 0x34659e,
     bodyDetail: 0x8f774d, core: 0x8effdc, accent: 0xffecc5
+  },
+  asterion: {
+    shadow: 0x07111a, outer: 0x83f4e4, body: 0xb7cad1,
+    bodyDetail: 0x465d70, core: 0x80ffdf, accent: 0xffe2a0
+  },
+  solstice: {
+    shadow: 0x100b13, outer: 0xffd685, body: 0xbda570,
+    bodyDetail: 0x333440, core: 0xff536d, accent: 0xffefd0
   }
 } as const;
 
@@ -94,7 +102,9 @@ export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionT
   manta: { signatureSpin: 0, signaturePulse: 0.012 },
   spearhead: { signatureSpin: 0, signaturePulse: 0 },
   corsair: { signatureSpin: 0, signaturePulse: 0 },
-  nautilus: { signatureSpin: 0, signaturePulse: 0 }
+  nautilus: { signatureSpin: 0, signaturePulse: 0 },
+  asterion: { signatureSpin: 0, signaturePulse: 0 },
+  solstice: { signatureSpin: 0, signaturePulse: 0 }
 } as const;
 
 export interface FxQualityTokens {

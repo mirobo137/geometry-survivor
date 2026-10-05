@@ -47,6 +47,10 @@
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 17-9-4-9 4Z" fill="#17283b" stroke="currentColor" stroke-width="2"/><path d="m12 7 3 6h-6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Skins</strong><small>ABRIR</small></span></button>
               <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Laboratorio</strong><small>MEJORAS PERMANENTES</small></span></button>
             </div>
+            <div class="start-engagement-grid">
+              <button id="start-retention" class="start-secondary start-retention-entry" type="button" aria-controls="start-retention-view"><span class="retention-entry-mark" aria-hidden="true">✦</span><span class="home-action-copy"><strong>Retos y Bitácora</strong><small id="start-retention-home-status" aria-live="polite">DESAFÍO SEMANAL · OBJETIVOS</small></span></button>
+              <button id="start-daily-wheel" class="start-secondary start-wheel-entry" type="button" aria-haspopup="dialog"><span class="wheel-entry-icon" aria-hidden="true"></span><span class="home-action-copy"><strong>Ruleta diaria</strong><small id="start-daily-wheel-status">UN GIRO GRATIS CADA 24 H</small></span></button>
+            </div>
             <p id="start-coming-soon-note" class="start-coming-soon-note">Jugar recuerda tu última ruta elegida.</p>
           </div>
           <div id="start-settings" class="start-settings" hidden>
@@ -94,6 +98,17 @@
             <p id="start-act-status" class="act-status" role="status" aria-live="polite"></p>
             <button id="start-act-play" class="start-primary" type="button">INICIAR ACTO I</button>
             </div>
+          </section>
+          <section id="start-retention-view" class="start-retention-view console-screen" hidden aria-labelledby="start-retention-title">
+            <div class="console-header retention-header">
+              <button id="start-retention-back" class="skins-back" type="button" aria-label="Volver al menú principal">← Menú</button>
+              <div>
+                <p class="start-kicker">RETOS / ARCHIVO DE VUELO</p>
+                <h2 id="start-retention-title">Bitácora de expedición</h2>
+                <p>Retos de habilidad y objetivos de campaña. Sin anuncios ni mejoras permanentes.</p>
+              </div>
+            </div>
+            <div id="start-retention-body" class="console-body retention-body" tabindex="0" role="region" aria-label="Desafío semanal y objetivos de la Bitácora"></div>
           </section>
           <section id="start-entry-view" class="start-entry-view" hidden aria-labelledby="start-entry-title">
             <div class="act-header">
@@ -307,6 +322,10 @@
         <p id="game-over-kicker">RUN COMPLETE</p>
         <h1 id="game-over-title">Fin de la partida</h1>
         <p id="game-over-act-message" hidden></p>
+        <section id="game-over-retention" class="game-over-retention" hidden aria-live="polite">
+          <img id="game-over-retention-art" alt="" width="112" height="112" />
+          <div><p id="game-over-retention-message"></p><ul id="game-over-retention-highlights"></ul></div>
+        </section>
         <div id="game-over-stats" aria-live="polite">
           <span id="game-over-nova">NOVA +0</span>
           <span id="game-over-time">Tiempo 00:00</span>

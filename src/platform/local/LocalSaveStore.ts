@@ -41,6 +41,21 @@ export class LocalSaveStore implements SaveStore {
     return true;
   }
 
+  public saveDurably(data: SaveData): boolean {
+    if (!this.storage) return false;
+    const normalized = migrateSaveData(data);
+    const raw = JSON.stringify(normalized);
+    if (raw.length > MAX_SAVE_BYTES) return false;
+    try {
+      this.storage.setItem(SAVE_STORAGE_KEY, raw);
+      if (this.storage.getItem(SAVE_STORAGE_KEY) !== raw) return false;
+      this.memoryRaw = raw;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public clear(): void {
     this.memoryRaw = null;
     try {

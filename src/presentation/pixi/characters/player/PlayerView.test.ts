@@ -12,7 +12,9 @@ const skinTextures = {
   obsidian: Texture.WHITE,
   nova: Texture.WHITE,
   corsair: Texture.WHITE,
-  nautilus: Texture.WHITE
+  nautilus: Texture.WHITE,
+  asterion: Texture.WHITE,
+  solstice: Texture.WHITE
 };
 
 const cannonPair = () => ({ left: Texture.WHITE, right: Texture.WHITE });

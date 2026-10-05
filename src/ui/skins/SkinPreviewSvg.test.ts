@@ -19,7 +19,8 @@ describe('SkinPreviewSvg', () => {
 
   it('covers ten complete raster ships while retaining existing IDs', () => {
     expect(PLAYER_SKIN_DEFINITIONS.map(skin => skin.id)).toContain('spearhead');
-    expect(PLAYER_SKIN_DEFINITIONS).toHaveLength(10);
+    expect(PLAYER_SKIN_DEFINITIONS.filter(skin => skin.acquisition === 'default' || skin.acquisition === 'nova')).toHaveLength(10);
+    expect(PLAYER_SKIN_DEFINITIONS.filter(skin => skin.acquisition === 'event' || skin.acquisition === 'daily-wheel')).toHaveLength(2);
     for (const definition of PLAYER_SKIN_DEFINITIONS) {
       const card = createPlayerSkinPreviewSvg(definition.id);
       const preview = createPlayerSkinPreviewSvg(definition.id, { animated: true });

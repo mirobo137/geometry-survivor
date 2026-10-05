@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
       target: 'es2018',
       outDir: `dist/${target}`,
       emptyOutDir: true,
+      // CI uploads the local bundles and their linked source maps as diagnostics;
+      // the Pages staging copy strips the links and map files before deployment.
       sourcemap: target === 'local'
     },
     define: {

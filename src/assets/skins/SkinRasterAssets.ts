@@ -1,23 +1,25 @@
-import cyanShipUrl from './ships/cyan.png';
-import violetShipUrl from './ships/violet.png';
-import amberShipUrl from './ships/amber.png';
-import emeraldShipUrl from './ships/emerald.png';
-import obsidianShipUrl from './ships/obsidian.png';
-import novaShipUrl from './ships/nova.png';
-import mantaShipUrl from './ships/manta.png';
-import spearheadShipUrl from './tethered/tether-ship.png';
-import corsairShipUrl from './ships/corsair.png';
-import nautilusShipUrl from './ships/nautilus.png';
-import basicCannonUrl from './cannons/basic.png';
-import curveCannonUrl from './cannons/curve.png';
-import smokeCannonUrl from './cannons/smoke.png';
-import rainbowCannonUrl from './cannons/rainbow.png';
-import latticeCannonUrl from './cannons/lattice.png';
-import helixCannonUrl from './cannons/helix.png';
-import bloomCannonUrl from './cannons/bloom.png';
-import spearheadCannonUrl from './tethered/tether-cannon.png';
-import gyreCannonUrl from './cannons/gyre.png';
-import razorCannonUrl from './cannons/razor.png';
+import cyanShipUrl from './ships/cyan.webp?no-inline';
+import violetShipUrl from './ships/violet.webp?no-inline';
+import amberShipUrl from './ships/amber.webp?no-inline';
+import emeraldShipUrl from './ships/emerald.webp?no-inline';
+import obsidianShipUrl from './ships/obsidian.webp?no-inline';
+import novaShipUrl from './ships/nova.webp?no-inline';
+import mantaShipUrl from './ships/manta.webp?no-inline';
+import spearheadShipUrl from './tethered/tether-ship.webp?no-inline';
+import corsairShipUrl from './ships/corsair.webp?no-inline';
+import nautilusShipUrl from './ships/nautilus.webp?no-inline';
+import asterionShipUrl from './ships/asterion/asterion.webp?no-inline';
+import solsticeShipUrl from './ships/solstice/solstice.webp?no-inline';
+import basicCannonUrl from './cannons/basic.webp?no-inline';
+import curveCannonUrl from './cannons/curve.webp?no-inline';
+import smokeCannonUrl from './cannons/smoke.webp?no-inline';
+import rainbowCannonUrl from './cannons/rainbow.webp?no-inline';
+import latticeCannonUrl from './cannons/lattice.webp?no-inline';
+import helixCannonUrl from './cannons/helix.webp?no-inline';
+import bloomCannonUrl from './cannons/bloom.webp?no-inline';
+import spearheadCannonUrl from './tethered/tether-cannon.webp?no-inline';
+import gyreCannonUrl from './cannons/gyre.webp?no-inline';
+import razorCannonUrl from './cannons/razor.webp?no-inline';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 
@@ -45,7 +47,9 @@ export const PLAYER_SHIP_RASTER_ART: Readonly<Record<PlayerSkinId, ShipRasterArt
   manta: { url: mantaShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   spearhead: { url: spearheadShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   corsair: { url: corsairShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
-  nautilus: { url: nautilusShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 }
+  nautilus: { url: nautilusShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
+  asterion: { url: asterionShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
+  solstice: { url: solsticeShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 }
 };
 
 /** One interchangeable 128px cannon image; shared combat/locker frame, unchanged muzzle anchor. */

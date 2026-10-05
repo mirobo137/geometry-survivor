@@ -11,7 +11,7 @@
 #start-screen .start-screen-panel,
 #start-screen .start-screen-panel::before,
 #start-screen .start-screen-panel::after { animation: none; }
-#start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .start-screen-panel {
+#start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .start-screen-panel {
   width: min(68rem, 100%); padding: 0; border-radius: 1rem;
   border-color: #759cae; border-bottom-color: #355569; background: #081421;
   box-shadow: 0 24px 64px #020611b3, inset 0 2px #d1e2ec33;
@@ -31,7 +31,7 @@
 /* The exterior continues the same world using the exact selected plate URL.
    Keep viewport-sized surfaces static; cloud motion is limited to desktop corners. */
 .home-exterior { display: none; position: fixed; inset: 0; z-index: 0; overflow: hidden; contain: paint; pointer-events: none; }
-#start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .home-exterior { display: block; }
+#start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .home-exterior { display: block; }
 .home-exterior-image { opacity: .65; }
 .home-exterior::after { content: ""; position: absolute; z-index: 2; inset: 0; background: radial-gradient(ellipse at center, #06121c33 25%, #06121c66 65%, #030913a6), linear-gradient(0deg, #03091388, transparent 55%); }
 .home-exterior-cloud { display: none; position: absolute; z-index: 1; width: min(26vw, 300px); aspect-ratio: 1; background-size: contain; background-repeat: no-repeat; opacity: .48; contain: layout paint; }
@@ -79,6 +79,13 @@
 .start-actions .home-action-copy strong { font: 700 .88rem/1.2 system-ui, sans-serif; letter-spacing: 0; color: #f1f8fc; }
 .start-actions .home-action-copy small { font: 600 .55rem/1.4 ui-monospace, monospace; letter-spacing: .035em; color: #c1d8e6; }
 .start-actions .start-secondary:disabled { opacity: .65; }
+.start-actions #start-retention[data-claimable="true"] {
+  border-color: #ffe39a;
+  background: linear-gradient(135deg, #62502b, #17283a 78%);
+  box-shadow: inset 0 1px #fff0c94d, inset 0 -3px #060d1977, 0 0 18px #ffd66b2b;
+}
+.start-actions #start-retention[data-claimable="true"] .retention-entry-mark,
+.start-actions #start-retention[data-claimable="true"] .home-action-copy small { color: #ffe39a; }
 .start-actions .start-secondary:hover:not(:disabled) { border-color: #c3f8ef; box-shadow: inset 0 0 0 1px #c3f8ef33, 0 3px 12px #0005; }
 .start-actions button:focus-visible { outline: 2px solid #ffe39a; outline-offset: 2px; }
 .start-coming-soon-note { color: #a0baca; font-size: .65rem; line-height: 1.5; margin: .25rem 0 0; }
@@ -90,8 +97,8 @@
 .home-ambient-light:nth-of-type(3) { top: 68%; left: 10%; }
 .home-ambient-light:nth-of-type(4) { top: 82%; left: 43%; }
 @media (prefers-reduced-motion: no-preference) {
-  #start-screen:not([hidden]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .home-mark-image { animation: home-mark-drift 7s ease-in-out infinite; will-change: transform; }
-  #start-screen:not([hidden]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .home-ambient-light { animation: home-light-drift 6s ease-in-out infinite; will-change: transform, opacity; }
+  #start-screen:not([hidden]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .home-mark-image { animation: home-mark-drift 7s ease-in-out infinite; will-change: transform; }
+  #start-screen:not([hidden]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .home-ambient-light { animation: home-light-drift 6s ease-in-out infinite; will-change: transform, opacity; }
   .home-ambient-light:nth-of-type(2) { animation-delay: -2s; }
   .home-ambient-light:nth-of-type(3) { animation-delay: -3s; }
   .home-ambient-light:nth-of-type(4) { animation-delay: -5s; }
@@ -124,7 +131,7 @@
   .start-hint { padding-bottom: 1.25rem; font-size: .7rem; }
 }
 @media (min-width: 52rem) and (min-height: 32rem) and (prefers-reduced-motion: no-preference) {
-  #start-screen:not([hidden]):not([data-quality="low"]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .home-exterior-cloud { animation: home-cloud-drift 16s ease-in-out infinite; will-change: transform, opacity; }
+  #start-screen:not([hidden]):not([data-quality="low"]):not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .home-exterior-cloud { animation: home-cloud-drift 16s ease-in-out infinite; will-change: transform, opacity; }
   #start-screen .home-exterior-cloud-south { animation-delay: -8s; }
 }
 @keyframes home-cloud-drift { 0%, 100% { transform: translate(0, 0) rotate(-1deg); opacity: .35; } 50% { transform: translate(10px, -8px) rotate(2deg); opacity: .55; } }
@@ -145,7 +152,7 @@
 }
 @media (max-height: 540px) {
   #start-screen { align-items: start; }
-  #start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode) .start-screen-panel { max-height: none; }
+  #start-screen:not(.is-skins-mode):not(.is-meta-mode):not(.is-act-mode):not(.is-entry-mode):not(.is-retention-mode) .start-screen-panel { max-height: none; }
 }
 /* Short landscape keeps the controls alongside the cover, not a tall stack. */
 @media (min-width: 600px) and (max-height: 540px) {

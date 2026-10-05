@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ARENA_CENTER } from '../config/constants';
+import { BOSS_DEFINITION } from '../content/bosses/BossDefinition';
+import { ENEMY_DEFINITIONS } from '../content/enemies/EnemyDefinitions';
 import { createDefaultSaveData } from '../platform/save/SaveStore';
+import { getRetentionWeeklyEdition, RETENTION_WEEK_ANCHOR_UTC, RETENTION_WEEK_MS } from '../content/retention/RetentionDefinitions';
 import type { PlatformAdapter, RewardedAdResult } from '../platform/Platform';
 import type { GameElements, GameOptions } from './Game';
 import { Game } from './Game';
@@ -296,6 +300,30 @@ describe('Game', () => {
     void runtime.requestDoubleNova.call(game, 1);
     expect(save).not.toHaveBeenCalled();
   });
+  it('records normal objectives without paying NOVA and keeps completed prizes pending after terminal settlement', () => {
+    let saved = createDefaultSaveData();
+    const save = vi.fn((next: typeof saved) => { saved = next; return true; });
+    const game = new Game(createOptions({ saveStore: { load: () => saved, save, clear: vi.fn() } }));
+    const runtime = game as unknown as {
+      retentionProgressEligibleThisRun: boolean;
+      combat: { stats: { kills: number; elapsedSeconds: number } };
+      finishRun: (outcome: 'victory') => void;
+      settleTerminalRun: (token: number) => boolean;
+      pendingTerminalRun: { novaReward: number; retentionPresentation: { message: string; bonusNova: number } };
+    };
+    runtime.retentionProgressEligibleThisRun = true;
+    runtime.combat.stats.kills = 100;
+    runtime.combat.stats.elapsedSeconds = 300;
+    runtime.finishRun('victory');
+    expect(saved.wallet.nova).toBe(runtime.pendingTerminalRun.novaReward);
+    expect(saved.retention.objectiveCycles['first-flight']).toEqual({ claimed: 0, value: 1 });
+    expect(saved.retention.completedObjectiveIds).toEqual([]);
+    expect(runtime.pendingTerminalRun.retentionPresentation.bonusNova).toBe(0);
+    expect(runtime.pendingTerminalRun.retentionPresentation.message).toContain('cobrar');
+    runtime.settleTerminalRun(1);
+    expect(saved.wallet.nova).toBe(runtime.pendingTerminalRun.novaReward);
+    expect(saved.retention.runsCompleted).toBe(1);
+  });
 
   it('pauses an Overdrive transition and resumes its remaining handoff time', () => {
     vi.useFakeTimers();
@@ -353,6 +381,138 @@ describe('Game', () => {
     runtime.updateSimulation.call(game);
 
     expect(runtime.gameState.phase).toBe('game-over');
+  });
+
+  it('fails a no-hit boss challenge on a shielded impact before same-tick victory', () => {
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      activeRetentionChallenge: 'core-duel';
+      retentionNoHitFailure: boolean;
+      player: { resolveDamage: () => { outcome: 'shielded'; incomingAmount: number; appliedAmount: number } };
+      combat: {
+        update: () => void;
+        events: Array<
+          | { type: 'playerDamaged'; amount: number; source: 'boss' }
+          | { type: 'retentionChallengeVictory' }
+        >;
+      };
+      updateSimulation: () => void;
+      gameState: { phase: string };
+    };
+    runtime.activeRetentionChallenge = 'core-duel';
+    runtime.player.resolveDamage = () => ({ outcome: 'shielded', incomingAmount: 1, appliedAmount: 0 });
+    runtime.combat.update = () => {
+      runtime.combat.events.push(
+        { type: 'playerDamaged', amount: 1, source: 'boss' },
+        { type: 'retentionChallengeVictory' }
+      );
+    };
+
+    runtime.updateSimulation.call(game);
+
+    expect(runtime.retentionNoHitFailure).toBe(true);
+    expect(runtime.gameState.phase).toBe('game-over');
+  });
+
+  it.each(['core-duel', 'warden-duel', 'fracture-duel'] as const)(
+    'starts %s without Calibration or twin emitters and restores its setup on retry', (challengeId) => {
+      const game = new Game(createOptions());
+      const runtime = game as unknown as {
+        stopped: boolean;
+        startScreen: { close: () => void } | null;
+        gameState: { phase: string; startRun: () => boolean };
+        activateRun: () => void;
+        beginRunIntro: (kind: string) => void;
+        calibrationId: string | null;
+        beginRetentionChallenge: (id: typeof challengeId, practiceOnly: boolean) => void;
+        resetRunState: () => void;
+        combat: {
+          readonly currentProjectileRank: number;
+          readonly hasTwinEmitters: boolean;
+          setProjectileRank: (rank: 2) => boolean;
+        };
+        player: { state: { x: number; y: number; radius: number } };
+      };
+      runtime.stopped = false;
+      runtime.startScreen = { close: vi.fn() };
+      runtime.gameState.phase = 'menu';
+      runtime.gameState.startRun = vi.fn(() => true);
+      runtime.activateRun = vi.fn();
+      runtime.beginRunIntro = vi.fn();
+
+      runtime.beginRetentionChallenge.call(game, challengeId, true);
+
+      const initialSpawn = { x: runtime.player.state.x, y: runtime.player.state.y };
+      expect(runtime.calibrationId).toBeNull();
+      expect(runtime.combat.currentProjectileRank).toBe(1);
+      expect(runtime.combat.hasTwinEmitters).toBe(false);
+
+      if (challengeId === 'core-duel') {
+        const bossY = ARENA_CENTER.y - BOSS_DEFINITION.spawnDistance;
+        const bossRadius = ENEMY_DEFINITIONS.boss.radius;
+        const distanceToBoss = Math.hypot(runtime.player.state.x - ARENA_CENTER.x, runtime.player.state.y - bossY);
+        expect(runtime.player.state.y).toBeGreaterThan(ARENA_CENTER.y);
+        expect(distanceToBoss).toBeGreaterThan(runtime.player.state.radius + bossRadius);
+      }
+
+      // Mimic a run upgrade, then ensure retry clears it and reapplies the start point.
+      expect(runtime.combat.setProjectileRank(2)).toBe(true);
+      runtime.player.state.x = ARENA_CENTER.x;
+      runtime.player.state.y = ARENA_CENTER.y;
+      runtime.resetRunState.call(game);
+      expect(runtime.player.state).toMatchObject(initialSpawn);
+      expect(runtime.combat.currentProjectileRank).toBe(1);
+      expect(runtime.combat.hasTwinEmitters).toBe(false);
+      if (challengeId === 'core-duel') expect(runtime.player.state.y).toBeGreaterThan(ARENA_CENTER.y);
+    });
+
+  it('awards weekly NOVA after Asterion is owned, once per edition', () => {
+    const defaults = createDefaultSaveData();
+    let persisted: ReturnType<typeof createDefaultSaveData> = {
+      ...defaults,
+      skins: { ...defaults.skins, unlocked: [...defaults.skins.unlocked, 'asterion'] }
+    };
+    const saveStore = {
+      load: vi.fn(() => persisted),
+      save: vi.fn(() => true),
+      saveDurably: vi.fn((next: ReturnType<typeof createDefaultSaveData>) => {
+        persisted = next;
+        return true;
+      }),
+      clear: vi.fn()
+    };
+    const game = new Game(createOptions({ saveStore }));
+    const runtime = game as unknown as {
+      activeRetentionChallenge: 'core-duel';
+      activeRetentionChallengePractice: false;
+      activeRetentionEdition: ReturnType<typeof getRetentionWeeklyEdition>;
+      settleRetentionChallenge: (pending: {
+        summary: { outcome: 'victory' };
+        settled: boolean;
+        retentionPresentation?: { message: string; bonusNova: number };
+      }, saved: ReturnType<typeof createDefaultSaveData>) => boolean;
+    };
+    const settleFor = (edition: ReturnType<typeof getRetentionWeeklyEdition>) => {
+      runtime.activeRetentionEdition = edition;
+      const pending: {
+        summary: { outcome: 'victory' };
+        settled: boolean;
+        retentionPresentation?: { message: string; bonusNova: number };
+      } = { summary: { outcome: 'victory' }, settled: false };
+      runtime.settleRetentionChallenge.call(game, pending, persisted);
+      return pending.retentionPresentation;
+    };
+    runtime.activeRetentionChallenge = 'core-duel';
+    runtime.activeRetentionChallengePractice = false;
+
+    const firstEdition = getRetentionWeeklyEdition(RETENTION_WEEK_ANCHOR_UTC);
+    expect(settleFor(firstEdition)).toMatchObject({ bonusNova: 250 });
+    expect(persisted.retention.weeklyClaimIds).toContain(firstEdition.editionId);
+    expect(settleFor(firstEdition)?.bonusNova).toBe(0);
+
+    const nextEdition = getRetentionWeeklyEdition(RETENTION_WEEK_ANCHOR_UTC + RETENTION_WEEK_MS);
+    expect(settleFor(nextEdition)).toMatchObject({ bonusNova: 250 });
+    expect(persisted.retention.weeklyClaimIds).toContain(nextEdition.editionId);
   });
 
   it('forwards the defeated Tank identity to presentation without changing its position', () => {

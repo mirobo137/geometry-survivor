@@ -1,9 +1,12 @@
 # RET-F01 — Retención: Bitácora, retos semanales y cápsula diaria
 
-**Estado: PENDIENTE DE IMPLEMENTAR. Sólo documentación.**
-Fecha: 03-10-2026. Base inspeccionada: `7d9ec8f` (`10 de 10`).
-Dirección de producto aceptada para elaborar este plan; no equivale a una
-orden de implementar, aprobación de balance, arte terminado o permiso del portal.
+**Estado: PROTOTIPO LOCAL IMPLEMENTADO; validación humana y puertas de publicación pendientes.**
+Plan inicial: 03-10-2026. Implementación local: 04-10-2026. Base: `d042357`.
+La implementación recibida por el jugador sigue siendo una prueba: sus cifras,
+cadencia y perfiles de combate no son balance aprobado ni permiso para publicar.
+La ruleta diaria y el extra opcional de NOVA están implementados para prueba
+local por solicitud posterior del usuario. Revisión comercial e integración
+real de anuncios en portales siguen siendo puertas de publicación.
 
 ## 1. Propósito y precedencia
 
@@ -27,12 +30,12 @@ sugerencia conversacional anterior de quitar su patrón de réplicas.
 
 | Elemento | Dirección de diseño | Estado de ejecución |
 | --- | --- | --- |
-| Bitácora del piloto | Objetivos permanentes de descubrimiento, dominio y Overdrive; resumen conectado con el siguiente objetivo. | Pendiente. |
-| Retos semanales | Un evento destacado, reutilizando recursos aprobados; condiciones particulares y cosméticos exclusivos. | Pendiente. |
-| Duelo de boss | Sin oleadas comunes ni cartas; boss completo, incluidas sus invocaciones. | Pendiente. |
-| Evasión Charger | Sin disparar; sobrevivir 60 segundos de simulación activa. | Pendiente. |
-| Gachapón/cápsula diaria | Una apertura gratuita cada 24 horas; NOVA o cosmético exclusivo. | Pendiente de implementación y revisión de portal. |
-| Colecciones finitas | Cosméticos adicionales al catálogo base; eventos recurrentes y NOVA después de completar la colección. | Arte, cantidad y economía por definir. |
+| Bitácora del piloto | 13 objetivos persistentes y resumen conectado al resultado normal. | Prototipo local implementado; economía y objetivos por validar. |
+| Retos semanales | Rotación UTC versionada, repetible y separada de las runs normales. | Prototipo local implementado; primera recompensa: Asterion Courier. |
+| Duelo de boss sin impactos | Sin oleadas comunes ni cartas elegibles; un impacto conectado termina el intento, aunque lo absorba el escudo. | Implementado para Core Sentinel, Orbital Warden y Fracture Engine; QA humano pendiente. |
+| Evasión Charger | Sin fuego/daño automático; sobrevivir 60 segundos activos, máximo cinco Chargers. | Prototipo local implementado; justicia y dificultad móvil pendientes. |
+| Ruleta diaria | Gratis cada 24 h; diez ranuras NOVA y Solstice Regent (1% inicial, +1 punto por giro hasta 20%). Extra con video también puede entregar skin. | Implementación local; [contrato y pruebas](RULETA_DIARIA.md); QA humano/publicación pendientes. |
+| Colecciones finitas | Diez naves, diez cañones y diez fondos exclusivos de retos/ruleta. Asterion y Solstice cuentan como dos de las diez naves; faltan ocho naves, diez cañones y diez fondos. | El conteo quedó definido; los 28 artes nuevos y su entrega siguen pendientes por el presupuesto de build. |
 
 Son propuestas para validar, no cifras aprobadas: cantidades de NOVA,
 probabilidades, garantía de cosmético, número de skins, calendario/fecha de
@@ -71,8 +74,36 @@ jugadores, no una promesa de resultados ni de aceptación comercial.
 
 En la base inspeccionada existen tres bosses, seis familias de arma con dos
 evoluciones, Overdrive, Laboratorio, NOVA y un catálogo base de diez naves,
-diez cañones y diez fondos. No existe todavía este sistema de eventos,
-cápsula diaria ni Bitácora persistente.
+tres duelos semanales repetidos cada tres semanas, una Bitácora y ruleta diaria.
+El catálogo cosmético de lanzamiento tiene diez naves, diez cañones y diez fondos.
+La colección exclusiva acordada añade Asterion y Solstice al conteo de diez
+naves, más diez cañones y diez fondos; sus 28 nuevas ilustraciones todavía no
+están incorporadas. La ruleta añade un extra opcional por video simulado
+localmente; ver [contrato vigente](RULETA_DIARIA.md).
+
+### Puerta de presupuesto para cosméticos exclusivos
+
+El artefacto local medido el 04-10-2026 ocupa 14,939,834 de 15,000,000 bytes;
+quedan 60,166 bytes. Esa build incluía aproximadamente 5 MB de mapas de
+diagnóstico y no representa el payload público separado. Por decisión del
+04-10-2026, CI conserva los `.map` junto con los bundles JS/CSS como artefacto
+temporal; Pages recibe una copia sin mapas y el límite de 15 MB se aplica al
+payload publicado. A partir de los derivados existentes
+(naves WebP de 42–75 KB, cañones de 8–22 KB y fondos con placa más preview de
+80–139 KB), el lote de 8 naves, 10 cañones y 10 fondos se estima en alrededor
+de 1.2–2.2 MB, antes de cualquier capa adicional de movimiento.
+
+Se midió sin aplicar una recompresión Q64 de los fondos actuales: recuperaría
+187,136 bytes, con PSNR de 37.56–45.49 dB frente a los derivados actuales.
+Eso aún quedaría muy por debajo del espacio necesario y no se considera una
+autorización para degradar arte aprobado. Por tanto, conservar el límite de
+15 MB y la calidad actual son puertas obligatorias: no generar/importar el lote
+completo hasta medir el payload público con los assets finales. No subir el
+límite ni borrar los mapas; se conservan fuera del deploy como diagnóstico. La
+limpieza de SVG sin consumidor de producción ordena el repositorio, pero no se
+cuenta como ahorro de descarga. La ruta local de vista previa con propiedad
+sintética se incorpora junto con el catálogo, y nunca debe persistir
+desbloqueos de prueba en el guardado real.
 
 Puntos de entrada existentes, no módulos nuevos ya implementados:
 
@@ -83,9 +114,10 @@ Puntos de entrada existentes, no módulos nuevos ya implementados:
   embestidas y límites authored.
 - [RunSummary](../../src/app/RunSummary.ts): resultado, tiempo, bajas, XP y score;
   no contiene un historial de maestrías o descubrimientos.
-- [SaveStore](../../src/platform/save/SaveStore.ts): schema 9, payload limitado
-  a 20,000 bytes, cartera, propiedad y selección de cosméticos, Laboratorio y
-  récords. Esa versión no añade campos de retención por este documento.
+- [SaveStore](../../src/platform/save/SaveStore.ts): schema 13, payload limitado
+  a 20,000 bytes, cartera, propiedad, Laboratorio, récords y progreso acotado
+  de retención. Schema 9 migra conservando sus datos previos y comienza la
+  Bitácora vacía; no se limpia el perfil.
 
 Fuera de alcance inicial: backend, servicios de hora externos, cuentas propias,
 compras reales, moneda nueva, apuestas, intercambio de skins, ranking mundial,
@@ -116,7 +148,10 @@ Overdrive; mejorar una marca comparable.
 - No bloquear armas, rutas ni mejoras existentes detrás de nuevos logros.
 - El resumen resalta hasta tres novedades relevantes y propone el siguiente
   intento sin abrir una cadena obligatoria de modales.
-- Premios únicos; insignias/títulos sin estadísticas y NOVA moderada por definir.
+- Actualización autorizada: los objetivos generales reciclan rangos con metas
+  y NOVA crecientes. Actos I–III y sus bosses de campaña son únicos. El final
+  sólo registra objetivos; NOVA se cobra manualmente aquí y entonces se activa
+  el siguiente rango desde cero. [Contrato de Bitácora](BITACORA_OBJETIVOS.md).
   No añadir daño permanente paralelo al Laboratorio.
 - Objetivos se actualizan por eventos/snapshots relevantes, no buscando toda
   la colección cada frame. Progreso e historial tienen capacidad finita.
@@ -154,6 +189,11 @@ una actualización del calendario no cambia reglas a mitad del combate.
   la recompensa del evento se resuelve por su propio contrato una sola vez.
 - Al salir se limpian amenazas, reservas y estado de evento; la siguiente
   partida normal restaura sus reglas. Nunca mutar definiciones globales.
+- Primera regla específica implementada para probar dificultad: los tres
+  duelos acortan las fases activas al 70% y recuperación al 33%, sin reducir
+  telegraphs. El ciclo de patrones resulta al menos 1.45× más rápido; sólo se
+  aplica al director del reto, no a campaña ni Overdrive. Aún requiere prueba
+  humana antes de aceptarse como balance.
 
 Propuesta de acceso, pendiente de confirmar: explicar el formato antes del
 primer intento y destacar duelos de bosses ya conocidos sin obligar a farmear
@@ -173,6 +213,15 @@ NO significa eliminar entidades, proyectiles o peligros del kit del boss.**
 Suprimir las oleadas no debe desactivar incidentalmente las invocaciones,
 reservas de pool o consumidores de ataques que comparten sistemas con ellas.
 Usar el kit vigente al implementar, no una descripción histórica sustituida.
+El casco del boss causa daño por contacto en cualquier fase y modo, no sólo
+cuando una geometría de ataque conecta. El detector barre el desplazamiento
+del boss para evitar atravesar al jugador entre ticks y aplica un cooldown de
+0.45 s mientras hay solapamiento; la práctica sin impactos falla también por
+este contacto.
+Sólo el duelo Core Sentinel añade una barrera física alrededor del núcleo
+(radio 112; el centro del jugador queda a ≥129 unidades). No daña al tocarla:
+impide entrar y elimina el estacionamiento en el centro. La arena presenta el
+anillo segmentado; campaña, Warden, Fracture y Charger no reciben esta regla.
 
 ### Ajustes admisibles y límites
 
@@ -188,7 +237,9 @@ aburrido el encuentro, pero no vaciar su identidad. Guía de calibración:
    posicionamiento o secuencia de los ataques existentes. Mantener todos los
    patrones definitorios presentes; no ocultarlos con probabilidades mínimas.
 4. Todo ajuste conserva telegraph/reacción/salidas seguras y necesita prueba
-   humana en touch. No reducir avisos para compensar menos enemigos comunes.
+   humana en touch. El primer perfil de prueba sube la cadencia acortando el
+   tramo activo y la recuperación; no reduce avisos. No añadir oleadas comunes
+   para compensar menos enemigos.
 5. Si se necesita un verbo ofensivo nuevo, pedir aprobación específica. «Cambiar
    comportamiento» no autoriza reemplazar silenciosamente el kit por otro boss.
 6. Registrar el perfil local del evento, motivo, parámetros y versión. Campaña
@@ -200,10 +251,11 @@ depende de posición y esquiva, no del poder permanente acumulado.
 
 ### Primer consumidor
 
-Propuesto: Core Sentinel, por ser el duelo inicial más acotado. Esta prioridad
-no excluye a Warden ni Fracture: sus duelos quedan pendientes en la misma guía.
-La victoria ocurre al derrotar al boss; resolver el caso simultáneo de muerte
-de boss/player antes de publicar, con una regla explícita y testeada.
+Los primeros tres eventos de la rotación son Core Sentinel, Orbital Warden y
+Fracture Engine; los tres exigen derrotar al boss sin recibir un impacto. El
+primer impacto registrado —incluido uno absorbido por escudo— termina el intento;
+un evento ignorado por invulnerabilidad no cuenta como impacto. Si impacto y
+victoria se registran en el mismo tick, prevalece el fallo del reto.
 
 ## 9. Evasión de Chargers — 60 segundos
 
@@ -229,10 +281,13 @@ El desafío mide lectura de avisos y desplazamiento, no DPS ni selección de car
 
 ## 10. Catálogo de eventos, calendario y repetición
 
-Primer lote propuesto: duelo Core Sentinel y evasión Charger. Después duelos
-completos de Warden/Fracture. Variantes futuras pueden reutilizar anillos,
-barridos o minas, con combinaciones concretas y validación humana por plantilla.
-No generar combinaciones arbitrarias que nunca se hayan probado.
+Rotación aprobada e implementada, en este orden: Core Sentinel sin impactos,
+Orbital Warden sin impactos y Fracture Engine sin impactos. Luego vuelve a
+empezar con Core Sentinel. Charger se conserva como práctica local, no como
+evento semanal. Sólo aparece una edición por semana;
+los tres duelos están disponibles como prácticas locales de QA descritas abajo.
+Variantes futuras pueden reutilizar ataques existentes con combinaciones
+concretas y validación humana por plantilla. No generar combinaciones arbitrarias.
 
 - Una edición destacada por semana; catálogo finito que vuelve a rotar.
 - Propuesta técnica pendiente de confirmar: cambio los lunes 00:00 UTC,
@@ -250,9 +305,26 @@ No generar combinaciones arbitrarias que nunca se hayan probado.
   Fijar esa ventana y su historial máximo antes de implementar.
 - No almacenar/reanudar una run activa sólo por añadir eventos; el contrato
   normal de recarga segura sigue vigente. Conservar logros/premios ya confirmados.
-- Práctica y récord personal del evento no conceden cobros adicionales. Un
+- Las repeticiones gratuitas no vuelven a pagar una edición ya cobrada. La primera
+  victoria elegible de cada edición puede entregar su recompensa; si Asterion ya
+  pertenece al jugador, entrega 250 NOVA en lugar de un duplicado, una sola vez
+  por edición. Si la cartera no puede aceptar el pago, no se registra el recibo.
+- Prácticas locales de QA no conceden premios, NOVA ni escrituras al guardado. Un
   ranking global o igualdad de semillas entre dispositivos exige trabajo y
   revisión independientes; no está incluido.
+
+### Rutas locales de práctica para QA
+
+En el target local, con `debug=1`, se puede abrir directamente cada duelo sin
+esperar la semana correspondiente. Estas rutas inician una práctica gratuita,
+sin premio, NOVA, récord normal ni cambios al guardado:
+
+- `/?debug=1&retention-challenge=core-duel&quality=high`
+- `/?debug=1&retention-challenge=warden-duel&quality=high`
+- `/?debug=1&retention-challenge=fracture-duel&quality=high`
+
+El parámetro se ignora en builds Poki/CrazyGames y Pages; no es un acceso de
+producción. El puerto/host debe ser el que esté usando el servidor local.
 
 ## 11. Colección semanal y recompensas
 
@@ -264,13 +336,15 @@ Los cosméticos mantienen todos los contratos de batalla de sus categorías.
 2. Al completar y confirmar la liquidación, desbloquear propiedad permanentemente
    y añadir el cosmético al catálogo elegible normal con origen «Reto semanal».
 3. No equiparlo sin decisión del jugador; ofrecer «Equipar» o «Seguir usando».
-4. Cobrar una sola vez por edición; múltiples victorias posteriores no entregan
-   skins, NOVA ni bonos normales de combate adicionales.
+4. Cobrar una sola vez por edición. Si Asterion ya está desbloqueada, la edición
+   entrega 250 NOVA en su lugar; victorias/reintentos adicionales en esa misma
+   edición no vuelven a pagar.
 5. Propuesta al repetir plantillas: destacar el siguiente cosmético pendiente
    según un orden estable; mostrarlo antes del intento. No entregar un duplicado
    mientras queden premios pendientes en la colección semanal.
-6. Una vez completa la colección semanal, futuras ediciones entregan una
-   cantidad authored de NOVA, también una sola vez por edición.
+6. La compensación actual se activa al poseer Asterion; el premio y la cantidad
+   de NOVA son provisionales hasta la validación humana. Una futura colección de
+   cosméticos semanales requerirá decidir si esta política cambia.
 7. Las diez opciones base por categoría siguen intactas. Las skins especiales
    son extras, no reemplazos, recolores indistinguibles ni compras/anuncios
    encubiertos. Lo ya adquirido conserva propiedad, selección e ID.
@@ -278,34 +352,22 @@ Los cosméticos mantienen todos los contratos de batalla de sus categorías.
 No hay ventajas de estadísticas en las skins de evento. Sus cañones/balas
 pueden tener identidad visual propia sin modificar colisión, daño o targeting.
 
-## 12. Cápsula diaria / gachapón gratuito
+## 12. Ruleta diaria: actualización autorizada 04-10-2026
 
-**Pendiente de validación comercial; no asumir permiso por ser gratuito.**
-La intención es una sorpresa temática espacial, no una apuesta. Cambiar el
-nombre o dibujar una cápsula no cambia la clasificación de su mecánica.
+El usuario pidió concretamente una rueda de once ranuras, una skin muy rara
+y un extra diario con video. Su actualización posterior permite skin en ambos
+giros, con probabilidad compartida creciente (1% inicial, +1 punto por giro
+completado hasta 20%, sin reinicio). Sustituye la propuesta
+inicial de cápsula sin anuncios ni porcentajes. Implementado en local: gratis
+cada 24 h, diez importes de 40–300 NOVA que comparten el porcentaje no dorado,
+Solstice Regent, duplicado convertido en 500 NOVA y extra tras video completado.
+No hay compra de giros, rachas o garantía de skin. Probabilidades visibles.
 
-- Un uso gratuito cada 24 horas reales desde la última apertura reclamada.
-  No son «una vez por fecha» ni 24 horas con el juego abierto.
-- Sin compras de intentos con NOVA/dinero, moneda premium, apuestas ni anuncios
-  de aperturas extra en el alcance inicial. Sin premios vacíos o «casi ganaste».
-- NOVA o una skin exclusiva diaria; colección separada de premios de habilidad.
-- Probabilidades publicadas por premio disponible, con pesos coherentes y
-  explicación de cambios por propiedad/garantía. Nunca cifras sólo cosméticas.
-- Excluir cosméticos ya adquiridos mientras queden pendientes. Tras completar
-  la colección diaria, convertir la tabla a NOVA; no reclamar skins inexistentes.
-- Propuesta: garantía tras un número máximo de aperturas sin cosmético. Umbral
-  y reglas de reinicio pendientes; contar aperturas reales, no días de conexión.
-- No reiniciar garantía ni propiedad por faltar días. No introducir una racha.
-- Resultado se decide y confirma una vez antes de la animación; cancelar,
-  recargar, hacer doble clic o cerrar la vista no vuelve a sortear ni duplica.
-- Sin acumulación ilimitada de aperturas por ausencia; propuesta inicial una
-  disponible al volver. Confirmar esta política con los demás parámetros.
-- Al agotarse la colección, la cápsula conserva utilidad con NOVA calibrada,
-  no aumenta atributos directamente ni reabre topes del Laboratorio.
-
-No fijar ahora porcentajes, garantía o importes. Simular previamente el tiempo
-esperado de colección y los casos extremos; verificar que la tabla publicada
-corresponda a la selección real, incluidas garantías y exclusión de duplicados.
+[RULETA_DIARIA](RULETA_DIARIA.md) gobierna los parámetros, economía estimada,
+guardado actual schema 13, Web Locks, recuperación de reloj, flujo de video/audio,
+arte y pruebas. No aumentar estadísticas por cosméticos ni cambiar silenciosamente
+esa política. El permiso de probar localmente no sustituye revisión comercial
+por portal, integración de SDK ni QA humano.
 
 ## 13. Economía y límites de recompensas
 
@@ -327,12 +389,12 @@ no una nueva medición del balance actual o del futuro modo Asalto.
 
 ## 14. Guardado, relojes y honestidad técnica
 
-Extender el schema únicamente cuando exista la primera implementación consumidora;
-no crear migración/campos por este plan. Mantener ajustes, cartera, propiedad,
-Laboratorio, actos, récords y última ruta del schema actual, sin reset.
+La primera implementación añadió schema 10; la Bitácora migra ahora a 13. Se
+conservan ajustes, cartera, propiedad, Laboratorio, actos, récords y última ruta;
+las cuentas anteriores reciben progreso vacío, sin reset de su perfil previo.
 
 Datos futuros mínimos: versión del catálogo, progreso finito de Bitácora,
-última reclamación diaria, garantía, identificadores de ediciones cobradas,
+última reclamación diaria, identificadores de ediciones cobradas,
 récords comparables acotados y resultado/recibo mínimo si hace falta recuperación.
 La propiedad cosmética debe reutilizar las colecciones existentes, no duplicarse
 en un segundo inventario contradictorio.
@@ -343,9 +405,11 @@ en un segundo inventario contradictorio.
   en una única transición de guardado. No grabar «cobrado» separado del premio.
 - La UI/animación representa un resultado confirmado; no decide la recompensa.
 - Probar doble clic, callback repetido, recarga durante reveal y fallo de storage.
-- Diseñar exclusión/revalidación entre pestañas del mismo origen; localStorage
-  no es una transacción multitab ni una garantía de cobro exactamente una vez.
-  Probar dos reclamaciones simultáneas, no sólo debounce de un botón.
+- La escritura local se verifica por lectura posterior antes de mostrar premio.
+  `localStorage` no es transacción entre pestañas: la exclusión/revalidación
+  concurrente sigue siendo un límite conocido para premios semanales.
+  Bitácora y ruleta usan Web Locks propios y confirman su pago antes del reveal, sin
+  prometer cobro global entre dispositivos.
 - Guardar al adquirir/completar/reclamar; nunca cada frame ni todo el historial
   por enemigo. Respetar `MAX_SAVE_BYTES` y una retención explícita de recibos.
 - Fallo de persistencia: mantener el juego accesible con su fallback y advertir
@@ -397,12 +461,20 @@ de diseño, no un `interface` ya implementado ni permiso para una reescritura.
 - Arte nuevo con identidad distinta, alpha/pivotes/perfiles/derivados y pruebas
   conforme a [Arte híbrido](ARTE_HIBRIDO.md), [Naves PNG](NAVES_PNG.md),
   [Fondos premium](FONDOS_PREMIUM.md) y [Catálogo diez](CATALOGO_DIEZ.md).
+- La Bitácora usa el arte raster/WebP ya aprobado de bosses y Chargers, además
+  de Asterion Courier como premio visible. Se carga bajo demanda en el panel y
+  en el resultado; tarjetas mobile pasan a una columna y el contenido conserva
+  scroll interno. No se genera una ilustración distinta por cada objetivo.
+- La pantalla estática no crea un loop Pixi, filtros animados ni partículas.
+  Las imágenes usan `?no-inline`, carga diferida/observación visible y recursos
+  reusados; verificar su coste en el build final antes de publicar.
 - Producir un lote piloto pequeño, no todas las skins semanales/diarias juntas.
   No precargar todo el catálogo ni añadir shaders/partículas para retención.
 - Última evidencia del catálogo: local 14,964,288 bytes, margen 35,712 hasta
   el límite de 15,000,000. Es evidencia fechada, no medida de este plan.
-  Medir/optimizar antes de ampliar; no elevar límite, retirar mapas o borrar
-  contratos para conseguir una puerta verde.
+  Medir/optimizar antes de ampliar; no elevar el límite, borrar mapas o retirar
+  contratos para conseguir una puerta verde. Los mapas se conservan como
+  artefacto diagnóstico de CI, fuera del payload publicado.
 - Pools/ataques de boss siguen limitados; reservar capacidad para réplicas y
   amenazas propias aunque no haya oleadas. Low no puede eliminar esos ataques.
 - Medir carga, memoria y cleanup con entradas/reintentos/cambios de skin.
@@ -426,38 +498,59 @@ no acepta azar, una recompensa diaria determinista sería una alternativa a
 aprobar explícitamente, no un cambio silencioso ni una supuesta forma de eludir
 restricciones. Retos de habilidad y Bitácora no dependen del permiso de la cápsula.
 
-Este plan no añade placements de publicidad. Mantener la política opcional
-actual fuera de los retos; no abrir anuncios por entrar a eventos o menús.
+La solicitud posterior añade `daily-wheel-nova` como placement opcional fuera
+de los retos; sólo se solicita al elegir el extra. No abrir anuncios por entrar
+a eventos o menús. Local indica simulación; portales no fingen éxito.
 GitHub Pages valida sólo el target local, no el sorteo comercial, cloud save o
 integración real. EX-09 conserva sus puertas.
 
-## 18. Entregas propuestas — todas pendientes
+## 18. Entregas y estado local
 
-No ejecutar esta tabla como tarea autorizada sólo por retomar el repositorio.
-Pedir la selección explícita de una entrega. El orden recomendado prioriza
-pruebas de habilidad; Bitácora puede desarrollarse aparte sin depender del azar.
+La implementación autorizada se hizo localmente. «Implementado» no equivale a
+validado por el usuario, aprobado en móvil o listo para portal.
 
-| ID | Entrega pendiente | Entrada / puerta |
+| ID | Entrega | Estado actual / puerta |
 | --- | --- | --- |
-| RET-00 | Confirmar parámetros, acceso, reglas de reloj/edición, economía y consulta de portal. | Aprobación de la subtarea; no crear infraestructura de red. |
-| RET-01 | Duelo piloto Core Sentinel con reglas aisladas y premio piloto. | Perfil fijo validado, kit completo, save idempotente y aceptación humana. |
-| RET-02 | Evasión Charger 60 s. | Sin ofensiva residual, rutas justas, límites y prueba móvil. |
-| RET-03 | Rotación semanal, colección finita y duelos Warden/Fracture. | Réplicas/ataques completos, calendario y repetición segura. |
-| RET-04 | Bitácora y resumen conectado. | Objetivos útiles, datos demostrables, recompensas únicas y UI no invasiva. |
-| RET-05 | Cápsula gratuita de 24 h. | Revisión por portal, probabilidades/garantía/economía aprobadas y pruebas de reloj/cobro. |
-| RET-06 | Validación de participación, regreso y costes. | Jugadores reales/portales, sin promesas causales ni SDK analítico nuevo implícito. |
+| RET-00 | Parámetros y calendario local del prototipo. | Valores de prueba documentados abajo; aún no son aprobación de balance. |
+| RET-01 | Duelos sin impactos de Core Sentinel, Warden y Fracture. | Core Sentinel aprobado por el usuario; Fracture se conserva sin cambios. Los duelos usan Projectile rango I (un emisor, sin Calibration), daño de contacto y cadencia de reto ≥1.45×. Core empieza y reintenta al lado opuesto del spawn del boss; recuperación al 33% del valor base. Sólo en Orbital Warden, las réplicas requieren dos impactos del proyectil base (28 de vida); campaña conserva 30. Tipado y suite completa (755 pruebas / 133 archivos) pasan; falta probar el nuevo ritmo de Warden en móvil. |
+| RET-02 | Evasión Charger 60 s. | Implementada sin disparo y con máximo cinco; falta probar esquiva en móvil. |
+| RET-03 | Rotación y duelos Warden/Fracture. | Rotación semanal Core → Warden → Fracture, repetida cada tres semanas; Charger queda fuera de calendario. Los duelos conservan kit y cadencia exclusiva; el tick de amenazas Fracture está activo. Los tres retos aprobados; QA en teléfono físico pendiente. |
+| RET-04 | Bitácora y resumen conectado. | 13 objetivos y pagos locales; validar comprensión, persistencia y economía. |
+| RET-05 | Ruleta gratuita de 24 h y extra de NOVA. | Implementada localmente por solicitud expresa; revisión humana y publicación de portal pendientes. |
+| RET-06 | Validación de participación, regreso y costes. | Pendiente: revisión humana/datos aprobados; no se añadió analítica. |
 
 RET-00 no obliga a detener el duelo por una revisión comercial del azar: ese
-permiso bloquea RET-05, no los eventos de habilidad. Antes de publicar deben
+permiso es puerta de publicación, no de la prueba local autorizada. Antes de publicar deben
 cumplirse EX-09 y las puertas de guardado, recursos e integridad aplicables.
 
-## 19. Validación y Definition of Done futura
+## 19. Validación: estado y Definition of Done pendiente
 
-Todas las casillas siguen pendientes; no se ejecutaron pruebas de estas features.
+Tipado y suite unitaria completa (755 pruebas / 133 archivos) comprobados en
+esta actualización de vida de réplicas Warden. En la actualización anterior
+de barrera central Core también pasaron 80 casos enfocados de geometría,
+ArenaModel, PlayerModel, render, definición del evento y Game.
+En la entrega anterior de los duelos
+se habían ejecutado 84 pruebas enfocadas de Game, CombatSimulation y
+RetentionDefinitions. Smoke enfocado PC/móvil previo
+valida la ruleta y sus assets, premio/equipo en batalla, persistencia y dos
+pestañas; no equivale a QA de combate/retención físico. Evidencia vigente en
+CONTINUACION.
 
-- [ ] Reglas puras: éxito/derrota simultáneos, loadout fijo, sin meta/cartas,
-  timer activo, reto sin armas, RNG/pesos/garantía y selección sin duplicados.
-- [ ] Core/Warden/Fracture mantienen todos sus patrones definitorios. Réplicas
+- [x] Lógica pura: calendario UTC determinista, progreso acotado, normalización
+  defensiva, objetivos generales por rangos y actos/bosses únicos con cobro manual.
+- [x] Retos aislados: proyectil fijo en duelos sin Laboratorio/cartas elegibles;
+  Chargers sin armas; timer de simulación; premios fuera del combate.
+- [x] Migración schema 9/10/11/12 → 13 sin borrar datos existentes; escritura de premios
+  confirmada por lectura local antes de presentarlos.
+- [x] Cubrir por unit test que un impacto bloqueado por escudo invalida el duelo
+  aunque la victoria del boss llegue en el mismo tick.
+- [x] Unit tests de contacto de casco para los tres bosses, cadencia aislada con
+  telegraphs intactos y amenazas Fracture activas: typecheck y suite completa
+  pasaron; aceptación humana en combate/móvil sigue pendiente.
+- [ ] Suite unitaria completa y smoke browser para los flujos nuevos, incluyendo
+  fallo de guardado y retorno entre modos (las 84 pruebas enfocadas ya pasaron).
+- [ ] Core/Warden/Fracture mantienen todos sus patrones definitorios; el primer
+  impacto conectado termina el duelo, también si lo bloquea el escudo. Réplicas
   de Warden se generan, atacan, reciben daño y limpian correctamente sin oleadas.
 - [ ] Reservas/capacidades suficientes para proyectiles, réplicas y minas; no
   se salta un patrón silenciosamente por quitar al director común.
@@ -465,8 +558,10 @@ Todas las casillas siguen pendientes; no se ejecutaron pruebas de estas features
   doble clic, callbacks, recarga, dos pestañas, fallo de storage y cartera al tope.
 - [ ] Cooldown 24 h, retrocesos/saltos de fecha, cambio semanal, versión de
   calendario y cierre de intentos; reglas iguales entre zonas horarias.
-- [ ] Migración desde schema 9 y guardados anteriores, datos corruptos,
-  propiedad desconocida y payload bajo el límite; ningún reset de progreso.
+- [x] La migración desde schema 9 preserva la cuenta y comienza los campos nuevos
+  vacíos. La prueba unitaria se ejecutó en la entrega de ruleta.
+- [ ] Verificar dos pestañas simultáneas y `MAX_SAVE_BYTES` bajo todos los
+  targets; el recibo local no es almacenamiento autoritativo.
 - [ ] Nada de XP/cartas/revive/bonos normales filtra hacia eventos. Los eventos
   no conceden desbloqueos de campaña ni récords normales por atajos.
 - [ ] Salir/reiniciar/evento → campaña/Overdrive restaura todas las reglas,
@@ -478,8 +573,8 @@ Todas las casillas siguen pendientes; no se ejecutaron pruebas de estas features
   duración y coste Low/High. No sustituir por emulación o una suite verde.
 - [ ] Typecheck/unitarias, smoke proporcionado y builds de tres targets bajo
   presupuestos; portal real cuando corresponda. No esperar/pushear automáticamente.
-- [ ] Probabilidades publicadas coinciden con el algoritmo; decisión de portal
-  registrada para la cápsula. Sin acceso, esa puerta sigue pendiente.
+- [ ] Aprobación de interfaz/combate en dispositivo físico y decisión de portal
+  sobre la cápsula. Sin acceso, esas puertas siguen pendientes.
 
 ## 20. Medir regreso sin confundirlo con sesiones largas
 
@@ -499,18 +594,21 @@ no prometer métricas o exportaciones que el portal concreto no proporciona.
 Datos locales acotados sirven para diagnóstico, no una medición poblacional
 fiable ni seguimiento entre dispositivos. Analítica externa requiere aprobación.
 
-## 21. Decisiones necesarias al retomar
+## 21. Decisiones actuales y pendientes de usuario/portal
 
-- [ ] Acceso a retos y momento en que se presentan sin spoilers ni grind nuevo.
-- [ ] Loadout, HP, arena y perfil del primer duelo; criterio de muerte simultánea.
-- [ ] Presión/capacidad/cadencia Charger y criterio terminal a los 60 s.
-- [ ] Ancla semanal, orden/versionado y cierre de un intento que cruza de edición.
-- [ ] Cantidad/identidad de premios diarios y semanales; primeros assets piloto.
-- [ ] NOVA por sistema y economía de varias semanas; propiedad al tope de cartera.
-- [ ] Pesos por premio, garantía y cooldown; aprobación específica de cada portal.
-- [ ] Política de fecha anómala, sincronización/fallback y deduplicación multitab.
-- [ ] Objetivos Bitácora que justifican medir progreso; no crear logros de relleno.
-
-**Siguiente acción documental cumplida:** plan detallado y corrección de identidad
-de bosses registrados. **Siguiente implementación: ninguna iniciada.** Retomar
-RET-00 o la entrega elegida sólo por nueva indicación explícita del usuario.
+- [x] Acceso opcional «Retos y Bitácora» en Inicio; Jugar conserva prioridad.
+- [x] Loadout fijo de proyectil; sin Laboratorio, cartas elegibles, anuncios,
+  revive ni double-NOVA. El Charger no recibe fuego automático.
+- [x] Charger: 60 s activos, máximo cinco y llegada gradual; justicia/tensión
+  requiere prueba humana antes de ajustar.
+- [x] Rotación técnica: lunes 00:00 UTC, ancla 2026-10-05, cuatro plantillas
+  versionadas. Un intento conserva la edición al cruzar una semana.
+- [x] Premio inicial: Asterion Courier, una vez por edición; al poseerla,
+  +250 NOVA por edición. Cifras provisionales; el lote futuro está pendiente.
+- [ ] Economía final y política al alcanzar el tope de cartera.
+- [ ] Reloj confiable y concurrencia entre pestañas: best-effort local, sin
+  servidor ni sincronización entre PCs.
+- [x] Ruleta diaria, cooldown 24 h y extra opcional NOVA por video implementados
+  en local; [contrato](RULETA_DIARIA.md).
+- [ ] Revisión comercial por portal e integración real de anuncios.
+- [ ] Revisión humana de progreso/recompensas y prueba física en móvil/PC.

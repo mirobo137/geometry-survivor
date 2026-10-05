@@ -1,122 +1,50 @@
 import { describe, expect, it } from 'vitest';
-import turtleSvg from './turtle/turtle.svg?raw';
 import chaserSvg from './chaser/chaser.svg?raw';
-import chaserRearSvg from './chaser/chaser-rear.svg?raw';
-import chaserWingsSvg from './chaser/chaser-wings.svg?raw';
-import chaserHullSvg from './chaser/chaser-hull.svg?raw';
-import chaserCockpitSvg from './chaser/chaser-cockpit.svg?raw';
 import fastSvg from './fast/fast.svg?raw';
-import fastRearSvg from './fast/fast-rear.svg?raw';
-import fastWingsSvg from './fast/fast-wings.svg?raw';
-import fastHullSvg from './fast/fast-hull.svg?raw';
-import fastCockpitSvg from './fast/fast-cockpit.svg?raw';
 import tankSvg from './tank/tank.svg?raw';
-import tankRearSvg from './tank/tank-rear.svg?raw';
-import tankWingsSvg from './tank/tank-wings.svg?raw';
-import tankHullSvg from './tank/tank-hull.svg?raw';
-import tankCockpitSvg from './tank/tank-cockpit.svg?raw';
 import eliteSvg from './elite/elite.svg?raw';
-import eliteRearSvg from './elite/elite-rear.svg?raw';
-import eliteWingsSvg from './elite/elite-wings.svg?raw';
-import eliteHullSvg from './elite/elite-hull.svg?raw';
-import eliteCockpitSvg from './elite/elite-cockpit.svg?raw';
 import orbiterSvg from './orbiter/orbiter.svg?raw';
-import orbiterRearSvg from './orbiter/orbiter-rear.svg?raw';
-import orbiterWingsSvg from './orbiter/orbiter-wings.svg?raw';
-import orbiterHullSvg from './orbiter/orbiter-hull.svg?raw';
-import orbiterCockpitSvg from './orbiter/orbiter-cockpit.svg?raw';
 import chargerSvg from './charger/charger.svg?raw';
-import chargerRearSvg from './charger/charger-rear.svg?raw';
-import chargerWingsSvg from './charger/charger-wings.svg?raw';
-import chargerHullSvg from './charger/charger-hull.svg?raw';
-import chargerCockpitSvg from './charger/charger-cockpit.svg?raw';
 import splitterSvg from './splitter/splitter.svg?raw';
-import splitterRearSvg from './splitter/splitter-rear.svg?raw';
-import splitterWingsSvg from './splitter/splitter-wings.svg?raw';
-import splitterHullSvg from './splitter/splitter-hull.svg?raw';
-import splitterCockpitSvg from './splitter/splitter-cockpit.svg?raw';
 import prismWeaverSvg from './prism-weaver/prism-weaver.svg?raw';
-import prismWeaverRearSvg from './prism-weaver/prism-weaver-rear.svg?raw';
-import prismWeaverWingsSvg from './prism-weaver/prism-weaver-wings.svg?raw';
-import prismWeaverHullSvg from './prism-weaver/prism-weaver-hull.svg?raw';
-import prismWeaverCockpitSvg from './prism-weaver/prism-weaver-cockpit.svg?raw';
 import replicaSvg from './warden-replica/warden-replica.svg?raw';
-import replicaRearSvg from './warden-replica/warden-replica-rear.svg?raw';
-import replicaWingsSvg from './warden-replica/warden-replica-wings.svg?raw';
-import replicaHullSvg from './warden-replica/warden-replica-hull.svg?raw';
-import replicaCockpitSvg from './warden-replica/warden-replica-cockpit.svg?raw';
 
-describe('enemy SVG masters', () => {
-  it('keeps the top-down turtle within the character contract', () => {
-    expect(turtleSvg).toContain('viewBox="-32 -32 64 64"');
-    expect(turtleSvg).toContain('role="img"');
-    expect(turtleSvg).toContain('id="enemy-turtle-shell-base"');
-    expect(turtleSvg).toContain('id="enemy-turtle-head-base"');
-    expect(turtleSvg).toContain('id="enemy-turtle-leg-front-left"');
-    expect(turtleSvg).toContain('id="enemy-turtle-leg-rear-right"');
-    expect(turtleSvg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
-    const ids = [...turtleSvg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.every((id) => id.startsWith('enemy-turtle-'))).toBe(true);
-    expect((turtleSvg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(20);
-  });
-});
+const productionFallbacks = [
+  ['enemy-chaser-', chaserSvg],
+  ['enemy-fast-', fastSvg],
+  ['enemy-tank-', tankSvg],
+  ['enemy-elite-', eliteSvg],
+  ['enemy-orbiter-', orbiterSvg],
+  ['enemy-charger-', chargerSvg],
+  ['enemy-splitter-', splitterSvg],
+  ['enemy-prism-weaver-', prismWeaverSvg],
+  ['enemy-warden-replica-', replicaSvg]
+] as const;
 
-describe('enemy SVG masters', () => {
-  it('keeps Tank master identical to the ordered modular geometry', () => {
-    const geometry = (svg: string): string[] => svg.match(/<(?:path|circle|ellipse|polygon|rect)\b[^>]*\/>/g) ?? [];
-    expect(geometry(tankSvg)).toEqual([tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg].flatMap(geometry));
-    expect(geometry(tankSvg)).toHaveLength(23);
-  });
-  it('keeps the Fast, Tank and Elite family masters self-contained and directional', () => {
-    const families = [
-      ['enemy-chaser-', chaserSvg, [chaserRearSvg, chaserWingsSvg, chaserHullSvg, chaserCockpitSvg]],
-      ['enemy-fast-', fastSvg, [fastRearSvg, fastWingsSvg, fastHullSvg, fastCockpitSvg]],
-      ['enemy-tank-', tankSvg, [tankRearSvg, tankWingsSvg, tankHullSvg, tankCockpitSvg]],
-      ['enemy-elite-', eliteSvg, [eliteRearSvg, eliteWingsSvg, eliteHullSvg, eliteCockpitSvg]],
-      ['enemy-orbiter-', orbiterSvg, [orbiterRearSvg, orbiterWingsSvg, orbiterHullSvg, orbiterCockpitSvg]],
-      ['enemy-charger-', chargerSvg, [chargerRearSvg, chargerWingsSvg, chargerHullSvg, chargerCockpitSvg]],
-      ['enemy-splitter-', splitterSvg, [splitterRearSvg, splitterWingsSvg, splitterHullSvg, splitterCockpitSvg]],
-      ['enemy-prism-weaver-', prismWeaverSvg, [prismWeaverRearSvg, prismWeaverWingsSvg, prismWeaverHullSvg, prismWeaverCockpitSvg]],
-      ['enemy-warden-replica-', replicaSvg, [replicaRearSvg, replicaWingsSvg, replicaHullSvg, replicaCockpitSvg]]
-    ] as const;
-    for (const [prefix, svg, parts] of families) {
+describe('enemy SVG fallback masters', () => {
+  it('keeps every production fallback complete, safe and framed', () => {
+    for (const [prefix, svg] of productionFallbacks) {
       expect(svg).toContain('viewBox="-32 -32 64 64"');
       expect(svg).toContain('preserveAspectRatio="xMidYMid meet"');
       expect(svg).toContain('role="img"');
       expect(svg).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
+
       const ids = [...svg.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
       expect(ids.length).toBeGreaterThanOrEqual(5);
       expect(new Set(ids).size).toBe(ids.length);
       expect(ids.every((id) => id.startsWith(prefix))).toBe(true);
-      // Tank bakes bevels into textures; its source budget is documented in tank/README.md.
       expect((svg.match(/<(?:path|circle|ellipse|polygon|rect)\b/g) ?? []).length).toBeLessThanOrEqual(24);
-      const geometry = (source: string): string[] => source.match(/<(?:path|circle|ellipse|polygon|rect)\b[^>]*\/>/g) ?? [];
-      expect(geometry(svg)).toEqual(parts.flatMap(geometry));
-      for (const part of parts) {
-        expect(part).toContain('viewBox="-32 -32 64 64"');
-        expect(part).toContain('preserveAspectRatio="xMidYMid meet"');
-        expect(part).not.toMatch(/<script|<foreignObject|<image|url\(|on[a-z]+=|filter=|mask=/i);
-        const partIds = [...part.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
-        expect(new Set(partIds).size).toBe(partIds.length);
-        expect(partIds.every((id) => id.startsWith(prefix))).toBe(true);
-        for (const [, pathData] of part.matchAll(/\sd="([^"]+)"/g)) {
-          expect(svg).toContain(`d="${pathData}"`);
-        }
-      }
     }
   });
 
-  it('keeps the Warden replica geometry inside its shared 64px texture frame', () => {
-    for (const svg of [replicaSvg, replicaRearSvg, replicaWingsSvg, replicaHullSvg, replicaCockpitSvg]) {
-      // Pixi's Graphics.svg parser walks <g> but does not apply its transform.
-      expect(svg).not.toMatch(/<g\s+transform=/);
-      const values = [...svg.matchAll(/\sd="([^"]+)"/g)].flatMap(([, pathData]) =>
-        [...pathData.matchAll(/-?(?:\d+\.\d+|\d+|\.\d+)/g)].map(([value]) => Number(value))
-      );
-      expect(values.length).toBeGreaterThan(0);
-      expect(Math.min(...values)).toBeGreaterThanOrEqual(-32);
-      expect(Math.max(...values)).toBeLessThanOrEqual(32);
-    }
+  it('keeps the Warden replica fallback inside its shared 64px texture frame', () => {
+    // Pixi's Graphics.svg parser walks <g> but does not apply its transform.
+    expect(replicaSvg).not.toMatch(/<g\s+transform=/);
+    const values = [...replicaSvg.matchAll(/\sd="([^"]+)"/g)].flatMap(([, pathData]) =>
+      [...pathData.matchAll(/-?(?:\d+\.\d+|\d+|\.\d+)/g)].map(([value]) => Number(value))
+    );
+    expect(values.length).toBeGreaterThan(0);
+    expect(Math.min(...values)).toBeGreaterThanOrEqual(-32);
+    expect(Math.max(...values)).toBeLessThanOrEqual(32);
   });
 });

@@ -33,11 +33,14 @@ const clamp01 = (value: number): number => Math.min(Math.max(value, 0), 1);
  */
 export class ArenaModel {
   private readonly actDirector: RadialActDirector;
+  private readonly centerExclusionRadius: number;
   public state: ArenaState;
 
-  public constructor(actDirector: RadialActDirector = new RadialActDirector()) {
+  public constructor(actDirector: RadialActDirector = new RadialActDirector(), centerExclusionRadius = 0) {
     this.actDirector = actDirector;
-    this.state = createInitialArenaState(this.actDirector.initialArenaShape);
+    this.centerExclusionRadius = Number.isFinite(centerExclusionRadius)
+      ? Math.max(0, centerExclusionRadius) : 0;
+    this.state = createInitialArenaState(this.actDirector.initialArenaShape, this.centerExclusionRadius);
   }
 
   public update(dtSeconds: number): void {
@@ -72,12 +75,13 @@ export class ArenaModel {
       expansionProgress,
       expansionIndex,
       resonance,
-      ...shapeFrame
+      ...shapeFrame,
+      ...(this.centerExclusionRadius > 0 ? { centerExclusionRadius: this.centerExclusionRadius } : {})
     };
   }
 
   public reset(): void {
-    this.state = createInitialArenaState(this.actDirector.initialArenaShape);
+    this.state = createInitialArenaState(this.actDirector.initialArenaShape, this.centerExclusionRadius);
   }
 
   private expansionResonance(elapsedSeconds: number, startSeconds: number): number {
@@ -146,7 +150,7 @@ const getShapeFrame = (
   };
 };
 
-const createInitialArenaState = (shape: ArenaShape): ArenaState => ({
+const createInitialArenaState = (shape: ArenaShape, centerExclusionRadius = 0): ArenaState => ({
   elapsedSeconds: 0,
   radius: ARENA_RADIUS,
   expansionProgress: 0,
@@ -158,5 +162,6 @@ const createInitialArenaState = (shape: ArenaShape): ArenaState => ({
   morphProgress: 0,
   shapeTelegraphProgress: 0,
   shapePhase: 'stable',
-  shapeIndex: 0
+  shapeIndex: 0,
+  ...(centerExclusionRadius > 0 ? { centerExclusionRadius } : {})
 });

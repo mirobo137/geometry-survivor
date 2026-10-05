@@ -1,15 +1,19 @@
 # Personajes SVG
 
-Cada personaje tiene una carpeta propia. El master y sus piezas visuales viven
-junto a su contrato, mientras que la simulacion permanece en `src/simulation/`.
+Las naves PNG son el arte principal; aquí sólo permanecen los fallback SVG que
+consume producción. La simulación permanece en `src/simulation/`.
 
 ```text
 characters/
 └─ player/
    ├─ README.md
-   ├─ player.svg
-   └─ piezas-animables.svg
+   ├─ player-body.svg
+   ├─ player-ring.svg
+   ├─ player-core.svg
+   ├─ player-shadow.svg
+   ├─ player-accent.svg
+   └─ skins/<id>/{body,ring,core}.svg
 ```
 
-La carpeta `player/` queda preparada para mejorar el jugador sin mezclar sus
-assets con enemigos ni con la UI.
+`PlayerHullSvg.ts` compone las piezas de fallback por skin. No se guardan
+copias completas de la nave ni armas dentro de este catálogo.

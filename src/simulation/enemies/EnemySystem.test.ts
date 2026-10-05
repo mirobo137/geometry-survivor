@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
+import { WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
 import { PlayerModel } from '../PlayerModel';
 import { AngularActDirector } from '../acts/AngularActDirector';
 import { EnemyPool } from '../combat/EntityPools';
@@ -38,6 +39,28 @@ describe('EnemySystem', () => {
     expect(system.update(1 / 60, player.state)).toBeNull();
     const cooldownResults = Array.from({ length: 30 }, () => system.update(1 / 60, player.state));
     expect(cooldownResults).toContain(enemy.contactDamage);
+  });
+
+  it('keeps authored replica health by default and supports the two-hit Warden duel override', () => {
+    const authored = new EnemySystem(new EnemyPool(2), new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    authored.spawnWardenReplicas(400, 300, 880, 300, ARENA_RADIUS);
+    const authoredReplica = authored.states.find((enemy) => enemy.active)!;
+    expect(authoredReplica.maxHealth).toBe(ENEMY_DEFINITIONS['warden-replica'].maxHealth);
+
+    const twoHit = new EnemySystem(
+      new EnemyPool(2),
+      new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
+      undefined,
+      undefined,
+      { wardenReplicaMaxHealthOverride: WEAPON_DEFINITIONS.projectile.damage * 2 }
+    );
+    twoHit.spawnWardenReplicas(400, 300, 880, 300, ARENA_RADIUS);
+    const replica = twoHit.states.find((enemy) => enemy.active)!;
+    expect(replica.maxHealth).toBe(WEAPON_DEFINITIONS.projectile.damage * 2);
+    replica.health -= WEAPON_DEFINITIONS.projectile.damage;
+    expect(replica.health).toBeGreaterThan(0);
+    replica.health -= WEAPON_DEFINITIONS.projectile.damage;
+    expect(replica.health).toBe(0);
   });
 
   it('honors temporary slow and stun control without changing an enemy base speed', () => {

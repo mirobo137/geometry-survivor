@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import heroSceneSvg from './hero-scene.svg?raw';
 import markSvg from './mark.svg?raw';
 
 const validateStartAsset = (svg: string, viewBox: string, idPrefix: string): void => {
@@ -20,10 +19,4 @@ describe('start screen SVG asset', () => {
     expect(markSvg).toContain('preserveAspectRatio="xMidYMid meet"');
   });
 
-  it('keeps the ambient hero scene scalable and safe for inline animation', () => {
-    validateStartAsset(heroSceneSvg, '0 0 1200 900', 'ui-start-hero-');
-    expect(heroSceneSvg).toContain('preserveAspectRatio="xMidYMid slice"');
-    expect(heroSceneSvg).toContain('class="start-hero-sweep');
-    expect(heroSceneSvg).toContain('class="start-hero-node');
-  });
 });

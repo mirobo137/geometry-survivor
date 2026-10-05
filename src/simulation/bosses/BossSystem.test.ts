@@ -43,12 +43,31 @@ describe('BossSystem', () => {
       const boss = new BossSystem(enemies, { ...definition, startSeconds: 0 });
       expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
       expect(boss.state.phase).toBe('intro');
-      player.state.x = boss.state.x;
-      player.state.y = boss.state.y;
       for (let index = 0; index < Math.floor(definition.introSeconds * 60) - 1; index += 1) {
         expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
         expect(boss.state.phase).toBe('intro');
       }
+    }
+  );
+
+  it.each([BOSS_DEFINITION, ORBITAL_WARDEN_DEFINITION, FRACTURE_ENGINE_DEFINITION])(
+    'damages on $id hull contact even during its intro and throttles sustained overlap', definition => {
+      const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(1280, 720));
+      const player = new PlayerModel();
+      const boss = new BossSystem(enemies, {
+        ...definition,
+        startSeconds: 0,
+        introSeconds: 5,
+        movementAngularSpeed: 0
+      });
+
+      expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
+      player.state.x = boss.state.x;
+      player.state.y = boss.state.y;
+
+      expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(definition.damage);
+      expect(boss.state.phase).toBe('intro');
+      expect(boss.update(1 / 60, 0, player.state, ARENA_RADIUS)).toBe(0);
     }
   );
 

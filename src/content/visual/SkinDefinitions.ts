@@ -5,7 +5,7 @@ import {
 } from './VisualTokens';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
-export type SkinAcquisition = 'default' | 'nova';
+export type SkinAcquisition = 'default' | 'nova' | 'event' | 'daily-wheel';
 export type PlayerSkinSignature = 'aurora' | 'prism' | 'solar' | 'verdant' | 'quasar' | 'supernova' | 'manta';
 
 export interface PlayerSkinDefinition {
@@ -133,6 +133,18 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     description: 'Una concha blindada de cobalto y latón abraza un reactor turquesa excéntrico.',
     rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 4200,
     palette: PLAYER_SKINS.nautilus, acquisition: 'nova', signature: 'quasar'
+  },
+  {
+    id: 'asterion', name: 'Asterion Courier', subtitle: 'Mensajero de la última órbita',
+    description: 'Una nave de escolta de marfil y titanio oscuro, unida por aletas abiertas alrededor de un reactor verde menta.',
+    rarity: 'RETO SEMANAL · EXCLUSIVA', tier: 'epic', priceNova: 0,
+    palette: PLAYER_SKINS.asterion, acquisition: 'event', signature: 'aurora'
+  },
+  {
+    id: 'solstice', name: 'Solstice Regent', subtitle: 'Corona del eclipse',
+    description: 'Tres proas de obsidiana y oro abrazan un reactor carmesí. Exclusiva de la ruleta: gratis o con video. Probabilidad creciente de 1% a 20%, sin ventajas de combate.',
+    rarity: 'RULETA DIARIA · EXCLUSIVA', tier: 'epic', priceNova: 0,
+    palette: PLAYER_SKINS.solstice, acquisition: 'daily-wheel', signature: 'solar'
   }
 ] as const;
 

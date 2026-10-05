@@ -1,14 +1,142 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 04-10-2026. Base Git de la entrega: `e66273c` en `main`,
-sincronizada con remoto al iniciar. El rediseño descrito aquí queda como cambios
-locales sin commit, push o publicación. Este snapshot no reemplaza
+Actualizado: 04-10-2026. Base Git de esta entrega: `d042357` en `main`.
+El prototipo descrito aquí queda como cambios locales sin commit, push o
+publicación. Este snapshot no reemplaza
 `PLAN_DESARROLLO.md` ni el estado Git.
+
+Última entrega local (04-10): GitHub Actions conserva por 30 días los source
+maps del build `local` junto con JS/CSS; Pages publica `dist/pages` sin mapas,
+sin borrar diagnósticos ni subir el límite de 15 MB. Medición actual: Pages
+9,875,558 B; mapas 5,087,383 B; Poki 9,875,488 B; CrazyGames 9,875,494 B.
+El diagnóstico conserva los vínculos sourceMappingURL; la copia pública los
+retira junto con `.map`. Typecheck y 749 unitarias
+/ 132 archivos pasan; los tres builds y el guard de tamaño pasan. Sin suite
+browser, push ni deploy en GitHub todavía.
+
+Se retiraron 57 SVG que no consumía producción (70,112 B): masters completos
+antiguos de player/cañones, componentes de enemigos, tortuga SVG y escena SVG
+del inicio. Las rutas de fallback que aún usa el juego permanecen; también los
+dos fondos SVG guardados intencionalmente como referencia histórica. Las
+pruebas estructurales ahora cubren los fallbacks activos. El ahorro es del
+repositorio, no se suma al presupuesto publicado.
 
 ## Solicitud vigente y siguiente acción
 
-Entrega solicitada: sustituir el primer lote similar a SVG por **16 naves
-militares originales** con el enfoque artístico del Tank aprobado: 13 enemigos
+Regla base de los duelos: el casco de los tres bosses causa daño por contacto en
+cualquier fase/modo (detección barrida, cooldown 0.45 s). El perfil de ataques
+es exclusivo de los retos y conserva los telegraphs; Fracture actualiza sus
+proyectiles/minas durante el duelo. La prueba manual de dificultad, especialmente
+en móvil, sigue pendiente.
+
+Nuevo ajuste solicitado para el ensayo: Core Duel solamente bloquea el centro
+con un anillo visible de radio 112; el casco del jugador queda fuera y la
+barrera no causa daño. Pruebas enfocadas de geometría, ArenaModel, PlayerModel,
+render, definición del evento y Game: 80/80 correctas. Typecheck pasó; repetir
+la suite completa también pasó (751 pruebas / 133 archivos). Validar en pantalla
+que la barrera suba la dificultad sin estorbar el paso alrededor, especialmente
+en móvil, queda pendiente.
+
+Últimos ajustes tras feedback: Core inicia y reintenta al sur del anillo, opuesto
+al spawn del boss; los tres duelos eliminan Calibration y parten en Projectile
+rango I con un solo emisor. La recuperación sube a 33% del valor base (antes
+25%), dejando un ciclo todavía ≥1.45× más rápido que campaña; kits y telegraphs
+se conservan. `typecheck` y suite completa: 754 pruebas / 133 archivos. Falta
+confirmación visual y de game feel en navegador/móvil.
+
+Ajuste solicitado para terminar de balancear Orbital Warden: únicamente las
+réplicas del reto semanal mueren con dos impactos del Proyectil base (28 de
+vida frente a 30 en campaña); Core Sentinel, Fracture Engine y el Warden de
+campaña no cambian. Core Sentinel queda aprobado por el usuario; Fracture se
+conserva sin cambios. `typecheck` pasó y la suite completa quedó en 755 pruebas
+/ 133 archivos correctos. Falta comprobar el ritmo de Warden en pantalla/móvil.
+
+Bitácora actualizada: siete objetivos generales se reciclan con metas mayores
+y +25% de la recompensa base por rango; seis objetivos de actos/bosses de campaña
+son únicos y se ocultan al cobrar. Terminar una run sólo deja el premio pendiente.
+Cobro manual en Bitácora activa la siguiente meta desde cero, con pago durable
+y lock entre pestañas; schema 13 conserva premios previos sin repagarlos.
+Contrato: [BITACORA_OBJETIVOS](docs/design/BITACORA_OBJETIVOS.md).
+Retos semanales actualizados localmente: Core Sentinel, Orbital Warden y Fracture
+Engine son duelos sin impactos, aprobados por el usuario; ahora rotan en un ciclo
+de tres semanas. Charger permanece fuera de la rotación semanal. Primer
+impacto conectado falla el intento incluso si lo bloquea el escudo; las réplicas
+y ataques de Warden siguen activos. Asterion es el premio principal; si ya se
+posee, una edición distinta paga +250 NOVA sólo una vez. La práctica local no
+guarda ni da premios. Aceptación humana sigue pendiente.
+Validación final de Bitácora: tipado, 737 unitarias / 132 archivos y 10 smoke
+PC/móvil (29.6s, incluye regresión de ruleta), correctos. Builds completos:
+Local 14,939,834 bytes, Poki 9,869,389, CrazyGames 9,869,395. Margen local
+60,166 bytes bajo 15 MB; warning de chunk JS previo conservado. Sin commit/push.
+
+Catálogo exclusivo de retos/ruleta solicitado: diez naves, diez cañones y diez
+fondos; contar Asterion y Solstice dentro de las diez naves (ocho naves nuevas).
+La estimación de 28 derivados nuevos es 1.2–2.2 MB, frente a los 60,166 bytes
+de margen de la medición anterior, que incluía source maps públicos. La nueva
+copia Pages deja 5,124,442 B antes del tope de 15 MB; el lote estimado cabe en
+el baseline actual, pero se medirá el build final antes de aprobarlo. No
+cambiar calidad de arte ni borrar mapas. No se generó aún el lote ni la ruta
+debug de vista previa. Estado y mediciones: [plan de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md#puerta-de-presupuesto-para-cosmeticos-exclusivos).
+
+Actualización de ruleta comprobada: 729 unitarias en 131 archivos y seis smoke
+PC/móvil (21.2s); tipado y builds Local/Poki/CrazyGames correctos:
+14,918,422 / 9,863,397 / 9,863,403 bytes. La probabilidad aumenta sólo con
+premios guardados, no videos cancelados ni reintentos fallidos; conserva el
+porcentaje al recargar. Schema 11 mantiene premios/cooldown e inicia la nueva
+probabilidad en 1% porque no guardaba el conteo histórico. QA físico pendiente.
+
+Entrega solicitada: iniciar la implementación del plan de retención. Se añadieron
+localmente una Bitácora persistente, 13 familias de objetivos, resumen terminal, rotación
+UTC de tres duelos semanales y evasión Charger de 60 segundos en práctica. La
+recompensa piloto semanal es Asterion Courier. La solicitud posterior ya añadió
+la **Ruleta diaria** junto a Retos y Bitácora: marco generado y Solstice Regent
+exclusiva y diez ranuras NOVA; gratis cada 24 h y extra diario con video.
+Ambos pueden entregar la skin: primer giro 1%, +1 punto por giro completado
+hasta 20%, persistente sin reinicio diario ni al ganar. No compra de giros.
+Las cifras son provisionales.
+
+Al probar la rotación: en Inicio abrir **Retos y Bitácora**. Antes del ancla
+2026-10-05 00:00 UTC sólo se permite practicar sin premio; al empezar la edición
+aparece Core Sentinel. Cada lunes 00:00 UTC rotan Core Sentinel, Orbital Warden
+y Fracture Engine; al terminar la tercera semana vuelve Core Sentinel.
+Para probar hoy los tres duelos sin esperar la rotación, usar el servidor local
+con `debug=1&retention-challenge=core-duel`, `warden-duel` o `fracture-duel`;
+estas rutas no otorgan NOVA ni alteran el guardado.
+El menú de resultado regresa a Bitácora. Una nave ganada no se equipa sola.
+El duelo sólo permite la build fija de proyectiles; Warden conserva sus réplicas
+y el kit completo. Charger no dispara, no recibe armas automáticas y el grupo
+crece hasta cinco. La Bitácora sólo cuenta resultados normales, no abandonos ni
+resultados de retos.
+
+La migración actual es schema 9/10/11/12 → 13 y conserva el perfil anterior. El pago local se
+confirma por lectura posterior; la ruleta usa Web Locks entre pestañas del mismo
+origen y guarda antes de animar. No es guardado autoritativo ni entre dispositivos.
+No equipa premios sin decisión del jugador. Local/Pages indica video simulado;
+Poki/CrazyGames no simulan éxito. Revisión comercial de portal sigue pendiente.
+Reglas, arquitectura, economía estimada y límites: [RULETA_DIARIA](docs/design/RULETA_DIARIA.md).
+
+Comprobados tipado, suite unitaria y smoke enfocado PC/móvil de ruleta (guardado,
+recarga, skin/equipo/Inicio/batalla, 320/390/844/1280px, dos pestañas y video
+cancelado). Capturas de ruleta en `test-results`. Se corrigió XP que filtraban las réplicas en duelos semanales;
+siguen atacando y recibiendo daño normalmente, sin oleadas comunes.
+Para caber en presupuesto, runtime de naves/cañones y arsenal pasa a WebP
+lossless con igualdad RGBA comprobada; PNG maestros conservados. Arte nuevo
+60,690 bytes, ahorro directo 348,198 bytes. No quitar source maps ni elevar límite.
+La aceptación visual, combate y móvil físico queda para el usuario. No iniciar
+Vite, commit, push ni publicar automáticamente.
+
+Entrega anterior a la probabilidad creciente: **724 unitarias / 131 archivos**, **11 smoke enfocados** PC/móvil
+en 32.1s (seis de ruleta, dos de catálogo, dos de rotación de portada, uno de
+Manta). Builds Local/Poki/CrazyGames: **14,915,355 / 9,862,552 / 9,862,558 bytes**,
+incluyendo mapas debug en Local; margen Local 84,645 bytes. Advertencia conocida
+de chunk JS >500kB, no de presupuesto total. No se ejecutó la suite browser
+completa ni se midieron FPS/GPU en móvil físico. Servidor del usuario no reiniciado;
+preview de QA efímero se cerró al terminar las pruebas.
+
+## Entrega inmediatamente anterior — arte PNG de 16 naves militares
+
+Se sustituyó el primer lote similar a SVG por **16 naves militares originales**
+con el enfoque artístico del Tank aprobado: 13 enemigos
 comunes y Core Sentinel, Orbital Warden y Fracture Engine. Tank reutiliza la
 imagen aprobada; las otras 15 son nuevas y diferenciadas. Fracture Gunner tiene
 la boca del cañón central y canal frontal despejado para su disparo real.
@@ -31,19 +159,20 @@ Verificados typecheck, **695 unitarias / 128 archivos** (reporte JSON en
 `test-results/enemy-art-units.json`) y **96 casos browser** con el arte final
 cargado, no fallback: fuentes/dimensiones, muerte, pausa/resize, saturación,
 60 ciclos, reset de tramo y limpieza; cero errores JS/HTTP. Capturas en
-`test-results/tank-defeat`. Builds Local/Poki/CrazyGames correctos:
+`test-results/tank-defeat`. Último build Local/Poki/CrazyGames anterior a retención:
 **14,997,754 / 10,073,008 / 10,073,014 bytes**. Margen Local **2,246 bytes**:
-revisar presupuesto antes de crecer, sin relajar el límite de 15 MB.
-No se ejecutó toda la suite browser ni se midieron FPS/GPU en móvil físico.
+el prototipo de retención aún no se compiló y requiere volver a medir el tamaño;
+no relajar el límite de 15 MB. No se ejecutó toda la suite browser ni se midieron
+FPS/GPU en móvil físico.
 
-Siguiente acción: revisión humana en batalla/móvil. Galería en Vite 5173:
+La revisión humana en batalla/móvil de enemigos sigue pendiente. Galería en Vite 5173:
 `/docs/visual/tank-defeat.html?quality=high` (selector de 16 familias, tamaño
 real, pausa y muerte; `&enemy=fracture-gunner` selecciona al artillero).
 Prueba en batalla: `/?fracture-drill=gunner&debug=1&quality=high`.
 El servidor del usuario sigue disponible; no se reinició en esta entrega.
 Las piezas SVG de entrada de bosses siguen en runtime; los masters de cuerpos
-permanecen en el repositorio. Overdrive/retención, aprobación humana del FX
-anterior y prueba humana del Laboratorio conservan sus pendientes.
+permanecen en el repositorio. Overdrive, aprobación humana del FX anterior y
+prueba humana del Laboratorio conservan sus pendientes.
 
 ### Base implementada antes de los PNG — 03-10-2026
 
@@ -63,21 +192,42 @@ No se certificaron FPS/GPU en teléfono físico. El diagnóstico de la muerte co
 es `node scripts/qa-tank-defeat.mjs`; el rediseño militar volvió a ejecutarlo
 con los 96 casos y texturas runtime finales (evidencia vigente arriba).
 
-## Retención — entrega documental anterior
+## Retención — implementación local actual, 04-10-2026
 
-RET-F01 documentado por solicitud del usuario: [plan de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md),
-§22.21 del plan y guía de ejecución. **Pendiente de implementar**: Bitácora,
-retos semanales y cápsula gratuita cada 24 horas. Los duelos conservan el kit
-completo del boss; Orbital Warden mantiene sus réplicas. Ajustes de vida/ritmo
-son locales al evento y no quitan identidad ni alteran campaña/Overdrive.
+- Código: `src/content/retention/RetentionDefinitions.ts` define calendario UTC,
+  tres retos semanales, 13 objetivos y pagos acotados; `RetentionActDirector` abre cada
+  boss directamente.
+- Rotación: Core sin impactos → Warden sin impactos → Fracture sin impactos →
+  Chargers; impacto conectado incluye daño absorbido por escudo. Compensación:
+  +250 NOVA por edición nueva si Asterion ya está desbloqueada, una vez por edición.
+- Prácticas directas locales: `?debug=1&retention-challenge=core-duel`,
+  `?debug=1&retention-challenge=warden-duel` y
+  `?debug=1&retention-challenge=fracture-duel`; son rewardless y no persisten.
+- El duelo Core Sentinel tiene barrera central física y aparece al sur de ella,
+  opuesto al spawn norte del boss, evitando contacto al abrir la introducción.
+- Combate: bosses conservan el `BossSystem` completo (incluidas réplicas y
+  amenazas propias) sin oleadas comunes; se mantiene un proyectil fijo del
+  jugador. Chargers: 60 s activos, crecimiento gradual a cinco, sin armas ni
+  daño automático del jugador.
+- UI: entrada opcional en Inicio, panel responsive con WebP de bosses/Chargers y
+  Asterion; scroll móvil, carga diferida y resultado conectado a Bitácora.
+- Save actual: schema 13 migra schemas 9–12 sin borrar datos previos. Progreso y
+  recibos se limitan; pago confirmado por lectura posterior. localStorage no es
+  servidor, antitrampas ni garantía entre dispositivos.
+- Pruebas escritas en `RetentionDefinitions.test.ts`,
+  `CombatSimulation.test.ts`, `TetheredAssets.test.ts` y `SaveStore.test.ts`.
+  En la entrega de duelos: typecheck y 84 pruebas enfocadas pasaron; suite total,
+  smoke y builds no se ejecutaron. Aceptación de PC/móvil queda para el usuario;
+  no reiniciar Vite ni publicar.
+- Pendiente: valores/balance provisionales, suite total, smoke/build y revisión
+  visual/combate humana; publicación y ruleta real conservan puertas de portal.
 
-Esta entrega sólo modifica documentación/índices: sin runtime, arte, migración,
-commit/push, build o reinicio de Vite. Importes, probabilidades, garantía,
-calendario/acceso y perfiles de combate requieren decisiones/pruebas; el azar
-requiere revisión del portal. RET-00–06 son pendientes futuros, no ejecución
-autorizada. Siguiente paso: escoger una entrega cuando el usuario lo indique.
-EX-09, prueba humana del Laboratorio y aceptación móvil del catálogo siguen
-pendientes. Verificación documental: diff/whitespace, enlaces y estados.
+## Retención — entrega documental anterior (histórica)
+
+La guía previa describía sólo la propuesta futura; su estado «sin implementación»
+ya fue superado. Consultar la sección actual de arriba y la
+[guía canónica](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md). EX-09, prueba
+humana del Laboratorio y aceptación móvil del catálogo siguen pendientes.
 
 ## Catálogo de diez — entrega anterior
 

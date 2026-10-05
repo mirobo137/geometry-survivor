@@ -48,7 +48,7 @@ y su [seguimiento de correcciones](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
 | EX-10 | Acto III Fracture entregado y validado por el usuario. |
 | EX-11.1–EX-11.7 | Contrato/save, director, transición, seis armas, reservas, parejas y entrada pública/retirada entregados. Auditorías OD-A/OD-B se conservan como criterios de regresión, no otra cola pendiente. |
 | OD-F01 | PROPUESTA futura de Asalto por puntos; Normal conserva sus reglas. |
-| RET-F01 | PENDIENTE DE IMPLEMENTAR: plan documental de Bitácora, retos semanales y cápsula diaria; duelos conservan el kit completo del boss, incluidas réplicas. No iniciar sin nueva indicación explícita. |
+| RET-F01 | Bitácora, cuatro retos y ruleta diaria implementados localmente. Tipado/unitarias y smoke enfocado de ruleta comprobados; QA humano/economía y puertas de portal pendientes. |
 
 La aprobación de contenido registrada en [§22.15–17 del plan](../PLAN_DESARROLLO.md)
 no equivale a aprobación comercial, suite actual completa o ausencia de fugas.
@@ -152,15 +152,35 @@ en la fecha de la integración. No implementar ambos portales en un diff masivo.
 Subida comercial, credenciales, contratos, analítica y publicación requieren la
 autorización pertinente; GitHub Pages prueba el target local, no estas condiciones.
 
-### RET-F01 — Retención futura, no cola automática
+### RET-F01 — Retención: prototipo local, validación pendiente
 
 Guía detallada y estado: [retención/eventos/recompensas](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md),
-enlazada desde §22.21 del plan. La entrega del 03-10 sólo documenta; no contiene
-runtime ni arte nuevo. RET-00–06 separan decisiones, duelo piloto, evasión,
-rotación/otros bosses, Bitácora, cápsula y validación de regreso.
-Al retomar, elegir una entrega expresamente autorizada. El permiso comercial del
-azar bloquea la cápsula, no los retos de habilidad; ninguna entrega cierra EX-09.
-Los ajustes locales de HP/ritmo no eliminan réplicas ni ataques definitorios.
+enlazada desde §22.21 del plan. La implementación local incluye Bitácora, resumen
+conectado, cuatro retos y rotación semanal versionada; el save migra a schema 13.
+Bitácora tiene siete familias generales por rangos crecientes y seis únicas de
+actos/bosses; requiere cobro manual, no pago automático al terminar la run.
+El siguiente rango inicia desde cero al cobrar. [Contrato](design/BITACORA_OBJETIVOS.md).
+Los duelos Core/Warden/Fracture requieren cero impactos (el escudo no anula un
+impacto) y mantienen el kit completo del boss; Warden conserva réplicas. Orden:
+Core → Warden → Fracture → Charger. Hay rutas de práctica local sin guardado ni
+premios documentadas en la guía. Chargers quedan sin fuego y se limitan a cinco.
+El casco de cada boss causa daño por contacto en todos los modos (cooldown 0.45 s,
+colisión barrida); el perfil experimental sólo de reto acorta fase activa al 70%
+y recuperación al 33% del valor base para una cadencia ≥1.45×, conservando todos
+los telegraphs. Los tres duelos inician sin Calibration (Projectile rango I,
+un emisor) y los reintentos restauran su estado de inicio. Fracture actualiza sus
+proyectiles/minas durante el duelo. Sólo Core Duel tiene ahora barrera física
+central visible (radio 112) para quitar su zona de camping; no causa daño y no
+afecta la campaña ni otros retos. Prueba humana de dificultad pendiente.
+Asterion se entrega una vez; si ya se posee, una edición nueva paga 250 NOVA una
+sola vez. Valores aún provisionales.
+
+RET-05 se implementó por solicitud posterior: [ruleta diaria](design/RULETA_DIARIA.md)
+con diez ranuras NOVA y Solstice Regent: 1% inicial, +1 punto por giro hasta 20%.
+El extra con video también puede entregar la skin; ambos comparten probabilidad.
+Tipado/unitarias y smoke enfocado PC/móvil comprobados. Local simula el video;
+integración real/revisión de portal, aceptación física y economía siguen pendientes.
+No altera EX-09, Overdrive o balance de campaña.
 
 ## 5. Fuentes canónicas por dominio
 
@@ -170,7 +190,7 @@ Los ajustes locales de HP/ritmo no eliminan réplicas ni ataques definitorios.
 | Campaña/Overdrive | [ACTOS_Y_META](design/ACTOS_Y_META.md), [PLAN_INFINITO](design/PLAN_INFINITO.md) |
 | Rangos/evoluciones/cartas | [PROGRESION_ARMAS_V2](design/PROGRESION_ARMAS_V2.md), [EVOLUCIONES_V2](design/EVOLUCIONES_V2.md) y definiciones/tests actuales |
 | Meta/NOVA/Laboratorio | [LABORATORIO_META_V2](design/LABORATORIO_META_V2.md) |
-| Retención futura | [RETENCION_EVENTOS_Y_RECOMPENSAS](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md): pendiente de implementar, no contrato runtime vigente. |
+| Retención | [Retos y Bitácora](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md) y [Ruleta diaria](design/RULETA_DIARIA.md): implementados localmente; QA humano/publicación pendientes. |
 | Raster/SVG/identidad | [ARTE_HIBRIDO](design/ARTE_HIBRIDO.md), [NAVES_PNG](design/NAVES_PNG.md), READMEs de assets/prompts y skill SVG/rendering |
 | Carga/recursos | [auditoría actual](audits/AUDITORIA_RECURSOS_2026-10-02.md), [VITE_MEMORY](performance/VITE_MEMORY.md) |
 | Audio | [AUDIO_SFX_ZZFX](design/AUDIO_SFX_ZZFX.md) |

@@ -198,7 +198,7 @@ export const registerTetheredShipChecks = (): void => {
     const images = new Set<string>();
     page.on('pageerror', error => errors.push(error.message));
     page.on('response', response => {
-      if (/(tether-ship|tether-cannon)-.*\.png/.test(response.url())) {
+      if (/(tether-ship|tether-cannon)-.*\.webp/.test(response.url())) {
         images.add(response.url());
         if (!response.ok()) errors.push(`HTTP ${response.status()}`);
       }

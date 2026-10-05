@@ -29,6 +29,11 @@ const SPAWN_ANGLE_STEP = 2.399963229728653;
 const STRESS_ENEMY_KINDS: readonly EnemyKind[] = ['chaser', 'fast', 'tank'];
 const EVOLUTION_DRILL_ENEMY_HEALTH = 10_000;
 
+export interface EnemySystemOptions {
+  /** Optional base-health override for Warden replicas in the dedicated duel. */
+  readonly wardenReplicaMaxHealthOverride?: number;
+}
+
 // Kept as a compatibility export for simulation consumers and existing tools.
 // New runtime code uses RadialActDirector so the act owns its timeline.
 export { selectEnemyKind } from '../../content/run/EnemySpawnDefinitions';
@@ -46,7 +51,8 @@ export class EnemySystem {
     public readonly pool: EnemyPool,
     private readonly grid: SpatialGrid,
     private readonly actDirector: RadialActDirector = new RadialActDirector(),
-    private readonly fractureThreats?: FractureThreatEmitter
+    private readonly fractureThreats?: FractureThreatEmitter,
+    private readonly options: EnemySystemOptions = {}
   ) {}
 
   public get states(): readonly EnemyState[] {
@@ -493,8 +499,15 @@ export class EnemySystem {
     const isSplitterChild = kind === 'splitter' && splitterDepth > 0;
     state.radius = definition.radius * (isSplitterChild ? SPLITTER_DEFINITION.childRadiusScale : 1);
     state.speed = definition.speed * (isSplitterChild ? SPLITTER_DEFINITION.childSpeedScale : 1);
+    const replicaHealthOverride = this.options.wardenReplicaMaxHealthOverride;
+    const baseHealth = kind === 'warden-replica'
+      && typeof replicaHealthOverride === 'number'
+      && Number.isFinite(replicaHealthOverride)
+      && replicaHealthOverride > 0
+      ? replicaHealthOverride
+      : definition.maxHealth;
     state.maxHealth = capOverdriveHealth(
-      definition.maxHealth,
+      baseHealth,
       this.actDirector.enemyHealthMultiplier,
       isSplitterChild ? SPLITTER_DEFINITION.childHealthScale : 1
     );

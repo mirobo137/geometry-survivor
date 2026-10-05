@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-elite-cockpit-title">
-  <title id="enemy-elite-cockpit-title">elite: cockpit</title>
-  <path id="enemy-elite-cockpit-well" d="M0-12 7-5 7 3 0 10 -7 3 -7-5Z" fill="#291d3d"/>
-  <path id="enemy-elite-cockpit-reactor" d="M0-8 4-4 4 2 0 6 -4 2 -4-4Z" fill="#f777ce"/>
-  <path id="enemy-elite-cockpit-reflection" d="M0-8 4-4 0-1 -4-4Z" fill="#ffe3f4"/>
-</svg>

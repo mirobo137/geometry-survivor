@@ -38,17 +38,9 @@
   ralentizar una animación no evita repintados. Cualquier ampliación necesita
   nueva prueba en el móvil afectado. Sin nuevos loops Pixi ni dependencias.
 
-## `hero-scene.svg`
-
-- Rol: atmósfera decorativa de la pantalla de inicio.
-- ViewBox: `0 0 1200 900`, centrado visualmente para recorte responsive.
-- Render: SVG estático como `img` en `#start-scene`, con URL gestionada por Vite.
-  Las clases del master se conservan para edición/catálogo; no reciben las
-  animaciones CSS del documento al usarse como imagen.
-- Animación: cuatro luces HTML independientes del SVG. El fondo no se anima.
-- Accesibilidad: decorativo, `aria-hidden="true"` y sin interacción.
-- Restricciones: geometría simple, sin raster, recursos externos, scripts,
-  filtros o máscaras complejas. IDs prefijados con `ui-start-hero-`.
+La escena ambiental de Inicio ahora se sirve mediante arte raster adaptable;
+este directorio conserva sólo la marca vectorial. Contrato y variantes:
+[assets de Inicio](../../../images/ui/home/README.md).
 
 Los textos, botones, foco y áreas táctiles continúan siendo HTML en
 `index.html`. No se convierte el master a PNG ni se añaden texturas Pixi.

@@ -27,7 +27,10 @@ import {
   getHazardCadenceProfile,
   type HazardCadenceMode
 } from '../../content/hazards/HazardCadenceDefinitions';
-import { PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
+import {
+  PULSE_RING_WEAPON_DRILL_COOLDOWN_SECONDS,
+  WEAPON_DEFINITIONS
+} from '../../content/weapons/WeaponDefinitions';
 import type { WeaponEvolutionId, WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolutionDefinitions';
 import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../content/upgrades/UpgradeDefinitions';
 import { OVERDRIVE_POWER_INCREMENT } from '../../content/run/OverdriveDefinitions';
@@ -36,6 +39,16 @@ import { OverdriveActDirector, type OverdriveBossPair } from '../acts/OverdriveA
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
+
+const RETENTION_DUEL_WEAPON_OPTIONS = {
+  projectileEnabled: true,
+  orbitEnabled: false,
+  chainEnabled: false,
+  boomerangEnabled: false,
+  pulseRingEnabled: false,
+  magneticChargeEnabled: false
+} as const;
+const RETENTION_WARDEN_REPLICA_HIT_COUNT = 2;
 
 export interface CombatSimulationOptions {
   readonly stress?: boolean;
@@ -51,6 +64,12 @@ export interface CombatSimulationOptions {
   readonly orbiterDrill?: boolean;
   /** Isolated second-family scenario; never changes the normal Radial run. */
   readonly chargerDrill?: boolean;
+  /** Weekly timed no-fire trial with a capped, gradually growing Charger group. */
+  readonly retentionChargerChallenge?: boolean;
+  /** Weekly boss duel; authored boss behavior and boss-owned adds remain intact. */
+  readonly retentionBossDuel?: boolean;
+  /** Orbital Warden duel only: replicas are tuned for two base Projectile hits. */
+  readonly retentionWardenDuel?: boolean;
   /** Isolated third-family scenario; the weapon is enabled to demonstrate fracture. */
   readonly splitterDrill?: boolean;
   /** Isolated fourth-family scenario; demonstrates the rotating three-spoke cast. */
@@ -97,7 +116,8 @@ export type CombatEvent =
     readonly type: 'playerDamaged';
     readonly amount: number;
     readonly source: 'contact' | 'laser' | 'radial-pulse' | 'pulse-ring' | 'angular-sweep' | 'boss' | 'fracture-projectile' | 'fracture-mine';
-  };
+  }
+  | { readonly type: 'retentionChallengeVictory' };
 
 export interface CombatStats {
   elapsedSeconds: number;
@@ -105,6 +125,7 @@ export interface CombatStats {
   experience: number;
   shotsFired: number;
   damageTaken: number;
+  bossDefeats: Record<BossId, number>;
 }
 
 /**
@@ -185,7 +206,8 @@ export class CombatSimulation {
     kills: 0,
     experience: 0,
     shotsFired: 0,
-    damageTaken: 0
+    damageTaken: 0,
+    bossDefeats: { 'core-sentinel': 0, 'orbital-warden': 0, 'fracture-engine': 0 }
   };
   private readonly actDirector: RadialActDirector;
   private readonly enemySystem: EnemySystem;
@@ -213,6 +235,9 @@ export class CombatSimulation {
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
   private readonly chargerDrill: boolean;
+  private readonly retentionChargerChallenge: boolean;
+  private readonly retentionBossDuel: boolean;
+  private readonly retentionWardenDuel: boolean;
   private readonly splitterDrill: boolean;
   private readonly prismWeaverDrill: boolean;
   private readonly pulseRingDrill: boolean;
@@ -236,6 +261,7 @@ export class CombatSimulation {
   private readonly overdriveBossPair: OverdriveBossPair | undefined;
   private readonly bossAttackGate: PairedBossAttackGate | undefined;
   private doubleBossEncounter = false;
+  private retentionChargerWon = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.actDirector = options.actDirector ?? new RadialActDirector();
@@ -243,6 +269,11 @@ export class CombatSimulation {
     this.stressMode = options.stress === true;
     this.orbiterDrill = options.orbiterDrill === true;
     this.chargerDrill = options.chargerDrill === true && !this.orbiterDrill;
+    this.retentionChargerChallenge = options.retentionChargerChallenge === true;
+    this.retentionBossDuel = options.retentionBossDuel === true && !this.retentionChargerChallenge;
+    this.retentionWardenDuel = options.retentionWardenDuel === true
+      && this.retentionBossDuel
+      && this.actDirector.bossDefinition.id === 'orbital-warden';
     this.splitterDrill = options.splitterDrill === true
       && !this.orbiterDrill && !this.chargerDrill && !this.stressMode;
     this.prismWeaverDrill = options.prismWeaverDrill === true
@@ -283,7 +314,10 @@ export class CombatSimulation {
       this.enemies,
       new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT),
       this.actDirector,
-      this.fractureThreats
+      this.fractureThreats,
+      this.retentionWardenDuel
+        ? { wardenReplicaMaxHealthOverride: WEAPON_DEFINITIONS.projectile.damage * RETENTION_WARDEN_REPLICA_HIT_COUNT }
+        : undefined
     );
     const initialBosses = this.getOverdriveBossEncounter();
     this.bossAttackGate = this.actDirector instanceof OverdriveActDirector
@@ -720,13 +754,17 @@ export class CombatSimulation {
 
     this.stats.elapsedSeconds += dt;
     this.stageElapsedSeconds += dt;
+    if (this.retentionChargerChallenge && !this.retentionChargerWon && this.stageElapsedSeconds >= 60) {
+      this.retentionChargerWon = true;
+      this.pendingEvents.push({ type: 'retentionChallengeVictory' });
+    }
     this.spawnAccumulator += dt;
     const angularAct = this.isAngularAct;
     const fractureAct = this.isFractureAct;
     const isolatedAngularDrill = this.orbiterDrill || this.chargerDrill || this.splitterDrill
       || this.pulseRingDrill || this.angularSweepDrill || this.wardenDrill
       || this.pulseRingWeaponDrill || this.magneticChargeWeaponDrill || this.evolutionDrill !== null
-      || this.fractureDrill;
+      || this.fractureDrill || this.retentionBossDuel || this.retentionChargerChallenge;
     if (!isolatedAngularDrill && !angularAct && this.laser.update(
       dt,
       this.stageElapsedSeconds,
@@ -753,7 +791,7 @@ export class CombatSimulation {
       });
     }
 
-    if (this.pulseRingDrill || angularAct || fractureAct) {
+    if (!this.retentionBossDuel && !this.retentionChargerChallenge && (this.pulseRingDrill || angularAct || fractureAct)) {
       const pulse = this.pulseRing.update(
         dt,
         this.stageElapsedSeconds,
@@ -773,7 +811,7 @@ export class CombatSimulation {
       }
     }
 
-    if (this.angularSweepDrill || this.wardenDrill || angularAct || fractureAct) {
+    if (!this.retentionBossDuel && !this.retentionChargerChallenge && (this.angularSweepDrill || this.wardenDrill || angularAct || fractureAct)) {
       const sector = this.angularSweep.update(
         dt,
         this.stageElapsedSeconds,
@@ -797,6 +835,15 @@ export class CombatSimulation {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'orbiter')) {
         this.enemySystem.spawnOrbiterDrill(arenaRadius);
       }
+    } else if (this.retentionChargerChallenge) {
+      const desired = Math.min(5, 1 + Math.floor(this.stageElapsedSeconds / 12));
+      let activeChargers = 0;
+      for (const enemy of this.enemies.states) {
+        if (enemy.active && enemy.kind === 'charger') activeChargers += 1;
+      }
+      if (activeChargers < desired) this.enemySystem.spawnChargerDrill(arenaRadius);
+    } else if (this.retentionBossDuel) {
+      // Boss-owned replicas, projectiles and mines remain in the boss system.
     } else if (this.chargerDrill) {
       if (!this.enemies.states.some((enemy) => enemy.active && enemy.kind === 'charger')) this.enemySystem.spawnChargerDrill(arenaRadius);
     } else if (this.splitterDrill) {
@@ -847,7 +894,7 @@ export class CombatSimulation {
       }
     }
 
-    if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill)) {
+    if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill || this.retentionBossDuel)) {
       this.bossAttackGate?.update(dt);
       for (const bossSystem of this.bosses) {
         const bossDamage = bossSystem.update(dt, this.stageElapsedSeconds, player, arenaRadius);
@@ -867,8 +914,8 @@ export class CombatSimulation {
     // Orbiter/Charger/Prism teach a committed route and keep their authored
     // target alive. Splitter and Warden deliberately keep autofire: their
     // lessons are the bounded fracture and destructible copies, respectively.
-    if (!this.orbiterDrill && !this.chargerDrill && !this.prismWeaverDrill && !this.angularSweepDrill) {
-      this.weaponSystem.update(dt, player, this.evolutionDrillWeapon !== null
+    if (!this.orbiterDrill && !this.chargerDrill && !this.retentionChargerChallenge && !this.prismWeaverDrill && !this.angularSweepDrill) {
+      this.weaponSystem.update(dt, player, this.retentionBossDuel ? RETENTION_DUEL_WEAPON_OPTIONS : this.evolutionDrillWeapon !== null
         ? getEvolutionWeaponUpdateOptions(this.evolutionDrillWeapon, arenaBoundary)
         : this.pulseRingWeaponDrill
         ? {
@@ -893,7 +940,8 @@ export class CombatSimulation {
           }
         : { magneticChargeArena: arenaBoundary, arena: arenaBoundary });
     }
-    const threatDamage = this.fractureThreats.update(dt, player, arenaBoundary);
+    const threatDamage = this.retentionChargerChallenge
+      ? null : this.fractureThreats.update(dt, player, arenaBoundary);
     if (threatDamage) {
       this.stats.damageTaken += threatDamage.amount;
       this.pendingEvents.push({
@@ -932,6 +980,9 @@ export class CombatSimulation {
     this.stats.experience = 0;
     this.stats.shotsFired = 0;
     this.stats.damageTaken = 0;
+    this.stats.bossDefeats['core-sentinel'] = 0;
+    this.stats.bossDefeats['orbital-warden'] = 0;
+    this.stats.bossDefeats['fracture-engine'] = 0;
     this.experienceMultiplier = 1;
     this.pendingEvents.length = 0;
     this.spawnAccumulator = 0;
@@ -939,6 +990,7 @@ export class CombatSimulation {
     this.magneticChargeWeaponDrillInitialized = false;
     this.evolutionDrillInitialized = false;
     this.stressInitialized = false;
+    this.retentionChargerWon = false;
   }
 
   /**
@@ -1019,12 +1071,14 @@ export class CombatSimulation {
     // Splitter children can reuse the released parent slot immediately.
     const enemyIndex = this.enemies.states.indexOf(enemy);
     const generation = enemy.generation;
-    const experience = ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
+    const experience = this.retentionBossDuel || this.retentionChargerChallenge
+      ? 0 : ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
     this.enemies.release(enemy);
     this.stats.kills += 1;
     this.stats.experience += experience;
     if (kind === 'boss') {
       const owner = this.bosses.find((system) => system.ownsEnemy(enemy)) ?? this.boss;
+      if (enemy.bossId !== undefined) this.stats.bossDefeats[enemy.bossId] += 1;
       owner.markDefeated();
       if (owner?.instanceId !== undefined) this.bossAttackGate?.skip(owner.instanceId);
       this.pendingEvents.push({

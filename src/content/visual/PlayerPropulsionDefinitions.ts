@@ -11,7 +11,9 @@ export const PLAYER_ENGINE_PORTS: Readonly<Record<PlayerSkinId, readonly (readon
   nova: [[-6.5, 28], [0, 19], [6.5, 28]],
   manta: [[0, 20]],
   corsair: [[-10, 28], [10, 28]],
-  nautilus: [[-3, 28], [3, 28]]
+  nautilus: [[-3, 28], [3, 28]],
+  asterion: [[-8, 27], [0, 21], [8, 27]],
+  solstice: [[-7.8, 24], [0, 28], [7.8, 24]]
 };
 
 export const PLAYER_ENGINE_FALLBACK_PORTS = [[-5, 13], [5, 13]] as const;

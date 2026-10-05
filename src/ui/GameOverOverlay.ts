@@ -2,6 +2,10 @@ import type { RunSummary } from '../app/RunSummary';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
 import { isCalibrationId, type CalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
+import coreSentinelUrl from '../assets/images/enemies/core-sentinel.webp?no-inline';
+import chargerUrl from '../assets/images/enemies/charger.webp?no-inline';
+import orbitalWardenUrl from '../assets/images/enemies/orbital-warden.webp?no-inline';
+import fractureEngineUrl from '../assets/images/enemies/fracture-engine.webp?no-inline';
 
 export type RestartHandler = () => void;
 export type DoubleNovaHandler = () => void;
@@ -34,6 +38,24 @@ export interface ActIntermissionOptions {
   readonly onReturnToMenu?: ReturnToMenuHandler;
 }
 
+export interface RetentionGameOverOptions {
+  readonly artId: string;
+  readonly message: string;
+  readonly highlights: readonly string[];
+  readonly bonusNova: number;
+  readonly challenge: boolean;
+  readonly restartLabel: string;
+  readonly menuLabel?: string;
+  readonly onReturnToMenu?: ReturnToMenuHandler;
+}
+
+const RETENTION_ART: Readonly<Record<string, string>> = {
+  'core-sentinel': coreSentinelUrl,
+  charger: chargerUrl,
+  'orbital-warden': orbitalWardenUrl,
+  'fracture-engine': fractureEngineUrl
+};
+
 const formatTime = (seconds: number): string => {
   const wholeSeconds = Math.max(0, Math.floor(seconds));
   const minutes = Math.floor(wholeSeconds / 60).toString().padStart(2, '0');
@@ -46,6 +68,10 @@ export class GameOverOverlay {
   private readonly kicker: HTMLElement;
   private readonly title: HTMLElement;
   private readonly actMessage: HTMLElement;
+  private readonly retentionSection: HTMLElement;
+  private readonly retentionArt: HTMLImageElement;
+  private readonly retentionMessage: HTMLElement;
+  private readonly retentionHighlights: HTMLElement;
   private readonly time: HTMLElement;
   private readonly kills: HTMLElement;
   private readonly experience: HTMLElement;
@@ -74,6 +100,10 @@ export class GameOverOverlay {
     const kicker = root.querySelector<HTMLElement>('#game-over-kicker');
     const title = root.querySelector<HTMLElement>('#game-over-title');
     const actMessage = root.querySelector<HTMLElement>('#game-over-act-message');
+    const retentionSection = root.querySelector<HTMLElement>('#game-over-retention');
+    const retentionArt = root.querySelector<HTMLImageElement>('#game-over-retention-art');
+    const retentionMessage = root.querySelector<HTMLElement>('#game-over-retention-message');
+    const retentionHighlights = root.querySelector<HTMLElement>('#game-over-retention-highlights');
     const time = root.querySelector<HTMLElement>('#game-over-time');
     const kills = root.querySelector<HTMLElement>('#game-over-kills');
     const experience = root.querySelector<HTMLElement>('#game-over-experience');
@@ -91,7 +121,7 @@ export class GameOverOverlay {
     const reviveSection = root.querySelector<HTMLElement>('#game-over-revive');
     const reviveMessage = root.querySelector<HTMLElement>('#game-over-revive-message');
     const reviveButton = root.querySelector<HTMLButtonElement>('#game-over-revive-button');
-    if (!kicker || !title || !actMessage || !time || !kills || !experience || !score || !best || !nova || !restartButton || !continueButton || !templateSection || templateButtons.length === 0 || !menuButton
+    if (!kicker || !title || !actMessage || !retentionSection || !retentionArt || !retentionMessage || !retentionHighlights || !time || !kills || !experience || !score || !best || !nova || !restartButton || !continueButton || !templateSection || templateButtons.length === 0 || !menuButton
       || !rewardedSection || !rewardedMessage || !doubleNovaButton
       || !reviveSection || !reviveMessage || !reviveButton) {
       throw new Error('Faltan elementos del resumen de partida');
@@ -100,6 +130,10 @@ export class GameOverOverlay {
     this.kicker = kicker;
     this.title = title;
     this.actMessage = actMessage;
+    this.retentionSection = retentionSection;
+    this.retentionArt = retentionArt;
+    this.retentionMessage = retentionMessage;
+    this.retentionHighlights = retentionHighlights;
     this.time = time;
     this.kills = kills;
     this.experience = experience;
@@ -137,25 +171,45 @@ export class GameOverOverlay {
     totalNova: number,
     restartHandler: RestartHandler,
     rewarded: GameOverRewardedOptions = {},
-    intermission?: ActIntermissionOptions
+    intermission?: ActIntermissionOptions,
+    retention?: RetentionGameOverOptions,
+    onReturnToMenu?: ReturnToMenuHandler
   ): void {
     const isIntermission = summary.outcome === 'victory' && intermission !== undefined;
-    this.kicker.textContent = isIntermission ? 'ACTO COMPLETADO' : 'RUN COMPLETE';
-    this.title.textContent = isIntermission
+    this.kicker.textContent = retention ? retention.challenge ? 'RETO SEMANAL' : 'BITÁCORA ACTUALIZADA'
+      : isIntermission ? 'ACTO COMPLETADO' : 'RUN COMPLETE';
+    this.title.textContent = retention?.challenge
+      ? summary.outcome === 'victory' ? 'Reto superado' : 'Entrenamiento finalizado'
+      : retention ? 'Registro de vuelo'
+      : isIntermission
       ? `${intermission.actName} superado`
       : summary.outcome === 'victory' ? 'Victoria' : 'Fin de la partida';
     this.actMessage.textContent = isIntermission ? intermission.message : '';
     this.actMessage.hidden = !isIntermission;
+    this.retentionSection.hidden = retention === undefined;
+    this.retentionArt.hidden = retention === undefined;
+    this.retentionHighlights.replaceChildren();
+    this.retentionMessage.textContent = retention?.message ?? '';
+    if (retention) {
+      this.retentionArt.src = RETENTION_ART[retention.artId] ?? coreSentinelUrl;
+      for (const highlight of retention.highlights.slice(0, 3)) {
+        const item = document.createElement('li');
+        item.textContent = highlight;
+        this.retentionHighlights.append(item);
+      }
+    } else this.retentionArt.removeAttribute('src');
     this.time.textContent = `Tiempo ${formatTime(summary.elapsedSeconds)}`;
     this.kills.textContent = `Bajas ${summary.kills}`;
     this.experience.textContent = `Experiencia ${summary.experience}`;
     this.score.textContent = `Puntuación ${summary.score}`;
     this.best.textContent = `Mejor ${formatTime(best.timeSeconds)} · ${best.score} puntos`;
+    this.best.hidden = retention?.challenge === true;
+    this.nova.hidden = retention?.challenge === true;
     this.renderNova(novaReward, totalNova);
     this.restartHandler = restartHandler;
     this.continueHandler = intermission?.onContinue ?? null;
     this.templateHandler = intermission?.onSelectTemplate ?? null;
-    this.menuHandler = intermission?.onReturnToMenu ?? null;
+    this.menuHandler = retention?.onReturnToMenu ?? intermission?.onReturnToMenu ?? onReturnToMenu ?? null;
     this.doubleNovaHandler = rewarded.onDoubleNova ?? null;
     this.reviveHandler = summary.outcome === 'game-over' ? rewarded.onRevive ?? null : null;
     const canDouble = rewarded.doubleNovaAvailable === true && this.doubleNovaHandler !== null;
@@ -170,7 +224,7 @@ export class GameOverOverlay {
     this.reviveButton.hidden = !canRevive;
     this.reviveButton.disabled = !canRevive;
     this.reviveButton.textContent = 'Ver anuncio · revivir';
-    this.restartButton.textContent = intermission?.restartLabel ?? 'Jugar de nuevo';
+    this.restartButton.textContent = retention?.restartLabel ?? intermission?.restartLabel ?? 'Jugar de nuevo';
     const canContinue = isIntermission && this.continueHandler !== null && intermission?.continueLabel !== undefined;
     const templates = isIntermission ? intermission?.templates ?? [] : [];
     const hasTemplates = templates.length > 0 && this.templateHandler !== null;
@@ -184,6 +238,7 @@ export class GameOverOverlay {
     this.continueButton.disabled = !canContinue || hasTemplates;
     this.continueButton.textContent = intermission?.continueLabel ?? 'Continuar';
     this.menuButton.hidden = this.menuHandler === null;
+    this.menuButton.textContent = retention?.challenge ? 'Volver a retos' : retention?.menuLabel ?? 'Volver al menú';
     this.root.hidden = false;
     if (hasTemplates) this.templateButtons.find((button) => !button.hidden)?.focus({ preventScroll: true });
     else (canContinue ? this.continueButton : this.restartButton).focus({ preventScroll: true });

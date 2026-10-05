@@ -1,7 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const MAX_BUILD_BYTES = 15_000_000; // PLAN_DESARROLLO §9; decimal MB, not MiB.
+const MAX_BUILD_BYTES = 15_000_000; // PLAN_DESARROLLO §9; deployed payload, decimal MB.
 const targets = process.argv.slice(2);
 async function bytes(folder) {
   let total = 0;
@@ -12,8 +12,8 @@ async function bytes(folder) {
   }
   return total;
 }
-for (const target of targets.length ? targets : ['local', 'poki', 'crazygames']) {
+for (const target of targets.length ? targets : ['pages', 'poki', 'crazygames']) {
   const size = await bytes(resolve('dist', target));
-  console.log(`${target}: ${size} / ${MAX_BUILD_BYTES} complete artifact bytes (including debug maps)`);
+  console.log(`${target}: ${size} / ${MAX_BUILD_BYTES} published payload bytes`);
   if (size > MAX_BUILD_BYTES) process.exitCode = 1;
 }

@@ -1,22 +1,18 @@
 # Biblioteca SVG
 
-Los assets vectoriales se organizan por dominio y despues por identidad:
+Los SVG se conservan como piezas code-first de UI y como fallback cuando el
+juego los consume en producción. El catálogo PNG/WebP es el arte principal de
+naves, cañones, enemigos y fondos.
 
 ```text
 svg/
-├─ characters/
-│  └─ player/          # master, piezas y contrato del jugador
-├─ enemies/
-│  └─ turtle/          # master, piezas, pruebas y ficha de la tortuga
-└─ ui/
-   └─ level-up/        # marcos e iconos de cartas
+├─ characters/player/  # body/ring/core y detalles SVG de fallback
+├─ enemies/            # masters completos de fallback y entrada de bosses
+├─ cannons/            # barriles izquierdo/derecho y proyectiles fallback
+└─ ui/                 # iconos, paneles y marcos
 ```
 
-La carpeta `ui/start/` contiene la marca y la escena ambiental del menú
-inicial. La escena se monta una sola vez en el DOM y sus grupos se animan con
-CSS, sin crear una segunda simulación.
-
-Cada carpeta de personaje o enemigo debe contener su master SVG, las piezas
-animables (si existen), una ficha README y sus pruebas estructurales. Los
-archivos comparten `viewBox`, frame de textura, ancla y escala cuando se
-componen en Pixi.
+Los dos SVG de `backgrounds/` se conservan intencionalmente como referencias
+editables históricas; no forman parte del runtime. Los dibujos obsoletos sin
+consumidor de producción se retiraron. La escena raster del menú se documenta
+en `src/assets/images/ui/home/README.md`.

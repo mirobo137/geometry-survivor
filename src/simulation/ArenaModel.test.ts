@@ -21,6 +21,16 @@ describe('ArenaModel', () => {
     expect(arena.state.expansionProgress).toBe(0);
   });
 
+  it('preserves an optional center exclusion profile through updates and reset', () => {
+    const arena = new ArenaModel(new AngularActDirector(), 112);
+    expect(arena.state.centerExclusionRadius).toBe(112);
+
+    arena.update(25);
+    expect(arena.state.centerExclusionRadius).toBe(112);
+    arena.reset();
+    expect(arena.state.centerExclusionRadius).toBe(112);
+  });
+
   it('reaches an intermediate plateau during the first expansion', () => {
     const arena = new ArenaModel();
 

@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { PROJECTILE_MUZZLE_OFFSETS } from '../../../content/weapons/WeaponDefinitions';
-import cannonBasicSvg from './cannon-basic.svg?raw';
-import cannonCurveSvg from './cannon-curve.svg?raw';
-import cannonSmokeSvg from './cannon-smoke.svg?raw';
-import cannonRainbowSvg from './cannon-rainbow.svg?raw';
-import cannonLatticeSvg from './cannon-lattice.svg?raw';
-import cannonHelixSvg from './cannon-helix.svg?raw';
-import cannonBloomSvg from './cannon-bloom.svg?raw';
 import projectileBasicSvg from './projectile-basic.svg?raw';
 import projectileCurveSvg from './projectile-curve.svg?raw';
 import projectileSmokeSvg from './projectile-smoke.svg?raw';
@@ -18,8 +11,6 @@ import {
   CANNON_BARREL_SVG,
   extractSvgGraphicMarkup
 } from './CannonSvgMarkup';
-
-const masters = [cannonBasicSvg, cannonCurveSvg, cannonSmokeSvg, cannonRainbowSvg, cannonLatticeSvg, cannonHelixSvg, cannonBloomSvg] as const;
 
 const assertSafeFramed = (svg: string, prefix: string, maxPrimitives = 16): void => {
   expect(svg).toContain('viewBox="-32 -32 64 64"');
@@ -34,12 +25,6 @@ const assertSafeFramed = (svg: string, prefix: string, maxPrimitives = 16): void
 };
 
 describe('cannon and projectile SVG assets', () => {
-  it('keeps every cannon package framed, local and vector-only', () => {
-    for (const svg of masters) {
-      assertSafeFramed(svg, 'cannon-', 24);
-    }
-  });
-
   it('keeps left and right barrels aligned to the shared frame and muzzle slots', () => {
     const [leftMuzzle, rightMuzzle] = PROJECTILE_MUZZLE_OFFSETS;
     const barrelPaths = Object.values(CANNON_BARREL_SVG).map((pair) => pair.left.match(/\sd="([^"]+)"/)?.[1]);
@@ -58,26 +43,6 @@ describe('cannon and projectile SVG assets', () => {
     // but an unsupported transform must never erase a live muzzle in Pixi.
     expect(CANNON_BARREL_SVG.bloom.right).not.toContain('transform=');
     expect(CANNON_BARREL_SVG.bloom.right).toContain('d="M7-5 14-8 22-3');
-  });
-
-  it('links modular barrels to their package masters', () => {
-    const masterById = {
-      basic: cannonBasicSvg,
-      curve: cannonCurveSvg,
-      smoke: cannonSmokeSvg,
-      rainbow: cannonRainbowSvg,
-      lattice: cannonLatticeSvg,
-      helix: cannonHelixSvg,
-      bloom: cannonBloomSvg
-    } as const;
-    for (const [id, pair] of Object.entries(CANNON_BARREL_SVG)) {
-      const master = masterById[id as keyof typeof masterById];
-      for (const part of [pair.left, pair.right]) {
-        for (const [, pathData] of part.matchAll(/\sd="([^"]+)"/g)) {
-          expect(master).toContain(`d="${pathData}"`);
-        }
-      }
-    }
   });
 
   it('extracts graphic markup without the SVG root', () => {

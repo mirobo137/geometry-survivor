@@ -27,11 +27,13 @@ se usaron como referencia de forma.
 | `corsair` | Scarlet Corsair | Catamarán escarlata con canal abierto y motores gemelos | 3,600 |
 | `nautilus` | Nautilus Ark | Concha cobalto/latón con turbina espiral | 4,200 |
 
-Catálogo actual: diez naves. El lote adicional y sus prompts se documentan en
+Catálogo base: diez naves. El lote adicional y sus prompts se documentan en
 [Catálogo diez](../../../../docs/design/CATALOGO_DIEZ.md). Una textura RGBA 256²
 por nave; puertos de propulsión de Corsair ±10/28 y Nautilus ±3/28 en el frame
 56×64. No cambia hitbox, bocas, cables ni estadísticas. Suma de las diez
-imágenes runtime: 761,427 bytes; sólo se prepara la elegida.
+maestros PNG: 761,427 bytes; sólo se prepara la elegida. El runtime actual usa
+derivados WebP lossless, igualdad RGBA comprobada mediante
+`scripts/prepare-skin-lossless-webp.py`; no cambia píxeles, alpha o dimensiones.
 
 Se preservan los siete IDs, precios, nombres de catálogo, selección, propiedad y
 progreso ya guardado. Los perfiles nuevos empiezan con Ivory Spear y sus cañones
@@ -51,8 +53,9 @@ gratis, como antes.
 | Movimiento | La nave gira/derrota con el transform existente; el motor va integrado |
 | Fallback | PlayerView SVG anterior si el PNG seleccionado no carga o no decodifica |
 
-`PlayerView` usa el `TetheredShipView` existente para las ocho naves. Sólo carga
-la nave equipada y el cañón equipado; el flash comparte la textura de la nave y
+`PlayerView` usa el `TetheredShipView` existente para las diez naves del catálogo
+base y las skins exclusivas Asterion y [Solstice Regent](solstice/README.md).
+Sólo carga la nave equipada y el cañón equipado; el flash comparte la textura de la nave y
 las dos bocas comparten una textura de cañón. El locker enseña los PNG reales en
 tarjetas estáticas y sólo anima la vista modal seleccionada. Las miniaturas son
 HTML `img` con carga diferida. Cambiar la calidad, morir, revivir, pausar o
@@ -75,6 +78,24 @@ En Pixi se decodifica sólo una nave y un cañón: **320 KiB RGBA8 teóricos**
 esas texturas. Abrir el locker puede hacer que el navegador descargue miniaturas;
 no crea ocho texturas Pixi ni demuestra un cambio de FPS. Las pruebas no miden un
 móvil físico.
+
+## Skin de evento: Asterion Courier
+
+Asterion es una recompensa piloto de la rotación semanal RET-F01 y se suma como
+undécima entrada elegible, sin reemplazar las diez naves del catálogo base.
+Procedencia: ilustración raster generada para esta skin, revisada como pieza
+independiente; el PNG maestro conserva canal alpha y el WebP es la copia de
+runtime. No asigna estadísticas ni se equipa automáticamente al reclamarla.
+
+| Archivo | Uso | Frame lógico |
+| --- | --- | --- |
+| `asterion.png` (224×256) | Maestro transparente para edición/versionado | 56×64, centro `(0.5, 0.5)` |
+| `asterion.webp` | Raster de runtime, carga bajo demanda con `?no-inline` | 56×64, centro `(0.5, 0.5)` |
+
+Mantener identidad, transparencia y pivote; conectar el arte a
+`PLAYER_SHIP_RASTER_ART` y sus tokens antes de añadir el ID a cualquier guardado.
+La propiedad se concede únicamente al confirmar la reclamación del reto; el
+precio cero del catálogo no la convierte en compra gratis.
 
 ## QA
 

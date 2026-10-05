@@ -1,5 +1,5 @@
 import type { Application, Ticker } from 'pixi.js';
-import { FIXED_STEP_SECONDS } from '../config/constants';
+import { ARENA_CENTER, FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
 import { FrameProfiler } from '../debug/FrameProfiler';
 import { BaselinePanel } from '../debug/BaselinePanel';
@@ -32,7 +32,10 @@ import type {
   WeaponEvolutionScenario
 } from '../content/weapons/WeaponEvolutionDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
-import { isPlayerSkinId } from '../content/visual/SkinDefinitions';
+import { getPlayerSkinDefinition, isPlayerSkinId } from '../content/visual/SkinDefinitions';
+import { DailyWheelService } from './DailyWheelService';
+import { RetentionObjectiveService } from './RetentionObjectiveService';
+import { DAILY_WHEEL_SKIN, type DailyWheelKind, type DailyWheelResult } from '../content/retention/DailyWheelDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
@@ -61,6 +64,18 @@ import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefiniti
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
 import { normalizeOverdriveStage, type RunMode } from '../content/run/OverdriveDefinitions';
 import { OverdriveActDirector, type OverdriveBossPair } from '../simulation/acts/OverdriveActDirector';
+import { createRetentionActDirector } from '../simulation/acts/RetentionActDirector';
+import {
+  getRetentionChallenge,
+  getRetentionWeeklyEdition,
+  recordRetentionRun,
+  retentionProgressHighlights,
+  RETENTION_WEEKLY_NOVA_AFTER_COLLECTION,
+  RETENTION_WEEKLY_SKIN_ID,
+  type RetentionChallengeId,
+  type RetentionObjectiveId,
+  type RetentionWeeklyEdition
+} from '../content/retention/RetentionDefinitions';
 
 /** Gives terminal presentation time to resolve before the summary takes focus. */
 const TERMINAL_SUMMARY_DELAY_MS = 3_000;
@@ -81,6 +96,13 @@ interface PendingTerminalRun {
     readonly p95Ms: number | null;
   };
   readonly terminalCause: 'defeat' | 'withdrawal';
+  retentionPresentation?: {
+    readonly artId: string;
+    readonly message: string;
+    readonly highlights: readonly string[];
+    readonly bonusNova: number;
+    readonly challenge: boolean;
+  };
   settled: boolean;
 }
 
@@ -105,6 +127,8 @@ export interface GameOptions {
   readonly buildTarget: string;
   readonly platform: PlatformAdapter;
   readonly startOnMenu?: boolean;
+  /** Local-only direct retention practice route; never awards or persists a weekly prize. */
+  readonly retentionChallengePracticeId?: RetentionChallengeId;
   /** Public Act III continuation reloads into Overdrive with a brief chapter card. */
   readonly startWithBasicIntro?: boolean;
   readonly playerSkin?: PlayerSkinId;
@@ -190,6 +214,7 @@ export class Game {
   private readonly initialElapsedSeconds: number;
   private readonly startOnMenu: boolean;
   private readonly startWithBasicIntro: boolean;
+  private readonly retentionChallengePracticeId: RetentionChallengeId | null;
   private runMode: RunMode;
   private overdriveStage: number;
   private readonly initialOverdriveStage: number;
@@ -203,6 +228,9 @@ export class Game {
   private readonly fxQuality: FxQuality;
   private readonly lifecycle: PlatformLifecycle;
   private readonly rewardedAds: RewardedAdController;
+  private readonly dailyWheel: DailyWheelService;
+  private readonly logbook: RetentionObjectiveService;
+  private dailyWheelVideoPending = false;
   private readonly rewardedOffers = new RewardedOfferLedger();
   private readonly saveStore: SaveStore;
   private readonly audio: AudioService;
@@ -272,6 +300,11 @@ export class Game {
   private terminalNovaReward = 0;
   private terminalTotalNova = 0;
   private pendingTerminalRun: PendingTerminalRun | null = null;
+  private activeRetentionChallenge: RetentionChallengeId | null = null;
+  private activeRetentionEdition: RetentionWeeklyEdition | null = null;
+  private activeRetentionChallengePractice = false;
+  private retentionNoHitFailure = false;
+  private retentionProgressEligibleThisRun = false;
   private nextTerminalCause: 'defeat' | 'withdrawal' = 'defeat';
   private levelUpRequestToken = 0;
   private startScreenRequestToken = 0;
@@ -302,7 +335,7 @@ export class Game {
   private readonly onWindowFocus = (): void => this.resumeAmbientAudio();
 
   private readonly resumeAmbientAudio = (): void => {
-    if (this.stopped || !this.ambientAudioPaused || this.lifecyclePaused
+    if (this.stopped || this.dailyWheelVideoPending || !this.ambientAudioPaused || this.lifecyclePaused
       || document.visibilityState === 'hidden') return;
     this.ambientAudioPaused = false;
     this.audio.resume();
@@ -313,6 +346,7 @@ export class Game {
   };
 
   private readonly onUiButtonClick = (event: Event): void => {
+    if (this.dailyWheelVideoPending) return;
     const source = event.target;
     if (!(source instanceof Element)) return;
     const button = source.closest<HTMLElement>('button, [role="button"]');
@@ -326,6 +360,7 @@ export class Game {
   };
 
   private readonly onUiControlChange = (event: Event): void => {
+    if (this.dailyWheelVideoPending) return;
     const source = event.target;
     if (!(source instanceof HTMLInputElement || source instanceof HTMLSelectElement)
       || source.disabled || source.closest('[hidden]')) return;
@@ -349,6 +384,13 @@ export class Game {
     }
     this.startScreenRequestToken += 1;
     this.rewardedOffers.reset();
+    this.activeRetentionChallenge = null;
+    this.activeRetentionEdition = null;
+    this.activeRetentionChallengePractice = false;
+    this.retentionNoHitFailure = false;
+    this.retentionProgressEligibleThisRun = calibrationId === undefined
+      && !this.stressMode && this.weaponPath === null && this.campaignBuild === null
+      && this.debugUpgradeId === null && this.evolutionId === null;
     const saved = this.saveStore.load();
     this.applyLaboratoryBonuses(saved.laboratory);
     this.startScreen?.close();
@@ -392,6 +434,90 @@ export class Game {
     this.resetAudioFeedbackTrackers();
   };
 
+  private readonly onRetentionObjectiveSelect = (id: RetentionObjectiveId): void => {
+    const saved = this.saveStore.load();
+    if (saved.retention.selectedObjectiveId === id) return;
+    this.saveStore.save({ ...saved, retention: { ...saved.retention, selectedObjectiveId: id } });
+  };
+  private readonly onRetentionObjectiveClaim = (id: RetentionObjectiveId) => this.logbook.claim(id);
+
+  private readonly onStartRetentionChallenge = (id: RetentionChallengeId): void => {
+    this.beginRetentionChallenge(id, false);
+  };
+
+  private beginRetentionChallenge(id: RetentionChallengeId, practiceOnly: boolean): void {
+    if (this.stopped || !this.startScreen || this.gameState.phase !== 'menu') return;
+    const edition = getRetentionWeeklyEdition();
+    if ((!practiceOnly && edition.challenge.id !== id) || !this.gameState.startRun()) return;
+    const challenge = getRetentionChallenge(id);
+    const saved = this.saveStore.load();
+    this.startScreenRequestToken += 1;
+    this.rewardedOffers.reset();
+    this.activeRetentionChallenge = id;
+    this.activeRetentionEdition = practiceOnly ? null : edition;
+    this.activeRetentionChallengePractice = practiceOnly;
+    this.retentionNoHitFailure = false;
+    this.retentionProgressEligibleThisRun = false;
+    this.runMode = 'campaign';
+    this.actId = challenge.actId;
+    this.overdriveStage = this.initialOverdriveStage;
+    // Weekly trials are skill-only: never grant Calibration's twin emitters or
+    // its extra damage/cadence upgrades at entry.
+    this.calibrationId = null;
+    this.calibrationApplied = false;
+    this.configureActRuntime(saved);
+    this.player.reset();
+    this.progression.reset();
+    this.arena.update(0);
+    this.placePlayerForRetentionChallenge();
+    this.resetAudioFeedbackTrackers();
+    this.view.resetPresentation();
+    this.startScreen.close();
+    this.activateRun(true);
+    this.beginRunIntro('basic');
+  }
+
+  private readonly onRetentionReturnToMenu = (): void => {
+    if (this.contextLost || !this.startScreen || !this.gameState.returnToMenuFromTerminal()) return;
+    this.leaveRetentionRunForMenu();
+  };
+
+  private readonly onRunReturnToBitacora = (): void => {
+    if (this.contextLost || !this.startScreen) return;
+    const returned = this.gameState.phase === 'act-intermission'
+      ? this.gameState.returnToMenuFromIntermission()
+      : this.gameState.returnToMenuFromTerminal();
+    if (!returned) return;
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
+    this.returnToMenuState('retention');
+  };
+
+  private readonly onRunReturnToMenu = (): void => {
+    if (this.contextLost || !this.startScreen || !this.gameState.returnToMenuFromTerminal()) return;
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
+    this.returnToMenuState();
+  };
+
+  private leaveRetentionRunForMenu(): void {
+    this.terminalRunToken += 1;
+    this.rewardedOffers.reset();
+    this.activeRetentionChallenge = null;
+    this.activeRetentionEdition = null;
+    this.activeRetentionChallengePractice = false;
+    this.retentionNoHitFailure = false;
+    this.retentionProgressEligibleThisRun = false;
+    this.calibrationId = null;
+    this.calibrationApplied = false;
+    const saved = this.saveStore.load();
+    this.runMode = saved.lastSelectedRoute === 'overdrive' && saved.overdrive.unlocked ? 'overdrive' : 'campaign';
+    this.actId = this.runMode === 'campaign' && saved.lastSelectedRoute !== 'overdrive'
+      ? saved.lastSelectedRoute : 'radial';
+    this.configureActRuntime(saved);
+    this.returnToMenuState('retention');
+  }
+
   private readonly onPauseButton = (): void => {
     // A pause tap is also a valid user gesture for mobile Web Audio unlock.
     void this.audio.unlock();
@@ -419,6 +545,46 @@ export class Game {
     if (!skins.unlocked.includes(skins.selected)) return;
     this.saveStore.save({ ...saved, skins });
     this.view.setPlayerSkin(skins.selected);
+  };
+
+  private readonly onDailyWheelSpin = async (kind: DailyWheelKind): Promise<DailyWheelResult> => {
+    if (this.stopped || this.gameState.phase !== 'menu') return { status: 'unavailable' };
+    const result = await this.dailyWheel.spin(kind);
+    if (!this.stopped) {
+      this.startScreen?.syncRewardProfile(this.saveStore.load());
+      if (result.status === 'rewarded') this.audio.playCue('reward-claimed');
+    }
+    return result;
+  };
+
+  private readonly onDailyWheelEquip = (): boolean => {
+    if (this.stopped || this.gameState.phase !== 'menu') return false;
+    const saved = this.saveStore.load();
+    if (!saved.skins.unlocked.includes(DAILY_WHEEL_SKIN)) return false;
+    const next = { ...saved, skins: { ...saved.skins, selected: DAILY_WHEEL_SKIN } };
+    if (!this.saveStore.saveDurably?.(next)) return false;
+    this.view.setPlayerSkin(DAILY_WHEEL_SKIN);
+    this.startScreen?.syncRewardProfile(next);
+    return true;
+  };
+
+  private readonly requestDailyWheelVideo = async (): Promise<RewardedAdResult> => {
+    if (this.stopped || this.gameState.phase !== 'menu') return 'unavailable';
+    this.dailyWheelVideoPending = true;
+    this.audio.configure({ ...this.saveStore.load().settings, muted: true });
+    this.audio.pause();
+    try {
+      return await this.rewardedAds.request('daily-wheel-nova');
+    } finally {
+      this.dailyWheelVideoPending = false;
+      if (!this.stopped) {
+        this.audio.configure(this.saveStore.load().settings);
+        if (!this.lifecyclePaused && document.visibilityState !== 'hidden') {
+          this.ambientAudioPaused = false;
+          this.audio.resume();
+        }
+      }
+    }
   };
 
   private readonly onStartCannonSkinStateChange = (cannonSkins: CannonSkinSaveData): void => {
@@ -488,7 +654,8 @@ export class Game {
   private readonly onPauseReturnToMenu = (): void => {
     if (this.contextLost || !this.startScreen) return;
     if (!this.gameState.returnToMenuFromPause()) return;
-    this.returnToMenuState();
+    if (this.activeRetentionChallenge) this.leaveRetentionRunForMenu();
+    else this.returnToMenuState();
   };
 
   private readonly onPauseWithdraw = (): void => {
@@ -666,7 +833,9 @@ export class Game {
     this.overdriveSeed = options.overdriveSeed;
     this.overdriveBossPair = options.overdriveBossPair;
     this.overdriveBuild = options.overdriveBuild ?? 'starter';
-    this.startOnMenu = options.startOnMenu === true && options.elements.startScreen !== undefined;
+    this.retentionChallengePracticeId = options.retentionChallengePracticeId ?? null;
+    this.startOnMenu = (options.startOnMenu === true || this.retentionChallengePracticeId !== null)
+      && options.elements.startScreen !== undefined;
     this.startWithBasicIntro = options.startWithBasicIntro === true;
     this.saveStore = options.platform.saveStore;
     const saved = this.saveStore.load();
@@ -698,6 +867,8 @@ export class Game {
     this.lifecycle = options.platform.lifecycle;
     this.rewardedAds = new RewardedAdController(options.platform.ads);
     this.audio = options.platform.audio;
+    this.dailyWheel = new DailyWheelService(this.saveStore, this.requestDailyWheelVideo);
+    this.logbook = new RetentionObjectiveService(this.saveStore);
     this.audio.configure(saved.settings);
     this.configureActRuntime(saved);
     const renderAudioState = this.combat.renderState;
@@ -745,22 +916,32 @@ export class Game {
   }
 
   private configureActRuntime(saved: ReturnType<SaveStore['load']>): void {
-    this.actDirector = this.runMode === 'overdrive'
+    const retentionChallenge = this.activeRetentionChallenge
+      ? getRetentionChallenge(this.activeRetentionChallenge) : null;
+    const permanentBonuses = retentionChallenge
+      ? getLaboratoryCombatBonuses({}, 0)
+      : getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank);
+    this.actDirector = retentionChallenge
+      ? createRetentionActDirector(retentionChallenge.actId)
+      : this.runMode === 'overdrive'
       ? new OverdriveActDirector(this.overdriveStage, this.overdriveSeed)
       : this.actId === 'angular'
       ? new AngularActDirector()
       : this.actId === 'fracture' ? new FractureActDirector() : new RadialActDirector();
     if (this.runMode === 'overdrive') this.actId = this.actDirector.definition.id;
-    this.arena = new ArenaModel(this.actDirector);
+    this.arena = new ArenaModel(this.actDirector, retentionChallenge?.centerExclusionRadius ?? 0);
     this.combat = new CombatSimulation({
       stress: this.stressMode,
-      initialElapsedSeconds: this.initialElapsedSeconds,
-      permanentBonuses: getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank),
+      initialElapsedSeconds: retentionChallenge ? 0 : this.initialElapsedSeconds,
+      permanentBonuses,
       actDirector: this.actDirector,
       overdriveBossPair: this.overdriveBossPair,
       hazardCadenceMode: this.hazardCadenceMode,
       orbiterDrill: this.orbiterDrill,
       chargerDrill: this.chargerDrill,
+      retentionChargerChallenge: retentionChallenge?.id === 'charger-evasion',
+      retentionBossDuel: retentionChallenge?.bossId !== null && retentionChallenge !== null,
+      retentionWardenDuel: retentionChallenge?.id === 'warden-duel',
       splitterDrill: this.splitterDrill,
       prismWeaverDrill: this.prismWeaverDrill,
       pulseRingDrill: this.pulseRingDrill,
@@ -773,7 +954,7 @@ export class Game {
       evolutionDrill: this.evolutionScenario ?? undefined,
       evolutionDrillWeapon: this.evolutionId ?? undefined
     });
-    this.player.setPermanentBonuses(getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank));
+    this.player.setPermanentBonuses(permanentBonuses);
     this.upgradeApplier = new UpgradeApplier(this.player, this.combat, undefined, this.runMode);
   }
 
@@ -804,7 +985,11 @@ export class Game {
     this.arena.update(this.initialElapsedSeconds);
     this.resizeNow();
     await this.lifecycle.init();
-    if (this.startOnMenu) {
+    if (this.retentionChallengePracticeId !== null) {
+      this.beginRetentionChallenge(this.retentionChallengePracticeId, true);
+      this.hudElement.hidden = false;
+      if (this.pauseButton) this.pauseButton.hidden = false;
+    } else if (this.startOnMenu) {
       await this.openStartScreen();
       this.hudElement.hidden = true;
       if (this.pauseButton) this.pauseButton.hidden = true;
@@ -819,7 +1004,8 @@ export class Game {
       await Promise.race([
         Promise.all([
           loadShipSkinArt(this.playerSkin, this.cannonSkin),
-          this.startOnMenu ? this.startScreen?.prepareVisibleArt() : this.prepareCombatArt()
+          this.startOnMenu && this.retentionChallengePracticeId === null
+            ? this.startScreen?.prepareVisibleArt() : this.prepareCombatArt()
         ]),
         new Promise<void>(resolve => { deadline = setTimeout(resolve, 3000); })
       ]);
@@ -891,9 +1077,15 @@ export class Game {
     }
 
     let playerDefeated = false;
+    let noHitChallengeBroken = false;
     for (const event of events) {
       if (event.type !== 'playerDamaged') continue;
       const resolution = this.player.resolveDamage(event.amount);
+      const challenge = this.activeRetentionChallenge
+        ? getRetentionChallenge(this.activeRetentionChallenge) : null;
+      if (challenge?.noHitRequired && resolution.outcome !== 'ignored') {
+        noHitChallengeBroken = true;
+      }
       if (resolution.outcome === 'damaged') this.baseline.noteDamageSource(event.source);
       if (resolution.outcome === 'shielded') {
         this.audio.playCue('player-guard');
@@ -911,8 +1103,14 @@ export class Game {
       }
     }
 
-    if (playerDefeated) {
+    if (noHitChallengeBroken) this.retentionNoHitFailure = true;
+    if (playerDefeated || noHitChallengeBroken) {
       this.finishRun('game-over');
+      return;
+    }
+
+    if (this.activeRetentionChallenge && events.some((event) => event.type === 'retentionChallengeVictory')) {
+      this.finishRun('victory');
       return;
     }
 
@@ -940,6 +1138,7 @@ export class Game {
       this.finishRun('victory');
       return;
     }
+    if (this.activeRetentionChallenge) return;
     if (this.stressMode) return;
     this.progression.sync(this.combat.stats.experience);
     if (this.progression.state.pendingLevelUps > 0) this.openLevelUp();
@@ -1384,17 +1583,18 @@ export class Game {
     });
   }
 
-  private async openStartScreen(): Promise<void> {
+  private async openStartScreen(initialView?: 'retention'): Promise<void> {
     if (!this.startScreen) return;
     const requestToken = ++this.startScreenRequestToken;
     const initialSave = this.saveStore.load();
-    const [cosmeticUnlockAvailable, laboratoryVitalityAdAvailable] = await Promise.all([
+    const [cosmeticUnlockAvailable, laboratoryVitalityAdAvailable, dailyWheelVideoAvailable] = await Promise.all([
       this.rewardedOffers.canOffer('cosmetic-unlock')
         ? this.rewardedAds.isAvailable('cosmetic-unlock')
         : Promise.resolve(false),
       initialSave.overdrive.unlocked
         ? this.rewardedAds.isAvailable('laboratory-vitality')
-        : Promise.resolve(false)
+        : Promise.resolve(false),
+      this.rewardedAds.isAvailable('daily-wheel-nova')
     ]);
     if (this.stopped || requestToken !== this.startScreenRequestToken || this.gameState.phase !== 'menu') return;
     this.view.root.visible = false;
@@ -1427,7 +1627,22 @@ export class Game {
       laboratoryVitalityAdAvailable,
       onLaboratoryVitalityAd: this.onStartLaboratoryVitalityAd,
       cosmeticUnlockAvailable,
-      onCosmeticUnlock: this.onStartCosmeticUnlock
+      onCosmeticUnlock: this.onStartCosmeticUnlock,
+      retention: saved.retention,
+      retentionEdition: getRetentionWeeklyEdition(),
+      onStartRetentionChallenge: this.onStartRetentionChallenge,
+      onRetentionObjectiveSelect: this.onRetentionObjectiveSelect,
+      onRetentionObjectiveClaim: this.onRetentionObjectiveClaim,
+      readRetention: () => this.logbook.snapshot(),
+      dailyWheel: {
+        read: () => this.dailyWheel.snapshot(),
+        spin: this.onDailyWheelSpin,
+        equip: this.onDailyWheelEquip,
+        videoAvailable: dailyWheelVideoAvailable,
+        videoSimulation: __BUILD_TARGET__ === 'local',
+        onClose: () => this.startScreen?.syncRewardProfile(this.saveStore.load())
+      },
+      initialView
     });
     this.audio.startMusic('menu');
   }
@@ -1495,8 +1710,9 @@ export class Game {
     const terminalCause = outcome === 'game-over' ? this.nextTerminalCause : 'defeat';
     this.nextTerminalCause = 'defeat';
     const saved = this.saveStore.load();
-    const best = mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
-    const novaReward = calculateRunNova(summary)
+    const isolatedChallenge = this.activeRetentionChallenge !== null;
+    const best = isolatedChallenge ? saved.best : mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
+    const novaReward = isolatedChallenge ? 0 : calculateRunNova(summary)
       + (this.runMode === 'overdrive' ? this.upgradeApplier.overdriveNovaReward : 0);
     const profile = this.profiler.enabled ? this.profiler.snapshot(performance.now() + 500) : null;
     this.terminalRunToken += 1;
@@ -1532,6 +1748,7 @@ export class Game {
     if (pending.settled) return true;
 
     const saved = this.saveStore.load();
+    if (this.activeRetentionChallenge) return this.settleRetentionChallenge(pending, saved);
     if (this.diagnosticOverdrive) {
       this.baseline.finish({
         outcome: pending.summary.outcome,
@@ -1577,7 +1794,29 @@ export class Game {
       : this.runMode === 'campaign' && this.actId === 'fracture' && pending.summary.outcome === 'victory'
         ? unlockOverdrive(baseData)
         : baseData;
-    if (!this.saveStore.save(progressed)) return false;
+    const retentionUpdate = this.retentionProgressEligibleThisRun && pending.terminalCause !== 'withdrawal'
+      ? recordRetentionRun(saved.retention, {
+        outcome: pending.summary.outcome,
+        kills: this.combat.stats.kills,
+        elapsedSeconds: pending.summary.elapsedSeconds,
+        route: this.runMode === 'overdrive' ? 'overdrive' : this.actId,
+        overdriveStages: this.runMode === 'overdrive' ? Math.max(0, this.overdriveStage - 1) : 0,
+        bossDefeats: this.runMode === 'campaign' ? this.combat.stats.bossDefeats : {}
+      })
+      : null;
+    const dataToSave = retentionUpdate
+      ? { ...progressed, retention: retentionUpdate.progress }
+      : progressed;
+    if (retentionUpdate && retentionUpdate.newlyCompleted.length > 0) {
+      pending.retentionPresentation = {
+        artId: retentionUpdate.newlyCompleted[0].artId,
+        message: 'Objetivos completados. Entra a la Bitácora para cobrar sus recompensas y activar el siguiente rango.',
+        highlights: retentionProgressHighlights(retentionUpdate.progress, retentionUpdate.newlyCompleted),
+        bonusNova: 0,
+        challenge: false
+      };
+    }
+    if (!this.saveStore.save(dataToSave)) return false;
     this.baseline.finish({
       outcome: pending.summary.outcome,
       elapsedSeconds: pending.summary.elapsedSeconds,
@@ -1587,6 +1826,84 @@ export class Game {
     this.baselinePanel?.render(this.baseline);
     pending.settled = true;
     this.terminalTotalNova = wallet.nova;
+    return true;
+  }
+
+  private settleRetentionChallenge(
+    pending: PendingTerminalRun,
+    saved: ReturnType<SaveStore['load']>
+  ): boolean {
+    const id = this.activeRetentionChallenge;
+    if (!id) return false;
+    const challenge = getRetentionChallenge(id);
+    if (this.activeRetentionChallengePractice) {
+      pending.retentionPresentation = {
+        artId: challenge.artId,
+        message: this.retentionNoHitFailure
+          ? 'Práctica local: impacto recibido. El intento terminó; puedes reintentarlo gratis.'
+          : pending.summary.outcome === 'victory'
+            ? 'Práctica local superada sin impactos. Esta ruta de prueba no entrega premios.'
+            : 'Práctica local finalizada. Puedes reintentarlo gratis.',
+        highlights: [],
+        bonusNova: 0,
+        challenge: true
+      };
+      pending.settled = true;
+      this.terminalTotalNova = saved.wallet.nova;
+      return true;
+    }
+    const edition = this.activeRetentionEdition;
+    if (!edition) return false;
+    let message = this.retentionNoHitFailure
+      ? 'Reto fallido: recibiste un impacto. Puedes reintentarlo gratis.'
+      : pending.summary.outcome === 'victory'
+      ? 'Reto superado.' : 'Reto no superado. Puedes intentarlo de nuevo sin costo.';
+    let bonusNova = 0;
+    if (pending.summary.outcome === 'victory') {
+      if (!edition.scheduleStarted) {
+        message = 'Práctica completada. La rotación semanal aún no inicia; esta sesión no concede el premio.';
+      } else if (saved.retention.weeklyClaimIds.includes(edition.editionId)) {
+        message = 'Reto superado. El premio de esta edición ya fue reclamado; puedes volver a practicar gratis.';
+      } else if (saved.skins.unlocked.includes(RETENTION_WEEKLY_SKIN_ID)
+        && saved.wallet.nova >= MAX_NOVA) {
+        message = 'Reto superado. Tu billetera está al límite; gasta NOVA y repite para reclamar la recompensa de esta semana.';
+      } else {
+        const alreadyOwnsSkin = saved.skins.unlocked.includes(RETENTION_WEEKLY_SKIN_ID);
+        bonusNova = alreadyOwnsSkin
+          ? Math.min(RETENTION_WEEKLY_NOVA_AFTER_COLLECTION, MAX_NOVA - saved.wallet.nova)
+          : 0;
+        const next: typeof saved = {
+          ...saved,
+          skins: alreadyOwnsSkin ? saved.skins : {
+            ...saved.skins,
+            unlocked: [...saved.skins.unlocked, RETENTION_WEEKLY_SKIN_ID]
+          },
+          wallet: { nova: saved.wallet.nova + bonusNova },
+          retention: {
+            ...saved.retention,
+            weeklyClaimIds: [...saved.retention.weeklyClaimIds, edition.editionId].slice(-52)
+          }
+        };
+        if (this.saveStore.saveDurably?.(next) === true) {
+          this.terminalTotalNova = next.wallet.nova;
+          message = alreadyOwnsSkin
+            ? `Premio semanal confirmado: +${bonusNova} NOVA.`
+            : 'Premio semanal confirmado: nave exclusiva Asterion Courier desbloqueada. No se equipó automáticamente.';
+        } else {
+          bonusNova = 0;
+          message = 'Victoria conseguida, pero el guardado local no pudo confirmarse. No se entregó el premio; vuelve a completar el reto cuando el guardado esté disponible.';
+        }
+      }
+    }
+    pending.retentionPresentation = {
+      artId: challenge.artId,
+      message,
+      highlights: [],
+      bonusNova,
+      challenge: true
+    };
+    pending.settled = true;
+    this.terminalTotalNova = Math.max(this.terminalTotalNova, saved.wallet.nova);
     return true;
   }
 
@@ -1612,7 +1929,8 @@ export class Game {
     totalNova: number,
     terminalToken: number
   ): Promise<void> {
-    const canRevive = summary.outcome === 'game-over'
+    const isRetentionChallenge = this.activeRetentionChallenge !== null;
+    const canRevive = !isRetentionChallenge && summary.outcome === 'game-over'
       && this.pendingTerminalRun?.terminalCause !== 'withdrawal'
       && this.rewardedOffers.canOffer('revive')
       && await this.rewardedAds.isAvailable('revive');
@@ -1620,14 +1938,14 @@ export class Game {
     if (summary.outcome === 'game-over' && !canRevive) this.settleTerminalRun(terminalToken);
     const settled = this.pendingTerminalRun?.token === terminalToken
       && this.pendingTerminalRun.settled;
-    const canDoubleNova = !this.diagnosticOverdrive
+    const canDoubleNova = !isRetentionChallenge && !this.diagnosticOverdrive
       && this.pendingTerminalRun?.terminalCause !== 'withdrawal'
       && this.weaponPath === null
       && settled && novaReward > 0 && this.terminalTotalNova < MAX_NOVA
       && this.rewardedOffers.canOffer('double-nova')
       && await this.rewardedAds.isAvailable('double-nova');
     if (this.stopped || terminalToken !== this.terminalRunToken || !this.gameState.isTerminal) return;
-    const isActVictory = summary.outcome === 'victory';
+    const isActVictory = !isRetentionChallenge && summary.outcome === 'victory';
     const actName = this.actId === 'angular'
       ? 'Acto II · Angular'
       : this.actId === 'fracture' ? 'Acto III · Fracture' : 'Acto I · Radial';
@@ -1653,7 +1971,13 @@ export class Game {
       continueLabel: this.canContinueToNextAct() ? `Continuar al ${nextActName}` : undefined,
       onContinue: this.canContinueToNextAct() ? this.onActIntermissionContinue : undefined,
       onReturnToMenu: this.startScreen ? this.onActIntermissionReturnToMenu : undefined
-    } : undefined);
+    } : undefined, this.pendingTerminalRun?.retentionPresentation ? {
+      ...this.pendingTerminalRun.retentionPresentation,
+      restartLabel: isRetentionChallenge ? 'Reintentar gratis' : 'Jugar de nuevo',
+      menuLabel: isRetentionChallenge ? 'Volver a retos' : 'Ir a la Bitácora',
+      onReturnToMenu: isRetentionChallenge ? this.onRetentionReturnToMenu
+        : this.onRunReturnToBitacora
+    } : undefined, this.startScreen ? this.onRunReturnToMenu : undefined);
   }
 
   private canContinueToNextAct(): boolean {
@@ -1724,6 +2048,8 @@ export class Game {
   private async requestCosmeticUnlock(target: CosmeticUnlockTarget): Promise<RewardedAdResult> {
     if (this.gameState.phase !== 'menu') return 'unavailable';
     const saved = this.saveStore.load();
+    if (target.kind === 'player' && isPlayerSkinId(target.id)
+      && getPlayerSkinDefinition(target.id).acquisition !== 'nova') return 'unavailable';
     const alreadyUnlocked = target.kind === 'player'
       ? !isPlayerSkinId(target.id) || saved.skins.unlocked.includes(target.id)
       : target.kind === 'cannon'
@@ -1765,12 +2091,14 @@ export class Game {
   }
 
   private resetRunState(): void {
+    this.retentionNoHitFailure = false;
     if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
       this.overdriveStage = this.initialOverdriveStage;
       this.actDirector.setStage(this.initialOverdriveStage, this.overdriveSeed);
       this.actId = this.actDirector.definition.id;
     }
     this.clearRunPresentation();
+    if (this.activeRetentionChallenge !== null) this.placePlayerForRetentionChallenge();
     if (this.runMode === 'overdrive' && this.overdriveBuild !== 'starter') {
       this.prepareOverdriveDebugBuild(this.overdriveBuild);
     }
@@ -1779,6 +2107,18 @@ export class Game {
     this.audio.resume();
     this.audio.startMusic();
     this.lifecycle.onGameStart();
+  }
+
+  private placePlayerForRetentionChallenge(): void {
+    const challenge = this.activeRetentionChallenge
+      ? getRetentionChallenge(this.activeRetentionChallenge) : null;
+    if (challenge?.centerExclusionRadius !== undefined) {
+      // Core Sentinel enters from the north; place the player beyond the
+      // barrier on the far side on both first entry and every retry.
+      this.player.state.x = ARENA_CENTER.x;
+      this.player.state.y = ARENA_CENTER.y + challenge.centerExclusionRadius + this.player.state.radius + 8;
+    }
+    this.player.update({ x: 0, y: 0 }, 0, this.arena.state);
   }
 
   private applyCalibration(): void {
@@ -1841,7 +2181,8 @@ export class Game {
     }
   }
 
-  private returnToMenuState(): void {
+  private returnToMenuState(initialView?: 'retention'): void {
+    this.retentionProgressEligibleThisRun = false;
     if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
       this.overdriveStage = this.initialOverdriveStage;
       this.actDirector.setStage(this.initialOverdriveStage, this.overdriveSeed);
@@ -1858,7 +2199,7 @@ export class Game {
     this.lifecycle.onGamePause();
     this.hudElement.hidden = true;
     if (this.pauseButton) this.pauseButton.hidden = true;
-    void this.openStartScreen();
+    void this.openStartScreen(initialView);
   }
 
   private clearRunPresentation(): void {

@@ -127,4 +127,21 @@ describe('ArenaView', () => {
     view.reset();
     view.root.destroy({ children: true });
   });
+
+  it('renders a visible containment ring only when the arena defines a center barrier', () => {
+    const standardView = new ArenaView();
+    const challengeView = new ArenaView();
+    const standardBarrier = standardView.root.children.at(-1)!;
+    const challengeBarrier = challengeView.root.children.at(-1)!;
+    const challengeArena = new ArenaModel(new AngularActDirector(), 112);
+
+    expect(standardBarrier.visible).toBe(false);
+    challengeView.render(challengeArena.state);
+    expect(challengeBarrier.visible).toBe(true);
+
+    challengeView.reset();
+    expect(challengeBarrier.visible).toBe(false);
+    standardView.root.destroy({ children: true });
+    challengeView.root.destroy({ children: true });
+  });
 });

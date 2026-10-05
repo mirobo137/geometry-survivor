@@ -1,9 +1,11 @@
 # CI y publicación en Pages
 
-El workflow `.github/workflows/deploy.yml` publica únicamente `dist/local`
-después de typecheck, unit tests, tres builds y toda la suite browser. Un
-fallo sigue bloqueando la publicación. `npm ci` usa el lockfile y Chromium se
-instala con la versión de Playwright de ese lockfile.
+El workflow `.github/workflows/deploy.yml` publica `dist/pages`, una copia de
+`dist/local` sin source maps ni sus comentarios de referencia. Los mapas y los
+bundles JS/CSS exactos del build local se conservan como artefacto de diagnóstico
+de Actions durante 30 días. La publicación espera typecheck, unit tests, tres
+builds y toda la suite browser; un fallo sigue bloqueándola. `npm ci` usa el
+lockfile y Chromium se instala con la versión de Playwright de ese lockfile.
 
 ## Ejecución paralela entre runners — 27-09-2026
 
@@ -173,8 +175,16 @@ resultado local en Windows no predice el rendimiento Ubuntu.
 
 Corrección 02-10-2026: `playwright.config.ts` inicia `node scripts/qa-preview.mjs`
 con un único proceso Node/API Vite (sin npx padre), strictPort y cierre acotado.
-CI falla si `scripts/check-build-budget.mjs` encuentra un artefacto completo >15 MB;
-la descarga inicial ≤5 MB se verifica en los nuevos checks browser de recursos.
+CI conserva por 30 días `local-source-maps-<commit>`: contiene los `.map` y los
+bundles JS/CSS exactos del build local, descargables desde la sección Artifacts
+del run de GitHub Actions. Los bundles de diagnóstico conservan su comentario
+`sourceMappingURL` enlazado al mapa correspondiente; los mapas tienen
+`sourcesContent` para asociar errores del bundle con TypeScript/CSS original.
+No se incluyen en Pages. `dist/pages` se prepara desde `dist/local` quitando
+`.map` y sólo esos comentarios finales; `scripts/check-build-budget.mjs` aplica
+el tope de 15 MB al payload publicado (Pages/Poki/CrazyGames). No se borran los
+mapas diagnósticos. La descarga inicial ≤5 MB se verifica en los nuevos checks
+browser de recursos.
 Esto no certifica un portal ni FPS de móvil físico. [Seguimiento](audits/CORRECCIONES_RECURSOS_2026-10-02.md).
 
 1. Ejecutar `npm run build:local` para que preview sirva el código actual.

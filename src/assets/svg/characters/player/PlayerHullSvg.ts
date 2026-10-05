@@ -26,6 +26,8 @@ export const PLAYER_HULL_SVG: Readonly<Record<PlayerSkinId, { body: string; ring
   spearhead: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   corsair: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   nautilus: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
+  asterion: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
+  solstice: { body: amberBodySvg, ring: amberRingSvg, core: amberCoreSvg },
   manta: { body: mantaBodySvg, ring: mantaRingSvg, core: mantaCoreSvg },
   cyan: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   violet: { body: violetBodySvg, ring: violetRingSvg, core: violetCoreSvg },

@@ -12,6 +12,8 @@ export interface ArenaBoundary {
   /** Optional runtime context used by authored hazard pressure. */
   readonly shape?: ArenaShape;
   readonly shapeIndex?: number;
+  /** Radius of an optional solid exclusion ring around the arena center. */
+  readonly centerExclusionRadius?: number;
 }
 
 export type ArenaBoundaryInput = number | Readonly<ArenaBoundary>;
@@ -55,7 +57,7 @@ export const getArenaRadiusAtAngle = (input: ArenaBoundaryInput, angle: number):
   return fromRadius + (toRadius - fromRadius) * progress;
 };
 
-/** Clamps a circular player body inside the active convex arena boundary. */
+/** Keeps a circular body inside the arena and outside any optional center barrier. */
 export const clampPointToArena = (
   x: number,
   y: number,
@@ -66,8 +68,26 @@ export const clampPointToArena = (
   const dx = x - ARENA_CENTER.x;
   const dy = y - ARENA_CENTER.y;
   const distance = Math.hypot(dx, dy);
-  if (distance <= 0) return { x, y };
-  const maxDistance = Math.max(0, getArenaRadiusAtAngle(boundary, Math.atan2(dy, dx)) - Math.max(0, bodyRadius));
+  const safeBodyRadius = Math.max(0, bodyRadius);
+  const centerExclusionRadius = Number.isFinite(boundary.centerExclusionRadius)
+    ? Math.max(0, boundary.centerExclusionRadius ?? 0) : 0;
+  if (distance <= 0) {
+    if (centerExclusionRadius <= 0) return { x, y };
+    const angle = -Math.PI / 2;
+    const maxDistance = Math.max(0, getArenaRadiusAtAngle(boundary, angle) - safeBodyRadius);
+    const minDistance = Math.min(centerExclusionRadius + safeBodyRadius, maxDistance);
+    return { x: ARENA_CENTER.x, y: ARENA_CENTER.y - minDistance };
+  }
+  const angle = Math.atan2(dy, dx);
+  const maxDistance = Math.max(0, getArenaRadiusAtAngle(boundary, angle) - safeBodyRadius);
+  const minDistance = Math.min(centerExclusionRadius + safeBodyRadius, maxDistance);
+  if (centerExclusionRadius > 0 && distance < minDistance) {
+    const factor = minDistance / distance;
+    return {
+      x: ARENA_CENTER.x + dx * factor,
+      y: ARENA_CENTER.y + dy * factor
+    };
+  }
   if (distance <= maxDistance) return { x, y };
   const factor = maxDistance / distance;
   return {

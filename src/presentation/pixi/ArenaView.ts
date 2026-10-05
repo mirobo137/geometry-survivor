@@ -47,6 +47,7 @@ export class ArenaView {
   private readonly arenaSegments = new Graphics();
   private readonly arenaFrame = new Graphics();
   private readonly arenaCore = new Graphics();
+  private readonly centerBarrier = new Graphics();
   private readonly resonance = new Graphics();
   private readonly shockwave = new Graphics();
   private readonly couriers = Array.from({ length: 6 }, () => new Graphics());
@@ -106,6 +107,10 @@ export class ArenaView {
         .lineTo(-2, 1).closePath().fill({ color: ARENA_ART.hot, alpha: 0.86 });
       this.root.addChild(courier);
     }
+    // Appended to preserve existing child indices used by presentation tests.
+    this.centerBarrier.position.set(ARENA_CENTER.x, ARENA_CENTER.y);
+    this.centerBarrier.visible = false;
+    this.root.addChild(this.centerBarrier);
     this.render(INITIAL_ARENA_STATE);
   }
 
@@ -126,7 +131,8 @@ export class ArenaView {
       state.radius.toFixed(3),
       state.shapeFrom,
       state.shapeTo,
-      state.morphProgress.toFixed(4)
+      state.morphProgress.toFixed(4),
+      (state.centerExclusionRadius ?? 0).toFixed(2)
     ].join('|');
     if (geometryKey !== this.geometryKey) {
       this.drawArena(state);
@@ -177,6 +183,8 @@ export class ArenaView {
     this.arenaSegments.alpha = 0.86;
     this.arenaFrame.clear();
     this.arenaCore.clear();
+    this.centerBarrier.clear();
+    this.centerBarrier.visible = false;
     this.arenaCore.scale.set(1);
     this.arenaCore.rotation = 0;
   }
@@ -192,6 +200,35 @@ export class ArenaView {
     // Frame art is outside the continuous playable rail, preserving its authority.
     drawContainmentFrame(this.arenaFrame, this.arenaSegments, this.arenaMounts, boundary);
     this.drawCore();
+    this.drawCenterBarrier(boundary);
+  }
+
+  private drawCenterBarrier(boundary: ArenaBoundary): void {
+    const graphics = this.centerBarrier;
+    graphics.clear();
+    const radius = Number.isFinite(boundary.centerExclusionRadius)
+      ? Math.max(0, boundary.centerExclusionRadius ?? 0) : 0;
+    graphics.visible = radius > 0;
+    if (radius <= 0) return;
+
+    graphics.beginPath().circle(0, 0, Math.max(0, radius - 5))
+      .fill({ color: ARENA_ART.ink, alpha: 0.18 });
+    const segments = 12;
+    const segmentAngle = Math.PI * 2 / segments;
+    for (let index = 0; index < segments; index += 1) {
+      const start = index * segmentAngle + segmentAngle * 0.12;
+      const end = (index + 1) * segmentAngle - segmentAngle * 0.12;
+      graphics.beginPath().arc(0, 0, radius, start, end)
+        .stroke({ color: ARENA_ART.ink, width: 8, alpha: 0.92 });
+      graphics.beginPath().arc(0, 0, radius, start, end)
+        .stroke({ color: ARENA_ART.energy, width: 2.4, alpha: 0.88 });
+      const angle = index * segmentAngle;
+      const cosine = Math.cos(angle), sine = Math.sin(angle);
+      graphics.beginPath()
+        .moveTo(cosine * (radius - 8), sine * (radius - 8))
+        .lineTo(cosine * (radius + 8), sine * (radius + 8))
+        .stroke({ color: ARENA_ART.gold, width: 2, alpha: 0.9 });
+    }
   }
 
   private drawShapeSignal(state: Readonly<ArenaState>): void {

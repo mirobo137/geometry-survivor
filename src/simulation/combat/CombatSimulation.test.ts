@@ -8,6 +8,7 @@ import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 import { AngularActDirector } from '../acts/AngularActDirector';
 import { OverdriveActDirector } from '../acts/OverdriveActDirector';
+import { createRetentionActDirector } from '../acts/RetentionActDirector';
 
 const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: number): void => {
   const steps = Math.ceil(seconds * 60);
@@ -542,6 +543,116 @@ describe('CombatSimulation', () => {
     expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.boss.experience);
   });
 
+  it('keeps a fixed projectile weapon and the full Warden encounter in weekly boss duels', () => {
+    const combat = new CombatSimulation({
+      actDirector: createRetentionActDirector('angular'),
+      retentionBossDuel: true,
+      retentionWardenDuel: true
+    });
+    const player = new PlayerModel();
+    expect(combat.hasTwinEmitters).toBe(false);
+    expect(combat.currentProjectileRank).toBe(1);
+    runSeconds(combat, player, 1);
+    const boss = combat.enemies.states.find(enemy => enemy.active && enemy.kind === 'boss')!;
+    expect(boss).toBeDefined();
+    boss.health = boss.maxHealth = 1_000_000; // Exercise the full kit without the fixed build ending this fixture early.
+    let sawReplica = false;
+    let sawTwoHitReplica = false;
+    for (let tick = 0; tick < 60 * 60; tick++) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      const replicas = combat.enemies.states.filter(enemy => enemy.active && enemy.kind === 'warden-replica');
+      sawReplica ||= replicas.length > 0;
+      for (const replica of replicas) {
+        expect(replica.maxHealth).toBe(combat.currentProjectileDamage * 2);
+        sawTwoHitReplica = true;
+      }
+      expect(combat.enemies.states.filter(enemy => enemy.active)
+        .every(enemy => enemy.kind === 'boss' || enemy.kind === 'warden-replica')).toBe(true);
+    }
+
+    expect(combat.boss.state.active).toBe(true);
+    expect(combat.boss.state.bossId).toBe('orbital-warden');
+    expect(combat.stats.shotsFired).toBeGreaterThan(0);
+    expect(sawReplica).toBe(true);
+    expect(sawTwoHitReplica).toBe(true);
+    expect(combat.enemies.states.filter((enemy) => enemy.active)
+      .every((enemy) => enemy.kind === 'boss' || enemy.kind === 'warden-replica')).toBe(true);
+    expect(combat.angularSweep.state.sequence).toBe(0);
+    expect(combat.stats.experience).toBe(0);
+  });
+
+  it('reports direct boss hull contact as damage during a weekly duel', () => {
+    const combat = new CombatSimulation({
+      actDirector: createRetentionActDirector('radial'),
+      retentionBossDuel: true
+    });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 0.1);
+    const boss = combat.enemies.states.find(enemy => enemy.active && enemy.kind === 'boss')!;
+    expect(boss).toBeDefined();
+
+    player.state.x = boss.x;
+    player.state.y = boss.y;
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+
+    expect(combat.events).toContainEqual({
+      type: 'playerDamaged', amount: BOSS_DEFINITION.damage, source: 'boss'
+    });
+  });
+
+  it('updates Fracture boss projectiles and mines during the weekly duel', () => {
+    const combat = new CombatSimulation({
+      actDirector: createRetentionActDirector('fracture'),
+      retentionBossDuel: true
+    });
+    const player = new PlayerModel();
+    runSeconds(combat, player, 0.1);
+
+    expect(combat.fractureThreats.fireProjectile(
+      player.state.x - 4,
+      player.state.y,
+      player.state.x + 1,
+      player.state.y,
+      245,
+      13
+    )).toBe(1);
+    combat.update(1 / 60, player.state, ARENA_RADIUS);
+    expect(combat.events).toContainEqual({
+      type: 'playerDamaged', amount: 13, source: 'fracture-projectile'
+    });
+
+    expect(combat.fractureThreats.deployMine(
+      player.state.x,
+      player.state.y,
+      player.state.x,
+      player.state.y,
+      21
+    )).toBe(1);
+    let mineHit = false;
+    for (let index = 0; index < 60 * 3 && !mineHit; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      mineHit = combat.events.some(event => event.type === 'playerDamaged' && event.source === 'fracture-mine');
+    }
+    expect(mineHit).toBe(true);
+  });
+
+  it('keeps the Charger retention trial non-offensive, capped, and resolves once at 60 active seconds', () => {
+    const combat = new CombatSimulation({ retentionChargerChallenge: true });
+    const player = new PlayerModel();
+    let victories = 0;
+
+    for (let index = 0; index < 60 * 60 + 2; index += 1) {
+      combat.update(1 / 60, player.state, ARENA_RADIUS);
+      victories += combat.events.filter((event) => event.type === 'retentionChallengeVictory').length;
+    }
+
+    expect(victories).toBe(1);
+    expect(combat.stats.shotsFired).toBe(0);
+    expect(combat.enemies.activeCount).toBeLessThanOrEqual(5);
+    expect(combat.enemies.states.filter((enemy) => enemy.active).every((enemy) => enemy.kind === 'charger')).toBe(true);
+    expect(combat.stats.experience).toBe(0);
+  });
+
   it.each(['tank', 'chaser', 'splitter', 'warden-replica'] as const)('identifies defeated %s before a released slot can be reused by its children', (kind) => {
     const combat = new CombatSimulation();
     const player = new PlayerModel();
@@ -628,7 +739,8 @@ describe('CombatSimulation', () => {
       kills: 0,
       experience: 0,
       shotsFired: 0,
-      damageTaken: 0
+      damageTaken: 0,
+      bossDefeats: { 'core-sentinel': 0, 'orbital-warden': 0, 'fracture-engine': 0 }
     });
     expect(combat.enemies.activeCount).toBe(0);
     expect(combat.projectiles.activeCount).toBe(0);

@@ -2,6 +2,8 @@ import { Application } from 'pixi.js';
 import './styles.css';
 import './ui/home.css';
 import './ui/start-panels.css';
+import './ui/retention.css';
+import './ui/daily-wheel.css';
 import { Game } from './app/Game';
 import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import pauseActionIcons from './assets/svg/ui/pause-icons.svg?raw';
@@ -30,6 +32,7 @@ import {
   type RunMode
 } from './content/run/OverdriveDefinitions';
 import type { OverdriveBossPair } from './simulation/acts/OverdriveActDirector';
+import { isRetentionChallengeId, type RetentionChallengeId } from './content/retention/RetentionDefinitions';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -109,6 +112,12 @@ const bootstrap = async (): Promise<void> => {
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
+  const requestedRetentionChallenge = searchParams.get('retention-challenge');
+  const retentionChallengePracticeId: RetentionChallengeId | undefined = __BUILD_TARGET__ === 'local'
+    && searchParams.get('debug') === '1'
+    && isRetentionChallengeId(requestedRetentionChallenge)
+    ? requestedRetentionChallenge
+    : undefined;
   const requestedCardId = searchParams.get('card')?.replaceAll('-', '_');
   const debugUpgradeId: UpgradeId | undefined = searchParams.get('debug') === '1'
     && isUpgradeId(requestedCardId)
@@ -306,12 +315,14 @@ const bootstrap = async (): Promise<void> => {
       : overdriveBossDebugMode ? overdriveBossStartSeconds
       : undefined,
     buildTarget: __BUILD_TARGET__,
-    startOnMenu: (overdriveMode && !diagnosticOverdrive
+    startOnMenu: retentionChallengePracticeId !== undefined
+      || (overdriveMode && !diagnosticOverdrive
       && (!overdriveAutostart || !publicOverdriveUnlocked))
       || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill
       && !magneticChargeWeaponDrill && !fractureDrill && debugUpgradeId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined),
+    retentionChallengePracticeId,
     platform
   });
   await game.start();

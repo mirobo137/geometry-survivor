@@ -26,6 +26,11 @@ import { LaboratoryPanel } from './meta/LaboratoryPanel';
 import type { RewardedAdResult } from '../platform/Platform';
 import type { ActId } from '../content/run/ActDefinitions';
 import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationDefinitions';
+import { RetentionPanel } from './retention/RetentionPanel';
+import { DailyWheelDialog, type DailyWheelDialogOptions } from './retention/DailyWheelDialog';
+import wheelRimUrl from '../assets/images/ui/retention/wheel-rim.webp?no-inline';
+import { dailyWheelAvailability } from '../content/retention/DailyWheelDefinitions';
+import { getRetentionObjectiveProgress, RETENTION_OBJECTIVES, type RetentionChallengeId, type RetentionObjectiveId, type RetentionSaveData, type RetentionWeeklyEdition, type RetentionClaimResult } from '../content/retention/RetentionDefinitions';
 
 export interface StartScreenBest {
   readonly timeSeconds: number;
@@ -67,6 +72,14 @@ export interface StartScreenOptions {
   readonly onCosmeticUnlock: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
   readonly overdriveUnlocked?: boolean;
   readonly onOverdrivePlay?: () => void;
+  readonly retention: RetentionSaveData;
+  readonly retentionEdition: RetentionWeeklyEdition;
+  readonly onStartRetentionChallenge: (id: RetentionChallengeId) => void;
+  readonly onRetentionObjectiveSelect: (id: RetentionObjectiveId) => void;
+  readonly onRetentionObjectiveClaim: (id: RetentionObjectiveId) => Promise<RetentionClaimResult>;
+  readonly readRetention: () => { readonly progress: RetentionSaveData; readonly walletNova: number };
+  readonly initialView?: 'retention';
+  readonly dailyWheel?: DailyWheelDialogOptions;
 }
 
 const formatTime = (seconds: number): string => {
@@ -113,6 +126,13 @@ export class StartScreen {
   private readonly backgroundPanel: BackgroundSelectPanel;
   private readonly cosmeticDialog: CosmeticPreviewDialog;
   private readonly metaPanel: LaboratoryPanel;
+  private readonly retentionPanel: RetentionPanel;
+  private readonly dailyWheelDialog = new DailyWheelDialog();
+  private dailyWheelOptions: DailyWheelDialogOptions | null = null;
+  private readonly retentionToggle: HTMLButtonElement;
+  private readonly retentionBack: HTMLButtonElement;
+  private readonly retentionView: HTMLElement;
+  private readonly retentionBody: HTMLElement;
   private readonly skinsView: HTMLElement;
   private readonly metaView: HTMLElement;
   private readonly metaToggle: HTMLButtonElement;
@@ -210,6 +230,10 @@ export class StartScreen {
     const metaToggle = root.querySelector<HTMLButtonElement>('#start-meta');
     const metaBack = root.querySelector<HTMLButtonElement>('#start-meta-back');
     const metaView = root.querySelector<HTMLElement>('#start-meta-view');
+    const retentionToggle = root.querySelector<HTMLButtonElement>('#start-retention');
+    const retentionBack = root.querySelector<HTMLButtonElement>('#start-retention-back');
+    const retentionView = root.querySelector<HTMLElement>('#start-retention-view');
+    const retentionBody = root.querySelector<HTMLElement>('#start-retention-body');
     const playerSkinsView = root.querySelector<HTMLElement>('#start-player-skins-panel');
     const cannonSkinsView = root.querySelector<HTMLElement>('#start-cannon-skins-panel');
     const backgroundsView = root.querySelector<HTMLElement>('#start-backgrounds-panel');
@@ -217,7 +241,7 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || !fractureActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || !fractureActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !retentionToggle || !retentionBack || !retentionView || !retentionBody || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -263,6 +287,11 @@ export class StartScreen {
     this.cannonPanel = new CannonSelectPanel(cannonSkinsView, this.cosmeticDialog);
     this.backgroundPanel = new BackgroundSelectPanel(backgroundsView, this.cosmeticDialog);
     this.metaPanel = new LaboratoryPanel(metaView);
+    this.retentionPanel = new RetentionPanel(retentionBody);
+    this.retentionToggle = retentionToggle;
+    this.retentionBack = retentionBack;
+    this.retentionView = retentionView;
+    this.retentionBody = retentionBody;
     for (const hostId of ['start-nova-icon', 'start-meta-nova-icon']) {
       const host = root.querySelector<HTMLElement>(`#${hostId}`);
       if (!host) continue;
@@ -318,6 +347,13 @@ export class StartScreen {
     this.cosmeticRewardedButton.addEventListener('click', () => { void this.requestCosmeticUnlock(); });
     this.metaToggle.addEventListener('click', () => this.openMeta());
     this.metaBack.addEventListener('click', () => this.closeMeta());
+    this.retentionToggle.addEventListener('click', () => this.openRetention());
+    this.retentionBack.addEventListener('click', () => this.closeRetention());
+    root.querySelector<HTMLButtonElement>('#start-daily-wheel')?.addEventListener('click', event => {
+      if (this.dailyWheelOptions) this.dailyWheelDialog.open(this.dailyWheelOptions, event.currentTarget as HTMLElement);
+    });
+    const wheelIcon = root.querySelector<HTMLElement>('.wheel-entry-icon');
+    if (wheelIcon) wheelIcon.style.background = `url("${wheelRimUrl}") center / contain no-repeat`;
     this.musicInput.addEventListener('input', () => this.emitSettings());
     this.sfxInput.addEventListener('input', () => this.emitSettings());
     this.mutedInput.addEventListener('change', () => this.emitSettings());
@@ -325,6 +361,9 @@ export class StartScreen {
   }
 
   public open(options: StartScreenOptions): void {
+    this.dailyWheelOptions = options.dailyWheel ?? null;
+    this.updateDailyWheelEntry();
+    this.updateRetentionEntry(options.retention);
     this.root.dataset.quality = options.quality;
     this.playHandler = options.onPlay;
     this.overdrivePlayHandler = options.onOverdrivePlay ?? null;
@@ -381,12 +420,32 @@ export class StartScreen {
     this.closeMeta();
     this.closeActSelector();
     this.closeEntrySelector();
+    this.closeRetention();
+    this.retentionPanel.render({
+      progress: options.retention,
+      edition: options.retentionEdition,
+      skinOwned: options.skins.unlocked.includes('asterion'),
+      walletNova: options.wallet.nova,
+      onSelectObjective: options.onRetentionObjectiveSelect,
+      readProgress: options.readRetention,
+      onClaimObjective: async id => {
+        const result = await options.onRetentionObjectiveClaim(id);
+        this.wallet = { nova: result.walletNova };
+        this.updateNovaValues();
+        this.updateRetentionEntry(result.progress);
+        return result;
+      },
+      onStartChallenge: options.onStartRetentionChallenge
+    });
     this.updateActSelector();
     this.root.hidden = false;
-    this.playButton.focus({ preventScroll: true });
+    if (options.initialView === 'retention') this.openRetention();
+    else this.playButton.focus({ preventScroll: true });
   }
 
   public close(): void {
+    this.dailyWheelDialog.close();
+    this.dailyWheelOptions = null;
     this.root.hidden = true;
     this.playHandler = null;
     this.overdrivePlayHandler = null;
@@ -412,6 +471,8 @@ export class StartScreen {
     this.closeMeta();
     this.closeActSelector();
     this.closeEntrySelector();
+    this.closeRetention();
+    this.retentionPanel.close();
   }
 
   private updateHomeShip(): void {
@@ -441,6 +502,35 @@ export class StartScreen {
     this.homeMarkReady = prepareImage(mark);
     const name = this.root.querySelector<HTMLElement>('#start-equipped-ship');
     if (name) name.textContent = `NAVE EQUIPADA · ${getPlayerSkinDefinition(skin).name}`;
+  }
+
+  public syncRewardProfile(profile: { readonly skins: SkinSaveData; readonly wallet: WalletSaveData }): void {
+    this.skinState = profile.skins;
+    this.wallet = profile.wallet;
+    this.updateNovaValues();
+    this.updateHomeShip();
+    this.updateDailyWheelEntry();
+  }
+
+  private updateDailyWheelEntry(): void {
+    const label = this.root.querySelector<HTMLElement>('#start-daily-wheel-status');
+    if (!label || !this.dailyWheelOptions) return;
+    const availability = dailyWheelAvailability(this.dailyWheelOptions.read().progress, Date.now());
+    label.textContent = availability.free ? 'GIRO GRATIS DISPONIBLE' : availability.video ? 'GIRO EXTRA CON VIDEO' : 'VUELVE POR TU PRÓXIMO GIRO';
+  }
+
+  private updateRetentionEntry(progress: RetentionSaveData): void {
+    const button = this.root.querySelector<HTMLButtonElement>('#start-retention');
+    const label = this.root.querySelector<HTMLElement>('#start-retention-home-status');
+    if (!button || !label) return;
+    const claimable = RETENTION_OBJECTIVES.some(objective =>
+      getRetentionObjectiveProgress(progress, objective.id).completed
+    );
+    button.dataset.claimable = String(claimable);
+    label.textContent = claimable ? 'PREMIO LISTO · COBRAR' : 'DESAFÍO SEMANAL · OBJETIVOS';
+    button.title = claimable
+      ? 'Tienes una o más recompensas de objetivos listas para cobrar en la Bitácora'
+      : 'Abrir desafíos semanales y objetivos de la Bitácora';
   }
 
   public async prepareVisibleArt(): Promise<void> {
@@ -493,12 +583,14 @@ export class StartScreen {
   private toggleSettings(): void {
     if (!this.skinsPanelIsClosed()) this.closeSkins();
     if (!this.metaView.hidden) this.closeMeta();
+    if (!this.retentionView.hidden) this.closeRetention();
     this.setSettingsExpanded(this.settingsPanel.hidden);
   }
 
   private openActSelector(): void {
     if (!this.skinsPanelIsClosed()) this.closeSkins();
     if (!this.metaView.hidden) this.closeMeta();
+    if (!this.retentionView.hidden) this.closeRetention();
     this.setSettingsExpanded(false);
     this.closeEntrySelector();
     this.mainView.hidden = true;
@@ -524,6 +616,30 @@ export class StartScreen {
     this.mainView.hidden = false;
     this.root.classList.remove('is-entry-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-entry-open');
+  }
+
+  private openRetention(): void {
+    this.setSettingsExpanded(false);
+    this.closeSkins();
+    this.closeMeta();
+    this.closeActSelector();
+    this.closeEntrySelector();
+    this.mainView.hidden = true;
+    this.retentionView.hidden = false;
+    this.retentionBody.scrollTo(0, 0);
+    this.root.classList.add('is-retention-mode');
+    this.retentionToggle.setAttribute('aria-expanded', 'true');
+    this.retentionPanel.setVisible(true);
+    this.retentionBack.focus({ preventScroll: true });
+  }
+
+  private closeRetention(): void {
+    if (this.retentionView.hidden) return;
+    this.retentionPanel.setVisible(false);
+    this.retentionView.hidden = true;
+    this.mainView.hidden = false;
+    this.root.classList.remove('is-retention-mode');
+    this.retentionToggle.setAttribute('aria-expanded', 'false');
   }
 
   private handlePlay(): void {
@@ -754,7 +870,8 @@ export class StartScreen {
 
   private findCosmeticTarget(): CosmeticUnlockTarget | null {
     if (this.activeSkinTab === 'player') {
-      const definition = PLAYER_SKIN_DEFINITIONS.find((candidate) => !this.skinState.unlocked.includes(candidate.id) && candidate.priceNova > 0);
+      const definition = PLAYER_SKIN_DEFINITIONS.find((candidate) => candidate.acquisition === 'nova'
+        && !this.skinState.unlocked.includes(candidate.id) && candidate.priceNova > 0);
       return definition ? { kind: 'player', id: definition.id, name: definition.name, priceNova: definition.priceNova } : null;
     }
     if (this.activeSkinTab === 'cannon') {

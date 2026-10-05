@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 -32 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="enemy-chaser-cockpit-title">
-  <title id="enemy-chaser-cockpit-title">chaser: cockpit</title>
-  <path id="enemy-chaser-cockpit-well" d="M0-15 6-5 4 3 0 6 -4 3 -6-5Z" fill="#102336"/>
-  <path id="enemy-chaser-cockpit-glass" d="M0-12 4-5 2 1 0 3 -2 1 -4-5Z" fill="#53c6dc"/>
-  <path id="enemy-chaser-cockpit-reflection" d="M0-12 4-5 0-3 -3-5Z" fill="#d6fcf1"/>
-</svg>

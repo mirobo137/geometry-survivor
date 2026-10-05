@@ -5,19 +5,23 @@ import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
 import { registerTetheredShipChecks } from './tethered.checks';
 import { registerCatalogChecks } from './catalog.checks';
+import { registerDailyWheelChecks } from './daily-wheel.checks';
+import { registerLogbookChecks } from './logbook.checks';
 
 registerHomeChecks();
 registerMusicChecks();
 registerResourceChecks();
 registerTetheredShipChecks();
 registerCatalogChecks();
+registerDailyWheelChecks();
+registerLogbookChecks();
 
 test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y cañones', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const textures: string[] = [];
   page.on('response', response => {
-    if (/\/(manta|tether-cannon)-[^/]+\.png/.test(response.url()) && response.ok()) textures.push(response.url());
+    if (/\/(manta|tether-cannon)-[^/]+\.webp/.test(response.url()) && response.ok()) textures.push(response.url());
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -56,7 +60,7 @@ test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y ca
 for (const quality of ['low', 'high']) {
   test(`Manta conserva identidad y carga diferida en partida ${quality}`, async ({ page }, testInfo) => {
     const failures = captureRuntimeFailures(page);
-    const imageReady = page.waitForResponse(response => /\/manta-[^/]+\.png/.test(response.url()) && response.ok());
+    const imageReady = page.waitForResponse(response => /\/manta-[^/]+\.webp/.test(response.url()) && response.ok());
     await page.goto(`/?skin=manta&quality=${quality}&boss=1`);
     await imageReady;
     await expect(page.locator('#boot-status')).toBeHidden();

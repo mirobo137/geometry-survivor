@@ -10,7 +10,7 @@ export interface PlatformLifecycle {
 }
 
 /** Rewarded placements are product decisions, not SDK-specific strings. */
-export type RewardedPlacement = 'revive' | 'reroll' | 'double-nova' | 'cosmetic-unlock' | 'laboratory-vitality';
+export type RewardedPlacement = 'revive' | 'reroll' | 'double-nova' | 'cosmetic-unlock' | 'laboratory-vitality' | 'daily-wheel-nova';
 
 export type RewardedAdResult = 'rewarded' | 'dismissed' | 'unavailable' | 'error';
 

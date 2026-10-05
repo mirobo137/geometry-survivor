@@ -1,6 +1,6 @@
 /* Start consoles: one bounded scroll body. Navigation never shares the
    shrinking card track; optional offers grow inside the scrolling flow. */
-#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel {
+#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode, .is-retention-mode) .start-screen-panel {
   width: min(64rem, 100%);
   height: min(48rem, 100%);
   min-height: 0;
@@ -16,14 +16,14 @@
   animation: none;
 }
 
-#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel::before {
+#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode, .is-retention-mode) .start-screen-panel::before {
   inset: 7px;
   border-radius: .65rem;
   border-color: #6d94a52e;
   animation: none;
 }
 
-#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel::after {
+#start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode, .is-retention-mode) .start-screen-panel::after {
   inset: 0 auto auto 2rem;
   width: 4rem;
   height: 3px;
@@ -429,7 +429,7 @@
   #start-screen .console-header { padding-bottom: .5rem; }
   #start-screen #start-act-view .console-header { min-height: 6rem; padding: .65rem .85rem; }
   #start-screen .console-screen { gap: .5rem; }
-  #start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode) .start-screen-panel { padding: .8rem; }
+  #start-screen:is(.is-skins-mode, .is-meta-mode, .is-act-mode, .is-retention-mode) .start-screen-panel { padding: .8rem; }
   .lab-tree-stage { height: 11.5rem; min-height: 184px; }
   #start-meta-view .console-body > * + * { margin-top: .45rem; }
 }

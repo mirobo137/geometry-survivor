@@ -2,7 +2,7 @@
 
 > Estado: vertical slice funcional; prioridades de expansión revisadas y fijadas en la sección 16.
 >
-> **Continuación vigente — 03-10-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La auditoría de recursos de §22.18 antecede al cierre de publicación. §22.21 registra el plan futuro de retención, todavía sin implementar. La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
+> **Continuación vigente — 04-10-2026:** leer primero [§22: ejecución por tareas](#ejecucion-vigente) y su [guía operativa](docs/PLAN_EJECUCION.md). La auditoría de recursos de §22.18 antecede al cierre de publicación. §22.21 registra retención y ruleta implementadas localmente; QA humano y revisión de portal siguen pendientes. La sección titulada **16. PLAN MAESTRO REVISADO** gobierna el producto; las entregas fechadas son historial, no órdenes para rehacer trabajo.
 >
 > Revisión externa base: 2026-09-03; Node/Vite, recursos Pixi y requisitos de publicación reconsultados el 2026-10-02 en la auditoría enlazada desde §22.18.
 >
@@ -721,7 +721,8 @@ Los números son puertas de ingeniería iniciales y se ajustarán con medición.
 - objetivo de descarga inicial comprimida: **≤ 5 MB**;
 - puerta Poki: **< 8 MB** inicial;
 - puerta CrazyGames móvil: **≤ 20 MB** inicial;
-- build completo del MVP: objetivo **≤ 15 MB**;
+- payload publicado del MVP: objetivo **≤ 15 MB**, excluyendo source maps de
+  diagnóstico, que se conservan por separado como artefacto de GitHub Actions;
 - todos los paths relativos;
 - música general diferida hasta el primer gesto válido (incluido el menú, por
   solicitud del 03-10-2026); el resto de contenido no necesario se carga después
@@ -841,7 +842,9 @@ La selección será de build (`VITE_PLATFORM` o equivalente), no una detección 
 - permite `?boss=1` como escenario de desarrollo: inicia el reloj en el umbral oficial del boss y sincroniza la arena late game, sin modificar la URL normal ni el balance;
 - muestra versión/commit en el HUD de debug;
 - usa `base: "./"` para paths relativos y compatibilidad con subruta/zip;
-- GitHub Actions ejecuta verificación y publica únicamente `dist/local`.
+- GitHub Actions conserva los source maps del build local junto con sus bundles
+  JS/CSS en un artefacto de diagnóstico; Pages publica `dist/pages`, preparado
+  desde `dist/local` sin archivos `.map`.
 
 ## Limitación importante
 
@@ -869,10 +872,12 @@ Cada push a la rama principal:
 2. ejecuta typecheck;
 3. ejecuta unit tests;
 4. valida contenido y SVG;
-5. construye los tres destinos;
-6. falla si excede presupuestos de tamaño;
+5. construye `local` con source maps externos y conserva mapas + bundles JS/CSS
+   enlazados como artefacto de diagnóstico; construye Poki y CrazyGames;
+6. prepara `dist/pages` sin `.map` y falla si algún payload publicado excede
+   presupuestos de tamaño;
 7. ejecuta smoke tests de navegador y resize sobre `dist/local`;
-8. publica `dist/local` en GitHub Pages si todo pasa.
+8. publica `dist/pages` en GitHub Pages si todo pasa.
 
 El deploy no debe ocurrir si falla una puerta. GitHub Pages es el entorno de revisión del juego, no el host comercial final.
 
@@ -3883,14 +3888,36 @@ artefacto completo bajo 15 MB, conservando mapas y el guard de CI. El margen
 local continúa estrecho; otro lote exige revisar presupuesto antes de generar.
 No cierra EX-09, aceptación humana del Laboratorio, móvil físico ni publicación.
 
-## 22.21 RET-F01 — Plan futuro de retención — 03-10-2026
+## 22.21 RET-F01 — Retención, Bitácora y eventos — 04-10-2026
 
-**PENDIENTE DE IMPLEMENTAR. Entrega exclusivamente documental solicitada.**
-Dirección aceptada: Bitácora permanente, retos semanales con cosméticos propios
-y cápsula/gachapón gratuito cada 24 horas (NOVA o skin exclusiva). Colecciones
-finitas, eventos recurrentes y NOVA al completar sus premios; catálogo base intacto.
-Reglas, economía abierta, calendario/guardado, validación de portal y entregas:
+**Prototipo local implementado el 04-10-2026; aceptación y validación siguen pendientes.**
+Bitácora con 13 familias: siete generales por rangos, seis únicas de actos/bosses
+de campaña. Los premios de objetivos requieren cobro manual en Bitácora; el
+resumen terminal no los paga. Metas y NOVA aumentan al activar el siguiente rango
+desde cero. [Contrato de Bitácora](docs/design/BITACORA_OBJETIVOS.md). Rotación
+semanal versionada de cuatro retos, duelos completos de Core Sentinel / Orbital
+Warden / Fracture Engine y evasión de Chargers durante 60 s con tope cinco.
+Los tres duelos son sin impactos: el golpe conectado falla el intento incluso
+si el escudo lo absorbe; Warden conserva réplicas y kit completo. Orden semanal:
+Core → Warden → Fracture → Charger. Primera recompensa semanal: Asterion Courier;
+si ya se posee, +250 NOVA en lugar de duplicado, una vez por edición. Prácticas
+locales sin guardado/premio: `?debug=1&retention-challenge=core-duel|warden-duel|fracture-duel`.
+Por solicitud posterior se añade ruleta gratis de 24h junto a Retos y Bitácora:
+diez ranuras NOVA y Solstice Regent (1% inicial, +1 punto por giro hasta 20%),
+más un extra diario por video que también puede entregar la skin. Ambos usan
+la probabilidad persistente compartida. [Contrato de ruleta](docs/design/RULETA_DIARIA.md). Revisión específica
+de portal e integración de anuncios reales siguen pendientes. Cifras y plantillas son de prueba, no balance
+aprobado. Contrato, parámetros, límites de almacenamiento y pruebas pendientes:
 [RETENCION_EVENTOS_Y_RECOMPENSAS](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md).
+
+El save migra de schema 9/10/11/12 a 13 sin limpiar datos previos. El progreso y los
+recibos quedan acotados en localStorage; la escritura de premio se confirma por
+lectura posterior. No es antitrampas, no sincroniza dispositivos ni garantiza
+exclusión global de recompensas entre pestañas. La ruleta sí usa Web Locks por
+origen para sus propios giros; Bitácora usa otro Web Lock para sus cobros manuales.
+Probados en dos pestañas Chromium. La UI reutiliza
+arte PNG/WebP del catálogo y Asterion, añade marco y Solstice generados,
+con carga diferida, layout vertical móvil y scroll propio.
 
 Corrección explícita de producto: los duelos eliminan oleadas comunes, **no el
 kit del boss**. Orbital Warden conserva todas sus réplicas y ataques; invocaciones,
@@ -3898,10 +3925,21 @@ minas y proyectiles propios son parte del encuentro. Se puede calibrar vida,
 ritmo o comportamiento local si el duelo resulta tedioso, conservando identidad,
 patrones y respuesta justa. No mutar el balance aprobado de campaña/Overdrive.
 
-No se implementaron eventos, sorteo, Bitácora, assets ni migraciones por registrar
-este plan. No fija importes/probabilidades ni autoriza servicios externos,
-publicación o aperturas de pago/anuncios. RET-00–06 son entregas futuras que
-requieren indicación explícita; EX-09, recursos y QA humano conservan sus puertas.
+Primera regla de reto en prueba local: el casco de los tres bosses causa daño
+por contacto en todas las fases y modos, con cooldown de 0.45 s y detección
+barrida. Sólo los duelos acortan ataques activos al 70% y recuperación al 33%;
+los telegraphs permanecen intactos y el ciclo de cada kit queda al menos 1.45×
+más rápido. Los tres inician con Projectile rango I y un emisor, sin Calibration.
+Fracture Engine mantiene ticking de proyectiles/minas en su duelo. Core Duel
+añade una barrera central visible (radio 112) que impide acampar en el centro
+sin añadir daño por tocarla; el spawn opuesto se restablece al reintentar.
+Pendiente de prueba humana; estos perfiles no cambian campaña ni Overdrive.
+
+No incluye backend, analítica ni sincronización cloud. RET-05 implementada para
+prueba local, video simulado identificado; portales no simulan premios de anuncio.
+Tipado/unitarias y smoke enfocado de ruleta comprobados. La revisión del usuario
+en PC/móvil y las puertas de publicación permanecen antes de aceptación.
+No autoriza publicación ni cierra EX-09, recursos o QA humano.
 
 ## 22.22 Cuerpos PNG transparentes para enemigos — 04-10-2026
 
@@ -3925,3 +3963,29 @@ Margen Local **2,246 bytes**; requiere revisar presupuesto antes de ampliar.
 Galería y capturas de QA disponibles; aprobación humana en batalla y móvil
 físico pendiente. No se midieron FPS/GPU ni se ejecutó toda la suite browser.
 Sin commit, push o deploy; no reabre retención, Overdrive o Laboratorio.
+
+## 22.23 Presupuesto de publicación y source maps de CI — 04-10-2026
+
+Decisión del usuario: conservar los source maps de diagnóstico sin publicarlos
+con el juego. Vite genera mapas externos y GitHub Actions sube los `.map` con
+sus bundles JS/CSS enlazados como `local-source-maps-<commit>` por 30 días.
+`scripts/prepare-pages-artifact.mjs` crea `dist/pages`, valida los vínculos del
+diagnóstico y quita los mapas y comentarios `sourceMappingURL` sólo en la copia
+pública. El guard de
+15,000,000 bytes mide `dist/pages`, `dist/poki` y `dist/crazygames`; no se eleva
+el límite. Los source maps no se borran del build de diagnóstico ni del repo.
+
+La auditoría SVG separó assets de producción de referencias históricas y pruebas
+obsoletas. Se mantienen los dos SVG de fondos que la documentación conserva
+intencionalmente y todos los fallbacks activos. Se retiran 57 SVG sin consumidor
+de producción (aprox. 70 KB), actualizando sus pruebas y fichas; el ahorro de
+repositorio no se cuenta como margen del artefacto publicado. Verificación de
+esta actualización en `CONTINUACION.md` y `docs/CI_DEPLOY.md`.
+
+Verificación local: `dist/pages` **9,875,558 B**; source maps **5,087,383 B**
+(11 mapas, conservados en `dist/local` y con vínculo desde sus bundles de
+diagnóstico); Poki **9,875,488 B** y CrazyGames
+**9,875,494 B**. `dist/pages` tiene cero mapas y cero comentarios
+`sourceMappingURL`. Typecheck, **749 pruebas / 132 archivos** y los tres builds
+pasaron; el warning previo de chunk JS >500 KB permanece. No se ejecutó la
+suite browser completa ni se verificó el artefacto subido o el deploy remoto.

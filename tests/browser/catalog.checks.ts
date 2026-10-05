@@ -19,7 +19,7 @@ export const registerCatalogChecks = (): void => {
     ];
     for (const group of groups) {
       await page.locator(group.tab).click();
-      await expect(page.locator(group.cards)).toHaveCount(10);
+      await expect(page.locator(group.cards)).toHaveCount(group.data === 'skin' ? 12 : 10);
       for (const id of group.ids) {
         await page.locator(`${group.cards}[data-${group.data}="${id}"] button`).click();
         await expect(page.locator('#start-cosmetic-action')).toBeEnabled();

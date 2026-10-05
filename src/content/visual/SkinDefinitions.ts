@@ -3,6 +3,7 @@ import {
   type PlayerSkinId,
   type PlayerSkinTokens
 } from './VisualTokens';
+import { REWARD_COSMETICS, REWARD_SHIP_IDS } from '../retention/RewardCosmeticDefinitions';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
 export type SkinAcquisition = 'default' | 'nova' | 'event' | 'daily-wheel';
@@ -146,6 +147,12 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     rarity: 'RULETA DIARIA · EXCLUSIVA', tier: 'epic', priceNova: 0,
     palette: PLAYER_SKINS.solstice, acquisition: 'daily-wheel', signature: 'solar'
   }
+  ,...REWARD_COSMETICS.filter(reward => reward.family === 'ship' && (REWARD_SHIP_IDS as readonly string[]).includes(reward.id)).map(reward => ({
+    id: reward.id as PlayerSkinId, name: reward.name, subtitle: reward.subtitle, description: reward.description,
+    rarity: reward.source === 'daily-wheel' ? 'RULETA DIARIA · EXCLUSIVA' : 'RETO SEMANAL · EXCLUSIVA',
+    tier: 'epic' as const, priceNova: 0, palette: PLAYER_SKINS[reward.id as PlayerSkinId],
+    acquisition: reward.source === 'daily-wheel' ? 'daily-wheel' as const : 'event' as const, signature: 'aurora' as const
+  }))
 ] as const;
 
 export const isPlayerSkinId = (value: unknown): value is PlayerSkinId => (

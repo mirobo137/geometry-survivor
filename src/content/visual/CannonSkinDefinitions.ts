@@ -1,4 +1,5 @@
-export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'spearhead' | 'gyre' | 'razor';
+import { REWARD_CANNON_IDS, REWARD_COSMETICS, type RewardCannonId } from '../retention/RewardCosmeticDefinitions';
+export type CannonSkinId = 'basic' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'spearhead' | 'gyre' | 'razor' | RewardCannonId;
 export type CannonTrailKind = 'straight' | 'curve' | 'smoke' | 'rainbow' | 'lattice' | 'helix' | 'bloom' | 'gyre' | 'razor';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -10,7 +11,7 @@ export interface CannonSkinDefinition {
   readonly rarity: string;
   readonly tier: CosmeticTier;
   readonly priceNova: number;
-  readonly acquisition: 'default' | 'nova';
+  readonly acquisition: 'default' | 'nova' | 'event' | 'daily-wheel';
   readonly trail: CannonTrailKind;
   readonly accent: number;
   readonly projectileAccent: number;
@@ -134,10 +135,18 @@ export const CANNON_SKIN_DEFINITIONS: readonly CannonSkinDefinition[] = [
     rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 4200, acquisition: 'nova',
     trail: 'razor', accent: 0xff8faa, projectileAccent: 0xffdae9
   }
+  ,...REWARD_COSMETICS.filter(reward => reward.family === 'cannon').map((reward, index) => ({
+    id: reward.id as RewardCannonId, name: reward.name, subtitle: reward.subtitle, description: reward.description,
+    rarity: reward.source === 'daily-wheel' ? 'RULETA DIARIA · EXCLUSIVA' : 'RETO SEMANAL · EXCLUSIVA',
+    tier: 'epic' as const, priceNova: 0, acquisition: reward.source === 'daily-wheel' ? 'daily-wheel' as const : 'event' as const,
+    trail: (['curve','helix','smoke','curve','gyre','straight','bloom','lattice','helix','razor'] as const)[index],
+    accent: [0x8bc4ff,0xa5e5ff,0xff945b,0xb5a0ff,0x93efce,0xffd07d,0xff94cd,0xa1f7f3,0x69dacd,0xcced83][index],
+    projectileAccent: [0x8bc4ff,0xa5e5ff,0xff945b,0xb5a0ff,0x93efce,0xffd07d,0xff94cd,0xa1f7f3,0x69dacd,0xcced83][index]
+  }))
 ] as const;
 
 export const isCannonSkinId = (value: unknown): value is CannonSkinId => (
-  value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom' || value === 'spearhead' || value === 'gyre' || value === 'razor'
+  (REWARD_CANNON_IDS as readonly unknown[]).includes(value) || value === 'basic' || value === 'curve' || value === 'smoke' || value === 'rainbow' || value === 'lattice' || value === 'helix' || value === 'bloom' || value === 'spearhead' || value === 'gyre' || value === 'razor'
 );
 
 export const getCannonSkinDefinition = (id: CannonSkinId): CannonSkinDefinition => (

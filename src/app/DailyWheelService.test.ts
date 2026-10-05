@@ -3,6 +3,8 @@ import { DailyWheelService, type DailyWheelLock } from './DailyWheelService';
 import { LocalSaveStore } from '../platform/local/LocalSaveStore';
 import { createDefaultSaveData, MAX_NOVA, migrateSaveData, type StorageAdapter } from '../platform/save/SaveStore';
 import { DAILY_WHEEL_PERIOD_MS } from '../content/retention/DailyWheelDefinitions';
+import { getSeasonalReward, REWARD_WEEK_ANCHOR, REWARD_WEEK_MS } from '../content/retention/RewardCosmeticDefinitions';
+import { ownsRewardCosmetic } from './RewardCosmeticOwnership';
 import type { RewardedAdResult } from '../platform/Platform';
 
 class Storage implements StorageAdapter {
@@ -20,7 +22,7 @@ const lock: DailyWheelLock = work => work();
 const setup = (sample = 0) => {
   const storage = new Storage();
   const store = new LocalSaveStore(storage);
-  let time = 1_800_000_000_000;
+  let time = Date.UTC(2026, 9, 5);
   const video = vi.fn(async (): Promise<RewardedAdResult> => 'rewarded');
   const random = vi.fn(() => sample);
   const service = new DailyWheelService(store, video, lock, () => time, random);
@@ -35,7 +37,7 @@ describe('DailyWheelService', () => {
     expect(store.load().dailyWheel.lastReceipt?.nova).toBe(40);
     expect(store.load().dailyWheel.chancePercent).toBe(2);
     expect((await service.spin('free')).status).toBe('cooldown');
-    const fresh = new DailyWheelService(new LocalSaveStore(storage), video, lock, () => 1_800_000_000_001, () => 0.999);
+    const fresh = new DailyWheelService(new LocalSaveStore(storage), video, lock, () => Date.UTC(2026, 9, 5) + 1, () => 0.999);
     expect((await fresh.spin('free')).status).toBe('cooldown');
     expect(fresh.snapshot().progress.chancePercent).toBe(2);
     expect(store.load().wallet.nova).toBe(40);
@@ -116,7 +118,7 @@ describe('DailyWheelService', () => {
     const base = createDefaultSaveData();
     store.save({ ...base, dailyWheel: { chancePercent: 15, cycleStartedAtMs: 1_900_000_000_000, videoClaimed: false, lastReceipt: null } });
     expect((await service.spin('free')).status).toBe('clock-error');
-    expect(store.load().dailyWheel.cycleStartedAtMs).toBe(1_800_000_000_000);
+    expect(store.load().dailyWheel.cycleStartedAtMs).toBe(Date.UTC(2026, 9, 5));
     expect(store.load().dailyWheel.videoClaimed).toBe(true);
     expect(store.load().wallet.nova).toBe(0);
     expect(store.load().dailyWheel.chancePercent).toBe(15);
@@ -144,6 +146,40 @@ describe('DailyWheelService', () => {
       await service.spin('video');
     }
     expect(store.load().dailyWheel.chancePercent).toBe(20);
+  });
+  it('awards, persists and substitutes duplicates for every seasonal family on both kinds of spin', async () => {
+    for (const kind of ['free', 'video'] as const) {
+      for (let week = 0; week < 15; week++) {
+        const store = new LocalSaveStore(new Storage());
+        let time = REWARD_WEEK_ANCHOR + week*REWARD_WEEK_MS;
+        const reward = getSeasonalReward('daily-wheel', time);
+        let sample = kind === 'video' ? 0 : 0.999;
+        const service = new DailyWheelService(store, async () => 'rewarded', lock, () => time, () => sample);
+        if (kind === 'video') { await service.spin('free'); sample = 0.999; }
+        expect(await service.spin(kind)).toMatchObject({ status: 'rewarded', receipt: { skin: reward.id, rewardId: reward.id, nova: 0 } });
+        expect(ownsRewardCosmetic(store.load(), reward.id)).toBe(true);
+        expect(store.load().dailyWheel.lastReceipt?.skin).toBe(reward.id);
+        time += DAILY_WHEEL_PERIOD_MS;
+        expect(await service.spin('free')).toMatchObject({ receipt: { skin: null, nova: 500 } });
+      }
+    }
+  });
+  it('keeps the offered cosmetic when a video and a pending save cross a weekly boundary', async () => {
+    const storage = new Storage();
+    const store = new LocalSaveStore(storage);
+    let time = REWARD_WEEK_ANCHOR + REWARD_WEEK_MS - 60_000;
+    const offered = getSeasonalReward('daily-wheel', time);
+    let sample = 0;
+    const service = new DailyWheelService(store, async () => { time += 120_000; return 'rewarded'; }, lock, () => time, () => sample);
+    await service.spin('free');
+    sample = 0.999;
+    storage.failAt = storage.writes + 2;
+    expect(await service.spin('video')).toEqual({ status: 'storage-error' });
+    expect(service.snapshot().rewardId).toBe(offered.id);
+    storage.failAt = Infinity;
+    expect(await service.spin('free')).toMatchObject({ receipt: { skin: offered.id, rewardId: offered.id, kind: 'video' } });
+    expect(ownsRewardCosmetic(store.load(), offered.id)).toBe(true);
+    expect(ownsRewardCosmetic(store.load(), getSeasonalReward('daily-wheel', time).id)).toBe(false);
   });
   it('migrates schema 11 preserving the active cycle, prizes and wallet', () => {
     const base = createDefaultSaveData();

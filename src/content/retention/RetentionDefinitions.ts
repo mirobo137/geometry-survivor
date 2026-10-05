@@ -1,5 +1,6 @@
 import type { BossId } from '../bosses/BossDefinition';
 import type { CampaignActId } from '../../platform/save/SaveStore';
+import { getSeasonalReward, type RewardCosmetic } from './RewardCosmeticDefinitions';
 
 export type RetentionChallengeId = 'core-duel' | 'charger-evasion' | 'warden-duel' | 'fracture-duel';
 export const RETENTION_CORE_CENTER_EXCLUSION_RADIUS = 112;
@@ -58,6 +59,7 @@ export const isRetentionChallengeId = (value: unknown): value is RetentionChalle
 );
 
 export interface RetentionWeeklyEdition {
+  readonly reward: RewardCosmetic;
   readonly challenge: RetentionChallengeDefinition;
   readonly editionId: string;
   readonly weekIndex: number;
@@ -84,6 +86,7 @@ export const getRetentionWeeklyEdition = (nowMs = Date.now()): RetentionWeeklyEd
   const dateKey = new Date(startsAtMs).toISOString().slice(0, 10).replaceAll('-', '');
   return {
     challenge,
+    reward: getSeasonalReward('weekly-logbook', now),
     editionId: `rf${RETENTION_CATALOG_VERSION}-${dateKey}-${challenge.id}`,
     weekIndex,
     startsAtMs,

@@ -1,4 +1,5 @@
 import type { AudioSettings } from '../audio/AudioService';
+import { ownsRewardCosmetic } from '../app/RewardCosmeticOwnership';
 import { prepareImage, observeVisibleImages, prepareActPlates } from './ImageReadiness';
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import heroSceneUrl from '../assets/images/ui/home/orbital-sanctuary.webp?url';
@@ -28,6 +29,7 @@ import type { ActId } from '../content/run/ActDefinitions';
 import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationDefinitions';
 import { RetentionPanel } from './retention/RetentionPanel';
 import { DailyWheelDialog, type DailyWheelDialogOptions } from './retention/DailyWheelDialog';
+import type { RewardCosmeticSource } from '../content/retention/RewardCosmeticDefinitions';
 import wheelRimUrl from '../assets/images/ui/retention/wheel-rim.webp?no-inline';
 import { dailyWheelAvailability } from '../content/retention/DailyWheelDefinitions';
 import { getRetentionObjectiveProgress, RETENTION_OBJECTIVES, type RetentionChallengeId, type RetentionObjectiveId, type RetentionSaveData, type RetentionWeeklyEdition, type RetentionClaimResult } from '../content/retention/RetentionDefinitions';
@@ -80,6 +82,8 @@ export interface StartScreenOptions {
   readonly readRetention: () => { readonly progress: RetentionSaveData; readonly walletNova: number };
   readonly initialView?: 'retention';
   readonly dailyWheel?: DailyWheelDialogOptions;
+  /** Local/Pages preview uses a session-only save and all normal catalogs. */
+  readonly rewardCatalogPreview?: boolean;
 }
 
 const formatTime = (seconds: number): string => {
@@ -241,7 +245,20 @@ export class StartScreen {
     const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
-    if (!playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView || !actView || !entryView || !actBack || !entryBack || !radialActButton || !angularActButton || !fractureActButton || entryButtons.length !== 3 || !actStatus || !skinsToggle || !skinsBack || !skinsView || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab || !metaToggle || !metaBack || !metaView || !retentionToggle || !retentionBack || !retentionView || !retentionBody || !playerSkinsView || !cannonSkinsView || !backgroundsView || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage || !cosmeticRewardedButton) {
+    if (
+      !playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel
+      || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput
+      || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView
+      || !actView || !entryView || !actBack || !entryBack || !radialActButton
+      || !angularActButton || !fractureActButton || entryButtons.length !== 3
+      || !actStatus || !skinsToggle || !skinsBack || !skinsView
+      || !playerSkinsTab || !cannonSkinsTab || !backgroundsTab
+      || !metaToggle || !metaBack || !metaView || !retentionToggle || !retentionBack
+      || !retentionView || !retentionBody || !playerSkinsView || !cannonSkinsView
+      || !backgroundsView
+      || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage
+      || !cosmeticRewardedButton
+    ) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
     this.root = root;
@@ -424,7 +441,8 @@ export class StartScreen {
     this.retentionPanel.render({
       progress: options.retention,
       edition: options.retentionEdition,
-      skinOwned: options.skins.unlocked.includes('asterion'),
+      skinOwned: ownsRewardCosmetic({ skins: options.skins, cannonSkins: options.cannonSkins, backgrounds: options.backgrounds }, options.retentionEdition.reward.id),
+      readRewardOwned: id => ownsRewardCosmetic({ skins: this.skinState, cannonSkins: this.cannonSkinState, backgrounds: this.backgroundState }, id),
       walletNova: options.wallet.nova,
       onSelectObjective: options.onRetentionObjectiveSelect,
       readProgress: options.readRetention,
@@ -439,7 +457,12 @@ export class StartScreen {
     });
     this.updateActSelector();
     this.root.hidden = false;
-    if (options.initialView === 'retention') this.openRetention();
+    const previewNote = this.root.querySelector<HTMLElement>('#reward-preview-note');
+    if (previewNote) previewNote.hidden = !options.rewardCatalogPreview;
+    if (options.rewardCatalogPreview) {
+      this.openSkins();
+      this.selectSkinTab('player');
+    } else if (options.initialView === 'retention') this.openRetention();
     else this.playButton.focus({ preventScroll: true });
   }
 
@@ -504,8 +527,10 @@ export class StartScreen {
     if (name) name.textContent = `NAVE EQUIPADA · ${getPlayerSkinDefinition(skin).name}`;
   }
 
-  public syncRewardProfile(profile: { readonly skins: SkinSaveData; readonly wallet: WalletSaveData }): void {
+  public syncRewardProfile(profile: { readonly skins: SkinSaveData; readonly cannonSkins: CannonSkinSaveData; readonly backgrounds: BackgroundSaveData; readonly wallet: WalletSaveData }): void {
     this.skinState = profile.skins;
+    this.cannonSkinState = profile.cannonSkins;
+    this.backgroundState = profile.backgrounds;
     this.wallet = profile.wallet;
     this.updateNovaValues();
     this.updateHomeShip();
@@ -773,7 +798,8 @@ export class StartScreen {
         state: this.cannonSkinState,
         wallet: this.wallet,
         onStateChange: this.onCannonSkinStateChange,
-        onWalletChange: (wallet) => this.onWalletChange(wallet)
+        onWalletChange: (wallet) => this.onWalletChange(wallet),
+        onRewardNavigate: source => this.navigateToRewardSource(source)
       });
       this.skinsPanel.close();
       this.backgroundPanel.close();
@@ -782,7 +808,8 @@ export class StartScreen {
         state: this.backgroundState,
         wallet: this.wallet,
         onStateChange: this.onBackgroundStateChange,
-        onWalletChange: (wallet) => this.onWalletChange(wallet)
+        onWalletChange: (wallet) => this.onWalletChange(wallet),
+        onRewardNavigate: source => this.navigateToRewardSource(source)
       });
       this.skinsPanel.close();
       this.cannonPanel.close();
@@ -793,7 +820,8 @@ export class StartScreen {
         state: this.skinState,
         wallet: this.wallet,
         onStateChange: this.onSkinStateChange,
-        onWalletChange: (wallet) => this.onWalletChange(wallet)
+        onWalletChange: (wallet) => this.onWalletChange(wallet),
+        onRewardNavigate: source => this.navigateToRewardSource(source)
       });
     }
     this.updateCosmeticOffer();
@@ -818,6 +846,17 @@ export class StartScreen {
     this.cannonSkinsView.hidden = !cannon;
     this.playerSkinsView.hidden = cannon || background;
     this.backgroundsView.hidden = !background;
+  }
+
+  private navigateToRewardSource(source: RewardCosmeticSource): void {
+    if (source === 'weekly-logbook') {
+      this.openRetention();
+      return;
+    }
+    this.closeSkins();
+    if (!this.dailyWheelOptions) return;
+    const opener = this.root.querySelector<HTMLElement>('#start-daily-wheel') ?? this.skinsToggle;
+    this.dailyWheelDialog.open(this.dailyWheelOptions, opener);
   }
 
   private skinsPanelIsClosed(): boolean {
@@ -849,7 +888,10 @@ export class StartScreen {
   }
 
   private updateCosmeticOffer(): void {
-    if (this.skinsView.hidden || !this.cosmeticUnlockAvailable || this.cosmeticOfferConsumed || this.cosmeticRequestPending) {
+    if (
+      this.skinsView.hidden
+      || !this.cosmeticUnlockAvailable || this.cosmeticOfferConsumed || this.cosmeticRequestPending
+    ) {
       if (!this.cosmeticRequestPending) this.hideCosmeticOffer();
       return;
     }

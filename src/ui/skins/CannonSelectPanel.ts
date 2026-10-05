@@ -10,12 +10,15 @@ import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
 import { observeVisibleImages } from '../ImageReadiness';
+import { getRewardCatalogAction } from './RewardCatalogAction';
+import type { RewardCosmeticSource } from '../../content/retention/RewardCosmeticDefinitions';
 
 export interface CannonSelectPanelOptions {
   readonly state: CannonSkinSaveData;
   readonly wallet: WalletSaveData;
   readonly onStateChange: (state: CannonSkinSaveData) => void;
   readonly onWalletChange: (wallet: WalletSaveData) => void;
+  readonly onRewardNavigate?: (source: RewardCosmeticSource) => void;
 }
 
 interface CannonCardEntry {
@@ -33,6 +36,7 @@ export class CannonSelectPanel {
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
+  private rewardNavigateHandler: ((source: RewardCosmeticSource) => void) | null = null;
 
   public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-cannon-cards');
@@ -48,6 +52,7 @@ export class CannonSelectPanel {
     this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
     this.walletHandler = options.onWalletChange;
+    this.rewardNavigateHandler = options.onRewardNavigate ?? null;
     this.cards.scrollTop = 0;
     this.render();
     observeVisibleImages(this.cards);
@@ -56,6 +61,7 @@ export class CannonSelectPanel {
   public close(): void {
     this.changeHandler = null;
     this.walletHandler = null;
+    this.rewardNavigateHandler = null;
   }
 
   private normalize(state: CannonSkinSaveData): CannonSkinSaveData {
@@ -116,7 +122,11 @@ export class CannonSelectPanel {
       entry.button.setAttribute('aria-label', unlocked
         ? `Ver ${cannon.name}, ${selected ? 'equipado' : 'disponible'}`
         : `Ver ${cannon.name}, ${formatNova(cannon.priceNova)} NOVA`);
-      if (selected || unlocked) {
+      const reward = getRewardCatalogAction(cannon.id);
+      if (!unlocked && reward) {
+        entry.action.textContent = reward.card;
+        entry.button.setAttribute('aria-label', `Ver ${cannon.name}, ${reward.status}`);
+      } else if (selected || unlocked) {
         entry.action.textContent = selected ? 'EQUIPADO · VER' : 'VER Y EQUIPAR';
       } else {
         const amount = this.wallet.nova >= cannon.priceNova
@@ -137,6 +147,7 @@ export class CannonSelectPanel {
     const unlocked = this.state.unlocked.includes(id);
     const selected = this.state.selected === id;
     const affordable = this.wallet.nova >= definition.priceNova;
+    const reward = !unlocked ? getRewardCatalogAction(id) : null;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const preview = document.createElement('div');
     preview.className = 'cannon-preview';
@@ -144,19 +155,19 @@ export class CannonSelectPanel {
     this.dialog.open({
       kind: 'DISPARO / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
       subtitle: definition.subtitle, description: definition.description, preview,
-      actionLabel: selected ? 'Equipado' : unlocked ? 'Equipar disparo'
+      actionLabel: reward ? reward.label : selected ? 'Equipado' : unlocked ? 'Equipar disparo'
         : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
-      actionDisabled: selected || (!unlocked && !affordable),
-      status: selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
+      actionDisabled: selected || (reward ? !reward.available : !unlocked && !affordable),
+      status: reward ? reward.status : selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
-      onAction: () => this.select(id)
+      onAction: () => { if (reward?.available) this.rewardNavigateHandler?.(reward.source); else if (!reward) this.select(id); }
     }, button);
   }
 
   private select(id: CannonSkinId): void {
     const definition = getCannonSkinDefinition(id);
     const unlocked = this.state.unlocked.includes(id);
-    if (!unlocked && this.wallet.nova < definition.priceNova) return;
+    if (!unlocked && (getRewardCatalogAction(id) || this.wallet.nova < definition.priceNova)) return;
     const next: CannonSkinSaveData = unlocked
       ? { ...this.state, selected: id }
       : { selected: id, unlocked: Array.from(new Set<CannonSkinId>([...this.state.unlocked, id])) };

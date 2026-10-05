@@ -65,6 +65,7 @@ export const registerDailyWheelChecks = (): void => {
   test('ruleta diaria: skin exclusiva con video, animación saltable y selección en batalla', async ({ page }, testInfo) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
+    await page.clock.setFixedTime(new Date('2026-10-05T12:00:00Z'));
     await seedRandom(page, true, true);
     await open(page);
     await page.locator('#daily-wheel-free').click();
@@ -100,6 +101,7 @@ export const registerDailyWheelChecks = (): void => {
   });
 
   test('ruleta diaria: no duplica entre pestañas ni consume un video cancelado', async ({ page, context }) => {
+    await page.clock.setFixedTime(new Date('2026-10-05T12:00:00Z'));
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await seedRandom(page);
     await open(page, '&ad=dismissed');
@@ -130,7 +132,7 @@ export const registerDailyWheelChecks = (): void => {
     await page.locator('.daily-wheel-close').click();
     await page.locator('#start-skins').click();
     await page.locator('.skin-card[data-skin="solstice"] button').click();
-    await expect(page.locator('#start-cosmetic-action')).toBeDisabled();
-    await expect(page.locator('#start-cosmetic-action')).toContainText('ruleta diaria');
+    await expect(page.locator('#start-cosmetic-action')).toBeEnabled();
+    await expect(page.locator('#start-cosmetic-action')).toHaveText('Ir a Ruleta diaria');
   });
 };

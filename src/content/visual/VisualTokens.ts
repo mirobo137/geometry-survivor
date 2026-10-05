@@ -1,4 +1,5 @@
-export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead' | 'corsair' | 'nautilus' | 'asterion' | 'solstice';
+import { REWARD_SHIP_IDS, type RewardShipId } from '../retention/RewardCosmeticDefinitions';
+export type PlayerSkinId = 'cyan' | 'violet' | 'amber' | 'emerald' | 'obsidian' | 'nova' | 'manta' | 'spearhead' | 'corsair' | 'nautilus' | 'asterion' | 'solstice' | RewardShipId;
 export type FxQuality = 'low' | 'medium' | 'high';
 
 export interface PlayerSkinTokens {
@@ -12,6 +13,10 @@ export interface PlayerSkinTokens {
 
 /** Shared palette for the first player skins. Skins are visual-only content. */
 export const PLAYER_SKINS: Readonly<Record<PlayerSkinId, PlayerSkinTokens>> = {
+  ...Object.fromEntries(REWARD_SHIP_IDS.map((id, index) => [id, {
+    shadow: 0x070a14, outer: [0x83e4ef,0xc1b1ff,0xffaf80,0xe5a0da,0x88efd2,0xff9858,0xee8caa,0xcce87e][index],
+    body: 0x8799ac, bodyDetail: 0x324655, core: [0x83e4ef,0xc1b1ff,0xffaf80,0xe5a0da,0x88efd2,0xff9858,0xee8caa,0xcce87e][index], accent: 0xf8efdc
+  }])) as Record<RewardShipId, PlayerSkinTokens>,
   cyan: {
     shadow: 0x050816,
     outer: 0x75e6ff,
@@ -93,6 +98,7 @@ export interface PlayerSkinMotionTokens {
 
 /** Motion accents are presentation-only and never affect the player model. */
 export const PLAYER_SKIN_MOTION: Readonly<Record<PlayerSkinId, PlayerSkinMotionTokens>> = {
+  ...Object.fromEntries(REWARD_SHIP_IDS.map(id => [id, { signatureSpin: 0, signaturePulse: 0 }])) as Record<RewardShipId, PlayerSkinMotionTokens>,
   cyan: { signatureSpin: 0.12, signaturePulse: 0.012 },
   violet: { signatureSpin: -0.18, signaturePulse: 0.02 },
   amber: { signatureSpin: 0.28, signaturePulse: 0.016 },

@@ -22,6 +22,7 @@ import gyreCannonUrl from './cannons/gyre.webp?no-inline';
 import razorCannonUrl from './cannons/razor.webp?no-inline';
 import type { CannonSkinId } from '../../content/visual/CannonSkinDefinitions';
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
+import { REWARD_SHIP_ART, REWARD_CANNON_ART } from './RewardCosmeticAssets';
 
 export interface ShipRasterArt {
   readonly url: string;
@@ -38,6 +39,7 @@ export interface CannonRasterArt extends ShipRasterArt {
 
 /** One complete 256px sprite per ship; artwork never changes the hitbox. */
 export const PLAYER_SHIP_RASTER_ART: Readonly<Record<PlayerSkinId, ShipRasterArt>> = {
+  ...REWARD_SHIP_ART,
   cyan: { url: cyanShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   violet: { url: violetShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
   amber: { url: amberShipUrl, width: 56, height: 64, anchorX: 0.5, anchorY: 0.5 },
@@ -54,6 +56,7 @@ export const PLAYER_SHIP_RASTER_ART: Readonly<Record<PlayerSkinId, ShipRasterArt
 
 /** One interchangeable 128px cannon image; shared combat/locker frame, unchanged muzzle anchor. */
 export const CANNON_SKIN_RASTER_ART: Readonly<Record<CannonSkinId, CannonRasterArt>> = {
+  ...REWARD_CANNON_ART,
   basic: { url: basicCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
   curve: { url: curveCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },
   smoke: { url: smokeCannonUrl, width: 30, height: 39, anchorX: 0.5, anchorY: 0.08, cableAnchorY: 0.9 },

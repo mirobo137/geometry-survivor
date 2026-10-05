@@ -35,7 +35,9 @@ import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
 import { getPlayerSkinDefinition, isPlayerSkinId } from '../content/visual/SkinDefinitions';
 import { DailyWheelService } from './DailyWheelService';
 import { RetentionObjectiveService } from './RetentionObjectiveService';
-import { DAILY_WHEEL_SKIN, type DailyWheelKind, type DailyWheelResult } from '../content/retention/DailyWheelDefinitions';
+import { type DailyWheelKind, type DailyWheelResult } from '../content/retention/DailyWheelDefinitions';
+import { createRewardPreviewStore, ownsRewardCosmetic, unlockRewardCosmetic } from './RewardCosmeticOwnership';
+import { getRewardCosmetic } from '../content/retention/RewardCosmeticDefinitions';
 import { isCannonSkinId, type CannonSkinId } from '../content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
@@ -71,7 +73,6 @@ import {
   recordRetentionRun,
   retentionProgressHighlights,
   RETENTION_WEEKLY_NOVA_AFTER_COLLECTION,
-  RETENTION_WEEKLY_SKIN_ID,
   type RetentionChallengeId,
   type RetentionObjectiveId,
   type RetentionWeeklyEdition
@@ -135,6 +136,8 @@ export interface GameOptions {
   readonly cannonSkin?: CannonSkinId;
   /** Opt-in visual trial only; no cosmetic ownership, stats or saved selection changes. */
   readonly tetheredShipPrototype?: boolean;
+  /** Local debug reward gallery; all displayed unlocks are synthetic and ephemeral. */
+  readonly rewardCatalogPreview?: boolean;
   readonly background?: BackgroundId;
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
@@ -215,6 +218,7 @@ export class Game {
   private readonly startOnMenu: boolean;
   private readonly startWithBasicIntro: boolean;
   private readonly retentionChallengePracticeId: RetentionChallengeId | null;
+  private readonly rewardCatalogPreview: boolean;
   private runMode: RunMode;
   private overdriveStage: number;
   private readonly initialOverdriveStage: number;
@@ -557,13 +561,17 @@ export class Game {
     return result;
   };
 
-  private readonly onDailyWheelEquip = (): boolean => {
+  private readonly onDailyWheelEquip = (id?: import('../content/retention/RewardCosmeticDefinitions').RewardCosmeticId | null): boolean => {
     if (this.stopped || this.gameState.phase !== 'menu') return false;
     const saved = this.saveStore.load();
-    if (!saved.skins.unlocked.includes(DAILY_WHEEL_SKIN)) return false;
-    const next = { ...saved, skins: { ...saved.skins, selected: DAILY_WHEEL_SKIN } };
+    const rewardId = id ?? saved.dailyWheel.lastReceipt?.skin;
+    if (!rewardId || !ownsRewardCosmetic(saved, rewardId)) return false;
+    const next = unlockRewardCosmetic(saved, rewardId, true);
     if (!this.saveStore.saveDurably?.(next)) return false;
-    this.view.setPlayerSkin(DAILY_WHEEL_SKIN);
+    this.view.setPlayerSkin(next.skins.selected);
+    this.cannonSkin = next.cannonSkins.selected;
+    this.view.setCannonSkin(next.cannonSkins.selected);
+    this.view.setBackground(next.backgrounds.selected);
     this.startScreen?.syncRewardProfile(next);
     return true;
   };
@@ -834,10 +842,11 @@ export class Game {
     this.overdriveBossPair = options.overdriveBossPair;
     this.overdriveBuild = options.overdriveBuild ?? 'starter';
     this.retentionChallengePracticeId = options.retentionChallengePracticeId ?? null;
+    this.rewardCatalogPreview = options.rewardCatalogPreview === true && options.buildTarget === 'local';
     this.startOnMenu = (options.startOnMenu === true || this.retentionChallengePracticeId !== null)
       && options.elements.startScreen !== undefined;
     this.startWithBasicIntro = options.startWithBasicIntro === true;
-    this.saveStore = options.platform.saveStore;
+    this.saveStore = this.rewardCatalogPreview ? createRewardPreviewStore(options.platform.saveStore) : options.platform.saveStore;
     const saved = this.saveStore.load();
     // Explicit/developer routes take precedence. A plain menu remembers only
     // the chosen route, always creating a fresh run (stage one for Overdrive).
@@ -1642,6 +1651,7 @@ export class Game {
         videoSimulation: __BUILD_TARGET__ === 'local',
         onClose: () => this.startScreen?.syncRewardProfile(this.saveStore.load())
       },
+      rewardCatalogPreview: this.rewardCatalogPreview,
       initialView
     });
     this.audio.startMusic('menu');
@@ -1864,20 +1874,16 @@ export class Game {
         message = 'Práctica completada. La rotación semanal aún no inicia; esta sesión no concede el premio.';
       } else if (saved.retention.weeklyClaimIds.includes(edition.editionId)) {
         message = 'Reto superado. El premio de esta edición ya fue reclamado; puedes volver a practicar gratis.';
-      } else if (saved.skins.unlocked.includes(RETENTION_WEEKLY_SKIN_ID)
+      } else if (ownsRewardCosmetic(saved, edition.reward.id)
         && saved.wallet.nova >= MAX_NOVA) {
         message = 'Reto superado. Tu billetera está al límite; gasta NOVA y repite para reclamar la recompensa de esta semana.';
       } else {
-        const alreadyOwnsSkin = saved.skins.unlocked.includes(RETENTION_WEEKLY_SKIN_ID);
+        const alreadyOwnsSkin = ownsRewardCosmetic(saved, edition.reward.id);
         bonusNova = alreadyOwnsSkin
           ? Math.min(RETENTION_WEEKLY_NOVA_AFTER_COLLECTION, MAX_NOVA - saved.wallet.nova)
           : 0;
         const next: typeof saved = {
-          ...saved,
-          skins: alreadyOwnsSkin ? saved.skins : {
-            ...saved.skins,
-            unlocked: [...saved.skins.unlocked, RETENTION_WEEKLY_SKIN_ID]
-          },
+          ...unlockRewardCosmetic(saved, edition.reward.id),
           wallet: { nova: saved.wallet.nova + bonusNova },
           retention: {
             ...saved.retention,
@@ -1888,7 +1894,7 @@ export class Game {
           this.terminalTotalNova = next.wallet.nova;
           message = alreadyOwnsSkin
             ? `Premio semanal confirmado: +${bonusNova} NOVA.`
-            : 'Premio semanal confirmado: nave exclusiva Asterion Courier desbloqueada. No se equipó automáticamente.';
+            : `Premio semanal confirmado: ${edition.reward.name} desbloqueado. No se equipó automáticamente.`;
         } else {
           bonusNova = 0;
           message = 'Victoria conseguida, pero el guardado local no pudo confirmarse. No se entregó el premio; vuelve a completar el reto cuando el guardado esté disponible.';
@@ -2050,6 +2056,7 @@ export class Game {
     const saved = this.saveStore.load();
     if (target.kind === 'player' && isPlayerSkinId(target.id)
       && getPlayerSkinDefinition(target.id).acquisition !== 'nova') return 'unavailable';
+    if (getRewardCosmetic(target.id)) return 'unavailable';
     const alreadyUnlocked = target.kind === 'player'
       ? !isPlayerSkinId(target.id) || saved.skins.unlocked.includes(target.id)
       : target.kind === 'cannon'

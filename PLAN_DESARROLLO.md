@@ -3989,3 +3989,32 @@ diagnóstico); Poki **9,875,488 B** y CrazyGames
 `sourceMappingURL`. Typecheck, **749 pruebas / 132 archivos** y los tres builds
 pasaron; el warning previo de chunk JS >500 KB permanece. No se ejecutó la
 suite browser completa ni se verificó el artefacto subido o el deploy remoto.
+
+## 22.24 Catálogo de recompensas completo — 04-10-2026
+
+El usuario aprobó el piloto y pidió integrar toda la colección, incluyendo
+balas/estelas propias para los cañones. Puerta visual del piloto superada;
+ya no está pendiente la autorización para completar el lote.
+
+Implementado: diez recompensas por familia (30 total, Asterion/Solstice cuentan
+entre las naves), junto a diez cosméticos base por familia. Catálogos normales
+con ownership/equipado/guardado y redirección de premios activos a su fuente.
+Dos calendarios de 15 premios semanales, uno de Retos/Bitácora y otro de Ruleta;
+la rotación de bosses conserva sus tres semanas. Duplicados: 250 NOVA semanal,
+500 NOVA en la ruleta. Cuotas, odds 1%–20%, videos y dificultad no cambian.
+
+PNG maestros originales preservados, derivados WebP con transparencia real.
+Diez cañones tienen diez balas y diez estelas originales; arcos/hélices/
+serpentinas/vibración son sólo visuales, sin modificar simulación. Nuevos
+fondos reutilizan el sistema de pintura/vapor y límites de calidad actuales.
+
+Entrada `/?debug=1&reward-catalog=1`: catálogo normal desbloqueado en memoria,
+equipable y utilizable en batalla, sin escritura al guardado real. Disponible
+en local/Pages, no en Poki/CrazyGames. La galería piloto y su UI redundante se
+retiraron. Coste nuevo de 58 derivados: **1,463,696 B**; mapas de diagnóstico
+siguen fuera de Pages y el límite permanece en 15 MB.
+
+Contrato completo y producción reproducible:
+[CATALOGO_RECOMPENSAS](docs/design/CATALOGO_RECOMPENSAS.md).
+Medidas finales y pruebas: `CONTINUACION.md`. Queda QA humana en móvil físico
+y publicación remota; no se hizo commit ni push en esta entrega.

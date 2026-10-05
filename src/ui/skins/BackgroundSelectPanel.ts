@@ -8,12 +8,16 @@ import type { WalletSaveData } from '../../platform/save/SaveStore';
 import { formatNova } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
+import { getRewardCatalogAction } from './RewardCatalogAction';
+import { REWARD_COSMETIC_IMAGES } from '../../assets/skins/RewardCosmeticAssets';
+import { getRewardCosmetic, type RewardCosmeticSource } from '../../content/retention/RewardCosmeticDefinitions';
 
 export interface BackgroundSelectPanelOptions {
   readonly state: BackgroundSaveData;
   readonly wallet: WalletSaveData;
   readonly onStateChange: (state: BackgroundSaveData) => void;
   readonly onWalletChange: (wallet: WalletSaveData) => void;
+  readonly onRewardNavigate?: (source: RewardCosmeticSource) => void;
 }
 
 interface BackgroundCardEntry {
@@ -31,6 +35,7 @@ export class BackgroundSelectPanel {
   private wallet: WalletSaveData = { nova: 0 };
   private changeHandler: ((state: BackgroundSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
+  private rewardNavigateHandler: ((source: RewardCosmeticSource) => void) | null = null;
 
   public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-background-cards');
@@ -46,6 +51,7 @@ export class BackgroundSelectPanel {
     this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
     this.walletHandler = options.onWalletChange;
+    this.rewardNavigateHandler = options.onRewardNavigate ?? null;
     this.cards.scrollTop = 0;
     this.render();
   }
@@ -53,6 +59,7 @@ export class BackgroundSelectPanel {
   public close(): void {
     this.changeHandler = null;
     this.walletHandler = null;
+    this.rewardNavigateHandler = null;
   }
 
   private normalize(state: BackgroundSaveData): BackgroundSaveData {
@@ -81,6 +88,11 @@ export class BackgroundSelectPanel {
       const art = document.createElement('span');
       art.className = 'background-card-art';
       art.dataset.background = background.id;
+      const reward = getRewardCosmetic(background.id);
+      if (reward) {
+        art.dataset.reward = 'true';
+        art.style.backgroundImage = `url("${REWARD_COSMETIC_IMAGES[reward.id]}")`;
+      }
       art.setAttribute('aria-hidden', 'true');
 
       const copy = document.createElement('span');
@@ -109,12 +121,16 @@ export class BackgroundSelectPanel {
       const unlocked = this.state.unlocked.includes(background.id);
       const selected = this.state.selected === background.id;
       entry.card.classList.toggle('is-selected', selected);
-      const free = background.priceNova === 0;
+      const reward = getRewardCatalogAction(background.id);
+      const free = background.priceNova === 0 && !reward;
       entry.card.classList.toggle('is-locked', !unlocked && !free);
       entry.button.setAttribute('aria-label', unlocked
         ? `Ver ${background.name}, ${selected ? 'equipado' : 'disponible'}`
         : free ? `Ver ${background.name}, gratis` : `Ver ${background.name}, ${formatNova(background.priceNova)} NOVA`);
-      if (selected || unlocked || free) {
+      if (!unlocked && reward) {
+        entry.action.textContent = reward.card;
+        entry.button.setAttribute('aria-label', `Ver ${background.name}, ${reward.status}`);
+      } else if (selected || unlocked || free) {
         entry.action.textContent = selected ? 'EQUIPADO · VER' : free && !unlocked ? 'GRATIS · VER' : 'VER Y EQUIPAR';
       } else {
         const amount = this.wallet.nova >= background.priceNova
@@ -135,6 +151,7 @@ export class BackgroundSelectPanel {
     const unlocked = this.state.unlocked.includes(id);
     const selected = this.state.selected === id;
     const affordable = this.wallet.nova >= definition.priceNova;
+    const reward = !unlocked ? getRewardCatalogAction(id) : null;
     const preview = document.createElement('div');
     preview.className = 'cosmetic-background-frame';
     preview.dataset.background = id;
@@ -143,6 +160,11 @@ export class BackgroundSelectPanel {
     const plate = document.createElement('div');
     plate.className = 'background-preview';
     plate.dataset.background = id;
+    const cosmetic = getRewardCosmetic(id);
+    if (cosmetic) {
+      plate.style.backgroundImage = `url("${REWARD_COSMETIC_IMAGES[cosmetic.id]}")`;
+      preview.style.setProperty('--current-opacity', '.78');
+    }
     plate.setAttribute('aria-hidden', 'true');
     const atmosphere = document.createElement('div');
     atmosphere.className = 'cosmetic-background-atmosphere';
@@ -156,20 +178,20 @@ export class BackgroundSelectPanel {
     this.dialog.open({
       kind: 'FONDO / VISTA PREVIA', rarity: definition.rarity, name: definition.name,
       subtitle: definition.subtitle, description: definition.description, preview,
-      actionLabel: selected ? 'Equipado' : unlocked ? 'Equipar fondo'
+      actionLabel: reward ? reward.label : selected ? 'Equipado' : unlocked ? 'Equipar fondo'
         : definition.priceNova === 0 ? 'Desbloquear gratis y equipar'
           : `Desbloquear y equipar · ${formatNova(definition.priceNova)} NOVA`,
-      actionDisabled: selected || (!unlocked && !affordable),
-      status: selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
+      actionDisabled: selected || (reward ? !reward.available : !unlocked && !affordable),
+      status: reward ? reward.status : selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
-      onAction: () => this.select(id)
+      onAction: () => { if (reward?.available) this.rewardNavigateHandler?.(reward.source); else if (!reward) this.select(id); }
     }, button);
   }
 
   private select(id: BackgroundId): void {
     const definition = getBackgroundDefinition(id);
     const unlocked = this.state.unlocked.includes(id);
-    if (!unlocked && this.wallet.nova < definition.priceNova) return;
+    if (!unlocked && (getRewardCatalogAction(id) || this.wallet.nova < definition.priceNova)) return;
     const next: BackgroundSaveData = unlocked
       ? { ...this.state, selected: id }
       : { selected: id, unlocked: Array.from(new Set<BackgroundId>([...this.state.unlocked, id])) };

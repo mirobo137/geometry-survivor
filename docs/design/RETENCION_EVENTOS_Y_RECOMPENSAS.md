@@ -35,7 +35,7 @@ sugerencia conversacional anterior de quitar su patrón de réplicas.
 | Duelo de boss sin impactos | Sin oleadas comunes ni cartas elegibles; un impacto conectado termina el intento, aunque lo absorba el escudo. | Implementado para Core Sentinel, Orbital Warden y Fracture Engine; QA humano pendiente. |
 | Evasión Charger | Sin fuego/daño automático; sobrevivir 60 segundos activos, máximo cinco Chargers. | Prototipo local implementado; justicia y dificultad móvil pendientes. |
 | Ruleta diaria | Gratis cada 24 h; diez ranuras NOVA y Solstice Regent (1% inicial, +1 punto por giro hasta 20%). Extra con video también puede entregar skin. | Implementación local; [contrato y pruebas](RULETA_DIARIA.md); QA humano/publicación pendientes. |
-| Colecciones finitas | Diez naves, diez cañones y diez fondos exclusivos de retos/ruleta. Asterion y Solstice cuentan como dos de las diez naves; faltan ocho naves, diez cañones y diez fondos. | El conteo quedó definido; los 28 artes nuevos y su entrega siguen pendientes por el presupuesto de build. |
+| Colecciones finitas | Diez naves, diez cañones y diez fondos exclusivos de retos/ruleta, Asterion y Solstice incluidos. | Catálogo completo funcional; [arte, temporadas, guardado y presupuesto](CATALOGO_RECOMPENSAS.md). QA humana móvil/publicación pendientes. |
 
 Son propuestas para validar, no cifras aprobadas: cantidades de NOVA,
 probabilidades, garantía de cosmético, número de skins, calendario/fecha de
@@ -77,11 +77,17 @@ evoluciones, Overdrive, Laboratorio, NOVA y un catálogo base de diez naves,
 tres duelos semanales repetidos cada tres semanas, una Bitácora y ruleta diaria.
 El catálogo cosmético de lanzamiento tiene diez naves, diez cañones y diez fondos.
 La colección exclusiva acordada añade Asterion y Solstice al conteo de diez
-naves, más diez cañones y diez fondos; sus 28 nuevas ilustraciones todavía no
-están incorporadas. La ruleta añade un extra opcional por video simulado
+naves, más diez cañones y diez fondos; el catálogo está completado con balas y
+estelas originales. Contrato: [CATALOGO_RECOMPENSAS](CATALOGO_RECOMPENSAS.md). La ruleta añade un extra opcional por video simulado
 localmente; ver [contrato vigente](RULETA_DIARIA.md).
 
 ### Puerta de presupuesto para cosméticos exclusivos
+
+**Puerta superada en la colección aprobada del 04-10-2026:** 58 derivados
+nuevos, 1,463,696 B; los tres payloads públicos siguen bajo 15 MB. Ver
+[contrato vigente](CATALOGO_RECOMPENSAS.md) y medidas finales en CONTINUACION.
+La estimación y el bloqueo siguientes documentan el baseline anterior, no un
+pendiente de implementación de este catálogo.
 
 El artefacto local medido el 04-10-2026 ocupa 14,939,834 de 15,000,000 bytes;
 quedan 60,166 bytes. Esa build incluía aproximadamente 5 MB de mapas de
@@ -328,26 +334,26 @@ producción. El puerto/host debe ser el que esté usando el servidor local.
 
 ## 11. Colección semanal y recompensas
 
-Colección propia de naves, cañones y fondos, distinta del catálogo base y de
-la colección diaria. Cantidad inicial, identidades y orden pendientes.
-Los cosméticos mantienen todos los contratos de batalla de sus categorías.
+La colección exclusiva 10/10/10 está implementada y aprobada para integrarse:
+[contrato completo](CATALOGO_RECOMPENSAS.md). Cada catálogo normal tiene veinte
+entradas (diez base + diez premios). Todos conservan sus contratos de batalla.
 
-1. Mostrar la recompensa exacta y condición del evento antes de entrar.
-2. Al completar y confirmar la liquidación, desbloquear propiedad permanentemente
-   y añadir el cosmético al catálogo elegible normal con origen «Reto semanal».
-3. No equiparlo sin decisión del jugador; ofrecer «Equipar» o «Seguir usando».
-4. Cobrar una sola vez por edición. Si Asterion ya está desbloqueada, la edición
-   entrega 250 NOVA en su lugar; victorias/reintentos adicionales en esa misma
-   edición no vuelven a pagar.
-5. Propuesta al repetir plantillas: destacar el siguiente cosmético pendiente
-   según un orden estable; mostrarlo antes del intento. No entregar un duplicado
-   mientras queden premios pendientes en la colección semanal.
-6. La compensación actual se activa al poseer Asterion; el premio y la cantidad
-   de NOVA son provisionales hasta la validación humana. Una futura colección de
-   cosméticos semanales requerirá decidir si esta política cambia.
-7. Las diez opciones base por categoría siguen intactas. Las skins especiales
-   son extras, no reemplazos, recolores indistinguibles ni compras/anuncios
-   encubiertos. Lo ya adquirido conserva propiedad, selección e ID.
+1. Cada fuente recorre 15 cosméticos en semanas UTC; el reto de boss mantiene
+   su rotación independiente de tres semanas. El calendario de premios empieza
+   el 05-10-2026 y se repite cada 15 semanas. Se muestra el premio exacto.
+2. La victoria elegible desbloquea la recompensa de esa edición en su familia,
+   con guardado durable y sin autoequipar. Si ya se posee, entrega 250 NOVA.
+3. Sólo una entrega por edición; repetir/practicar no repaga. Los premios
+   adquiridos permanecen disponibles aunque termine la temporada.
+4. La rotación es fija, no salta los cosméticos poseídos: todos los jugadores
+   ven el mismo premio semanal. La política propuesta anteriormente de saltar
+   duplicados no se adopta en esta colección de temporadas visibles.
+5. Las fichas normales de un premio actual no poseído redirigen a su fuente;
+   fuera de temporada se indican como inactivas y no se venden por NOVA.
+6. Las diez opciones base por categoría permanecen. Skins especiales son
+   extras originales, no ventajas de combate ni recolores indistinguibles.
+7. La ruta temporal `/?debug=1&reward-catalog=1` permite equipar/jugar con las
+   treinta recompensas sin escritura al guardado real, sólo en local/Pages.
 
 No hay ventajas de estadísticas en las skins de evento. Sus cañones/balas
 pueden tener identidad visual propia sin modificar colisión, daño o targeting.
@@ -360,7 +366,8 @@ giros, con probabilidad compartida creciente (1% inicial, +1 punto por giro
 completado hasta 20%, sin reinicio). Sustituye la propuesta
 inicial de cápsula sin anuncios ni porcentajes. Implementado en local: gratis
 cada 24 h, diez importes de 40–300 NOVA que comparten el porcentaje no dorado,
-Solstice Regent, duplicado convertido en 500 NOVA y extra tras video completado.
+un cosmético semanal de su colección de 15 (Solstice es el primero), duplicado
+convertido en 500 NOVA y extra tras video completado.
 No hay compra de giros, rachas o garantía de skin. Probabilidades visibles.
 
 [RULETA_DIARIA](RULETA_DIARIA.md) gobierna los parámetros, economía estimada,

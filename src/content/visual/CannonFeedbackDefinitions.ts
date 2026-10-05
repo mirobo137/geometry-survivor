@@ -1,9 +1,11 @@
+import { REWARD_CANNON_IDS, type RewardCannonId } from '../retention/RewardCosmeticDefinitions';
 import type { CannonSkinId } from './CannonSkinDefinitions';
 
 /** Cosmetic discharge shapes, in logical units; never projectile range or hitbox. */
 export const CANNON_DISCHARGE_PROFILES: Readonly<Record<CannonSkinId, {
   readonly length: number; readonly width: number; readonly corona: number; readonly recoil: number;
 }>> = {
+  ...Object.fromEntries(REWARD_CANNON_IDS.map((id, index) => [id, { length: 25 + index % 3 * 5, width: 8 + index % 4 * 2, corona: .5, recoil: 4 }])) as Record<RewardCannonId, { length: number; width: number; corona: number; recoil: number }>,
   basic: { length: 28, width: 11, corona: 0.5, recoil: 4 },
   curve: { length: 35, width: 7, corona: 0.35, recoil: 3.5 },
   smoke: { length: 24, width: 18, corona: 0.65, recoil: 4.8 },

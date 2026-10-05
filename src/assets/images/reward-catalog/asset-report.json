@@ -1,0 +1,522 @@
+[
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\riftwake-strider.webp",
+    "bytes": 38308,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\halo-drifter.webp",
+    "bytes": 54300,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\iron-orchid.webp",
+    "bytes": 43482,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\vesper-kite.webp",
+    "bytes": 42648,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\tidebreaker.webp",
+    "bytes": 51218,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\sunscar.webp",
+    "bytes": 28936,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\umbra-manta.webp",
+    "bytes": 31508,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\crown-wasp.webp",
+    "bytes": 51150,
+    "width": 224,
+    "height": 256,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\astral-fang-cannon.webp",
+    "bytes": 13154,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\astral-fang-head.webp",
+    "bytes": 8546,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\astral-fang-trail.webp",
+    "bytes": 22838,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      253
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\frostbite-cannon.webp",
+    "bytes": 20440,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\frostbite-head.webp",
+    "bytes": 9918,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\frostbite-trail.webp",
+    "bytes": 18924,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\embercoil-cannon.webp",
+    "bytes": 21140,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\embercoil-head.webp",
+    "bytes": 11104,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\embercoil-trail.webp",
+    "bytes": 17608,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\voidspindle-cannon.webp",
+    "bytes": 10518,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\voidspindle-head.webp",
+    "bytes": 7388,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\voidspindle-trail.webp",
+    "bytes": 24084,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\jade-serpent-cannon.webp",
+    "bytes": 17672,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\jade-serpent-head.webp",
+    "bytes": 10394,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\jade-serpent-trail.webp",
+    "bytes": 16556,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\sunhammer-cannon.webp",
+    "bytes": 20928,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\sunhammer-head.webp",
+    "bytes": 8300,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\sunhammer-trail.webp",
+    "bytes": 24168,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\rose-thorn-cannon.webp",
+    "bytes": 12784,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\rose-thorn-head.webp",
+    "bytes": 7732,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\rose-thorn-trail.webp",
+    "bytes": 18020,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\starweaver-cannon.webp",
+    "bytes": 17504,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\starweaver-head.webp",
+    "bytes": 9926,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\starweaver-trail.webp",
+    "bytes": 24056,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\abyss-maw-cannon.webp",
+    "bytes": 16760,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\abyss-maw-head.webp",
+    "bytes": 9614,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      254
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\abyss-maw-trail.webp",
+    "bytes": 19406,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      253
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\prism-judge-cannon.webp",
+    "bytes": 20792,
+    "width": 120,
+    "height": 156,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\prism-judge-head.webp",
+    "bytes": 11794,
+    "width": 128,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\prism-judge-trail.webp",
+    "bytes": 24662,
+    "width": 256,
+    "height": 64,
+    "alpha": [
+      0,
+      255
+    ]
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\ember-remnant.webp",
+    "bytes": 79488,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\ember-remnant.webp",
+    "bytes": 18986,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\frozen-meridian.webp",
+    "bytes": 43532,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\frozen-meridian.webp",
+    "bytes": 12460,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\binary-veil.webp",
+    "bytes": 28396,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\binary-veil.webp",
+    "bytes": 8452,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\tether-citadel.webp",
+    "bytes": 49138,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\tether-citadel.webp",
+    "bytes": 13076,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\silver-dunes.webp",
+    "bytes": 48044,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\silver-dunes.webp",
+    "bytes": 11406,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\amber-hive.webp",
+    "bytes": 59030,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\amber-hive.webp",
+    "bytes": 16610,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\pearl-torrent.webp",
+    "bytes": 39448,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\pearl-torrent.webp",
+    "bytes": 11348,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\rust-cathedral.webp",
+    "bytes": 49880,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\rust-cathedral.webp",
+    "bytes": 13290,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\echo-scar.webp",
+    "bytes": 66626,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\echo-scar.webp",
+    "bytes": 17344,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\runtime\\night-garden.webp",
+    "bytes": 45898,
+    "width": 1024,
+    "height": 1024,
+    "alpha": null
+  },
+  {
+    "file": "src\\assets\\images\\reward-catalog\\preview\\night-garden.webp",
+    "bytes": 12964,
+    "width": 512,
+    "height": 512,
+    "alpha": null
+  }
+]

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { CANNON_SKIN_RASTER_ART, LINKED_CANNON_LAYOUT, PLAYER_SHIP_RASTER_ART } from '../SkinRasterAssets';
+import { getRewardCosmetic } from '../../../content/retention/RewardCosmeticDefinitions';
 import { TETHERED_SHIP_ART } from './TetheredAssets';
 
 const pngAlpha = (png: Buffer, width: number, height: number): Uint8Array => {
@@ -66,7 +67,7 @@ const assertRgbaAsset = (path: URL, width: number, height = width): number => {
 describe('PNG ship and cannon skin contract', () => {
   it('ships ten square RGBA ships with true transparency and bounded file size', () => {
     const ids = Object.keys(PLAYER_SHIP_RASTER_ART) as (keyof typeof PLAYER_SHIP_RASTER_ART)[];
-    const catalogIds = ids.filter((id) => id !== 'asterion' && id !== 'solstice');
+    const catalogIds = ids.filter((id) => !getRewardCosmetic(id));
     expect(catalogIds).toEqual(['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead', 'corsair', 'nautilus']);
     let bytes = 0;
     for (const id of catalogIds) {
@@ -92,7 +93,7 @@ describe('PNG ship and cannon skin contract', () => {
   });
 
   it('ships ten square RGBA cannons while sharing one texture per two barrels', () => {
-    const ids = Object.keys(CANNON_SKIN_RASTER_ART) as (keyof typeof CANNON_SKIN_RASTER_ART)[];
+    const ids = (Object.keys(CANNON_SKIN_RASTER_ART) as (keyof typeof CANNON_SKIN_RASTER_ART)[]).filter(id => !getRewardCosmetic(id));
     expect(ids).toEqual(['basic', 'curve', 'smoke', 'rainbow', 'lattice', 'helix', 'bloom', 'spearhead', 'gyre', 'razor']);
     let bytes = 0;
     for (const id of ids) {

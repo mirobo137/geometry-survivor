@@ -1,4 +1,5 @@
-export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil' | 'silent-archive' | 'lunar-fault' | 'leviathan-wake';
+import { REWARD_BACKGROUND_IDS, REWARD_COSMETICS, type RewardBackgroundId } from '../retention/RewardCosmeticDefinitions';
+export type BackgroundId = 'deep-space' | 'ion-storm' | 'solar-drift' | 'crystal-field' | 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil' | 'silent-archive' | 'lunar-fault' | 'leviathan-wake' | RewardBackgroundId;
 export type BackgroundPattern = 'constellation' | 'nebula' | 'solar' | 'crystal';
 import type { CosmeticTier } from '../meta/EconomyDefinitions';
 
@@ -18,7 +19,7 @@ export interface BackgroundDefinition {
   readonly rarity: string;
   readonly tier: CosmeticTier;
   readonly priceNova: number;
-  readonly acquisition: 'default' | 'nova';
+  readonly acquisition: 'default' | 'nova' | 'event' | 'daily-wheel';
   readonly tokens: BackgroundTokens;
 }
 
@@ -119,9 +120,18 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 2400, acquisition: 'nova',
     tokens: { base: 0x050d17, glow: 0x183f41, accent: 0x82bcaf, secondary: 0x91aabd, pattern: 'nebula' }
   }
+  ,...REWARD_COSMETICS.filter(reward => reward.family === 'background').map((reward, index) => ({
+    id: reward.id as RewardBackgroundId, name: reward.name, subtitle: reward.subtitle, description: reward.description,
+    rarity: reward.source === 'daily-wheel' ? 'RULETA DIARIA · EXCLUSIVA' : 'RETO SEMANAL · EXCLUSIVA',
+    tier: 'epic' as const, priceNova: 0, acquisition: reward.source === 'daily-wheel' ? 'daily-wheel' as const : 'event' as const,
+    tokens: { base: 0x080b14, glow: 0x283240,
+      accent: [0xb78e76,0x93c4d0,0xb97891,0xbfb9a2,0xb3c2cc,0xbea174,0xa3cac9,0xb2957b,0xb39aa5,0x87b9a4][index],
+      secondary: 0x8f9caa, pattern: 'nebula' as const }
+  }))
 ] as const;
 
 export const isBackgroundId = (value: unknown): value is BackgroundId => (
+  (REWARD_BACKGROUND_IDS as readonly unknown[]).includes(value) ||
   value === 'deep-space' || value === 'ion-storm' || value === 'solar-drift' || value === 'crystal-field'
   || value === 'nacre-orbit' || value === 'vesper-bloom' || value === 'tidal-veil'
   || value === 'silent-archive' || value === 'lunar-fault' || value === 'leviathan-wake'

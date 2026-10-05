@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sprite, Texture } from 'pixi.js';
 import { PlayerView } from './PlayerView';
+import { PLAYER_SKINS, type PlayerSkinId } from '../../../../content/visual/VisualTokens';
+import { REWARD_CANNON_IDS, type RewardCannonId } from '../../../../content/retention/RewardCosmeticDefinitions';
 
 const skinTextures = {
+  ...Object.fromEntries(Object.keys(PLAYER_SKINS).map(id => [id, Texture.WHITE])) as Record<PlayerSkinId, Texture>,
   spearhead: Texture.WHITE,
   manta: Texture.WHITE,
   cyan: Texture.WHITE,
@@ -23,6 +26,7 @@ const textures = {
   shadow: Texture.WHITE,
   ring: skinTextures,
   weapons: {
+    ...Object.fromEntries(REWARD_CANNON_IDS.map(id => [id, cannonPair()])) as Record<RewardCannonId, ReturnType<typeof cannonPair>>,
     basic: cannonPair(),
     curve: cannonPair(),
     smoke: cannonPair(),

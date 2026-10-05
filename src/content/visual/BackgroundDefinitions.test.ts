@@ -3,8 +3,8 @@ import { BACKGROUND_DEFINITIONS, getBackgroundDefinition, isBackgroundId } from 
 
 describe('BackgroundDefinitions', () => {
   it('keeps ten bounded, presentation-only background identities', () => {
-    expect(BACKGROUND_DEFINITIONS).toHaveLength(10);
-    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(10);
+    expect(BACKGROUND_DEFINITIONS).toHaveLength(20);
+    expect(new Set(BACKGROUND_DEFINITIONS.map((definition) => definition.id)).size).toBe(20);
     for (const definition of BACKGROUND_DEFINITIONS) {
       expect(definition.name.length).toBeGreaterThan(0);
       expect(isBackgroundId(definition.id)).toBe(true);

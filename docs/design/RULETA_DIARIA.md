@@ -8,19 +8,30 @@ por giro completado, desde 1% hasta 20%. Este contrato
 sustituye la propuesta inicial de cápsula sin anuncios/porcentajes del plan de
 [retención](RETENCION_EVENTOS_Y_RECOMPENSAS.md), no sus puertas de publicación.
 
+## Colección de temporadas — actualización 04-10-2026
+
+El piloto aprobado se amplió a 15 premios de ruleta: cinco naves, cinco cañones
+y cinco fondos. Cambia el cosmético visible cada semana UTC, desde 05-10-2026,
+y repite cada 15 semanas. Solstice es el primero. Cada premio tiene una única
+fuente; sólo el ofrecido actualmente se puede conseguir. Ganar lo conserva para
+siempre. [Contrato del catálogo](CATALOGO_RECOMPENSAS.md).
+Las reglas de giro, porcentajes y compensación no cambian. El video conserva
+el premio ofrecido antes de iniciarlo, incluso si atraviesa un cambio semanal;
+el recibo añade `rewardId` opcional, compatible con schema 13 y premios viejos.
+
 ## Reglas implementadas
 
 | Giro / premio | Regla |
 | --- | --- |
 | Gratuito | Disponible al empezar; luego 24 horas reales desde el último giro gratuito guardado. No depende del tiempo conectado o la zona horaria. |
 | Diez ranuras NOVA | 40, 50, 60, 75, 90, 110, 130, 160, 200 y 300; cada una tiene `(100 - p) / 10`%, donde `p` es la probabilidad actual de skin. |
-| Ranura exclusiva | Solstice Regent, sin ventajas de combate. Primer giro 1%, segundo 2%, hasta 20%. Ambos tipos comparten el mismo porcentaje. |
+| Ranura exclusiva | Cosmético actual de la temporada; primero Solstice Regent, sin ventajas de combate. Primer giro 1%, segundo 2%, hasta 20%. Ambos tipos comparten el mismo porcentaje. |
 | Skin ya adquirida | La ranura dorada entrega 500 NOVA; no duplica la skin. |
 | Extra por video | Después del giro gratis y antes del siguiente ciclo, una vez. Puede entregar NOVA o la skin exclusiva. |
 | Progresión | Cada premio guardado aumenta un punto porcentual para el siguiente giro, con tope 20%. No reinicia al cambiar de día ni al ganar la skin. |
 | Video incompleto/error | No consume el extra, no sortea ni paga. Sin inventario publicitario el botón explica que no está disponible. |
 | Ausencia | No acumula giros. Un extra no utilizado vence al habilitarse el siguiente gratuito. |
-| Selección | Ganar desbloquea, no equipa. Equipar requiere decisión explícita; la nave se refleja también en Inicio y en batalla. |
+| Selección | Ganar desbloquea, no equipa. Equipar requiere decisión explícita; el cosmético se refleja en batalla y, si es nave, también en Inicio. |
 
 No hay pago de giros con NOVA/dinero, racha, compra obligatoria, garantía de
 skin ni garantía oculta. El porcentaje del próximo giro se muestra y se
@@ -29,7 +40,7 @@ explica en el desplegable. Las once secciones visuales son iguales para lectura,
 El giro se detiene en el premio real guardado, sin diseñar un «casi ganaste».
 
 Valores de prueba: en cualquier modalidad, media de NOVA `121.5 * (1 - p/100)`
-mientras falta la nave; si ya está adquirida, sumar `500 * p/100`.
+mientras falta el cosmético; si ya está adquirida, sumar `500 * p/100`.
 La probabilidad acumulada desde el inicio es
 `1 - producto(1 - min(n, 20)/100)` para los giros `n = 1..N`.
 Llegar al 20% no garantiza un premio ni implica reiniciar el porcentaje.

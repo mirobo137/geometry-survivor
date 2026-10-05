@@ -6,6 +6,8 @@ import silentArchiveUrl from '../../assets/images/backgrounds/silent-archive.web
 import lunarFaultUrl from '../../assets/images/backgrounds/lunar-fault.webp?url';
 import leviathanWakeUrl from '../../assets/images/backgrounds/leviathan-wake.webp?url';
 import type { BackgroundId } from '../../content/visual/BackgroundDefinitions';
+import { REWARD_BACKGROUND_URLS } from '../../assets/skins/RewardCosmeticAssets';
+import type { RewardBackgroundId } from '../../content/retention/RewardCosmeticDefinitions';
 import { createRasterBackgroundLoader, StaticRasterBackgroundView, type RasterBackgroundLoader } from './StaticRasterBackgroundView';
 
 export type PainterlyBackgroundId = Exclude<BackgroundId, 'nacre-orbit' | 'vesper-bloom' | 'tidal-veil'>;
@@ -19,6 +21,7 @@ export const loadLunarFaultBackground = createRasterBackgroundLoader(lunarFaultU
 export const loadLeviathanWakeBackground = createRasterBackgroundLoader(leviathanWakeUrl);
 
 const DEFAULT_LOADERS: Readonly<Record<PainterlyBackgroundId, RasterBackgroundLoader>> = {
+  ...Object.fromEntries(Object.entries(REWARD_BACKGROUND_URLS).map(([id, url]) => [id, createRasterBackgroundLoader(url)])) as Record<RewardBackgroundId, RasterBackgroundLoader>,
   'deep-space': loadDeepSpaceBackground,
   'ion-storm': loadIonStormBackground,
   'solar-drift': loadSolarDriftBackground,
@@ -32,6 +35,7 @@ const DEFAULT_LOADERS: Readonly<Record<PainterlyBackgroundId, RasterBackgroundLo
 export const createPainterlyBackgroundViews = (
   loaders: Partial<Record<PainterlyBackgroundId, RasterBackgroundLoader>> = {}
 ): Record<PainterlyBackgroundId, StaticRasterBackgroundView> => ({
+  ...Object.fromEntries(Object.keys(REWARD_BACKGROUND_URLS).map(id => [id, new StaticRasterBackgroundView(loaders[id as RewardBackgroundId] ?? DEFAULT_LOADERS[id as RewardBackgroundId])])) as Record<RewardBackgroundId, StaticRasterBackgroundView>,
   'deep-space': new StaticRasterBackgroundView(loaders['deep-space'] ?? DEFAULT_LOADERS['deep-space']),
   'ion-storm': new StaticRasterBackgroundView(loaders['ion-storm'] ?? DEFAULT_LOADERS['ion-storm']),
   'solar-drift': new StaticRasterBackgroundView(loaders['solar-drift'] ?? DEFAULT_LOADERS['solar-drift']),

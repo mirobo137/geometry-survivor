@@ -2,7 +2,7 @@ import coreSentinelUrl from '../../assets/images/enemies/core-sentinel.webp?no-i
 import chargerUrl from '../../assets/images/enemies/charger.webp?no-inline';
 import orbitalWardenUrl from '../../assets/images/enemies/orbital-warden.webp?no-inline';
 import fractureEngineUrl from '../../assets/images/enemies/fracture-engine.webp?no-inline';
-import asterionUrl from '../../assets/skins/ships/asterion/asterion.webp?no-inline';
+import { REWARD_COSMETIC_IMAGES } from '../../assets/skins/RewardCosmeticAssets';
 import {
   RETENTION_OBJECTIVES,
   RETENTION_WEEKLY_NOVA_AFTER_COLLECTION,
@@ -29,6 +29,7 @@ export interface RetentionPanelOptions {
   readonly progress: RetentionSaveData;
   readonly edition: RetentionWeeklyEdition;
   readonly skinOwned: boolean;
+  readonly readRewardOwned?: (id: RetentionWeeklyEdition['reward']['id']) => boolean;
   readonly walletNova: number;
   readonly onSelectObjective: (id: RetentionObjectiveId) => void;
   readonly onClaimObjective: (id: RetentionObjectiveId) => Promise<RetentionClaimResult>;
@@ -104,7 +105,7 @@ export class RetentionPanel {
     artwork.append(image(ART[challenge.artId], challenge.title, 'retention-boss-art'));
     const prize = document.createElement('div');
     prize.className = 'retention-prize-art';
-    prize.append(image(asterionUrl, '', 'retention-prize-ship'));
+    prize.append(image(REWARD_COSMETIC_IMAGES[edition.reward.id], edition.reward.name, 'retention-prize-ship'));
     prize.setAttribute('aria-hidden', 'true');
     const copy = document.createElement('div');
     copy.className = 'retention-weekly-copy';
@@ -131,7 +132,7 @@ export class RetentionPanel {
     reward.textContent = claimed
       ? 'PREMIO SEMANAL RECLAMADO'
       : options.skinOwned ? novaReward > 0 ? `NOVA DE EVENTO · ${novaReward}` : 'NOVA DE EVENTO · BILLETERA LLENA'
-        : 'NAVE EXCLUSIVA · ASTERION COURIER';
+        : `${edition.reward.family === 'ship' ? 'NAVE' : edition.reward.family === 'cannon' ? 'CAÑÓN' : 'FONDO'} EXCLUSIVO · ${edition.reward.name.toUpperCase()}`;
     meta.append(timer, reward);
     const rules = document.createElement('ul');
     rules.className = 'retention-rules';
@@ -252,7 +253,8 @@ export class RetentionPanel {
     const currentEdition = getRetentionWeeklyEdition();
     if (currentEdition.editionId !== edition.editionId
       || currentEdition.scheduleStarted !== edition.scheduleStarted) {
-      this.render({ ...this.options, edition: currentEdition });
+      this.render({ ...this.options, ...this.options.readProgress(), edition: currentEdition,
+        skinOwned: this.options.readRewardOwned?.(currentEdition.reward.id) ?? this.options.skinOwned });
       this.setVisible(true);
       return;
     }

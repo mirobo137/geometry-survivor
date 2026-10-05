@@ -17,7 +17,7 @@ describe('selective player fallback textures', () => {
     expect(createSvgTexture).toHaveBeenCalledTimes(3);
     expect(textures.weapons.spearhead).toBe(textures.weapons.basic);
     expect(createSvgTexture).toHaveBeenCalledTimes(5);
-    expect(Object.keys(textures.weapons)).toHaveLength(10);
+    expect(Object.keys(textures.weapons)).toHaveLength(20);
     expect(textures.weapons.gyre).toBe(textures.weapons.basic);
     expect(textures.body.corsair).toBe(textures.body.cyan);
     expect(textures.body.nautilus).toBe(textures.body.cyan);

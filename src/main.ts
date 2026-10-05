@@ -112,6 +112,11 @@ const bootstrap = async (): Promise<void> => {
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
+  const rewardCatalogPreview = __BUILD_TARGET__ === 'local'
+    && searchParams.get('debug') === '1'
+    && searchParams.get('reward-catalog') === '1';
+  // Cosmetic approval route shows the art, not the diagnostic overlay.
+  if (rewardCatalogPreview) debugElement.style.display = 'none';
   const requestedRetentionChallenge = searchParams.get('retention-challenge');
   const retentionChallengePracticeId: RetentionChallengeId | undefined = __BUILD_TARGET__ === 'local'
     && searchParams.get('debug') === '1'
@@ -316,6 +321,7 @@ const bootstrap = async (): Promise<void> => {
       : undefined,
     buildTarget: __BUILD_TARGET__,
     startOnMenu: retentionChallengePracticeId !== undefined
+      || rewardCatalogPreview
       || (overdriveMode && !diagnosticOverdrive
       && (!overdriveAutostart || !publicOverdriveUnlocked))
       || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
@@ -323,6 +329,7 @@ const bootstrap = async (): Promise<void> => {
       && !magneticChargeWeaponDrill && !fractureDrill && debugUpgradeId === undefined && evolutionId === undefined
       && weaponPath === undefined && campaignBuild === undefined),
     retentionChallengePracticeId,
+    rewardCatalogPreview,
     platform
   });
   await game.start();

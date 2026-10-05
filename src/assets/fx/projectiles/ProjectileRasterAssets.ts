@@ -19,9 +19,11 @@ import gyreTrail from './gyre-trail.png';
 import razorHead from './razor-head.png';
 import razorTrail from './razor-trail.png';
 import type { CannonSkinId } from '../../../content/visual/CannonSkinDefinitions';
+import { REWARD_PROJECTILE_ART, REWARD_PROJECTILE_URLS } from '../../skins/RewardCosmeticAssets';
 
 /** URLs only: importing the catalogue does not decode or upload its images. */
 export const PROJECTILE_ART_URLS = {
+  ...REWARD_PROJECTILE_URLS,
   shot_basic: basicHead, wake_basic: basicTrail,
   shot_curve: curveHead, wake_curve: curveTrail,
   shot_smoke: smokeHead, wake_smoke: smokeTrail,
@@ -35,6 +37,7 @@ export const PROJECTILE_ART_URLS = {
 } as const;
 
 export const PROJECTILE_SKIN_ART = {
+  ...REWARD_PROJECTILE_ART,
   basic: { headId: 'shot_basic', trailId: 'wake_basic' },
   curve: { headId: 'shot_curve', trailId: 'wake_curve' },
   smoke: { headId: 'shot_smoke', trailId: 'wake_smoke' },

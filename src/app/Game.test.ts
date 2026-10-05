@@ -510,9 +510,38 @@ describe('Game', () => {
     expect(persisted.retention.weeklyClaimIds).toContain(firstEdition.editionId);
     expect(settleFor(firstEdition)?.bonusNova).toBe(0);
 
-    const nextEdition = getRetentionWeeklyEdition(RETENTION_WEEK_ANCHOR_UTC + RETENTION_WEEK_MS);
+    const nextEdition = getRetentionWeeklyEdition(RETENTION_WEEK_ANCHOR_UTC + RETENTION_WEEK_MS * 15);
     expect(settleFor(nextEdition)).toMatchObject({ bonusNova: 250 });
     expect(persisted.retention.weeklyClaimIds).toContain(nextEdition.editionId);
+  });
+
+  it('settles the fifteen weekly cosmetics across all families without auto-equipping or paying twice', () => {
+    let persisted = createDefaultSaveData();
+    const saveStore = { load: () => persisted, save: () => true,
+      saveDurably: (next: typeof persisted) => { persisted = next; return true; }, clear: () => {} };
+    const game = new Game(createOptions({ saveStore }));
+    const runtime = game as unknown as {
+      activeRetentionChallenge: ReturnType<typeof getRetentionWeeklyEdition>['challenge']['id'];
+      activeRetentionChallengePractice: boolean;
+      activeRetentionEdition: ReturnType<typeof getRetentionWeeklyEdition>;
+      settleRetentionChallenge: (pending: { summary: { outcome: 'victory' }; settled: boolean }, saved: typeof persisted) => boolean;
+    };
+    runtime.activeRetentionChallengePractice = false;
+    for (let week = 0; week < 15; week++) {
+      const edition = getRetentionWeeklyEdition(RETENTION_WEEK_ANCHOR_UTC + week*RETENTION_WEEK_MS);
+      runtime.activeRetentionEdition = edition;
+      runtime.activeRetentionChallenge = edition.challenge.id;
+      const pending = { summary: { outcome: 'victory' as const }, settled: false };
+      expect(runtime.settleRetentionChallenge.call(game, pending, persisted)).toBe(true);
+      const family = edition.reward.family === 'ship' ? persisted.skins : edition.reward.family === 'cannon' ? persisted.cannonSkins : persisted.backgrounds;
+      expect(family.unlocked).toContain(edition.reward.id);
+      expect(family.selected).not.toBe(edition.reward.id);
+      expect(persisted.retention.weeklyClaimIds).toContain(edition.editionId);
+      const snapshot = JSON.stringify(persisted);
+      runtime.settleRetentionChallenge.call(game, { summary: { outcome: 'victory' }, settled: false }, persisted);
+      expect(JSON.stringify(persisted)).toBe(snapshot);
+    }
+    expect(persisted.wallet.nova).toBe(0);
   });
 
   it('forwards the defeated Tank identity to presentation without changing its position', () => {

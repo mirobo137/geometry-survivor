@@ -1,15 +1,16 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PROJECTILE_ART_URLS, PROJECTILE_HEAD_SIZE, PROJECTILE_SKIN_ART, getProjectileSkinArtIds } from './ProjectileRasterAssets';
+import { getRewardCosmetic } from '../../../content/retention/RewardCosmeticDefinitions';
 import { CANNON_SKIN_DEFINITIONS } from '../../../content/visual/CannonSkinDefinitions';
 
 describe('generated bullet material contract', () => {
   it('covers every cannon with unique bounded RGBA head and trail, not a renamed SVG', () => {
     const directory = new URL('./', import.meta.url);
     expect(readdirSync(directory).filter(name => name.endsWith('.png'))).toHaveLength(20);
-    expect(new Set(Object.values(PROJECTILE_ART_URLS)).size).toBe(20);
+    expect(new Set(Object.values(PROJECTILE_ART_URLS)).size).toBe(40);
     let total = 0;
-    for (const { id } of CANNON_SKIN_DEFINITIONS) {
+    for (const { id } of CANNON_SKIN_DEFINITIONS.filter(definition => !getRewardCosmetic(definition.id))) {
       const art = PROJECTILE_SKIN_ART[id];
       expect(getProjectileSkinArtIds(id)).toEqual([art.headId, art.trailId]);
       expect(getProjectileSkinArtIds(id, false)).toEqual([art.headId]);

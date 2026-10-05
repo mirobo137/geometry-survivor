@@ -135,7 +135,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .85rem;
 }
-
 #start-screen .console-screen .skin-tabs { flex: 0 0 auto; overflow: visible; }
 #start-screen .console-screen .skin-tab {
   flex: 1 1 0;

@@ -53,7 +53,7 @@ export const createCannonPreviewSvg = (skin: CannonSkinId, options: CannonPrevie
   )).join('');
 
   const viewBox = thumbnail ? '-28 -22 98 44' : '-45 -68 90 100';
-  return `<svg xmlns="http://www.w3.org/2000/svg" data-cannon="${skin}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" data-cannon="${skin}" data-trail="${definition.trail}" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Vista previa de ${definition.name}">
   <g${thumbnail ? ' transform="rotate(90)"' : ''}>
   <g class="cannon-preview-scene${animationClass}">
     <g class="cannon-preview-routes">${trails}</g>

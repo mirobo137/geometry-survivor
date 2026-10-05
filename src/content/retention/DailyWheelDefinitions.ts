@@ -1,3 +1,4 @@
+import { getRewardCosmetic, type RewardCosmeticId } from './RewardCosmeticDefinitions';
 /** Authored daily rewards. Displayed sectors are prizes, not proportional odds. */
 export const DAILY_WHEEL_NOVA = [40, 50, 60, 75, 90, 110, 130, 160, 200, 300] as const;
 export const DAILY_WHEEL_SKIN = 'solstice' as const;
@@ -15,7 +16,10 @@ export interface DailyWheelReceipt {
   readonly kind: DailyWheelKind;
   readonly slot: number;
   readonly nova: number;
-  readonly skin: typeof DAILY_WHEEL_SKIN | null;
+  /** Legacy field name retained: now accepts any reward cosmetic family. */
+  readonly skin: RewardCosmeticId | null;
+  /** Frozen season prize, even if the award was NOVA or storage is retried later. */
+  readonly rewardId?: RewardCosmeticId;
 }
 
 export interface DailyWheelSaveData {
@@ -27,6 +31,7 @@ export interface DailyWheelSaveData {
 }
 
 export interface DailyWheelSnapshot {
+  readonly rewardId?: RewardCosmeticId;
   readonly progress: DailyWheelSaveData;
   readonly skinOwned: boolean;
   readonly walletNova: number;
@@ -57,7 +62,8 @@ export const normalizeDailyWheel = (value: unknown): DailyWheelSaveData => {
     id: entry.id as string, kind: entry.kind as DailyWheelKind, slot: entry.slot as number,
     cycleStartedAtMs: timestamp(entry.cycleStartedAtMs), claimedAtMs: timestamp(entry.claimedAtMs),
     nova: typeof entry.nova === 'number' && Number.isFinite(entry.nova) ? Math.min(DAILY_WHEEL_RARE_NOVA, Math.max(0, Math.floor(entry.nova))) : 0,
-    skin: entry.slot === DAILY_WHEEL_NOVA.length && entry.skin === DAILY_WHEEL_SKIN ? DAILY_WHEEL_SKIN : null
+    skin: entry.slot === DAILY_WHEEL_NOVA.length && getRewardCosmetic(entry.skin)?.source === 'daily-wheel' ? entry.skin as RewardCosmeticId : null,
+    ...(getRewardCosmetic(entry.rewardId)?.source === 'daily-wheel' ? { rewardId: entry.rewardId as RewardCosmeticId } : {})
   } : null;
   return { chancePercent: normalizeChance(raw.chancePercent), cycleStartedAtMs, videoClaimed: raw.videoClaimed === true && cycleStartedAtMs > 0, lastReceipt };
 };
@@ -82,8 +88,8 @@ export const drawDailyWheelSlot = (randomUnit: number, chancePercent = 1): numbe
   return ticket >= novaTickets * 10 ? 10 : Math.floor(ticket / novaTickets);
 };
 
-export const dailyWheelPrize = (slot: number, _kind: DailyWheelKind, skinOwned: boolean) => {
+export const dailyWheelPrize = (slot: number, _kind: DailyWheelKind, skinOwned: boolean, rewardId: RewardCosmeticId = DAILY_WHEEL_SKIN) => {
   if (!Number.isInteger(slot) || slot < 0 || slot >= DAILY_WHEEL_SLOT_COUNT) throw new Error('Invalid wheel slot');
-  const skin = slot === 10 && !skinOwned ? DAILY_WHEEL_SKIN : null;
+  const skin = slot === 10 && !skinOwned ? rewardId : null;
   return { skin, nova: skin ? 0 : slot === 10 ? DAILY_WHEEL_RARE_NOVA : DAILY_WHEEL_NOVA[slot] };
 };

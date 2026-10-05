@@ -2,6 +2,14 @@ import type { PlayerSkinId } from './VisualTokens';
 
 /** Nozzles measured in the existing 56x64 intact PNG frame, nose facing up. */
 export const PLAYER_ENGINE_PORTS: Readonly<Record<PlayerSkinId, readonly (readonly [number, number])[]>> = {
+  'riftwake-strider': [[-4, 19], [0, 24], [4, 19]],
+  'halo-drifter': [[-10, 27], [10, 27]],
+  'iron-orchid': [[-8, 27], [8, 27]],
+  'vesper-kite': [[0, 26]],
+  tidebreaker: [[-6, 25], [6, 25]],
+  sunscar: [[-2, 28], [2, 28]],
+  'umbra-manta': [[-7, 16], [7, 16]],
+  'crown-wasp': [[-5, 28], [5, 28]],
   spearhead: [[0, 23]],
   cyan: [[0, 20]],
   violet: [[0, 26]],

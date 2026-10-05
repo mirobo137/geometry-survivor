@@ -1,0 +1,21 @@
+/* Reward plates: no procedural stars or geometry over the generated painting. */
+.background-card-art[data-reward="true"]::before,
+.background-card-art[data-reward="true"]::after { content: none; }
+@media (prefers-reduced-motion: no-preference) {
+  svg[data-trail="gyre"] .is-animated .cannon-preview-weave { animation: cannon-preview-gyre 1.25s linear infinite; }
+  svg[data-trail="razor"] .is-animated .cannon-preview-weave { animation: cannon-preview-razor 1.25s linear infinite; }
+  svg[data-trail="curve"] .is-animated .cannon-preview-weave { animation: reward-shot-arc 1.25s ease-in-out infinite; }
+  svg[data-trail="helix"] .is-animated .cannon-preview-weave { animation: reward-shot-helix 1.25s ease-in-out infinite; }
+}
+@keyframes reward-shot-arc { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+@keyframes reward-shot-helix { 0%,50%,100% { transform: translateX(0); } 25% { transform: translateX(4px); } 75% { transform: translateX(-4px); } }
+.cosmetic-background-frame[data-background="ember-remnant"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(155deg) saturate(.7); }
+.cosmetic-background-frame[data-background="frozen-meridian"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: saturate(.35); }
+.cosmetic-background-frame[data-background="binary-veil"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(95deg) saturate(.7); }
+.cosmetic-background-frame[data-background="tether-citadel"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: saturate(.3); }
+.cosmetic-background-frame[data-background="silver-dunes"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: saturate(.15); }
+.cosmetic-background-frame[data-background="amber-hive"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(160deg) saturate(.6); }
+.cosmetic-background-frame[data-background="pearl-torrent"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: saturate(.25); }
+.cosmetic-background-frame[data-background="rust-cathedral"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(170deg) saturate(.4); }
+.cosmetic-background-frame[data-background="echo-scar"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(100deg) saturate(.4); }
+.cosmetic-background-frame[data-background="night-garden"] .cosmetic-background-atmosphere { --current-opacity: .78; --current-tint: hue-rotate(-15deg) saturate(.75); }

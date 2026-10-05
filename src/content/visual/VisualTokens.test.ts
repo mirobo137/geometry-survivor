@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { REWARD_SHIP_IDS } from '../retention/RewardCosmeticDefinitions';
 import { FX_QUALITY, PLAYER_SKINS, PLAYER_SKIN_MOTION } from './VisualTokens';
 
 describe('VisualTokens', () => {
   it('keeps skins presentation-only and complete', () => {
-    expect(Object.keys(PLAYER_SKINS)).toEqual(['cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead', 'corsair', 'nautilus', 'asterion', 'solstice']);
+    expect(Object.keys(PLAYER_SKINS)).toEqual([...REWARD_SHIP_IDS, 'cyan', 'violet', 'amber', 'emerald', 'obsidian', 'nova', 'manta', 'spearhead', 'corsair', 'nautilus', 'asterion', 'solstice']);
     for (const skin of Object.values(PLAYER_SKINS)) {
       expect(Object.values(skin).every((color) => Number.isInteger(color))).toBe(true);
     }

@@ -1,0 +1,379 @@
+{
+  "date": "2026-10-04",
+  "generator": "built-in ImageGen",
+  "jobs": [
+    {
+      "id": "halo-drifter",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A compact split circular annulus spacecraft, open central negative space, forward silver crescent, two small rear thruster pods, deep indigo ceramic and pale lavender seams. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "iron-orchid",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A squat heavy hammerhead spacecraft with broad horizontal armored front bar, narrow rear waist and two chunky lower engines, rust-red titanium, muted pearl and amber vents. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "vesper-kite",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A slender angular diamond kite spacecraft with four stepped translucent smoky plum sails and brass skeletal frame, tiny magenta core, rear engine centered. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "tidebreaker",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A wide crab-shaped spacecraft, two massive forward curved claws framing short jade cockpit, white ceramic layered plates, teal apertures, low compact rear bridge. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "sunscar",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A long thin needle spacecraft with forked forward prongs and asymmetric outrigger antenna, charred copper heatshield, luminous orange spine, two tiny rear engine ports. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "umbra-manta",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A broad swept-back batwing spacecraft, sharply notched obsidian wing edges, central silver ridge, burgundy energy vents, two short lower tail engines; not organic porcelain manta. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "crown-wasp",
+      "type": "ship",
+      "prompt": "Use case: stylized-concept. Production game sprite of ONE premium original spacecraft. A compact plated beetle spacecraft with oval champagne-gold shell, segmented black inner spine, two forward triangular mandibles and two stubby rear wings, acid-lime pinlights. True orthographic TOP DOWN, nose straight UP (-Y), centered symmetric orientation even if design asymmetric, back engines at bottom. Rich hand-painted realistic science fantasy metallic materials and bevels, substantial silhouette readable at 56x64 pixels, not a logo or geometric SVG. Entire craft fits inside canvas with 12% transparent padding. Local rim lighting only. Genuine transparent alpha background, no stars, scene, shadow, floor, trail, typography, extra detached objects or cannons. No existing franchise designs."
+    },
+    {
+      "id": "astral-fang",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE transparent game projectile asset sheet, square canvas. Upper half: sharp blue diamond bolt with ivory center, pointing RIGHT (+X), centered x=50%,y=25%, isolated entirely above y=48%, occupying width 45%. Bottom half: two fine cobalt filaments and amber sparks, horizontal moving to RIGHT, brightest thick end at right, fading transparent left end, centered y=75%, width75%, height18%. Both objects isolated with large transparent gap, crisp polished science fantasy materials. No cannon, no ship, no scene, no text or labels, no glow reaching edges. Genuine transparent background."
+    },
+    {
+      "id": "frostbite",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single thick crystalline frost prism barrel, steel-grey collar, pale blue hexagonal mouth, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: elongated six-point icy shard, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: soft forked ice-blue vapor ribbon, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "embercoil",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single short copper spiral induction barrel with charcoal ribs and bright red aperture, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: molten orange teardrop with bright yellow point, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: smoky copper flame ribbon tapering into red embers, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "voidspindle",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single narrow black telescoping spindle cannon with violet oval aperture and silver rings, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: violet lens-shaped dark-core bolt, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: three narrow purple interference ribbons, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "jade-serpent",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single curved jade armored snake-neck cannon with gold cheek plates and mint aperture, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: curved mint crescent dart, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: sinuous emerald double-strand ribbon, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "sunhammer",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single squat industrial gold hammer-shaped cannon with rectangular ivory mouth, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: broad amber chisel bolt, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: thick amber segmented plasma wake, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "rose-thorn",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single long thorn-like burgundy cannon with pearl serrations and pink aperture, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: pink needle with two rear hooked fins, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: rose dotted petal-chain trail, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "starweaver",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single silver textile-like braided barrel with three cyan lateral vents and small white aperture, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: three-point white star bolt, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: interwoven turquoise filaments with silver knots, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "abyss-maw",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single broad U-shaped navy gunmetal cannon with teal recessed mouth, compact chunky shape, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: hollow turquoise ring bolt enclosing dark center, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: low-intensity teal rippling wake, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "prism-judge",
+      "type": "cannon",
+      "prompt": "Use case: stylized-concept. ONE coherent transparent game cannon VFX sprite sheet, square canvas, exactly three isolated elements in three fixed non-overlapping cells. Upper LEFT quadrant x0-50% y0-50%: Single faceted purple amethyst wedge cannon with asymmetrical silver plates and lime aperture, one standalone cannon, orthographic top down, firing UP (-Y), rear bottom, centered x25%,y25%, occupy35%canvas width and38%height. Upper RIGHT quadrant x50-100% y0-50%: angular lime chevron bolt with violet wings, pointing RIGHT (+X), centerx75%,y25%, occupy35%width18%height. Bottom half y50-100%: alternating lime-violet broken zigzag ribbons, pointing RIGHT (+X), brightest at right and tapered transparent tail left, centeredx50% y75%, width80% height18%. Premium hand-painted hard-surface sci-fi detail, restrained glow, crisp readable silhouette at30x39px cannon and36x18px bolt. Large transparent gutters between components, true alpha transparency. No spaceship, no hands, no text, labels, framing lines, scenery or checkerboard. Each component completely inside its cell."
+    },
+    {
+      "id": "frozen-meridian",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. Enormous frozen comet cliffs clipped at left and top edges, granular pale cyan frost and charcoal ice, grazing cold light from left; no crystals or planets. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "binary-veil",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. Two very distant partially obscured crimson accretion lenses cropped at opposite far corners, velvet-black space, muted red silk-like dust on edges, diagonal faint backlight; no ringed planets. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "tether-citadel",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. A colossal derelict ivory suspension megastructure curving along right edge, thick weathered support bands, tiny ochre windows, smoke-blue distant haze, soft side light; not angular arena frame. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "silver-dunes",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. Dark rippled metallic dust dunes along lower left edge, brushed silver grains and midnight-blue sky, faint broad aurora at top rim, monochrome side lighting. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "amber-hive",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. Huge eroded honeycomb fossil stone cavities cropped in upper left, dull amber resin seams, brown-black stone and dusty purple shadows, weak warm interior light; no crystalline spikes. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "pearl-torrent",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. A broad folded opalescent cosmic liquid sheet draped only along right and bottom edges, desaturated pearl and petrol black, smooth milky folds not smoke, diffuse cool backlight. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "rust-cathedral",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. Gigantic broken cylindrical rust-metal organ pipes clipped top right, layered corroded steel and deep olive shadows, sparse dull copper rimlight, dark empty central space; not archival vault. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "echo-scar",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. One massive weathered impact groove along left rim of dark maroon asteroid surface, fractured smooth basalt and chalk-white vein, weak oblique light, no moon sphere or crater terraces. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    },
+    {
+      "id": "night-garden",
+      "type": "background",
+      "prompt": "Use case: stylized-concept. Square painterly space background plate for a top-down survival game. A sparse canopy of enormous dark bioluminescent branching coral at far upper and lower right edges, muted emerald-black porous material and dim blue tips, smooth ink-black center; no astral flower. At least 65% of image in a broad CENTER area must be almost black, calm, very low detail and low contrast for combat readability. Main huge cropped masses ONLY in peripheral 15-20% edges/corners, no small bright dots mistaken for bullets or pickups. Muted artistic rich layered material and atmospheric depth, restrained contrast, no bright white. Opaque image edge to edge, square uniform cover composition readable portrait and landscape. No ship, enemy, weapon, UI, text, watermark, central focal object, stars as bright discrete points, thin luminous lines, or arena geometry."
+    }
+  ],
+  "identity": [
+    {
+      "id": "asterion",
+      "family": "ship",
+      "name": "Asterion Courier",
+      "subtitle": "Mensajero de la última órbita",
+      "description": "Escolta de marfil y titanio oscuro con reactor menta.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "solstice",
+      "family": "ship",
+      "name": "Solstice Regent",
+      "subtitle": "Corona del eclipse",
+      "description": "Tres proas de oro y obsidiana alrededor de un reactor carmesí.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "riftwake-strider",
+      "family": "ship",
+      "name": "Riftwake Strider",
+      "subtitle": "Quilla asimétrica",
+      "description": "Una media luna grafito y tres aletas escalonadas escoltan un reactor de hielo.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "halo-drifter",
+      "family": "ship",
+      "name": "Halo Drifter",
+      "subtitle": "Órbita abierta",
+      "description": "Un anillo abierto de cerámica índigo enmarca el vacío con dos motores gemelos.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "iron-orchid",
+      "family": "ship",
+      "name": "Iron Orchid",
+      "subtitle": "Bastión transversal",
+      "description": "Una proa de titanio rojo, ancha y pesada, protege una cintura de perla.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "vesper-kite",
+      "family": "ship",
+      "name": "Vesper Kite",
+      "subtitle": "Velas del ocaso",
+      "description": "Cuatro velas ahumadas sostienen un diamante de latón y energía magenta.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "tidebreaker",
+      "family": "ship",
+      "name": "Tidebreaker",
+      "subtitle": "Pinzas de la marea",
+      "description": "Dos pinzas de jade abrazan una cabina compacta de porcelana.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "sunscar",
+      "family": "ship",
+      "name": "Sunscar",
+      "subtitle": "Aguja de la forja",
+      "description": "Una proa bifurcada de cobre quemado corta el espacio con su espina naranja.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "umbra-manta",
+      "family": "ship",
+      "name": "Umbra Manta",
+      "subtitle": "Alas de sombra",
+      "description": "Alas dentadas de obsidiana rodean una cresta plateada y respiraderos granate.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "crown-wasp",
+      "family": "ship",
+      "name": "Crown Wasp",
+      "subtitle": "Caparazón de luz",
+      "description": "Un casco dorado segmentado conserva dos mandíbulas y puntos de luz lima.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "astral-fang",
+      "family": "cannon",
+      "name": "Astral Fang",
+      "subtitle": "Colmillo estelar",
+      "description": "Colmillo de marfil; diamante azul y dos filamentos ámbar se curvan al salir.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "frostbite",
+      "family": "cannon",
+      "name": "Frostbite",
+      "subtitle": "Cristal polar",
+      "description": "Prisma de escarcha; una esquirla de hielo serpentea sobre vapor bifurcado.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "embercoil",
+      "family": "cannon",
+      "name": "Embercoil",
+      "subtitle": "Bobina de la forja",
+      "description": "Bobina de cobre; un pulso fundido arrastra una cinta de brasas.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "voidspindle",
+      "family": "cannon",
+      "name": "Voidspindle",
+      "subtitle": "Huso del vacío",
+      "description": "Huso telescópico oscuro; una lente violeta curva deja bandas de interferencia.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "jade-serpent",
+      "family": "cannon",
+      "name": "Jade Serpent",
+      "subtitle": "Cintas de jade",
+      "description": "Cuello de jade; una media luna menta ondula entre dos cintas esmeralda.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "sunhammer",
+      "family": "cannon",
+      "name": "Sunhammer",
+      "subtitle": "Martillo solar",
+      "description": "Martillo industrial; un cincel ámbar deja una estela de plasma segmentado.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "rose-thorn",
+      "family": "cannon",
+      "name": "Rose Thorn",
+      "subtitle": "Espina de la rosa",
+      "description": "Espina granate; una aguja rosa deja pétalos encadenados.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "starweaver",
+      "family": "cannon",
+      "name": "Starweaver",
+      "subtitle": "Tejedor de constelaciones",
+      "description": "Trenza de plata; una estrella blanca teje filamentos turquesa.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "abyss-maw",
+      "family": "cannon",
+      "name": "Abyss Maw",
+      "subtitle": "Mandíbula abisal",
+      "description": "Mandíbula abisal; un pulso anular dibuja dos lóbulos sobre una estela ondulada.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "prism-judge",
+      "family": "cannon",
+      "name": "Prism Judge",
+      "subtitle": "Veredicto prismático",
+      "description": "Cuña de amatista; un chevrón lima vibra sobre cortes violeta.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "ember-remnant",
+      "family": "background",
+      "name": "Ember Remnant",
+      "subtitle": "Vidrio de la supernova",
+      "description": "Un remanente de vidrio fundido enmarca un gran vacío negro.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "frozen-meridian",
+      "family": "background",
+      "name": "Frozen Meridian",
+      "subtitle": "Meridiano glaciar",
+      "description": "Acantilados de hielo antiguo resguardan un meridiano oscuro.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "binary-veil",
+      "family": "background",
+      "name": "Binary Veil",
+      "subtitle": "Velos de estrellas gemelas",
+      "description": "Dos lentes carmesí lejanas velan el vacío en esquinas opuestas.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "tether-citadel",
+      "family": "background",
+      "name": "Tether Citadel",
+      "subtitle": "Ciudad suspendida",
+      "description": "Una ciudad suspendida de marfil rodea la penumbra.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "silver-dunes",
+      "family": "background",
+      "name": "Silver Dunes",
+      "subtitle": "Desierto de plata",
+      "description": "Dunas de polvo metálico reciben una aurora de plata.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "amber-hive",
+      "family": "background",
+      "name": "Amber Hive",
+      "subtitle": "Colmena fósil",
+      "description": "Cavidades de piedra fósil conservan vetas de resina ámbar.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "pearl-torrent",
+      "family": "background",
+      "name": "Pearl Torrent",
+      "subtitle": "Torrente de nácar",
+      "description": "Láminas líquidas de nácar se pliegan alrededor de la oscuridad.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "rust-cathedral",
+      "family": "background",
+      "name": "Rust Cathedral",
+      "subtitle": "Catedral de óxido",
+      "description": "Tubos de acero corroído forman una catedral distante.",
+      "source": "daily-wheel"
+    },
+    {
+      "id": "echo-scar",
+      "family": "background",
+      "name": "Echo Scar",
+      "subtitle": "Cicatriz de ecos",
+      "description": "Una cicatriz mineral corta el borde de un asteroide oscuro.",
+      "source": "weekly-logbook"
+    },
+    {
+      "id": "night-garden",
+      "family": "background",
+      "name": "Night Garden",
+      "subtitle": "Jardín nocturno",
+      "description": "Corales cósmicos apagados crecen fuera del espacio de combate.",
+      "source": "daily-wheel"
+    }
+  ],
+  "selection": "Disc, hammerhead, kite, claws, needle, batwing and beetle chosen over recolors of existing crescent/six-shield/porcelain forms. Cannon kits are coherent single asset sheets cropped into 3 runtime sprites. Background motifs differ from existing planets, flowers, geodes and vaults; quiet center required."
+}

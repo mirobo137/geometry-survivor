@@ -1,4 +1,5 @@
 import type { PlayerSkinId } from '../../../../content/visual/VisualTokens';
+import { REWARD_SHIP_IDS, type RewardShipId } from '../../../../content/retention/RewardCosmeticDefinitions';
 import mantaBodySvg from './skins/manta/body.svg?raw';
 import mantaCoreSvg from './skins/manta/core.svg?raw';
 import mantaRingSvg from './skins/manta/ring.svg?raw';
@@ -22,6 +23,7 @@ import violetCoreSvg from './skins/violet/core.svg?raw';
 import violetRingSvg from './skins/violet/ring.svg?raw';
 
 export const PLAYER_HULL_SVG: Readonly<Record<PlayerSkinId, { body: string; ring: string; core: string }>> = {
+  ...Object.fromEntries(REWARD_SHIP_IDS.map(id => [id, { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg }])) as Record<RewardShipId, { body: string; ring: string; core: string }>,
   // Safe fallback only; the selected raster ship has no newly drawn SVG master.
   spearhead: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },
   corsair: { body: cyanBodySvg, ring: cyanRingSvg, core: cyanCoreSvg },

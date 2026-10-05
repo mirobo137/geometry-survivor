@@ -1,5 +1,7 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 import type { BackgroundId } from '../../content/visual/BackgroundDefinitions';
+import { REWARD_BACKGROUND_IDS, type RewardBackgroundId } from '../../content/retention/RewardCosmeticDefinitions';
+import { getBackgroundDefinition } from '../../content/visual/BackgroundDefinitions';
 import { loadTidalVeilCurrentA, loadTidalVeilCurrentB } from './TidalVeilBackgroundView';
 
 const SOURCE_SIZE = 1254;
@@ -16,6 +18,7 @@ export interface PainterlyMotionStyle {
 
 /** Per-background treatment keeps the reused vapor layers in each painting's palette. */
 export const PAINTERLY_MOTION_STYLES: Readonly<Record<PainterlyBackgroundMotionId, PainterlyMotionStyle>> = {
+  ...Object.fromEntries(REWARD_BACKGROUND_IDS.map((id, index) => [id, { tint: getBackgroundDefinition(id).tokens.accent, opacity: .78, speed: .94 + index * .014, phase: index * .7 }])) as Record<RewardBackgroundId, PainterlyMotionStyle>,
   'deep-space': { tint: 0x7189e8, opacity: 0.88, speed: 1.01, phase: 0.35 },
   'ion-storm': { tint: 0x55dfc7, opacity: 0.94, speed: 1.13, phase: 1.1 },
   'solar-drift': { tint: 0xf2a05a, opacity: 0.86, speed: 0.99, phase: 2.05 },

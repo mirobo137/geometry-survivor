@@ -22,7 +22,7 @@ describe('lazy arsenal texture ownership', () => {
 
   it('has a finite catalogue, fetches only the used recipe once and decodes before Texture.from', async () => {
     const { ARSENAL_ART, getArsenalTexture } = await import('./ArsenalTextures');
-    expect(Object.keys(ARSENAL_ART)).toHaveLength(45);
+    expect(Object.keys(ARSENAL_ART)).toHaveLength(65);
     expect(FakeImage.instances).toHaveLength(0);
     expect(getArsenalTexture('rail_lance')).toBeNull();
     getArsenalTexture('rail_lance');

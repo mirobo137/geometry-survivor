@@ -1,5 +1,6 @@
 import rimUrl from '../../assets/images/ui/retention/wheel-rim.webp?no-inline';
-import shipUrl from '../../assets/skins/ships/solstice/solstice.webp?no-inline';
+import { REWARD_COSMETIC_IMAGES } from '../../assets/skins/RewardCosmeticAssets';
+import { getRewardCosmetic, getSeasonalReward, type RewardCosmeticId } from '../../content/retention/RewardCosmeticDefinitions';
 import novaUrl from '../../assets/svg/ui/nova.svg?no-inline';
 import { DAILY_WHEEL_NOVA, DAILY_WHEEL_SLOT_COUNT, dailyWheelAvailability,
   type DailyWheelKind, type DailyWheelReceipt, type DailyWheelResult, type DailyWheelSnapshot } from '../../content/retention/DailyWheelDefinitions';
@@ -8,7 +9,7 @@ import { dailyWheelCopy } from './DailyWheelCopy';
 export interface DailyWheelDialogOptions {
   readonly read: () => DailyWheelSnapshot;
   readonly spin: (kind: DailyWheelKind) => Promise<DailyWheelResult>;
-  readonly equip: () => boolean;
+  readonly equip: (id?: DailyWheelReceipt['skin']) => boolean;
   readonly videoAvailable: boolean;
   readonly videoSimulation?: boolean;
   readonly onClose: () => void;
@@ -43,6 +44,7 @@ export class DailyWheelDialog {
   private angle = 0;
   private mode: DailyWheelKind = 'free';
   private showWonSkin = false;
+  private spinRewardId: RewardCosmeticId | undefined;
   private disk = element('div', 'daily-wheel-disk');
   private freeButton = element('button', 'daily-wheel-free');
   private videoButton = element('button', 'daily-wheel-video');
@@ -56,6 +58,10 @@ export class DailyWheelDialog {
   private modeLabel = element('span', 'daily-wheel-mode');
   private oddsNote = element('p', 'daily-wheel-odds-note');
   private oddsList = element('ul', 'daily-wheel-odds-list');
+  private prizeArt = image('', 'daily-wheel-ship');
+  private prizeTitle = element('h3', '');
+  private prizeSubtitle = element('p', '');
+  private get reward() { return getRewardCosmetic(this.spinRewardId ?? this.options?.read().rewardId) ?? getSeasonalReward('daily-wheel'); }
 
   public constructor() {
     this.dialog.id = 'daily-wheel-dialog';
@@ -78,6 +84,7 @@ export class DailyWheelDialog {
     this.awaiting = false;
     this.mode = 'free';
     this.showWonSkin = false;
+    this.spinRewardId = undefined;
     this.angle = 0;
     this.build();
     document.body.append(this.dialog);
@@ -141,11 +148,13 @@ export class DailyWheelDialog {
     orbit.append(this.modeLabel, wheel, this.oddsNote, this.skipButton);
     const side = element('section', 'daily-wheel-side');
     const prize = element('div', 'daily-wheel-prize');
-    const art = image(shipUrl, 'daily-wheel-ship');
+    this.prizeArt = image(REWARD_COSMETIC_IMAGES[this.reward.id], 'daily-wheel-ship');
+    this.prizeTitle = element('h3', '', this.reward.name);
+    this.prizeSubtitle = element('p', '', this.reward.description);
     const text = element('div', 'daily-wheel-prize-copy');
-    text.append(element('span', 'daily-wheel-eyebrow', t.exclusive), element('h3', '', 'Solstice Regent'), element('p', '', t.shipSubtitle));
+    text.append(element('span', 'daily-wheel-eyebrow', t.exclusive), this.prizeTitle, this.prizeSubtitle);
     this.prizeNote = element('p', 'daily-wheel-prize-note');
-    prize.append(art, text, this.prizeNote);
+    prize.append(this.prizeArt, text, this.prizeNote);
     this.freeButton = element('button', 'daily-wheel-free', t.free);
     this.freeButton.id = 'daily-wheel-free'; this.freeButton.type = 'button';
     this.freeButton.addEventListener('click', () => void this.spin('free'));
@@ -170,7 +179,7 @@ export class DailyWheelDialog {
 
   private renderSlots(owned: boolean): void {
     const chance = this.options!.read().progress.chancePercent;
-    const tag = `${owned}-${chance}`;
+    const tag = `${this.reward.id}-${owned}-${chance}`;
     if (this.disk.dataset.slots === tag) return;
     this.disk.dataset.slots = tag;
     this.disk.replaceChildren();
@@ -185,7 +194,7 @@ export class DailyWheelDialog {
       label.style.left = `${50 + Math.sin(angle) * 36}%`;
       label.style.top = `${50 - Math.cos(angle) * 36}%`;
       if (index === 10 && !owned) {
-        label.append(image(shipUrl, 'daily-wheel-slot-ship'), element('small', '', `${chance}%`));
+        label.append(image(REWARD_COSMETIC_IMAGES[this.reward.id], 'daily-wheel-slot-ship'), element('small', '', `${chance}%`));
       } else label.append(image(novaUrl, 'daily-wheel-slot-coin'), element('strong', '', String(DAILY_WHEEL_NOVA[index] ?? 500)));
       this.disk.append(label);
     }
@@ -194,6 +203,11 @@ export class DailyWheelDialog {
   private refresh(): void {
     if (!this.options || this.busy) return;
     const snapshot = this.options.read();
+    const reward = this.reward;
+    const url = REWARD_COSMETIC_IMAGES[reward.id];
+    if (this.prizeArt.getAttribute('src') !== url) this.prizeArt.src = url;
+    this.prizeTitle.textContent = reward.name;
+    this.prizeSubtitle.textContent = reward.description;
     const status = dailyWheelAvailability(snapshot.progress, Date.now());
     const t = this.copy;
     this.wallet.textContent = `${snapshot.walletNova.toLocaleString()} NOVA`;
@@ -206,7 +220,7 @@ export class DailyWheelDialog {
     this.prizeNote.textContent = snapshot.skinOwned ? t.collected : t.chance.replace('{chance}', String(chance));
     this.oddsNote.textContent = t.oddsNote.replace('{chance}', String(chance)).replace('{nova}', novaChance);
     this.oddsList.replaceChildren(...DAILY_WHEEL_NOVA.map(nova => element('li', '', `${nova} NOVA · ${novaChance}%`)),
-      element('li', '', `${snapshot.skinOwned ? '500 NOVA' : 'Solstice Regent'} · ${chance}%`));
+      element('li', '', `${snapshot.skinOwned ? '500 NOVA' : reward.name} · ${chance}%`));
     if (!snapshot.supported) this.message.textContent = t.unsupported;
     else if (status.clockAhead) this.message.textContent = t['clock-error'];
     const seconds = Math.max(0, Math.ceil((status.nextFreeAtMs - Date.now()) / 1000));
@@ -220,6 +234,7 @@ export class DailyWheelDialog {
     const options = this.options;
     const generation = this.generation;
     this.mode = kind;
+    this.spinRewardId = options.read().rewardId;
     this.showWonSkin = false;
     this.renderSlots(options.read().skinOwned);
     this.modeLabel.textContent = kind === 'video' ? this.copy.videoMode : this.copy.freeMode;
@@ -232,6 +247,7 @@ export class DailyWheelDialog {
     if (generation !== this.generation || !this.dialog.open) return;
     this.awaiting = false; this.closeButton.disabled = false;
     if (outcome.status === 'rewarded') {
+      this.spinRewardId = outcome.receipt.rewardId ?? outcome.receipt.skin ?? this.spinRewardId;
       this.mode = outcome.receipt.kind;
       this.showWonSkin = outcome.receipt.skin !== null;
       this.modeLabel.textContent = this.mode === 'video' ? this.copy.videoMode : this.copy.freeMode;
@@ -254,6 +270,7 @@ export class DailyWheelDialog {
       this.message.textContent = '';
     } else this.message.textContent = this.copy[outcome.status];
     this.busy = false;
+    this.spinRewardId = undefined;
     this.refresh();
   }
 
@@ -262,13 +279,13 @@ export class DailyWheelDialog {
     this.result.dataset.kind = receipt.skin ? 'skin' : 'nova';
     this.result.dataset.receipt = receipt.id;
     this.result.append(element('span', 'daily-wheel-eyebrow', previous ? this.copy.previous : this.copy.saved),
-      element('strong', '', receipt.skin ? this.copy.unlocked : `+${receipt.nova.toLocaleString()} NOVA`),
-      element('p', '', receipt.skin ? this.copy.shipSubtitle : receipt.nova === 0 ? this.copy.full : this.copy.awarded));
+      element('strong', '', receipt.skin ? this.copy.unlocked.replace('{name}', getRewardCosmetic(receipt.skin)!.name) : `+${receipt.nova.toLocaleString()} NOVA`),
+      element('p', '', receipt.skin ? getRewardCosmetic(receipt.skin)!.description : receipt.nova === 0 ? this.copy.full : this.copy.awarded));
     if (receipt.skin) {
       const equip = element('button', 'daily-wheel-equip', this.copy.equip);
       equip.type = 'button';
       equip.addEventListener('click', () => {
-        if (this.options?.equip()) { equip.textContent = this.copy.equipped; equip.disabled = true; }
+        if (this.options?.equip(receipt.skin)) { equip.textContent = this.copy.equipped; equip.disabled = true; }
       });
       this.result.append(equip);
     }

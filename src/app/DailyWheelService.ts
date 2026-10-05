@@ -4,6 +4,8 @@ import {
 } from '../content/retention/DailyWheelDefinitions';
 import { MAX_NOVA, type SaveStore } from '../platform/save/SaveStore';
 import type { RewardedAdResult } from '../platform/Platform';
+import { getSeasonalReward } from '../content/retention/RewardCosmeticDefinitions';
+import { ownsRewardCosmetic, unlockRewardCosmetic } from './RewardCosmeticOwnership';
 
 export type DailyWheelLock = (work: () => Promise<DailyWheelResult>) => Promise<DailyWheelResult>;
 
@@ -29,8 +31,9 @@ export class DailyWheelService {
 
   public snapshot(): DailyWheelSnapshot {
     const data = this.store.load();
+    const rewardId = this.pending?.rewardId ?? getSeasonalReward('daily-wheel', this.now()).id;
     return {
-      progress: data.dailyWheel, skinOwned: data.skins.unlocked.includes(DAILY_WHEEL_SKIN),
+      rewardId, progress: data.dailyWheel, skinOwned: ownsRewardCosmetic(data, rewardId),
       walletNova: data.wallet.nova, pendingReward: this.pending !== null,
       supported: this.lock !== browserDailyWheelLock || (typeof navigator !== 'undefined' && !!navigator.locks)
     };
@@ -44,6 +47,7 @@ export class DailyWheelService {
         if (this.pending) return this.persistPending();
         const saved = this.store.load();
         const available = dailyWheelAvailability(saved.dailyWheel, this.now());
+        const offeredRewardId = getSeasonalReward('daily-wheel', this.now()).id;
         if (available.clockAhead) {
           // Recover from a corrected device clock without locking the player
           // out for months or granting an immediate duplicate daily prize.
@@ -70,10 +74,11 @@ export class DailyWheelService {
         const time = this.now();
         if (dailyWheelAvailability(current.dailyWheel, time).clockAhead) return { status: 'clock-error' };
         const slot = drawDailyWheelSlot(this.random(), current.dailyWheel.chancePercent);
-        const prize = dailyWheelPrize(slot, kind, current.skins.unlocked.includes(DAILY_WHEEL_SKIN));
+        const rewardId = offeredRewardId;
+        const prize = dailyWheelPrize(slot, kind, ownsRewardCosmetic(current, rewardId), rewardId);
         this.pending = {
           id: crypto.randomUUID(), cycleStartedAtMs: kind === 'free' ? time : cycle,
-          claimedAtMs: time, kind, slot, ...prize
+          claimedAtMs: time, kind, slot, rewardId, ...prize
         };
         return this.persistPending();
       });
@@ -96,12 +101,12 @@ export class DailyWheelService {
       ? current.dailyWheel.cycleStartedAtMs >= pending.cycleStartedAtMs
       : current.dailyWheel.cycleStartedAtMs !== pending.cycleStartedAtMs || current.dailyWheel.videoClaimed;
     if (superseded) { this.pending = null; return { status: 'cooldown' }; }
-    const prize = dailyWheelPrize(pending.slot, pending.kind, current.skins.unlocked.includes(DAILY_WHEEL_SKIN));
+    const rewardId = pending.rewardId ?? pending.skin ?? DAILY_WHEEL_SKIN;
+    const prize = dailyWheelPrize(pending.slot, pending.kind, ownsRewardCosmetic(current, rewardId), rewardId);
     const receipt: DailyWheelReceipt = { ...pending, skin: prize.skin, nova: Math.min(prize.nova, MAX_NOVA - current.wallet.nova) };
     const next = {
-      ...current,
+      ...(receipt.skin ? unlockRewardCosmetic(current, receipt.skin) : current),
       wallet: { nova: current.wallet.nova + receipt.nova },
-      skins: receipt.skin ? { ...current.skins, unlocked: [...current.skins.unlocked, receipt.skin] } : current.skins,
       dailyWheel: {
         chancePercent: Math.min(DAILY_WHEEL_MAX_CHANCE_PERCENT, current.dailyWheel.chancePercent + 1),
         cycleStartedAtMs: receipt.cycleStartedAtMs,

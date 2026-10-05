@@ -1,9 +1,46 @@
 # Geometry Survivor — continuación operativa
 
 Actualizado: 04-10-2026. Base Git de esta entrega: `d042357` en `main`.
-El prototipo descrito aquí queda como cambios locales sin commit, push o
-publicación. Este snapshot no reemplaza
-`PLAN_DESARROLLO.md` ni el estado Git.
+El catálogo completo descrito aquí queda como cambios locales sin commit, push
+o publicación. Este snapshot no reemplaza `PLAN_DESARROLLO.md` ni Git.
+
+## Solicitud vigente — catálogo completo de recompensas
+
+Piloto aprobado por el usuario. Implementadas **30 recompensas**: 10 naves
+(incluye Asterion/Solstice), 10 cañones y 10 fondos. Los catálogos normales tienen
+20 entradas por familia (10 base + 10 exclusivas), sin tab piloto.
+Diez cañones con balas/estelas originales; varios gestos curvos, serpentinas,
+hélices y vibración, sólo visuales. Contratos existentes de propulsor, cables,
+recoil, pooling y fondos pintados/vapor conservados, sin cambiar balance.
+
+Vista completa: `http://localhost:5173/?debug=1&reward-catalog=1`. Abre los
+catálogos normales con recompensas desbloqueadas en memoria, equipables y
+utilizables en batalla. No escribe al guardado real; volver a una URL sin los
+parámetros recupera la partida real. Aviso temporal visible en Hangar, sin HUD
+de diagnóstico tapando la prueba. Sólo local/Pages; portales ignoran la ruta.
+
+Temporadas: 15 premios por fuente (Bitácora/Ruleta), un premio por semana UTC
+desde 05-10-2026, repetir en 15 semanas. Bosses siguen rotando cada 3 semanas.
+Premio actual enlaza a su fuente; inactivos no se venden. Propiedad/equipado
+durables en su familia sin autoequipar al ganar; duplicados 250 NOVA semanal/
+500 ruleta. Video y reintento mantienen el premio ofrecido al cruzar la semana.
+
+58 derivados WebP nuevos: **1,463,696 B**; PNG maestros y prompts preservados,
+sin importar masters al runtime. Medida final:
+Pages **11,362,406 B**, Poki **11,362,252 B**, CrazyGames **11,362,258 B**,
+todos bajo 15,000,000 B (margen Pages 3,637,594 B). Mapas local
+**5,147,538 B**, fuera de Pages. Persiste el warning previo de chunk JS >500 KB.
+Tipos, **758 unitarias / 134 archivos** y **20 smoke PC/móvil** correctos
+(57.8 s), incluyendo premios/equipado de cañón y fondo, compra base, temporadas,
+guardado, cuotas y concurrencia. Adicionalmente 11 smoke de carga inicial,
+consolas y catálogo (41.8 s) correctos en PC/portrait/landscape. Verificación
+final de batalla High PC / Low móvil: 2/2 (14.3 s), sin overlay de diagnóstico.
+Se inspeccionaron
+contact sheets de arte y de los diez kits bala/estela, modales y batalla.
+Falta móvil físico, profiling prolongado y deploy remoto.
+Contrato: [CATALOGO_RECOMPENSAS](docs/design/CATALOGO_RECOMPENSAS.md).
+
+## Historial fechado — limpieza y diagnóstico anteriores
 
 Última entrega local (04-10): GitHub Actions conserva por 30 días los source
 maps del build `local` junto con JS/CSS; Pages publica `dist/pages` sin mapas,
@@ -21,7 +58,7 @@ dos fondos SVG guardados intencionalmente como referencia histórica. Las
 pruebas estructurales ahora cubren los fallbacks activos. El ahorro es del
 repositorio, no se suma al presupuesto publicado.
 
-## Solicitud vigente y siguiente acción
+## Historial reciente — retos semanales y siguiente validación humana
 
 Regla base de los duelos: el casco de los tres bosses causa daño por contacto en
 cualquier fase/modo (detección barrida, cooldown 0.45 s). El perfil de ataques
@@ -75,8 +112,9 @@ La estimación de 28 derivados nuevos es 1.2–2.2 MB, frente a los 60,166 bytes
 de margen de la medición anterior, que incluía source maps públicos. La nueva
 copia Pages deja 5,124,442 B antes del tope de 15 MB; el lote estimado cabe en
 el baseline actual, pero se medirá el build final antes de aprobarlo. No
-cambiar calidad de arte ni borrar mapas. No se generó aún el lote ni la ruta
-debug de vista previa. Estado y mediciones: [plan de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md#puerta-de-presupuesto-para-cosmeticos-exclusivos).
+cambiar calidad de arte ni borrar mapas. Ya existe un piloto visual local con
+tres conceptos, pero aún no el lote de 28; Pages del piloto mide 9,982,039 B.
+Estado anterior y presupuesto: [plan de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md#puerta-de-presupuesto-para-cosmeticos-exclusivos).
 
 Actualización de ruleta comprobada: 729 unitarias en 131 archivos y seis smoke
 PC/móvil (21.2s); tipado y builds Local/Poki/CrazyGames correctos:

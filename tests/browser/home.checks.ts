@@ -276,13 +276,13 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     // Home requests only the saved hull. It does not fetch the old cover ship
     // or briefly load the default ship before restoring the save.
     const hullRequests = [...new Set(requests.filter(url =>
-      /\/(cyan|violet|amber|emerald|obsidian|nova|manta|tether-ship)-[^/]+\.png$/.test(url)))];
+      /\/(cyan|violet|amber|emerald|obsidian|nova|manta|tether-ship)-[^/]+\.webp$/.test(url)))];
     expect(hullRequests).toHaveLength(1);
     expect(hullRequests[0]).toContain('/manta-');
     expect(requests.some(url => url.includes('survivor-core'))).toBe(false);
 
-    // Cover all eight selections across the two CI projects, without duplicating
-    // an entire locker traversal or extending the global timeout.
+    // Cover representative equipped hulls across both CI projects without
+    // duplicating a full locker traversal or extending the global timeout.
     const ids = testInfo.project.name === 'mobile'
       ? ['obsidian', 'nova', 'manta', 'spearhead'] : ['cyan', 'violet', 'amber', 'emerald'];
     let previous = 'manta';
@@ -325,11 +325,11 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 8,
       skins: { selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet', 'manta'] } })));
-    await page.route(/\/violet-[^/]+\.png$/, route => route.abort());
+    await page.route(/\/violet-[^/]+\.webp$/, route => route.abort());
     let release!: () => void;
     const gate = new Promise<void>(resolve => { release = resolve; });
     const pending: Promise<void>[] = [];
-    await page.route(/\/manta-[^/]+\.png$/, route => {
+    await page.route(/\/manta-[^/]+\.webp$/, route => {
       const load = gate.then(() => route.continue()).catch(() => {});
       pending.push(load);
       return load;

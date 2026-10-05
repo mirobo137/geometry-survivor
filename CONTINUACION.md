@@ -1,8 +1,25 @@
 # Geometry Survivor — continuación operativa
 
-Actualizado: 04-10-2026. Base Git de esta entrega: `d042357` en `main`.
-El catálogo completo descrito aquí queda como cambios locales sin commit, push
-o publicación. Este snapshot no reemplaza `PLAN_DESARROLLO.md` ni Git.
+Actualizado: 05-10-2026. Base Git: `54a3358` (`catalogo 20`) en `main`,
+sincronizado con `origin/main`. Este snapshot no reemplaza
+`PLAN_DESARROLLO.md` ni Git.
+
+## Corrección de smoke del deploy #203 — 05-10-2026
+
+El run de GitHub Actions #203 (commit `54a3358`) compiló y preparó Pages, pero
+falló en cuatro shards y omitió `deploy`. Se actualizaron localmente pruebas que
+conservaban formatos/rangos anteriores: la carga fallida de nave ahora intercepta
+WebP; los conteos de skins/cañones usan las definiciones actuales; la matriz de
+miniaturas comprueba tres imágenes por cada cañón. La comprobación del menú mide
+el colapso real del bloque Configuración, no el alto externo del panel limitado
+por el viewport de 720 px.
+
+Después de la corrección: `npm run build:local` (tipado, 758 unitarias y build)
+pasó; los 10 smoke afectados en PC/móvil pasaron; `npm run typecheck` volvió a
+pasar después del último ajuste. Los cuatro archivos de pruebas modificados
+siguen sin commit/push; el run #203 continúa fallido porque precede a estas
+correcciones. Se requiere un nuevo push para que GitHub vuelva a ejecutar y,
+si pasa, publique Pages.
 
 ## Solicitud vigente — catálogo completo de recompensas
 

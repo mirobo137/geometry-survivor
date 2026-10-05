@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
+import { CANNON_SKIN_DEFINITIONS } from '../../src/content/visual/CannonSkinDefinitions';
+import { PLAYER_SKIN_DEFINITIONS } from '../../src/content/visual/SkinDefinitions';
 import { registerHomeChecks } from './home.checks';
 import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
@@ -257,7 +259,7 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await expect(page.locator('#start-player-skins-panel')).toBeVisible();
   await expect(page.locator('#start-cannon-skins-panel')).toBeHidden();
   await expect(page.locator('.skin-preview-stage')).toHaveCount(0);
-  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(10);
+  await expect(page.locator('#start-skin-cards .skin-card')).toHaveCount(PLAYER_SKIN_DEFINITIONS.length);
   await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   await page.locator('.skin-card[data-skin="violet"] button').click();
   await expect(page.locator('#start-cosmetic-title')).toHaveText('Eclipse Prism');
@@ -290,7 +292,7 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await page.locator('#start-cannon-skins-tab').click();
   await expect(page.locator('#start-player-skins-panel')).toBeHidden();
   await expect(page.locator('#start-cannon-skins-panel')).toBeVisible();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(10);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(CANNON_SKIN_DEFINITIONS.length);
   expect(await page.locator('#start-cannon-cards .cannon-card-art').evaluateAll((artworks) =>
     artworks.every((artwork) => getComputedStyle(artwork).overflowX === 'hidden' && getComputedStyle(artwork).overflowY === 'hidden')
   )).toBe(true);
@@ -381,11 +383,12 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
 
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
-  const expandedPanelHeight = await page.locator('.start-screen-panel').evaluate((element) => element.getBoundingClientRect().height);
+  const settings = page.locator('#start-settings');
+  const expandedSettingsHeight = await settings.evaluate((element) => element.getBoundingClientRect().height);
+  expect(expandedSettingsHeight).toBeGreaterThan(40);
   await page.locator('#start-settings-toggle').click();
-  await expect(page.locator('#start-settings')).toBeHidden();
-  const collapsedPanelHeight = await page.locator('.start-screen-panel').evaluate((element) => element.getBoundingClientRect().height);
-  expect(collapsedPanelHeight).toBeLessThan(expandedPanelHeight - 40);
+  await expect(settings).toBeHidden();
+  expect(await settings.evaluate((element) => element.getBoundingClientRect().height)).toBe(0);
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-settings')).toBeVisible();
   await page.locator('#start-music').fill('45');

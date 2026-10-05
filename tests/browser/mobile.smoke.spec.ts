@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
+import { CANNON_SKIN_DEFINITIONS } from '../../src/content/visual/CannonSkinDefinitions';
 import { registerHomeChecks } from './home.checks';
 import { registerMusicChecks } from './music.checks';
 import { registerResourceChecks } from './resources.checks';
@@ -197,7 +198,7 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
   await page.locator('.cannon-card[data-cannon="basic"] button').click();
   await expect(page.locator('#start-cosmetic-preview .cannon-preview svg')).toBeVisible();
   await page.locator('#start-cosmetic-close').click();
-  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(10);
+  await expect(page.locator('#start-cannon-cards .cannon-card')).toHaveCount(CANNON_SKIN_DEFINITIONS.length);
   const cannonScrollMetrics = await page.locator('#start-skins-view .console-body').evaluate((element) => ({
     scrollHeight: element.scrollHeight,
     clientHeight: element.clientHeight

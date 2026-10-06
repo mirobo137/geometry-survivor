@@ -160,28 +160,40 @@ las reglas actuales del modo implementado permanecen en
 **Estado:** EX-09 en curso. Poki y CrazyGames tienen adaptadores reales
 aislados. `local` conserva su simulador; Pages no prueba SDKs reales.
 
-### Pendiente — guardado gestionado por plataforma
+### CrazyGames Data Module — integración inicial (validación de portal pendiente)
 
-Solicitud aprobada para trabajo futuro; no implementada. Sustituir el guardado
-local directo por la solución oficial donde la plataforma lo requiera/ofrezca,
-sin mezclar dependencias, cuentas ni partidas entre portales. Pages/local
-conservan `LocalSaveStore`.
+Implementado en el adaptador exclusivo del build `crazygames`: `SDK.init()` y
+`SDK.data` quedan listos antes de la primera lectura de progreso. `SDK.data` es
+la autoridad para invitados y usuarios conectados; `local`/Pages y Poki siguen
+usando su `LocalSaveStore` y no reciben dependencias ni estado de CrazyGames.
 
-- **CrazyGames:** integrar `SDK.data` como autoridad del guardado para invitados
-  y usuarios conectados. Esperar la inicialización y carga del SDK antes de
-  leer/escribir progreso. Migrar una sola vez el save local existente cuando no
-  exista save de plataforma; nunca sobrescribir una partida remota con defaults
-  o con datos locales antiguos. Cambiar el formulario a Data Module únicamente
-  cuando la integración esté implementada y validada. Hasta entonces usar
-  **Using LocalStorage**.
-- **Poki:** validar Cloud gamesaves con acceso real y cuenta. La documentación
-  actual indica sincronización automática de `localStorage`/IndexedDB; aquí
-  no corresponde inventar un Data Module ni reemplazar esas APIs. Adaptar el
-  arranque/guardado solo si las pruebas o requisitos vigentes lo exigen, y
-  comprobar restauración antes del primer acceso al progreso.
-- **Otros portales futuros:** investigar soporte, disponibilidad y requisitos
-  oficiales al integrarlos; adoptar su guardado gestionado cuando exista.
-  Si no lo ofrecen, conservar guardado local, sin prometer sincronización.
+- Un save existente de CrazyGames prevalece sobre cualquier `localStorage`
+  antiguo. Solo si `SDK.data` no contiene save y no hay marcador de migración,
+  importa una vez el save local actual y verifica la escritura antes de usarlo.
+- Una carga fallida, el módulo deshabilitado, datos corruptos o un schema más
+  nuevo no escriben defaults encima del portal: conserva el almacenamiento
+  antiguo y permite jugar con progreso solo en memoria. Si las lecturas fallan
+  después de preparar la sesión, mantiene el último valor leído y bloquea
+  escrituras al portal durante esa sesión. Si falla una escritura, conserva en
+  memoria el cambio de esa sesión y no vuelve a insistir con escrituras dudosas.
+- La migración no borra la clave local: CrazyGames puede implementar el Data
+  Module de invitados sobre almacenamiento local del navegador. Un marcador en
+  `SDK.data` evita volver a importar un save obsoleto después de borrar progreso.
+- La comprobación inmediata de `getItem` confirma la capa local del SDK, no un
+  respaldo remoto ya sincronizado; la sincronización de cuenta/dispositivo aún
+  requiere validación en Preview.
+- No cambiar todavía el formulario del portal: mantener **Using LocalStorage**
+  hasta validar el artefacto exacto y los flujos de invitado/cuenta en Preview.
+
+**Poki:** validar Cloud gamesaves con acceso real y cuenta. La documentación
+actual indica sincronización automática de `localStorage`/IndexedDB; aquí no
+corresponde inventar un Data Module ni reemplazar esas APIs. Adaptar el
+arranque/guardado solo si las pruebas o requisitos vigentes lo exigen, y
+comprobar restauración antes del primer acceso al progreso.
+
+**Otros portales futuros:** investigar soporte, disponibilidad y requisitos
+oficiales al integrarlos; adoptar su guardado gestionado cuando exista. Si no
+lo ofrecen, conservar guardado local, sin prometer sincronización.
 
 **Aceptación:** preservar schema/migraciones, NOVA, cosméticos, Laboratorio y
 recibos idempotentes de recompensas; probar invitado, cuenta, login/logout,
@@ -190,6 +202,12 @@ Definir qué ajustes son del dispositivo y cuáles se sincronizan. No confundir
 un write/read-back local del SDK con confirmación de respaldo remoto ni generar
 un save vacío sobre uno existente cuando la carga falle. Cubrir límites de
 tamaño, aislamiento de builds y validar en el portal, no solo localhost.
+
+La migración, prioridad remoto/local, fallos de lectura y aislamiento tienen
+pruebas unitarias locales. Pendiente en CrazyGames Preview: invitado, cuenta,
+login/logout, recarga, cambio de dispositivo, persistencia remota real y
+confirmar límites/comportamiento del formulario. No afirmar sync de nube a
+partir de builds locales.
 
 Fuentes oficiales consultadas el 05-10-2026:
 [CrazyGames Data](https://docs.crazygames.com/sdk/data/) y
@@ -224,13 +242,20 @@ v3 solo desde su adaptador, inicializa sin bloquear el arranque, informa
 ajuste de silencio del portal y conecta rewarded al contrato de anuncios
 existente. El audio se silencia solo desde `adStarted`; el premio depende
 exclusivamente de `adFinished`. No-fill, adblock, Basic Launch, cooldown, error
-y timeout no otorgan premios; el guardado sigue en `localStorage`. Como el SDK
-no expone la fase Basic/Full antes de solicitar el anuncio, las ofertas reales
-del portal permanecen desactivadas por defecto en
+y timeout no otorgan premios; en ese corte el guardado seguía en `localStorage`.
+Como el SDK no expone la fase Basic/Full antes de solicitar el anuncio, las
+ofertas reales del portal permanecen desactivadas por defecto en
 `src/platform/crazygames/CrazyGamesPlatform.ts`; localhost conserva el modo demo.
 Activarlas requiere confirmación de elegibilidad Full Launch. No se añadió
-midgame automático, Data API ni dependencia npm. Restan validar el artefacto en
-Preview y completar metadata/requisitos/derechos en el portal.
+midgame automático ni dependencia npm. Restan validar el artefacto en Preview
+y completar metadata/requisitos/derechos en el portal.
+
+Actualización de persistencia: `CrazyGamesSaveStore` usa `SDK.data` tras la
+inicialización, importa el save local una vez solo si no hay save/marker del
+portal y evita sobrescribir datos no legibles. El arranque espera a la conexión
+por un máximo acotado; si el SDK no queda disponible, el juego abre con memoria
+de sesión, sin recurrir al `localStorage` genérico. El formulario de CrazyGames
+permanece en **Using LocalStorage** hasta completar la validación Preview.
 
 Corrección de QA del 05-10-2026: el SDK v3 oficial devuelve `uninitialized`
 antes de `init()`. El adaptador ahora espera la inicialización antes de filtrar

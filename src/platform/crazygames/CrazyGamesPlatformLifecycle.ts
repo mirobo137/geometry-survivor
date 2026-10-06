@@ -3,6 +3,7 @@ import type { CrazyGamesAudioService } from './CrazyGamesAudioService';
 import { loadCrazyGamesSdk, type CrazyGamesSdk } from './CrazyGamesSdk';
 
 const SDK_INIT_TIMEOUT_MS = 4_000;
+const SDK_READY_TIMEOUT_MS = 8_500;
 
 const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> => (
   new Promise((resolve) => {
@@ -21,7 +22,7 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, fallback: T): Pr
 /** Buffers game events while the portal SDK initializes in the background. */
 export class CrazyGamesPlatformLifecycle implements PlatformLifecycle {
   private sdk: CrazyGamesSdk | null = null;
-  private connectionStarted = false;
+  private connection: Promise<CrazyGamesSdk | null> | null = null;
   private gameReady = false;
   private wantsGameplay = false;
   private gameplayActive = false;
@@ -31,16 +32,19 @@ export class CrazyGamesPlatformLifecycle implements PlatformLifecycle {
   public constructor(
     private readonly audio: CrazyGamesAudioService,
     private readonly loadSdk: () => Promise<CrazyGamesSdk | null> = loadCrazyGamesSdk,
-    private readonly sdkInitTimeoutMs = SDK_INIT_TIMEOUT_MS
+    private readonly sdkInitTimeoutMs = SDK_INIT_TIMEOUT_MS,
+    private readonly sdkReadyTimeoutMs = SDK_READY_TIMEOUT_MS
   ) {}
 
   public init(): Promise<void> {
-    if (!this.connectionStarted) {
-      this.connectionStarted = true;
-      void this.connect().catch(() => undefined);
-    }
+    void this.ensureConnection();
     // A blocked portal CDN must not hold the game boot screen.
     return Promise.resolve();
+  }
+
+  /** Waits for initialized SDK data during the boot/loading screen, but is bounded. */
+  public waitForSdk(): Promise<CrazyGamesSdk | null> {
+    return withTimeout(this.ensureConnection(), this.sdkReadyTimeoutMs, null);
   }
 
   public onGameReady(): void {
@@ -72,15 +76,20 @@ export class CrazyGamesPlatformLifecycle implements PlatformLifecycle {
     return this.sdk;
   }
 
-  private async connect(): Promise<void> {
+  private ensureConnection(): Promise<CrazyGamesSdk | null> {
+    if (!this.connection) this.connection = this.connect().catch(() => null);
+    return this.connection;
+  }
+
+  private async connect(): Promise<CrazyGamesSdk | null> {
     const sdk = await this.loadSdk();
-    if (!sdk) return;
+    if (!sdk) return null;
 
     const initialized = await withTimeout(sdk.init(), this.sdkInitTimeoutMs, false);
-    if (initialized === false) return;
+    if (initialized === false) return null;
     // v3 reports "uninitialized" until init resolves. Checking first silently
     // skips init and prevents every loading/gameplay event from reaching QA.
-    if (sdk.environment !== 'local' && sdk.environment !== 'crazygames') return;
+    if (sdk.environment !== 'local' && sdk.environment !== 'crazygames') return null;
     this.sdk = sdk;
     try {
       this.audio.setPortalMuted(sdk.game.settings?.muteAudio === true);
@@ -99,6 +108,7 @@ export class CrazyGamesPlatformLifecycle implements PlatformLifecycle {
       // Initial SDK settings and gameplay lifecycle remain available.
     }
     this.syncSdkState();
+    return sdk;
   }
 
   private syncSdkState(): void {

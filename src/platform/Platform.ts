@@ -28,4 +28,6 @@ export interface PlatformAdapter {
   readonly ads: AdService;
   readonly saveStore: SaveStore;
   readonly audio: AudioService;
+  /** Optional async platform preparation; runs before persistent data is read. */
+  prepare?(): Promise<void>;
 }

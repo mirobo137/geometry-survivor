@@ -136,6 +136,26 @@ describe('CrazyGamesPlatformLifecycle', () => {
     await expect(lifecycle.init()).resolves.toBeUndefined();
   });
 
+  it('shares one initialized SDK connection between boot preparation and game lifecycle', async () => {
+    const { sdk, events } = createSdk();
+    const loadSdk = vi.fn(async () => sdk);
+    const lifecycle = new CrazyGamesPlatformLifecycle(new CrazyGamesAudioService(createAudio()), loadSdk);
+
+    await expect(lifecycle.waitForSdk()).resolves.toBe(sdk);
+    await lifecycle.init();
+    expect(loadSdk).toHaveBeenCalledTimes(1);
+    expect(sdk.init).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(['init', 'loadingStart']);
+  });
+
+  it('bounds data preparation when the SDK script loader never settles', async () => {
+    const lifecycle = new CrazyGamesPlatformLifecycle(
+      new CrazyGamesAudioService(createAudio()), () => new Promise(() => undefined), 5, 5
+    );
+
+    await expect(lifecycle.waitForSdk()).resolves.toBeNull();
+  });
+
   it('drops a timed-out SDK init and leaves the game lifecycle operational', async () => {
     const { sdk } = createSdk();
     sdk.init.mockImplementation(() => new Promise(() => undefined));

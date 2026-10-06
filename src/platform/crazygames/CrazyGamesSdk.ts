@@ -1,3 +1,5 @@
+import type { StorageAdapter } from '../save/SaveStore';
+
 export type CrazyGamesEnvironment = 'uninitialized' | 'local' | 'crazygames' | 'disabled';
 
 export interface CrazyGamesAdError {
@@ -14,6 +16,8 @@ export interface CrazyGamesAdCallbacks {
 export interface CrazyGamesSdk {
   init(): Promise<unknown>;
   readonly environment: CrazyGamesEnvironment;
+  /** Available after init; the portal owns its persistence and cloud sync. */
+  readonly data?: StorageAdapter;
   readonly game: {
     readonly settings?: { readonly muteAudio?: boolean };
     loadingStart?(): void;

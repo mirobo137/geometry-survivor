@@ -16,6 +16,7 @@ import { type FxQuality, type PlayerSkinId } from './content/visual/VisualTokens
 import { isCannonSkinId, type CannonSkinId } from './content/visual/CannonSkinDefinitions';
 import { isBackgroundId, type BackgroundId } from './content/visual/BackgroundDefinitions';
 import { LocalPlatform } from './platform/local/LocalPlatform';
+import type { PlatformAdapter } from './platform/Platform';
 import { isPlayerSkinId } from './content/visual/SkinDefinitions';
 import { isHazardCadenceMode, type HazardCadenceMode } from './content/hazards/HazardCadenceDefinitions';
 import { isCalibrationId, type CalibrationId } from './content/run/CalibrationDefinitions';
@@ -240,11 +241,12 @@ const bootstrap = async (): Promise<void> => {
     ? requestedWeaponPath
     : undefined;
   // Only the local build may simulate ads; each portal selects its own adapter.
-  const platform = __BUILD_TARGET__ === 'poki'
+  const platform: PlatformAdapter = __BUILD_TARGET__ === 'poki'
     ? new (await import('./platform/poki/PokiPlatform')).PokiPlatform()
     : __BUILD_TARGET__ === 'crazygames'
       ? new (await import('./platform/crazygames/CrazyGamesPlatform')).CrazyGamesPlatform()
       : new LocalPlatform(__BUILD_TARGET__ === 'local');
+  await platform.prepare?.();
   const publicOverdriveUnlocked = platform.saveStore.load().overdrive.unlocked;
   const overdriveBossDebugMode = diagnosticOverdrive && searchParams.get('od-pair') !== null;
   const overdriveBossStartSeconds = overdriveStage >= 10

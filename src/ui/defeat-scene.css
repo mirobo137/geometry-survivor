@@ -1,0 +1,112 @@
+/* Fixed, finite layers; the coordinator samples their timeline. No filters. */
+.defeat-scene {
+  --defeat-time: 0s;
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  color: #f2ddd6;
+  contain: layout paint;
+}
+.defeat-scene[hidden] { display: none; }
+.defeat-scene > div {
+  position: absolute;
+  animation-duration: 3s;
+  animation-delay: var(--defeat-time);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+}
+.defeat-scene-shade {
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 44%, #08091300 8%, #09091577 46%, #050711f5 90%),
+    linear-gradient(0deg, #090b17bb, #170d1933);
+  animation-name: defeat-shade;
+}
+.defeat-scene-flash {
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 46%, #ffdfc4cc, #da527a33 45%, transparent 75%);
+  animation-name: defeat-flash;
+}
+.defeat-scene-ripple {
+  width: min(76vw, 700px);
+  aspect-ratio: 1;
+  top: 46%;
+  left: 50%;
+  border: 1px solid #e6a98aaa;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, transparent 65%, #f7a69b12 69%, transparent 71%);
+  animation-name: defeat-ripple;
+}
+.defeat-scene-fracture {
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, #8cc5ea12, #07091799 55%, #d66c9822);
+  animation-name: defeat-fracture;
+}
+.defeat-scene-fracture-left {
+  --fracture-shift: -5%;
+  clip-path: polygon(0 0, 40% 0, 47% 31%, 22% 43%, 39% 72%, 0 92%);
+}
+.defeat-scene-fracture-right {
+  --fracture-shift: 5%;
+  clip-path: polygon(100% 0, 79% 0, 62% 23%, 81% 39%, 57% 67%, 76% 100%, 100% 100%);
+}
+.defeat-scene-horizon {
+  left: 7%;
+  right: 7%;
+  top: 46%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #9a344a, #ffe2c2, #9a344a, transparent);
+  animation-name: defeat-horizon;
+}
+.defeat-scene-letterbox {
+  left: 0;
+  right: 0;
+  height: clamp(18px, 5vh, 54px);
+  background: #040711;
+  border-color: #b57a6822;
+  animation-name: defeat-letterbox;
+}
+.defeat-scene-letterbox-top { top: 0; border-bottom: 1px solid #b57a6822; }
+.defeat-scene-letterbox-bottom { bottom: 0; border-top: 1px solid #b57a6822; }
+.defeat-scene-copy {
+  top: 53%;
+  left: 50%;
+  width: calc(100% - 2.2rem);
+  max-width: 700px;
+  display: grid;
+  justify-items: center;
+  gap: .75rem;
+  text-align: center;
+  animation-name: defeat-copy;
+}
+.defeat-scene-kicker { font: 700 clamp(.48rem, 1.5vw, .65rem)/1.4 ui-monospace, monospace; letter-spacing: .22em; color: #c09289; }
+.defeat-scene-title { font-size: clamp(1.4rem, 5vw, 3.2rem); line-height: 1.08; letter-spacing: .09em; font-weight: 800; text-shadow: 0 2px 0 #14080c; }
+.defeat-scene-caption { max-width: 90%; font: 600 clamp(.48rem, 1.6vw, .68rem)/1.6 ui-monospace, monospace; letter-spacing: .13em; color: #b6a8b1; }
+.defeat-scene-signal { display: flex; gap: 6px; align-items: center; height: 15px; margin-top: .15rem; }
+.defeat-scene-signal i { width: 3px; height: 3px; background: #ce7d75; }
+.defeat-scene-signal i:nth-child(2), .defeat-scene-signal i:nth-child(4) { height: 7px; opacity: .65; }
+.defeat-scene-signal i:nth-child(3) { height: 13px; opacity: .35; }
+@keyframes defeat-shade { 0% { opacity: 0; } 22% { opacity: .45; } 66%, 90% { opacity: 1; } 100% { opacity: .7; } }
+@keyframes defeat-flash { 0% { opacity: 0; } 3% { opacity: .24; } 17%, 100% { opacity: 0; } }
+@keyframes defeat-ripple { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.15); } 7% { opacity: .5; } 45%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.65); } }
+@keyframes defeat-fracture { 0% { opacity: 0; transform: translateX(0); } 15% { opacity: .6; } 68%, 100% { opacity: 0; transform: translateX(var(--fracture-shift)); } }
+@keyframes defeat-horizon { 0% { opacity: 0; transform: scaleX(.05); } 12% { opacity: .7; transform: scaleX(1); } 46%, 100% { opacity: 0; transform: scaleX(.1); } }
+@keyframes defeat-letterbox { 0% { opacity: 0; transform: scaleY(.1); } 30%, 88% { opacity: .9; transform: scaleY(1); } 100% { opacity: 0; transform: scaleY(1); } }
+@keyframes defeat-copy { 0%, 25% { opacity: 0; transform: translate(-50%, 12px); } 43%, 86% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -5px); } }
+.defeat-scene[data-quality="low"] .defeat-scene-fracture,
+.defeat-scene[data-quality="low"] .defeat-scene-ripple { display: none; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .defeat-scene-copy { top: 48%; gap: .4rem; }
+  .defeat-scene-title { font-size: 1.65rem; }
+  .defeat-scene-letterbox { height: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .defeat-scene-flash, .defeat-scene-ripple, .defeat-scene-fracture, .defeat-scene-horizon { display: none; }
+  .defeat-scene > div { animation-name: defeat-reduced-fade; }
+  .defeat-scene-copy { transform: translateX(-50%); }
+}
+@keyframes defeat-reduced-fade { 0% { opacity: 0; } 25%, 85% { opacity: .85; } 100% { opacity: 0; } }

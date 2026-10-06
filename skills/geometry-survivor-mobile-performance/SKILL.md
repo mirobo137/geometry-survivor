@@ -11,7 +11,7 @@ La simulación debe ser estable y el canvas adaptable sin conceder ventaja por a
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay”, “Rendimiento y presupuestos”, “Estrategia de pruebas” y las puertas de Fases 0/7. Consulta en `../../proyecto.md` las secciones 20–22, 30–35, 42, 50–51 y 61–62.
+Lee `../../proyecto.md` para los invariantes de rendimiento y `../../PLAN_DESARROLLO.md` para la puerta de móvil/sesión prolongada que esté abierta. Consulta la auditoría o contrato de carga relevante; separa Node, browser y renderer al medir.
 
 ## Invariantes responsive
 

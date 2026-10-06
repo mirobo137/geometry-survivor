@@ -1,95 +1,29 @@
-# EX-11 — Plan de implementación del modo Infinito
+# Overdrive Normal — contrato técnico
 
-Estado: **EX-11.1–EX-11.7 y OD-A01–OD-A08 implementados y validados por el usuario**
-Contrato de implementación: 2026-09-22. Vigencia operativa revisada: 02-10-2026.
-
-Para la siguiente tarea usar [la guía vigente](../PLAN_EJECUCION.md) y
-[CONTINUACION](../../CONTINUACION.md); el orden de implementación y evidencias
-de esta ficha describen la entrega de EX-11, no una cola pendiente. El informe
+Este archivo es el contrato técnico del modo implementado, no un roadmap. Las
+tareas abiertas están únicamente en el
+[plan de pendientes](../../PLAN_DESARROLLO.md). El informe
 de [recursos/carga](../audits/AUDITORIA_RECURSOS_2026-10-02.md) contiene la revisión
 actual previa a plataformas. Las pruebas históricas no certifican memoria de
 sesión prolongada ni QA de portal.
 
-Puerta vigente: la auditoría OD-A01–OD-A08 está corregida y cubierta por
-regresiones. EX-11.6 ya soporta dos instancias de boss, slots reservados,
-arbitraje y finalización conjunta; EX-11.7 añade la entrada pública después
-del Acto III, retirada y liquidación única. El usuario confirma que Overdrive
-funciona correctamente. EX-09 sigue pendiente como trabajo separado. EX-02c
-quedó cerrado por aprobación humana el 28-09-2026 según §22.16 del plan; esto
-no afirma una nueva medición cuantitativa ni acepta el QA táctil del Laboratorio.
+Overdrive Normal reutiliza actos, enemigos, bosses, arenas, armas, evoluciones y
+efectos; no crea variantes visuales ni un sistema de combate paralelo.
 
-Este documento es el contrato de trabajo para implementar el modo Infinito después del Acto III. La intención es reutilizar los actos, enemigos, bosses, arenas, armas, evoluciones y efectos ya validados, sin crear variantes visuales ni un sistema de combate paralelo.
+Asalto por puntos es una propuesta futura descrita en el
+[plan de pendientes](../../PLAN_DESARROLLO.md#d-overdrive-asalto-por-puntos--propuesta-futura).
+No reabre el baseline de balance aprobado. Las cadencias y entradas por tiempo
+descritas aquí siguen vigentes para Overdrive Normal.
 
-**Extensión futura, aún no implementada:** [OD-F01 — Ritmo por puntos](OVERDRIVE_RITMO_POR_PUNTOS.md)
-propone un Asalto opcional para llegar antes al boss por bajas. La antigua
-dependencia de EX-02c no reabre el baseline aprobado ni autoriza implementar
-Asalto: faltan aprobación de cuotas/reglas y validación propia. Las cadencias y entradas por tiempo descritas
-aquí siguen vigentes para Overdrive Normal.
+## Acceso y alcance
 
-## Estado de implementación de esta entrega
-
-- Overdrive sigue siendo `campaign | overdrive`, nunca un cuarto `ActId`.
-- El director selecciona un único boss hasta el tramo 9; desde el tramo 10
-  puede añadir uno de los otros dos modelos con semilla, sin duplicar tipo.
-  `?od-pair=core-warden|core-fracture|warden-fracture` fuerza una pareja sólo
-  en rutas debug.
-- Cada boss tiene instancia, barra, nave y estado de derrota propios. El tramo
-  sólo avanza cuando la colección completa queda derrotada. Las réplicas del
-  Warden sólo las limpia su propio boss.
-- En una pareja se reservan dos slots del pool enemigo, se bloquean nuevos
-  hazards de arena y se alternan ataques especiales con cola de lectura de
-  0,35 s; los peligros ya activos terminan normalmente.
-- El menú desbloquea **Infinito** al vencer el Acto III. La ruta pública manual
-  es `?mode=overdrive`; la tarjeta selecciona el modo dentro del runtime, sin
-  navegar ni recargar. El botón **Iniciar** del selector comienza la ruta elegida. Las rutas
-  `?debug=1&mode=overdrive...` siguen siendo diagnósticas y no escriben NOVA,
-  récords ni desbloqueos.
-- La retirada está disponible en pausa sólo en Overdrive y pide confirmación.
-  Muerte o retirada liquidan una sola vez; tras una derrota definitiva puede
-  ofrecerse una duplicación de NOVA por run, incluso si ya se usó el revive.
-  La retirada confirmada liquida sin revive ni duplicación. El récord de
-  Overdrive se guarda separado del récord de campaña.
-
-## Correcciones de la auditoría OD-B01–OD-B10
-
-Las correcciones de seguridad y consistencia de la auditoría están implementadas
-en el checkout local. Incluyen identidad visual persistente por familia de boss,
-continuidad de ataques cuando muere el otro boss, hazards de arena activos hasta
-la ventana del encuentro doble, aislamiento de atajos diagnósticos, retirada
-terminal sin revive, reservas previas de recursos, conversión final de NOVA,
-entrada `od-pair` en la ventana correcta, continuación directa desde Acto III y
-selección acotada de encuentros dobles sin historial creciente.
-
-La validación humana reportada por el usuario confirma que Overdrive funciona
-correctamente, por lo que esta entrega queda validada funcionalmente. Las
-métricas exhaustivas de sesiones largas y el QA específico de portales no se
-infieren desde pruebas unitarias ni desde esta aprobación; cualquier comprobación
-de publicación permanece en EX-09.
-
-## 1. Decisiones cerradas
-
-> Validación humana vigente (22-09-2026): el usuario confirma Overdrive
-> funcionando correctamente. También confirma que las evoluciones y los tres
-> actos fueron probados en móvil. EX-09 y EX-02c no quedan cerrados por esta
-> aprobación.
->
-> Validacion local adicional (17-09-2026): el smoke browser comprobo la ruta
-> publica desbloqueada `?mode=overdrive`, el inicio con build limpia y la
-> retirada visible desde pausa.
->
-> La entrada de Overdrive se presenta dentro del selector `Actos` como cuarta
-> tarjeta. Bloqueada permanece visible y deshabilitada; tras vencer Acto III
-> queda habilitada y conserva la misma ruta publica.
->
-> Al cerrar una victoria real del Acto III, la intermisión ofrece
-> `Continuar al Overdrive` y abre la ruta pública directamente con build limpia.
-
-> Las cuatro tarjetas seleccionan una ruta; **Iniciar** y **Jugar** arrancan la
-> selección actual. Infinito permanece visible, habilitado si está desbloqueado,
-> y marcado con `aria-pressed` cuando está seleccionado. Cambiar a un acto
-> restaura el modo campaña y su política de tres armas. No se recarga la página.
-> Abrir manualmente `?mode=overdrive` conserva el menú; `autostart=1` sigue
-> disponible para la continuación directa desde la victoria del Acto III.
+Overdrive sigue siendo `campaign | overdrive`, nunca un cuarto `ActId`. Se
+desbloquea al vencer al boss del Acto III y aparece como cuarta ruta en el
+selector de Actos. Las cuatro tarjetas seleccionan una ruta; **Iniciar** y
+**Jugar** comienzan la selección sin recargar la página. `?mode=overdrive` abre
+el menú con esa ruta seleccionada; `autostart=1` permite continuar desde la
+victoria real del Acto III. Cambiar a un acto restaura la campaña y su política
+de tres armas.
 
 - Infinito se desbloquea al derrotar al boss del Acto III.
 - Es una partida independiente que comienza con **build limpia**. Conserva únicamente las mejoras permanentes que ya aplican a una partida normal.
@@ -98,7 +32,8 @@ de publicación permanece en EX-09.
 - Los multiplicadores definidos aquí afectan la vida máxima de enemigos y bosses. No modifican daño, velocidad ni resistencia porcentual.
 - Los encuentros dobles empiezan después de completar tres vueltas, es decir, después de derrotar nueve bosses.
 - Entre tramos el jugador recupera 25% de su vida máxima, sin superar el máximo.
-- El balance global de daño, vida y resistencia sigue siendo una tarea posterior. Este modo no debe ocultar ni sustituir esa calibración.
+- El baseline general de balance está aprobado y no se reabre por esta ficha.
+  Overdrive Normal conserva sus multiplicadores y cadencias documentados aquí.
 
 Como referencia de diseño, Brotato reutiliza bloques de oleadas, introduce encuentros con varios bosses y separa el escalado de dificultad de límites como la velocidad. Se toma como referencia conceptual, no como fórmula ni como copia de economía: <https://brotato.wiki.spellsandguns.com/Endless_Mode>.
 
@@ -347,21 +282,7 @@ tramo inicial.
 
 El flujo normal siempre debe respetar el desbloqueo. Los atajos de desarrollo no deben cambiar el guardado.
 
-## 10. Orden de implementación
-
-1. Crear el contrato del modo, estado de tramo, guardado y desbloqueo.
-2. Crear el director de Infinito que componga los perfiles de enemigos y arena existentes.
-3. Implementar la transición segura sin borrar build, XP ni modificadores.
-4. Ampliar la política de cartas de tres a seis armas después de las tres evoluciones.
-5. Implementar cartas de reserva post-evolución y sus límites.
-6. Migrar bosses, eventos, amenazas y presentación a un máximo de dos instancias. **Implementado.**
-7. Añadir retirada, recompensa única y protección de contadores. **Implementado.**
-8. Añadir rutas de depuración y documentación. **Implementado; falta prueba browser pública.**
-9. Ejecutar las pruebas y corregir regresiones antes de declarar EX-11 terminado. **En curso: falta validación humana integral.**
-
-No declarar terminado el modo si solamente funcionan los primeros tres tramos.
-
-## 11. Pruebas de aceptación
+## Pruebas de aceptación
 
 ### Unitarias y de integración
 
@@ -393,18 +314,11 @@ No declarar terminado el modo si solamente funcionan los primeros tres tramos.
 
 No presentar simulaciones como mediciones de FPS. Registrar dispositivo, calidad, duración, frame time y memoria realmente observados.
 
-## 12. Documentación de cierre
+## Invariantes de aceptación
 
-Al implementar, enlazar este documento desde el plan de ejecución vigente, registrar EX-11 y actualizar `CONTINUACION.md` con:
-
-- Tramos y fórmulas implementados.
-- Contenido reutilizado y diferencias exclusivas de Infinito.
-- Política de cartas y estado de las seis armas.
-- Límites técnicos y coordinación de bosses.
-- Rutas de prueba.
-- Resultados realmente comprobados.
-- Balance y validaciones humanas que sigan pendientes.
-
-### Definition of Done
-
-Infinito está terminado cuando aparece en el flujo normal tras vencer el Acto III, empieza con build limpia, conserva progresión entre tramos, habilita las seis armas después de tres evoluciones, reutiliza correctamente las arenas y enemigos, soporta encuentros dobles desde el tramo 10, liquida una sola recompensa y no rompe la campaña ni los presupuestos técnicos. El balance final de daño y aguante permanece separado como tarea posterior.
+Overdrive Normal comienza tras vencer el Acto III, usa una build limpia, conserva
+progresión entre tramos, habilita las seis armas después de tres evoluciones,
+reutiliza arenas y enemigos, admite encuentros dobles desde el tramo 10 y
+liquida una sola recompensa sin alterar la campaña ni exceder presupuestos.
+Overdrive Asalto por puntos es un modo futuro separado y está descrito en el
+plan principal.

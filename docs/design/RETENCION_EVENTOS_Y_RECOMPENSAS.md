@@ -1,12 +1,13 @@
-# RET-F01 — Retención: Bitácora, retos semanales y cápsula diaria
+# RET-F01 — Contrato funcional de Retención
 
-**Estado: PROTOTIPO LOCAL IMPLEMENTADO; validación humana y puertas de publicación pendientes.**
-Plan inicial: 03-10-2026. Implementación local: 04-10-2026. Base: `d042357`.
-La implementación recibida por el jugador sigue siendo una prueba: sus cifras,
-cadencia y perfiles de combate no son balance aprobado ni permiso para publicar.
-La ruleta diaria y el extra opcional de NOVA están implementados para prueba
-local por solicitud posterior del usuario. Revisión comercial e integración
-real de anuncios en portales siguen siendo puertas de publicación.
+Retos, Bitácora, recompensas y ruleta tienen consumidores locales. Este archivo
+conserva sus reglas de producto, límites y pruebas; no es un backlog. El único
+estado de trabajo pendiente y sus puertas está en el
+[plan único](../../PLAN_DESARROLLO.md).
+
+Los valores de economía y dificultad son de prueba hasta que el usuario los
+valide. La simulación de rewarded local no es una integración comercial ni
+autoriza publicar el sistema.
 
 ## 1. Propósito y precedencia
 
@@ -14,34 +15,30 @@ Dar motivos distintos para volver: descubrir una build, dominar un encuentro,
 completar una colección y encontrar un reto diferente. No convertir la partida
 normal en una obligación diaria ni alargarla artificialmente para retener.
 
-Este documento detalla la propuesta futura enlazada desde §22.21 de
-[PLAN_DESARROLLO](../../PLAN_DESARROLLO.md). Aplicar [AGENTS](../../AGENTS.md)
-y las skills gameplay, platforms, architecture y validation según la entrega.
-No sustituye las puertas de publicación EX-09, las pruebas humanas aplazadas
-del [Laboratorio V2](LABORATORIO_META_V2.md), los presupuestos ni el plan
-independiente de [Overdrive por puntos](OVERDRIVE_RITMO_POR_PUNTOS.md).
+Aplicar [AGENTS](../../AGENTS.md) y las skills gameplay, platforms, architecture
+y validation según el cambio. Las reglas de publicación, aceptación humana y
+Overdrive Asalto se encuentran en el plan único; esta ficha sólo conserva el
+contrato funcional de Retención.
 
 **Corrección expresa del usuario:** no eliminar ataques para simplificar un
 duelo. Orbital Warden conserva sus réplicas; enfrentarse al boss implica
 enfrentarse también a sus invocaciones y ataques. Esta regla sustituye la
 sugerencia conversacional anterior de quitar su patrón de réplicas.
 
-## 2. Decisiones acordadas y valores aún abiertos
+## 2. Reglas funcionales
 
-| Elemento | Dirección de diseño | Estado de ejecución |
+| Elemento | Regla funcional |
 | --- | --- | --- |
-| Bitácora del piloto | 13 objetivos persistentes y resumen conectado al resultado normal. | Prototipo local implementado; economía y objetivos por validar. |
-| Retos semanales | Rotación UTC versionada, repetible y separada de las runs normales. | Prototipo local implementado; primera recompensa: Asterion Courier. |
-| Duelo de boss sin impactos | Sin oleadas comunes ni cartas elegibles; un impacto conectado termina el intento, aunque lo absorba el escudo. | Implementado para Core Sentinel, Orbital Warden y Fracture Engine; QA humano pendiente. |
-| Evasión Charger | Sin fuego/daño automático; sobrevivir 60 segundos activos, máximo cinco Chargers. | Prototipo local implementado; justicia y dificultad móvil pendientes. |
-| Ruleta diaria | Gratis cada 24 h; diez ranuras NOVA y Solstice Regent (1% inicial, +1 punto por giro hasta 20%). Extra con video también puede entregar skin. | Implementación local; [contrato y pruebas](RULETA_DIARIA.md); QA humano/publicación pendientes. |
-| Colecciones finitas | Diez naves, diez cañones y diez fondos exclusivos de retos/ruleta, Asterion y Solstice incluidos. | Catálogo completo funcional; [arte, temporadas, guardado y presupuesto](CATALOGO_RECOMPENSAS.md). QA humana móvil/publicación pendientes. |
+| Bitácora | Objetivos persistentes por rangos; el jugador reclama manualmente y el resumen de partida sólo redirige cuando corresponde. |
+| Retos semanales | Una edición versionada por semana, repetible como práctica, separada de las runs normales. |
+| Duelo sin impactos | Sin oleadas comunes ni cartas elegibles; cualquier impacto conectado invalida el intento aunque lo absorba el escudo. |
+| Evasión Charger | Sin fuego ni daño automático; sobrevivir 60 segundos activos, máximo cinco Chargers. |
+| Ruleta diaria | Giro gratis cada 24 h; diez ranuras NOVA y una skin exclusiva. Probabilidad de skin empieza en 1% y sube un punto por giro hasta 20%; el extra opcional también puede entregar skin. Ver [contrato](RULETA_DIARIA.md). |
+| Catálogo de recompensas | Diez naves, diez cañones y diez fondos exclusivos de retos/ruleta. Ver [catálogo, arte y guardado](CATALOGO_RECOMPENSAS.md). |
 
-Son propuestas para validar, no cifras aprobadas: cantidades de NOVA,
-probabilidades, garantía de cosmético, número de skins, calendario/fecha de
-activación, acceso inicial, loadouts, vida del boss y ajustes de ritmo.
-Registrar esas decisiones antes de programarlas; no interpretar un ejemplo de
-este documento como un valor definitivo.
+Las cifras de economía y dificultad siguen siendo parámetros de prueba hasta
+que el usuario cierre su validación; el estado de esa puerta se mantiene sólo
+en el [plan de pendientes](../../PLAN_DESARROLLO.md).
 
 ## 3. Investigación y aplicación al proyecto
 
@@ -83,21 +80,10 @@ localmente; ver [contrato vigente](RULETA_DIARIA.md).
 
 ### Puerta de presupuesto para cosméticos exclusivos
 
-**Puerta superada en la colección aprobada del 04-10-2026:** 58 derivados
-nuevos, 1,463,696 B; los tres payloads públicos siguen bajo 15 MB. Ver
-[contrato vigente](CATALOGO_RECOMPENSAS.md) y medidas finales en CONTINUACION.
-La estimación y el bloqueo siguientes documentan el baseline anterior, no un
-pendiente de implementación de este catálogo.
-
-El artefacto local medido el 04-10-2026 ocupa 14,939,834 de 15,000,000 bytes;
-quedan 60,166 bytes. Esa build incluía aproximadamente 5 MB de mapas de
-diagnóstico y no representa el payload público separado. Por decisión del
-04-10-2026, CI conserva los `.map` junto con los bundles JS/CSS como artefacto
-temporal; Pages recibe una copia sin mapas y el límite de 15 MB se aplica al
-payload publicado. A partir de los derivados existentes
-(naves WebP de 42–75 KB, cañones de 8–22 KB y fondos con placa más preview de
-80–139 KB), el lote de 8 naves, 10 cañones y 10 fondos se estima en alrededor
-de 1.2–2.2 MB, antes de cualquier capa adicional de movimiento.
+La colección autorizada del 04-10-2026 añadió 58 derivados (1,463,696 B).
+Los formatos, fuentes, medidas del catálogo y fallback se mantienen en
+[CATALOGO_RECOMPENSAS](CATALOGO_RECOMPENSAS.md); los presupuestos y aceptación
+vigentes se siguen en el [plan único](../../PLAN_DESARROLLO.md).
 
 Se midió sin aplicar una recompresión Q64 de los fondos actuales: recuperaría
 187,136 bytes, con PSNR de 37.56–45.49 dB frente a los derivados actuales.
@@ -201,9 +187,9 @@ una actualización del calendario no cambia reglas a mitad del combate.
   aplica al director del reto, no a campaña ni Overdrive. Aún requiere prueba
   humana antes de aceptarse como balance.
 
-Propuesta de acceso, pendiente de confirmar: explicar el formato antes del
-primer intento y destacar duelos de bosses ya conocidos sin obligar a farmear
-actos. No introducir por inferencia un nuevo bloqueo de progreso.
+Explicar el formato antes del primer intento y destacar duelos de bosses ya
+conocidos sin obligar a farmear actos. No introducir un nuevo bloqueo de
+progreso sin una decisión explícita.
 
 ## 8. Duelo de boss: preservar la esencia
 
@@ -296,19 +282,18 @@ Variantes futuras pueden reutilizar ataques existentes con combinaciones
 concretas y validación humana por plantilla. No generar combinaciones arbitrarias.
 
 - Una edición destacada por semana; catálogo finito que vuelve a rotar.
-- Propuesta técnica pendiente de confirmar: cambio los lunes 00:00 UTC,
-  ancla de lanzamiento explícita y orden de plantillas versionado. Mostrar
-  cuenta atrás/localización sin depender de la zona horaria del dispositivo.
+- La rotación cambia los lunes 00:00 UTC, con ancla de lanzamiento y orden de
+  plantillas versionados. Mostrar cuenta atrás/localización sin depender de la
+  zona horaria del dispositivo.
 - Identificar edición por calendario + plantilla + versión; definir antes de
   programar cómo una revisión de balance afecta a récords/recompensas ya cobradas.
 - La misma edición no cambia por recargar, abrir en otra pestaña o cambiar
   selección. No elegir el evento semanal al azar en cada visita.
 - Una skin perdida una semana no desaparece para siempre: regresan eventos
   y oportunidades de completar la colección en rotaciones posteriores.
-- Congelar recompensa y reglas al comenzar. Política exacta para un intento
-  que cruza el cambio semanal pendiente: proponer terminar el intento sin cortar
-  el combate y reconocer su edición original con una ventana de cierre acotada.
-  Fijar esa ventana y su historial máximo antes de implementar.
+- Congelar recompensa y reglas al comenzar. Si un intento cruza el cambio
+  semanal, terminarlo sin cortar el combate y reconocer su edición original;
+  limitar el historial que se conserva.
 - No almacenar/reanudar una run activa sólo por añadir eventos; el contrato
   normal de recarga segura sigue vigente. Conservar logros/premios ya confirmados.
 - Las repeticiones gratuitas no vuelven a pagar una edición ya cobrada. La primera
@@ -511,77 +496,28 @@ a eventos o menús. Local indica simulación; portales no fingen éxito.
 GitHub Pages valida sólo el target local, no el sorteo comercial, cloud save o
 integración real. EX-09 conserva sus puertas.
 
-## 18. Entregas y estado local
+## 18. Criterios funcionales y de aceptación
 
-La implementación autorizada se hizo localmente. «Implementado» no equivale a
-validado por el usuario, aprobado en móvil o listo para portal.
+El seguimiento de qué criterios faltan por comprobar vive exclusivamente en el
+[plan de pendientes](../../PLAN_DESARROLLO.md). Esta sección define el contrato,
+no el estado de una entrega.
 
-| ID | Entrega | Estado actual / puerta |
-| --- | --- | --- |
-| RET-00 | Parámetros y calendario local del prototipo. | Valores de prueba documentados abajo; aún no son aprobación de balance. |
-| RET-01 | Duelos sin impactos de Core Sentinel, Warden y Fracture. | Core Sentinel aprobado por el usuario; Fracture se conserva sin cambios. Los duelos usan Projectile rango I (un emisor, sin Calibration), daño de contacto y cadencia de reto ≥1.45×. Core empieza y reintenta al lado opuesto del spawn del boss; recuperación al 33% del valor base. Sólo en Orbital Warden, las réplicas requieren dos impactos del proyectil base (28 de vida); campaña conserva 30. Tipado y suite completa (755 pruebas / 133 archivos) pasan; falta probar el nuevo ritmo de Warden en móvil. |
-| RET-02 | Evasión Charger 60 s. | Implementada sin disparo y con máximo cinco; falta probar esquiva en móvil. |
-| RET-03 | Rotación y duelos Warden/Fracture. | Rotación semanal Core → Warden → Fracture, repetida cada tres semanas; Charger queda fuera de calendario. Los duelos conservan kit y cadencia exclusiva; el tick de amenazas Fracture está activo. Los tres retos aprobados; QA en teléfono físico pendiente. |
-| RET-04 | Bitácora y resumen conectado. | 13 objetivos y pagos locales; validar comprensión, persistencia y economía. |
-| RET-05 | Ruleta gratuita de 24 h y extra de NOVA. | Implementada localmente por solicitud expresa; revisión humana y publicación de portal pendientes. |
-| RET-06 | Validación de participación, regreso y costes. | Pendiente: revisión humana/datos aprobados; no se añadió analítica. |
-
-RET-00 no obliga a detener el duelo por una revisión comercial del azar: ese
-permiso es puerta de publicación, no de la prueba local autorizada. Antes de publicar deben
-cumplirse EX-09 y las puertas de guardado, recursos e integridad aplicables.
-
-## 19. Validación: estado y Definition of Done pendiente
-
-Tipado y suite unitaria completa (755 pruebas / 133 archivos) comprobados en
-esta actualización de vida de réplicas Warden. En la actualización anterior
-de barrera central Core también pasaron 80 casos enfocados de geometría,
-ArenaModel, PlayerModel, render, definición del evento y Game.
-En la entrega anterior de los duelos
-se habían ejecutado 84 pruebas enfocadas de Game, CombatSimulation y
-RetentionDefinitions. Smoke enfocado PC/móvil previo
-valida la ruleta y sus assets, premio/equipo en batalla, persistencia y dos
-pestañas; no equivale a QA de combate/retención físico. Evidencia vigente en
-CONTINUACION.
-
-- [x] Lógica pura: calendario UTC determinista, progreso acotado, normalización
-  defensiva, objetivos generales por rangos y actos/bosses únicos con cobro manual.
-- [x] Retos aislados: proyectil fijo en duelos sin Laboratorio/cartas elegibles;
-  Chargers sin armas; timer de simulación; premios fuera del combate.
-- [x] Migración schema 9/10/11/12 → 13 sin borrar datos existentes; escritura de premios
-  confirmada por lectura local antes de presentarlos.
-- [x] Cubrir por unit test que un impacto bloqueado por escudo invalida el duelo
-  aunque la victoria del boss llegue en el mismo tick.
-- [x] Unit tests de contacto de casco para los tres bosses, cadencia aislada con
-  telegraphs intactos y amenazas Fracture activas: typecheck y suite completa
-  pasaron; aceptación humana en combate/móvil sigue pendiente.
-- [ ] Suite unitaria completa y smoke browser para los flujos nuevos, incluyendo
-  fallo de guardado y retorno entre modos (las 84 pruebas enfocadas ya pasaron).
-- [ ] Core/Warden/Fracture mantienen todos sus patrones definitorios; el primer
-  impacto conectado termina el duelo, también si lo bloquea el escudo. Réplicas
-  de Warden se generan, atacan, reciben daño y limpian correctamente sin oleadas.
-- [ ] Reservas/capacidades suficientes para proyectiles, réplicas y minas; no
-  se salta un patrón silenciosamente por quitar al director común.
-- [ ] Recompensa exactamente una vez por edición en el flujo soportado;
-  doble clic, callbacks, recarga, dos pestañas, fallo de storage y cartera al tope.
-- [ ] Cooldown 24 h, retrocesos/saltos de fecha, cambio semanal, versión de
-  calendario y cierre de intentos; reglas iguales entre zonas horarias.
-- [x] La migración desde schema 9 preserva la cuenta y comienza los campos nuevos
-  vacíos. La prueba unitaria se ejecutó en la entrega de ruleta.
-- [ ] Verificar dos pestañas simultáneas y `MAX_SAVE_BYTES` bajo todos los
-  targets; el recibo local no es almacenamiento autoritativo.
-- [ ] Nada de XP/cartas/revive/bonos normales filtra hacia eventos. Los eventos
-  no conceden desbloqueos de campaña ni récords normales por atajos.
-- [ ] Salir/reiniciar/evento → campaña/Overdrive restaura todas las reglas,
-  audio, input, lifecycle y recursos sin crecimiento sostenido de memoria.
-- [ ] Browser PC/móvil: pantalla de reglas, recompensa, reveal y catálogo;
-  pausa, resize, blur, background, reduced-motion y errores/404.
-- [ ] 30/60/144 Hz conserva velocidad, contador, targeting y resultado.
-- [ ] Android real: identidad del boss, esquiva posible, presión/diversión,
-  duración y coste Low/High. No sustituir por emulación o una suite verde.
-- [ ] Typecheck/unitarias, smoke proporcionado y builds de tres targets bajo
-  presupuestos; portal real cuando corresponda. No esperar/pushear automáticamente.
-- [ ] Aprobación de interfaz/combate en dispositivo físico y decisión de portal
-  sobre la cápsula. Sin acceso, esas puertas siguen pendientes.
+- El calendario UTC es determinista y versionado; repetir, recargar o abrir otra
+  pestaña no cambia una edición ya elegida.
+- Los duelos usan un proyectil fijo, sin Laboratorio, cartas elegibles, anuncios,
+  revive ni fuego automático. Charger no recibe daño automático.
+- Los bosses conservan ataques, amenazas, telegraphs y colisión; el primer
+  impacto conectado invalida el duelo, incluso si lo bloquea el escudo. Orbital
+  Warden conserva sus réplicas.
+- Recompensas y pagos se registran una sola vez por edición. Repeticiones no
+  duplican premio; al poseer la skin, se aplica la compensación NOVA definida.
+- El giro gratis respeta 24 h; el giro extra sólo se ofrece tras una respuesta
+  rewarded exitosa. Ambos usan la probabilidad compartida documentada.
+- Persistencia local, errores de storage, callbacks repetidos, dos pestañas,
+  límites de tamaño y navegación entre eventos/modos no deben producir pagos
+  duplicados ni ventajas en partidas normales.
+- La aceptación de combate, legibilidad y rendimiento debe incluir dispositivo
+  físico; emulación y suites no demuestran por sí solas la experiencia móvil.
 
 ## 20. Medir regreso sin confundirlo con sesiones largas
 
@@ -601,21 +537,15 @@ no prometer métricas o exportaciones que el portal concreto no proporciona.
 Datos locales acotados sirven para diagnóstico, no una medición poblacional
 fiable ni seguimiento entre dispositivos. Analítica externa requiere aprobación.
 
-## 21. Decisiones actuales y pendientes de usuario/portal
+## 19. Límites del contrato local
 
-- [x] Acceso opcional «Retos y Bitácora» en Inicio; Jugar conserva prioridad.
-- [x] Loadout fijo de proyectil; sin Laboratorio, cartas elegibles, anuncios,
-  revive ni double-NOVA. El Charger no recibe fuego automático.
-- [x] Charger: 60 s activos, máximo cinco y llegada gradual; justicia/tensión
-  requiere prueba humana antes de ajustar.
-- [x] Rotación técnica: lunes 00:00 UTC, ancla 2026-10-05, cuatro plantillas
-  versionadas. Un intento conserva la edición al cruzar una semana.
-- [x] Premio inicial: Asterion Courier, una vez por edición; al poseerla,
-  +250 NOVA por edición. Cifras provisionales; el lote futuro está pendiente.
-- [ ] Economía final y política al alcanzar el tope de cartera.
-- [ ] Reloj confiable y concurrencia entre pestañas: best-effort local, sin
-  servidor ni sincronización entre PCs.
-- [x] Ruleta diaria, cooldown 24 h y extra opcional NOVA por video implementados
-  en local; [contrato](RULETA_DIARIA.md).
-- [ ] Revisión comercial por portal e integración real de anuncios.
-- [ ] Revisión humana de progreso/recompensas y prueba física en móvil/PC.
+- La persistencia local no ofrece sincronización entre equipos ni autoridad de
+  servidor; el reloj del dispositivo no es una fuente confiable contra abuso.
+- El modo local puede simular el resultado de rewarded sólo en las rutas de
+  desarrollo. Ningún target comercial debe fingir una reproducción exitosa.
+- La economía numérica, la dificultad final, el comportamiento ante el máximo
+  de cartera y cualquier política comercial se rigen por las decisiones que se
+  cierren en el [plan de pendientes](../../PLAN_DESARROLLO.md).
+- No añadir analítica externa, almacenamiento en nube, leaderboard global ni
+  integraciones reales de anuncios sin autorización y revisión de privacidad y
+  requisitos del portal.

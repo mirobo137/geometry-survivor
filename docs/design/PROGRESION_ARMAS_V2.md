@@ -1,8 +1,8 @@
-# EX-08-R1 — Progresión de armas I–VII y cartas
+# Progresión de armas V2 — contrato de rangos y cartas
 
-Fecha: 2026-09-14. Estado: **las seis rutas de prueba y el compositor normal
-de campaña están implementados; la validación humana de la nueva rotación
-queda pendiente**. Complementa
+Esta ficha especifica rangos I–VII, selección, herencia de mejoras y ofertas de
+cartas. El estado de aceptación abierto se mantiene sólo en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md). Complementa
 [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md).
 
 Las rutas activas son `/?weapon-path=projectile|orbit|chain|boomerang|pulse-ring|magnetic-charge&debug=1&quality=low|medium|high`.
@@ -272,56 +272,9 @@ de recuperar, otros lo cuentan desde el disparo. Conservar su semántica actual
 y mostrarla correctamente en UI («espera» frente a «intervalo entre disparos»).
 No presentar dañoPorHit/cooldown como DPS medido si faltan esas fases.
 
-## 6. Implementación y pruebas para Luna
+## Reglas vigentes de campaña
 
-1. Añadir contenido de progresión con las 42 filas anteriores, validación de
-   secuencia y un resolver puro de perfil efectivo. Consumidor: las seis armas
-   actuales. Ningún editor/árbol genérico adicional.
-2. Separar rango de familia de XP global en `UpgradeApplier`; adquisición y
-   transición alimentan un único estado. Descartar ofertas obsoletas cuando
-   fromRank no coincide y no consumir el level-up ante rechazo.
-3. Actualizar parámetros de behaviors, scheduler y snapshots. Aplicar nuevos
-   parámetros de cast al siguiente ataque; un ataque ya activo conserva su
-   perfil capturado para evitar saltos de radio/hits. Orbit, persistente,
-   aplica al reanudar con posiciones previas reiniciadas para no barrer la
-   distancia de recolocación como daño. No resetear cooldown para regalar tiros.
-4. Migrar pool de cartas, previews, calibraciones, debug y tests v1 de manera
-   explícita. Mantener acceso a fixtures antiguos para detectar cambios,
-   identificado como v1 y separado de la campaña v2.
-5. UI muestra `I/ VII`, próximo efecto y delta con valores efectivos. Los
-   cambios de alcance/cantidad se representan físicamente en Low/High. Reusar
-   iconos de familia, añadir marcadores discretos de rango; no aumentar glow
-   cada nivel ni reemplazar skins/cañones cosméticos.
-6. Laboratorio permite elegir I–VII y comparar rango anterior/siguiente con
-   misma semilla, además de baseVII/A/B. Implementar y comprobar los parámetros
-   antes de dar URLs; no afirmar que ya existen por figurar aquí.
-7. Tests de 42 perfiles y resultados: rango VII exige seis aplicaciones,
-   mejora pasiva no avanza, preview coincide, cadencia/cantidad/alcance efectivos,
-   reset y calibración exactos, doble clic idempotente, VII no evoluciona gratis.
-8. Tests de colisión y tiempos30/60/144, tick de cierre, pools, máximo de tres
-   armas, boss inmune a fuerzas y regeneración de enlaces sin entidades extras.
-9. Validar I/IV/VII bajo presión y sin meta; después VII con meta máxima y
-   combinación de tres armas. Comparar arma baseVII y ambas ramas por separado.
-   Registrar tiempo a primera evolución y cada mejora realmente elegida.
-
-El lote queda implementado con seis cartas de rango base I→VI por familia,
-aplicación acumulativa, hito de evolución, panel debug y partida normal. El
-laboratorio directo aísla la familia elegida; queda validar manualmente los seis
-rangos, seis hitos y doce ramas. La ruta no cierra todavía la progresión normal
-de campaña ni el balance de EX-02c.
-
-La integración normal de cartas queda deliberadamente separada de estas rutas
-de desarrollo. Cada familia conserva el mismo contrato: una partida normal,
-una sola familia en sus level-ups, hito en nivel global 7 y sus dos ramas.
-La aprobación antigua de armas y Projectile sigue como referencia funcional/
-visual; **no certifica estos números nuevos**. EX-02c conserva el balance final
-de daño y resistencia enemigos. Esta entrega de documentación no ejecuta
-ninguna migración ni prueba de rendimiento del juego.
-
-## Estado vigente de campaña - 15-09-2026
-
-La integración normal descrita arriba ya está conectada en `UpgradeApplier` y
-prevalece sobre los párrafos históricos de este documento. En cada mano normal
+En cada mano normal
 se compone una oferta de arsenal con peso uniforme entre `projectile_rank_2`
 (Doble cañón) y las cinco armas adicionales que aún caben. Se conserva como
 máximo una adquisición por mano; al completar tres armas se retiran todas las
@@ -333,9 +286,10 @@ La carta universal `Potencia calibrada` solo entra cuando las tres armas
 activas ya evolucionaron; abre una segunda pantalla para elegir el objetivo y
 no reabre ramas. La ruta QA `/?debug=1&campaign=evolved&act=angular&quality=high`
 permite revisar esa presentación directamente en una partida de acto. El modo
-infinito conserva un compositor futuro separado y el balance EX-02c no cambia.
+Overdrive conserva un compositor separado; la política de campaña no se
+extiende a ese modo por inferencia.
 
-Corrección de compositor, 16-09-2026: las runs reales reciben semilla nueva;
+Las runs reales reciben semilla nueva;
 las pruebas pueden inyectarla. La mano no vuelve a usar el pool legacy como
 relleno, reserva rangos/evoluciones pendientes, admite solo una adquisición de
 arsenal y convierte una adquisición tomada en progreso de rango. `Potencia

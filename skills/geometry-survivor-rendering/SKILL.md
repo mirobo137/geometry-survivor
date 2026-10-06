@@ -13,7 +13,7 @@ Para crear o revisar SVG code-first con contrato, geometría, accesibilidad y va
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay”, “Rendering y pipeline SVG” y “Rendimiento y presupuestos”. Consulta en `../../proyecto.md` las secciones 16–17, 23–30, 43–49 y 73–103.
+Lee `../../proyecto.md` para los principios visuales y móviles, y `../../PLAN_DESARROLLO.md` para las puertas activas. Usa el contrato específico del asset o efecto antes de cambiar representación, carga o coste.
 
 ## Selección de representación
 
@@ -22,7 +22,7 @@ Lee `../../PLAN_DESARROLLO.md`, especialmente “Responsive sin alterar gameplay
 - Arena, líneas y warnings dinámicos: `Graphics`, mesh o geometría simple.
 - Formas simples repetidas que deban seguir vectoriales: `GraphicsContext` compartido si el spike lo justifica.
 - Menús y cartas: HTML/CSS + SVG cuando mejore responsive y accesibilidad.
-- SVG complejo: master editable y validación; rasterización en build solo como fallback medido cuando el destino o el presupuesto lo exijan, nunca como sustituto por defecto del SVG fuente.
+- SVG complejo o PNG ilustrado: elegir el formato según la identidad del asset y el contrato de [arte híbrido](../../docs/design/ARTE_HIBRIDO.md); no convertir una imagen raster en SVG artificial ni exigir PNG para geometría que convenga editar como vector.
 
 ## Invariantes
 

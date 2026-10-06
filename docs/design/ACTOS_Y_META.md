@@ -1,30 +1,22 @@
 # Geometry Survivor — actos, meta y Overdrive
 
-Fecha de decisión original: 05-09-2026. Vigencia operativa revisada: 02-10-2026.
+Contrato de producto de Actos y meta.
 
-Este documento fija la dirección de producto que acompaña a
-`PLAN_DESARROLLO.md` §16. Sus fichas de diseño conservan contexto histórico;
-el estado implementado actual y las decisiones posteriores registradas en
-`CONTINUACION.md`/§22 prevalecen sobre sus estados antiguos. Los Actos I–III,
-Overdrive y sus flujos ya tienen consumidores reales; EX-09 de portales sigue
-pendiente. El contrato vigente del Laboratorio es
+Este documento describe la dirección de Actos y meta, no una cola de trabajo.
+Las tareas abiertas están únicamente en el
+[plan de pendientes](../../PLAN_DESARROLLO.md). Los Actos I–III, Overdrive y
+sus flujos ya tienen consumidores reales. El contrato vigente del Laboratorio es
 [`LABORATORIO_META_V2.md`](LABORATORIO_META_V2.md).
 
-Para trabajo nuevo usar la [guía vigente](../PLAN_EJECUCION.md) y
-[CONTINUACION](../../CONTINUACION.md). Expedition fue eliminado; sus menciones
-en registros antiguos de esta ficha son contexto de diseño, no un modo,
-guardado o transición pendiente de construir.
+Expedition fue eliminado; sus menciones históricas en esta ficha no describen
+un modo, guardado o transición pendiente de construir.
 
-## Estado de implementación — 28-09-2026
+## Estado funcional
 
-Los tres actos y Overdrive fueron validados por el usuario. El baseline de vida
-de enemigos y bosses quedó aprobado en EX-02c; los ajustes futuros serán
-puntuales a partir de problemas observados. El balance numérico global no se
-declara como una nueva matriz medida. El Laboratorio V2 conserva el progreso y
-las reglas de compra existentes y presenta ahora las ramas en un árbol
-hexagonal; sus efectos y precios tienen su contrato canónico en la ficha
-enlazada arriba. La comprobación automática de UI pasó, pero falta la revisión
-visual/táctil final en un móvil físico.
+Los tres actos, Overdrive Normal y Laboratorio V2 tienen implementación. El
+baseline de balance fue aprobado; nuevos ajustes deben responder a un problema
+reproducible y conservar alcance acotado. Las puertas de aceptación abiertas
+se mantienen únicamente en el [plan principal](../../PLAN_DESARROLLO.md).
 
 ## Decisión principal
 
@@ -38,7 +30,7 @@ modo infinito opcional posterior llamado **Overdrive**.
   ofrece las mismas tres calibraciones.
 - Overdrive se desbloquea tras vencer realmente el Acto III. Es una partida
   independiente con build limpia (conserva meta permanente), según
-  [PLAN_INFINITO](PLAN_INFINITO.md), y mezcla las reglas ya aprendidas en ciclos
+  [Overdrive Normal](OVERDRIVE_NORMAL.md), y mezcla las reglas ya aprendidas en ciclos
   cada vez más exigentes; no depende de un modo Expedition.
 - Ningún modo obliga a jugar infinito para terminar la experiencia principal.
 
@@ -127,11 +119,10 @@ La identidad visual premium de la arena está documentada en
 para campo, rieles, nodos, resonancia y shockwave; queda preparada para nuevas
 formas sin activar gameplay futuro desde el renderer.
 
-El prototipo histórico no creó save nuevo, selección de actos, otros polígonos
-ni Overdrive. EX-06a compuso ese timeline en `ActDefinition` con un único
-consumidor Radial; EX-07e es la entrega posterior que ya conecta la campaña
-Angular, su selector/gating y la transición I→II. La pregunta de si el pulso y
-la composición producen la diversión esperada conserva una puerta humana.
+El contrato vigente compone el timeline en `ActDefinition`; la campaña Angular,
+su selector y la transición I→II ya son consumidores activos. El pulso Radial y
+la composición aprobada no se reabren sin un problema reproducible o una nueva
+solicitud.
 
 ## EX-06a — contrato Radial sin cambio de gameplay
 
@@ -173,10 +164,9 @@ supere el deadline se descarta; el pulso tampoco inicia con el boss activo.
 Así la regla añade expectativa sin convertir la combinación en daño inevitable.
 
 El contrato de contenido está en `RadialPulseDefinition`, la simulación en
-`RadialPulseHazard` y la representación premium de bajo coste en
-`RadialPulseView`. El daño 16 es provisional y no adelanta EX-02c. La ficha y
-la evidencia están en `docs/balance/EX-06b-radial-pulse.md`; falta validación
-humana de lectura, comodidad y diversión en desktop/móvil.
+`RadialPulseHazard` y la representación de bajo coste en `RadialPulseView`.
+Los valores y criterios actuales se comprueban en código y pruebas; las puertas
+humanas abiertas se registran en el plan principal.
 
 ## EX-06c — resultado e intermisión del Acto I
 
@@ -260,11 +250,10 @@ implementa antes que las siguientes: Orbiter, Charger y Splitter no se entregan
 en un solo cambio. Pulse Ring ya tiene una base aislada con una abertura que
 rota durante el daño; el hazard angular ya tiene una hoja con recorrido acotado
 y Orbital Warden una familia de riel, embestida fija, arco curvo, réplicas
- destructibles y corredor móvil. EX-07e ya compone estos consumidores en una
-run Angular real y habilita su selección sólo tras vencer Radial. Calibration
-ofrece una plantilla de entrada, no una build arbitraria. La composición del
-Acto II quedó aprobada por validación humana el 12-09-2026; el balance final de
-daño, vida y resistencia permanece diferido a EX-02c.
+destructibles y corredor móvil. Estos consumidores forman la run Angular y su
+selección sólo se habilita tras vencer Radial. Calibration ofrece una plantilla
+de entrada, no una build arbitraria. La composición del Acto II conserva el
+balance aprobado.
 
 El Orbiter tiene una regla de comportamiento vigente: durante `approach`
 persigue directamente al player mientras avanza un reloj authored; al vencerlo
@@ -313,13 +302,10 @@ sistema de hazards sólo para el morph, y ningún cast nuevo comienza durante lo
 0.75 s de transformación.
 Un cast ya iniciado conserva su fase y sigue la frontera interpolada.
 
-El destello ligero que aún puede percibirse en el cuadrado queda registrado
-como `VIS-A2-01` y no bloquea el acto. Las dos ventanas cuadradas contienen
+El destello ligero del cuadrado no bloquea el acto. Las dos ventanas cuadradas contienen
 exactamente las expansiones globales de 60 s y 180 s: durante ellas se combinan
 el redibujado del radio, la resonancia y la onda de expansión. La opacidad del
-marco es estable y la frontera lógica no parpadea. La investigación y la ruta
-de corrección opcional viven en
-[`EX-07e-angular-campaign.md`](../balance/EX-07e-angular-campaign.md#hallazgo-visual-no-bloqueante-destello-del-cuadrado).
+marco es estable y la frontera lógica no parpadea.
 
 Al iterar nuevas formas, no añadirlas a esta secuencia por decoración. Primero
 definir forma inicial/final, margen mínimo, telegraph, duración de morph,
@@ -401,23 +387,12 @@ Overdrive usa la misma liquidación idempotente de NOVA que los demás modos y n
 entrega premios intermedios por ciclo. Los récords pueden persistirse, pero no
 se agregará otra moneda, logros o economía diaria por inferencia.
 
-## Orden de construcción
+## Estado del trabajo
 
-La decisión de diseño no salta las puertas técnicas:
-
-1. dejar EX-02c **PENDIENTE** hasta la pasada final de vida, daño y meta;
-2. terminar la evidencia local de EX-03 y conservar la extracción EX-04;
-3. implementar Boomerang en EX-05 para cerrar la frontera del arsenal;
-4. cerrar el prototipo y consolidar Acto I/`ActDefinition` en EX-06; EX-06a
-   ya formalizó el contrato sin cambiar su gameplay y EX-06b añadirá la regla;
-5. implementar Angular, Calibration y su boss en EX-07;
-6. integrar Fracture y la victoria de Expedition en EX-10;
-7. abrir Overdrive en EX-11, con tabla de ciclos, caps, memoria y recompensa
-   comprobadas.
-
-Las evoluciones siguen EX-08 y sólo se agregan al acto que las consume. La
-implementación no debe crear el registro de actos, ciclos infinitos ni campos
-de save antes de tener un consumidor y pruebas de transición.
+El orden vigente y las tareas todavía abiertas no se mantienen en esta ficha.
+Consulta el [único plan vigente](../../PLAN_DESARROLLO.md). Esta sección
+conserva los criterios funcionales para cambios futuros, no una secuencia de
+entregas.
 
 ## Puertas de aceptación
 

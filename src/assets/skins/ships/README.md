@@ -103,5 +103,5 @@ precio cero del catálogo no la convierte en compra gratis.
 las cuatro esquinas transparentes, al menos un píxel opaco, tamaño acumulado y
 el layout de los slots/cables. Para revisar las artes a escala de catálogo se
 pueden abrir `test-results/skin-refresh/ships-contact.png` y la captura del
-locker generada al completar el smoke. El reporte, navegador y rutas probadas
-se registran en `CONTINUACION.md`.
+locker generada al completar el smoke. La aceptación física y las puertas de
+publicación se registran en `PLAN_DESARROLLO.md`.

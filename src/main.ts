@@ -4,6 +4,8 @@ import './ui/home.css';
 import './ui/start-panels.css';
 import './ui/retention.css';
 import './ui/daily-wheel.css';
+import './ui/defeat-scene.css';
+import './ui/victory-scene.css';
 import { Game } from './app/Game';
 import pauseIcon from './assets/svg/ui/pause.svg?raw';
 import pauseActionIcons from './assets/svg/ui/pause-icons.svg?raw';
@@ -33,6 +35,7 @@ import {
 } from './content/run/OverdriveDefinitions';
 import type { OverdriveBossPair } from './simulation/acts/OverdriveActDirector';
 import { isRetentionChallengeId, type RetentionChallengeId } from './content/retention/RetentionDefinitions';
+import { bindLanguageControls, initializeLocalization } from './i18n';
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
@@ -86,6 +89,8 @@ const createPixiApplication = async (container: HTMLElement): Promise<Applicatio
 };
 
 const bootstrap = async (): Promise<void> => {
+  await initializeLocalization();
+  bindLanguageControls(document);
   const container = document.querySelector<HTMLElement>('#game-container');
   const debugElement = document.querySelector<HTMLElement>('#debug-panel');
   const baselineElement = document.querySelector<HTMLElement>('#baseline-panel');
@@ -234,9 +239,12 @@ const bootstrap = async (): Promise<void> => {
     && !stressMode
     ? requestedWeaponPath
     : undefined;
-  // Commercial adapters remain an EX-09 release gate. Never award a simulated
-  // local ad in a portal artifact while that integration is still pending.
-  const platform = new LocalPlatform(__BUILD_TARGET__ === 'local');
+  // Only the local build may simulate ads; each portal selects its own adapter.
+  const platform = __BUILD_TARGET__ === 'poki'
+    ? new (await import('./platform/poki/PokiPlatform')).PokiPlatform()
+    : __BUILD_TARGET__ === 'crazygames'
+      ? new (await import('./platform/crazygames/CrazyGamesPlatform')).CrazyGamesPlatform()
+      : new LocalPlatform(__BUILD_TARGET__ === 'local');
   const publicOverdriveUnlocked = platform.saveStore.load().overdrive.unlocked;
   const overdriveBossDebugMode = diagnosticOverdrive && searchParams.get('od-pair') !== null;
   const overdriveBossStartSeconds = overdriveStage >= 10

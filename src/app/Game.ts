@@ -44,6 +44,8 @@ import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
 import { GameOverOverlay } from '../ui/GameOverOverlay';
+import { DefeatSceneOverlay } from '../ui/DefeatSceneOverlay';
+import { VictorySceneOverlay } from '../ui/VictorySceneOverlay';
 import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/LevelUpOverlay';
 import { getUpgradeCardVisual } from '../ui/level-up/UpgradeCardVisual';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
@@ -257,6 +259,8 @@ export class Game {
   private readonly levelUp: LevelUpOverlay;
   private readonly pause: PauseOverlay;
   private readonly gameOver: GameOverOverlay;
+  private readonly defeatScene: DefeatSceneOverlay;
+  private readonly victoryScene: VictorySceneOverlay;
   private readonly runTransition: RunTransitionOverlay | null;
   private readonly startScreen: StartScreen | null;
   private readonly uiAudioRoots: readonly HTMLElement[];
@@ -912,6 +916,8 @@ export class Game {
     this.levelUp = new LevelUpOverlay(options.elements.levelUp);
     this.pause = new PauseOverlay(options.elements.pause);
     this.gameOver = new GameOverOverlay(options.elements.gameOver);
+    this.defeatScene = new DefeatSceneOverlay(this.container, this.fxQuality);
+    this.victoryScene = new VictorySceneOverlay(this.container, this.fxQuality);
     this.runTransition = options.elements.runTransition
       ? new RunTransitionOverlay(options.elements.runTransition, this.completeRunIntro, this.fxQuality)
       : null;
@@ -1020,10 +1026,13 @@ export class Game {
       ]);
     } finally { clearTimeout(deadline); }
     if (this.stopped) return;
+    this.lifecycle.onGameReady?.();
     this.app.ticker.add(this.onTick);
   }
 
   public shutdown(): void {
+    this.defeatScene.destroy();
+    this.victoryScene.destroy();
     if (!this.started || this.stopped) return;
     this.stopped = true;
     this.clearTerminalSummaryTimer();
@@ -1114,6 +1123,10 @@ export class Game {
 
     if (noHitChallengeBroken) this.retentionNoHitFailure = true;
     if (playerDefeated || noHitChallengeBroken) {
+      if (!playerDefeated) {
+        this.audio.playCue('player-defeated');
+        this.view.playPlayerDefeat(this.player.state.x, this.player.state.y);
+      }
       this.finishRun('game-over');
       return;
     }
@@ -1189,6 +1202,8 @@ export class Game {
       || this.gameState.phase === 'menu' || this.gameState.isRunIntro ? 0 : deltaSeconds;
     this.view.renderImpactFx(defeatDelta);
     this.view.updateTerminalFx(defeatDelta);
+    this.defeatScene.update(defeatDelta);
+    this.victoryScene.update(defeatDelta);
     this.view.renderLevelUpFx(deltaSeconds);
     if (this.combat.renderState.boss.active) this.baseline.noteBoss(this.combat.stats.elapsedSeconds);
     this.hud.update({
@@ -1475,6 +1490,8 @@ export class Game {
   }
 
   private activateRun(unlockAudio: boolean): void {
+    this.defeatScene.close();
+    this.victoryScene.close();
     this.view.root.visible = true;
     this.baseline.beginRun(this.fxQuality);
     this.applyCalibration();
@@ -1719,6 +1736,10 @@ export class Game {
     const summary = createRunSummary(outcome, this.combat.stats);
     const terminalCause = outcome === 'game-over' ? this.nextTerminalCause : 'defeat';
     this.nextTerminalCause = 'defeat';
+    if (outcome === 'game-over' && terminalCause === 'defeat') {
+      this.defeatScene.play(this.activeRetentionChallenge !== null, this.retentionNoHitFailure);
+    }
+    if (outcome === 'victory') this.victoryScene.play(this.activeRetentionChallenge !== null);
     const saved = this.saveStore.load();
     const isolatedChallenge = this.activeRetentionChallenge !== null;
     const best = isolatedChallenge ? saved.best : mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
@@ -1961,6 +1982,8 @@ export class Game {
     this.lifecyclePaused = false;
     this.audio.startMusic('menu');
     if (!this.ambientAudioPaused) this.audio.resume();
+    this.defeatScene.close();
+    this.victoryScene.close();
     this.gameOver.open(summary, best, novaReward, settled ? this.terminalTotalNova : totalNova, () => {
       this.restartRun();
     }, {
@@ -2018,6 +2041,8 @@ export class Game {
     this.pendingTerminalRun = null;
     this.gameOver.close();
     this.view.playPlayerRevive();
+    this.defeatScene.close();
+    this.victoryScene.close();
     this.audio.playCue('reward-claimed');
     // Game over only resets input state; listeners remain attached for an
     // in-place revive, so attaching again would duplicate pointer handlers.
@@ -2189,6 +2214,8 @@ export class Game {
   }
 
   private returnToMenuState(initialView?: 'retention'): void {
+    this.defeatScene.close();
+    this.victoryScene.close();
     this.retentionProgressEligibleThisRun = false;
     if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector) {
       this.overdriveStage = this.initialOverdriveStage;

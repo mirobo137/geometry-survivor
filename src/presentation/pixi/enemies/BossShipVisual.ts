@@ -7,13 +7,14 @@ import { createDefeatFragments, defeatCompression, ENEMY_DEFEAT_SECONDS, poseDef
 
 export interface BossShipTextures {
   flat: Texture;
-  readonly parts: readonly [Texture, Texture, Texture, Texture];
+  /** Legacy fixtures only; rendering never assembles separate layers. */
+  readonly parts?: readonly [Texture, Texture, Texture, Texture];
 }
 
 export type BossShipTextureMap = Readonly<Record<'core-sentinel' | 'orbital-warden', BossShipTextures>>
   & Readonly<Partial<Record<Exclude<BossId, 'core-sentinel' | 'orbital-warden'>, BossShipTextures>>>;
 
-/** One boss assembly, outside the 250-enemy pool. Never owns attack timing. */
+/** Complete hull with a depth arrival; extra sprites are defeat fragments only. */
 export class BossShipVisual {
   public readonly root = new Container();
   private readonly pieces: Sprite[];
@@ -34,12 +35,15 @@ export class BossShipVisual {
       ? textures
       : { 'core-sentinel': textures, 'orbital-warden': textures, 'fracture-engine': textures };
     const initial = this.textures[this.bossId] ?? this.textures['core-sentinel'];
-    this.pieces = (quality === 'low' ? [initial.flat] : initial.parts).map((texture) => {
+    this.pieces = Array.from({ length: quality === 'low' ? 1 : 4 }, () => {
+      const texture = initial.flat;
       const sprite = new Sprite(texture);
       sprite.anchor.set(0.5);
-      this.root.addChild(sprite);
       return sprite;
     });
+    // Stable sprite order also keeps the four death fragments aligned with
+    // their matching regions of the complete hull.
+    this.root.addChild(...this.pieces);
     this.root.visible = false;
     this.prepareFragments(initial.flat);
     this.root.once('destroyed', () => {
@@ -58,16 +62,16 @@ export class BossShipVisual {
       return;
     }
     for (let index = 0; index < this.pieces.length; index += 1) {
-      this.pieces[index].texture = textures.parts[index];
+      this.pieces[index].texture = textures.flat;
     }
   }
 
-  /** Apply a decoded body without interrupting an entrance already assembling. */
+  /** Apply a decoded hull without restarting the entrance progress. */
   public refreshBodyTexture(previousFlat: Texture): void {
     const body = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
     this.prepareFragments(body);
-    if (this.quality === 'low' || this.pieces[0].texture === previousFlat) {
-      this.pieces[0].texture = body;
+    if (this.defeatAge < 0) for (const piece of this.pieces) {
+      if (piece.texture === previousFlat) piece.texture = body;
     }
   }
 
@@ -75,54 +79,45 @@ export class BossShipVisual {
     if (this.defeatAge < 0) this.root.visible = false;
   }
 
-  public render(state: EnemyRenderState, seconds: number, hitPulse = 0, introProgress = 1): void {
+  public render(state: EnemyRenderState, _seconds: number, hitPulse = 0, introProgress = 1): void {
     if (!state.active || state.kind !== 'boss' || this.defeatAge >= 0) return;
     const progress = Math.max(0, Math.min(1, introProgress));
-    const assembly = this.motionReduced ? 1 : progress * progress * (3 - 2 * progress);
     this.root.visible = true;
     this.root.position.set(state.x, state.y);
-    this.root.alpha = Math.max(0.7, state.health / state.maxHealth) * (0.35 + 0.65 * progress);
-    this.root.scale.set((this.motionReduced ? 1 : 0.8 + 0.2 * assembly) * (1 + hitPulse * 0.025));
+    this.root.alpha = Math.max(0.7, state.health / state.maxHealth);
+    this.root.scale.set(1 + hitPulse * 0.025);
     if (progress < 1) this.root.rotation = 0;
     else if (this.bossId === 'orbital-warden' && Math.hypot(state.vx,state.vy)>1) {
       this.root.rotation = Math.atan2(state.vy,state.vx)+Math.PI/2;
     }
-    if (this.quality === 'low') return;
-    if (progress >= 1) {
-      // Keep the existing modular entrance, but use a complete body once
-      // assembled. PNG bodies replace only this flat texture.
-      this.pieces[0].texture = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
-      this.pieces[0].visible = true;
-      this.pieces[0].position.set(0, 0);
-      this.pieces[0].rotation = 0;
-      this.pieces[0].scale.set(1);
-      this.pieces[0].alpha = 1;
-      for (let index = 1; index < this.pieces.length; index += 1) this.pieces[index].visible = false;
-      return;
+    const body = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
+    const hull = this.pieces[0];
+    for (let index = 0; index < this.pieces.length; index++) {
+      const piece = this.pieces[index];
+      piece.texture = body;
+      piece.visible = index === 0;
+      piece.position.set(0, 0);
+      piece.scale.set(1);
+      piece.rotation = 0;
+      piece.alpha = 1;
+      piece.tint = 0xffffff;
+      piece.blendMode = 'normal';
     }
-    const textures = this.textures[this.bossId] ?? this.textures['core-sentinel'];
-    for (let index = 0; index < this.pieces.length; index += 1) {
-      this.pieces[index].texture = textures.parts[index];
-      this.pieces[index].visible = true;
-    }
-    // Four cached ship layers dock during the existing non-attacking intro.
-    // At progress 1 the complete body takes over; entrances change separately.
-    const remaining = 1 - assembly;
-    this.pieces[0].position.set(0, Math.sin(seconds * 1.8) * 0.45 + remaining * 44);
-    this.pieces[1].position.set(-remaining * 52, 0);
-    this.pieces[2].position.set(remaining * 46, 0);
-    this.pieces[3].position.set(0, -remaining * 54);
-    for (let index = 0; index < this.pieces.length; index += 1) {
-      this.pieces[index].alpha = progress >= 1 ? 1
-        : Math.max(0.14, Math.min(1, (progress - index * 0.075) / 0.6));
-    }
-    this.pieces[1].scale.x = 1 + Math.sin(seconds * 1.2) * 0.009;
-    this.pieces[3].scale.set(1 + Math.sin(seconds * 2.1) * 0.012);
-    this.pieces[0].rotation = remaining * -0.12;
-    this.pieces[1].rotation = remaining * 0.18
-      + (this.bossId === 'orbital-warden' ? Math.sin(seconds*1.2)*0.055 : 0);
-    this.pieces[2].rotation = remaining * -0.16;
-    this.pieces[3].rotation = remaining * 0.1;
+    if (progress >= 1) return;
+    if (this.motionReduced) { hull.alpha = 0.4 + 0.6 * progress; return; }
+    const orbital = this.bossId === 'orbital-warden';
+    const fracture = this.bossId === 'fracture-engine';
+    // Anticipation → emergence → recoil → settled hull. Progress is the
+    // simulation's intro clock, so pause/retry cannot desynchronise the arrival.
+    const emerge = Math.max(0, Math.min(1, (progress - 0.22) / 0.4));
+    const depth = 1 - Math.pow(1 - emerge, 3);
+    const settle = Math.max(0, Math.min(1, (progress - 0.62) / 0.38));
+    const recoil = Math.sin(settle * Math.PI * 2) * Math.pow(1 - settle, 2) * 0.14;
+    hull.alpha = Math.min(1, emerge * 3);
+    const scale = 0.12 + depth * 0.88 + recoil;
+    // The hull stays centered on its logical position throughout the entrance.
+    hull.scale.set(scale * (fracture ? 0.45 + depth * 0.55 : 1), scale);
+    hull.rotation = orbital ? -(1 - depth) * 0.85 : fracture ? (1 - depth) * 0.1 : 0;
   }
 
   public playDefeat(x: number, y: number): void {
@@ -138,6 +133,7 @@ export class BossShipVisual {
     for (let index = 0; index < this.pieces.length; index += 1) {
       this.pieces[index].texture = fragments[index];
       this.pieces[index].visible = true;
+      this.pieces[index].blendMode = 'normal';
     }
     poseDefeatFragments(this.pieces, body, 0);
   }
@@ -168,8 +164,9 @@ export class BossShipVisual {
     this.root.scale.set(1);
     for (let index = 0; index < this.pieces.length; index += 1) {
       const piece = this.pieces[index];
-      piece.texture = this.quality === 'low' ? textures.flat : textures.parts[index];
-      piece.visible = true;
+      piece.texture = textures.flat;
+      piece.visible = index === 0;
+      piece.blendMode = 'normal';
       piece.position.set(0, 0);
       piece.rotation = 0;
       piece.scale.set(1);

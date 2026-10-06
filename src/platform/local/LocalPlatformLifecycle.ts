@@ -5,6 +5,7 @@ export class LocalPlatformLifecycle implements PlatformLifecycle {
     // Local mode intentionally has no external SDK or network dependency.
   }
 
+  public onGameReady(): void {}
   public onGameStart(): void {}
   public onGamePause(): void {}
   public onGameResume(): void {}

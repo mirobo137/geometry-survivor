@@ -162,11 +162,11 @@ export class LevelUpOverlay {
           ? `Nivel ${level} · MAESTRÍA`
           : `Nivel ${level}`;
     this.subtitle.textContent = isEvolutionOffer
-      ? `Elige una ruta y confirma como cambia ${familyLabel}`
+      ? `Elige una ruta y confirma cómo cambia ${familyLabel}`
       : isEvolutionGateOffer
-        ? `${familyLabel} esta lista; abre la carta para comparar sus dos rutas`
+        ? `${familyLabel} está lista; abre la carta para comparar sus dos rutas`
         : isMasteryTargetOffer
-          ? 'Elige el arma evolucionada que recibira la calibracion'
+          ? 'Elige el arma evolucionada que recibirá la calibración'
           : 'Elige una carta para cambiar el destino de esta run';
     this.root.dataset.offerKind = isEvolutionOffer
       ? 'evolution'
@@ -203,7 +203,7 @@ export class LevelUpOverlay {
         button.setAttribute('aria-label', `${choice.title}. Abre las dos evoluciones de ${familyLabel}.`);
       }
       if (choice.effect.type === 'universalWeaponMastery') {
-        button.setAttribute('aria-label', `${choice.title}. Abre la seleccion de un arma evolucionada.`);
+        button.setAttribute('aria-label', `${choice.title}. Abre la selección de un arma evolucionada.`);
       }
 
       const frame = document.createElement('span');

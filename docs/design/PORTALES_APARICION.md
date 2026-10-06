@@ -9,11 +9,29 @@ gana opacidad durante 0,26 s. El portal se disipa en 0,48 s.
 
 Core Sentinel, Orbital Warden y Fracture Engine ya tenían una fase `intro` de
 1,2 / 1,1 / 1,3 s respectivamente. Durante ella no comienzan ataques. La vista
-ahora presenta un portal mayor y ensambla las cuatro texturas existentes
-(`rear`, `wings`, `hull`, `cockpit`) desde cuatro direcciones hasta su pose
-normal. En Low se conserva el casco completo con aparición gradual; con
-`prefers-reduced-motion` no viajan las piezas. Dos bosses simultáneos tienen dos
-portales independientes.
+presenta desde el inicio el cuerpo completo raster (SVG completo sólo como
+fallback de carga), sin ensamblaje. Segunda propuesta del 05-10-2026: anticipación
+durante el primer 22% de la intro, emergencia hasta el 62%, rebote amortiguado
+y asentamiento durante el resto. Core emerge frontalmente desde una apertura
+dorada; Orbital llega girando desde una apertura azul inclinada; Fracture
+atraviesa una brecha vertical cálida, recuperando el ancho de su casco.
+El cuerpo permanece centrado en su posición lógica. Al emerger dispara una
+onda visual expansiva; la brecha se contrae y desvanece hasta el final.
+Se retiraron los ecos de naves de la primera propuesta.
+
+Cada slot de boss tiene dos Graphics adicionales (halo y onda), construidos
+una vez y animados sólo por transforms/alpha; el halo tiene 16 trazos en
+Medium/High y 8 en Low. Son cuatro Graphics en total para dos bosses simultáneos.
+Sus contextos pertenecen a los Graphics y siguen la destrucción del árbol de
+la vista. No se crean partículas, imágenes ni filtros adicionales.
+Movimiento reducido conserva el casco fijo y un fade, sin onda ni rotación.
+Las curvas dependen del progreso de intro existente, no del reloj de pared.
+Dos bosses simultáneos conservan portales y animaciones independientes.
+Cambio comprobado el 05-10-2026 con typecheck, suite unitaria completa (758
+tests / 134 archivos), build development y smoke Chromium del boss Core
+Sentinel. Revisión visual en móvil físico y aprobación estética siguen
+pendientes; la evidencia histórica del final de este documento no valida esta
+entrada nueva.
 
 ## Representación y presupuesto
 

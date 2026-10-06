@@ -2,7 +2,7 @@
 
 Prototipo web del MVP de *Geometry Survivor*. El juego está construido para ejecutarse primero en navegador y publicarse en GitHub Pages, con destinos separados para pruebas locales, Poki y CrazyGames.
 
-Para retomar el desarrollo desde otra sesión o agente, consulta [CONTINUACION.md](CONTINUACION.md) y el [mapa documental](docs/README.md). El snapshot y la [guía de ejecución](docs/PLAN_EJECUCION.md) indican la tarea vigente; los historiales fechados no son una lista de trabajo pendiente ni reemplazan `PLAN_DESARROLLO.md`.
+Para retomar el desarrollo, consulta el [plan único de pendientes](PLAN_DESARROLLO.md), el [índice de documentación](docs/README.md) y la skill de la tarea. No hay un snapshot o plan de ejecución paralelo.
 
 ## Arranque local
 
@@ -21,8 +21,6 @@ npm run dev
 Abre la URL que muestre Vite. Para ver el panel técnico añade `?debug=1`.
 
 La orientación primaria es portrait para móvil. En landscape el juego usa un viewport 1280×720 para aprovechar pantallas de PC y portales de escritorio; no se fuerza a girar el dispositivo.
-
-Los spikes de Fase 0 se pueden ejecutar desde GitHub Pages con `?spike=rendering` y `?spike=audio`; el protocolo está en [docs/performance/F0_SPIKES.md](docs/performance/F0_SPIKES.md).
 
 El stress de combate de Fase 2 se ejecuta con `?stress=1`. Inicializa 250 enemigos y 300 proyectiles reales, mantiene visible el panel técnico y sirve para comprobar el peor caso en el mismo móvil. Se puede combinar con `&debug=1`, aunque no es necesario.
 
@@ -54,4 +52,4 @@ El repositorio y GitHub Pages ya están configurados: no ejecutar de nuevo el ar
 
 El workflow `.github/workflows/deploy.yml` publica `dist/local` en GitHub Pages tras un push a `main` o ejecución manual, sólo después de typecheck, unitarios, tres builds y todos los shards browser. Una validación local no demuestra que el workflow remoto haya pasado. Commit, push y publicación requieren autorización de la solicitud vigente.
 
-GitHub Pages prueba el target local. Antes de publicar comercialmente faltan los adaptadores reales y pruebas en Poki Inspector/CrazyGames Preview, así como las puertas de carga, recursos y presupuestos descritas en el [plan vigente](docs/PLAN_EJECUCION.md).
+GitHub Pages prueba el target local. Antes de publicar comercialmente faltan los adaptadores reales y pruebas en Poki Inspector/CrazyGames Preview, así como las puertas de carga, recursos y presupuestos descritas en el [plan vigente](PLAN_DESARROLLO.md).

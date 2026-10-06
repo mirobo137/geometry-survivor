@@ -25,8 +25,8 @@ No la cargues como unica skill para reglas de combate, balance, arquitectura o i
 
 Antes de generar un asset, lee:
 
-1. `../../PLAN_DESARROLLO.md`, en especial el viewport logico, el pipeline SVG, los presupuestos y la Definition of Done;
-2. `../../proyecto.md`, en especial el lenguaje visual y las reglas de UI/feedback;
+1. `../../proyecto.md`, para la visión y los invariantes visuales;
+2. el contrato pertinente de `../../docs/design/` y el límite activo indicado en `../../PLAN_DESARROLLO.md`;
 3. `../../skills/geometry-survivor-rendering/SKILL.md` cuando el asset vaya a PixiJS;
 4. `../../skills/geometry-survivor-mobile-performance/SKILL.md` si el asset se repite, se anima o se usa en movil.
 

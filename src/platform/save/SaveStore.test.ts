@@ -173,7 +173,7 @@ describe('LocalSaveStore', () => {
         musicVolume: 1,
         sfxVolume: 0,
         muted: false,
-        controlScheme: 'touch',
+        controlScheme: 'joystick',
         quality: 'medium'
       },
       best: { timeSeconds: 0, score: 14 },
@@ -201,7 +201,7 @@ describe('LocalSaveStore', () => {
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       settings: { controlScheme: 'unknown' }
-    }).settings.controlScheme).toBe('touch');
+    }).settings.controlScheme).toBe('joystick');
   });
 
   it('migrates campaign unlocks with Radial always available and no unknown acts', () => {

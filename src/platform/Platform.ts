@@ -3,6 +3,8 @@ import type { AudioService } from '../audio/AudioService';
 
 export interface PlatformLifecycle {
   init(): Promise<void>;
+  /** Fired after the app's first interactive assets are ready. */
+  onGameReady?(): void;
   onGameStart(): void;
   onGamePause(): void;
   onGameResume(): void;

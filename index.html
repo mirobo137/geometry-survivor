@@ -65,6 +65,13 @@
               <option value="joystick">Joystick</option>
             </select>
             <p class="control-help">Con joystick, arrastra lejos de la nave y suelta para detenerte. En PC siempre puedes usar el teclado.</p>
+            <label for="start-language">Idioma</label>
+            <select id="start-language" class="control-scheme-select" data-language-selector aria-label="Selección de idioma">
+              <option value="auto">Automático · idioma del dispositivo</option>
+              <option value="es">Español</option>
+              <option value="en">English</option>
+            </select>
+            <p class="control-help">Al cambiar idioma, la interfaz se actualiza al instante.</p>
             <label class="start-checkbox" for="start-muted">
               <input id="start-muted" type="checkbox" />
               Silenciar todo
@@ -266,7 +273,7 @@
             <div id="pause-actions" class="pause-actions">
               <button id="pause-resume" class="pause-action pause-action-primary" type="button">
                 <span class="pause-button-icon" data-pause-icon="resume" aria-hidden="true"></span>
-                <span class="pause-button-label">Continuar</span>
+                <span class="pause-button-label">Reanudar</span>
                 <span class="pause-button-hint" aria-hidden="true">ENTER</span>
               </button>
               <button id="pause-settings-toggle" class="pause-action" type="button" aria-expanded="false" aria-controls="pause-settings">
@@ -311,6 +318,12 @@
                 <option value="joystick">Joystick</option>
               </select>
               <p class="control-help">El cambio se guarda al instante. En PC siempre puedes usar el teclado.</p>
+              <label for="pause-language">Idioma</label>
+              <select id="pause-language" class="control-scheme-select" data-language-selector aria-label="Selección de idioma">
+                <option value="auto">Automático · idioma del dispositivo</option>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
               <label class="pause-checkbox" for="pause-muted">
                 <input id="pause-muted" type="checkbox" />
                 <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="mute" aria-hidden="true"></span><span>Silenciar todo</span></span>

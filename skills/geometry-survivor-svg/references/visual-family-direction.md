@@ -145,10 +145,9 @@ una mejora SVG no autoriza tocar su daño ni volver homing un disparo cosmético
 
 ## Fondos: composición primero, partículas después
 
-Para nuevas familias, aplicar [Fondos premium](../../../../docs/design/FONDOS_PREMIUM.md).
-Órbita de Nacre y Flor del Ocaso establecen fuentes SVG compartidas con el
-locker, rasterizadas una vez a 768×768, y láminas estáticas con centro de baja
-interferencia. Reutilizar `StaticSvgBackgroundView` al crear otra familia.
+Para nuevas familias, aplicar [Fondos premium](../../../docs/design/FONDOS_PREMIUM.md).
+El runtime usa placas pictóricas raster/WebP con corrientes compartidas; cada
+familia necesita composición y material propios, no un SVG estático recoloreado.
 
 Consumidor real: `BackgroundView.ts`; colores y IDs: `BackgroundDefinitions.ts`.
 No imponer SVG si unas formas estáticas de Graphics resuelven mejor el fondo.
@@ -208,7 +207,8 @@ nueva.
 
 ## Secuencia de entrega y puerta para el siguiente agente
 
-1. Leer la solicitud actual, §22 del plan y la ficha de categoría anterior.
+1. Leer la solicitud actual, `AGENTS.md`, el primer pendiente de
+   `PLAN_DESARROLLO.md` cuando corresponda y la ficha de categoría anterior.
 2. Identificar el asset exacto y sus consumidores. Explicar qué cambia y qué
    se conserva. No reconstruir toda la flota por un ajuste de una nave.
 3. Aplicar planos/espacios de `ship-art-direction.md`; crear piezas y actualizar
@@ -223,5 +223,5 @@ nueva.
 7. Probar manualmente `?boss=1`, `?stress=1`, pausa, muerte y restart; en móvil
    físico medir el MISMO escenario Low/High. Registrar aparato, DPR y tiempos.
 8. Informar APROBADO AUTOMÁTICO / PENDIENTE HUMANO por separado. No cerrar
-   VIS completos ni adelantar EX sólo porque el arte compile. Continuar desde
-   `CONTINUACION.md`, sin depender de memoria de un modelo.
+   VIS completos ni adelantar fases sólo porque el arte compile. Registrar las
+   puertas abiertas exclusivamente en `PLAN_DESARROLLO.md`.

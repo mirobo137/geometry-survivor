@@ -1,0 +1,87 @@
+/* Six reusable layers, no filters, textures, particles or independent timers. */
+.victory-scene {
+  --victory-time: 0s;
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  contain: layout paint;
+  color: #fff2c5;
+}
+.victory-scene[hidden] { display: none; }
+.victory-scene > div {
+  position: absolute;
+  animation-duration: 3s;
+  animation-delay: var(--victory-time);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-play-state: paused;
+}
+.victory-scene-shade {
+  inset: 0;
+  background: radial-gradient(ellipse at center, #07182888, #030c1cec);
+  animation-name: victory-shade;
+}
+.victory-scene-aura {
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, #ffda7e44, #75edee22 35%, transparent 70%);
+  animation-name: victory-bloom;
+}
+.victory-scene-ring {
+  width: min(72vw, 580px);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 45%;
+  border: 2px solid #ffe09ba0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 12px #78e6e90a, 0 0 0 24px #ffdc8110;
+  animation-name: victory-ring;
+}
+.victory-scene-rays {
+  inset: -50%;
+  background: repeating-conic-gradient(from 8deg at 50% 50%, transparent 0deg 24deg, #ffd77a0e 25deg 30deg);
+  animation-name: victory-rays;
+}
+.victory-scene-horizon {
+  top: 46%;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8bebeb88, #fff2c9, #8bebeb88, transparent);
+  animation-name: victory-horizon;
+}
+.victory-scene-copy {
+  top: 50%;
+  left: 50%;
+  width: calc(100% - 2rem);
+  max-width: 760px;
+  display: grid;
+  justify-items: center;
+  gap: .8rem;
+  text-align: center;
+  animation-name: victory-copy;
+}
+.victory-scene-emblem { font: 400 clamp(2.5rem, 8vw, 5rem)/1 serif; color: #ffe09b; text-shadow: 0 0 24px #ffd36a66; }
+.victory-scene-title { font-size: clamp(1.5rem, 5vw, 3.4rem); line-height: 1.12; font-weight: 800; letter-spacing: .08em; }
+.victory-scene-caption { max-width: 95%; color: #a4f0e9; font: 700 clamp(.6rem, 1.6vw, .8rem)/1.6 ui-monospace, monospace; letter-spacing: .12em; }
+@keyframes victory-shade { 0% { opacity: 0; } 22%, 88% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes victory-bloom { 0% { opacity: 0; transform: scale(.85); } 25%, 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1.15); } }
+@keyframes victory-ring { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); } 18% { opacity: .8; } 85%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); } }
+@keyframes victory-rays { 0% { opacity: 0; transform: rotate(-8deg); } 30%, 75% { opacity: 1; } 100% { opacity: 0; transform: rotate(8deg); } }
+@keyframes victory-horizon { 0% { opacity: 0; transform: scaleX(.05); } 22% { opacity: .8; transform: scaleX(1); } 80%, 100% { opacity: 0; transform: scaleX(1.1); } }
+@keyframes victory-copy { 0%, 12% { opacity: 0; transform: translate(-50%, -40%) scale(.94); } 30%, 86% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -55%) scale(1); } }
+.victory-scene[data-quality="low"] .victory-scene-rays,
+.victory-scene[data-quality="low"] .victory-scene-ring { display: none; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .victory-scene-copy { gap: .35rem; }
+  .victory-scene-emblem { font-size: 2.2rem; }
+  .victory-scene-title { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .victory-scene-rays, .victory-scene-ring, .victory-scene-horizon { display: none; }
+  .victory-scene > div { animation-name: victory-reduced-fade; }
+  .victory-scene-copy { transform: translate(-50%, -50%); }
+}
+@keyframes victory-reduced-fade { 0% { opacity: 0; } 25%, 85% { opacity: 1; } 100% { opacity: 0; } }

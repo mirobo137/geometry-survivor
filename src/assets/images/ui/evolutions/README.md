@@ -87,8 +87,8 @@ Pasaron typecheck y 515 pruebas unitarias. Builds local, Poki y CrazyGames
 compilan con el config loader runner; la carga bundle de config local sufrió
 el error de permisos de OneDrive ya registrado. Continúa la advertencia
 preexistente de chunk principal >500 kB.
-El smoke dirigido de selección de las dos evoluciones y la revisión visual
-se registran en CONTINUACION.md.
+La aceptación visual pendiente, si aplica, se sigue únicamente en
+`PLAN_DESARROLLO.md`.
 
 `node docs/visual/capture-evolution-art.mjs` prueba contra preview 4173;
 admite otra URL como argumento. Captura 1280×720, 390×844, 320×568, 640×360

@@ -1,14 +1,12 @@
 # Laboratorio de meta — contrato V2
 
-Estado: progresión implementada localmente; árbol UI automático OK, revisión
-visual/táctil y pruebas humanas aplazadas por solicitud del usuario (29-09-2026).
-Última actualización: 29-09-2026.
+Contrato funcional y visual del Laboratorio V2. El estado de aceptación actual
+se sigue únicamente en [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 
 Este documento reemplaza el contrato de la tienda permanente V1. Es la fuente
-canónica para contenido, UI, guardado y pruebas del Laboratorio. El balance
-aprobado de enemigos y bosses de EX-02c es independiente: esta entrega no lo
-reabre. El plan futuro de Overdrive por ritmo de puntos tampoco se implementa
-ni se presume como fuente actual de NOVA.
+canónica para contenido, UI, guardado y pruebas del Laboratorio. El baseline
+aprobado de enemigos y bosses es independiente y no se reabre por cambios de
+meta.
 
 ## Acceso y alcance
 
@@ -199,20 +197,19 @@ La aprobación final del equilibrio de los topes y costes requiere juego manual.
 El ritmo futuro de Overdrive por puntos debe medir NOVA/minuto antes de
 recalibrar estos precios; no duplicar ingresos por anticipado.
 
-### Recordatorio: pruebas manuales aplazadas
+### Criterios de aceptación
 
-El 29-09-2026 el usuario pide dejar el Laboratorio en pausa y probarlo después.
-Las pruebas automáticas ya registradas no sustituyen esta aceptación humana.
-Al retomar, comprobar:
+Las puertas que falten por comprobar se registran en el
+[plan único](../../PLAN_DESARROLLO.md). Esta ficha mantiene los criterios:
 
-- [ ] PC y móvil físico: lectura de iconos y ofertas, arrastre, zoom, pinch,
+- PC y móvil físico: lectura de iconos y ofertas, arrastre, zoom, pinch,
   recentrado y acceso a la isla de Vitalidad sin bloquear otros controles.
-- [ ] Modal: efecto y coste comprensibles; cerrar por botón, exterior y Escape
+- Modal: efecto y coste comprensibles; cerrar por botón, exterior y Escape
   en teclado; comprar, mostrar el rango siguiente y respetar el saldo.
-- [ ] Recargar: conservar NOVA, rangos, ofertas y contador de compras.
-- [ ] Vitalidad: habilitar tras tres compras NOVA; conceder una sola vez por
+- Recargar: conservar NOVA, rangos, ofertas y contador de compras.
+- Vitalidad: habilitar tras tres compras NOVA; conceder una sola vez por
   anuncio exitoso y no conceder al cancelar o no disponer de anuncio.
-- [ ] Actos y Overdrive: aplicar las mejoras compradas y mostrar en las cartas
+- Actos y Overdrive: aplicar las mejoras compradas y mostrar en las cartas
   el daño que incluye las bonificaciones permanentes; revisar topes y costes
   jugando antes de declararlos aprobados.
 

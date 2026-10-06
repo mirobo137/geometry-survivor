@@ -332,22 +332,23 @@ QA de plurales, textos largos, botones y accesibilidad sin recortes.
 6. **EX-09:** inglés/adaptadores/QA portal con artefacto exacto; después submission
    autorizada. No reabrir balance aprobado sin defecto concreto.
 
-Guía: [PLAN_EJECUCION](../PLAN_EJECUCION.md). Cierre futuro por ID, commit, escenario,
-antes/después, regresión y límites; no resolver un hallazgo con tests no relacionados.
+Este informe es una auditoría histórica del estado inspeccionado en su fecha.
+El seguimiento de acciones abiertas y sus cierres vive en el
+[plan único](../../PLAN_DESARROLLO.md); cada cierre debe identificar commit,
+escenario, medición anterior/posterior, regresión y límites.
 
 ## 7. Depuración documental
 
-CONTINUACION 306 KB → 4.8 KB; guía de ejecución 85.6 KB → 11.4 KB:
-aproximadamente **96% menos lectura operativa**. Históricos íntegros recuperables
-en docs/archive, comparación contra HEAD y 75 enlaces rebasados. Nuevo
-[índice documental](../README.md): contratos activos, evidencia fechada y propuestas.
-README ya no ordena reinicializar este repositorio.
+La consolidación documental actual mantiene una cola única y conserva esta
+auditoría como evidencia técnica fechada. El
+[índice documental](../README.md) enlaza contratos activos y evidencias
+relevantes; se eliminaron snapshots operativos duplicados y archivos de
+decisiones ya sustituidas.
 
-Se aclaran estados caducados de Infinito/Overdrive y eliminación de Expedition.
-EX-02c cerrado; Laboratorio humano/EX-09 pendientes. Se conservan contratos,
-prompts/licencias/procedencia y pruebas humanas útiles. No se eliminaron assets,
-código ni evidencia necesaria; conservar una especificación implementada sí aporta
-referencias para futuras extensiones. La limpieza no es optimización de RAM.
+El baseline de balance y los sistemas descritos aquí no vuelven a abrirse por
+esta auditoría. Las puertas actuales de Laboratorio, recursos y portales viven
+en `PLAN_DESARROLLO.md`. Se conservan contratos técnicos y evidencia fechada;
+esta limpieza documental no es una optimización de RAM.
 
 ## 8. Fuentes y límites
 

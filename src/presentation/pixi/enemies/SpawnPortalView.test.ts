@@ -30,7 +30,7 @@ describe('SpawnPortalView', () => {
     const secondary = boss('orbital-warden', 0.2);
     view.render(1, primary, [primary, secondary]);
     expect(view.activeCount).toBe(2);
-    const sprites = view.root.children.slice(-2) as Sprite[];
+    const sprites = view.root.children.slice(-4, -2) as Sprite[];
     expect(sprites[0].x).toBe(640);
     expect(sprites[0].scale.x).toBeGreaterThan(1);
     expect(sprites[0].tint).not.toBe(sprites[1].tint);

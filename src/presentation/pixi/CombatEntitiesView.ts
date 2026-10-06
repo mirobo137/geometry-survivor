@@ -14,10 +14,6 @@ import fastSvg from '../../assets/svg/enemies/fast/fast.svg?raw';
 import tankSvg from '../../assets/svg/enemies/tank/tank.svg?raw';
 import eliteSvg from '../../assets/svg/enemies/elite/elite.svg?raw';
 import bossSvg from '../../assets/svg/enemies/boss/boss.svg?raw';
-import bossRearSvg from '../../assets/svg/enemies/boss/boss-rear.svg?raw';
-import bossWingsSvg from '../../assets/svg/enemies/boss/boss-wings.svg?raw';
-import bossHullSvg from '../../assets/svg/enemies/boss/boss-hull.svg?raw';
-import bossCockpitSvg from '../../assets/svg/enemies/boss/boss-cockpit.svg?raw';
 import { BossShipVisual, type BossShipTextures } from './enemies/BossShipVisual';
 import orbiterSvg from '../../assets/svg/enemies/orbiter/orbiter.svg?raw';
 import chargerSvg from '../../assets/svg/enemies/charger/charger.svg?raw';
@@ -25,10 +21,6 @@ import splitterSvg from '../../assets/svg/enemies/splitter/splitter.svg?raw';
 import prismWeaverSvg from '../../assets/svg/enemies/prism-weaver/prism-weaver.svg?raw';
 import wardenReplicaSvg from '../../assets/svg/enemies/warden-replica/warden-replica.svg?raw';
 import orbitalWardenSvg from '../../assets/svg/enemies/boss/orbital-warden.svg?raw';
-import orbitalWardenRearSvg from '../../assets/svg/enemies/boss/orbital-warden-rear.svg?raw';
-import orbitalWardenWingsSvg from '../../assets/svg/enemies/boss/orbital-warden-wings.svg?raw';
-import orbitalWardenHullSvg from '../../assets/svg/enemies/boss/orbital-warden-hull.svg?raw';
-import orbitalWardenCockpitSvg from '../../assets/svg/enemies/boss/orbital-warden-cockpit.svg?raw';
 import { FRACTURE_BOSS_SVGS, FRACTURE_ENEMY_SVGS } from '../../assets/svg/enemies/FractureEnemySvgMarkup';
 import {
   ENEMY_RASTER_BOSS_IDS,
@@ -95,22 +87,13 @@ const createEnemyTextures = (renderer: Renderer): EnemyTextureSet => ({
   },
   boss: {
     'core-sentinel': {
-      flat: createSvgTexture(renderer, bossSvg, { x: -56, y: -56, width: 112, height: 112 }),
-      parts: [bossRearSvg, bossWingsSvg, bossHullSvg, bossCockpitSvg].map(svg =>
-        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
-      ) as [Texture, Texture, Texture, Texture]
+      flat: createSvgTexture(renderer, bossSvg, { x: -56, y: -56, width: 112, height: 112 })
     },
     'orbital-warden': {
-      flat: createSvgTexture(renderer, orbitalWardenSvg, { x: -56, y: -56, width: 112, height: 112 }),
-      parts: [orbitalWardenRearSvg, orbitalWardenWingsSvg, orbitalWardenHullSvg, orbitalWardenCockpitSvg].map(svg =>
-        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
-      ) as [Texture, Texture, Texture, Texture]
+      flat: createSvgTexture(renderer, orbitalWardenSvg, { x: -56, y: -56, width: 112, height: 112 })
     },
     'fracture-engine': {
-      flat: createSvgTexture(renderer, FRACTURE_BOSS_SVGS.flat, { x: -56, y: -56, width: 112, height: 112 }),
-      parts: [FRACTURE_BOSS_SVGS.rear, FRACTURE_BOSS_SVGS.wings, FRACTURE_BOSS_SVGS.hull, FRACTURE_BOSS_SVGS.cockpit].map(svg =>
-        createSvgTexture(renderer, svg, { x: -56, y: -56, width: 112, height: 112 })
-      ) as [Texture, Texture, Texture, Texture]
+      flat: createSvgTexture(renderer, FRACTURE_BOSS_SVGS.flat, { x: -56, y: -56, width: 112, height: 112 })
     }
   }
 });

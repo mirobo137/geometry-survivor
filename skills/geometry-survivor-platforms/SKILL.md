@@ -11,7 +11,7 @@ Mantén una sola simulación con adaptadores aislados y bundles separados.
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Builds y GitHub Pages”, “Integración Poki y CrazyGames”, “Guardado” y Fase 8. Consulta `../../proyecto.md` secciones 37–41. Antes de cambiar un SDK o requisito, abre su documentación oficial vigente.
+Lee el bloque de plataformas de `../../PLAN_DESARROLLO.md`, el contrato de build en `../../docs/CI_DEPLOY.md` y `../../proyecto.md`. Antes de cambiar un SDK o requisito, abre su documentación oficial vigente.
 
 ## Invariantes
 

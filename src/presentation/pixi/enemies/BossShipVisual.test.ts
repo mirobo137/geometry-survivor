@@ -8,14 +8,16 @@ const state: EnemyRenderState = { active: true, kind: 'boss', x: 300, y: 200, vx
 
 describe('BossShipVisual', () => {
   afterEach(() => vi.unstubAllGlobals());
-  it('assembles all four pieces through intro and finishes in its normal pose', () => {
+  it('brings in the complete hull and settles at its combat pose', () => {
     const view = new BossShipVisual(textures, 'high');
     view.render(state, 0, 0, 0);
     const pieces = view.root.children as Sprite[];
-    expect(pieces.map(piece => Math.hypot(piece.x, piece.y)).every(distance => distance > 40)).toBe(true);
-    const startScale = view.root.scale.x;
+    expect(pieces.map(piece => piece.texture)).toEqual([textures.flat, textures.flat, textures.flat, textures.flat]);
+    expect(pieces.filter(piece => piece.visible)).toHaveLength(1);
+    expect(pieces[0].alpha).toBe(0);
     view.render(state, 0.6, 0, 0.5);
-    expect(view.root.scale.x).toBeGreaterThan(startScale);
+    expect(pieces[0].alpha).toBeGreaterThan(0.5);
+    expect(pieces[0].scale.x).toBeGreaterThan(0.8);
     view.render(state, 1.2, 0, 1);
     expect(pieces[0].x).toBe(0);
     expect(pieces[0].y).toBe(0);
@@ -77,7 +79,7 @@ describe('BossShipVisual', () => {
     expect(view.isDefeatActive).toBe(false);
   });
 
-  it('switches the cached assembly when the boss identity changes', () => {
+  it('switches the complete hull when the boss identity changes', () => {
     const wardenTextures: BossShipTextures = {
       flat: Texture.WHITE,
       parts: [Texture.EMPTY, Texture.EMPTY, Texture.EMPTY, Texture.EMPTY]
@@ -88,12 +90,12 @@ describe('BossShipVisual', () => {
     }, 'high');
 
     view.render(state, 0);
-    expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
+    expect((view.root.children[0] as Sprite).texture).toBe(textures.flat);
     view.setBossId('orbital-warden');
-    expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
-    expect((view.root.children[3] as Sprite).texture).toBe(Texture.EMPTY);
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.WHITE);
+    expect((view.root.children[3] as Sprite).texture).toBe(Texture.WHITE);
     view.reset();
-    expect((view.root.children[0] as Sprite).texture).toBe(Texture.EMPTY);
+    expect((view.root.children[0] as Sprite).texture).toBe(Texture.WHITE);
   });
 
   it('omits moving fragments with reduced motion, independently of boss size', () => {

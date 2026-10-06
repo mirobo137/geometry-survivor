@@ -69,6 +69,6 @@ importa los módulos reales mediante Vite. No forma parte de dist ni del menú.
 La lámina muestra original, master, composición Pixi, Low, tamaños, grises y
 despiece. Después comprobar `?stress=1` en Low/High y una muerte de Tank.
 
-La aprobación artística y rendimiento físico se reportan en CONTINUACION.md;
-no se consideran satisfechos sólo por existir esta ficha.
+La aceptación artística y el rendimiento físico se registran en
+`PLAN_DESARROLLO.md`; no se consideran satisfechos sólo por existir esta ficha.
 Procedimiento canónico: `skills/geometry-survivor-svg/references/ship-art-direction.md`.

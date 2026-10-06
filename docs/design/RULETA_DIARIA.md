@@ -4,9 +4,9 @@ Implementación local: 04-10-2026. Solicitud expresa del usuario: acceso junto a
 Retos y Bitácora, diez ranuras de NOVA, una skin exclusiva muy rara y un extra
 diario al completar un video opcional. Actualización autorizada: ambos giros
 pueden entregar la skin y aumentan su probabilidad en un punto porcentual
-por giro completado, desde 1% hasta 20%. Este contrato
-sustituye la propuesta inicial de cápsula sin anuncios/porcentajes del plan de
-[retención](RETENCION_EVENTOS_Y_RECOMPENSAS.md), no sus puertas de publicación.
+por giro completado, desde 1% hasta 20%. Este contrato describe el sistema
+implementado; su validación local y puertas de publicación están en el
+[plan único de pendientes](../../PLAN_DESARROLLO.md).
 
 ## Colección de temporadas — actualización 04-10-2026
 

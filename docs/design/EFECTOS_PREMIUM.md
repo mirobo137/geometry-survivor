@@ -17,9 +17,9 @@ La receta equivalente para la frontera y el espacio habitable vive en
 [ARENA_FX_PREMIUM.md](ARENA_FX_PREMIUM.md); no reutilizar Solar Rail como
 decoración de arena ni convertir la frontera en un hazard falso.
 
-Esta entrega reemplaza el láser anterior por solicitud del usuario. No está
-aprobada visualmente por él todavía. La aprobación de skins y cañones no se
-extiende automáticamente a nuevos efectos.
+La validación visual de cada efecto es específica y no se extiende desde la
+aprobación de skins o cañones. Las puertas que falten se mantienen en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 
 ## Qué significa premium
 
@@ -141,19 +141,18 @@ Para el hazard anular leer también
 la banda activa con dirección geométrica, su disipación y el presupuesto de
 paths cacheados sin tocar `RadialPulseHazard`.
 
-Para el primer hazard Angular leer también
-[`EX-07c-pulse-ring.md`](../balance/EX-07c-pulse-ring.md): define la abertura
-sectorial móvil, la colisión de radio barrido, el hit único, el empuje limitado
-y cómo reutilizar la receta visual sin pintar una falsa zona segura.
+Para el hazard sectorial leer también
+[`ACTOS_Y_META.md`](ACTOS_Y_META.md): define la abertura móvil, la colisión de
+radio barrido, el hit único, el empuje limitado y la zona segura.
 
-Para la hoja sectorial y el patrón móvil del boss leer también
-[`EX-07d-angular-warden.md`](../balance/EX-07d-angular-warden.md): el aviso
+Para la hoja sectorial y el patrón móvil del boss, consultar
+[`ACTO_II_BOSS_FAMILY_PREMIUM.md`](ACTO_II_BOSS_FAMILY_PREMIUM.md): el aviso
 compromete sector y sentido, el cuerpo activo rota por transform y la vista no
 convierte la zona segura en una superficie pintada.
-# Evoluciones: contrato específico vigente
 
-Para EX-08-R aplicar además [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md): contiene
-storyboard, geometría física, identidad y pruebas de cada nueva ruta. Es una
-especificación pendiente de implementación y aprobación humana; no sustituir
-un cambio de comportamiento por más brillo. La pareja Projectile ya aprobada
-se conserva. Las reglas generales de efectos de este documento siguen vigentes.
+## Evoluciones: contrato específico vigente
+
+Aplicar además [EVOLUCIONES_V2.md](EVOLUCIONES_V2.md): contiene storyboard,
+geometría física, identidad y criterios de regresión de cada ruta. No sustituir
+un cambio de comportamiento por más brillo. Las reglas generales de efectos de
+este documento siguen vigentes.

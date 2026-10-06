@@ -20,7 +20,13 @@ const mocks = vi.hoisted(() => ({
   transitionOpenRoute: vi.fn(() => 2.6),
   transitionOpenStage: vi.fn(),
   transitionClose: vi.fn(),
-  transitionPaused: vi.fn()
+  transitionPaused: vi.fn(),
+  defeatScenePlay: vi.fn(),
+  victoryScenePlay: vi.fn(),
+  victorySceneClose: vi.fn(),
+  defeatSceneUpdate: vi.fn(),
+  defeatSceneClose: vi.fn(),
+  defeatSceneDestroy: vi.fn()
 }));
 
 vi.mock('../presentation/PixiGameView', () => ({
@@ -66,6 +72,24 @@ vi.mock('../ui/GameOverOverlay', () => ({
     public setDoubleNovaPending = mocks.doubleNovaPending;
     public setDoubleNovaResult = mocks.doubleNovaResult;
     public updateNova = mocks.gameOverUpdateNova;
+  }
+}));
+
+vi.mock('../ui/DefeatSceneOverlay', () => ({
+  DefeatSceneOverlay: class {
+    public play = mocks.defeatScenePlay;
+    public update = mocks.defeatSceneUpdate;
+    public close = mocks.defeatSceneClose;
+    public destroy = mocks.defeatSceneDestroy;
+  }
+}));
+
+vi.mock('../ui/VictorySceneOverlay', () => ({
+  VictorySceneOverlay: class {
+    public play = mocks.victoryScenePlay;
+    public update = vi.fn();
+    public close = mocks.victorySceneClose;
+    public destroy = vi.fn();
   }
 }));
 
@@ -175,6 +199,12 @@ describe('Game', () => {
     mocks.transitionOpenStage.mockReset();
     mocks.transitionClose.mockReset();
     mocks.transitionPaused.mockReset();
+    mocks.defeatScenePlay.mockReset();
+    mocks.victoryScenePlay.mockReset();
+    mocks.victorySceneClose.mockReset();
+    mocks.defeatSceneUpdate.mockReset();
+    mocks.defeatSceneClose.mockReset();
+    mocks.defeatSceneDestroy.mockReset();
     vi.stubGlobal('window', {
       location: { search: '' },
       addEventListener: vi.fn(),
@@ -412,6 +442,9 @@ describe('Game', () => {
 
     expect(runtime.retentionNoHitFailure).toBe(true);
     expect(runtime.gameState.phase).toBe('game-over');
+    expect((game as unknown as { view: { playPlayerDefeat: ReturnType<typeof vi.fn> } })
+      .view.playPlayerDefeat).toHaveBeenCalledOnce();
+    expect(mocks.defeatScenePlay).toHaveBeenCalledWith(true, true);
   });
 
   it.each(['core-duel', 'warden-duel', 'fracture-duel'] as const)(
@@ -591,6 +624,8 @@ describe('Game', () => {
 
     finishRun.call(game, 'victory');
 
+    expect(mocks.victoryScenePlay).toHaveBeenCalledWith(false);
+    expect(mocks.defeatScenePlay).not.toHaveBeenCalled();
     expect(platform.audio.stopMusic).not.toHaveBeenCalled();
     expect(platform.audio.startMusic).not.toHaveBeenCalled();
     expect(mocks.gameOverOpen).not.toHaveBeenCalled();
@@ -601,8 +636,25 @@ describe('Game', () => {
     await Promise.resolve();
     expect(mocks.gameOverOpen).toHaveBeenCalledTimes(1);
     expect(mocks.gameOverOpen.mock.calls[0][0]).toMatchObject({ outcome: 'victory' });
+    expect(mocks.victorySceneClose).toHaveBeenCalled();
     expect(platform.audio.startMusic).toHaveBeenCalledWith('menu');
     expect(platform.audio.resume).toHaveBeenCalledOnce();
+  });
+
+  it('celebrates a weekly victory once without playing the defeat scene', () => {
+    vi.useFakeTimers();
+    const game = new Game(createOptions());
+    const runtime = game as unknown as {
+      activeRetentionChallenge: 'core-duel';
+      activeRetentionChallengePractice: boolean;
+      finishRun: (outcome: 'victory') => void;
+    };
+    runtime.activeRetentionChallenge = 'core-duel';
+    runtime.activeRetentionChallengePractice = true;
+    runtime.finishRun('victory');
+    runtime.finishRun('victory');
+    expect(mocks.victoryScenePlay).toHaveBeenCalledExactlyOnceWith(true);
+    expect(mocks.defeatScenePlay).not.toHaveBeenCalled();
   });
 
   it('collapses a burst of simulation shots into one presentation pulse per frame', () => {

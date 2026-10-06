@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { Renderer } from 'pixi.js';
 import type { EnemyKind } from '../../../content/enemies/EnemyDefinitions';
 import type { FxQuality } from '../../../content/visual/VisualTokens';
@@ -24,6 +24,8 @@ export class SpawnPortalView {
   public readonly root = new Container();
   private readonly normal: readonly PortalSlot[];
   private readonly bosses: readonly Sprite[];
+  private readonly bossHalos: readonly Graphics[];
+  private readonly bossWaves: readonly Graphics[];
   private readonly motionReduced: boolean;
   private visibleLeft = 0;
   private visibleTop = 0;
@@ -62,7 +64,35 @@ export class SpawnPortalView {
       return { sprite, startedAt: Number.NEGATIVE_INFINITY, size: 0 };
     });
     this.bosses = [this.createSprite(texture), this.createSprite(texture)];
-    this.root.addChild(...this.normal.map(slot => slot.sprite), ...this.bosses);
+    // Geometry is authored once. Per-frame work only changes transforms/alpha.
+    this.bossHalos = this.bosses.map(() => {
+      const halo = new Graphics();
+      halo.beginPath().circle(0, 0, 75).fill({ color: 0x030711, alpha: 0.85 });
+      halo.beginPath().circle(0, 0, 78).stroke({ color: 0xffffff, width: 16, alpha: 0.08 });
+      halo.beginPath().circle(0, 0, 78).stroke({ color: 0xffffff, width: 7, alpha: 0.18 });
+      for (let index = 0; index < (quality === 'low' ? 8 : 16); index++) {
+        const angle = index * Math.PI / (quality === 'low' ? 4 : 8);
+        halo.beginPath().arc(0, 0, 78, angle + 0.025, angle + 0.15)
+          .stroke({ color: 0xffffff, width: 2.5, alpha: 0.95 });
+        // Radial needles converge as the aperture opens; never free particles.
+        halo.beginPath().moveTo(Math.cos(angle) * 88, Math.sin(angle) * 88)
+          .lineTo(Math.cos(angle + 0.018) * 117, Math.sin(angle + 0.018) * 117)
+          .stroke({ color: 0xffffff, width: 1.5, alpha: 0.55 });
+      }
+      halo.visible = false;
+      return halo;
+    });
+    this.bossWaves = this.bosses.map(() => {
+      const wave = new Graphics();
+      wave.beginPath().circle(0, 0, 80).stroke({ color: 0xffffff, width: 10, alpha: 0.1 });
+      wave.beginPath().circle(0, 0, 80).stroke({ color: 0xffffff, width: 2, alpha: 0.8 });
+      wave.beginPath().circle(0, 0, 72).stroke({ color: 0xffffff, width: 1, alpha: 0.4 });
+      wave.blendMode = 'add';
+      wave.visible = false;
+      return wave;
+    });
+    this.root.addChild(...this.normal.map(slot => slot.sprite), ...this.bossHalos,
+      ...this.bosses, ...this.bossWaves);
   }
 
   /** Cosmetic only. Saturation drops a portal, never an enemy. */
@@ -114,17 +144,43 @@ export class SpawnPortalView {
     for (let index = 0; index < this.bosses.length; index += 1) {
       const state = bosses?.[index] ?? (index === 0 ? boss : undefined);
       const sprite = this.bosses[index];
+      const halo = this.bossHalos[index];
+      const wave = this.bossWaves[index];
       sprite.visible = Boolean(state?.active && state.phase === 'intro');
+      halo.visible = sprite.visible;
+      wave.visible = sprite.visible;
       if (!sprite.visible || !state) continue;
       const progress = clamp01(state.progress);
-      const opening = Math.sin(progress * Math.PI);
+      const charge = clamp01(progress / 0.24);
+      const opening = 1 - Math.pow(1 - charge, 3);
       sprite.position.set(state.x, state.y);
-      sprite.scale.set(Math.max(230, state.radius * 5) / PORTAL_FRAME
-        * (this.motionReduced ? 1 : 0.7 + opening * 0.34));
-      sprite.alpha = this.motionReduced ? 0.65 : 0.58 + opening * 0.32;
-      sprite.rotation = this.motionReduced ? 0 : progress * 0.45;
+      const orbital = state.bossId === 'orbital-warden';
+      const fracture = state.bossId === 'fracture-engine';
+      const size = Math.max(230, state.radius * 5) / PORTAL_FRAME;
+      const close = clamp01((progress - 0.62) / 0.38);
+      const aperture = this.motionReduced ? 1 : (0.08 + opening * 0.92) * (1 - close * 0.85);
+      // Fracture opens a vertical breach; Warden a tilted orbital aperture.
+      sprite.scale.set(size * aperture * (this.motionReduced ? 1 : fracture ? 0.28 + opening * 0.35 : 1),
+        size * aperture * (this.motionReduced ? 1 : orbital ? 0.66 : 1));
+      sprite.alpha = (this.motionReduced ? 0.35 : 0.6) * (1 - close);
+      sprite.rotation = this.motionReduced ? 0 : orbital ? progress * 2.4
+        : fracture ? -0.12 : -progress * 0.6;
       sprite.tint = state.bossId === 'orbital-warden' ? 0xb5ecff
         : state.bossId === 'fracture-engine' ? 0xffc4a4 : 0xffd5f5;
+      halo.position.set(state.x, state.y);
+      halo.tint = fracture ? 0xff875d : orbital ? 0x85bdff : 0xffcf7c;
+      const gateSize = Math.max(170, state.radius * 3.8) / 160 * aperture;
+      halo.scale.set(gateSize * (this.motionReduced ? 1 : fracture ? 0.24 : 1),
+        gateSize * (this.motionReduced ? 1 : orbital ? 0.62 : 1));
+      halo.rotation = this.motionReduced ? 0 : fracture ? -0.12 : -sprite.rotation * 0.6;
+      halo.alpha = (this.motionReduced ? 0.35 : Math.min(1, charge * 2)) * (1 - close);
+      wave.position.set(state.x, state.y);
+      wave.tint = halo.tint;
+      const impact = clamp01((progress - 0.62) / 0.38);
+      wave.visible = !this.motionReduced && impact > 0 && impact < 1;
+      wave.scale.set(Math.max(120, state.radius * 2.5) / 160
+        * (0.75 + Math.sqrt(impact) * 1.9));
+      wave.alpha = Math.pow(1 - impact, 2) * (fracture ? 0.85 : 0.65);
     }
   }
 
@@ -138,6 +194,8 @@ export class SpawnPortalView {
   public reset(): void {
     for (const slot of this.normal) slot.sprite.visible = false;
     for (const sprite of this.bosses) sprite.visible = false;
+    for (const halo of this.bossHalos) halo.visible = false;
+    for (const wave of this.bossWaves) wave.visible = false;
   }
 
   private createSprite(texture: Texture): Sprite {

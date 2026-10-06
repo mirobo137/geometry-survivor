@@ -59,4 +59,4 @@ no cambia gameplay ni presupone una mejora universal de rendimiento.
 RGBA y alpha real de los 16 PNG. `TetheredShipView.test.ts` verifica pivotes,
 slots, texturas compartidas, cambio de skin, pausa, retroceso y fallback. El
 resultado final de browser y las capturas de revisión se registran en
-`CONTINUACION.md`.
+`PLAN_DESARROLLO.md` sólo si modifican una puerta de aceptación.

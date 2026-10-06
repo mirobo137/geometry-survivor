@@ -41,7 +41,8 @@ siendo persistentes y tienen prioridad; volumen cero/mute no inicia la pista.
 Pausa, blur y segundo plano suspenden el audio. Volver a la ventana sólo retoma
 la música de pantallas no jugables; una partida pausada sigue requiriendo Continuar.
 
-Validaciones y peso final: consultar la entrega vigente en CONTINUACION.md.
+Validación física y presupuesto final: consultar
+`PLAN_DESARROLLO.md`, sección A.
 Las regresiones reales de PC/móvil emulado viven en `tests/browser/music.checks.ts`:
 volumen nativo, una pista, avance de posición, mute/slider, pausa, carga tardía/
 fallida y cero llamadas a `decodeAudioData`. Los smoke generales sólo excluyen

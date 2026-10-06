@@ -1,9 +1,8 @@
 # Colección de recompensas — catálogo funcional
 
-Estado: implementado localmente el 04-10-2026, tras aprobación explícita del
-piloto por el usuario. No requiere otra aprobación para integrarse. La revisión
-humana final en móvil y la publicación remota quedan a cargo de la siguiente
-validación. Sustituye la galería sintética del piloto.
+Este archivo es el contrato del catálogo completo de recompensas, que sustituyó
+la galería sintética del piloto. Su aceptación y las puertas de publicación se
+siguen exclusivamente en [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 
 ## Alcance y acceso
 
@@ -110,12 +109,12 @@ precargan todas las texturas GPU: batalla carga nave/cañón seleccionados,
 materiales usados y fondo activo. Las miniaturas de catálogo son imágenes de UI.
 El fallback SVG existente permanece si falla una carga; no se duplican masters
 antiguos. El presupuesto publicado sigue siendo 15,000,000 B, sin source maps;
-éstos se conservan por separado para diagnóstico. La medida final de builds y
-pruebas de esta entrega está registrada en CONTINUACION.md.
+éstos se conservan por separado para diagnóstico. El estado vigente de pruebas
+y builds está en el [plan único](../../PLAN_DESARROLLO.md).
 
-## Validación pendiente de producto
+## Criterios de aceptación del catálogo
 
 Revisar tamaño/contraste de las siluetas y estelas en móvil físico, sobre todo
-Prism Judge, Abyss Maw y los fondos más cálidos. Probar el catálogo completo
-con la entrada temporal; no usar esa ruta para comprobar premios persistentes.
-No se ha ejecutado ni publicado un deploy remoto en esta entrega.
+Prism Judge, Abyss Maw y los fondos más cálidos. La entrada temporal permite
+inspeccionar el catálogo completo; no usar esa ruta para comprobar premios
+persistentes.

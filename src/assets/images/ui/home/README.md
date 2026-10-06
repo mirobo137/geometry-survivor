@@ -157,8 +157,8 @@ presupuestos independientes: un boot adicional por proyecto evita acumular
 toda la UI bajo un solo límite de 60 s. No se retira cobertura ni se añade
 un caso por tamaño. Diagnóstico y límites: [CI](../../../../../docs/CI_DEPLOY.md).
 
-Validaciones medidas y pendientes: consultar el snapshot vigente en
-[CONTINUACION.md](../../../../../CONTINUACION.md). No se certifican FPS, memoria
+Las validaciones medidas y abiertas se siguen en el
+[plan único](../../../../../PLAN_DESARROLLO.md). No se certifican FPS, memoria
 real, móvil físico, CI ni publicación por una captura de escritorio.
 
 Ampliación del 03-10 comprobada localmente: typecheck/unitarias, tres builds y

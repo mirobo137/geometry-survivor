@@ -17,6 +17,7 @@ import {
 import { MAX_NOVA } from '../../platform/save/SaveStore';
 import { observeVisibleImages } from '../ImageReadiness';
 import { logbookCopy } from './LogbookCopy';
+import { getFormattingLocale } from '../../i18n';
 
 const ART: Readonly<Record<string, string>> = {
   'core-sentinel': coreSentinelUrl,
@@ -48,12 +49,15 @@ const image = (src: string, alt: string, className: string): HTMLImageElement =>
   return node;
 };
 
-const countdownText = (milliseconds: number): string => {
+const countdownText = (milliseconds: number, locale: 'es-MX' | 'en-US'): string => {
   const totalMinutes = Math.max(0, Math.ceil(milliseconds / 60_000));
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor(totalMinutes % 1440 / 60);
   const minutes = totalMinutes % 60;
-  return days > 0 ? `${days} d ${hours} h` : hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
+  const units = locale === 'es-MX' ? { days: 'd', hours: 'h', minutes: 'min' } : { days: 'd', hours: 'hr', minutes: 'min' };
+  return days > 0 ? `${days} ${units.days} ${hours} ${units.hours}`
+    : hours > 0 ? `${hours} ${units.hours} ${minutes} ${units.minutes}`
+      : `${minutes} ${units.minutes}`;
 };
 
 export class RetentionPanel {
@@ -134,6 +138,10 @@ export class RetentionPanel {
       : options.skinOwned ? novaReward > 0 ? `NOVA DE EVENTO · ${novaReward}` : 'NOVA DE EVENTO · BILLETERA LLENA'
         : `${edition.reward.family === 'ship' ? 'NAVE' : edition.reward.family === 'cannon' ? 'CAÑÓN' : 'FONDO'} EXCLUSIVO · ${edition.reward.name.toUpperCase()}`;
     meta.append(timer, reward);
+    const ruleDetails = document.createElement('details');
+    ruleDetails.className = 'retention-rule-details';
+    const ruleSummary = document.createElement('summary');
+    ruleSummary.textContent = `Ver reglas del reto · ${challenge.rules.length}`;
     const rules = document.createElement('ul');
     rules.className = 'retention-rules';
     for (const rule of challenge.rules) {
@@ -141,14 +149,15 @@ export class RetentionPanel {
       item.textContent = rule;
       rules.append(item);
     }
+    ruleDetails.append(ruleSummary, rules);
     const play = document.createElement('button');
     play.type = 'button';
     play.className = 'start-primary retention-play';
     play.textContent = !edition.scheduleStarted
-      ? 'Practicar ahora · sin premio'
-      : claimed ? 'Repetir gratis · premio reclamado' : 'Entrar al reto semanal · gratis';
+      ? 'Practicar · sin premio'
+      : claimed ? 'Reintentar gratis' : 'Jugar reto · gratis';
     play.addEventListener('click', () => options.onStartChallenge(challenge.id));
-    copy.append(eyebrow, title, briefing, meta, rules, play);
+    copy.append(eyebrow, title, briefing, meta, ruleDetails, play);
     card.append(artwork, prize, copy);
     return card;
   }
@@ -170,7 +179,8 @@ export class RetentionPanel {
     copy.append(eyebrow, title, description);
     const wallet = document.createElement('span');
     wallet.className = 'retention-wallet';
-    wallet.textContent = `${Math.max(0, Math.floor(options.walletNova)).toLocaleString('es-MX')} NOVA`;
+    const locale = getFormattingLocale();
+    wallet.textContent = `${Math.max(0, Math.floor(options.walletNova)).toLocaleString(locale)} NOVA`;
     heading.append(copy, wallet);
     const grid = document.createElement('div');
     grid.className = 'retention-objective-grid';
@@ -192,18 +202,25 @@ export class RetentionPanel {
       const text = document.createElement('span');
       text.className = 'retention-objective-copy';
       const name = document.createElement('strong');
-      name.textContent = `${objective.title}${state.repeatable ? ` · ${t.rank} ${state.rank}` : ''}`;
+      name.append(document.createTextNode(objective.title));
+      if (state.repeatable) {
+        name.append(document.createTextNode(' · '));
+        const rank = document.createElement('span');
+        rank.className = 'retention-objective-rank';
+        rank.textContent = t.rank;
+        name.append(rank, document.createTextNode(` ${state.rank}`));
+      }
       const detail = document.createElement('span');
       detail.textContent = state.rank === 1 ? objective.description
         : (objective.metric === 'runsCompleted' ? t.runs : objective.metric === 'totalKills' ? t.kills
           : objective.metric === 'bestSurvivalSeconds' ? t.survival : t.stages)
-          .replace('{target}', (objective.metric === 'bestSurvivalSeconds' ? Math.floor(objective.target / 60) : objective.target).toLocaleString());
+          .replace('{target}', (objective.metric === 'bestSurvivalSeconds' ? Math.floor(objective.target / 60) : objective.target).toLocaleString(locale));
       const progress = document.createElement('span');
       progress.className = 'retention-objective-progress';
-      progress.textContent = state.completed ? t.ready : `${state.value.toLocaleString('es-MX')} / ${objective.target.toLocaleString('es-MX')}`;
+      progress.textContent = state.completed ? t.ready : `${state.value.toLocaleString(locale)} / ${objective.target.toLocaleString(locale)}`;
       const reward = document.createElement('span');
       reward.className = 'retention-objective-reward';
-      reward.textContent = state.completed ? `${t.claim} +${objective.rewardNova.toLocaleString('es-MX')} NOVA ↗` : `+${objective.rewardNova.toLocaleString('es-MX')} NOVA · ${t.follow}`;
+      reward.textContent = state.completed ? `${t.claim} +${objective.rewardNova.toLocaleString(locale)} NOVA ↗` : `+${objective.rewardNova.toLocaleString(locale)} NOVA · ${t.follow}`;
       text.append(name, detail, progress, reward);
       card.append(art, text);
       card.addEventListener('click', () => {
@@ -259,8 +276,8 @@ export class RetentionPanel {
       return;
     }
     this.countdown.textContent = edition.scheduleStarted
-      ? `SIGUIENTE ROTACIÓN · ${countdownText(edition.nextChangeMs - Date.now())}`
-      : `LA ROTACIÓN COMIENZA · ${new Date(edition.startsAtMs).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })} UTC`;
+      ? `SIGUIENTE ROTACIÓN · ${countdownText(edition.nextChangeMs - Date.now(), getFormattingLocale())}`
+      : `LA ROTACIÓN COMIENZA · ${new Date(edition.startsAtMs).toLocaleDateString(getFormattingLocale(), { day: 'numeric', month: 'short', timeZone: 'UTC' })} UTC`;
   }
 
   private clearTimer(): void {

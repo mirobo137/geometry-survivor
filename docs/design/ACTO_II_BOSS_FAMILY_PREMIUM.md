@@ -45,8 +45,8 @@ La integración del movimiento ocurre dentro de cada subpaso de fase.
 Las regresiones comprueban ambos endpoints, recovery y comienzo del arco.
 
 Secuencia vigente: sweep → charge → curve → replicas → ring. Se mantienen
-un hit por cast de movimiento, copias destructibles y el balance final diferido
-a EX-02c. Esta corrección no integra todavía la campaña de EX-07e.
+un hit por cast de movimiento, copias destructibles y el baseline de balance
+aprobado. El contrato de integración de Angular está en `ACTOS_Y_META.md`.
 
 ## Locomoción de presencia del Warden
 

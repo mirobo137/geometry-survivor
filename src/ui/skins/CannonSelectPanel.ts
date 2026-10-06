@@ -41,7 +41,7 @@ export class CannonSelectPanel {
   public constructor(root: HTMLElement, dialog: CosmeticPreviewDialog) {
     const cards = root.querySelector<HTMLElement>('#start-cannon-cards');
     if (!cards) {
-      throw new Error('Faltan elementos del panel de canones');
+      throw new Error('Faltan elementos del panel de cañones');
     }
     this.cards = cards;
     this.dialog = dialog;

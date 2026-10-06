@@ -7,7 +7,7 @@ Estas reglas aplican a todo el repositorio. Están escritas para ser neutrales a
 Respeta este orden:
 
 1. solicitud actual del usuario;
-2. [PLAN_DESARROLLO.md](PLAN_DESARROLLO.md) para alcance, decisiones, fases y puertas;
+2. [PLAN_DESARROLLO.md](PLAN_DESARROLLO.md) como única cola de trabajo y puertas pendientes;
 3. [proyecto.md](proyecto.md) para visión y principios de largo plazo;
 4. la skill pertinente para el procedimiento de la tarea;
 5. el código y los tests como descripción del estado implementado.
@@ -16,8 +16,8 @@ Si detectas una contradicción material, no inventes una solución silenciosa: e
 
 ## Antes de actuar
 
-- Al retomar el proyecto en otra sesión, lee [CONTINUACION.md](CONTINUACION.md) como snapshot operativo y comprueba que siga vigente frente al plan, el código y Git. No es una fuente de verdad superior.
-- Para «continuar el plan», entra por [§22 del plan](PLAN_DESARROLLO.md#ejecucion-vigente) y su [guía de tareas](docs/PLAN_EJECUCION.md); no ejecutes como pendientes las instrucciones históricas de arranque o entregas ya realizadas.
+- Al retomar el proyecto, lee el plan único y comprueba su primera tarea abierta contra Git, código y tests. No existe un snapshot de sesión paralelo.
+- Para «continuar el plan», sigue el primer pendiente vigente de [PLAN_DESARROLLO.md](PLAN_DESARROLLO.md); no reactives decisiones reemplazadas ni entregas cerradas.
 - Para cambios importantes de arquitectura, alcance o plataforma, lee completos `proyecto.md` y `PLAN_DESARROLLO.md`.
 - Para tareas acotadas, lee este archivo, la skill correspondiente y las secciones que esa skill indique.
 - Inspecciona el código existente antes de proponer archivos o abstracciones nuevas.
@@ -40,7 +40,7 @@ Si una tarea cruza dominios, combina únicamente las skills necesarias. Por ejem
 
 ## Portabilidad
 
-- Para skins híbridas o PNG generados por IA, aplicar [Arte híbrido](docs/design/ARTE_HIBRIDO.md), enlazado desde §8 del plan. Manta Veil es el primer consumidor; el contrato incluye generación, identidad, transparencia, coste y pruebas, independientemente del modelo.
+- Para skins híbridas o PNG generados por IA, aplicar [Arte híbrido](docs/design/ARTE_HIBRIDO.md). El contrato incluye generación, identidad, transparencia, coste y pruebas, independientemente del modelo.
 
 - `skills/` es la fuente canónica neutral y se carga mediante este `AGENTS.md`.
 - `.grok/skills/` contiene adaptadores finos de descubrimiento para Grok y no debe duplicar reglas.
@@ -73,4 +73,4 @@ El modelo por sí solo no controla un repositorio. El host debe abrir este direc
 - Una petición de construir, cambiar o corregir incluye las validaciones locales no destructivas pertinentes.
 - Prueba la lógica crítica sin levantar Pixi cuando sea posible.
 - Reporta qué se comprobó y qué no pudo comprobarse; no presentes una suposición como resultado medido.
-- Una feature debe satisfacer la Definition of Done y la puerta de su fase en `PLAN_DESARROLLO.md`.
+- Una feature debe satisfacer la Definition of Done de su skill/contrato y las puertas aplicables del único PLAN_DESARROLLO.md.

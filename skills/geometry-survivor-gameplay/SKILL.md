@@ -11,7 +11,7 @@ Cada mecánica debe mejorar movimiento, decisiones de build, amenaza, variedad o
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Alcance cerrado”, “Diseño de la primera partida”, “Fases y puertas” y “Métricas de decisión”. Consulta en `../../proyecto.md` las secciones 2–13 y 43–59; para un cambio de visión, lee ambos documentos completos.
+Lee `../../proyecto.md` para la identidad y reglas generales; consulta `../../PLAN_DESARROLLO.md` para saber si la tarea está aprobada o es un pendiente futuro. Para modificar una regla existente, usa el contrato de ese sistema y el contenido/tests actuales.
 
 ## Reglas
 

@@ -3,8 +3,8 @@
 Estado al 04-10-2026: **13 enemigos comunes y 3 bosses usan un cuerpo raster
 transparente de diseño militar original**. PNG maestros y WebP runtime;
 el SVG completo queda de fallback y fuente editable.
-Las entradas modulares actuales de bosses siguen intactas hasta que se diseñen
-entradas dedicadas. La presentación no altera ataques, dificultad, recompensas,
+Las entradas de bosses usan el casco completo, emergencia y onda desde el 05-10-2026;
+ver [portales](PORTALES_APARICION.md). La presentación no altera ataques, dificultad, recompensas,
 guardado, hitboxes ni radios.
 Este contrato sustituye las recetas antiguas de desarme modular de enemigos
 y el colapso exclusivo de bosses; los registros fechados conservan su historia.
@@ -20,10 +20,9 @@ y el colapso exclusivo de bosses; los registros fechados conservan su historia.
   presets. Movimiento secundario por transforms en Medium/High; Low y
   movimiento reducido omiten respiración/balanceo. Los telegraphs, orientación,
   escalas de réplicas/hijos, entrada y reacción de impacto siguen presentes.
-- Los bosses conservan su ensamblaje de entrada con las capas SVG actuales.
-  Después del ensamblaje se muestra su cuerpo raster completo. **No borrar esas
-  capas ni migrar las entradas en esta entrega.** El salto visual entre entrada
-  antigua y casco militar nuevo es un pendiente de diseño conocido.
+- Los bosses muestran el mismo cuerpo completo durante entrada y combate.
+  Ya no cargan las cuatro capas SVG para ensamblarlas. Los sprites auxiliares
+  se conservan exclusivamente para los fragmentos de muerte.
 - Todos mueren con la receta aprobada del Tank: contracción breve, separación
   amortiguada de cuatro regiones del mismo cuerpo, giro pequeño, oscurecimiento
   y fade; duración total **420 ms**. En bosses la distancia de fragmentación
@@ -85,8 +84,8 @@ completo ocurre al finalizar la transición existente de 3 s, sin alargarla.
 Reset restaura familia, tint y transforms; destroy libera sólo las vistas con
 `destroy(false)`, nunca la fuente compartida.
 
-Los masters SVG completos siguen cacheados como fallback; las cuatro piezas de
-entrada de bosses siguen siendo texturas activas. Los SVG separados de piezas
+Los masters SVG completos siguen cacheados como fallback; las piezas SVG de
+entrada de bosses ya no se cargan. Los SVG separados de piezas
 comunes quedan como referencias editables y dejan de cargarse al runtime.
 `FractureEnemySvgMarkup` conserva su ensamblaje para producir los masters SVG
 usados como fallback.
@@ -113,9 +112,8 @@ conserva exclusivamente la derrota/tono del player.
 - `EnemyShipVisual` cambia la textura del sprite existente al completarse la
   carga. `EnemyDefeatFxView` registra los fragmentos para cada fuente raster;
   las muertes ya activas conservan las subtexturas que estaban usando.
-- Los bosses registran fragmentos desde el raster y cambian el cuerpo final al
-  terminar el ensamblaje. Si la entrada está en curso, sus capas SVG siguen
-  animándose sin interrupción. Las cuatro piezas SVG de entrada se conservan.
+- Los bosses registran fragmentos desde el raster; desde el 05-10-2026 una
+  carga tardía también actualiza el casco durante la entrada sin reiniciarla.
 - Los SVG de componentes de enemigos comunes permanecen como masters en el
   repositorio. Ya no se importan en runtime: el cuerpo SVG único basta como
   fallback y los sprites comunes ya se muestran como una imagen completa.

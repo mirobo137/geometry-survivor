@@ -21,5 +21,5 @@ No reutiliza la silueta del Orbiter, Charger o Splitter.
 - La geometria se cachea al aparecer el cast; no se crea SVG ni Graphics dentro
   del loop por frame.
 
-La nave es un consumidor de Acto II, no una decision de balance final. Sus
-valores provisionales quedan aislados hasta EX-02c.
+La nave es un consumidor de Acto II. Sus valores se configuran en las
+definiciones de contenido y el baseline global de balance está aprobado.

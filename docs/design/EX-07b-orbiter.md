@@ -1,13 +1,11 @@
 # EX-07b — Orbiter: ficha de primera familia Angular
 
-**Estado:** persecución directa, cadencia temporal y compromiso de ataque
-integrados y aprobados por validación humana; la composición del Acto II queda
-cerrada. El balance numérico final sigue reservado para EX-02c.
+Contrato funcional del Orbiter: persecución directa, cadencia temporal y
+compromiso de ataque. La composición vigente del Acto II está en
+[`ACTOS_Y_META.md`](ACTOS_Y_META.md).
 
-**Alcance de esta ficha:** define exclusivamente la primera familia enemiga del
-Acto II. No autoriza añadir Charger, Splitter, Pulse Ring, hazard angular,
-Orbital Warden, selector de Acto II, guardado de Expedition ni balance global.
-Los valores numéricos son provisionales hasta EX-02c.
+**Alcance de esta ficha:** define exclusivamente la familia Orbiter del Acto II.
+Los valores de juego se mantienen en sus definiciones de contenido.
 
 ## 1. Intención jugable
 
@@ -90,7 +88,7 @@ una base de test y no un cierre de vida, daño, experiencia o economía.
 | --- | ---: | --- |
 | `kind` | `orbiter` | Nueva familia, no recolor de `elite`. |
 | `radius` | 17 u | Similar a Chaser pero con espacio para leer su orientación. |
-| `maxHealth` | 32 | Provisional; no se calibra hasta EX-02c. |
+| `maxHealth` | 32 | Valor base del contenido. |
 | `contactDamage` | 9 | Provisional; lo aplica el collider circular del casco en todas las fases. |
 | `experience` | 3 | Recompensa provisional por amenaza de ruta. |
 | `spawnCost` | 2 | Permite al director sustituir presión, no sumar masa sin límite. |
@@ -259,7 +257,5 @@ con Orbiter.
 
 ## 8. Criterio de cierre de esta subtarea
 
-Orbiter queda integrado en el consumidor Angular real y la composición del acto
-ya fue aprobada. Este refinamiento también queda cerrado por validación humana;
-no reabre el balance de EX-02c ni la aprobación del resto de familias. Charger,
-Splitter y Prism Weaver conservan sus contratos propios.
+Orbiter forma parte del consumidor Angular real. Esta ficha conserva sus reglas
+de comportamiento; Charger, Splitter y Prism Weaver tienen contratos propios.

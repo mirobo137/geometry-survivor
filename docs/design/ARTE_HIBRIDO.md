@@ -1,6 +1,7 @@
 # Arte híbrido: identidad y coste verificable
 
-Decisión de producto, 09-09-2026. Entrada canónica: PLAN_DESARROLLO.md §8.
+Contrato de selección, identidad y coste de arte híbrido. El estado de tareas
+relacionadas se mantiene en [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 Aplicable a Luna, Codex, Grok y cualquier agente con herramientas de repositorio.
 Referencia implementada: [Manta Veil](../../src/assets/skins/manta/README.md).
 Decisión posterior aprobada para naves/cañones: [Naves PNG](NAVES_PNG.md).
@@ -114,8 +115,9 @@ No eliminar cosméticos ni fallback vectorial para cumplir una migración raster
 Ficha junto al asset: id, concepto, referencia y diferencias, prompt completo,
 procedencia, tamaño original/final, bytes, alpha, frame/pivote, piezas, capas,
 presets, ownership/carga, fallback, animación, muerte y consumidores.
-Registrar en CONTINUACION.md lo implementado, cómo probar sin escribir URLs
-largas, validaciones automáticas y lo pendiente de aprobación humana.
+Registrar las puertas de aceptación todavía abiertas sólo en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md); esta ficha describe el contrato
+visual y las pruebas requeridas.
 
 Pruebas: selección/adquisición y persistencia; carga fallida; cambio de skin;
 recursos compartidos; orientación, pausa, daño, muerte/reinicio; resize;

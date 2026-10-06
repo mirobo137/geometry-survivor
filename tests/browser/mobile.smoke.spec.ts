@@ -17,6 +17,40 @@ registerCatalogChecks();
 registerDailyWheelChecks();
 registerLogbookChecks();
 
+test('el idioma detecta el dispositivo, permite elegir manualmente y persiste la elección', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'languages', { configurable: true, value: ['en-US', 'es-MX'] });
+  });
+  await page.goto('/?quality=low');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#start-play')).toContainText('PLAY');
+  await page.locator('#start-settings-toggle').click();
+  const startLanguage = page.locator('#start-language');
+  await expect(startLanguage).toHaveValue('auto');
+  await expect(startLanguage.locator('option[value="auto"]')).toHaveText('Automatic · device language');
+
+  await startLanguage.selectOption('es');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+  await expect(page.locator('#start-play')).toContainText('JUGAR');
+  await expect(page.locator('#pause-language')).toHaveValue('es');
+  await expect(page.locator('#start-level')).toContainText('Actos');
+  expect(await page.evaluate(() => localStorage.getItem('geometry-survivor:language-preference'))).toBe('es');
+
+  await startLanguage.selectOption('en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#start-play')).toContainText('PLAY');
+  await page.reload();
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#start-language')).toHaveValue('en');
+
+  await page.locator('#start-settings-toggle').click();
+  await page.locator('#start-language').selectOption('auto');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#start-play')).toContainText('PLAY');
+});
+
 test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
   await page.goto('/?debug=1');
@@ -43,11 +77,12 @@ test('la entrada premium cabe en movil y deja iniciar sin esperar', async ({ pag
   expect(failures).toEqual([]);
 });
 
-test('joystick opcional persiste y se cancela en pausa, cambio y rotación', async ({ page }, testInfo) => {
+test('joystick predeterminado persiste y se cancela en pausa, cambio y rotación', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
   await page.goto('/?debug=1');
   await expect(page.locator('#start-screen')).toBeVisible();
   await page.locator('#start-settings-toggle').click();
+  await expect(page.locator('#start-control-scheme')).toHaveValue('joystick');
   await page.locator('#start-control-scheme').selectOption('joystick');
   await page.reload();
   await page.locator('#start-settings-toggle').click();

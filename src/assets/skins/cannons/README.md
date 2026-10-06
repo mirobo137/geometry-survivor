@@ -74,6 +74,6 @@ fallback y propiedad explícita; no se eliminó el catálogo de efectos.
 
 `TetheredAssets.test.ts` inspecciona RGBA real, pivotes, slots y presupuesto.
 `CannonPreviewSvg.test.ts` comprueba aislamiento sin nave y dos referencias al
-PNG del cañón, cabeza y cinta (seis imágenes en modal; tres en tarjeta). La matriz de gameplay y locker Low/High,
-persistencia, fallback y requests se documenta en `CONTINUACION.md` cuando se
-termine la revisión browser.
+PNG del cañón, cabeza y cinta (seis imágenes en modal; tres en tarjeta). La
+matriz de gameplay y locker Low/High cubre persistencia, fallback y requests;
+la aceptación física y el estado de pruebas viven en `PLAN_DESARROLLO.md`.

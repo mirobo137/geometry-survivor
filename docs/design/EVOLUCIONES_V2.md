@@ -1,12 +1,9 @@
-# EX-08-R — Evoluciones con decisiones reales
+# Evoluciones de armas V2 — contrato de gameplay
 
-Fecha: 2026-09-14. Estado: **seis parejas implementadas; la pareja de Búmeran
-está de nuevo en prueba humana tras el rediseño del 28-09-2026**. El baseline
-general de balance EX-02c fue aprobado por separado.
-
-Revisión puntual 28-09-2026: la pareja de Búmeran se reabrió por solicitud del
-usuario. La nueva mecánica de §4.D está implementada y pendiente de su prueba
-humana; la aprobación previa de esa pareja no se traslada automáticamente.
+Las definiciones siguientes describen las evoluciones y sus invariantes. El
+código y las pruebas reflejan la implementación actual; cualquier aceptación
+humana aún abierta se registra únicamente en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 
 Revisión 30-09-2026: Singularity Return cambia a fragmentación remota guiada
 por solicitud explícita, §4.D. Comet Quintet no cambia. Thunderhead obtiene PNG
@@ -23,7 +20,7 @@ las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
 evolucionar. Sus fórmulas de herencia prevalecen sobre los valores fijos de
 prototipo en §4. Los rangos tienen ahora una secuencia fija por familia.
 
-## Correccion vigente de dano y lectura - 14-09-2026
+## Corrección vigente de daño y lectura
 
 Este bloque prevalece sobre las descripciones de prototipo mas abajo cuando
 hay una diferencia.
@@ -61,35 +58,13 @@ hay una diferencia.
   avance y se libere por TTL; una textura de estela no puede mantener un slot
   muerto en pantalla.
 
-## 1. Mandato y diagnóstico histórico
+## 1. Alcance e invariantes
 
-El siguiente diagnóstico conserva el motivo por el que se revisaron las
-evoluciones: la pareja Projectile comunicaba mejor el cambio, mientras que
-Solar Crown, Event Horizon, Compression Wave, Singularity Return y Polar
-Collapse necesitaban una diferencia funcional más clara y una ejecución segura.
-Ese registro no representa el estado de aprobación actual.
-
-La decisión vigente del usuario es aprobar las seis parejas después de su
-validación humana. Esta especificación continúa siendo la guía de
-implementación, regresión y futuras iteraciones; los tests no sustituyen la
-aprobación humana, y la aprobación humana tampoco cierra el balance global de
-enemigos/daño de EX-02c.
-
-Evidencia del código revisado:
-
-- `OrbitBehavior`: Solar modifica principalmente radio, daño y velocidad.
-- `PulseRingWeaponBehavior`: Compression atrae cerca de la nave antes del golpe.
-- `BoomerangBehavior`: Singularity produce su pulso al volver al player.
-- `MagneticChargeBehavior`: Event atrae hacia un centro que la banda de daño
-  excluye. Geométricamente puede concentrar enemigos donde la detonación no
-  alcanza; comprobarlo con un test, no inferir daño por la animación.
-- `UpgradeApplier.getEvolutionChoices`: el umbral usa el nivel global del
-  jugador; no demuestra inversión hasta nivel 7 de esa arma como pide el plan.
-- Los blancos estáticos de laboratorio no demuestran seguridad contra enemigos
-  que persiguen, ni aíslan de verdad el arma si sigue disparando la primaria.
-
-No es un problema que se resuelva añadiendo brillo: primero debe existir una
-nueva decisión espacial, después una animación que la explique.
+Esta ficha describe las seis parejas de evoluciones, sus comportamientos y sus
+contratos visuales. El código/configuración son la fuente de los valores
+efectivos; los cambios nuevos deben conservar identidad, límites de simulación,
+lectura visual y el baseline global de balance aprobado. Las pruebas automáticas
+no sustituyen la revisión visual y de jugabilidad.
 
 ## 2. Referentes y decisión de selección
 
@@ -150,8 +125,9 @@ presentar evidencia antes de cambiar el umbral. No aumentar XP silenciosamente.
   se suman encima de ellas. No tocar la pareja Projectile aprobada.
 - Conservar base de cada arma y mejoras adquiridas. Derivar parámetros de
   base + mejoras + rama, sin resetear alcance o cantidad al evolucionar.
-- Todos los tiempos/distancias siguientes son semillas de prototipo en
-  unidades lógicas, no balance aprobado. EX-02c sigue pendiente.
+- Los tiempos y distancias son unidades del juego. Para el balance vigente manda
+  la definición de contenido; no reabrir el baseline global sin una solicitud o
+  un defecto reproducible.
 - Comparar cada rama con su misma arma VII, semilla, meta y duración. Objetivos
   del plan: +30–45% de contribución ideal; techos 1.6× DPS single y 2× cobertura.
   Medir daño, control y exposición por separado: no ocultar daño excesivo
@@ -437,7 +413,7 @@ estas ramas cambian expresamente sus zonas de daño.
   un filo queda aturdido y recibe el remate140%; sin filo sólo recibe45%;
   funciona sin enemigos y en hexágono/cuadrado.
 
-## 5. Procedimiento visual premium para Luna
+## 5. Procedimiento visual de evoluciones
 
 Leer completas las skills gameplay, rendering, SVG, mobile-performance y
 validation y las referencias pertinentes antes de implementar una pareja.
@@ -479,21 +455,14 @@ Fuentes visuales canónicas: [efectos](EFECTOS_PREMIUM.md),
 
 ## 6. Integración acotada
 
-- `WeaponEvolutionDefinitions`: mantener identidad/slugs; configurar parámetros
-  y textos v2. Nada de dos versiones activas acumulando efectos por flags.
-- `UpgradeDefinitions`, `UpgradeApplier`, `LevelProgression`: rango por familia,
-  elegibilidad y selección atómica. Tests de inversión, exclusión, consumo y
-  vuelta al menú. Inventario obligatorio de cartas en R1 antes de migración.
-- `CombatWeaponSystem` y behaviors existentes: fases y daños puros. Extender
-  cada familia donde se usa; no inventar motor genérico de evoluciones.
-- `CombatRenderState`, pools y `WeaponView`: snapshot de fase, evolución,
-  castId/generation, origen/destinos/radios cuando haga falta. La vista consume,
-  no reconstruye targeting desde posiciones actuales. Extraer vista pequeña
-  de familia solo si reduce complejidad con consumidor actual.
-- `Game`/`main`: laboratorio explícito y aislado. No modificar inventario
-  persistente, NOVA, desbloqueos ni progreso normal desde rutas de desarrollo.
-- Revisar sin pérdida el worktree existente. No resetear la entrega EX-08d;
-  tests y documentación son evidencia histórica, no autorización de arte v2.
+- `WeaponEvolutionDefinitions` conserva IDs/slugs y parámetros de cada rama;
+  no activar dos versiones acumulativas por flags.
+- `UpgradeDefinitions`, `UpgradeApplier` y `LevelProgression` mantienen rango,
+  elegibilidad y selección atómica por familia.
+- `CombatWeaponSystem` y behaviors resuelven fases/daño; la vista consume un
+  snapshot con fase, origen, destino y radios cuando aplique, sin decidir targeting.
+- Las rutas de desarrollo permanecen aisladas: no escriben inventario, NOVA,
+  desbloqueos ni progreso normal.
 
 ## 7. Ruta de prueba arma por arma
 
@@ -510,8 +479,8 @@ siguiente rango hasta VI. El nivel 7 del jugador no entrega una mejora de
 estadística: muestra una sola carta hito `Evolucion disponible`. Al elegirla se
 abre la pareja Rail Lance/Pulse Volley sin consumir todavía la subida. La
 pareja incluye `Volver`; confirmar una rama consume esa oportunidad y
-continuar vuelve a la selección normal. El rango VII queda reservado para la
-integración normal futura y no aparece en esta ruta de prueba. El panel debug
+continuar vuelve a la selección normal. El rango VII no forma parte de esta ruta
+focalizada; su interacción con maestrías se prueba en el compositor normal. El panel debug
 muestra `mode: weapon-path-projectile`, rango y paso. El flujo es temporal de
 desarrollo, no aparece en el menú ni altera el guardado. Las cinco familias
 restantes reutilizan este mismo patrón y ya están conectadas al código; la
@@ -524,34 +493,24 @@ rango y que la evolución conserva el perfil de cierre. No usar una URL de evolu
 como sustituto de esta prueba: esa entrada sigue siendo el laboratorio aislado
 histórico.
 
-## 8. Laboratorio comparativo
+## 8. Rutas comparativas
 
-Conservar entradas `?evolution=<slug>&scenario=single|mass&debug=1`.
-No prometer escenarios nuevos como si existieran: implementar lo siguiente en R1:
+Las rutas `?evolution=<slug>&scenario=single|mass&debug=1` permiten comparar
+una rama aislada y una situación de cobertura. No asumir escenarios o métricas
+que no estén expuestos por el código.
 
-- Selector base VII / A / B con misma semilla, mejoras y estado reiniciado.
-  `single`: boss inmóvil y boss móvil como casos separados.
-- `mass`: 56 enemigos para cobertura; además un escenario `pressure` con
-  perseguidores móviles y colisión real, reposición acotada al morir y vida
-  suficiente para observar control. No todos inmortales en la prueba de bajas.
-- Aislamiento real: desactivar scheduler de primaria al probar otra familia;
-  nada de daño «cero» que aún aplique críticos, lifesteal o control. Sin hazards,
-  jefe, otras armas ni meta. Verificar también rutas con acto Angular para que
-  las condiciones del acto no reactiven amenazas durante el laboratorio.
-- Prueba separada `combined`: máximo tres armas reales + hazards del Acto II;
-  no combinar parámetros contradictorios de drills silenciosamente. Mostrar
-  acto, semilla, escenario, familia, rango y calidad actuales.
-- Registrar por arma daño efectivo (sin overkill), hits, bajas, targets únicos,
-  tiempo de control, contactos player y máximos de entidades/FX. Si una métrica
-  no se implementó, marcarla no medida. No concluir utilidad por conteo de sprites.
-- Las rutas actuales sin acto explícito no garantizan Acto II. Documentar URL
-  verificada en código para cada entrega; no inventar parámetros en la respuesta.
+- Comparar la rama elegida bajo condiciones reproducibles y observar daño real,
+  control, objetivos alcanzados, colisión y límites de entidades/FX.
+- Las rutas de una sola arma aíslan su scheduler; no concluir utilidad sólo por
+  conteo de sprites ni afirmar métricas no implementadas.
+- Cuando haga falta un caso combinado, verificar primero el consumidor y la URL
+  en código; no inferir Acto II ni inventar parámetros.
 
-## 8.1 Cartas post-evolución — contrato vigente — 15-09-2026
+## 8.1 Cartas post-evolución
 
-Esta capa se aplica a los tres actos de campaña. El modo infinito tendrá una
-política de ofertas separada y no heredará silenciosamente el límite de tres
-armas. La evolución sigue siendo el momento de elegir una rama; las cartas
+Esta capa se aplica a los tres actos de campaña. Overdrive usa una política de
+ofertas separada descrita en su contrato técnico. La evolución sigue siendo el
+momento de elegir una rama; las cartas
 post-evolución son maestrías del arma ya transformada y no crean una tercera
 rama.
 
@@ -576,7 +535,7 @@ rama.
 `Potencia calibrada` es una carta rara de maestría universal, no una carta
 normal de rotación. Su primera configuración de prueba usa como límites una
 aparición máxima cada tres manos normales y hasta tres aplicaciones por run;
-los números se podrán recalibrar después de EX-02c sin cambiar el contrato.
+  sus números se recalibran únicamente mediante una decisión de balance nueva.
 La rareza no depende de anuncios, NOVA ni de una probabilidad sin límite.
 
 El límite de tres es de estado real, no solo una intención de composición. La
@@ -658,26 +617,10 @@ carta de daño exclusiva del rayo.
 - Verificar que la carta universal no aparezca con dos o menos armas
   evolucionadas y que, con tres, nunca deje una mano sin tres opciones válidas.
 - Comparar base evolucionada y maestría con la misma semilla a 30/60/144 Hz.
-  No fijar porcentajes finales hasta cerrar EX-02c.
+  No fijar porcentajes nuevos sin una comparación reproducible y una decisión
+  explícita de balance.
 
-## 9. Orden de entregas y puertas
-
-| Paso | Alcance | Condición para avanzar |
-| --- | --- | --- |
-| R0 | Este plan y registro del rechazo | Documentación solamente; completado |
-| R1 | Ruta normal enfocada, tablas I–VII, migración de cartas/calibración y selección | Projectile probado rango por rango; después inventario normal |
-| R2 | Pulse Ring: Echo + Ariete | Prueba humana de dos centros y frente útil sin atraer |
-| R3 | Magnetic: Núcleo + Prensa | Daño en centro visible y cierre geométrico distinto |
-| R4 | Boomerang: Comet Quintet + Singularity Return | Abanico corto de ida/vuelta y alcance largo con seis fragmentos guiados |
-| R5 | Orbit: Corona + Órbita de avance | Coberturas distintas observables y sin hits fantasma |
-| R6 | Chain: Circuito + Sobrecarga | Trampa de cruce frente a explosión diferida real |
-| R7 | Integración de tres armas / Acto II | Sinergias, caps, claridad y perfil PC/móvil |
-
-Dentro de cada pareja: primero A lógica/tests + visual; después B; entregar
-ambas URLs y base para comparar. No saltar al paso siguiente hasta la respuesta
-humana. Si una rama se rechaza, revisar su verbo antes de aumentar brillo/daño.
-
-### Tests obligatorios por entrega
+## Regresión del contrato
 
 - Fases, targeting vacío, enemigo muerto/reutilizado, colisión barrida a
   30/60/144 Hz, daño por fase/target y límites bajo cadencia máxima.
@@ -686,20 +629,17 @@ humana. Si una rama se rechaza, revisar su verbo antes de aumentar brillo/daño.
 - Pausa, suspensión, reset, muerte, cambio de acto y máximos de tres armas.
 - Browser comprueba resultado de mecánica y selección, no únicamente texto
    «evolución activa»; screenshot/clip revisado a tamaño de juego Low/High.
-- Primera prueba humana breve: base/A/B, aislada y bajo presión. Preguntar:
+- Revisión humana breve: base/A/B, aislada y bajo presión. Preguntar:
   ¿explicas la diferencia?, ¿cuándo elegirías cada una?, ¿te hizo daño un
   enemigo acercado artificialmente?, ¿ves el área real?, ¿hay una opción
   siempre superior? No exigir ahora otras diez runs para aceptar un prototipo.
-- Stress y run completa en Acto II tras aceptar la pareja; usar PC y S25 como
-  evidencia de esos dispositivos, no certificación de gama baja. Balance final
-  de enemigos/daño sigue diferido. La aprobación humana de las seis parejas ya
-  está registrada; cualquier cambio posterior requiere una nueva validación.
+- Probar la run normal tras cambios de una pareja, en PC y teléfono físico
+  cuando el alcance afecte a la experiencia móvil.
 
-## 10. Instrucción de arranque para el siguiente agente
+## Procedimiento para cambios futuros
 
-Leer CONTINUACION → plan §16.4–16.5 y §22.1r → este documento → skills.
-Empezar por cualquier ruta `weapon-path` de la lista anterior y probar los seis
-rangos base I→VI, después el hito y ambas evoluciones. Las seis parejas tienen
-aprobación humana vigente; cualquier ajuste de sus verbos, daño o presentación
-debe conservar este contrato y solicitar una nueva validación. No modificar el
-balance global de enemigos durante esta revisión.
+Aplicar las skills canónicas de gameplay, rendering y validation pertinentes.
+Probar una ruta `weapon-path`: los seis rangos base I→VI, después el hito y
+ambas evoluciones. Cualquier ajuste de sus verbos, daño o presentación debe
+conservar este contrato y pasar por la validación humana correspondiente. No
+modificar el balance global de enemigos durante esta revisión.

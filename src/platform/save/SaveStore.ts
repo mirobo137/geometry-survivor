@@ -14,7 +14,7 @@ import { createDefaultDailyWheel, normalizeDailyWheel, type DailyWheelSaveData }
 
 export type { LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 13 as const;
+export const SAVE_SCHEMA_VERSION = 14 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -124,7 +124,7 @@ export const createDefaultSaveData = (): SaveData => ({
     musicVolume: 1,
     sfxVolume: 1,
     muted: false,
-    controlScheme: 'touch',
+    controlScheme: 'joystick',
     quality: 'medium'
   },
   best: {
@@ -245,7 +245,10 @@ export const migrateSaveData = (value: unknown): SaveData => {
       musicVolume: clamp(finiteOr(rawSettings.musicVolume, defaults.settings.musicVolume), 0, 1),
       sfxVolume: clamp(finiteOr(rawSettings.sfxVolume, defaults.settings.sfxVolume), 0, 1),
       muted: typeof rawSettings.muted === 'boolean' ? rawSettings.muted : defaults.settings.muted,
-      controlScheme: readControlScheme(rawSettings.controlScheme, defaults.settings.controlScheme),
+      // One-time control reset for pre-14 profiles, not a progress reset.
+      // Subsequent choices are saved as schema 14 and remain untouched.
+      controlScheme: version < 14 ? defaults.settings.controlScheme
+        : readControlScheme(rawSettings.controlScheme, defaults.settings.controlScheme),
       quality: readQuality(rawSettings.quality, defaults.settings.quality)
     },
     best: {

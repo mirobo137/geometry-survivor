@@ -11,7 +11,7 @@ Mantén localidad del cambio sin construir abstracciones especulativas.
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Stack aprobado”, “Arquitectura ejecutable” y “Definition of Done”. Para cambios importantes, lee también `../../proyecto.md` completo; para tareas acotadas consulta sus secciones 13–22 y 104–134.
+Lee `../../proyecto.md` para los principios arquitectónicos y `../../PLAN_DESARROLLO.md` sólo para comprobar pendientes y puertas aplicables. Para un contrato concreto, consulta la especificación del dominio antes de añadir abstracciones.
 
 ## Invariantes
 

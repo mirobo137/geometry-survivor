@@ -1,5 +1,5 @@
 const en = {
-  description: 'Complete goals in normal runs and claim NOVA here. General goals renew with higher ranks and rewards; campaign goals are one-time.',
+  description: 'Complete goals in normal runs and claim NOVA here. General goals rank up with better rewards; campaign goals are one-time.',
   rank: 'Rank', ready: 'COMPLETED · UNCLAIMED', claim: 'CLAIM', follow: 'TRACK GOAL',
   runs: 'Finish {target} normal runs since your last claim.',
   kills: 'Defeat {target} enemies since your last claim.',

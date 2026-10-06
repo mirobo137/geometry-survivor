@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DailyWheelService, type DailyWheelLock } from './DailyWheelService';
 import { LocalSaveStore } from '../platform/local/LocalSaveStore';
-import { createDefaultSaveData, MAX_NOVA, migrateSaveData, type StorageAdapter } from '../platform/save/SaveStore';
+import { createDefaultSaveData, MAX_NOVA, migrateSaveData, SAVE_SCHEMA_VERSION, type StorageAdapter } from '../platform/save/SaveStore';
 import { DAILY_WHEEL_PERIOD_MS } from '../content/retention/DailyWheelDefinitions';
 import { getSeasonalReward, REWARD_WEEK_ANCHOR, REWARD_WEEK_MS } from '../content/retention/RewardCosmeticDefinitions';
 import { ownsRewardCosmetic } from './RewardCosmeticOwnership';
@@ -191,6 +191,6 @@ describe('DailyWheelService', () => {
     } });
     expect(migrated.dailyWheel).toMatchObject({ chancePercent: 1, videoClaimed: true, lastReceipt: { id: 'old-video', nova: 500 } });
     expect(migrated.wallet.nova).toBe(700);
-    expect(migrated.schemaVersion).toBe(13);
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION);
   });
 });

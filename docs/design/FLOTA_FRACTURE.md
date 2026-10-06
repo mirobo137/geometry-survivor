@@ -94,8 +94,7 @@ antes que añadir adornos y revisar el master Low en el mismo cambio. Nunca
 reintroducir un único casco recoloreado ni dibujar el boss Low por separado.
 Las pruebas estructurales y las capturas no equivalen a aprobación humana.
 
-Evidencia al cierre: typecheck y 415 tests aprobados, build local correcto,
-captura automatizada completa sin errores JS/HTTP. Inspección de la comparativa
-final y del compositor Pixi realizada. Pendientes: aprobación del usuario,
-perfil móvil, builds de portales y smoke completo antes de publicación.
-Estado Git y comandos de continuación: `CONTINUACION.md`, bloque Handoff a Luna.
+Esta ficha conserva la dirección visual de la flota y las restricciones de
+identidad de Fracture. La aceptación móvil, builds de portal y cualquier tarea
+abierta se registran exclusivamente en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).

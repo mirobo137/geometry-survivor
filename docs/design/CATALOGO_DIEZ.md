@@ -1,11 +1,11 @@
-# Catálogo de lanzamiento: diez por familia
+# Catálogo de lanzamiento — identidad y composición
 
-Solicitud del 03-10-2026. Ampliar 8 naves / 8 cañones / 7 fondos a 10 cada
-uno sin sustituir propiedad, precios ni IDs existentes. Contratos:
+Contrato de identidad para diez cosméticos por familia, sin sustituir propiedad,
+precios ni IDs existentes. Contratos:
 [Naves PNG](NAVES_PNG.md), [Arte híbrido](ARTE_HIBRIDO.md) y
 [Fondos premium](FONDOS_PREMIUM.md). No cambia simulación ni balance.
 
-## Decisiones antes de generar
+## Dirección visual del catálogo
 
 Tres masas de nave comparadas: catamarán abierto, concha espiral y crucero
 rectangular macizo. Se eligen las primeras dos: el crucero se acerca al bastión
@@ -46,9 +46,10 @@ Low/reduced-motion estáticos. Preview y runtime proceden del mismo máster.
 ## Producción y verificación
 
 Generador integrado, no API de pago. Registrar prompts literales, originales,
-derivados, alpha, bytes y validaciones en el manifiesto de este lote.
-La aprobación humana del arte y el perfil en teléfono físico son posteriores
-a las pruebas automatizadas; no se infieren FPS de dimensiones o pooling.
+derivados, alpha, bytes y validaciones en el manifiesto de este lote. La
+aceptación humana y las pruebas físicas se siguen sólo en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md); no inferir FPS de dimensiones o
+pooling.
 
 ## Catálogo incorporado y costes
 
@@ -113,42 +114,23 @@ anteriores desde sus PNG intactos con Q82/method=6, misma resolución, ahorrando
 483,096 bytes; no se recomprimieron los WebP existentes ni se cambiaron overlays.
 Script `scripts/optimize-background-delivery.py 82 --apply`.
 PSNR comparado con el derivado previo: placas 40.87–45.90 dB; previews
-39.62–44.06 dB. Nacre comparado visualmente a tamaño completo; revisión final
-del usuario pendiente. Nuevos fondos Q78 y previews Q76.
+39.62–44.06 dB. Nacre fue comparado visualmente a tamaño completo. Nuevos
+fondos Q78 y previews Q76.
 
 Artefactos completos verificados, incluidos mapas de diagnóstico:
 local 14,964,288; Poki 10,012,364; CrazyGames 10,012,370 bytes. Límite 15,000,000
 sin aumento ni eliminación de mapas. Margen local sólo 35,712 bytes: antes de
 otra ampliación revisar descarga/chunks/derivados; no asumir margen infinito.
 
-## Validación local y puertas
+## QA y runtime
 
-- Typecheck y 126 archivos / 624 pruebas unitarias: correctos. Cobertura de
-  diez IDs por familia, transparencia/dimensiones, materiales únicos, alpha,
-  guardado, fallback lazy, derivadas del movimiento y límite de desplazamiento.
-- Siete smoke enfocados escritorio/móvil: correctos (50.8 s). Compra de las
-  siete novedades, guardado tras recarga, encuadre de diez tarjetas, scrollbar
-  móvil y carga de diez parejas PNG con boss en High.
-- QA `scripts/qa-catalog-ten.mjs`: seis escenarios correctos, tres fondos ×
-  Low/High. Placa correspondiente, no descargar las otras nuevas, cuatro
-  corrientes/dos texturas, movimiento en High/no movimiento en Low, dos nuevas
-  naves y cañones presentes, pools existentes y cero errores JS/HTTP.
-- Capturas de masters, Nacre recomprimido y combate portrait/landscape revisadas.
-  Artefactos QA locales en `test-results/`; no se incluyen en runtime.
-- Siete regresiones adicionales: layout de consolas 1280×720, red lenta,
-  descarga inicial ≤5 MB, fallos de imágenes, rotación y timeout, escritorio/
-  móvil: correctas (26.8 s). Repetición final de compra + PNG elegido en Inicio,
-  PC/móvil: dos correctas (8.1 s). No se ejecutó la suite browser completa.
-- QA balas: 20 combinaciones de los diez paquetes Low/High y dos stress de
-  300 cabezas/0 o 480 bandas, correctas. QA feedback: 24 escenarios de pausa,
-  resize, reinicio, reduced-motion, Medium y stress, correctos. QA propulsión:
-  15 escenarios incluida la flota de diez, correctos. Sin errores JS; el perfil
-  de Chromium usa SwiftShader, no certifica FPS ni coste GPU en teléfono físico.
-
-No aprobar SDKs reales, publicación, rendimiento físico, laboratorio manual,
-balance nuevo ni planes pendientes a partir de esta entrega. Sin commit/push,
-reinicio del Vite del usuario ni cambios de audio. Sólo se cierra el catálogo
-implementado para revisión artística; móvil físico/aceptación humana pendientes.
+`scripts/qa-catalog-ten.mjs` comprueba las tres placas nuevas en Low/High,
+carga selectiva, corrientes y errores JS/HTTP. Los tests de catálogo cubren IDs,
+transparencia, dimensiones, guardado, fallback lazy, movimiento de balas y
+límite de desplazamiento. Las capturas QA de `test-results/` no forman parte
+del runtime. El estado de aceptación física y de publicación está únicamente en
+[PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md); SwiftShader no certifica FPS ni
+coste GPU en teléfono.
 
 ## Prueba directa sin comprar
 

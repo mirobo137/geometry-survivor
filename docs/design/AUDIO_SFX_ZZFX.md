@@ -156,7 +156,7 @@ Para comprobar integración real:
 Hacer un gesto sobre el canvas para desbloquear Web Audio. Probar también la
 partida normal, las evoluciones y la pausa.
 
-## Evidencia y pendientes — 26-09-2026
+## Muestra de validación — 26-09-2026
 
 - Typecheck aprobado; suite completa 482/482. Se añadieron después dos casos
   extra de regresión; la suite de audio final pasó 17/17.
@@ -175,13 +175,14 @@ partida normal, las evoluciones y la pausa.
 - Mezcla offline en Chromium de ocho cues fuertes simultáneos: pico 0,814
   y cero muestras saturadas. Es ese escenario concreto, no una garantía de
   volumen subjetivo o de cualquier futura receta.
-- Pendiente: aprobación auditiva del usuario, altavoz/auriculares en móvil
-  físico, fatiga tras partida larga y rendimiento de preparación en móvil.
+- La aprobación auditiva, la escucha en teléfono físico y el coste en ese
+  dispositivo se siguen en el [plan único](../../PLAN_DESARROLLO.md).
 
-## Entrega para Luna y siguientes iteraciones
+## Protocolo de cambios futuros
 
-La implementación está terminada; no hay código parcial pendiente. Antes de
-retocar, leer este contrato y la entrada más reciente de CONTINUACION.md.
+Este archivo es el contrato técnico, no un estado de entrega. Para trabajo
+pendiente, consultar el [plan único](../../PLAN_DESARROLLO.md). Antes de
+retocar, leer este contrato.
 No rehacer el sintetizador ni duplicar señales en Game.
 
 1. Pedir/leer el feedback auditivo del usuario: efecto concreto, dispositivo,
@@ -202,7 +203,3 @@ No rehacer el sintetizador ni duplicar señales en Game.
    demuestre que se oye al activarse y no se repite indebidamente.
 7. Registrar por separado validación automática y aprobación auditiva humana.
    No declarar medido el rendimiento móvil con Chromium emulado.
-
-Estado de publicación: esta revisión aún no tiene commit/push. El usuario
-debe pedir su publicación cuando quiera probarla en Pages; el laboratorio de
-audición se usa localmente con Vite.

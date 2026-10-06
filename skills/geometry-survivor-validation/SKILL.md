@@ -11,7 +11,7 @@ No declares terminado lo que no tenga evidencia proporcional al riesgo.
 
 ## Contexto requerido
 
-Lee `../../PLAN_DESARROLLO.md`, especialmente “Estrategia de pruebas”, “Fases y puertas”, “Métricas de decisión” y “Definition of Done”. Usa además la skill del dominio validado.
+Lee el pendiente y sus criterios de cierre en `../../PLAN_DESARROLLO.md`; usa además la skill y el contrato del dominio validado. Distingue pruebas locales, aceptación humana, móvil físico y portal.
 
 ## Capas de prueba
 

@@ -5,6 +5,7 @@ import novaUrl from '../../assets/svg/ui/nova.svg?no-inline';
 import { DAILY_WHEEL_NOVA, DAILY_WHEEL_SLOT_COUNT, dailyWheelAvailability,
   type DailyWheelKind, type DailyWheelReceipt, type DailyWheelResult, type DailyWheelSnapshot } from '../../content/retention/DailyWheelDefinitions';
 import { dailyWheelCopy } from './DailyWheelCopy';
+import { getFormattingLocale } from '../../i18n';
 
 export interface DailyWheelDialogOptions {
   readonly read: () => DailyWheelSnapshot;
@@ -210,7 +211,7 @@ export class DailyWheelDialog {
     this.prizeSubtitle.textContent = reward.description;
     const status = dailyWheelAvailability(snapshot.progress, Date.now());
     const t = this.copy;
-    this.wallet.textContent = `${snapshot.walletNova.toLocaleString()} NOVA`;
+    this.wallet.textContent = `${snapshot.walletNova.toLocaleString(getFormattingLocale())} NOVA`;
     this.freeButton.disabled = !snapshot.supported || (!snapshot.pendingReward && !status.free && !status.clockAhead);
     this.freeButton.textContent = snapshot.pendingReward ? t.pending : status.clockAhead ? t.recoverClock : t.free;
     this.videoButton.disabled = !this.options.videoAvailable || !snapshot.supported || !status.video || snapshot.pendingReward;
@@ -279,7 +280,7 @@ export class DailyWheelDialog {
     this.result.dataset.kind = receipt.skin ? 'skin' : 'nova';
     this.result.dataset.receipt = receipt.id;
     this.result.append(element('span', 'daily-wheel-eyebrow', previous ? this.copy.previous : this.copy.saved),
-      element('strong', '', receipt.skin ? this.copy.unlocked.replace('{name}', getRewardCosmetic(receipt.skin)!.name) : `+${receipt.nova.toLocaleString()} NOVA`),
+      element('strong', '', receipt.skin ? this.copy.unlocked.replace('{name}', getRewardCosmetic(receipt.skin)!.name) : `+${receipt.nova.toLocaleString(getFormattingLocale())} NOVA`),
       element('p', '', receipt.skin ? getRewardCosmetic(receipt.skin)!.description : receipt.nova === 0 ? this.copy.full : this.copy.awarded));
     if (receipt.skin) {
       const equip = element('button', 'daily-wheel-equip', this.copy.equip);

@@ -12,6 +12,7 @@ la primera tarea abierta con el código, los tests y el estado de Git.
 | --- | --- |
 | Actos y meta | [ACTOS_Y_META](design/ACTOS_Y_META.md) |
 | Overdrive Normal | [Contrato Overdrive](design/OVERDRIVE_NORMAL.md) |
+| Overdrive Asalto | [Plan de balance inicial](design/OVERDRIVE_ASALTO_BALANCE.md) |
 | Laboratorio | [Laboratorio Meta V2](design/LABORATORIO_META_V2.md) |
 | Rangos y evoluciones | [Progresión](design/PROGRESION_ARMAS_V2.md), [evoluciones](design/EVOLUCIONES_V2.md) |
 | Bitácora, retos y ruleta | [objetivos](design/BITACORA_OBJETIVOS.md), [ruleta](design/RULETA_DIARIA.md), [contrato de Retención](design/RETENCION_EVENTOS_Y_RECOMPENSAS.md) |

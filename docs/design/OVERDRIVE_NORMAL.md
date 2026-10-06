@@ -10,10 +10,12 @@ sesión prolongada ni QA de portal.
 Overdrive Normal reutiliza actos, enemigos, bosses, arenas, armas, evoluciones y
 efectos; no crea variantes visuales ni un sistema de combate paralelo.
 
-Asalto por puntos es una propuesta futura descrita en el
-[plan de pendientes](../../PLAN_DESARROLLO.md#d-overdrive-asalto-por-puntos--propuesta-futura).
-No reabre el baseline de balance aprobado. Las cadencias y entradas por tiempo
-descritas aquí siguen vigentes para Overdrive Normal.
+Overdrive Asalto es una variante implementada con director y reglas de
+encuentro separados. Su calibración de composición y XP está pendiente y se
+lleva en el [plan único](../../PLAN_DESARROLLO.md#d-overdrive-asalto-continuo-por-bajas),
+con detalle en [su plan de balance](OVERDRIVE_ASALTO_BALANCE.md). Esta ficha no
+reabre el baseline de Normal: sus cadencias y entradas por tiempo siguen
+vigentes sólo para Overdrive Normal.
 
 ## Acceso y alcance
 
@@ -320,5 +322,7 @@ Overdrive Normal comienza tras vencer el Acto III, usa una build limpia, conserv
 progresión entre tramos, habilita las seis armas después de tres evoluciones,
 reutiliza arenas y enemigos, admite encuentros dobles desde el tramo 10 y
 liquida una sola recompensa sin alterar la campaña ni exceder presupuestos.
-Overdrive Asalto por puntos es un modo futuro separado y está descrito en el
-plan principal.
+Overdrive Asalto es una variante continua e independiente; su plan de balance y
+aceptación móvil se documenta en
+[OVERDRIVE_ASALTO_BALANCE](OVERDRIVE_ASALTO_BALANCE.md). No modifica estos
+invariantes de Overdrive Normal.

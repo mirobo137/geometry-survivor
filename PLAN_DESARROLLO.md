@@ -21,8 +21,9 @@ Pendientes reales:
 
 1. completar pruebas humanas de Laboratorio, retención y arte en dispositivo;
 2. cerrar la prueba prolongada de recursos y dispositivos modestos;
-3. validar en móvil el balance, legibilidad y rendimiento del nuevo Overdrive
-   Asalto; su cuota inicial aún requiere comparación con una partida Normal;
+3. suavizar el early de Overdrive Asalto y validar su balance, legibilidad y
+   rendimiento en móvil según el contrato de balance; comparar la cuota y el
+   ritmo de XP con una partida Normal;
 4. integrar Poki y CrazyGames para publicación comercial;
 5. validar las nuevas entradas visuales de bosses como mejora no bloqueante.
 
@@ -146,14 +147,20 @@ El modo Normal y su contrato de etapas permanecen sin cambios.
   de tiempo, jefes y bajas. Los saves previos migran con Asalto en cero y la
   selección Normal por defecto. Las rutas de diagnóstico no liquidan récords.
 
-**Validación pendiente antes de cerrar:** comparar en el mismo dispositivo y
-con el mismo Laboratorio la distribución de bajas, XP, nivel y tiempo al jefe
-de Normal frente a Asalto; comprobar que el umbral de 100 no adelanta ni retrasa
-demasiado el encuentro. Después probar continuidad y ausencia de transición,
-×1→×2→×3→×4→×5 en enemigos y jefes, salud estable de entidades vivas, cola única,
-Splitter, cambio de tamaño de pantalla, legibilidad del HUD y sesiones largas.
-Revisar también el costo del mix de doce enemigos en Low/High. No reportar la
-cuota como balanceada ni cerrar la aceptación móvil hasta tener esos resultados.
+**Pendiente inmediato:** medir la apertura actual desde móvil, después ajustar
+por separado composición/cadencia de las primeras 100 bajas y la pauta de XP
+exclusiva de Asalto. Los factores `0.35–0.40` y el objetivo de 7–8 elecciones
+son hipótesis de prueba, no decisiones aprobadas.
+
+**Validación pendiente antes de cerrar:** comparar en el mismo dispositivo,
+semilla cuando esté disponible, equipamiento, calidad y nivel del Laboratorio:
+primera carta, cartas/XP/tiempo al jefe, separación entre mejoras, bajas por
+familia y supervivencia frente a Normal. Verificar continuidad sin transiciones,
+×1→×2→×3→×4→×5 para spawns nuevos, vida estable de enemigos vivos, cola única,
+Splitter, resize, legibilidad del HUD, pools y sesiones largas. Las pruebas
+detalladas y cifras provisionales están en
+[balance de Overdrive Asalto](docs/design/OVERDRIVE_ASALTO_BALANCE.md). No
+declarar balanceada la cuota ni aceptar móvil hasta tener resultados humanos.
 
 Las reglas de Normal permanecen en
 [contrato de Overdrive Normal](docs/design/OVERDRIVE_NORMAL.md).

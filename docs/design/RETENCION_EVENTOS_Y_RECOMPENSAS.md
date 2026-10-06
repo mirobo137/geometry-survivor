@@ -16,9 +16,10 @@ completar una colección y encontrar un reto diferente. No convertir la partida
 normal en una obligación diaria ni alargarla artificialmente para retener.
 
 Aplicar [AGENTS](../../AGENTS.md) y las skills gameplay, platforms, architecture
-y validation según el cambio. Las reglas de publicación, aceptación humana y
-Overdrive Asalto se encuentran en el plan único; esta ficha sólo conserva el
-contrato funcional de Retención.
+y validation según el cambio. La cola de tareas, incluidas las de Overdrive
+Asalto, permanece en el [plan único](../../PLAN_DESARROLLO.md); el detalle de
+balance de Asalto está en [su plan de balance](OVERDRIVE_ASALTO_BALANCE.md).
+Esta ficha sólo conserva el contrato funcional de Retención.
 
 **Corrección expresa del usuario:** no eliminar ataques para simplificar un
 duelo. Orbital Warden conserva sus réplicas; enfrentarse al boss implica

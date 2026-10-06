@@ -47,6 +47,8 @@ export class BossSystem {
   private replicaRightX = ARENA_CENTER.x;
   private replicaRightY = ARENA_CENTER.y;
   private enabled = true;
+  private manualSpawn = false;
+  private spawnRequested = false;
   private retryPattern = false;
   private bodyContactCooldownSeconds = 0;
   private reservedProjectiles = 0;
@@ -99,6 +101,19 @@ export class BossSystem {
     this.reset();
   }
 
+  /** Enables kill-gated encounters without changing timeline-driven bosses. */
+  public setManualSpawn(enabled: boolean): void {
+    this.manualSpawn = enabled;
+    this.spawnRequested = false;
+  }
+
+  /** Requests one boss entry; a full pool retries on the next simulation step. */
+  public requestSpawn(): boolean {
+    if (!this.manualSpawn || !this.enabled || this.state.active) return false;
+    this.spawnRequested = true;
+    return true;
+  }
+
   public setEnabled(enabled: boolean): void {
     if (this.enabled === enabled) return;
     this.enabled = enabled;
@@ -116,12 +131,13 @@ export class BossSystem {
     player: PlayerState,
     arenaRadius: number
   ): number {
-    if (!this.enabled || this.phase === 'defeated') return 0;
+    if (!this.enabled || (this.phase === 'defeated' && (!this.manualSpawn || !this.spawnRequested))) return 0;
     this.arenaRadius = Math.max(0, arenaRadius);
     if (!this.boss) {
-      if (elapsedSeconds + EPSILON < this.definition.startSeconds) return 0;
+      if (this.manualSpawn ? !this.spawnRequested : elapsedSeconds + EPSILON < this.definition.startSeconds) return 0;
       this.boss = this.enemies.spawnBoss(arenaRadius, this.definition.spawnDistance, this.definition);
       if (!this.boss) return 0;
+      this.spawnRequested = false;
       this.phase = 'intro';
       this.phaseTimer = 0;
       this.hitApplied = false;
@@ -208,6 +224,7 @@ export class BossSystem {
     this.releasePatternReservations();
     this.boss = null;
     this.phase = 'defeated';
+    this.spawnRequested = false;
     this.phaseTimer = 0;
     this.hitApplied = true;
     this.state.active = false;
@@ -224,6 +241,7 @@ export class BossSystem {
     this.releasePatternReservations();
     this.boss = null;
     this.phase = 'inactive';
+    this.spawnRequested = false;
     this.phaseTimer = 0;
     this.attackIndex = 0;
     this.hitApplied = false;

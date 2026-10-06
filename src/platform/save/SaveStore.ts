@@ -14,7 +14,7 @@ import { createDefaultDailyWheel, normalizeDailyWheel, type DailyWheelSaveData }
 
 export type { LaboratorySaveData } from '../../content/meta/LaboratoryDefinitions';
 
-export const SAVE_SCHEMA_VERSION = 14 as const;
+export const SAVE_SCHEMA_VERSION = 15 as const;
 export const SAVE_STORAGE_KEY = 'geometry-survivor:save';
 export const MAX_SAVE_BYTES = 20_000;
 export const MAX_NOVA = 9_999_999;
@@ -54,10 +54,16 @@ export interface WalletSaveData {
 /** Persistent records for the optional Infinite/Overdrive mode. */
 export interface OverdriveSaveData {
   readonly unlocked: boolean;
+  /** Normal-only record; legacy fields remain stable for existing profiles. */
   readonly bestTotalTimeSeconds: number;
   readonly maxStages: number;
   readonly bestKills: number;
+  readonly assaultBestTotalTimeSeconds: number;
+  readonly assaultBestBosses: number;
+  readonly assaultBestKills: number;
 }
+
+export type OverdriveVariantSaveData = 'normal' | 'assault';
 
 export type CampaignActId = 'radial' | 'angular' | 'fracture';
 export type StartRouteId = CampaignActId | 'overdrive';
@@ -77,6 +83,8 @@ export interface SaveData {
   readonly overdrive: OverdriveSaveData;
   /** Menu preference only: never resumes an active run or an Overdrive stage. */
   readonly lastSelectedRoute: StartRouteId;
+  /** Selected Overdrive card only; never resumes a run. */
+  readonly lastSelectedOverdriveVariant: OverdriveVariantSaveData;
   /** Bounded, local-only journal and weekly event receipts. */
   readonly retention: RetentionSaveData;
   readonly dailyWheel: DailyWheelSaveData;
@@ -105,10 +113,20 @@ export const mergeOverdriveRecord = (
   current: OverdriveSaveData,
   candidate: Pick<OverdriveSaveData, 'bestTotalTimeSeconds' | 'maxStages' | 'bestKills'>
 ): OverdriveSaveData => ({
-  unlocked: current.unlocked,
+  ...current,
   bestTotalTimeSeconds: Math.max(0, current.bestTotalTimeSeconds, candidate.bestTotalTimeSeconds),
   maxStages: Math.max(0, Math.floor(current.maxStages), Math.floor(candidate.maxStages)),
   bestKills: Math.max(0, Math.floor(current.bestKills), Math.floor(candidate.bestKills))
+});
+
+export const mergeOverdriveAssaultRecord = (
+  current: OverdriveSaveData,
+  candidate: Pick<OverdriveSaveData, 'assaultBestTotalTimeSeconds' | 'assaultBestBosses' | 'assaultBestKills'>
+): OverdriveSaveData => ({
+  ...current,
+  assaultBestTotalTimeSeconds: Math.max(0, current.assaultBestTotalTimeSeconds, candidate.assaultBestTotalTimeSeconds),
+  assaultBestBosses: Math.max(0, Math.floor(current.assaultBestBosses), Math.floor(candidate.assaultBestBosses)),
+  assaultBestKills: Math.max(0, Math.floor(current.assaultBestKills), Math.floor(candidate.assaultBestKills))
 });
 
 /** Unlocking is an explicit consequence of a real Act III victory. */
@@ -150,11 +168,15 @@ export const createDefaultSaveData = (): SaveData => ({
   laboratory: normalizeLaboratorySaveData(null),
   unlockedActs: ['radial'],
   lastSelectedRoute: 'radial',
+  lastSelectedOverdriveVariant: 'normal',
   overdrive: {
     unlocked: false,
     bestTotalTimeSeconds: 0,
     maxStages: 0,
-    bestKills: 0
+    bestKills: 0,
+    assaultBestTotalTimeSeconds: 0,
+    assaultBestBosses: 0,
+    assaultBestKills: 0
   },
   retention: createDefaultRetentionSaveData(),
   dailyWheel: createDefaultDailyWheel()
@@ -278,11 +300,15 @@ export const migrateSaveData = (value: unknown): SaveData => {
       : isCampaignActId(value.lastSelectedRoute) && normalizedUnlockedActs.includes(value.lastSelectedRoute)
         ? value.lastSelectedRoute
         : 'radial',
+    lastSelectedOverdriveVariant: value.lastSelectedOverdriveVariant === 'assault' ? 'assault' : 'normal',
     overdrive: {
       unlocked: overdriveUnlocked,
       bestTotalTimeSeconds: Math.max(0, finiteOr(rawOverdrive.bestTotalTimeSeconds, defaults.overdrive.bestTotalTimeSeconds)),
       maxStages: readNonNegativeInt(rawOverdrive.maxStages, defaults.overdrive.maxStages, Number.MAX_SAFE_INTEGER),
-      bestKills: readNonNegativeInt(rawOverdrive.bestKills, defaults.overdrive.bestKills, Number.MAX_SAFE_INTEGER)
+      bestKills: readNonNegativeInt(rawOverdrive.bestKills, defaults.overdrive.bestKills, Number.MAX_SAFE_INTEGER),
+      assaultBestTotalTimeSeconds: Math.max(0, finiteOr(rawOverdrive.assaultBestTotalTimeSeconds, defaults.overdrive.assaultBestTotalTimeSeconds)),
+      assaultBestBosses: readNonNegativeInt(rawOverdrive.assaultBestBosses, defaults.overdrive.assaultBestBosses, Number.MAX_SAFE_INTEGER),
+      assaultBestKills: readNonNegativeInt(rawOverdrive.assaultBestKills, defaults.overdrive.assaultBestKills, Number.MAX_SAFE_INTEGER)
     },
     retention: normalizeRetentionSaveData(rawRetention),
     dailyWheel: normalizeDailyWheel(version >= 11 ? value.dailyWheel : null)

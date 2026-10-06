@@ -8,7 +8,10 @@ import { PlayerModel } from '../PlayerModel';
 import { CombatSimulation, selectEnemyKind } from './CombatSimulation';
 import { AngularActDirector } from '../acts/AngularActDirector';
 import { OverdriveActDirector } from '../acts/OverdriveActDirector';
+import { OverdriveAssaultDirector } from '../acts/OverdriveAssaultDirector';
 import { createRetentionActDirector } from '../acts/RetentionActDirector';
+import { OVERDRIVE_ASSAULT_KILLS_PER_BOSS } from '../../content/run/OverdriveAssaultDefinitions';
+import type { EnemyState } from './EntityPools';
 
 const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: number): void => {
   const steps = Math.ceil(seconds * 60);
@@ -18,6 +21,52 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
+  it('gates Assault bosses by common kills and scales new spawns after each boss without changing living HP', () => {
+    const director = new OverdriveAssaultDirector(0x1234);
+    const combat = new CombatSimulation({ actDirector: director });
+    const player = new PlayerModel();
+    const internals = combat as unknown as {
+      readonly enemySystem: { spawn(elapsedSeconds: number, arenaRadius: number): EnemyState | null };
+      defeatEnemy(enemy: EnemyState): void;
+    };
+    const existingEnemy = internals.enemySystem.spawn(0, ARENA_RADIUS);
+    expect(existingEnemy).not.toBeNull();
+    const originalHealth = existingEnemy?.maxHealth;
+    const defeatCommonEnemy = (): void => {
+      const enemy = combat.enemies.acquire();
+      if (!enemy) throw new Error('No se pudo adquirir una entidad de prueba');
+      enemy.kind = 'chaser';
+      internals.defeatEnemy(enemy);
+    };
+
+    // Time alone never starts an Assault boss.
+    combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
+    expect(combat.boss.state.active).toBe(false);
+    for (let index = 0; index < OVERDRIVE_ASSAULT_KILLS_PER_BOSS; index += 1) defeatCommonEnemy();
+    combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
+    expect(combat.boss.state.bossId).toBe('core-sentinel');
+    expect(combat.boss.state.maxHealth).toBe(director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth);
+
+    // One future boss may be queued while the current boss is alive.
+    for (let index = 0; index < OVERDRIVE_ASSAULT_KILLS_PER_BOSS; index += 1) defeatCommonEnemy();
+    expect(combat.overdriveAssaultProgress?.nextBossQueued).toBe(true);
+    const firstBoss = combat.enemies.states.find(enemy => enemy.active && enemy.kind === 'boss');
+    if (!firstBoss) throw new Error('El primer jefe no apareció');
+    internals.defeatEnemy(firstBoss);
+
+    expect(combat.overdriveAssaultProgress?.healthMultiplier).toBe(2);
+    expect(existingEnemy?.maxHealth).toBe(originalHealth);
+    combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
+    expect(combat.boss.state.bossId).toBe('orbital-warden');
+    expect(combat.boss.state.maxHealth).toBe((director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth) * 2);
+
+    const nextEnemy = internals.enemySystem.spawn(0, ARENA_RADIUS);
+    expect(nextEnemy).not.toBeNull();
+    if (nextEnemy) {
+      expect(nextEnemy.maxHealth).toBe(ENEMY_DEFINITIONS[nextEnemy.kind].maxHealth * 2);
+    }
+  });
+
   it('uses the promoted chaos cadence by default and keeps authored as an explicit control', () => {
     expect(new CombatSimulation().hazardCadenceMode).toBe('chaos');
     expect(new CombatSimulation({ hazardCadenceMode: 'authored' }).hazardCadenceMode).toBe('authored');

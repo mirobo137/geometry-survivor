@@ -36,6 +36,22 @@ const advanceToRing = (boss: BossSystem, player: PlayerModel): void => {
 };
 
 describe('BossSystem', () => {
+  it('waits for an explicit request in manual mode and can be triggered again after defeat', () => {
+    const { boss, player } = createBoss();
+    boss.setManualSpawn(true);
+
+    expect(boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS)).toBe(0);
+    expect(boss.state.phase).toBe('inactive');
+    expect(boss.requestSpawn()).toBe(true);
+    expect(boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS)).toBe(0);
+    expect(boss.state.phase).toBe('intro');
+
+    boss.markDefeated();
+    expect(boss.requestSpawn()).toBe(true);
+    expect(boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS)).toBe(0);
+    expect(boss.state.phase).toBe('intro');
+  });
+
   it.each([BOSS_DEFINITION, ORBITAL_WARDEN_DEFINITION, FRACTURE_ENGINE_DEFINITION])(
     'keeps $id non-attacking throughout its authored assembly window', definition => {
       const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(1280, 720));

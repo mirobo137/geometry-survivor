@@ -36,7 +36,9 @@ import type { WeaponMasteryChannel, WeaponPathId, WeaponRank } from '../../conte
 import { OVERDRIVE_POWER_INCREMENT } from '../../content/run/OverdriveDefinitions';
 import { FractureThreatSystem } from '../fracture/FractureThreatSystem';
 import { OverdriveActDirector, type OverdriveBossPair } from '../acts/OverdriveActDirector';
+import { OverdriveAssaultDirector } from '../acts/OverdriveAssaultDirector';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
+import { OVERDRIVE_ASSAULT_KILLS_PER_BOSS } from '../../content/run/OverdriveAssaultDefinitions';
 
 export { selectEnemyKind } from '../enemies/EnemySystem';
 
@@ -128,6 +130,16 @@ export interface CombatStats {
   bossDefeats: Record<BossId, number>;
 }
 
+export interface OverdriveAssaultProgress {
+  readonly normalKills: number;
+  readonly bossesDefeated: number;
+  readonly killsTowardNextBoss: number;
+  readonly killsPerBoss: number;
+  readonly healthMultiplier: number;
+  readonly bossActive: boolean;
+  readonly nextBossQueued: boolean;
+}
+
 /**
  * Serializes special attacks for a paired encounter without changing any
  * authored BossDefinition. The lock includes the persistent projectile/mine
@@ -210,6 +222,7 @@ export class CombatSimulation {
     bossDefeats: { 'core-sentinel': 0, 'orbital-warden': 0, 'fracture-engine': 0 }
   };
   private readonly actDirector: RadialActDirector;
+  private readonly assaultDirector: OverdriveAssaultDirector | null;
   private readonly enemySystem: EnemySystem;
   public readonly boss: BossSystem;
   public readonly secondaryBoss: BossSystem;
@@ -262,9 +275,13 @@ export class CombatSimulation {
   private readonly bossAttackGate: PairedBossAttackGate | undefined;
   private doubleBossEncounter = false;
   private retentionChargerWon = false;
+  private assaultNormalKills = 0;
+  private assaultKillsTowardNextBoss = 0;
+  private assaultNextBossQueued = false;
 
   public constructor(options: CombatSimulationOptions = {}) {
     this.actDirector = options.actDirector ?? new RadialActDirector();
+    this.assaultDirector = this.actDirector instanceof OverdriveAssaultDirector ? this.actDirector : null;
     this.overdriveBossPair = options.overdriveBossPair;
     this.stressMode = options.stress === true;
     this.orbiterDrill = options.orbiterDrill === true;
@@ -339,6 +356,7 @@ export class CombatSimulation {
       this.bossAttackGate
     );
     this.secondaryBoss.setEnabled(initialBosses.length > 1);
+    this.boss.setManualSpawn(this.assaultDirector !== null);
     this.bosses = [this.boss, this.secondaryBoss];
     this.laser = new LaserHazard(
       LASER_DEFINITION,
@@ -417,6 +435,19 @@ export class CombatSimulation {
 
   public get activeBossCount(): number {
     return this.bosses.reduce((count, system) => count + (system.state.active ? 1 : 0), 0);
+  }
+
+  public get overdriveAssaultProgress(): OverdriveAssaultProgress | null {
+    if (!this.assaultDirector) return null;
+    return {
+      normalKills: this.assaultNormalKills,
+      bossesDefeated: this.assaultDirector.bossesDefeated,
+      killsTowardNextBoss: this.assaultKillsTowardNextBoss,
+      killsPerBoss: OVERDRIVE_ASSAULT_KILLS_PER_BOSS,
+      healthMultiplier: this.assaultDirector.enemyHealthMultiplier,
+      bossActive: this.boss.state.active,
+      nextBossQueued: this.assaultNextBossQueued
+    };
   }
 
   public get currentProjectileDamage(): number {
@@ -983,6 +1014,15 @@ export class CombatSimulation {
     this.stats.bossDefeats['core-sentinel'] = 0;
     this.stats.bossDefeats['orbital-warden'] = 0;
     this.stats.bossDefeats['fracture-engine'] = 0;
+    this.assaultNormalKills = 0;
+    this.assaultKillsTowardNextBoss = 0;
+    this.assaultNextBossQueued = false;
+    if (this.assaultDirector) {
+      this.assaultDirector.reset();
+      this.boss.reconfigure(this.assaultDirector.bossDefinition);
+      this.boss.setManualSpawn(true);
+      this.secondaryBoss.setEnabled(false);
+    }
     this.experienceMultiplier = 1;
     this.pendingEvents.length = 0;
     this.spawnAccumulator = 0;
@@ -1081,6 +1121,14 @@ export class CombatSimulation {
       if (enemy.bossId !== undefined) this.stats.bossDefeats[enemy.bossId] += 1;
       owner.markDefeated();
       if (owner?.instanceId !== undefined) this.bossAttackGate?.skip(owner.instanceId);
+      if (this.assaultDirector && owner === this.boss) {
+        this.assaultDirector.recordBossDefeat();
+        if (this.assaultNextBossQueued) {
+          this.assaultKillsTowardNextBoss = 0;
+          this.assaultNextBossQueued = false;
+          this.prepareAssaultBossSpawn();
+        }
+      }
       this.pendingEvents.push({
         type: 'bossDefeated',
         bossId: enemy.bossId,
@@ -1091,11 +1139,35 @@ export class CombatSimulation {
       });
       return;
     }
+    this.registerAssaultNormalKill(kind);
     if (kind === 'splitter') {
       this.enemySystem.spawnSplitterChildren(x, y, splitterDepth, this.currentArenaRadius);
     }
     this.pendingEvents.push({ type: 'enemyDefeated', x, y, kind, experience,
       enemyIndex, generation });
+  }
+
+  private registerAssaultNormalKill(kind: EnemyKind): void {
+    if (!this.assaultDirector || kind === 'warden-replica') return;
+    this.assaultNormalKills += 1;
+    if (this.assaultNextBossQueued) return;
+    this.assaultKillsTowardNextBoss += 1;
+    if (this.assaultKillsTowardNextBoss < OVERDRIVE_ASSAULT_KILLS_PER_BOSS) return;
+    if (this.boss.state.active) {
+      // One ready encounter is enough; do not build an unbounded boss backlog.
+      this.assaultKillsTowardNextBoss = OVERDRIVE_ASSAULT_KILLS_PER_BOSS;
+      this.assaultNextBossQueued = true;
+      return;
+    }
+    this.assaultKillsTowardNextBoss -= OVERDRIVE_ASSAULT_KILLS_PER_BOSS;
+    this.prepareAssaultBossSpawn();
+  }
+
+  private prepareAssaultBossSpawn(): void {
+    if (!this.assaultDirector) return;
+    this.boss.reconfigure(this.assaultDirector.bossDefinition);
+    this.boss.setManualSpawn(true);
+    this.boss.requestSpawn();
   }
 }
 

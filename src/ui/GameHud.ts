@@ -5,6 +5,14 @@ export interface GameHudValues {
   readonly xp: number;
   readonly kills: number;
   readonly level: number;
+  readonly assault?: {
+    readonly healthMultiplier: number;
+    readonly bossesDefeated: number;
+    readonly killsTowardNextBoss: number;
+    readonly killsPerBoss: number;
+    readonly bossActive: boolean;
+    readonly nextBossQueued: boolean;
+  };
 }
 
 const formatTime = (seconds: number): string => {
@@ -23,6 +31,7 @@ export class GameHud {
   private readonly xpElement: HTMLElement;
   private readonly killsElement: HTMLElement;
   private readonly levelElement: HTMLElement;
+  private readonly assaultElement: HTMLElement | null;
   private lastText = '';
 
   public constructor(root: HTMLElement) {
@@ -31,6 +40,7 @@ export class GameHud {
     const xpElement = root.querySelector<HTMLElement>('#hud-xp');
     const killsElement = root.querySelector<HTMLElement>('#hud-kills');
     const levelElement = root.querySelector<HTMLElement>('#hud-level');
+    const assaultElement = root.querySelector<HTMLElement>('#hud-assault');
     if (!timeElement || !healthElement || !xpElement || !killsElement || !levelElement) {
       throw new Error('Faltan elementos del HUD');
     }
@@ -39,6 +49,7 @@ export class GameHud {
     this.xpElement = xpElement;
     this.killsElement = killsElement;
     this.levelElement = levelElement;
+    this.assaultElement = assaultElement;
   }
 
   public update(values: GameHudValues): void {
@@ -47,7 +58,10 @@ export class GameHud {
       `HP ${Math.ceil(values.health)}/${values.maxHealth}`,
       `XP ${formatExperience(values.xp)}`,
       `K ${values.kills}`,
-      `LV ${values.level}`
+      `LV ${values.level}`,
+      values.assault
+        ? `ASALTO ×${values.assault.healthMultiplier} · ${values.assault.bossActive ? 'JEFE' : 'SIG.'} ${values.assault.bossesDefeated + 1} · ${values.assault.nextBossQueued ? 'LISTO' : `${values.assault.killsTowardNextBoss}/${values.assault.killsPerBoss}`}`
+        : ''
     ];
     const joined = text.join('|');
     if (joined === this.lastText) return;
@@ -57,5 +71,9 @@ export class GameHud {
     this.xpElement.textContent = text[2];
     this.killsElement.textContent = text[3];
     this.levelElement.textContent = text[4];
+    if (this.assaultElement) {
+      this.assaultElement.hidden = values.assault === undefined;
+      this.assaultElement.textContent = text[5] ?? '';
+    }
   }
 }

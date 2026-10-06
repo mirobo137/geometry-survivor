@@ -2,6 +2,7 @@ import type { ActId } from './ActDefinitions';
 
 /** Run modes are deliberately separate from the authored campaign acts. */
 export type RunMode = 'campaign' | 'overdrive';
+export type OverdriveVariant = 'normal' | 'assault';
 
 export const OVERDRIVE_STAGES_PER_LAP = 3 as const;
 export const OVERDRIVE_HEALTH_MULTIPLIER_CAP = 1_000_000_000 as const;

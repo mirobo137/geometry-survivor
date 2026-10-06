@@ -54,6 +54,10 @@ export const getFormattingLocale = (): 'es-MX' | 'en-US' => getLanguage() === 'e
 const translateDynamicText = (source: string, language: Language): string | null => {
   if (language === 'en') {
     const patterns: readonly [RegExp, (match: RegExpMatchArray) => string][] = [
+      [/^ASALTO ×(\d+) · JEFE (\d+) · (\d+)\/(\d+)$/, match => `ASSAULT ×${match[1]} · BOSS ${match[2]} · ${match[3]}/${match[4]}`],
+      [/^ASALTO ×(\d+) · JEFE (\d+) · LISTO$/, match => `ASSAULT ×${match[1]} · BOSS ${match[2]} · READY`],
+      [/^ASALTO ×(\d+) · SIG\. (\d+) · (\d+)\/(\d+)$/, match => `ASSAULT ×${match[1]} · NEXT ${match[2]} · ${match[3]}/${match[4]}`],
+      [/^ASALTO ×(\d+) · SIG\. (\d+) · LISTO$/, match => `ASSAULT ×${match[1]} · NEXT ${match[2]} · READY`],
       [/^Tiempo (.+)$/, match => `Time ${match[1]}`],
       [/^Bajas (.+)$/, match => `Kills ${match[1]}`],
       [/^Experiencia (.+)$/, match => `Experience ${match[1]}`],
@@ -173,6 +177,10 @@ const translateDynamicText = (source: string, language: Language): string | null
   }
 
   const patterns: readonly [RegExp, (match: RegExpMatchArray) => string][] = [
+    [/^ASSAULT ×(\d+) · BOSS (\d+) · (\d+)\/(\d+)$/, match => `ASALTO ×${match[1]} · JEFE ${match[2]} · ${match[3]}/${match[4]}`],
+    [/^ASSAULT ×(\d+) · BOSS (\d+) · READY$/, match => `ASALTO ×${match[1]} · JEFE ${match[2]} · LISTO`],
+    [/^ASSAULT ×(\d+) · NEXT (\d+) · (\d+)\/(\d+)$/, match => `ASALTO ×${match[1]} · SIG. ${match[2]} · ${match[3]}/${match[4]}`],
+    [/^ASSAULT ×(\d+) · NEXT (\d+) · READY$/, match => `ASALTO ×${match[1]} · SIG. ${match[2]} · LISTO`],
     [/^Time (.+)$/, match => `Tiempo ${match[1]}`],
     [/^Kills (.+)$/, match => `Bajas ${match[1]}`],
     [/^Experience (.+)$/, match => `Experiencia ${match[1]}`],

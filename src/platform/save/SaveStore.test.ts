@@ -3,6 +3,7 @@ import {
   createDefaultSaveData,
   migrateSaveData,
   mergeBestRun,
+  mergeOverdriveAssaultRecord,
   mergeOverdriveRecord,
   SAVE_SCHEMA_VERSION,
   SAVE_STORAGE_KEY,
@@ -224,7 +225,10 @@ describe('LocalSaveStore', () => {
       unlocked: false,
       bestTotalTimeSeconds: 0,
       maxStages: 0,
-      bestKills: 0
+      bestKills: 0,
+      assaultBestTotalTimeSeconds: 0,
+      assaultBestBosses: 0,
+      assaultBestKills: 0
     });
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -233,7 +237,10 @@ describe('LocalSaveStore', () => {
       unlocked: true,
       bestTotalTimeSeconds: 900.5,
       maxStages: 6,
-      bestKills: 1200
+      bestKills: 1200,
+      assaultBestTotalTimeSeconds: 0,
+      assaultBestBosses: 0,
+      assaultBestKills: 0
     });
   });
 
@@ -257,6 +264,39 @@ describe('LocalSaveStore', () => {
       unlockedActs: ['radial', 'angular'], overdrive: { ...defaults.overdrive, unlocked: true } };
     expect(migrateSaveData(legacy)).toMatchObject({ schemaVersion: SAVE_SCHEMA_VERSION, lastSelectedRoute: 'radial',
       wallet: legacy.wallet, laboratory: legacy.laboratory, unlockedActs: legacy.unlockedActs, overdrive: legacy.overdrive });
+  });
+
+  it('migrates the old Overdrive record to Normal and persists an independent Assault result', () => {
+    const defaults = createDefaultSaveData();
+    const previous = migrateSaveData({
+      ...defaults,
+      schemaVersion: 14,
+      lastSelectedRoute: 'overdrive',
+      overdrive: { unlocked: true, bestTotalTimeSeconds: 420, maxStages: 4, bestKills: 350 }
+    });
+    expect(previous.lastSelectedOverdriveVariant).toBe('normal');
+    expect(previous.overdrive).toMatchObject({
+      bestTotalTimeSeconds: 420,
+      maxStages: 4,
+      bestKills: 350,
+      assaultBestTotalTimeSeconds: 0,
+      assaultBestBosses: 0,
+      assaultBestKills: 0
+    });
+
+    const assault = mergeOverdriveAssaultRecord(previous.overdrive, {
+      assaultBestTotalTimeSeconds: 180,
+      assaultBestBosses: 2,
+      assaultBestKills: 190
+    });
+    const migrated = migrateSaveData({
+      ...previous,
+      lastSelectedOverdriveVariant: 'assault',
+      overdrive: assault
+    });
+    expect(migrated.lastSelectedOverdriveVariant).toBe('assault');
+    expect(migrated.overdrive.bestTotalTimeSeconds).toBe(420);
+    expect(migrated.overdrive.assaultBestBosses).toBe(2);
   });
 
   it('resets only the old laboratory on schema 7 while preserving the wallet and real Overdrive unlock', () => {
@@ -290,13 +330,34 @@ describe('LocalSaveStore', () => {
       unlocked: true,
       bestTotalTimeSeconds: 45,
       maxStages: 3,
-      bestKills: 120
+      bestKills: 120,
+      assaultBestTotalTimeSeconds: 0,
+      assaultBestBosses: 0,
+      assaultBestKills: 0
     });
     expect(mergeOverdriveRecord(record, {
       bestTotalTimeSeconds: 10,
       maxStages: 1,
       bestKills: 3
     })).toEqual(record);
+    const assaultRecord = mergeOverdriveAssaultRecord(record, {
+      assaultBestTotalTimeSeconds: 90,
+      assaultBestBosses: 2,
+      assaultBestKills: 175
+    });
+    expect(assaultRecord).toMatchObject({
+      bestTotalTimeSeconds: 45,
+      maxStages: 3,
+      bestKills: 120,
+      assaultBestTotalTimeSeconds: 90,
+      assaultBestBosses: 2,
+      assaultBestKills: 175
+    });
+    expect(mergeOverdriveAssaultRecord(assaultRecord, {
+      assaultBestTotalTimeSeconds: 30,
+      assaultBestBosses: 1,
+      assaultBestKills: 40
+    })).toEqual(assaultRecord);
   });
 
   it('normalizes skin ownership and never equips a locked or unknown skin', () => {

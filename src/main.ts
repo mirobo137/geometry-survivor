@@ -32,6 +32,7 @@ import {
 import {
   normalizeOverdriveSeed,
   normalizeOverdriveStage,
+  type OverdriveVariant,
   type RunMode
 } from './content/run/OverdriveDefinitions';
 import type { OverdriveBossPair } from './simulation/acts/OverdriveActDirector';
@@ -203,6 +204,7 @@ const bootstrap = async (): Promise<void> => {
   const actId: ActId = requestedAct === 'angular' ? 'angular' : requestedAct === 'fracture' ? 'fracture' : 'radial';
   const requestedOverdrive = searchParams.get('mode') === 'overdrive';
   const overdriveMode = requestedOverdrive;
+  const overdriveVariant: OverdriveVariant = searchParams.get('od-variant') === 'assault' ? 'assault' : 'normal';
   const diagnosticOverdrive = overdriveMode && searchParams.get('debug') === '1';
   const runMode: RunMode = overdriveMode ? 'overdrive' : 'campaign';
   const overdriveAutostart = searchParams.get('autostart') === '1';
@@ -319,6 +321,7 @@ const bootstrap = async (): Promise<void> => {
     actId: requestedAct !== null || bossDebugMode ? actId : undefined,
     mode: searchParams.has('mode') ? runMode : undefined,
     overdriveStage: overdriveMode ? overdriveStage : undefined,
+    overdriveVariant: overdriveMode ? overdriveVariant : undefined,
     overdriveSeed: overdriveMode ? overdriveSeed : undefined,
     overdriveBossPair: overdriveMode ? overdriveBossPair : undefined,
     overdriveBuild: overdriveMode ? overdriveBuild : undefined,

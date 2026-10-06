@@ -528,8 +528,16 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await page.locator('#start-level').click();
   await expect(page.locator('#start-act-view')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeVisible();
+  await expect(page.locator('#start-overdrive-assault')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeEnabled();
+  await expect(page.locator('#start-overdrive-assault')).toBeEnabled();
   await page.evaluate(() => { (window as unknown as { menuIdentity: string }).menuIdentity = 'same-document'; });
+  await page.locator('#start-overdrive-assault').click();
+  await expect(page.locator('#start-overdrive-assault')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-overdrive')).not.toHaveClass(/is-selected/);
+  await expect(page.locator('#start-act-status')).toContainText('Asalto');
+  await expect(page.locator('#start-act-play')).toHaveText('INICIAR ASALTO');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save')!).lastSelectedOverdriveVariant)).toBe('assault');
   await page.locator('#start-overdrive').click();
   await expect(page.locator('#start-overdrive')).toHaveClass(/is-selected/);
   await expect(page.locator('#start-overdrive')).toBeEnabled();

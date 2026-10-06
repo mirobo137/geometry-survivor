@@ -1,6 +1,6 @@
 # Geometry Survivor — pendientes vigentes
 
-Revisión: 05-10-2026. Este es el único roadmap del proyecto. Contiene trabajo
+Revisión: 06-10-2026. Este es el único roadmap del proyecto. Contiene trabajo
 que todavía falta construir, validar o cerrar para publicación; no es un diario
 de sesiones ni un archivo de decisiones ya reemplazadas.
 
@@ -21,8 +21,8 @@ Pendientes reales:
 
 1. completar pruebas humanas de Laboratorio, retención y arte en dispositivo;
 2. cerrar la prueba prolongada de recursos y dispositivos modestos;
-3. implementar opcionalmente Overdrive Asalto por puntos, tras validar el
-   Laboratorio y tomar datos de Normal;
+3. validar en móvil el balance, legibilidad y rendimiento del nuevo Overdrive
+   Asalto; su cuota inicial aún requiere comparación con una partida Normal;
 4. integrar Poki y CrazyGames para publicación comercial;
 5. validar las nuevas entradas visuales de bosses como mejora no bloqueante.
 
@@ -112,47 +112,50 @@ Contratos: [Bitácora](docs/design/BITACORA_OBJETIVOS.md),
 [catálogo de recompensas](docs/design/CATALOGO_RECOMPENSAS.md) y
 [reglas del piloto de retención](docs/design/RETENCION_EVENTOS_Y_RECOMPENSAS.md).
 
-## D. Overdrive Asalto por puntos — propuesta futura
+## D. Overdrive Asalto continuo por bajas
 
-**Estado:** no implementado. Overdrive Normal conserva el disparador por tiempo
-y no debe cambiar por esta propuesta.
+**Estado:** implementado en código y tests; falta calibración humana en móvil.
+El modo Normal y su contrato de etapas permanecen sin cambios.
 
-**Puertas previas:** aceptar manualmente el Laboratorio; luego instrumentar
-partidas Normal comparables y medir bajas normales, XP, nivel y tiempo al boss
-por tramo. No inventar cuotas a partir de partidas antiguas o de estadísticas
-de otros actos.
+**Contrato vigente**
 
-**Contrato de Asalto**
+- La tarjeta de Overdrive ofrece dos opciones elegibles dentro de la misma
+  tarjeta: Normal y Asalto. La mitad de Asalto oscurece el arte para distinguir
+  su variante; la selección persiste como preferencia de menú, no como run.
+- Asalto usa un director independiente y un único campo de batalla radial, sin
+  contador de tramos ni transición/pausa de arena entre jefes. Las oleadas
+  comunes no se detienen durante un encuentro.
+- El roster determinista mezcla los doce enemigos comunes de los tres actos.
+  Jefes, réplicas del Warden y entidades de diagnóstico no aportan cuota; los
+  hijos destructibles del Splitter sí cuentan.
+- La cuota inicial configurable es **100 bajas comunes por jefe**. El primer
+  jefe aparece al alcanzar la cuota; no basta con esperar. Sólo se mantiene un
+  jefe siguiente en cola mientras el actual vive. Esta cifra es un valor de
+  arranque, no una medición: debe compararse con bajas, XP, nivel y tiempo al
+  primer jefe de partidas Normal antes de cerrar balance/publicación.
+- Los jefes rotan individualmente entre Core Sentinel, Orbital Warden y
+  Fracture Engine. No se altera el modo Normal ni se usan parejas en Asalto.
+- La vida de enemigos y jefes nuevos es ×1 inicialmente; después de cada jefe
+  derrotado pasa a ×2, ×3, ×4 y ×5. ×5 es el tope inicial: los enemigos ya vivos
+  conservan su vida y el tier sólo afecta spawns posteriores, incluido el
+  siguiente jefe. Al llegar a ×5, se mantiene.
+- La cadencia común es 75% de la cadencia radial base, con piso de 0.20 s y
+  capacidades/pools existentes. El HUD separa tier, bajas de cuota y estado
+  del siguiente jefe de la XP y las bajas totales.
+- Normal conserva sus campos de récord existentes; Asalto añade récord propio
+  de tiempo, jefes y bajas. Los saves previos migran con Asalto en cero y la
+  selección Normal por defecto. Las rutas de diagnóstico no liquidan récords.
 
-- Ritmo opcional elegido al entrar a Overdrive: Normal o Asalto. No crear un
-  cuarto ActId ni alterar campaña o Normal.
-- En Asalto, las bajas de enemigos normales determinan cuándo queda listo el
-  boss; esperar sin derrotar enemigos no lo invoca. Réplicas, bosses y entidades
-  de debug no suman puntos. Los hijos destructibles del Splitter sí cuentan.
-- Fijar por tramo una cuota derivada de la mediana de bajas de Normal; verificar
-  también el promedio y la XP. El tiempo sobrevivido y el nivel del Laboratorio
-  no alteran esa cuota.
-- Acelerar la cadencia de oleadas con el punto inicial max(0.20 s, intervalo
-  normal × 0.75), sin acumular ráfagas ni ampliar pools/capacidades. Conservar
-  las familias y el orden de cambios de arena.
-- Separar el disparador del boss del reloj de tramo. Mantener en tiempo real
-  hazards, telegraphs, ataques y recuperaciones; antes de la intro terminar
-  cambios de arena ya anunciados y llegar a una zona segura.
-- Mantener puntuación, XP, fórmula de NOVA y liquidación actuales; separar
-  récords Normal/Asalto y migrar el récord existente a Normal.
-- Mostrar puntos/cuota sin confundirlos con XP o bajas totales. Las rutas debug
-  no escriben récords, NOVA ni desbloqueos.
+**Validación pendiente antes de cerrar:** comparar en el mismo dispositivo y
+con el mismo Laboratorio la distribución de bajas, XP, nivel y tiempo al jefe
+de Normal frente a Asalto; comprobar que el umbral de 100 no adelanta ni retrasa
+demasiado el encuentro. Después probar continuidad y ausencia de transición,
+×1→×2→×3→×4→×5 en enemigos y jefes, salud estable de entidades vivas, cola única,
+Splitter, cambio de tamaño de pantalla, legibilidad del HUD y sesiones largas.
+Revisar también el costo del mix de doce enemigos en Low/High. No reportar la
+cuota como balanceada ni cerrar la aceptación móvil hasta tener esos resultados.
 
-**Aceptación:** en tramos comparables, mediana y promedio de bajas y la mediana
-de XP quedan dentro de ±10% de Normal; nivel con diferencia máxima de uno.
-Con Laboratorio avanzado, objetivo de reducir aproximadamente 20–30% la mediana
-de tiempo al boss en los tres primeros tramos. Validar semillas reproducibles,
-hijos Splitter, cruces de hitos, transiciones, parejas de bosses, pools, frames,
-memoria y evasión en móvil físico. Si se adelanta al boss suprimiendo enemigos,
-XP, familias o avisos, la propuesta falla.
-
-La especificación anterior se compactó aquí para mantener un único backlog;
-las reglas actuales del modo implementado permanecen en
+Las reglas de Normal permanecen en
 [contrato de Overdrive Normal](docs/design/OVERDRIVE_NORMAL.md).
 
 ## E. Plataformas y publicación comercial

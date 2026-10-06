@@ -302,6 +302,27 @@ describe('Game', () => {
     expect(runtime.actDirector.stageState).toMatchObject({ stage: 4, lap: 2 });
   });
 
+  it('connects Assault to its continuous director without constructing Normal stage state', () => {
+    const game = new Game({
+      ...createOptions(),
+      mode: 'overdrive',
+      overdriveVariant: 'assault',
+      overdriveSeed: 0x1234
+    });
+    const runtime = game as unknown as {
+      overdriveVariant: string;
+      actDirector: { definition: { id: string }; bossDefinition: { id: string }; enemyHealthMultiplier: number; stageState?: unknown };
+      combat: { overdriveAssaultProgress: { killsPerBoss: number; healthMultiplier: number } | null };
+    };
+
+    expect(runtime.overdriveVariant).toBe('assault');
+    expect(runtime.actDirector.definition.id).toBe('radial');
+    expect(runtime.actDirector.bossDefinition.id).toBe('core-sentinel');
+    expect(runtime.actDirector.enemyHealthMultiplier).toBe(1);
+    expect(runtime.actDirector).not.toHaveProperty('stageState');
+    expect(runtime.combat.overdriveAssaultProgress).toMatchObject({ killsPerBoss: 100, healthMultiplier: 1 });
+  });
+
   it('does not settle diagnostic Overdrive rewards or records', () => {
     let saved = createDefaultSaveData();
     const save = vi.fn((next: typeof saved) => {

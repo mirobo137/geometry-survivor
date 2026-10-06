@@ -9,7 +9,7 @@ import { JoystickView } from '../ui/JoystickView';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
 import { RewardedOfferLedger } from '../platform/RewardedOfferLedger';
-import { MAX_NOVA, mergeBestRun, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type LaboratorySaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
+import { MAX_NOVA, mergeBestRun, mergeOverdriveAssaultRecord, mergeOverdriveRecord, unlockOverdrive, type BackgroundSaveData, type CampaignActId, type CannonSkinSaveData, type ControlScheme, type LaboratorySaveData, type SaveStore, type SkinSaveData, type WalletSaveData } from '../platform/save/SaveStore';
 import { PixiGameView } from '../presentation/PixiGameView';
 import { loadShipSkinArt } from '../presentation/pixi/characters/player/TetheredShipView';
 import { ART_FAMILIES, getWeaponArtIds, getUpgradeArtIds, prepareArsenalTextures } from '../presentation/pixi/weapons/ArsenalTextures';
@@ -66,8 +66,9 @@ import { FractureActDirector } from '../simulation/acts/FractureActDirector';
 import type { ActId } from '../content/run/ActDefinitions';
 import type { HazardCadenceMode } from '../content/hazards/HazardCadenceDefinitions';
 import { getCalibrationDefinition, type CalibrationId } from '../content/run/CalibrationDefinitions';
-import { normalizeOverdriveStage, type RunMode } from '../content/run/OverdriveDefinitions';
+import { normalizeOverdriveStage, type OverdriveVariant, type RunMode } from '../content/run/OverdriveDefinitions';
 import { OverdriveActDirector, type OverdriveBossPair } from '../simulation/acts/OverdriveActDirector';
+import { OverdriveAssaultDirector } from '../simulation/acts/OverdriveAssaultDirector';
 import { createRetentionActDirector } from '../simulation/acts/RetentionActDirector';
 import {
   getRetentionChallenge,
@@ -152,6 +153,7 @@ export interface GameOptions {
   /** Explicit route override; the plain menu otherwise restores its saved choice. */
   readonly mode?: RunMode;
   readonly overdriveStage?: number;
+  readonly overdriveVariant?: OverdriveVariant;
   readonly overdriveSeed?: number;
   readonly overdriveBossPair?: OverdriveBossPair;
   /** Developer-only Overdrive build preset; never affects persistent state. */
@@ -222,6 +224,7 @@ export class Game {
   private readonly retentionChallengePracticeId: RetentionChallengeId | null;
   private readonly rewardCatalogPreview: boolean;
   private runMode: RunMode;
+  private overdriveVariant: OverdriveVariant;
   private overdriveStage: number;
   private readonly initialOverdriveStage: number;
   private readonly overdriveSeed: number | undefined;
@@ -410,12 +413,13 @@ export class Game {
       && this.debugUpgradeId === null && this.evolutionId === null;
   }
 
-  private readonly onStartOverdrivePlay = (): void => {
+  private readonly onStartOverdrivePlay = (variant: OverdriveVariant): void => {
     const saved = this.saveStore.load();
     if (this.stopped || this.gameState.phase !== 'menu'
       || !saved.overdrive.unlocked) return;
-    this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive' });
+    this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive', lastSelectedOverdriveVariant: variant });
     this.runMode = 'overdrive';
+    this.overdriveVariant = variant;
     this.overdriveStage = this.initialOverdriveStage;
     this.calibrationId = null;
     this.calibrationApplied = false;
@@ -427,7 +431,9 @@ export class Game {
   private readonly onStartOverdriveDirect = (): void => {
     if (this.runMode === 'overdrive' || typeof window === 'undefined') return;
     const saved = this.saveStore.load();
-    if (saved.overdrive.unlocked) this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive' });
+    if (saved.overdrive.unlocked) {
+      this.saveStore.save({ ...saved, lastSelectedRoute: 'overdrive', lastSelectedOverdriveVariant: 'normal' });
+    }
     const url = new URL(window.location.href);
     url.search = '?mode=overdrive&autostart=1';
     window.location.assign(url.toString());
@@ -524,6 +530,7 @@ export class Game {
     this.calibrationApplied = false;
     const saved = this.saveStore.load();
     this.runMode = saved.lastSelectedRoute === 'overdrive' && saved.overdrive.unlocked ? 'overdrive' : 'campaign';
+    if (this.runMode === 'overdrive') this.overdriveVariant = saved.lastSelectedOverdriveVariant;
     this.actId = this.runMode === 'campaign' && saved.lastSelectedRoute !== 'overdrive'
       ? saved.lastSelectedRoute : 'radial';
     this.configureActRuntime(saved);
@@ -774,7 +781,9 @@ export class Game {
         this.debug.update({ target: this.buildTarget, paused: 'menu', quality: this.fxQuality,
           orientation: state.orientation, logical: `${state.logicalWidth}×${state.logicalHeight}`,
           viewport: `${state.cssWidth}×${state.cssHeight}`, scale: state.scale, dpr: state.dpr,
-          mode: this.runMode === 'overdrive' ? `overdrive-stage-${this.overdriveStage}` : `${this.combat.actId}-act`,
+          mode: this.runMode === 'overdrive'
+            ? this.overdriveVariant === 'assault' ? 'overdrive-assault' : `overdrive-stage-${this.overdriveStage}`
+            : `${this.combat.actId}-act`,
           baseline: this.baselineMode ? `${this.baseline.records.length}/10` : 'off' });
       }
       return;
@@ -844,6 +853,7 @@ export class Game {
     this.weaponPath = options.weaponPath ?? null;
     this.campaignBuild = options.campaignBuild ?? null;
     this.runMode = options.mode ?? 'campaign';
+    this.overdriveVariant = options.overdriveVariant ?? 'normal';
     this.overdriveStage = normalizeOverdriveStage(options.overdriveStage ?? 1);
     this.initialOverdriveStage = this.overdriveStage;
     this.overdriveSeed = options.overdriveSeed;
@@ -861,6 +871,7 @@ export class Game {
     const restoreLastRoute = this.startOnMenu && options.mode === undefined && options.actId === undefined;
     if (restoreLastRoute) {
       this.runMode = saved.lastSelectedRoute === 'overdrive' ? 'overdrive' : 'campaign';
+      if (this.runMode === 'overdrive') this.overdriveVariant = saved.lastSelectedOverdriveVariant;
     }
     this.diagnosticOverdrive = this.runMode === 'overdrive'
       && !restoreLastRoute && options.diagnosticOverdrive !== false;
@@ -947,7 +958,9 @@ export class Game {
     this.actDirector = retentionChallenge
       ? createRetentionActDirector(retentionChallenge.actId)
       : this.runMode === 'overdrive'
-      ? new OverdriveActDirector(this.overdriveStage, this.overdriveSeed)
+        ? this.overdriveVariant === 'assault'
+          ? new OverdriveAssaultDirector(this.overdriveSeed)
+          : new OverdriveActDirector(this.overdriveStage, this.overdriveSeed)
       : this.actId === 'angular'
       ? new AngularActDirector()
       : this.actId === 'fracture' ? new FractureActDirector() : new RadialActDirector();
@@ -1156,6 +1169,10 @@ export class Game {
         );
       }
       this.triggerHitStop(HIT_STOP_SECONDS.terminal);
+      if (this.runMode === 'overdrive' && this.overdriveVariant === 'assault') {
+        // Assault never settles on boss defeat: kills continue toward the next encounter.
+        return;
+      }
       if (this.runMode === 'overdrive' && this.actDirector instanceof OverdriveActDirector
         && !this.combat.allBossesDefeated) {
         // A paired encounter remains live after the first boss falls.
@@ -1220,7 +1237,8 @@ export class Game {
       maxHealth: this.player.state.maxHealth,
       xp: this.combat.stats.experience,
       kills: this.combat.stats.kills,
-      level: this.progression.state.level
+      level: this.progression.state.level,
+      assault: this.combat.overdriveAssaultProgress ?? undefined
     });
     this.baseline.observe({
       enemies: this.combat.enemies.activeCount,
@@ -1262,7 +1280,9 @@ export class Game {
       longFrames: profile.enabled ? profile.longFrames : 'n/a',
       heap: profile.heapUsedMb === null ? 'n/a' : `${profile.heapUsedMb.toFixed(1)} MB`,
       fps: this.fps,
-      mode: this.runMode === 'overdrive' ? `overdrive-stage-${this.overdriveStage}` : this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isFractureDrill ? 'fracture-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
+      mode: this.runMode === 'overdrive'
+        ? this.overdriveVariant === 'assault' ? 'overdrive-assault' : `overdrive-stage-${this.overdriveStage}`
+        : this.combat.isStressMode ? 'stress' : this.combat.isOrbiterDrill ? 'orbiter-drill' : this.combat.isChargerDrill ? 'charger-drill' : this.combat.isSplitterDrill ? 'splitter-drill' : this.combat.isPrismWeaverDrill ? 'prism-weaver-drill' : this.combat.isPulseRingDrill ? 'pulse-ring-drill' : this.combat.isAngularSweepDrill ? 'angular-sweep-drill' : this.combat.isWardenDrill ? 'warden-drill' : this.combat.isPulseRingWeaponDrill ? 'pulse-ring-weapon-drill' : this.combat.isMagneticChargeWeaponDrill ? 'magnetic-charge-drill' : this.combat.isFractureDrill ? 'fracture-drill' : this.combat.isEvolutionDrill ? `evolution-${this.combat.evolutionDrillMode}` : this.weaponPath !== null ? `weapon-path-${this.weaponPath}` : `${this.combat.actId}-act`,
       hazards: this.combat.hazardCadenceMode,
       enemies: `${this.combat.enemies.activeCount}/${this.combat.enemies.capacity}`,
       projectiles: `${this.combat.projectiles.activeCount}/${this.combat.projectiles.capacity}`,
@@ -1646,6 +1666,7 @@ export class Game {
       unlockedActs: saved.unlockedActs,
       selectedAct: this.actId,
       selectedMode: this.runMode,
+      selectedOverdriveVariant: this.overdriveVariant,
       onPlay: this.onStartPlay,
       onOverdrivePlay: this.onStartOverdrivePlay,
       overdriveUnlocked: saved.overdrive.unlocked,
@@ -1824,11 +1845,17 @@ export class Game {
     const progressed = isPublicOverdrive
       ? {
         ...baseData,
-        overdrive: mergeOverdriveRecord(saved.overdrive, {
-          bestTotalTimeSeconds: pending.summary.elapsedSeconds,
-          maxStages: Math.max(0, this.overdriveStage - 1),
-          bestKills: this.combat.stats.kills
-        })
+        overdrive: this.overdriveVariant === 'assault'
+          ? mergeOverdriveAssaultRecord(saved.overdrive, {
+            assaultBestTotalTimeSeconds: pending.summary.elapsedSeconds,
+            assaultBestBosses: Object.values(this.combat.stats.bossDefeats).reduce((sum, count) => sum + count, 0),
+            assaultBestKills: this.combat.stats.kills
+          })
+          : mergeOverdriveRecord(saved.overdrive, {
+            bestTotalTimeSeconds: pending.summary.elapsedSeconds,
+            maxStages: Math.max(0, this.overdriveStage - 1),
+            bestKills: this.combat.stats.kills
+          })
       }
       : this.runMode === 'campaign' && this.actId === 'fracture' && pending.summary.outcome === 'victory'
         ? unlockOverdrive(baseData)

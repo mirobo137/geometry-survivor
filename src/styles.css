@@ -1896,6 +1896,17 @@ body {
   color: #ffe39a;
 }
 
+#hud-assault {
+  color: #ffe39a;
+  white-space: nowrap;
+}
+#hud-assault[hidden] { display: none; }
+
+@media (max-width: 599px) {
+  #game-hud { flex-wrap: wrap; justify-content: flex-start; }
+  #hud-assault { flex-basis: 100%; padding-top: .15rem; }
+}
+
 #level-up {
   position: absolute;
   z-index: 15;

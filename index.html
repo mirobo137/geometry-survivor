@@ -100,7 +100,17 @@
               <button id="start-act-radial" class="act-card-button" type="button" aria-pressed="true"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/radial.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>I · RADIAL</strong><small>Centro, borde y distancia</small><span>CORE SENTINEL</span></span></button>
               <button id="start-act-angular" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/angular.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>II · ANGULAR</strong><small>Sectores, alineación y giro</small><span>ORBITAL WARDEN</span></span></button>
               <button id="start-act-fracture" class="act-card-button" type="button" aria-pressed="false"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/fracture.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>III · FRACTURE</strong><small>Caos, munición y geometría rota</small><span>FRACTURE ENGINE</span></span></button>
-              <button id="start-overdrive" class="act-card-button start-overdrive-button" type="button" data-feature="overdrive"><img class="act-emblem" src="/src/assets/images/ui/menus/icons/overdrive.png" width="160" height="160" loading="lazy" decoding="async" alt="" /><span class="act-route-copy"><strong>INFINITO</strong><small>Tramos, vueltas y caos creciente</small><span>OVERDRIVE</span></span></button>
+              <div id="start-overdrive-card" class="overdrive-mode-card" role="group" aria-label="Modos de Overdrive">
+                <img class="act-emblem" src="/src/assets/images/ui/menus/icons/overdrive.png" width="160" height="160" loading="lazy" decoding="async" alt="" />
+                <div class="overdrive-mode-options">
+                  <button id="start-overdrive" class="overdrive-mode-choice" type="button" data-variant="normal" aria-pressed="false">
+                    <strong>OVERDRIVE</strong><small>Tramos, vueltas y jefes dobles.</small><span>INFINITO NORMAL</span>
+                  </button>
+                  <button id="start-overdrive-assault" class="overdrive-mode-choice" type="button" data-variant="assault" aria-pressed="false">
+                    <strong>ASALTO</strong><small>Oleadas continuas · jefes por bajas.</small><span>CAOS SIN TRAMOS</span>
+                  </button>
+                </div>
+              </div>
             </div>
             <p id="start-act-status" class="act-status" role="status" aria-live="polite"></p>
             <button id="start-act-play" class="start-primary" type="button">INICIAR ACTO I</button>
@@ -248,6 +258,7 @@
         <span id="hud-xp">XP 0</span>
         <span id="hud-kills">K 0</span>
         <span id="hud-level">LV 1</span>
+        <span id="hud-assault" hidden>ASALTO ×1 · JEFE 0 · 0/100</span>
       </div>
       <button id="pause-toggle" type="button" aria-label="Pausar partida" title="Pausar partida" hidden>||</button>
       <section id="level-up" aria-labelledby="level-up-title" hidden>

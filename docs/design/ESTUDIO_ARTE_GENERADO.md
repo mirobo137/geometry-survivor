@@ -15,7 +15,7 @@ cuadrícula. Prompts y comprobaciones en el mismo README. La aprobación de esto
 botones sigue pendiente; no autoriza migrar todas las pantallas.
 Leer junto a [Arte híbrido](ARTE_HIBRIDO.md) y [Fondos premium](FONDOS_PREMIUM.md).
 La implementación del Laboratorio permanece y sus pruebas humanas se aplazan
-según el [recordatorio](LABORATORIO_META_V2.md#recordatorio-pruebas-manuales-aplazadas).
+según los [criterios de aceptación](LABORATORIO_META_V2.md#criterios-de-aceptación).
 
 ## Lectura de las referencias
 

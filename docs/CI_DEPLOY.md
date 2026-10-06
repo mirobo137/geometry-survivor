@@ -7,6 +7,18 @@ de Actions durante 30 días. La publicación espera typecheck, unit tests, tres
 builds y toda la suite browser; un fallo sigue bloqueándola. `npm ci` usa el
 lockfile y Chromium se instala con la versión de Playwright de ese lockfile.
 
+## Incidente de smoke: idioma y arte SVG diferido — 06-10-2026
+
+El run de Actions #205 completó el build, pero seis shards reportaron 25 fallos
+finales porque Playwright usó el idioma inglés del runner y varias aserciones
+de los smokes esperan el texto español. La configuración fija `es-MX`; la prueba
+de idioma móvil sustituye explícitamente `navigator.languages` para seguir
+cubriendo detección en inglés. Un fallo intermitente separado leía el `href` de
+un módulo SVG antes de que el observador de carga diferida lo restaurara; ahora
+la prueba espera el estado `ready` antes de inspeccionarlo. No se cambió el
+loader de producción por ese fallo de sincronización. Actions debe validar el
+workflow completo en el siguiente run.
+
 ## Ejecución paralela entre runners — 27-09-2026
 
 El job `build` verifica TypeScript, lógica y los tres destinos. Ocho jobs
@@ -65,7 +77,8 @@ no prometer menos minutos acumulados de runner.
 El shard 8 completo pasó localmente con `CI=true`: 9/9 en 1.2 min, sin
 reintentos. Se usó la configuración de producción salvo el arranque de preview:
 se levantó manualmente con el loader runner por la restricción local de OneDrive.
-La suite vigente enumera 75 casos y el reparto sigue siendo de ocho shards.
+Ese commit enumeraba 75 casos; el listado actual se obtiene con
+`npx playwright test --list`. El reparto sigue siendo de ocho shards.
 La configuración/copia temporal del diagnóstico no forma parte de la entrega.
 Los dos casos de Inicio pasaron también en desktop con CI=true (16.7 s en
 total); typecheck, build local y los 528 tests unitarios siguen correctos.
@@ -154,7 +167,8 @@ resultado local en Windows no predice el rendimiento Ubuntu.
   cinco casos aislados. Cada compra verifica selección/nivel, save y débito;
   audio conserva la navegación Skins → menú → Meta → menú → Configuración
   → Jugar. La cobertura de gameplay, calidad y móvil continúa activa.
-- Cada caso mantiene 60 s. Las acciones tienen 15 s y navegación 30 s para
+- El timeout global predeterminado es 60 s; algunos escenarios extensos lo
+  ajustan de forma explícita. Las acciones tienen 15 s y navegación 30 s para
   distinguir una espera puntual del agotamiento del caso completo.
 - Un worker por runner para evitar que boots WebGL, screenshots y pruebas de UI
   compitan por CPU/memoria. CI reparte los casos entre ocho runners; local

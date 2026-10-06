@@ -396,15 +396,19 @@ export class Game {
     this.activeRetentionEdition = null;
     this.activeRetentionChallengePractice = false;
     this.retentionNoHitFailure = false;
-    this.retentionProgressEligibleThisRun = calibrationId === undefined
-      && !this.stressMode && this.weaponPath === null && this.campaignBuild === null
-      && this.debugUpgradeId === null && this.evolutionId === null;
+    this.retentionProgressEligibleThisRun = this.isRetentionProgressEligible(calibrationId ?? null);
     const saved = this.saveStore.load();
     this.applyLaboratoryBonuses(saved.laboratory);
     this.startScreen?.close();
     this.activateRun(true);
     this.beginRunIntro('premium');
   };
+
+  private isRetentionProgressEligible(calibrationId: CalibrationId | null): boolean {
+    return calibrationId === null
+      && !this.stressMode && this.weaponPath === null && this.campaignBuild === null
+      && this.debugUpgradeId === null && this.evolutionId === null;
+  }
 
   private readonly onStartOverdrivePlay = (): void => {
     const saved = this.saveStore.load();
@@ -866,6 +870,10 @@ export class Game {
     this.fxQuality = options.fxQuality ?? 'medium';
     this.baselineMode = options.baselineMode === true;
     this.calibrationId = options.calibrationId ?? null;
+    this.retentionProgressEligibleThisRun = this.startWithBasicIntro
+      && this.runMode === 'overdrive'
+      && !this.diagnosticOverdrive
+      && this.isRetentionProgressEligible(this.calibrationId);
     this.profiler = new FrameProfiler(options.profileMode === true || this.baselineMode);
     this.gameState = new GameState(this.startOnMenu ? 'menu' : 'playing');
     const requestedAct = options.actId

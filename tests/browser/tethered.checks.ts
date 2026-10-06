@@ -98,6 +98,9 @@ export const registerTetheredShipChecks = (): void => {
       }
       await page.locator('.cannon-card[data-cannon="curve"] button').click();
       await expect(preview.locator('svg image')).toHaveCount(6);
+      await expect.poll(() => preview.locator('.cannon-preview-module').evaluateAll(images => (
+        images.length === 2 && images.every(image => image.getAttribute('data-art-state') === 'ready')
+      ))).toBe(true);
       const cannons = await preview.locator('.cannon-preview-module').evaluateAll(images => images.map(image => {
         const box = image.getBoundingClientRect();
         return { url: image.getAttribute('href'), ratio: box.width / box.height };

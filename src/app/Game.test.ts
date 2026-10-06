@@ -355,6 +355,37 @@ describe('Game', () => {
     expect(saved.retention.runsCompleted).toBe(1);
   });
 
+  it('records Bitacora progress for public Overdrive autostart after Act III', () => {
+    let saved = {
+      ...createDefaultSaveData(),
+      overdrive: { ...createDefaultSaveData().overdrive, unlocked: true }
+    };
+    const save = vi.fn((next: typeof saved) => { saved = next; return true; });
+    const game = new Game({
+      ...createOptions({ saveStore: { load: () => saved, save, clear: vi.fn() } }),
+      mode: 'overdrive',
+      diagnosticOverdrive: false,
+      startWithBasicIntro: true
+    });
+    const runtime = game as unknown as {
+      retentionProgressEligibleThisRun: boolean;
+      combat: { stats: { kills: number; elapsedSeconds: number } };
+      finishRun: (outcome: 'game-over') => void;
+      settleTerminalRun: (token: number) => boolean;
+    };
+
+    expect(runtime.retentionProgressEligibleThisRun).toBe(true);
+    runtime.combat.stats.kills = 12;
+    runtime.combat.stats.elapsedSeconds = 90;
+    runtime.finishRun('game-over');
+    expect(runtime.settleTerminalRun(1)).toBe(true);
+    expect(saved.retention.runsCompleted).toBe(1);
+
+    const diagnostic = new Game({ ...createOptions(), mode: 'overdrive', startWithBasicIntro: true });
+    expect((diagnostic as unknown as { retentionProgressEligibleThisRun: boolean })
+      .retentionProgressEligibleThisRun).toBe(false);
+  });
+
   it('pauses an Overdrive transition and resumes its remaining handoff time', () => {
     vi.useFakeTimers();
     const options = createOptions();

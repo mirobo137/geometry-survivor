@@ -19,6 +19,9 @@ export default defineConfig({
     : 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
+    // Legacy smoke expectations use Spanish copy; individual language tests
+    // override navigator.languages explicitly when they need another locale.
+    locale: 'es-MX',
     // Recording every SVG-rich DOM snapshot penalizes the shared CI runner.
     // Keep full diagnostics on retry, including retries that eventually pass.
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',

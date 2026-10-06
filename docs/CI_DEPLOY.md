@@ -19,6 +19,11 @@ la prueba espera el estado `ready` antes de inspeccionarlo. No se cambió el
 loader de producción por ese fallo de sincronización. Actions debe validar el
 workflow completo en el siguiente run.
 
+El run #206 pasó siete shards; el restante falló cuando un drill de Prism Weaver
+seguía en fase `approach` con 4 FPS y agotó una espera de 12 s. Se amplió esa
+espera a 30 s, con un timeout total de 90 s para el caso; no se cambió el tiempo
+ni la velocidad de ataque del enemigo.
+
 ## Ejecución paralela entre runners — 27-09-2026
 
 El job `build` verifica TypeScript, lógica y los tres destinos. Ocho jobs

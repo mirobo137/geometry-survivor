@@ -1119,12 +1119,13 @@ test('carga el drill del Orbiter y muestra una ruta local durante el compromiso'
 
 for (const quality of ['low', 'high']) {
   test(`carga el drill Prism Weaver y mantiene su ataque anclado al enemigo ${quality}`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
     const failures = captureRuntimeFailures(page);
     await page.goto(`/?prism=1&debug=1&quality=${quality}`);
     await expect(page.locator('#boot-status')).toBeHidden();
     await expect(page.locator('#game-container canvas')).toBeVisible();
     await expect(page.locator('#debug-panel')).toContainText('mode: prism-weaver-drill');
-    await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 12_000 })
+    await expect.poll(() => page.locator('#debug-panel').textContent(), { timeout: 30_000 })
       .toMatch(/prism: (telegraph|active)/);
     await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`prism-weaver-${quality}.png`) });
     expect(failures).toEqual([]);

@@ -139,7 +139,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
-      schemaVersion: 8, overdrive: { unlocked: true }
+      schemaVersion: 15, unlockedActs: ['radial', 'angular'], overdrive: { unlocked: true }
     })));
     let releaseEntry!: () => void;
     const entryGate = new Promise<void>((resolve) => { releaseEntry = resolve; });

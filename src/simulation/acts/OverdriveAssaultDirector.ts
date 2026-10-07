@@ -12,6 +12,7 @@ import {
 } from '../../content/run/OverdriveDefinitions';
 import {
   getOverdriveAssaultHealthMultiplier,
+  OVERDRIVE_ASSAULT_OPENING_EXPERIENCE_MULTIPLIER,
   OVERDRIVE_ASSAULT_BOSS_ORDER,
   OVERDRIVE_ASSAULT_ENEMY_POOL
 } from '../../content/run/OverdriveAssaultDefinitions';
@@ -57,6 +58,12 @@ export class OverdriveAssaultDirector extends RadialActDirector {
 
   public override get enemyHealthMultiplier(): number {
     return getOverdriveAssaultHealthMultiplier(this.defeatedBossCount);
+  }
+
+  public get commonEnemyExperienceMultiplier(): number {
+    return this.defeatedBossCount === 0
+      ? OVERDRIVE_ASSAULT_OPENING_EXPERIENCE_MULTIPLIER
+      : 1;
   }
 
   public override get bossDefinition(): BossDefinition {

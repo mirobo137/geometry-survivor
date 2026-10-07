@@ -1,23 +1,25 @@
-# Overdrive Asalto — plan de balance inicial
+# Overdrive Asalto — ensayo de balance inicial
 
-Este documento registra el diagnóstico y la propuesta para hacer más llevadero
-el inicio de Asalto sin rebajar su identidad de caos continuo. **Es un plan de
-trabajo, no un balance ya aprobado ni implementado.** La única cola de tareas
-vigente está en [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md); este documento
-detalla su tarea de Asalto.
+Este documento registra el diagnóstico y el ensayo implementado para hacer más
+llevadero el inicio de Asalto sin rebajar su identidad de caos continuo. **Es
+experimental y requiere validación humana en móvil; no es un balance aprobado.**
+La única cola vigente está en [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md);
+este documento detalla su tarea de Asalto.
 
 ## Objetivo y límites
 
 - Reducir el muro de enemigos resistentes al comienzo y evitar cadenas de
-  pantallas de nivel que interrumpan la acción.
+  pantallas de nivel que interrumpan la acción. El jugador reportó que la mezcla
+  completa desde el inicio incluye enemigos difíciles con mucha XP y puede
+  producir subidas consecutivas; todavía no hay mediciones de partidas.
 - Conservar las bajas como motor de la cuota y de la experiencia: no conceder
   XP por esperar, moverse sin combatir o sobrevivir sin bajas.
 - No modificar Overdrive Normal, los valores globales de enemigos ni la curva
   de progresión de campaña.
-- Conservar la cuota de arranque de 100 bajas comunes por jefe, la vida ×1 del
-  primer encuentro y la subida de vida de spawns posteriores ×2, ×3, ×4 y ×5.
-  Este plan no cambia la vida de entidades que ya están vivas ni pausa las
-  oleadas durante un jefe.
+- Conservar la cuota de 100 bajas comunes por jefe y aumentar la vida por
+  encuentro: ×0.25, ×0.5, ×1, ×2, ×3, ×4… No hay tope de diseño en ×5. Las
+  entidades ya vivas conservan la vida con que aparecieron y las oleadas no se
+  pausan durante un jefe. El runtime conserva un límite técnico de seguridad.
 - No añadir datos persistentes de telemetría ni servicios externos. La lectura
   temporal de balance debe estar disponible en el navegador de Pages.
 
@@ -29,9 +31,9 @@ Verificado en `OverdriveAssaultDirector`, `OverdriveAssaultDefinitions`,
 1. El director elige con semilla entre los doce enemigos comunes de los tres
    actos desde el primer spawn. No hay fase de introducción ni pesos por
    dificultad; las selecciones del roster son uniformes por aparición.
-2. Asalto ya comienza en multiplicador de vida ×1. El muro pre-jefe, por tanto,
-   procede de la composición de enemigos y el ritmo inicial, no del escalado
-   ×2 del primer jefe.
+2. Antes de este ensayo Asalto comenzaba en ×1. El jugador reportó que la mezcla
+   completa incluye enemigos difíciles con recompensa alta de XP; aún no hay
+   telemetría que cuantifique cuánto aporta cada causa.
 3. El intervalo de spawn empieza en `0.75 ×` el intervalo radial (un 25 % menos
    de intervalo, aproximadamente un 33 % más de apariciones por minuto), sujeto
    al piso compartido de `0.20 s`.
@@ -47,93 +49,71 @@ Verificado en `OverdriveAssaultDirector`, `OverdriveAssaultDefinitions`,
    Derrotar un jefe concede además la XP definida para boss (40 base), aunque
    no sume a la cuota de bajas comunes.
 6. La curva global actual cruza umbrales acumulados de `8, 20, 36, 56, 80, 108,
-   140, 176, 216, 260, 308, 360, 416, 476...`. Si se alcanzan 475 XP antes del
-   primer jefe, se llega al nivel 14 y se acumulan 13 subidas desde nivel 1.
-   La carta de ganar experiencia puede elevar todavía más la cifra.
+   140, 176, 216, 260, 308, 360, 416, 476...`. Sin el ajuste, 475 XP antes del
+   primer boss producirían 13 subidas desde nivel 1; en el ensayo, la expectativa
+   uniforme sería 237.5 XP por cuota antes de bonos. La carta de XP puede elevar
+   esa cifra.
 7. `LevelProgression` conserva todas las subidas pendientes. Tras elegir una
    carta, `Game` vuelve a abrir la selección inmediatamente si queda otra
    pendiente; no se pierde XP, pero puede no haber combate entre varias pausas.
-8. El HP multiplicado de Asalto no multiplica por sí mismo la XP por baja. Esta
-   diferencia también debe observarse después de los tiers ×2–×5: aumentar XP
-   automáticamente en la misma proporción que el HP no está aprobado y podría
-   volver a acelerar demasiado los niveles.
+8. La vida escalada no multiplica la XP. En este ensayo, la XP común se reduce a
+   la mitad hasta vencer el primer boss y luego vuelve al valor normal; no sube
+   automáticamente junto con los tiers de vida posteriores.
 
-## Propuesta de ajuste, en orden
+## Ensayo implementado (sólo Overdrive Asalto)
 
-### 1. Medir el ritmo real sin depender de consola
+- Se conserva la mezcla uniforme de los doce enemigos, la cadencia `0.75 ×`
+  radial, los ataques de boss y la cuota de 100 bajas comunes por encuentro.
+- En cada encuentro, enemigos y boss usan la secuencia de vida `×0.25`, `×0.5`,
+  `×1`, `×2`, `×3`, `×4`… El tier avanza al derrotar al boss. Cada 100 bajas
+  comunes habilitan el siguiente encuentro; no hay un tope de diseño en `×5`.
+  Sólo aplica el límite técnico global de seguridad numérica.
+- Enemigos ya vivos mantienen la vida con la que aparecieron. El nuevo tier
+  afecta futuros spawns y el siguiente boss.
+- Hasta derrotar al primer boss, la XP de enemigos comunes se multiplica por
+  `0.5`; se mantiene el bono de XP de la run y la XP de boss no cambia. Después
+  del primer boss, las bajas comunes vuelven a dar XP normal. La XP se calcula
+  al derrotar al enemigo.
+- No se alteran campaña, Overdrive Normal, definiciones globales de enemigos,
+  cadencia, ataques de bosses ni regla de cuota.
 
-Antes de cerrar valores, la pantalla temporal de diagnóstico debe poder mostrar
-en teléfono: segundos y bajas hasta la primera carta; elecciones acumuladas y
-XP hasta el primer jefe; tiempo entre las primeras cartas; pico de
-`pendingLevelUps`; bajas por familia; tier de vida y calidad gráfica. No guardar
-estos datos en el perfil ni liquidar récords/recompensas en la ruta diagnóstica.
+Con el promedio teórico de `4.75 XP` por baja, el factor `0.5` equivaldría a
+`237.5 XP` para las primeras 100 bajas, antes de bonos. Es una referencia
+matemática, no una medición: los enemigos tienen distinto tiempo de eliminación
+y la mezcla de bajas reales puede diferir.
 
-Capturar primero partidas del build actual. Usar el mismo teléfono, navegador,
-calidad, equipamiento y nivel del Laboratorio para cada comparación. Registrar
-el commit y distinguir dato visto en Pages de expectativa calculada aquí.
+## Prueba humana pendiente
 
-### 2. Suavizar composición y cadencia de la apertura
+Comparar baseline y ensayo en el mismo teléfono, navegador, calidad,
+equipamiento y nivel del Laboratorio; registrar commit y semilla cuando esté
+disponible. Observar segundos y bajas hasta la primera carta y el primer boss,
+XP/cartas al boss, separación entre elecciones, pico de niveles pendientes,
+familias derrotadas/acumuladas, muertes y saturación de arena. Separar datos
+observados de expectativas.
 
-Probar una rampa guiada por el progreso de la cuota actual, no sólo por reloj:
-
-- `0–25` bajas: privilegiar familias de menor tiempo de eliminación y limitar
-  la frecuencia de los anclajes de mucha vida; conservar alguna variedad
-  avanzada para que Asalto no parezca una oleada tutorial.
-- `26–60` bajas: aumentar gradualmente el peso de amenazas medias y avanzadas.
-- `61–100` bajas: llegar a la mezcla completa; mantenerla durante los jefes y
-  después de ellos.
-
-Los cortes son una hipótesis inicial. Clasificar por tiempo de eliminación y
-amenaza observados, no sólo por el nombre del acto. No apilar varios enemigos
-de alto tiempo de eliminación al principio. Probar además si la cadencia puede
-arrancar en `1.0 ×` la radial y alcanzar `0.75 ×` hacia la mitad/final de la
-cuota. Mantener el mismo piso, pools y regla de no acumular ráfagas. La rampa no
-debe impedir que el jugador alcance el jefe de forma natural.
-
-### 3. Dar a Asalto una pauta de XP propia
-
-No tocar `LevelProgression` global ni las recompensas de enemigos de campaña.
-Introducir, si los datos confirman el exceso, un perfil exclusivamente de
-Asalto que ajuste la XP efectiva antes de sincronizar el progreso; la carta de
-XP sigue funcionando como bono dentro de ese perfil.
-
-**Ensayo inicial, no valor final:** probar un factor de XP Asalto de `0.35`, y
-`0.40` si la primera carta llega demasiado tarde. Con la mezcla uniforme
-actual, 475 XP esperadas se convertirían en unas 166–190 XP, aproximadamente
-7–8 subidas en la curva existente antes de contar variación del roster y
-bonos elegidos. La distribución de apertura propuesta cambiará el promedio,
-así que recalcular con las bajas observadas; no dar por balanceado el factor
-sólo por esta multiplicación.
-
-La primera carta debe seguir llegando a tiempo para ayudar a estabilizar la
-apertura. Si un factor escalar retrasa demasiado esa primera elección pero aún
-produce cadenas más adelante, evaluar una curva de XP específica de Asalto que
-mantenga la primera meta cerca de la actual y abra gradualmente los intervalos
-posteriores. No compensar suprimiendo niveles ni descartando XP pendiente.
-
-Si, después de calibrar la XP, todavía se producen varias aperturas
-consecutivas de cartas por bajas agrupadas (por ejemplo, hijos del Splitter),
-considerar una presentación continua de las elecciones pendientes. Debe
-preservar una recompensa por cada nivel y no reanudar/pausar varias veces por
-animaciones intermedias; no reducir la cantidad de elecciones ganadas.
+Confirmar que el inicio se siente más accesible, sin quitarle identidad al
+primer boss; que no se encadenen pausas de nivel de forma molesta y que el
+escalado posterior permita seguir jugando un tiempo. No fijar por adelantado un
+número de elecciones como criterio. Si se requiere otra iteración, cambiar un
+solo parámetro y no descartar XP ni elecciones ganadas.
 
 ## Validación y aceptación
 
 Pruebas deterministas sin Pixi:
 
-- selección del roster por semilla en cada banda de cuota, límites de bandas y
-  acceso a las doce familias antes de cerrar una cuota;
+- selección determinista del roster y acceso a las doce familias;
 - mismo conteo de bajas elegibles y el primer jefe en 100; bosses y réplicas no
   cuentan, los hijos destructibles del Splitter sí;
-- el factor/perfil de XP afecta Asalto únicamente, incluye sus fuentes reales
-  de XP, funciona junto con la carta de XP y no cambia Normal/campaña;
+- secuencia `×0.25→×0.5→×1→×2→×3…` sin tope authored de ×5 y aplicada al
+  siguiente boss/spawns tras derrotar un boss;
+- XP común `×0.5` hasta vencer el primer boss, luego `×1`; XP de boss intacta,
+  bono de XP compatible y sin cambios en Normal/campaña;
 - umbrales cruzados, XP fraccionaria acumulada y colas pendientes no pierden
   subidas;
-- después de cada jefe, sólo los spawns posteriores reciben el nuevo ×2–×5;
-  la vida de entidades vivas sigue constante.
+- después de cada boss, siguiente boss/spawns usan el tier posterior y la vida
+  de entidades vivas sigue constante.
 
-Comparación humana en móvil, primero con el baseline actual y luego con el
-candidato, en tres o más runs comparables:
+Comparación humana en móvil, con baseline y ensayo bajo condiciones comparables:
 
 - tiempo/bajas hasta la primera carta y hasta el primer jefe;
 - cartas elegidas y XP al momento del primer jefe;
@@ -141,16 +121,13 @@ candidato, en tres o más runs comparables:
   consecutivas sin una ventana perceptible de combate;
 - cantidad de enemigos avanzados acumulados, bajas por familia, muertes del
   jugador y saturación visible de la arena;
-- repetir la observación después del primer jefe en ×2 y ×3 para detectar si la
-  vida escalada vuelve demasiado lento el avance por tiempo.
+- repetir la observación en tiers posteriores para comprobar que el escalado
+  deja avanzar por cada cuota sin volver imposible la partida demasiado pronto.
 
-Objetivo piloto: alrededor de 7–8 elecciones antes del primer jefe, con la
-primera carta suficientemente temprana y sin cadenas de pausas. Comparar
-también con Overdrive Normal bajo el mismo Laboratorio; este objetivo no se
-considera aprobado hasta ver las capturas/datos reales. El tiempo del jefe no
-debe cambiar de forma perjudicial, la cuota sigue siendo de 100 y Normal debe
-quedar idéntico. Ajustar un solo parámetro por iteración para identificar qué
-resolvió o empeoró el problema.
+No hay un objetivo previo de cantidad de elecciones. Comparar también con
+Overdrive Normal bajo el mismo Laboratorio; el ensayo requiere revisión humana
+en móvil. La cuota sigue en 100 y Normal debe quedar idéntico. Ajustar un solo
+parámetro por iteración para identificar qué resolvió o empeoró el problema.
 
 Al retomarlo en casa, continuar desde la sección D de `PLAN_DESARROLLO.md` y
 usar este documento como referencia de diagnóstico, hipótesis y aceptación; no

@@ -59,7 +59,12 @@ import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
 import { calculateRunNova } from '../content/meta/EconomyDefinitions';
 import { canClaimLaboratoryVitalityAd, claimLaboratoryVitalityAd } from '../content/meta/LaboratoryProgression';
-import { getLaboratoryCombatBonuses } from '../content/meta/LaboratoryDefinitions';
+import {
+  getLaboratoryCombatBonuses,
+  LABORATORY_UPGRADE_DEFINITIONS,
+  LABORATORY_VITALITY_AD_MAX_RANK,
+  type LaboratoryUpgradeId
+} from '../content/meta/LaboratoryDefinitions';
 import { AngularActDirector } from '../simulation/acts/AngularActDirector';
 import { RadialActDirector } from '../simulation/acts/RadialActDirector';
 import { FractureActDirector } from '../simulation/acts/FractureActDirector';
@@ -70,6 +75,7 @@ import { normalizeOverdriveStage, type OverdriveVariant, type RunMode } from '..
 import { OverdriveActDirector, type OverdriveBossPair } from '../simulation/acts/OverdriveActDirector';
 import { OverdriveAssaultDirector } from '../simulation/acts/OverdriveAssaultDirector';
 import { createRetentionActDirector } from '../simulation/acts/RetentionActDirector';
+import { createSessionSaveStore } from './SessionSaveStore';
 import {
   getRetentionChallenge,
   getRetentionWeeklyEdition,
@@ -89,6 +95,9 @@ const HIT_STOP_SECONDS = {
   playerGuard: 0.05,
   terminal: 0.024
 } as const;
+const MAX_LABORATORY_PROFILE_LEVELS = Object.fromEntries(
+  LABORATORY_UPGRADE_DEFINITIONS.map(definition => [definition.id, definition.maxRank])
+) as Partial<Record<LaboratoryUpgradeId, number>>;
 
 interface PendingTerminalRun {
   readonly token: number;
@@ -141,6 +150,8 @@ export interface GameOptions {
   readonly tetheredShipPrototype?: boolean;
   /** Local debug reward gallery; all displayed unlocks are synthetic and ephemeral. */
   readonly rewardCatalogPreview?: boolean;
+  /** Local-only, session-isolated comparison of persistent Lab effects. */
+  readonly laboratoryProfileOverride?: 'none' | 'max';
   readonly background?: BackgroundId;
   readonly fxQuality?: FxQuality;
   readonly profileMode?: boolean;
@@ -223,6 +234,7 @@ export class Game {
   private readonly startWithBasicIntro: boolean;
   private readonly retentionChallengePracticeId: RetentionChallengeId | null;
   private readonly rewardCatalogPreview: boolean;
+  private readonly laboratoryProfileOverride: 'none' | 'max' | null;
   private runMode: RunMode;
   private overdriveVariant: OverdriveVariant;
   private overdriveStage: number;
@@ -635,7 +647,7 @@ export class Game {
   private readonly onStartLaboratoryChange = (laboratory: LaboratorySaveData, wallet: WalletSaveData): boolean => {
     if (this.gameState.phase !== 'menu') return false;
     const saved = this.saveStore.load();
-    if (!saved.overdrive.unlocked || !this.saveStore.save({ ...saved, laboratory, wallet })) return false;
+    if (!saved.unlockedActs.includes('angular') || !this.saveStore.save({ ...saved, laboratory, wallet })) return false;
     if (wallet.nova < saved.wallet.nova) this.audio.playCue('purchase');
     this.applyLaboratoryBonuses(laboratory);
     return true;
@@ -647,14 +659,14 @@ export class Game {
   }> => {
     if (this.gameState.phase !== 'menu') return { result: 'unavailable' };
     const before = this.saveStore.load();
-    if (!before.overdrive.unlocked || !canClaimLaboratoryVitalityAd(before.laboratory)) {
+    if (!before.unlockedActs.includes('angular') || !canClaimLaboratoryVitalityAd(before.laboratory)) {
       return { result: 'unavailable' };
     }
     const result = await this.rewardedAds.request('laboratory-vitality');
     if (result !== 'rewarded') return { result };
     if (this.stopped) return { result: 'error' };
     const current = this.saveStore.load();
-    if (!current.overdrive.unlocked) return { result: 'error' };
+    if (!current.unlockedActs.includes('angular')) return { result: 'error' };
     const laboratory = claimLaboratoryVitalityAd(current.laboratory);
     if (!laboratory || !this.saveStore.save({ ...current, laboratory })) return { result: 'error' };
     this.audio.playCue('reward-claimed');
@@ -861,10 +873,21 @@ export class Game {
     this.overdriveBuild = options.overdriveBuild ?? 'starter';
     this.retentionChallengePracticeId = options.retentionChallengePracticeId ?? null;
     this.rewardCatalogPreview = options.rewardCatalogPreview === true && options.buildTarget === 'local';
+    this.laboratoryProfileOverride = options.buildTarget === 'local'
+      && (options.laboratoryProfileOverride === 'none' || options.laboratoryProfileOverride === 'max')
+      ? options.laboratoryProfileOverride
+      : null;
     this.startOnMenu = (options.startOnMenu === true || this.retentionChallengePracticeId !== null)
       && options.elements.startScreen !== undefined;
     this.startWithBasicIntro = options.startWithBasicIntro === true;
-    this.saveStore = this.rewardCatalogPreview ? createRewardPreviewStore(options.platform.saveStore) : options.platform.saveStore;
+    this.saveStore = this.rewardCatalogPreview
+      ? createRewardPreviewStore(options.platform.saveStore)
+      : this.laboratoryProfileOverride !== null
+        ? createSessionSaveStore(options.platform.saveStore)
+        : options.platform.saveStore;
+    if (this.laboratoryProfileOverride !== null) {
+      options.elements.container.dataset.laboratoryProfile = this.laboratoryProfileOverride;
+    }
     const saved = this.saveStore.load();
     // Explicit/developer routes take precedence. A plain menu remembers only
     // the chosen route, always creating a fresh run (stage one for Overdrive).
@@ -954,7 +977,7 @@ export class Game {
       ? getRetentionChallenge(this.activeRetentionChallenge) : null;
     const permanentBonuses = retentionChallenge
       ? getLaboratoryCombatBonuses({}, 0)
-      : getLaboratoryCombatBonuses(saved.laboratory.levels, saved.laboratory.vitalityAdRank);
+      : this.getLaboratoryBonuses(saved.laboratory);
     this.actDirector = retentionChallenge
       ? createRetentionActDirector(retentionChallenge.actId)
       : this.runMode === 'overdrive'
@@ -995,9 +1018,17 @@ export class Game {
   }
 
   private applyLaboratoryBonuses(laboratory: LaboratorySaveData): void {
-    const bonuses = getLaboratoryCombatBonuses(laboratory.levels, laboratory.vitalityAdRank);
+    const bonuses = this.getLaboratoryBonuses(laboratory);
     this.combat.setPermanentBonuses(bonuses);
     this.player.setPermanentBonuses(bonuses);
+  }
+
+  private getLaboratoryBonuses(laboratory: LaboratorySaveData) {
+    if (this.laboratoryProfileOverride === 'none') return getLaboratoryCombatBonuses({}, 0);
+    if (this.laboratoryProfileOverride === 'max') {
+      return getLaboratoryCombatBonuses(MAX_LABORATORY_PROFILE_LEVELS, LABORATORY_VITALITY_AD_MAX_RANK);
+    }
+    return getLaboratoryCombatBonuses(laboratory.levels, laboratory.vitalityAdRank);
   }
 
   public async start(): Promise<void> {
@@ -1645,7 +1676,7 @@ export class Game {
       this.rewardedOffers.canOffer('cosmetic-unlock')
         ? this.rewardedAds.isAvailable('cosmetic-unlock')
         : Promise.resolve(false),
-      initialSave.overdrive.unlocked
+      initialSave.unlockedActs.includes('angular')
         ? this.rewardedAds.isAvailable('laboratory-vitality')
         : Promise.resolve(false),
       this.rewardedAds.isAvailable('daily-wheel-nova')

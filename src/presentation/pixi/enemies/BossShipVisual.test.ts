@@ -57,11 +57,11 @@ describe('BossShipVisual', () => {
     for (let index = 0; index < 4; index++) view.update(0.1);
     expect(view.root.visible).toBe(false);
     expect(view.isDefeatActive).toBe(false);
-    view.reset();
-    expect(pieces.every(piece => piece.tint === 0xffffff && piece.scale.x === 1)).toBe(true);
-    view.render(state, 0);
+    view.render(state, 1.3);
     expect(view.root.visible).toBe(true);
     expect(pieces[0].texture).toBe(body);
+    expect(pieces.every(piece => piece.tint === 0xffffff && piece.scale.x === 1)).toBe(true);
+    view.reset();
     view.root.destroy({ children: true });
     expect(body.source.destroyed).toBe(false);
     body.destroy(true);
@@ -77,6 +77,9 @@ describe('BossShipVisual', () => {
     view.playDefeat(300, 200);
     expect(view.root.visible).toBe(false);
     expect(view.isDefeatActive).toBe(false);
+    for (let step = 0; step < 6; step++) view.update(0.1);
+    view.render(state, 1);
+    expect(view.root.visible).toBe(true);
   });
 
   it('switches the complete hull when the boss identity changes', () => {

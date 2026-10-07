@@ -62,8 +62,10 @@ y [seguimiento de correcciones](docs/audits/CORRECCIONES_RECURSOS_2026-10-02.md)
 
 ## B. Laboratorio V2 — aceptación humana
 
-**Estado:** árbol, compras y guardado implementados; el usuario aplazó la
-validación visual y táctil.
+**Estado:** árbol, compras, guardado y balance de prueba (10 rangos, precios
+−30% y desbloqueo al abrir Acto II) implementados. La aprobación depende de
+comparar juego normal y perfiles locales con/sin Laboratorio; no declarar aún
+seguros los nuevos topes.
 
 Probar en PC y teléfono físico:
 
@@ -72,13 +74,24 @@ Probar en PC y teléfono físico:
 - abrir/cerrar el modal con botón, exterior y Escape; comprobar efecto, precio,
   compra, saldo y aparición del siguiente rango;
 - recargar y verificar NOVA, rangos, historial y ofertas;
+- confirmar que el Laboratorio queda bloqueado antes de completar Acto I y se
+  abre al desbloquear Acto II, sin requerir Overdrive;
+- comparar el mismo acto y condiciones con `?debug=1&act=radial&lab-profile=none`
+  y `?debug=1&act=radial&lab-profile=max` (también `angular`/`fracture`). Los
+  perfiles son locales y no escriben cambios en el guardado permanente;
+- comparar también Overdrive Normal y Asalto con ambos perfiles usando
+  `?debug=1&mode=overdrive&od-variant=normal&lab-profile=max|none` y
+  `?debug=1&mode=overdrive&od-variant=assault&lab-profile=max|none`;
+- evaluar especialmente DPS máximo (`1.8×` daño × `1/0.7` cadencia), curación,
+  armadura y resistencia al combinar rangos de Laboratorio con cartas;
 - habilitar Vitalidad después de tres compras NOVA: sólo conceder ante rewarded
   exitoso y no conceder ante cancelación, error o falta de anuncio;
 - jugar actos y Overdrive para confirmar que las mejoras aplican y que las
   cartas muestran daño total, incluidos los bonos permanentes.
 
-No recalibrar globalmente el balance ya aprobado. Ajustar un tope o precio sólo
-si una prueba concreta demuestra un problema.
+No recalibrar globalmente el balance ya aprobado. Los nuevos topes y precios del
+Laboratorio siguen provisionales hasta completar esa comparación humana; ajustar
+un valor sólo con evidencia de juego reproducible.
 Contrato: [Laboratorio V2](docs/design/LABORATORIO_META_V2.md).
 
 ## C. Retención local — validación y decisiones de producto
@@ -115,8 +128,9 @@ Contratos: [Bitácora](docs/design/BITACORA_OBJETIVOS.md),
 
 ## D. Overdrive Asalto continuo por bajas
 
-**Estado:** implementado en código y tests; falta calibración humana en móvil.
-El modo Normal y su contrato de etapas permanecen sin cambios.
+**Estado:** ensayo de balance implementado y cubierto por pruebas; falta
+calibración humana en móvil. No es un balance aprobado. Overdrive Normal y su
+contrato de etapas permanecen sin cambios.
 
 **Contrato vigente**
 
@@ -136,10 +150,14 @@ El modo Normal y su contrato de etapas permanecen sin cambios.
   primer jefe de partidas Normal antes de cerrar balance/publicación.
 - Los jefes rotan individualmente entre Core Sentinel, Orbital Warden y
   Fracture Engine. No se altera el modo Normal ni se usan parejas en Asalto.
-- La vida de enemigos y jefes nuevos es ×1 inicialmente; después de cada jefe
-  derrotado pasa a ×2, ×3, ×4 y ×5. ×5 es el tope inicial: los enemigos ya vivos
-  conservan su vida y el tier sólo afecta spawns posteriores, incluido el
-  siguiente jefe. Al llegar a ×5, se mantiene.
+- La vida de enemigos y bosses sigue esta secuencia al derrotar cada boss:
+  ×0.25, ×0.5, ×1, ×2, ×3, ×4… No existe tope de diseño en ×5; cada 100 bajas
+  comunes se habilita otro boss y la vida sigue escalando. Sólo queda el límite
+  técnico global de seguridad numérica. Las entidades ya vivas conservan su
+  vida; el nuevo multiplicador afecta apariciones posteriores.
+- Hasta derrotar al primer boss, las bajas comunes entregan ×0.5 XP; los bonos
+  de XP de la run siguen aplicándose encima y la XP de boss no se reduce.
+  Después del primer boss, las bajas comunes vuelven a entregar XP normal.
 - La cadencia común es 75% de la cadencia radial base, con piso de 0.20 s y
   capacidades/pools existentes. El HUD separa tier, bajas de cuota y estado
   del siguiente jefe de la XP y las bajas totales.
@@ -147,16 +165,20 @@ El modo Normal y su contrato de etapas permanecen sin cambios.
   de tiempo, jefes y bajas. Los saves previos migran con Asalto en cero y la
   selección Normal por defecto. Las rutas de diagnóstico no liquidan récords.
 
-**Pendiente inmediato:** medir la apertura actual desde móvil, después ajustar
-por separado composición/cadencia de las primeras 100 bajas y la pauta de XP
-exclusiva de Asalto. Los factores `0.35–0.40` y el objetivo de 7–8 elecciones
-son hipótesis de prueba, no decisiones aprobadas.
+**Pendiente inmediato:** probar en móvil el escalado ×0.25→×0.5→×1→×2→×3… y
+la XP reducida de la apertura. El usuario reportó que la mezcla completa desde
+el comienzo contiene enemigos difíciles con recompensa alta de XP y puede
+provocar subidas consecutivas; la frecuencia todavía no está medida. La cuota
+sigue en 100 bajas comunes por boss. El roster y cadencia se mantienen. Los
+valores son un ensayo, no un balance aprobado; factores anteriores `0.35–0.40`
+y el objetivo de 7–8 elecciones quedan reemplazados.
 
 **Validación pendiente antes de cerrar:** comparar en el mismo dispositivo,
 semilla cuando esté disponible, equipamiento, calidad y nivel del Laboratorio:
-primera carta, cartas/XP/tiempo al jefe, separación entre mejoras, bajas por
-familia y supervivencia frente a Normal. Verificar continuidad sin transiciones,
-×1→×2→×3→×4→×5 para spawns nuevos, vida estable de enemigos vivos, cola única,
+primera carta, XP/tiempo/bajas al boss, separación entre mejoras, enemigos
+acumulados, bajas por familia y supervivencia frente a Normal. Verificar
+continuidad, la secuencia de vida indicada para bosses y spawns nuevos, la XP
+normal después del primer boss, vida estable de enemigos existentes, cola única,
 Splitter, resize, legibilidad del HUD, pools y sesiones largas. Las pruebas
 detalladas y cifras provisionales están en
 [balance de Overdrive Asalto](docs/design/OVERDRIVE_ASALTO_BALANCE.md). No

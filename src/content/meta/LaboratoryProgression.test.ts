@@ -25,7 +25,7 @@ describe('LaboratoryProgression', () => {
     const selected = firstHand[0]!;
     let purchase = purchaseLaboratoryUpgrade(state, nova, selected);
     expect(purchase.purchased).toBe(true);
-    expect(purchase.nova).toBe(50_000 - 875);
+    expect(purchase.nova).toBe(50_000 - 613);
     expect(purchase.laboratory.levels[selected]).toBe(1);
     expect(purchase.laboratory.currentOfferIds.some((id) => firstHand.slice(1).includes(id))).toBe(false);
     state = purchase.laboratory;
@@ -46,11 +46,11 @@ describe('LaboratoryProgression', () => {
   it('does not spend NOVA on stale, unaffordable, or maxed offers', () => {
     const state = createFreshLaboratory();
     const [offered, stale] = state.currentOfferIds;
-    expect(purchaseLaboratoryUpgrade(state, 874, offered!).purchased).toBe(false);
+    expect(purchaseLaboratoryUpgrade(state, 612, offered!).purchased).toBe(false);
     expect(purchaseLaboratoryUpgrade(state, 20_000, 'global_damage').purchased).toBe(state.currentOfferIds.includes('global_damage'));
     expect(purchaseLaboratoryUpgrade({
       ...state,
-      levels: { global_damage: 5 },
+      levels: { global_damage: 10 },
       currentOfferIds: ['global_damage']
     }, 20_000, 'global_damage').purchased).toBe(false);
     expect(stale).toBeDefined();

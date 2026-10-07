@@ -1302,9 +1302,9 @@ export const CATALOG = [
   { es: 'Modo Infinito bloqueado: vence el Acto III', en: 'Infinite mode locked: defeat the Act III boss' },
   { es: 'Derrota al boss del Acto III para desbloquearlo', en: 'Defeat the Act III boss to unlock it' },
   { es: 'Abrir Laboratorio de mejoras permanentes', en: 'Open the permanent-upgrade Laboratory' },
-  { es: 'Laboratorio bloqueado: vence el Acto III para desbloquear Overdrive', en: 'Laboratory locked: defeat Act III to unlock Overdrive' },
+  { es: 'Laboratorio bloqueado: completa el Acto I para desbloquear el Acto II', en: 'Laboratory locked: complete Act I to unlock Act II' },
   { es: 'Mejoras permanentes que aplican a todos los modos', en: 'Permanent upgrades that apply to all modes' },
-  { es: 'Derrota al boss del Acto III para desbloquear el Laboratorio', en: 'Defeat the Act III boss to unlock the Laboratory' },
+  { es: 'Derrota al boss del Acto I para desbloquear el Laboratorio', en: 'Defeat the Act I boss to unlock the Laboratory' },
   { es: '· Angular se desbloquea al vencer Acto I', en: '· Unlock Angular by completing Act I' },
   { es: '· Fracture se desbloquea al vencer Acto II', en: '· Unlock Fracture by completing Act II' },
 ] as const;

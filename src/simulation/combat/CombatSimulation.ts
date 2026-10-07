@@ -1111,8 +1111,10 @@ export class CombatSimulation {
     // Splitter children can reuse the released parent slot immediately.
     const enemyIndex = this.enemies.states.indexOf(enemy);
     const generation = enemy.generation;
+    const assaultExperienceMultiplier = this.assaultDirector && kind !== 'boss'
+      ? this.assaultDirector.commonEnemyExperienceMultiplier : 1;
     const experience = this.retentionBossDuel || this.retentionChargerChallenge
-      ? 0 : ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier;
+      ? 0 : ENEMY_DEFINITIONS[kind].experience * this.experienceMultiplier * assaultExperienceMultiplier;
     this.enemies.release(enemy);
     this.stats.kills += 1;
     this.stats.experience += experience;

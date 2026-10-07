@@ -235,7 +235,7 @@ export const UPGRADE_DEFINITIONS: readonly UpgradeDefinition[] = [
     title: 'Núcleo vampírico',
     description: 'Cura 1% de vida máxima al derrotar',
     effect: { type: 'vampirism', amount: 0.01 },
-    maxStacks: 3
+    maxStacks: 2
   },
   {
     id: 'critical_impact',

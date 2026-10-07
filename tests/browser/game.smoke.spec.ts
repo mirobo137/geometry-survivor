@@ -170,6 +170,7 @@ const openFundedMenu = async (page: Page): Promise<string[]> => {
       localStorage.setItem('geometry-survivor:save', JSON.stringify({
         schemaVersion: 8,
         wallet: { nova: 20000 },
+        unlockedActs: ['radial', 'angular'],
         overdrive: { unlocked: true }
       }));
     }
@@ -451,6 +452,10 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   });
   await page.goto('/?debug=1');
   await expect(page.locator('#boot-status')).toBeHidden();
+  await expect(page.locator('#start-meta')).toBeEnabled();
+  await page.locator('#start-meta').click();
+  await expect(page.locator('#start-meta-view')).toBeVisible();
+  await page.locator('#start-meta-back').click();
   await page.locator('#start-level').click();
   await expect(page.locator('#start-act-view')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeVisible();
@@ -473,11 +478,12 @@ test('muestra el gating de actos y entra a Angular con build limpia cuando esta 
   expect(failures).toEqual([]);
 });
 
-test('habilita vitalidad solo tras tres compras NOVA y persiste el rango del anuncio', async ({ page }) => {
+test('habilita Laboratorio y vitalidad desde Acto II, tras tres compras NOVA', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
     schemaVersion: 8,
     wallet: { nova: 20_000 },
+    unlockedActs: ['radial', 'angular'],
     overdrive: { unlocked: true }
   })));
   await page.goto('/?debug=1');
@@ -507,11 +513,42 @@ test('habilita vitalidad solo tras tres compras NOVA y persiste el rango del anu
   expect(afterReward.laboratory.purchasesSinceVitalityAd).toBe(0);
 });
 
-test('mantiene el Laboratorio bloqueado hasta desbloquear Overdrive', async ({ page }) => {
+test('mantiene el Laboratorio bloqueado hasta desbloquear el Acto II', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#boot-status')).toBeHidden();
   await expect(page.locator('#start-meta')).toBeDisabled();
-  await expect(page.locator('#start-meta')).toHaveAttribute('aria-label', /vence el Acto III/);
+  await expect(page.locator('#start-meta')).toHaveAttribute('aria-label', /completa el Acto I/);
+});
+
+test('compara laboratorio al máximo y sin laboratorio con perfiles locales aislados', async ({ page }) => {
+  const initialSave = JSON.stringify({ schemaVersion: 15, unlockedActs: ['radial', 'angular'] });
+  await page.addInitScript(value => localStorage.setItem('geometry-survivor:save', value), initialSave);
+
+  for (const profile of ['max', 'none'] as const) {
+    await page.goto(`/?debug=1&act=radial&lab-profile=${profile}`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-container')).toHaveAttribute('data-laboratory-profile', profile);
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('geometry-survivor:save'))).toBe(initialSave);
+  }
+});
+
+test('abre Overdrive Normal y Asalto con perfiles de laboratorio aislados', async ({ page }) => {
+  const initialSave = JSON.stringify({ schemaVersion: 15, unlockedActs: ['radial', 'angular'] });
+  await page.addInitScript(value => localStorage.setItem('geometry-survivor:save', value), initialSave);
+
+  for (const profile of ['max', 'none'] as const) {
+    for (const variant of ['normal', 'assault'] as const) {
+      await page.goto(`/?debug=1&mode=overdrive&od-variant=${variant}&lab-profile=${profile}`);
+      await expect(page.locator('#boot-status')).toBeHidden();
+      await expect(page.locator('#game-container')).toHaveAttribute('data-laboratory-profile', profile);
+      await expect(page.locator('#game-container canvas')).toBeVisible();
+      await expect(page.locator('#debug-panel')).toContainText(
+        variant === 'normal' ? 'mode: overdrive-stage-1' : 'mode: overdrive-assault'
+      );
+      expect(await page.evaluate(() => localStorage.getItem('geometry-survivor:save'))).toBe(initialSave);
+    }
+  }
 });
 
 test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado', async ({ page }) => {

@@ -131,6 +131,14 @@ describe('PlayerModel', () => {
     expect(player.state.health).toBeCloseTo(52);
   });
 
+  it('never lets vampirism exceed 2% of maximum health per kill', () => {
+    const player = new PlayerModel();
+    player.increaseVampirism(0.01);
+    player.increaseVampirism(0.01);
+    player.increaseVampirism(0.01);
+    expect(player.currentVampirism).toBeCloseTo(0.02);
+  });
+
   it('blocks one damage packet with a rechargeable shield', () => {
     const player = new PlayerModel();
     player.enableShield(1);

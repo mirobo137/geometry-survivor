@@ -396,7 +396,7 @@ describe('LocalSaveStore', () => {
     })).toMatchObject({
       wallet: { nova: 12_345 },
       laboratory: {
-        levels: { global_damage: 5 },
+        levels: { global_damage: 10 },
         currentOfferIds: ['weapon_damage_projectile', 'weapon_cadence'],
         purchasesSinceVitalityAd: 3,
         vitalityAdRank: 4,

@@ -14,7 +14,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
     page.on('pageerror', error => errors.push(error.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(() => localStorage.setItem('geometry-survivor:save', JSON.stringify({
-      schemaVersion: 8, wallet: { nova: 20_000 }, overdrive: { unlocked: true }
+      schemaVersion: 8, wallet: { nova: 20_000 }, unlockedActs: ['radial', 'angular']
     })));
     await page.goto('/?ad=success');
     await expect(page.locator('#start-screen')).toBeVisible();

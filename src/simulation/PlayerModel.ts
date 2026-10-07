@@ -6,7 +6,8 @@ import {
   PLAYER_RADIUS,
   PLAYER_SHIELD_RECHARGE_SECONDS,
   PLAYER_SPEED,
-  PLAYER_VAMPIRISM_COOLDOWN_SECONDS
+  PLAYER_VAMPIRISM_COOLDOWN_SECONDS,
+  PLAYER_VAMPIRISM_MAX_PERCENT
 } from '../config/constants';
 import { clampPointToArena, type ArenaBoundaryInput } from './ArenaBoundary';
 import type { MovementVector } from './MovementVector';
@@ -119,7 +120,7 @@ export class PlayerModel {
   }
 
   public increaseVampirism(amount: number): void {
-    this.vampirismPercent = Math.max(0, this.vampirismPercent + amount);
+    this.vampirismPercent = Math.min(PLAYER_VAMPIRISM_MAX_PERCENT, Math.max(0, this.vampirismPercent + amount));
   }
 
   public enableShield(rechargeSeconds = PLAYER_SHIELD_RECHARGE_SECONDS): void {
@@ -212,11 +213,11 @@ export class PlayerModel {
   >): void {
     const previousMax = this.state.maxHealth;
     const wasFull = this.state.health >= previousMax;
-    this.permanentMovementSpeedMultiplier = Math.min(1.1, Math.max(1, Number.isFinite(bonuses.movementSpeedMultiplier)
+    this.permanentMovementSpeedMultiplier = Math.min(1.2, Math.max(1, Number.isFinite(bonuses.movementSpeedMultiplier)
       ? bonuses.movementSpeedMultiplier : 1));
-    this.permanentMaxHealthMultiplier = Math.min(1.144, Math.max(1, Number.isFinite(bonuses.maxHealthMultiplier)
+    this.permanentMaxHealthMultiplier = Math.min(1.248, Math.max(1, Number.isFinite(bonuses.maxHealthMultiplier)
       ? bonuses.maxHealthMultiplier : 1));
-    this.incomingDamageMultiplier = Math.min(1, Math.max(0.95,
+    this.incomingDamageMultiplier = Math.min(1, Math.max(0.9,
       Number.isFinite(bonuses.incomingDamageMultiplier) ? bonuses.incomingDamageMultiplier : 1));
     this.updateMovementSpeed();
     this.updateMaxHealth(wasFull);

@@ -347,6 +347,9 @@ describe('UpgradeApplier', () => {
       before: 0.01,
       after: 0.02
     });
+    expect(applier.apply('vampiric_core')).toBe(true);
+    expect(player.currentVampirism).toBeCloseTo(0.02);
+    expect(applier.apply('vampiric_core')).toBe(false);
   });
 
   it('applies critical and shield cards with authored limits', () => {

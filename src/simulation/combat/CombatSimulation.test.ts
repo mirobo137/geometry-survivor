@@ -32,6 +32,8 @@ describe('CombatSimulation', () => {
     const existingEnemy = internals.enemySystem.spawn(0, ARENA_RADIUS);
     expect(existingEnemy).not.toBeNull();
     const originalHealth = existingEnemy?.maxHealth;
+    if (!existingEnemy) throw new Error('No apareció el enemigo inicial');
+    expect(originalHealth).toBe(ENEMY_DEFINITIONS[existingEnemy.kind].maxHealth * 0.25);
     const defeatCommonEnemy = (): void => {
       const enemy = combat.enemies.acquire();
       if (!enemy) throw new Error('No se pudo adquirir una entidad de prueba');
@@ -42,29 +44,40 @@ describe('CombatSimulation', () => {
     // Time alone never starts an Assault boss.
     combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
     expect(combat.boss.state.active).toBe(false);
-    for (let index = 0; index < OVERDRIVE_ASSAULT_KILLS_PER_BOSS; index += 1) defeatCommonEnemy();
+    defeatCommonEnemy();
+    expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.chaser.experience * 0.5);
+    for (let index = 1; index < OVERDRIVE_ASSAULT_KILLS_PER_BOSS; index += 1) defeatCommonEnemy();
+    expect(combat.overdriveAssaultProgress?.healthMultiplier).toBe(0.25);
     combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
     expect(combat.boss.state.bossId).toBe('core-sentinel');
-    expect(combat.boss.state.maxHealth).toBe(director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth);
+    expect(combat.boss.state.maxHealth).toBe((director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth) * 0.25);
+    expect(combat.stats.experience).toBe(ENEMY_DEFINITIONS.chaser.experience * OVERDRIVE_ASSAULT_KILLS_PER_BOSS * 0.5);
 
     // One future boss may be queued while the current boss is alive.
     for (let index = 0; index < OVERDRIVE_ASSAULT_KILLS_PER_BOSS; index += 1) defeatCommonEnemy();
     expect(combat.overdriveAssaultProgress?.nextBossQueued).toBe(true);
     const firstBoss = combat.enemies.states.find(enemy => enemy.active && enemy.kind === 'boss');
     if (!firstBoss) throw new Error('El primer jefe no apareció');
+    const experienceBeforeBoss = combat.stats.experience;
     internals.defeatEnemy(firstBoss);
 
-    expect(combat.overdriveAssaultProgress?.healthMultiplier).toBe(2);
+    expect(combat.overdriveAssaultProgress?.healthMultiplier).toBe(0.5);
+    expect(director.commonEnemyExperienceMultiplier).toBe(1);
+    expect(combat.stats.experience).toBe(experienceBeforeBoss + ENEMY_DEFINITIONS.boss.experience);
     expect(existingEnemy?.maxHealth).toBe(originalHealth);
     combat.boss.update(1 / 60, 10_000, player.state, ARENA_RADIUS);
     expect(combat.boss.state.bossId).toBe('orbital-warden');
-    expect(combat.boss.state.maxHealth).toBe((director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth) * 2);
+    expect(combat.boss.state.maxHealth).toBe((director.bossDefinition.maxHealth ?? ENEMY_DEFINITIONS.boss.maxHealth) * 0.5);
 
     const nextEnemy = internals.enemySystem.spawn(0, ARENA_RADIUS);
     expect(nextEnemy).not.toBeNull();
     if (nextEnemy) {
-      expect(nextEnemy.maxHealth).toBe(ENEMY_DEFINITIONS[nextEnemy.kind].maxHealth * 2);
+      expect(nextEnemy.maxHealth).toBe(ENEMY_DEFINITIONS[nextEnemy.kind].maxHealth * 0.5);
     }
+
+    const experienceBeforeCommon = combat.stats.experience;
+    defeatCommonEnemy();
+    expect(combat.stats.experience - experienceBeforeCommon).toBe(ENEMY_DEFINITIONS.chaser.experience);
   });
 
   it('uses the promoted chaos cadence by default and keeps authored as an explicit control', () => {

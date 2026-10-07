@@ -145,9 +145,14 @@ export class BossShipVisual {
     const body = (this.textures[this.bossId] ?? this.textures['core-sentinel']).flat;
     this.root.alpha = this.defeatAlpha * (1 - progress * progress);
     this.root.scale.set(this.defeatScale * defeatCompression(progress));
-    if (!this.fragments.has(body)) { this.root.visible = false; return; }
+    if (!this.fragments.has(body)) {
+      this.root.visible = false;
+      if (progress >= 1) this.finishDefeat();
+      return;
+    }
     this.root.visible = progress < 1;
     poseDefeatFragments(this.pieces, body, progress);
+    if (progress >= 1) this.finishDefeat();
   }
 
   public reset(): void {
@@ -177,6 +182,17 @@ export class BossShipVisual {
 
   public get isDefeatActive(): boolean {
     return this.defeatAge >= 0 && this.defeatAge < ENEMY_DEFEAT_SECONDS && this.root.visible;
+  }
+
+  private finishDefeat(): void {
+    // Boss visuals are dedicated per family and reused when the endless
+    // Assault rotation comes around again. Retire this transient state;
+    // render() rejects a boss while defeatAge is non-negative.
+    this.defeatAge = -1;
+    this.root.visible = false;
+    this.root.alpha = 1;
+    this.root.scale.set(1);
+    this.root.rotation = 0;
   }
 
   private prepareFragments(body: Texture): void {

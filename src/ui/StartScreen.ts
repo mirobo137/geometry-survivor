@@ -169,6 +169,7 @@ export class StartScreen {
   private selectedAct: ActId = 'radial';
   private selectedMode: 'campaign' | 'overdrive' = 'campaign';
   private selectedOverdriveVariant: OverdriveVariant = 'normal';
+  private laboratoryUnlocked = false;
   private cosmeticUnlockAvailable = false;
   private cosmeticUnlockHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private cosmeticOfferConsumed = false;
@@ -410,6 +411,7 @@ export class StartScreen {
     this.wallet = options.wallet;
     this.laboratory = options.laboratory;
     this.unlockedActs = options.unlockedActs;
+    this.laboratoryUnlocked = options.unlockedActs.includes('angular');
     this.selectedAct = options.selectedAct;
     this.selectedMode = options.selectedMode ?? 'campaign';
     this.selectedOverdriveVariant = options.selectedOverdriveVariant ?? 'normal';
@@ -433,13 +435,13 @@ export class StartScreen {
         ? 'Oleadas continuas y jefes por bajas'
         : 'Derrota al boss del Acto III para desbloquearlo';
     }
-    this.metaToggle.disabled = options.overdriveUnlocked !== true;
-    this.metaToggle.setAttribute('aria-label', options.overdriveUnlocked === true
+    this.metaToggle.disabled = !this.laboratoryUnlocked;
+    this.metaToggle.setAttribute('aria-label', this.laboratoryUnlocked
       ? 'Abrir Laboratorio de mejoras permanentes'
-      : 'Laboratorio bloqueado: vence el Acto III para desbloquear Overdrive');
-    this.metaToggle.title = options.overdriveUnlocked === true
+      : 'Laboratorio bloqueado: completa el Acto I para desbloquear el Acto II');
+    this.metaToggle.title = this.laboratoryUnlocked
       ? 'Mejoras permanentes que aplican a todos los modos'
-      : 'Derrota al boss del Acto III para desbloquear el Laboratorio';
+      : 'Derrota al boss del Acto I para desbloquear el Laboratorio';
     this.cosmeticUnlockAvailable = options.cosmeticUnlockAvailable;
     this.cosmeticUnlockHandler = options.onCosmeticUnlock;
     this.cosmeticOfferConsumed = false;
@@ -792,7 +794,7 @@ export class StartScreen {
   }
 
   private openMeta(): void {
-    if (!this.overdriveUnlocked || !this.laboratoryChangeHandler || !this.laboratoryVitalityAdHandler) return;
+    if (!this.laboratoryUnlocked || !this.laboratoryChangeHandler || !this.laboratoryVitalityAdHandler) return;
     this.setSettingsExpanded(false);
     this.closeSkins();
     this.mainView.hidden = true;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OVERDRIVE_ASSAULT_ENEMY_POOL, OVERDRIVE_ASSAULT_KILLS_PER_BOSS } from '../../content/run/OverdriveAssaultDefinitions';
+import { getOverdriveAssaultHealthMultiplier, OVERDRIVE_ASSAULT_ENEMY_POOL, OVERDRIVE_ASSAULT_KILLS_PER_BOSS } from '../../content/run/OverdriveAssaultDefinitions';
 import { OverdriveAssaultDirector } from './OverdriveAssaultDirector';
 
 describe('OverdriveAssaultDirector', () => {
@@ -14,23 +14,37 @@ describe('OverdriveAssaultDirector', () => {
     expect(sequence).not.toContain('warden-replica');
   });
 
-  it('starts at ×1, advances boss and health tiers after each defeat, and caps at ×5', () => {
+  it('starts at ×0.25 and escalates boss tiers without an authored ×5 cap', () => {
     const director = new OverdriveAssaultDirector(1);
-    expect(director.enemyHealthMultiplier).toBe(1);
+    expect(director.enemyHealthMultiplier).toBe(0.25);
+    expect(director.commonEnemyExperienceMultiplier).toBe(0.5);
     expect(director.bossDefinition.id).toBe('core-sentinel');
 
     director.recordBossDefeat();
-    expect(director.enemyHealthMultiplier).toBe(2);
+    expect(director.enemyHealthMultiplier).toBe(0.5);
+    expect(director.commonEnemyExperienceMultiplier).toBe(1);
     expect(director.bossDefinition.id).toBe('orbital-warden');
     director.recordBossDefeat();
-    expect(director.enemyHealthMultiplier).toBe(3);
+    expect(director.enemyHealthMultiplier).toBe(1);
     expect(director.bossDefinition.id).toBe('fracture-engine');
     director.recordBossDefeat();
+    expect(director.enemyHealthMultiplier).toBe(2);
+    director.recordBossDefeat();
+    expect(director.enemyHealthMultiplier).toBe(3);
+    director.recordBossDefeat();
     expect(director.enemyHealthMultiplier).toBe(4);
+    expect(getOverdriveAssaultHealthMultiplier(7)).toBe(6);
+  });
+
+  it('resets the escalating health and opening XP profile for a fresh run', () => {
+    const director = new OverdriveAssaultDirector(1);
     director.recordBossDefeat();
-    expect(director.enemyHealthMultiplier).toBe(5);
     director.recordBossDefeat();
-    expect(director.enemyHealthMultiplier).toBe(5);
+    expect(director.enemyHealthMultiplier).toBe(1);
+    expect(director.commonEnemyExperienceMultiplier).toBe(1);
+    director.reset();
+    expect(director.enemyHealthMultiplier).toBe(0.25);
+    expect(director.commonEnemyExperienceMultiplier).toBe(0.5);
   });
 
   it('runs continuously with a bounded faster cadence and an explicit provisional quota', () => {

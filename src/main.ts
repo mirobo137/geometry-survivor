@@ -119,6 +119,12 @@ const bootstrap = async (): Promise<void> => {
   if (settingsToggle) mountInlineIcon(settingsToggle, settingsIcon, false);
 
   const searchParams = new URLSearchParams(window.location.search);
+  const requestedLaboratoryProfile = searchParams.get('lab-profile');
+  const laboratoryProfileOverride = __BUILD_TARGET__ === 'local'
+    && searchParams.get('debug') === '1'
+    && (requestedLaboratoryProfile === 'max' || requestedLaboratoryProfile === 'none')
+    ? requestedLaboratoryProfile
+    : undefined;
   const rewardCatalogPreview = __BUILD_TARGET__ === 'local'
     && searchParams.get('debug') === '1'
     && searchParams.get('reward-catalog') === '1';
@@ -303,6 +309,7 @@ const bootstrap = async (): Promise<void> => {
     fractureDrill,
     fractureEnemyKind,
     campaignBuild,
+    laboratoryProfileOverride,
     debugUpgradeId,
     evolutionId,
     evolutionScenario,
@@ -318,7 +325,7 @@ const bootstrap = async (): Promise<void> => {
     baselineMode,
     hazardCadenceMode,
     calibrationId,
-    actId: requestedAct !== null || bossDebugMode ? actId : undefined,
+    actId: requestedAct !== null || bossDebugMode || laboratoryProfileOverride !== undefined ? actId : undefined,
     mode: searchParams.has('mode') ? runMode : undefined,
     overdriveStage: overdriveMode ? overdriveStage : undefined,
     overdriveVariant: overdriveMode ? overdriveVariant : undefined,
@@ -335,7 +342,10 @@ const bootstrap = async (): Promise<void> => {
     buildTarget: __BUILD_TARGET__,
     startOnMenu: retentionChallengePracticeId !== undefined
       || rewardCatalogPreview
-      || (overdriveMode && !diagnosticOverdrive
+      ? true
+      : laboratoryProfileOverride !== undefined
+        ? false
+        : (overdriveMode && !diagnosticOverdrive
       && (!overdriveAutostart || !publicOverdriveUnlocked))
       || (!overdriveMode && requestedAct === null && !bossDebugMode && !orbiterDrill && !chargerDrill && !splitterDrill && !prismWeaverDrill
       && !pulseRingDrill && !angularSweepDrill && !wardenDrill && !pulseRingWeaponDrill

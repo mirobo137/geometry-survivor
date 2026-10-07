@@ -318,9 +318,9 @@ describe('Game', () => {
     expect(runtime.overdriveVariant).toBe('assault');
     expect(runtime.actDirector.definition.id).toBe('radial');
     expect(runtime.actDirector.bossDefinition.id).toBe('core-sentinel');
-    expect(runtime.actDirector.enemyHealthMultiplier).toBe(1);
+    expect(runtime.actDirector.enemyHealthMultiplier).toBe(0.25);
     expect(runtime.actDirector).not.toHaveProperty('stageState');
-    expect(runtime.combat.overdriveAssaultProgress).toMatchObject({ killsPerBoss: 100, healthMultiplier: 1 });
+    expect(runtime.combat.overdriveAssaultProgress).toMatchObject({ killsPerBoss: 100, healthMultiplier: 0.25 });
   });
 
   it('does not settle diagnostic Overdrive rewards or records', () => {

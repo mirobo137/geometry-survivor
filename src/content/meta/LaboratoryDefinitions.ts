@@ -1,7 +1,8 @@
 import type { WeaponPathId } from '../upgrades/UpgradeDefinitions';
 
-export const LABORATORY_MAX_RANK = 5;
-export const LABORATORY_RANK_COSTS_NOVA = [875, 1_325, 2_000, 3_000, 4_500] as const;
+export const LABORATORY_MAX_RANK = 10;
+// Ranks 6–10 continue the existing ~1.5× curve; all ranks are discounted by 30%.
+export const LABORATORY_RANK_COSTS_NOVA = [613, 928, 1_400, 2_100, 3_150, 4_725, 7_088, 10_632, 15_947, 23_921] as const;
 export const LABORATORY_OFFER_SIZE = 3;
 export const LABORATORY_DEFERRED_CHOICES = 2;
 export const LABORATORY_HISTORY_LIMIT = 4;
@@ -249,8 +250,8 @@ export const getLaboratoryEffectTotal = (id: LaboratoryUpgradeId, level: number)
     ? Math.min(definition.maxRank, Math.max(0, Math.floor(level)))
     : 0;
   const amount = definition.effect.amountPerRank;
-  if (definition.effect.type === 'cadence') return Math.max(0.75, 1 - safe * amount);
-  if (definition.effect.type === 'damageResistance') return Math.max(0.95, 1 - safe * amount);
+  if (definition.effect.type === 'cadence') return Math.max(0.7, 1 - safe * amount);
+  if (definition.effect.type === 'damageResistance') return Math.max(0.9, 1 - safe * amount);
   return 1 + safe * amount;
 };
 

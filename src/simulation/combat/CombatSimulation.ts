@@ -244,6 +244,7 @@ export class CombatSimulation {
   public readonly renderState: CombatRenderState;
   private readonly pendingEvents: CombatEvent[] = [];
   private spawnAccumulator = 0;
+  private assaultBossSpawnPending = false;
   private experienceMultiplier = 1;
   private readonly stressMode: boolean;
   private readonly orbiterDrill: boolean;
@@ -908,7 +909,20 @@ export class CombatSimulation {
     } else if (this.angularSweepDrill || this.wardenDrill) {
       // EX-07d keeps the hazard/boss pair readable before campaign composition.
     } else {
-      const spawnInterval = this.actDirector.getSpawnIntervalSeconds(this.stageElapsedSeconds);
+      let commonEnemyCount = 0;
+      if (this.assaultDirector) {
+        for (const enemy of this.enemies.states) {
+          if (enemy.active && enemy.kind !== 'boss' && enemy.kind !== 'warden-replica') commonEnemyCount += 1;
+        }
+      }
+      let spawnInterval = this.assaultDirector
+        ? this.assaultDirector.getAdaptiveSpawnIntervalSeconds(this.stageElapsedSeconds, commonEnemyCount)
+        : this.actDirector.getSpawnIntervalSeconds(this.stageElapsedSeconds);
+      if (this.assaultDirector) {
+        // Clearing a dense field must not cash an old, slower spawn timer into
+        // an instantaneous group. Preserve only one interval plus this tick.
+        this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval + dt);
+      }
       const reservedBossSlots = this.stressMode
         ? 0
         : this.actDirector instanceof OverdriveActDirector ? this.bosses.length : 1;
@@ -918,7 +932,11 @@ export class CombatSimulation {
       );
       while (this.spawnAccumulator >= spawnInterval && this.enemies.activeCount < normalEnemyCapacity) {
         this.spawnAccumulator -= spawnInterval;
-        this.enemySystem.spawn(this.stageElapsedSeconds, arenaRadius);
+        const spawned = this.enemySystem.spawn(this.stageElapsedSeconds, arenaRadius);
+        if (this.assaultDirector && spawned) {
+          commonEnemyCount += 1;
+          spawnInterval = this.assaultDirector.getAdaptiveSpawnIntervalSeconds(this.stageElapsedSeconds, commonEnemyCount);
+        }
       }
       if (this.enemies.activeCount >= normalEnemyCapacity) {
         this.spawnAccumulator = Math.min(this.spawnAccumulator, spawnInterval);
@@ -929,6 +947,9 @@ export class CombatSimulation {
       this.bossAttackGate?.update(dt);
       for (const bossSystem of this.bosses) {
         const bossDamage = bossSystem.update(dt, this.stageElapsedSeconds, player, arenaRadius);
+        if (bossSystem === this.boss && this.assaultBossSpawnPending && this.boss.state.active) {
+          this.assaultBossSpawnPending = false;
+        }
         if (bossDamage > 0) {
           this.stats.damageTaken += bossDamage;
           this.pendingEvents.push({ type: 'playerDamaged', amount: bossDamage, source: 'boss' });
@@ -1017,6 +1038,7 @@ export class CombatSimulation {
     this.assaultNormalKills = 0;
     this.assaultKillsTowardNextBoss = 0;
     this.assaultNextBossQueued = false;
+    this.assaultBossSpawnPending = false;
     if (this.assaultDirector) {
       this.assaultDirector.reset();
       this.boss.reconfigure(this.assaultDirector.bossDefinition);
@@ -1169,7 +1191,7 @@ export class CombatSimulation {
     if (!this.assaultDirector) return;
     this.boss.reconfigure(this.assaultDirector.bossDefinition);
     this.boss.setManualSpawn(true);
-    this.boss.requestSpawn();
+    this.assaultBossSpawnPending = this.boss.requestSpawn();
   }
 }
 

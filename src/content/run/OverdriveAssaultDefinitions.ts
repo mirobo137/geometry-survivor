@@ -9,8 +9,16 @@ export const OVERDRIVE_ASSAULT_SECOND_HEALTH_MULTIPLIER = 0.5 as const;
 /** Opening-only trial: common enemies grant half XP until the first boss falls. */
 export const OVERDRIVE_ASSAULT_OPENING_EXPERIENCE_MULTIPLIER = 0.5 as const;
 
+/** Density adaptation is exclusive to Assault; pool capacities remain shared. */
+export const OVERDRIVE_ASSAULT_SPAWN_DENSITY = {
+  /** At zero common enemies, shorten the interval by at most 10% vs. baseline. */
+  sparseIntervalMultiplier: 0.9,
+  /** Return to baseline once a small, readable group is already present. */
+  baselineFromEnemyCount: 8
+} as const;
+
 /** Only the twelve authored common enemies; bosses and Warden replicas are excluded. */
-export const OVERDRIVE_ASSAULT_ENEMY_POOL: readonly EnemyKind[] = [
+export const OVERDRIVE_ASSAULT_ENEMY_POOL: readonly Exclude<EnemyKind, 'boss' | 'warden-replica'>[] = [
   'chaser', 'fast', 'tank', 'elite',
   'orbiter', 'charger', 'splitter', 'prism-weaver',
   'fracture-gunner', 'thorn-bastion', 'zigzag-reaver', 'rift-miner'

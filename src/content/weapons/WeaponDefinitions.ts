@@ -139,6 +139,9 @@ export const WEAPON_DEFINITIONS = {
   } satisfies MagneticChargeWeaponDefinition
 } as const;
 
+/** Shared lower bound used by combat and upgrade eligibility/previews. */
+export const PROJECTILE_MIN_COOLDOWN_SECONDS = 0.18;
+
 /** Authored projectile ranks shared by combat and level-up damage previews. */
 export const PROJECTILE_RANK_STATS = [
   { damage: 14, speed: 460, cooldownSeconds: 0.55 },

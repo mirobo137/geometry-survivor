@@ -13,6 +13,7 @@ import {
 import {
   getOverdriveAssaultHealthMultiplier,
   OVERDRIVE_ASSAULT_OPENING_EXPERIENCE_MULTIPLIER,
+  OVERDRIVE_ASSAULT_SPAWN_DENSITY,
   OVERDRIVE_ASSAULT_BOSS_ORDER,
   OVERDRIVE_ASSAULT_ENEMY_POOL
 } from '../../content/run/OverdriveAssaultDefinitions';
@@ -93,11 +94,26 @@ export class OverdriveAssaultDirector extends RadialActDirector {
     return OVERDRIVE_ASSAULT_ENEMY_POOL[sampleIndex] ?? OVERDRIVE_ASSAULT_ENEMY_POOL[0] ?? 'chaser';
   }
 
-  /** 25% faster than the authored radial cadence, with the shared safety floor. */
+  /** Mildly faster than the authored radial cadence, with the shared safety floor. */
   public override getSpawnIntervalSeconds(elapsedSeconds: number): number {
     return Math.max(
       OVERDRIVE_MIN_SPAWN_INTERVAL_SECONDS,
-      super.getSpawnIntervalSeconds(elapsedSeconds) * 0.75
+      super.getSpawnIntervalSeconds(elapsedSeconds) * 0.9
     );
+  }
+
+  /** Sparse-field interval reduction is capped at 10% and ends at eight common enemies. */
+  public getAdaptiveSpawnIntervalSeconds(elapsedSeconds: number, commonEnemyCount: number): number {
+    const { sparseIntervalMultiplier, baselineFromEnemyCount } = OVERDRIVE_ASSAULT_SPAWN_DENSITY;
+    const baseline = this.getSpawnIntervalSeconds(elapsedSeconds);
+    const count = Number.isFinite(commonEnemyCount)
+      ? Math.max(0, commonEnemyCount)
+      : baselineFromEnemyCount;
+    const density = Math.min(1, count / baselineFromEnemyCount);
+    const sparseInterval = Math.max(
+      OVERDRIVE_MIN_SPAWN_INTERVAL_SECONDS,
+      baseline * sparseIntervalMultiplier
+    );
+    return sparseInterval + (baseline - sparseInterval) * density;
   }
 }

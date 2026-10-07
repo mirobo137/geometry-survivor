@@ -1,4 +1,9 @@
-import { getWeaponDamageAtRank, PROJECTILE_RANK_STATS, WEAPON_DEFINITIONS } from '../../content/weapons/WeaponDefinitions';
+import {
+  getWeaponDamageAtRank,
+  PROJECTILE_MIN_COOLDOWN_SECONDS,
+  PROJECTILE_RANK_STATS,
+  WEAPON_DEFINITIONS
+} from '../../content/weapons/WeaponDefinitions';
 import { BOOMERANG_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import type { PlayerState } from '../PlayerModel';
 import { BoomerangPool, ProjectilePool, type EnemyState } from './EntityPools';
@@ -425,7 +430,10 @@ export class CombatWeaponSystem {
   }
 
   public decreaseProjectileCooldown(amount: number): void {
-    this.projectileCooldown = Math.max(0.18, this.projectileCooldown - Math.max(0, amount));
+    this.projectileCooldown = Math.max(
+      PROJECTILE_MIN_COOLDOWN_SECONDS,
+      this.projectileCooldown - Math.max(0, amount)
+    );
   }
 
   public increaseProjectileSpeed(amount: number): void {
@@ -642,7 +650,10 @@ export class CombatWeaponSystem {
       * this.getPermanentDamageMultiplier('projectile')
       * this.overdrivePowerMultipliers.projectile;
     this.projectileSpeed = stats.speed;
-    this.projectileCooldown = Math.max(0.18, stats.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier);
+    this.projectileCooldown = Math.max(
+      PROJECTILE_MIN_COOLDOWN_SECONDS,
+      stats.cooldownSeconds * this.permanentBonuses.weaponCadenceMultiplier
+    );
     this.twinEmitters = this.projectileRank >= 2;
   }
 

@@ -278,6 +278,48 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('rapid_projectiles')).toBe(false);
   });
 
+  it('stops offering projectile cadence after Laboratory and run upgrades reach the cooldown floor', () => {
+    const combat = new CombatSimulation({
+      permanentBonuses: getLaboratoryCombatBonuses({ weapon_cadence: 10 })
+    });
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x18cad3ce, 'overdrive');
+
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.385);
+    expect(applier.apply('rapid_projectiles')).toBe(true);
+    expect(applier.apply('rapid_projectiles')).toBe(true);
+    expect(applier.apply('rapid_projectiles')).toBe(true);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.18);
+    expect(applier.getStacks('rapid_projectiles')).toBe(3);
+    expect(applier.canApply('rapid_projectiles')).toBe(false);
+    expect(applier.apply('rapid_projectiles')).toBe(false);
+    expect(applier.getChoicesWithPriority(11, 'rapid_projectiles').map((choice) => choice.id))
+      .not.toContain('rapid_projectiles');
+  });
+
+  it('omits Projectile tempo mastery from level-up hands when its interval is already capped', () => {
+    const combat = new CombatSimulation({
+      permanentBonuses: getLaboratoryCombatBonuses({ weapon_cadence: 10 })
+    });
+    const applier = new UpgradeApplier(new PlayerModel(), combat, 0x18cad3ce, 'overdrive');
+
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) {
+      expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    }
+    expect(applier.apply('pulse_volley')).toBe(true);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.273);
+    expect(applier.apply('projectile_mastery_tempo')).toBe(true);
+    expect(applier.apply('projectile_mastery_tempo')).toBe(true);
+    expect(combat.currentProjectileCooldown).toBeCloseTo(0.18);
+    expect(applier.getStacks('projectile_mastery_tempo')).toBe(2);
+    expect(applier.canApply('projectile_mastery_tempo')).toBe(false);
+    expect(applier.apply('projectile_mastery_tempo')).toBe(false);
+
+    const offeredIds = Array.from({ length: 60 }, (_, level) => applier.getChoices(level + 20))
+      .flat()
+      .map((choice) => choice.id);
+    expect(offeredIds).not.toContain('projectile_mastery_tempo');
+  });
+
   it('exposes numeric before-after previews without applying the upgrade', () => {
     const player = new PlayerModel();
     const combat = new CombatSimulation();

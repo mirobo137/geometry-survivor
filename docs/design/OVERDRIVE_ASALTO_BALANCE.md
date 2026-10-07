@@ -18,8 +18,8 @@ este documento detalla su tarea de Asalto.
   de progresión de campaña.
 - Conservar la cuota de 100 bajas comunes por jefe y aumentar la vida por
   encuentro: ×0.25, ×0.5, ×1, ×2, ×3, ×4… No hay tope de diseño en ×5. Las
-  entidades ya vivas conservan la vida con que aparecieron y las oleadas no se
-  pausan durante un jefe. El runtime conserva un límite técnico de seguridad.
+  entidades ya vivas conservan la vida con que aparecieron. El runtime conserva
+  un límite técnico de seguridad.
 - No añadir datos persistentes de telemetría ni servicios externos. La lectura
   temporal de balance debe estar disponible en el navegador de Pages.
 
@@ -34,9 +34,10 @@ Verificado en `OverdriveAssaultDirector`, `OverdriveAssaultDefinitions`,
 2. Antes de este ensayo Asalto comenzaba en ×1. El jugador reportó que la mezcla
    completa incluye enemigos difíciles con recompensa alta de XP; aún no hay
    telemetría que cuantifique cuánto aporta cada causa.
-3. El intervalo de spawn empieza en `0.75 ×` el intervalo radial (un 25 % menos
-   de intervalo, aproximadamente un 33 % más de apariciones por minuto), sujeto
-   al piso compartido de `0.20 s`.
+3. La cadencia vigente usa una base de `0.90 ×` el intervalo radial y, con el
+   campo vacío, reduce como máximo otro 10% el intervalo de esa base hasta que
+   haya ocho enemigos comunes. La versión anterior llegaba a `0.12 s`; en
+   partida el jugador reportó que esa presión se sentía excesiva.
 4. Las definiciones de los enemigos dan de 1 a 8 XP. Ejemplos de vida base
    efectiva en los actos que usan el multiplicador `1.2`: Chaser ≈37.4 HP / 1
    XP, Elite 158.4 HP / 8 XP, Thorn Bastion 148 HP / 8 XP y Rift Miner 92 HP /
@@ -62,8 +63,18 @@ Verificado en `OverdriveAssaultDirector`, `OverdriveAssaultDefinitions`,
 
 ## Ensayo implementado (sólo Overdrive Asalto)
 
-- Se conserva la mezcla uniforme de los doce enemigos, la cadencia `0.75 ×`
-  radial, los ataques de boss y la cuota de 100 bajas comunes por encuentro.
+- Se conserva la mezcla uniforme de los doce enemigos, los ataques de boss y
+  la cuota de 100 bajas comunes por encuentro.
+- La cadencia usa un intervalo base `0.90 ×` radial. Con cero enemigos comunes
+  vivos, el intervalo se reduce como máximo otro 10% frente a esa base, y
+  vuelve linealmente a la base al llegar a ocho enemigos comunes. El piso
+  compartido es `0.20 s`. Bosses y réplicas no cuentan para densidad; los hijos
+  del Splitter sí. El conteo usa el pool existente sin crear arrays y se
+  actualiza tras cada aparición exitosa. El acumulador se acota a un intervalo
+  más el tick actual para evitar ráfagas instantáneas al limpiar una arena
+  saturada. Las reservas de bosses, límites por familia y capacidad global se
+  conservan. Sin efecto del piso, el intervalo mínimo es `0.81 ×` radial (hasta
+  unas 23.5% más de spawns que Radial), frente al ritmo extremo previo.
 - En cada encuentro, enemigos y boss usan la secuencia de vida `×0.25`, `×0.5`,
   `×1`, `×2`, `×3`, `×4`… El tier avanza al derrotar al boss. Cada 100 bajas
   comunes habilitan el siguiente encuentro; no hay un tope de diseño en `×5`.
@@ -75,7 +86,21 @@ Verificado en `OverdriveAssaultDirector`, `OverdriveAssaultDefinitions`,
   del primer boss, las bajas comunes vuelven a dar XP normal. La XP se calcula
   al derrotar al enemigo.
 - No se alteran campaña, Overdrive Normal, definiciones globales de enemigos,
-  cadencia, ataques de bosses ni regla de cuota.
+  ataques de bosses ni regla de cuota.
+
+### Oleadas caóticas — retiradas tras prueba humana
+
+La primera propuesta añadía un grupo homogéneo y una pausa breve al spawn
+normal. El jugador reportó en partida que la presión resultante era excesiva;
+se retiraron los incidentes completos, incluidos telegraph, grupos extra y
+supresión temporal del flujo normal. Asalto vuelve a generar enemigos sólo por
+su roster normal, la cuota de bajas del boss permanece independiente y no hay
+bonos de oleada.
+
+En la misma iteración se moderó la adaptación de cadencia: el intervalo base
+pasó de `0.75 ×` a `0.90 ×` Radial y el campo despejado sólo reduce el intervalo
+otro 10% como máximo, regresando a la base con ocho enemigos comunes vivos.
+Es un valor provisional para volver a probar, no un balance aprobado.
 
 Con el promedio teórico de `4.75 XP` por baja, el factor `0.5` equivaldría a
 `237.5 XP` para las primeras 100 bajas, antes de bonos. Es una referencia
@@ -97,11 +122,20 @@ escalado posterior permita seguir jugando un tiempo. No fijar por adelantado un
 número de elecciones como criterio. Si se requiere otra iteración, cambiar un
 solo parámetro y no descartar XP ni elecciones ganadas.
 
+En la nueva prueba, confirmar que no se inyectan oleadas ni aparece una pausa o
+aviso de evento; observar si el flujo común y la cadencia moderada reducen la
+saturación, sobre todo cuando el campo queda despejado, sin volver demasiado
+tranquilos los encuentros con boss.
+
 ## Validación y aceptación
 
 Pruebas deterministas sin Pixi:
 
 - selección determinista del roster y acceso a las doce familias;
+- cadencia continua, máximo 10% de reducción adicional del intervalo con el
+  campo vacío, retorno al baseline con ocho enemigos, piso compartido de 0.20 s
+  y ausencia de ráfagas por tiempo acumulado;
+  bosses y réplicas excluidos del conteo, pools y reservas conservados;
 - mismo conteo de bajas elegibles y el primer jefe en 100; bosses y réplicas no
   cuentan, los hijos destructibles del Splitter sí;
 - secuencia `×0.25→×0.5→×1→×2→×3…` sin tope authored de ×5 y aplicada al
@@ -112,6 +146,8 @@ Pruebas deterministas sin Pixi:
   subidas;
 - después de cada boss, siguiente boss/spawns usan el tier posterior y la vida
   de entidades vivas sigue constante.
+- no existe sistema de incidente, telegraph, supresión del spawn ni grupo
+  añadido; la cuota del boss sigue dependiendo sólo de bajas comunes normales.
 
 Comparación humana en móvil, con baseline y ensayo bajo condiciones comparables:
 

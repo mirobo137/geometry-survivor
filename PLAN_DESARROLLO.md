@@ -138,8 +138,9 @@ contrato de etapas permanecen sin cambios.
   tarjeta: Normal y Asalto. La mitad de Asalto oscurece el arte para distinguir
   su variante; la selección persiste como preferencia de menú, no como run.
 - Asalto usa un director independiente y un único campo de batalla radial, sin
-  contador de tramos ni transición/pausa de arena entre jefes. Las oleadas
-  comunes no se detienen durante un encuentro.
+  contador de tramos ni transición/pausa de arena entre jefes. El spawn común
+  mantiene un flujo continuo y la cuota/cola del boss permanece independiente.
+  No se agregan oleadas o grupos de enemigos extra.
 - El roster determinista mezcla los doce enemigos comunes de los tres actos.
   Jefes, réplicas del Warden y entidades de diagnóstico no aportan cuota; los
   hijos destructibles del Splitter sí cuentan.
@@ -158,9 +159,16 @@ contrato de etapas permanecen sin cambios.
 - Hasta derrotar al primer boss, las bajas comunes entregan ×0.5 XP; los bonos
   de XP de la run siguen aplicándose encima y la XP de boss no se reduce.
   Después del primer boss, las bajas comunes vuelven a entregar XP normal.
-- La cadencia común es 75% de la cadencia radial base, con piso de 0.20 s y
-  capacidades/pools existentes. El HUD separa tier, bajas de cuota y estado
-  del siguiente jefe de la XP y las bajas totales.
+- La cadencia común usa como base el 90% del intervalo Radial (10% menos de
+  intervalo). Con cero enemigos comunes vivos, el intervalo se reduce como
+  máximo otro 10% y vuelve linealmente a la base al llegar a ocho; desde ahí se
+  mantiene en la base. El piso técnico compartido sigue siendo 0.20 s. Bosses y
+  réplicas no cuentan para densidad. No se acumula deuda para crear ráfagas al
+  despejar la arena y se conservan capacidades/pools. El HUD separa tier, bajas
+  de cuota y estado del siguiente jefe de la XP y las bajas totales.
+- No hay oleadas o incidentes añadidos: todos los enemigos comunes aparecen
+  sólo por el flujo normal del director Asalto y no se pausa el spawn para
+  anunciar/inyectar grupos.
 - Normal conserva sus campos de récord existentes; Asalto añade récord propio
   de tiempo, jefes y bajas. Los saves previos migran con Asalto en cero y la
   selección Normal por defecto. Las rutas de diagnóstico no liquidan récords.
@@ -169,9 +177,14 @@ contrato de etapas permanecen sin cambios.
 la XP reducida de la apertura. El usuario reportó que la mezcla completa desde
 el comienzo contiene enemigos difíciles con recompensa alta de XP y puede
 provocar subidas consecutivas; la frecuencia todavía no está medida. La cuota
-sigue en 100 bajas comunes por boss. El roster y cadencia se mantienen. Los
+sigue en 100 bajas comunes por boss. El roster se mantiene; la cadencia ahora
+se adapta a la densidad según los umbrales indicados arriba. Los
 valores son un ensayo, no un balance aprobado; factores anteriores `0.35–0.40`
 y el objetivo de 7–8 elecciones quedan reemplazados.
+
+**Oleadas caóticas:** retiradas tras la prueba humana porque añadían demasiada
+presión. La cadencia adaptativa también se suavizó; validar que la arena se
+sienta menos saturada sin perder la continuidad de Asalto.
 
 **Validación pendiente antes de cerrar:** comparar en el mismo dispositivo,
 semilla cuando esté disponible, equipamiento, calidad y nivel del Laboratorio:

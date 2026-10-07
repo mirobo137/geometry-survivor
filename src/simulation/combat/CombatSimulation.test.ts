@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ARENA_CENTER, ARENA_RADIUS, ENEMY_POOL_CAPACITY, PROJECTILE_POOL_CAPACITY } from '../../config/constants';
 import { ENEMY_DEFINITIONS } from '../../content/enemies/EnemyDefinitions';
 import { BOSS_DEFINITION } from '../../content/bosses/BossDefinition';
@@ -21,6 +21,42 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
+  it('excludes bosses and Warden replicas from the Assault density calculation', () => {
+    const director = new OverdriveAssaultDirector(0x1234);
+    const combat = new CombatSimulation({ actDirector: director });
+    const sample = vi.spyOn(director, 'getAdaptiveSpawnIntervalSeconds');
+    for (const kind of ['boss', 'warden-replica', 'chaser'] as const) {
+      const enemy = combat.enemies.acquire()!;
+      enemy.kind = kind;
+      enemy.x = ARENA_CENTER.x + ARENA_RADIUS;
+      enemy.y = ARENA_CENTER.y;
+    }
+    combat.update(1 / 60, new PlayerModel().state, ARENA_RADIUS);
+    expect(sample).toHaveBeenCalledWith(1 / 60, 1);
+  });
+
+  it('uses only a mild sparse-field spawn bonus and never releases a catch-up burst', () => {
+    const director = new OverdriveAssaultDirector(0x1234);
+    const assault = new CombatSimulation({ actDirector: director });
+    const campaign = new CombatSimulation();
+    const player = new PlayerModel();
+    const baseline = director.getSpawnIntervalSeconds(0);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 0)).toBeCloseTo(baseline * 0.9);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 4)).toBeCloseTo(baseline * 0.95);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 8)).toBeCloseTo(baseline);
+
+    runSeconds(assault, player, 0.13);
+    runSeconds(campaign, player, 0.13);
+    expect(assault.enemies.activeCount).toBe(0);
+    expect(campaign.enemies.activeCount).toBe(0);
+
+    const timer = assault as unknown as { spawnAccumulator: number };
+    timer.spawnAccumulator = baseline * 4;
+    assault.update(1 / 60, player.state, ARENA_RADIUS);
+    expect(assault.enemies.activeCount).toBe(1);
+    expect(timer.spawnAccumulator).toBeLessThan(director.getAdaptiveSpawnIntervalSeconds(0, 1));
+  });
+
   it('gates Assault bosses by common kills and scales new spawns after each boss without changing living HP', () => {
     const director = new OverdriveAssaultDirector(0x1234);
     const combat = new CombatSimulation({ actDirector: director });

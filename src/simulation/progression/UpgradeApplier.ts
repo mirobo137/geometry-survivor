@@ -14,6 +14,7 @@ import {
   type WeaponPathId
 } from '../../content/upgrades/UpgradeDefinitions';
 import { CHAIN_EVOLUTION_TUNING, SINGULARITY_RETURN_TUNING, type WeaponEvolutionId } from '../../content/weapons/WeaponEvolutionDefinitions';
+import { PROJECTILE_MIN_COOLDOWN_SECONDS } from '../../content/weapons/WeaponDefinitions';
 import {
   OVERDRIVE_AUTHORED_STACK_CAPS,
   OVERDRIVE_ACQUISITION_HISTORY_LIMIT,
@@ -522,7 +523,10 @@ export class UpgradeApplier {
         return {
           stat: 'projectileCooldown',
           before: this.combat.currentProjectileCooldown,
-          after: Math.max(0.18, this.combat.currentProjectileCooldown - definition.effect.amount)
+          after: Math.max(
+            PROJECTILE_MIN_COOLDOWN_SECONDS,
+            this.combat.currentProjectileCooldown - definition.effect.amount
+          )
         };
       case 'experienceGain':
         return {
@@ -614,7 +618,8 @@ export class UpgradeApplier {
         return channel === 'power'
           ? { stat: 'projectileDamage', before: this.combat.currentProjectileDamage, after: this.combat.currentProjectileDamage + 4 }
           : channel === 'tempo'
-            ? { stat: 'projectileCooldown', before: this.combat.currentProjectileCooldown, after: Math.max(0.18, this.combat.currentProjectileCooldown - 0.05) }
+            ? { stat: 'projectileCooldown', before: this.combat.currentProjectileCooldown,
+              after: Math.max(PROJECTILE_MIN_COOLDOWN_SECONDS, this.combat.currentProjectileCooldown - 0.05) }
             : { stat: 'projectileSpeed', before: this.combat.currentProjectileSpeed, after: this.combat.currentProjectileSpeed + 45 };
       case 'orbit':
         if (channel === 'power') return { stat: 'orbitDamage', before: this.combat.currentOrbitDamage, after: this.combat.currentOrbitDamage + 4 };
@@ -650,6 +655,14 @@ export class UpgradeApplier {
             ? { stat: 'magneticChargeCooldown', before: this.combat.currentMagneticChargeCooldown, after: Math.max(0.45, this.combat.currentMagneticChargeCooldown - 0.45) }
             : { stat: 'magneticChargeRadius', before: this.combat.currentMagneticChargeOuterRadius, after: this.combat.currentMagneticChargeOuterRadius + 24 };
     }
+  }
+
+  private hasEffectiveWeaponMastery(definition: UpgradeDefinition): boolean {
+    if (definition.effect.type !== 'weaponMastery') return false;
+    const preview = this.getWeaponMasteryPreview(definition);
+    if (preview === null) return false;
+    const delta = preview.after - preview.before;
+    return definition.effect.channel === 'tempo' ? delta < -1e-9 : delta > 1e-9;
   }
 
   private getOverdrivePowerPreview(
@@ -691,6 +704,10 @@ export class UpgradeApplier {
         && this.combat.getWeaponPathRank(definition.effect.family) + 1 === definition.effect.rank
         && currentStacks === 0;
     }
+    if (definition.effect.type === 'projectileCooldown') {
+      const preview = this.getPreview(definition);
+      return preview !== null && preview.after < preview.before - 1e-9;
+    }
     if (definition.effect.type === 'evolutionOffer') {
       return this.isFamilyActive(definition.effect.family)
         && this.combat.getWeaponPathRank(definition.effect.family) >= 7
@@ -698,7 +715,8 @@ export class UpgradeApplier {
     }
     if (definition.effect.type === 'weaponMastery') {
       return this.isFamilyActive(definition.effect.family)
-        && this.hasEvolution(definition.effect.family);
+        && this.hasEvolution(definition.effect.family)
+        && this.hasEffectiveWeaponMastery(definition);
     }
     if (definition.effect.type === 'universalWeaponMastery') {
       return this.getStacks(definition.id) < UNIVERSAL_MASTERY_MAX_STACKS

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getOverdriveAssaultHealthMultiplier, OVERDRIVE_ASSAULT_ENEMY_POOL, OVERDRIVE_ASSAULT_KILLS_PER_BOSS } from '../../content/run/OverdriveAssaultDefinitions';
+import {
+  getOverdriveAssaultHealthMultiplier,
+  OVERDRIVE_ASSAULT_ENEMY_POOL,
+  OVERDRIVE_ASSAULT_KILLS_PER_BOSS
+} from '../../content/run/OverdriveAssaultDefinitions';
 import { OverdriveAssaultDirector } from './OverdriveAssaultDirector';
 
 describe('OverdriveAssaultDirector', () => {
@@ -47,11 +51,32 @@ describe('OverdriveAssaultDirector', () => {
     expect(director.commonEnemyExperienceMultiplier).toBe(0.5);
   });
 
-  it('runs continuously with a bounded faster cadence and an explicit provisional quota', () => {
+  it('runs continuously with a modest faster cadence and an explicit provisional quota', () => {
     const director = new OverdriveAssaultDirector(1);
     expect(OVERDRIVE_ASSAULT_KILLS_PER_BOSS).toBe(100);
-    expect(director.getSpawnIntervalSeconds(0)).toBeCloseTo(0.75);
+    expect(director.getSpawnIntervalSeconds(0)).toBeCloseTo(0.9);
     expect(director.getSpawnIntervalSeconds(10_000)).toBeGreaterThanOrEqual(0.2);
     expect(director.definition.arenaShapeChanges).toEqual([]);
+  });
+
+  it('caps sparse-field acceleration at 10% and returns to baseline by eight enemies', () => {
+    const director = new OverdriveAssaultDirector(1);
+    const baseline = director.getSpawnIntervalSeconds(0);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 0)).toBeCloseTo(baseline * 0.9);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 4)).toBeCloseTo(baseline * 0.95);
+    expect(director.getAdaptiveSpawnIntervalSeconds(0, 8)).toBeCloseTo(baseline);
+    for (const elapsed of [0, 120, 10_000]) {
+      const currentBaseline = director.getSpawnIntervalSeconds(elapsed);
+      let previous = 0;
+      for (let count = 0; count <= 250; count++) {
+        const interval = director.getAdaptiveSpawnIntervalSeconds(elapsed, count);
+        expect(interval).toBeGreaterThanOrEqual(Math.max(0.2, currentBaseline * 0.9));
+        expect(interval).toBeGreaterThanOrEqual(previous);
+        expect(interval).toBeLessThanOrEqual(currentBaseline);
+        previous = interval;
+      }
+      expect(director.getAdaptiveSpawnIntervalSeconds(elapsed, 250))
+        .toBeCloseTo(currentBaseline);
+    }
   });
 });

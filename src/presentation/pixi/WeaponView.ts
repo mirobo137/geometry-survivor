@@ -787,7 +787,7 @@ export class WeaponView {
       return;
     }
     if (state.phase === 'collapse') {
-      const radius = state.polarFinalRadius ?? state.outerRadius * 0.43;
+      const radius = state.polarFinalRadius ?? state.outerRadius * 0.55;
       const pulses = state.polarPulseCount ?? 0;
       this.magneticChargeBand.clear();
       this.magneticChargeRails.clear();
@@ -807,7 +807,7 @@ export class WeaponView {
     drawMagneticBeacon(this.magneticChargeBeacon, 0, 0, state.pullRadius);
     drawMagneticField(this.magneticChargeField, 0, 0, state.pullRadius);
     if (state.evolution === 'polar_collapse') {
-      const polarRadius = state.polarRadius ?? state.outerRadius * 0.61;
+      const polarRadius = state.polarRadius ?? state.outerRadius * 0.76;
       const polarAngle = state.polarAngle ?? 0;
       drawPolarCollapseBackplate(this.magneticChargeBackplate, 0, 0, polarRadius, polarAngle);
       drawPolarCollapseFronts(this.magneticChargeBand, 0, 0, polarRadius, polarAngle);

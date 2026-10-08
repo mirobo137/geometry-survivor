@@ -159,6 +159,16 @@
 .console-body :is(.skin-card, .cannon-card, .background-card).is-selected {
   box-shadow: inset 3px 0 #75e6ff, inset 0 1px #d1e2ec66, inset 0 -3px #060d19;
 }
+.console-body :is(.skin-card, .cannon-card, .background-card).is-challenge-reward-owned {
+  border-color: #55d9b0;
+  background: linear-gradient(135deg, #123630, #0b1b27 72%);
+}
+.console-body :is(.skin-card, .cannon-card, .background-card).is-challenge-reward-owned :is(.skin-card-action, .cannon-card-action, .background-card-action) { color: #9ff2d3; }
+.console-body :is(.skin-card, .cannon-card, .background-card).is-weekly-reward-focus {
+  outline: 2px solid #ffe39a;
+  outline-offset: 3px;
+  box-shadow: 0 0 1.2rem #ffe39a65, inset 0 1px #fff5;
+}
 .console-body :is(.skin-card-copy, .cannon-card-copy, .background-card-copy) { overflow-wrap: anywhere; }
 #start-screen .cosmetic-rewarded {
   display: block;
@@ -337,7 +347,7 @@
   --route-accent: #ffe39a;
   position: relative;
   isolation: isolate;
-  grid-column: 1 / -1;
+  grid-column: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -494,11 +504,24 @@
   .console-body .act-card-button span { font-size: .57rem; letter-spacing: .04em; }
   #start-act-view .act-card-button { min-height: 11.75rem; padding: .75rem; }
   #start-act-view .act-card-button .act-emblem { width: 3rem; height: 3rem; }
-  #start-act-view #start-overdrive-card { min-height: 12.2rem; padding: .65rem; }
-  .overdrive-mode-options { gap: .4rem; margin-top: 3.5rem; }
-  .overdrive-mode-choice { min-height: 6.4rem; padding: .55rem; }
+  #start-act-view #start-overdrive-card {
+    grid-column: auto;
+    min-height: 11.75rem;
+    padding: .5rem;
+  }
+  .overdrive-mode-options { gap: .2rem; margin-top: 2rem; }
+  .overdrive-mode-options { grid-template-columns: minmax(0, 1fr); }
+  #start-overdrive-card > .act-emblem {
+    top: .35rem;
+    right: .35rem;
+    left: auto;
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+  .overdrive-mode-choice { min-height: 3.6rem; padding: .3rem .4rem; gap: .15rem; }
   .overdrive-mode-choice strong { font-size: .76rem; }
-  .overdrive-mode-choice small { font-size: .64rem; }
+  .overdrive-mode-choice small { font-size: .58rem; line-height: 1.2; }
+  .overdrive-mode-choice span { font-size: .5rem; letter-spacing: .035em; }
   #start-act-view .act-route-copy strong { font-size: .8rem; }
   #start-act-view .act-route-copy small { font-size: .69rem; }
   #start-act-view .act-route-copy > span { font-size: .54rem; letter-spacing: .035em; }

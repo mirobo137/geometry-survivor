@@ -30,8 +30,8 @@ import { isCalibrationId, type CalibrationId } from '../content/run/CalibrationD
 import { RetentionPanel } from './retention/RetentionPanel';
 import { DailyWheelDialog, type DailyWheelDialogOptions } from './retention/DailyWheelDialog';
 import type { RewardCosmeticSource } from '../content/retention/RewardCosmeticDefinitions';
-import wheelRimUrl from '../assets/images/ui/retention/wheel-rim.webp?no-inline';
 import { dailyWheelAvailability } from '../content/retention/DailyWheelDefinitions';
+import type { RewardCosmeticFamily } from '../content/retention/RewardCosmeticDefinitions';
 import { getRetentionObjectiveProgress, RETENTION_OBJECTIVES, type RetentionChallengeId, type RetentionObjectiveId, type RetentionSaveData, type RetentionWeeklyEdition, type RetentionClaimResult } from '../content/retention/RetentionDefinitions';
 import type { OverdriveVariant } from '../content/run/OverdriveDefinitions';
 
@@ -106,7 +106,7 @@ export class StartScreen {
   private readonly overdriveAssaultButton: HTMLButtonElement | null;
   private readonly settingsToggle: HTMLButtonElement;
   private readonly levelToggle: HTMLButtonElement;
-  private readonly settingsPanel: HTMLElement;
+  private readonly settingsPanel: HTMLDialogElement;
   private readonly panel: HTMLElement;
   private readonly musicInput: HTMLInputElement;
   private readonly sfxInput: HTMLInputElement;
@@ -211,7 +211,8 @@ export class StartScreen {
     const overdriveAssaultButton = root.querySelector<HTMLButtonElement>('#start-overdrive-assault');
     const settingsToggle = root.querySelector<HTMLButtonElement>('#start-settings-toggle');
     const levelToggle = root.querySelector<HTMLButtonElement>('#start-level');
-    const settingsPanel = root.querySelector<HTMLElement>('#start-settings');
+    const settingsPanel = root.querySelector<HTMLDialogElement>('#start-settings');
+    const settingsCloseButton = root.querySelector<HTMLButtonElement>('#start-settings-close');
     const panel = root.querySelector<HTMLElement>('.start-screen-panel');
     const musicInput = root.querySelector<HTMLInputElement>('#start-music');
     const sfxInput = root.querySelector<HTMLInputElement>('#start-sfx');
@@ -252,7 +253,7 @@ export class StartScreen {
     const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
     const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
     if (
-      !playButton || !settingsToggle || !levelToggle || !settingsPanel || !panel
+      !playButton || !settingsToggle || !levelToggle || !settingsPanel || !settingsCloseButton || !panel
       || !overdriveButton || !overdriveAssaultButton
       || !musicInput || !sfxInput || !mutedInput || !controlSchemeInput
       || !musicValue || !sfxValue || !bestTime || !bestScore || !mainView
@@ -353,6 +354,14 @@ export class StartScreen {
     root.querySelector<HTMLButtonElement>('#start-act-play')
       ?.addEventListener('click', () => this.handlePlay());
     this.settingsToggle.addEventListener('click', () => this.toggleSettings());
+    settingsCloseButton.addEventListener('click', () => this.setSettingsExpanded(false));
+    settingsPanel.addEventListener('click', event => {
+      if (event.target === settingsPanel) this.setSettingsExpanded(false);
+    });
+    settingsPanel.addEventListener('close', () => {
+      this.settingsToggle.setAttribute('aria-expanded', 'false');
+      if (!this.root.hidden && !this.mainView.hidden) this.settingsToggle.focus({ preventScroll: true });
+    });
     this.levelToggle.addEventListener('click', () => this.openActSelector());
     this.actBack.addEventListener('click', () => this.closeActSelector());
     this.entryBack.addEventListener('click', () => this.closeEntrySelector());
@@ -378,8 +387,6 @@ export class StartScreen {
     root.querySelector<HTMLButtonElement>('#start-daily-wheel')?.addEventListener('click', event => {
       if (this.dailyWheelOptions) this.dailyWheelDialog.open(this.dailyWheelOptions, event.currentTarget as HTMLElement);
     });
-    const wheelIcon = root.querySelector<HTMLElement>('.wheel-entry-icon');
-    if (wheelIcon) wheelIcon.style.background = `url("${wheelRimUrl}") center / contain no-repeat`;
     this.musicInput.addEventListener('input', () => this.emitSettings());
     this.sfxInput.addEventListener('input', () => this.emitSettings());
     this.mutedInput.addEventListener('change', () => this.emitSettings());
@@ -474,7 +481,8 @@ export class StartScreen {
         this.updateRetentionEntry(result.progress);
         return result;
       },
-      onStartChallenge: options.onStartRetentionChallenge
+      onStartChallenge: options.onStartRetentionChallenge,
+      onViewReward: (family, id) => this.openWeeklyReward(family, id)
     });
     this.updateActSelector();
     this.root.hidden = false;
@@ -630,7 +638,7 @@ export class StartScreen {
     if (!this.skinsPanelIsClosed()) this.closeSkins();
     if (!this.metaView.hidden) this.closeMeta();
     if (!this.retentionView.hidden) this.closeRetention();
-    this.setSettingsExpanded(this.settingsPanel.hidden);
+    this.setSettingsExpanded(!this.settingsPanel.open);
   }
 
   private openActSelector(): void {
@@ -774,6 +782,23 @@ export class StartScreen {
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.add('is-skins-open');
     this.selectSkinTab('player');
     this.skinsBack.focus({ preventScroll: true });
+  }
+
+  private openWeeklyReward(family: RewardCosmeticFamily, id: RetentionWeeklyEdition['reward']['id']): void {
+    this.closeRetention();
+    this.openSkins();
+    const tab = family === 'ship' ? 'player' : family === 'cannon' ? 'cannon' : 'background';
+    this.selectSkinTab(tab);
+    const attribute = family === 'ship' ? 'skin' : family === 'cannon' ? 'cannon' : 'background';
+    const card = this.skinsView.querySelector<HTMLElement>(`[data-${attribute}="${id}"]`);
+    if (!card) return;
+    card.classList.add('is-weekly-reward-focus');
+    card.scrollIntoView({
+      block: 'center',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+    });
+    card.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    window.setTimeout(() => card.classList.remove('is-weekly-reward-focus'), 2800);
   }
 
   private closeSkins(): void {
@@ -1029,8 +1054,13 @@ export class StartScreen {
   }
 
   private setSettingsExpanded(expanded: boolean): void {
-    this.settingsPanel.hidden = !expanded;
-    this.settingsToggle.setAttribute('aria-expanded', String(expanded));
+    if (expanded) {
+      if (!this.settingsPanel.open) this.settingsPanel.showModal();
+      this.settingsToggle.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    if (this.settingsPanel.open) this.settingsPanel.close();
+    this.settingsToggle.setAttribute('aria-expanded', 'false');
   }
 
   private setSettings(settings: AudioSettings): void {

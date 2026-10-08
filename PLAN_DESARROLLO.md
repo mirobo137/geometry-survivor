@@ -137,10 +137,16 @@ contrato de etapas permanecen sin cambios.
 - La tarjeta de Overdrive ofrece dos opciones elegibles dentro de la misma
   tarjeta: Normal y Asalto. La mitad de Asalto oscurece el arte para distinguir
   su variante; la selección persiste como preferencia de menú, no como run.
-- Asalto usa un director independiente y un único campo de batalla radial, sin
+- Asalto usa un director independiente y un único campo de batalla que cambia de forma, sin
   contador de tramos ni transición/pausa de arena entre jefes. El spawn común
   mantiene un flujo continuo y la cuota/cola del boss permanece independiente.
   No se agregan oleadas o grupos de enemigos extra.
+- La arena recorre círculo, hexágono, cuadrado, rombo, rectángulo horizontal,
+  octágono y rectángulo vertical en un ciclo continuo de 315 s. Cada cambio
+  termina cada 45 s, con 2 s de aviso y 1.25 s de transformación; el combate y
+  las cuotas continúan aunque haya boss activo. Los cascos respetan el contorno;
+  Orbital Warden adapta carga, recorrido curvo, avisos y réplicas al borde real.
+  Pendiente aceptación de presión/legibilidad en una run de Asalto y móvil físico.
 - El roster determinista mezcla los doce enemigos comunes de los tres actos.
   Jefes, réplicas del Warden y entidades de diagnóstico no aportan cuota; los
   hijos destructibles del Splitter sí cuentan.
@@ -172,6 +178,11 @@ contrato de etapas permanecen sin cambios.
 - Normal conserva sus campos de récord existentes; Asalto añade récord propio
   de tiempo, jefes y bajas. Los saves previos migran con Asalto en cero y la
   selección Normal por defecto. Las rutas de diagnóstico no liquidan récords.
+- La derrota en cualquiera de los modos paga el 100% de la NOVA generada. Una
+  retirada voluntaria confirmada desde pausa paga el 50% (redondeo hacia abajo)
+  y pierde el resto. La pantalla integrada presenta generado/perdido/neto antes
+  de aceptar; regresar no cambia nada. La liquidación sigue siendo única y la
+  retirada no puede revivir ni duplicar el pago con rewarded.
 
 **Pendiente inmediato:** probar en móvil el escalado ×0.25→×0.5→×1→×2→×3… y
 la XP reducida de la apertura. El usuario reportó que la mezcla completa desde
@@ -196,6 +207,10 @@ Splitter, resize, legibilidad del HUD, pools y sesiones largas. Las pruebas
 detalladas y cifras provisionales están en
 [balance de Overdrive Asalto](docs/design/OVERDRIVE_ASALTO_BALANCE.md). No
 declarar balanceada la cuota ni aceptar móvil hasta tener resultados humanos.
+Validar también en Normal y Asalto que la retirada muestre la cotización
+correcta, cancele sin cerrar la run, confirme el pago neto del 50% una sola
+vez y no ofrezca video; comprobar que morir paga el 100% y conserva sus ofertas
+de revivir/duplicación.
 
 Las reglas de Normal permanecen en
 [contrato de Overdrive Normal](docs/design/OVERDRIVE_NORMAL.md).

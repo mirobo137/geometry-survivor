@@ -42,19 +42,22 @@
             <p class="home-nav-kicker">TU PRÓXIMA EXPEDICIÓN</p>
             <button id="start-play" class="start-primary" type="button"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z" fill="currentColor"/><path d="M3 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="home-play-copy"><strong>JUGAR</strong><small id="start-play-route">Acto I · Radial</small></span><span class="home-play-arrow" aria-hidden="true">↗</span></button>
             <div class="start-menu-grid">
-              <button id="start-settings-toggle" class="start-secondary" type="button" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>
+              <button id="start-settings-toggle" class="start-secondary" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>
               <button id="start-level" class="start-secondary start-feature" type="button" aria-controls="start-act-view" data-feature="level-select"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 6-8 6 8 6-12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="3" cy="16" r="2" fill="currentColor"/><circle cx="21" cy="4" r="2" fill="currentColor"/></svg><span class="home-action-copy"><strong>Actos</strong><small>SELECCIONAR</small></span></button>
               <button id="start-skins" class="start-secondary start-feature" type="button" aria-controls="start-skins-view" data-feature="skins"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 17-9-4-9 4Z" fill="#17283b" stroke="currentColor" stroke-width="2"/><path d="m12 7 3 6h-6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Skins</strong><small>ABRIR</small></span></button>
               <button id="start-meta" class="start-secondary start-feature start-meta-button" type="button" aria-controls="start-meta-view" data-feature="meta"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M10 3v7L4 20h16l-6-10V3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 16h8l2 3H6Z" fill="currentColor"/></svg><span class="home-action-copy"><strong>Laboratorio</strong><small>MEJORAS PERMANENTES</small></span></button>
             </div>
             <div class="start-engagement-grid">
               <button id="start-retention" class="start-secondary start-retention-entry" type="button" aria-controls="start-retention-view"><span class="retention-entry-mark" aria-hidden="true">✦</span><span class="home-action-copy"><strong>Retos y Bitácora</strong><small id="start-retention-home-status" aria-live="polite">DESAFÍO SEMANAL · OBJETIVOS</small></span></button>
-              <button id="start-daily-wheel" class="start-secondary start-wheel-entry" type="button" aria-haspopup="dialog"><span class="wheel-entry-icon" aria-hidden="true"></span><span class="home-action-copy"><strong>Ruleta diaria</strong><small id="start-daily-wheel-status">UN GIRO GRATIS CADA 24 H</small></span></button>
+              <button id="start-daily-wheel" class="start-secondary start-wheel-entry" type="button" aria-haspopup="dialog"><span class="home-action-copy"><strong>Ruleta diaria</strong><small id="start-daily-wheel-status">UN GIRO GRATIS CADA 24 H</small></span></button>
             </div>
             <p id="start-coming-soon-note" class="start-coming-soon-note">Jugar recuerda tu última ruta elegida.</p>
           </div>
-          <div id="start-settings" class="start-settings" hidden>
-            <h2>Configuración rápida</h2>
+          <dialog id="start-settings" class="start-settings" aria-labelledby="start-settings-title">
+            <div class="start-settings-heading">
+              <h2 id="start-settings-title">Configuración rápida</h2>
+              <button id="start-settings-close" class="start-settings-close" type="button" aria-label="Cerrar configuración">×</button>
+            </div>
             <label for="start-music">Música <output id="start-music-value" for="start-music">100%</output></label>
             <input id="start-music" type="range" min="0" max="100" step="5" value="100" />
             <label for="start-sfx">Efectos <output id="start-sfx-value" for="start-sfx">100%</output></label>
@@ -76,13 +79,13 @@
               <input id="start-muted" type="checkbox" />
               Silenciar todo
             </label>
-          </div>
+          </dialog>
           <div class="start-record" aria-label="Mejor marca">
             <span>MEJOR RUN <strong id="start-best-time">00:00</strong></span>
             <span>PUNTOS <strong id="start-best-score">0</strong></span>
             <span class="start-wallet"><span id="start-nova-icon" class="nova-icon" aria-hidden="true"></span><strong data-nova-value>0</strong> NOVA</span>
           </div>
-          <p class="start-hint">Mueve con un dedo en móvil o con WASD / flechas en PC.</p>
+          <p class="start-hint">PC: WASD y flechas disponibles por defecto. Móvil: joystick o seguir el dedo en Configuración.</p>
           </div>
           <section id="start-act-view" class="start-act-view console-screen" hidden aria-labelledby="start-act-title">
             <div class="act-header-rail">
@@ -254,8 +257,18 @@
       </section>
       <div id="game-hud" aria-label="Estado de la partida" hidden>
         <span id="hud-time">00:00</span>
-        <span id="hud-health">HP 100/100</span>
-        <span id="hud-xp">XP 0</span>
+        <div class="hud-meter hud-meter--health">
+          <span id="hud-health">HP 100/100</span>
+          <div id="hud-health-meter" class="hud-meter-track" role="progressbar" aria-labelledby="hud-health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <span class="hud-meter-fill"></span>
+          </div>
+        </div>
+        <div class="hud-meter hud-meter--xp">
+          <span id="hud-xp">XP 0/8</span>
+          <div id="hud-xp-meter" class="hud-meter-track" role="progressbar" aria-labelledby="hud-xp" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="hud-meter-fill"></span>
+          </div>
+        </div>
         <span id="hud-kills">K 0</span>
         <span id="hud-level">LV 1</span>
         <span id="hud-assault" hidden>ASALTO ×1 · JEFE 0 · 0/100</span>
@@ -340,8 +353,25 @@
                 <span class="pause-setting-name"><span class="pause-setting-icon" data-pause-icon="mute" aria-hidden="true"></span><span>Silenciar todo</span></span>
               </label>
             </div>
-          </div>
+          </dialog>
         </div>
+        <section id="pause-withdrawal-dialog" class="pause-withdrawal-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-withdrawal-title" aria-describedby="pause-withdrawal-message" hidden>
+          <div class="pause-withdrawal-panel">
+            <p class="pause-withdrawal-kicker">RETIRADA VOLUNTARIA · OVERDRIVE</p>
+            <h2 id="pause-withdrawal-title">¿Retirarte de Overdrive?</h2>
+            <p id="pause-withdrawal-message">Si aceptas, recibirás solo la mitad de la NOVA generada. Si continúas y la run termina por derrota, conservarás la recompensa completa.</p>
+            <dl class="pause-withdrawal-breakdown">
+              <div><dt>NOVA generada</dt><dd><output id="pause-withdrawal-generated">0</output></dd></div>
+              <div class="pause-withdrawal-loss"><dt>NOVA que perderías</dt><dd><output id="pause-withdrawal-forfeited">0</output></dd></div>
+              <div class="pause-withdrawal-payout"><dt>NOVA que recibirías</dt><dd><output id="pause-withdrawal-payout">0</output></dd></div>
+            </dl>
+            <p class="pause-withdrawal-note">La retirada termina esta run. No se puede reanudar.</p>
+            <div class="pause-withdrawal-actions">
+              <button id="pause-withdrawal-back" class="pause-withdrawal-back" type="button">Regresar a la pausa</button>
+              <button id="pause-withdrawal-confirm" class="pause-withdrawal-confirm" type="button">Aceptar y cobrar la mitad</button>
+            </div>
+          </div>
+        </section>
       </section>
       <section id="game-over" aria-labelledby="game-over-title" hidden>
         <p id="game-over-kicker">RUN COMPLETE</p>

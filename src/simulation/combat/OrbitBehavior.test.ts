@@ -37,7 +37,7 @@ describe('OrbitBehavior evolutions', () => {
     expect(behavior.setEvolution('solar_crown')).toBe(true);
     expect(behavior.activeBladeCount).toBe(6);
     expect(behavior.currentRadius).toBeCloseTo(94);
-    expect(behavior.currentDamage).toBeCloseTo(18);
+    expect(behavior.currentDamage).toBeCloseTo(22.5);
     expect(behavior.blades).toHaveLength(6);
     const before = target.health;
     for (let index = 0; index < 80; index += 1) {
@@ -53,6 +53,7 @@ describe('OrbitBehavior evolutions', () => {
   it('Graviton Halo stretches the orbit along its movement axis without a pulse', () => {
     const { behavior, enemies, target } = createBehavior();
     expect(behavior.setEvolution('graviton_halo')).toBe(true);
+    expect(behavior.currentDamage).toBeCloseTo(22.5);
     const before = target.health;
     behavior.update(0.1, player);
     expect(behavior.pulseState.sequence).toBe(0);

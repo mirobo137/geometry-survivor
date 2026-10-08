@@ -17,7 +17,7 @@ const player: PlayerState = {
 
 const setup = () => {
   const enemies = new EnemySystem(new EnemyPool(8), new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
-  const targets = [100, 150, 200].map((offset) => {
+  const targets = [100, 150, 200, 250, 300].map((offset) => {
     const enemy = enemies.pool.acquire();
     if (!enemy) throw new Error('No se pudo preparar el objetivo');
     enemy.kind = 'chaser';
@@ -54,19 +54,22 @@ describe('ProjectileBehavior evolutions', () => {
     // Align the targets with the real muzzle-to-target ray. Rail Lance keeps
     // its authored direction after each pierce; it does not retarget between
     // enemies, so this validates the intended through-line collision.
-    targets[1].y = 375.17;
-    targets[2].y = 390.34;
+    for (let index = 1; index < targets.length; index += 1) {
+      targets[index].y = 360 + index * 15.17;
+    }
     enemies.rebuildGrid();
 
     behavior.fire(player);
     expect(projectiles.activeCount).toBe(1);
     const startX = projectiles.states[0].x;
-    for (let index = 0; index < 40; index += 1) behavior.update(1 / 60);
+    for (let index = 0; index < 60; index += 1) behavior.update(1 / 60);
 
     expect(projectiles.states[0].x).toBeGreaterThan(startX);
-    expect(targets[0].health).toBeCloseTo(981.1, 4);
-    expect(targets[1].health).toBeCloseTo(982.99, 4);
-    expect(targets[2].health).toBeCloseTo(984.88, 4);
+    expect(targets[0].health).toBeCloseTo(979, 4);
+    expect(targets[1].health).toBeCloseTo(981.1, 4);
+    expect(targets[2].health).toBeCloseTo(983.2, 4);
+    expect(targets[3].health).toBeCloseTo(985.3, 4);
+    expect(targets[4].health).toBeCloseTo(985.3, 4);
     for (let index = 0; index < 120; index += 1) behavior.update(1 / 60);
     expect(projectiles.activeCount).toBe(0);
   });
@@ -79,6 +82,7 @@ describe('ProjectileBehavior evolutions', () => {
     expect(projectiles.activeCount).toBe(3);
     expect(new Set(projectiles.states.slice(0, 3).map((state) => state.vy)).size).toBe(3);
     expect(projectiles.states.slice(0, 3).every((state) => state.evolution === 'pulse_volley')).toBe(true);
+    expect(projectiles.states.slice(0, 3).map((state) => state.damage)).toEqual([17.5, 17.5, 17.5]);
     const before = targets[0].health;
     for (let index = 0; index < 30; index += 1) behavior.update(1 / 60);
     expect(targets[0].health).toBeLessThan(before);

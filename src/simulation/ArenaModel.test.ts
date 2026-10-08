@@ -10,8 +10,42 @@ import {
 import { getArenaRadiusAtAngle } from './ArenaBoundary';
 import { ArenaModel } from './ArenaModel';
 import { AngularActDirector } from './acts/AngularActDirector';
+import { OverdriveAssaultDirector } from './acts/OverdriveAssaultDirector';
+import { OVERDRIVE_ASSAULT_ARENA_SHAPES } from '../content/run/OverdriveAssaultDefinitions';
 
 describe('ArenaModel', () => {
+  it('cycles every existing shape indefinitely in Assault with a bounded timeline', () => {
+    const director = new OverdriveAssaultDirector(1);
+    const arena = new ArenaModel(director);
+    const shapes = new Set([arena.state.shape]);
+    for (let cycle = 0; cycle < 3; cycle += 1) {
+      for (let index = 0; index < 7; index += 1) {
+        arena.update(45);
+        shapes.add(arena.state.shape);
+        expect(arena.state.shapePhase).toBe('stable');
+        expect(arena.state.shapeIndex).toBe(cycle * 7 + index + 1);
+      }
+      expect(arena.state.shape).toBe('circle');
+    }
+    expect(shapes).toEqual(new Set(OVERDRIVE_ASSAULT_ARENA_SHAPES));
+    expect(director.arenaShapeChanges).toHaveLength(7);
+    arena.reset();
+    expect(arena.state.shape).toBe('circle');
+    expect(arena.state.shapeIndex).toBe(0);
+  });
+
+  it.each([30, 60, 144])('warns and morphs in Assault consistently at %i Hz', rate => {
+    const arena = new ArenaModel(new OverdriveAssaultDirector(1));
+    for (let frame = 0; frame < rate * 44; frame += 1) arena.update(1 / rate);
+    expect(arena.state.shapePhase).toBe('morph');
+    expect(arena.state.shapeFrom).toBe('circle');
+    expect(arena.state.shapeTo).toBe('hexagon');
+    expect(arena.state.morphProgress).toBeCloseTo(0.2, 4);
+    arena.reset();
+    arena.update(42);
+    expect(arena.state.shapePhase).toBe('telegraph');
+    expect(arena.state.morphProgress).toBe(0);
+  });
   it('keeps the opening arena stable while the player learns the space', () => {
     const arena = new ArenaModel();
 

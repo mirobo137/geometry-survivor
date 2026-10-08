@@ -57,6 +57,11 @@ export const getArenaRadiusAtAngle = (input: ArenaBoundaryInput, angle: number):
   return fromRadius + (toRadius - fromRadius) * progress;
 };
 
+/** The same bounded orbital path is used by movement and its visible warning. */
+export const getArenaOrbitRadius = (
+  boundary: ArenaBoundaryInput, angle: number, requestedRadius: number, clearance: number
+): number => Math.max(0, Math.min(requestedRadius, getArenaRadiusAtAngle(boundary, angle) - clearance));
+
 /** Keeps a circular body inside the arena and outside any optional center barrier. */
 export const clampPointToArena = (
   x: number,

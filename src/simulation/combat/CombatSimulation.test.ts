@@ -21,6 +21,18 @@ const runSeconds = (combat: CombatSimulation, player: PlayerModel, seconds: numb
 };
 
 describe('CombatSimulation', () => {
+  it('passes the real Assault boundary to bosses without changing campaign behavior', () => {
+    const player = new PlayerModel();
+    const boundary = { radius: ARENA_RADIUS, shapeFrom: 'rectangle-horizontal',
+      shapeTo: 'rectangle-horizontal', morphProgress: 0 } as const;
+    const assault = new CombatSimulation({ actDirector: new OverdriveAssaultDirector(1) });
+    assault.boss.requestSpawn();
+    assault.update(1 / 60, player.state, boundary);
+    expect(assault.boss.state.movementBoundary).toBe(boundary);
+    const campaign = new CombatSimulation();
+    campaign.update(1 / 60, player.state, boundary);
+    expect(campaign.boss.state.movementBoundary).toBeUndefined();
+  });
   it('excludes bosses and Warden replicas from the Assault density calculation', () => {
     const director = new OverdriveAssaultDirector(0x1234);
     const combat = new CombatSimulation({ actDirector: director });

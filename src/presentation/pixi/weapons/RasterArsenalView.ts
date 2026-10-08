@@ -204,7 +204,7 @@ export class RasterArsenalView {
       }
     }
     if (state.phase === 'collapse' || recovery) {
-      const radius = state.polarFinalRadius ?? state.outerRadius * 0.43;
+      const radius = state.polarFinalRadius ?? state.outerRadius * 0.55;
       const pulse = (state.polarPulseCount ?? 0) > 1;
       this.ring(this.magneticBurst, 'magnetic_burst', state.targetX, state.targetY, radius,
         recovery ? (1 - p) ** 2 * 0.5 : pulse ? 1 : 0.74);

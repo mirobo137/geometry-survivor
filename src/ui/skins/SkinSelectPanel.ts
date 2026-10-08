@@ -132,7 +132,13 @@ export class SkinSelectPanel {
           ? `Ver ${skin.name}, exclusiva de reto semanal`
           : `Ver ${skin.name}, ${skin.priceNova === 0 ? 'gratis' : `${formatNova(skin.priceNova)} NOVA`}`);
       const reward = getRewardCatalogAction(skin.id);
-      if (!unlocked && reward) {
+      const challengeRewardOwned = reward?.source === 'weekly-logbook' && unlocked;
+      entry.card.classList.toggle('is-challenge-reward-owned', challengeRewardOwned);
+      entry.card.dataset.challengeRewardOwned = String(challengeRewardOwned);
+      if (challengeRewardOwned) {
+        entry.action.textContent = 'RETO · ADQUIRIDA';
+        entry.button.setAttribute('aria-label', `Ver ${skin.name}, recompensa de reto adquirida`);
+      } else if (!unlocked && reward) {
         entry.action.textContent = reward.card;
       } else if (!unlocked && skin.acquisition === 'daily-wheel') {
         entry.action.textContent = 'IR A RULETA · VER';

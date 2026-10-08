@@ -122,12 +122,18 @@ export class BackgroundSelectPanel {
       const selected = this.state.selected === background.id;
       entry.card.classList.toggle('is-selected', selected);
       const reward = getRewardCatalogAction(background.id);
+      const challengeRewardOwned = reward?.source === 'weekly-logbook' && unlocked;
+      entry.card.classList.toggle('is-challenge-reward-owned', challengeRewardOwned);
+      entry.card.dataset.challengeRewardOwned = String(challengeRewardOwned);
       const free = background.priceNova === 0 && !reward;
       entry.card.classList.toggle('is-locked', !unlocked && !free);
       entry.button.setAttribute('aria-label', unlocked
         ? `Ver ${background.name}, ${selected ? 'equipado' : 'disponible'}`
         : free ? `Ver ${background.name}, gratis` : `Ver ${background.name}, ${formatNova(background.priceNova)} NOVA`);
-      if (!unlocked && reward) {
+      if (challengeRewardOwned) {
+        entry.action.textContent = 'RETO · ADQUIRIDA';
+        entry.button.setAttribute('aria-label', `Ver ${background.name}, recompensa de reto adquirida`);
+      } else if (!unlocked && reward) {
         entry.action.textContent = reward.card;
         entry.button.setAttribute('aria-label', `Ver ${background.name}, ${reward.status}`);
       } else if (selected || unlocked || free) {

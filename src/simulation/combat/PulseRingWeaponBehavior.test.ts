@@ -125,8 +125,8 @@ describe('PulseRingWeaponBehavior', () => {
     for (let index = 0; index < 40; index += 1) weapon.update(0.1, player.state);
 
     expect(hits).toEqual([
-      { wave: 0, damage: 26 },
-      { wave: 1, damage: 26 }
+      { wave: 0, damage: 32.5 },
+      { wave: 1, damage: 32.5 }
     ]);
     expect(target.x).toBe(initialX);
     expect(target.y).toBe(initialY);
@@ -157,7 +157,7 @@ describe('PulseRingWeaponBehavior', () => {
     for (let index = 0; index < 20; index += 1) weapon.update(0.1, player.state);
     expect(weapon.state.originX).toBe(originX);
     expect(weapon.state.originX).not.toBe(player.state.x);
-    expect(target.health).toBe(1_000 - 26 * 2);
+    expect(target.health).toBe(1_000 - 32.5 * 2);
   });
 
   it('captures the latest movement direction while idle, then freezes it for Compression Wave', () => {
@@ -171,12 +171,12 @@ describe('PulseRingWeaponBehavior', () => {
     player.state.x += 80;
     weapon.update(0.1, player.state);
     weapon.fire(player.state);
-    expect(weapon.state.directionX).toBeCloseTo(1);
+    expect(weapon.state.directionX).toBeCloseTo(-1);
     expect(weapon.state.directionY).toBeCloseTo(0);
 
     player.state.y += 80;
     weapon.update(0.1, player.state);
-    expect(weapon.state.directionX).toBeCloseTo(1);
+    expect(weapon.state.directionX).toBeCloseTo(-1);
     expect(weapon.state.directionY).toBeCloseTo(0);
   });
 
@@ -188,7 +188,7 @@ describe('PulseRingWeaponBehavior', () => {
     if (!target) throw new Error('No se pudo preparar el objetivo de compresion');
     target.kind = 'chaser';
     target.x = player.state.x;
-    target.y = player.state.y - 70;
+    target.y = player.state.y + 70;
     target.radius = 14;
     target.health = 1_000;
     target.maxHealth = 1_000;
@@ -210,9 +210,9 @@ describe('PulseRingWeaponBehavior', () => {
     // front away from the direction the player was shown.
     player.state.x += 120;
     for (let index = 0; index < 16; index += 1) weapon.update(0.1, player.state);
-    expect(target.health).toBe(1_000 - 26 * 3);
+    expect(target.health).toBe(1_000 - 32.5 * 3);
     // Base push is 10u. Each of the three fronts applies triple push.
-    expect(target.y).toBeCloseTo(initialY - 90, 5);
+    expect(target.y).toBeCloseTo(initialY + 90, 5);
   });
 
   it('Compression Wave damages every durable target swept by its front, including real edge overlap', () => {
@@ -226,8 +226,8 @@ describe('PulseRingWeaponBehavior', () => {
       const angle = -0.88 + (index / 21) * 1.76;
       const radius = 70 + index * 9;
       target.kind = 'chaser';
-      target.x = player.state.x + Math.cos(angle - Math.PI / 2) * radius;
-      target.y = player.state.y + Math.sin(angle - Math.PI / 2) * radius;
+      target.x = player.state.x + Math.cos(angle + Math.PI / 2) * radius;
+      target.y = player.state.y + Math.sin(angle + Math.PI / 2) * radius;
       target.radius = 10;
       target.health = 1_000;
       target.maxHealth = 1_000;
@@ -239,7 +239,7 @@ describe('PulseRingWeaponBehavior', () => {
     const outsideTarget = pool.acquire();
     if (!edgeTarget || !outsideTarget) throw new Error('No se pudieron preparar los bordes de compresion');
     for (const [target, degrees] of [[edgeTarget, 58], [outsideTarget, 66]] as const) {
-      const angle = -Math.PI / 2 + degrees * Math.PI / 180;
+      const angle = Math.PI / 2 + degrees * Math.PI / 180;
       target.kind = 'chaser';
       target.x = player.state.x + Math.cos(angle) * 150;
       target.y = player.state.y + Math.sin(angle) * 150;

@@ -114,6 +114,7 @@ describe('WeaponView', () => {
         distanceTravelled: 120,
         travelLimit: 250,
         fanOffset: 0,
+        twinCometLedgerSlot: -1,
         curveStartX: 320,
         curveStartY: 240,
         curveControlX: 420,

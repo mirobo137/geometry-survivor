@@ -12,6 +12,7 @@ const ORBIT_DEFINITION = WEAPON_DEFINITIONS.orbit;
 const SOLAR_CROWN_BLADE_COUNT = 6;
 const SOLAR_CROWN_FIXED_RADIUS = 94;
 const GRAVITON_AXIS_TURN_SPEED = 2;
+const ORBIT_EVOLUTION_DAMAGE_MULTIPLIER = 1.25;
 
 export interface OrbitBehaviorContext {
   readonly enemies: EnemySystem;
@@ -139,7 +140,7 @@ export class OrbitBehavior {
     this.solarHasPosition = false;
     this.lastPlayerX = null;
     this.lastPlayerY = null;
-    this.applyEvolutionTuning();
+    this.applyRankTuning();
     return true;
   }
 
@@ -214,7 +215,8 @@ export class OrbitBehavior {
     this.radius = this.rank >= 6 ? 94 : this.rank >= 2 ? 76 : ORBIT_DEFINITION.orbitRadius;
     this.damage = getWeaponDamageAtRank('orbit', this.rank)
       * this.permanentDamageMultiplier
-      * this.overdrivePowerMultiplier;
+      * this.overdrivePowerMultiplier
+      * (this.evolution === null ? 1 : ORBIT_EVOLUTION_DAMAGE_MULTIPLIER);
     this.hitCooldownSeconds = Math.max(0.001, ORBIT_DEFINITION.hitCooldownSeconds * this.permanentCadenceMultiplier);
     this.rotationSpeed = ORBIT_DEFINITION.rotationSpeed;
     const authoredBladeCount = this.rank >= 7 ? 4 : this.rank >= 5 ? 3 : this.rank >= 3 ? 2 : 1;

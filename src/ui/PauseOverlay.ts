@@ -1,11 +1,12 @@
 import type { AudioSettings } from '../audio/AudioService';
+import { formatNova, type VoluntaryWithdrawalNova } from '../content/meta/EconomyDefinitions';
 import { isControlScheme, normalizeControlScheme } from '../input/ControlScheme';
 import type { ControlScheme } from '../platform/save/SaveStore';
 
 export type ResumeHandler = () => void;
 export type RestartHandler = () => void;
 export type ReturnToMenuHandler = () => void;
-export type WithdrawHandler = () => void;
+export type WithdrawHandler = () => boolean;
 export type SettingsChangeHandler = (settings: AudioSettings) => void;
 export type ControlSchemeChangeHandler = (controlScheme: ControlScheme) => void;
 
@@ -17,6 +18,7 @@ export interface PauseActions {
   readonly onRestart?: RestartHandler;
   readonly onReturnToMenu?: ReturnToMenuHandler;
   readonly onWithdraw?: WithdrawHandler;
+  readonly withdrawalQuote?: VoluntaryWithdrawalNova;
 }
 
 export class PauseOverlay {
@@ -34,12 +36,20 @@ export class PauseOverlay {
   private readonly restartButton: HTMLButtonElement | null;
   private readonly menuButton: HTMLButtonElement | null;
   private readonly withdrawButton: HTMLButtonElement | null;
+  private readonly pausePanel: HTMLElement | null;
+  private readonly withdrawalDialog: HTMLElement | null;
+  private readonly withdrawalGenerated: HTMLOutputElement | null;
+  private readonly withdrawalForfeited: HTMLOutputElement | null;
+  private readonly withdrawalPayout: HTMLOutputElement | null;
+  private readonly withdrawalBackButton: HTMLButtonElement | null;
+  private readonly withdrawalConfirmButton: HTMLButtonElement | null;
   private resumeHandler: ResumeHandler | null = null;
   private settingsHandler: SettingsChangeHandler | null = null;
   private controlSchemeHandler: ControlSchemeChangeHandler | null = null;
   private restartHandler: RestartHandler | null = null;
   private menuHandler: ReturnToMenuHandler | null = null;
   private withdrawHandler: WithdrawHandler | null = null;
+  private withdrawalQuote: VoluntaryWithdrawalNova | null = null;
 
   public constructor(root: HTMLElement) {
     const messageElement = root.querySelector<HTMLElement>('#pause-message');
@@ -59,6 +69,13 @@ export class PauseOverlay {
     this.restartButton = root.querySelector<HTMLButtonElement>('#pause-restart');
     this.menuButton = root.querySelector<HTMLButtonElement>('#pause-menu');
     this.withdrawButton = root.querySelector<HTMLButtonElement>('#pause-withdraw');
+    this.pausePanel = root.querySelector<HTMLElement>('.pause-panel');
+    this.withdrawalDialog = root.querySelector<HTMLElement>('#pause-withdrawal-dialog');
+    this.withdrawalGenerated = root.querySelector<HTMLOutputElement>('#pause-withdrawal-generated');
+    this.withdrawalForfeited = root.querySelector<HTMLOutputElement>('#pause-withdrawal-forfeited');
+    this.withdrawalPayout = root.querySelector<HTMLOutputElement>('#pause-withdrawal-payout');
+    this.withdrawalBackButton = root.querySelector<HTMLButtonElement>('#pause-withdrawal-back');
+    this.withdrawalConfirmButton = root.querySelector<HTMLButtonElement>('#pause-withdrawal-confirm');
     this.resumeButton.addEventListener('click', () => this.resumeHandler?.());
     this.settingsToggle?.addEventListener('click', () => this.toggleSettings());
     this.musicInput?.addEventListener('input', () => this.emitSettings());
@@ -67,7 +84,13 @@ export class PauseOverlay {
     this.controlSchemeInput?.addEventListener('change', () => this.emitControlScheme());
     this.restartButton?.addEventListener('click', () => this.restartHandler?.());
     this.menuButton?.addEventListener('click', () => this.menuHandler?.());
-    this.withdrawButton?.addEventListener('click', () => this.withdrawHandler?.());
+    this.withdrawButton?.addEventListener('click', () => this.openWithdrawalConfirmation());
+    this.withdrawalBackButton?.addEventListener('click', () => this.closeWithdrawalConfirmation(true));
+    this.withdrawalConfirmButton?.addEventListener('click', () => this.confirmWithdrawal());
+    this.withdrawalDialog?.addEventListener('click', event => {
+      if (event.target === this.withdrawalDialog) this.closeWithdrawalConfirmation(true);
+    });
+    this.root.addEventListener('keydown', event => this.handleWithdrawalKeydown(event));
   }
 
   public open(message: string, resumeHandler: ResumeHandler, actions: PauseActions = {}): void {
@@ -78,8 +101,10 @@ export class PauseOverlay {
     this.restartHandler = actions.onRestart ?? null;
     this.menuHandler = actions.onReturnToMenu ?? null;
     this.withdrawHandler = actions.onWithdraw ?? null;
+    this.withdrawalQuote = actions.withdrawalQuote ?? null;
     if (this.menuButton) this.menuButton.hidden = !this.menuHandler;
-    if (this.withdrawButton) this.withdrawButton.hidden = !this.withdrawHandler;
+    if (this.withdrawButton) this.withdrawButton.hidden = !this.withdrawHandler || !this.withdrawalQuote;
+    this.closeWithdrawalConfirmation(false);
     if (actions.settings) this.setSettings(actions.settings);
     if (actions.controlScheme) this.setControlScheme(actions.controlScheme);
     this.setSettingsExpanded(false);
@@ -88,6 +113,7 @@ export class PauseOverlay {
   }
 
   public close(): void {
+    this.closeWithdrawalConfirmation(false);
     this.root.hidden = true;
     this.resumeHandler = null;
     this.settingsHandler = null;
@@ -95,7 +121,54 @@ export class PauseOverlay {
     this.restartHandler = null;
     this.menuHandler = null;
     this.withdrawHandler = null;
+    this.withdrawalQuote = null;
     this.setSettingsExpanded(false);
+  }
+
+  private openWithdrawalConfirmation(): void {
+    const quote = this.withdrawalQuote;
+    if (!this.withdrawHandler || !quote || !this.withdrawalDialog) return;
+    if (this.withdrawalGenerated) this.withdrawalGenerated.value = formatNova(quote.generatedNova);
+    if (this.withdrawalForfeited) this.withdrawalForfeited.value = `−${formatNova(quote.forfeitedNova)}`;
+    if (this.withdrawalPayout) this.withdrawalPayout.value = formatNova(quote.payoutNova);
+    this.withdrawalDialog.hidden = false;
+    if (this.pausePanel) this.pausePanel.inert = true;
+    this.withdrawalBackButton?.focus({ preventScroll: true });
+  }
+
+  private closeWithdrawalConfirmation(returnFocus: boolean): void {
+    if (this.withdrawalDialog) this.withdrawalDialog.hidden = true;
+    if (this.pausePanel) this.pausePanel.inert = false;
+    if (returnFocus && !this.root.hidden) this.withdrawButton?.focus({ preventScroll: true });
+  }
+
+  private confirmWithdrawal(): void {
+    const handler = this.withdrawHandler;
+    if (!handler || !this.withdrawalQuote) return;
+    if (handler()) this.close();
+    else this.closeWithdrawalConfirmation(true);
+  }
+
+  private handleWithdrawalKeydown(event: KeyboardEvent): void {
+    if (!this.withdrawalDialog || this.withdrawalDialog.hidden) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeWithdrawalConfirmation(true);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const buttons = [this.withdrawalBackButton, this.withdrawalConfirmButton]
+      .filter((button): button is HTMLButtonElement => button !== null && !button.disabled);
+    if (buttons.length === 0) return;
+    const first = buttons[0]!;
+    const last = buttons[buttons.length - 1]!;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   private toggleSettings(): void {

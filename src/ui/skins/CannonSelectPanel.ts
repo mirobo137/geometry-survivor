@@ -123,7 +123,13 @@ export class CannonSelectPanel {
         ? `Ver ${cannon.name}, ${selected ? 'equipado' : 'disponible'}`
         : `Ver ${cannon.name}, ${formatNova(cannon.priceNova)} NOVA`);
       const reward = getRewardCatalogAction(cannon.id);
-      if (!unlocked && reward) {
+      const challengeRewardOwned = reward?.source === 'weekly-logbook' && unlocked;
+      entry.card.classList.toggle('is-challenge-reward-owned', challengeRewardOwned);
+      entry.card.dataset.challengeRewardOwned = String(challengeRewardOwned);
+      if (challengeRewardOwned) {
+        entry.action.textContent = 'RETO · ADQUIRIDA';
+        entry.button.setAttribute('aria-label', `Ver ${cannon.name}, recompensa de reto adquirida`);
+      } else if (!unlocked && reward) {
         entry.action.textContent = reward.card;
         entry.button.setAttribute('aria-label', `Ver ${cannon.name}, ${reward.status}`);
       } else if (selected || unlocked) {

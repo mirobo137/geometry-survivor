@@ -38,6 +38,11 @@ export class LevelProgression {
 
   private lastExperience = 0;
 
+  /** Cumulative threshold where the current level began. */
+  public get currentLevelExperience(): number {
+    return nextThresholdForLevel(this.state.level - 1);
+  }
+
   public sync(totalExperience: number): void {
     const safeExperience = normalizeExperience(totalExperience);
     if (safeExperience < this.lastExperience) return;

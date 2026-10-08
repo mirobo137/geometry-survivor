@@ -283,21 +283,21 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'rail_lance',
     title: 'Rail Lance',
-    description: 'Proyectil pesado: +35% dano, mayor calibre y atraviesa hasta 5 objetivos.',
+    description: 'Proyectil pesado: +50% al primer impacto; al perforar mantiene al menos +5% frente al disparo base. Intervalo +10%, hasta 5 objetivos.',
     effect: { type: 'weaponEvolution', evolution: 'rail_lance' },
     maxStacks: 1
   },
   {
     id: 'pulse_volley',
     title: 'Pulse Volley',
-    description: 'Abre un abanico de 3 proyectiles estrechos para cubrir grupos.',
+    description: 'Abre un abanico de 3 proyectiles: +25% de daño por impacto sin perder cadencia.',
     effect: { type: 'weaponEvolution', evolution: 'pulse_volley' },
     maxStacks: 1
   },
   {
     id: 'solar_crown',
     title: 'Solar Crown',
-    description: 'La orbita gana alcance y potencia; sus hojas giran con una cadencia mas pesada.',
+    description: 'Añade tres hojas y aumenta un 25% el daño de cada impacto, sin reducir la cadencia.',
     effect: { type: 'weaponEvolution', evolution: 'solar_crown' },
     maxStacks: 1,
     requires: ['orbit_blade']
@@ -305,7 +305,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'graviton_halo',
     title: 'Graviton Halo',
-    description: 'Sacrifica dano directo para emitir un pulso de control cada 3 s.',
+    description: 'Forma un halo elíptico: +25% de daño por impacto, con la misma cadencia.',
     effect: { type: 'weaponEvolution', evolution: 'graviton_halo' },
     maxStacks: 1,
     requires: ['orbit_blade']
@@ -313,7 +313,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'closed_circuit',
     title: 'Closed Circuit',
-    description: 'Alcanza dos blancos extra y deja cables persistentes con mayor dano al cruzarlos.',
+    description: 'Alcanza dos blancos extra: +25% de daño por impacto y cables persistentes.',
     effect: { type: 'weaponEvolution', evolution: 'closed_circuit' },
     maxStacks: 1,
     requires: ['chain_lightning']
@@ -321,7 +321,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'thunderhead',
     title: 'Thunderhead',
-    description: 'Conserva todos los blancos de la cadena; dos impactos dejan explosiones retardadas.',
+    description: 'Conserva los blancos: +25% de daño de rayo y explosión, sin perder cadencia.',
     effect: { type: 'weaponEvolution', evolution: 'thunderhead' },
     maxStacks: 1,
     requires: ['chain_lightning']
@@ -329,7 +329,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'twin_comet',
     title: 'Comet Quintet',
-    description: 'Cinco cuchillas de corto alcance barren en abanico y golpean al salir y regresar.',
+    description: 'Cinco cuchillas de alcance compacto barren en abanico: +25% de daño por golpe y más relanzamientos.',
     effect: { type: 'weaponEvolution', evolution: 'twin_comet' },
     maxStacks: 1,
     requires: ['vector_boomerang']
@@ -337,7 +337,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'singularity_return',
     title: 'Singularity Return',
-    description: 'Viaja un 48% mas lejos y se divide en seis fragmentos que persiguen enemigos cercanos.',
+    description: 'Recorre una distancia más corta y se divide en seis fragmentos: cada impacto hace +25% de daño.',
     effect: { type: 'weaponEvolution', evolution: 'singularity_return' },
     maxStacks: 1,
     requires: ['vector_boomerang']
@@ -345,7 +345,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'echo_shock',
     title: 'Echo Shock',
-    description: 'Una onda de mayor alcance vuelve a tu nave: ida y regreso hacen dano sin desplazar.',
+    description: 'La onda vuelve a la nave: +25% de daño en cada pasada, sin perder cadencia ni desplazar.',
     effect: { type: 'weaponEvolution', evolution: 'echo_shock' },
     maxStacks: 1,
     requires: ['pulse_ring']
@@ -353,7 +353,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'compression_wave',
     title: 'Compression Wave',
-    description: 'Tres frentes direccionales rapidos empujan con triple fuerza y abren paso.',
+    description: 'Tres frentes atacan hacia atrás, contra quienes te persiguen: +25% de daño y triple empuje.',
     effect: { type: 'weaponEvolution', evolution: 'compression_wave' },
     maxStacks: 1,
     requires: ['pulse_ring']
@@ -361,7 +361,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'event_horizon',
     title: 'Event Horizon',
-    description: 'Retiene y dana un nucleo remoto por mas tiempo; los supervivientes salen ralentizados.',
+    description: 'El núcleo remoto inflige +25% por impacto y ralentiza a quienes sobreviven.',
     effect: { type: 'weaponEvolution', evolution: 'event_horizon' },
     maxStacks: 1,
     requires: ['magnetic_charge']
@@ -369,7 +369,7 @@ export const WEAPON_EVOLUTION_DEFINITIONS: readonly UpgradeDefinition[] = [
   {
     id: 'polar_collapse',
     title: 'Polar Collapse',
-    description: 'Los filos arrastran y aturden; la implosion final castiga con fuerza a los objetivos aturdidos.',
+    description: 'Filos de alto daño arrastran y aturden; la implosión castiga aún más a los aturdidos.',
     effect: { type: 'weaponEvolution', evolution: 'polar_collapse' },
     maxStacks: 1,
     requires: ['magnetic_charge']

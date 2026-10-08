@@ -264,7 +264,6 @@ body {
 
 .start-brand,
 .start-actions,
-.start-settings,
 .start-record,
 .start-hint {
   position: relative;
@@ -422,15 +421,43 @@ body {
   gap: 0.45rem;
   padding: 0.9rem;
   color: #b9c9e8;
-  background: rgba(3, 8, 20, 0.48);
-  border: 1px solid rgba(145, 181, 255, 0.22);
-  border-radius: 0.65rem;
+  background: linear-gradient(145deg, #12283a, #081421 75%);
+  border: 1px solid rgba(145, 181, 255, 0.34);
+  border-radius: 0.9rem;
   text-align: left;
-  contain: layout paint;
 }
 
-.start-settings[hidden] {
+#start-settings:not([open]) {
   display: none;
+}
+
+#start-settings[open] {
+  display: grid;
+}
+
+.start-settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.15rem;
+}
+
+.start-settings-close {
+  display: grid;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  color: #e6f6ff;
+  background: #142738;
+  border: 1px solid #829bb2;
+  border-radius: 0.5rem;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .start-settings h2 {
@@ -1832,12 +1859,14 @@ body {
 }
 
 #game-hud {
+  align-items: center;
   position: absolute;
   z-index: 5;
   top: max(0.6rem, env(safe-area-inset-top));
   right: max(0.6rem, env(safe-area-inset-right));
   left: max(0.6rem, env(safe-area-inset-left));
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 12rem) minmax(0, 12rem) auto auto;
   justify-content: space-between;
   gap: 0.45rem;
   padding: 0.5rem 3.6rem 0.5rem 0.65rem;
@@ -1896,15 +1925,75 @@ body {
   color: #ffe39a;
 }
 
+.hud-meter {
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+  --meter-color: #79edff;
+  --meter-light: #defcff;
+}
+
+.hud-meter > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hud-meter--health { --meter-color: #ff927f; --meter-light: #ffe2b8; }
+.hud-meter--xp { --meter-color: #55d9ef; --meter-light: #bbffe6; }
+
+.hud-meter-track {
+  position: relative;
+  height: 0.5rem;
+  padding: 1px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--meter-color) 50%, transparent);
+  border-radius: 2px;
+  background: #06101d;
+  box-shadow: inset 0 1px 3px #0008;
+}
+
+.hud-meter-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(var(--meter-scale, 1));
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--meter-color), var(--meter-light));
+}
+
+.hud-meter-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), #06101d99 calc(10% - 1px), #06101d99 10%);
+  box-shadow: inset 0 1px 0 #ffffff30;
+}
+
+#hud-xp-meter { --meter-scale: 0; }
+#hud-health-meter[data-critical="true"] {
+  --meter-color: #ff385b;
+  --meter-light: #ffb5a8;
+  border-color: #ff5576;
+  box-shadow: 0 0 6px #ff385b55;
+}
+
 #hud-assault {
+  grid-column: 1 / -1;
   color: #ffe39a;
   white-space: nowrap;
 }
 #hud-assault[hidden] { display: none; }
 
 @media (max-width: 599px) {
-  #game-hud { flex-wrap: wrap; justify-content: flex-start; }
-  #hud-assault { flex-basis: 100%; padding-top: .15rem; }
+  #game-hud {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto auto;
+    gap: .35rem;
+    font-size: .65rem;
+    padding-left: .45rem;
+  }
+  #hud-assault { padding-top: .1rem; font-size: .6rem; }
 }
 
 #level-up {
@@ -2346,6 +2435,146 @@ body {
 
   .pause-settings-status {
     font-size: 0.52rem;
+  }
+}
+
+.pause-withdrawal-dialog {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: max(0.8rem, env(safe-area-inset-top)) max(0.8rem, env(safe-area-inset-right)) max(0.8rem, env(safe-area-inset-bottom)) max(0.8rem, env(safe-area-inset-left));
+  background: rgba(2, 5, 14, 0.82);
+  backdrop-filter: blur(5px);
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.pause-withdrawal-dialog[hidden] {
+  display: none;
+}
+
+.pause-withdrawal-panel {
+  display: grid;
+  gap: 0.8rem;
+  width: min(31rem, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: clamp(1.15rem, 4vw, 1.8rem);
+  color: #eaf0ff;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(244, 133, 117, 0.13), transparent 48%),
+    linear-gradient(145deg, #121c30, #08111f 76%);
+  border: 1px solid rgba(255, 159, 132, 0.7);
+  border-radius: 0.8rem;
+  box-shadow: 0 1rem 3.5rem rgba(0, 0, 0, 0.58), 0 0 1.5rem rgba(255, 129, 105, 0.12);
+  text-align: left;
+}
+
+.pause-withdrawal-panel > * {
+  margin: 0;
+}
+
+.pause-withdrawal-kicker {
+  color: #ffad91;
+  font: 800 0.68rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.15em;
+}
+
+.pause-withdrawal-panel h2 {
+  color: #fff2e9;
+  font-size: clamp(1.25rem, 5vw, 1.7rem);
+  letter-spacing: -0.025em;
+}
+
+#pause-withdrawal-message,
+.pause-withdrawal-note {
+  color: #bdcbe0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pause-withdrawal-breakdown {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+  padding: 0.75rem;
+  background: rgba(4, 11, 23, 0.72);
+  border: 1px solid rgba(132, 169, 208, 0.28);
+  border-radius: 0.55rem;
+}
+
+.pause-withdrawal-breakdown > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #ccd8eb;
+  font-size: 0.88rem;
+}
+
+.pause-withdrawal-breakdown dd {
+  margin: 0;
+  color: #eff7ff;
+  font: 800 0.96rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pause-withdrawal-breakdown .pause-withdrawal-loss,
+.pause-withdrawal-breakdown .pause-withdrawal-loss dd {
+  color: #ff9f89;
+}
+
+.pause-withdrawal-breakdown .pause-withdrawal-payout,
+.pause-withdrawal-breakdown .pause-withdrawal-payout dd {
+  color: #8ef0d0;
+}
+
+.pause-withdrawal-note {
+  font-size: 0.78rem;
+}
+
+.pause-withdrawal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.15rem;
+}
+
+.pause-withdrawal-actions button {
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(178, 207, 231, 0.45);
+  border-radius: 0.45rem;
+  color: #dce9fb;
+  background: linear-gradient(145deg, #1a2b42, #101a2b);
+  font: 750 0.84rem/1.25 ui-sans-serif, system-ui, sans-serif;
+  touch-action: manipulation;
+}
+
+.pause-withdrawal-actions button:focus-visible {
+  outline: 2px solid #eef8ff;
+  outline-offset: 3px;
+}
+
+.pause-withdrawal-actions .pause-withdrawal-confirm {
+  color: #26110d;
+  background: linear-gradient(145deg, #ffc2a8, #ff987e);
+  border-color: #ffe6d8;
+  border-bottom-color: #ae5248;
+}
+
+@media (max-width: 34rem) {
+  .pause-withdrawal-dialog {
+    padding: max(0.65rem, env(safe-area-inset-top)) max(0.65rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .pause-withdrawal-actions {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -56,7 +56,9 @@ describe('OverdriveAssaultDirector', () => {
     expect(OVERDRIVE_ASSAULT_KILLS_PER_BOSS).toBe(100);
     expect(director.getSpawnIntervalSeconds(0)).toBeCloseTo(0.9);
     expect(director.getSpawnIntervalSeconds(10_000)).toBeGreaterThanOrEqual(0.2);
-    expect(director.definition.arenaShapeChanges).toEqual([]);
+    expect(director.arenaShapeChanges).toHaveLength(7);
+    expect(director.arenaShapeCycleSeconds).toBe(315);
+    expect(director.getLaserPressure('hexagon', 100)).toEqual(director.getLaserPressure('circle', 0));
   });
 
   it('caps sparse-field acceleration at 10% and returns to baseline by eight enemies', () => {

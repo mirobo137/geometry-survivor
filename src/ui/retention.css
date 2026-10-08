@@ -57,20 +57,55 @@
   border-radius: 50%;
   background: radial-gradient(circle, #64e7d22a, #091321eF 71%);
   box-shadow: 0 0 1.3rem #63ead32a;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
+.retention-prize-art[data-owned="true"] { border-color: #68e7bf; box-shadow: 0 0 1.3rem #63ead355; }
+.retention-prize-art:focus-visible { outline: 2px solid #fff0ad; outline-offset: 3px; }
+.retention-prize-art::after { content: '↗'; position: absolute; top: .35rem; right: .4rem; display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border: 1px solid #6ecbd58c; border-radius: 50%; color: #c9f8ff; background: #0a1725dd; font: 900 .72rem/1 sans-serif; }
+.retention-prize-art[data-owned="true"]::after { border-color: #70ebc5; color: #b8ffe4; }
 .retention-prize-ship { width: 3.6rem; height: 4.3rem; object-fit: contain; }
+.retention-prize-status { position: absolute; bottom: -.2rem; left: 50%; padding: .22rem .4rem; transform: translateX(-50%); border: 1px solid #ffd77b; border-radius: 999px; color: #ffe6a6; background: #192333; font: 900 .48rem/1 ui-monospace, monospace; letter-spacing: .06em; white-space: nowrap; }
+.retention-prize-art[data-owned="true"] .retention-prize-status { border-color: #70ebc5; color: #b8ffe4; background: #10332f; }
 .retention-weekly-copy { display: grid; align-content: start; gap: .5rem; min-width: 0; padding: 1rem 1.1rem; }
 .retention-eyebrow { color: #7ce9ff; font: 800 .65rem/1.2 ui-monospace, monospace; letter-spacing: .17em; }
 .retention-weekly-copy h3, .retention-logbook-heading h3 { margin: 0; color: #edf5ff; font-size: clamp(1.2rem, 2.6vw, 1.7rem); line-height: 1.12; }
 .retention-weekly-copy > p, .retention-logbook-heading p { margin: 0; color: #b4c7dd; font-size: .86rem; line-height: 1.45; }
 .retention-weekly-meta { display: flex; flex-wrap: wrap; gap: .45rem 1rem; align-items: center; margin-top: .1rem; }
-.retention-countdown, .retention-reward { color: #ffe39a; font: 800 .64rem/1.3 ui-monospace, monospace; letter-spacing: .08em; }
-.retention-countdown { color: #a8c1d5; }
-.retention-rule-details { min-width: 0; color: #aebfda; font-size: .72rem; line-height: 1.3; }
-.retention-rule-details summary { width: fit-content; min-height: 1.8rem; display: flex; align-items: center; gap: .4rem; color: #8bdff0; font: 800 .65rem/1.2 ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
-.retention-rule-details summary::marker { color: #ffe39a; }
-.retention-rules { display: grid; gap: .16rem; margin: .3rem 0 .2rem; padding-left: 1.1rem; color: #aebfda; font-size: .73rem; line-height: 1.35; }
+.retention-countdown { color: #a8c1d5; font: 800 .64rem/1.3 ui-monospace, monospace; letter-spacing: .08em; }
+.retention-reward { display: flex; min-width: 0; align-items: baseline; gap: .3rem; overflow: hidden; color: #ffe39a; font: 800 .62rem/1.25 ui-monospace, monospace; letter-spacing: .06em; white-space: nowrap; }
+.retention-reward[data-owned="true"] { color: #a9f4d7; }
+.retention-reward-name { min-width: 0; overflow: hidden; color: #d8e5f2; font-size: .66rem; letter-spacing: .02em; text-overflow: ellipsis; white-space: nowrap; }
+.retention-rule-open { width: fit-content; min-height: 1.9rem; padding: .35rem .55rem; border: 1px solid #386179; border-radius: .4rem; color: #9ceeff; background: #0d1c2d; font: 800 .63rem/1.2 ui-monospace, monospace; letter-spacing: .035em; cursor: pointer; touch-action: manipulation; }
+.retention-rule-open:hover, .retention-rule-open:focus-visible { border-color: #8cecff; color: #e6fbff; background: #153249; }
+.retention-rules-dialog {
+  position: fixed;
+  inset: 0;
+  display: none;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: .8rem;
+  width: min(30rem, calc(100vw - 1.25rem));
+  max-height: min(27rem, calc(100dvh - 1.5rem));
+  margin: auto;
+  padding: .9rem 1rem 1rem;
+  overflow: hidden;
+  border: 1px solid #68bdd0;
+  border-radius: .8rem;
+  color: #eaf4ff;
+  background: linear-gradient(145deg, #13283b, #081321 74%, #17172d);
+  box-shadow: 0 1.5rem 5rem #000b, inset 0 1px #d4f5ff25;
+}
+.retention-rules-dialog[open] { display: grid; }
+.retention-rules-dialog::backdrop { background: #020814c9; backdrop-filter: blur(3px); }
+.retention-rules-header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding-bottom: .65rem; border-bottom: 1px solid #52718680; }
+.retention-rules-header h4 { margin: 0; color: #f2f7ff; font-size: 1rem; }
+.retention-rules-close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: none; border: 1px solid #59778b; border-radius: .45rem; color: #eaf7ff; background: #182a3a; font: 700 1.4rem/1 sans-serif; cursor: pointer; touch-action: manipulation; }
+.retention-rules-close:hover, .retention-rules-close:focus-visible { border-color: #8cecff; background: #24445a; }
+.retention-rules { display: grid; align-content: start; gap: .55rem; min-height: 0; margin: 0; padding: .15rem .25rem .15rem 1.25rem; overflow: auto; color: #c2d2e5; font-size: .82rem; line-height: 1.45; overscroll-behavior: contain; }
 .retention-play { width: 100%; min-height: 2.8rem; padding: .7rem 1rem; border-radius: .5rem; font: 800 .72rem/1.2 ui-monospace, monospace; letter-spacing: .06em; touch-action: manipulation; }
 
 .retention-logbook { display: grid; gap: .65rem; }
@@ -122,12 +157,14 @@
   .retention-weekly-copy h3 { font-size: 1.08rem; }
   .retention-weekly-copy > p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: .75rem; line-height: 1.28; }
   .retention-weekly-meta { flex-wrap: nowrap; gap: .5rem; min-width: 0; overflow: hidden; white-space: nowrap; }
-  .retention-countdown, .retention-reward { font-size: .53rem; letter-spacing: .04em; white-space: nowrap; }
+  .retention-countdown { font-size: .53rem; letter-spacing: .04em; white-space: nowrap; }
   .retention-countdown { flex: 0 0 auto; }
-  .retention-reward { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .retention-rule-details summary { min-height: 2.75rem; }
+  .retention-reward { min-width: 0; overflow: hidden; font-size: .5rem; letter-spacing: .025em; }
+  .retention-reward-name { font-size: .55rem; }
+  .retention-rule-open { min-height: 2.2rem; padding: .4rem .6rem; }
+  .retention-rules-dialog { gap: .65rem; width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); padding: .75rem; }
+  .retention-rules { gap: .45rem; padding-left: 1.05rem; font-size: .75rem; }
   .retention-play { min-height: 2.75rem; padding: .5rem .75rem; font-size: .68rem; }
-  .retention-rules { font-size: .69rem; }
   .retention-objective-grid { grid-template-columns: 1fr; gap: .45rem; }
   .retention-objective-card { grid-template-columns: 3.6rem minmax(0, 1fr); min-height: 5.5rem; padding: .4rem .55rem; }
   .retention-objective-art { width: 3.6rem; height: 4.5rem; }

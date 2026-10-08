@@ -2,27 +2,39 @@
 export type ProjectileEvolution = 'rail_lance' | 'pulse_volley';
 export type OrbitEvolution = 'solar_crown' | 'graviton_halo';
 export type ChainEvolution = 'closed_circuit' | 'thunderhead';
+/** Rail Lance trades a modest cadence reduction for a heavier direct hit. */
+export const RAIL_LANCE_TUNING = {
+  damageMultiplier: 1.5,
+  cooldownMultiplier: 1.1,
+  radiusMultiplier: 1.45,
+  maxTargets: 5,
+  damageFalloffPerPiercedTarget: 0.1,
+  minimumPierceDamageMultiplier: 0.7
+} as const;
 /** Bounded target growth shared by both chain branches after evolution. */
 export const CHAIN_EVOLUTION_TUNING = {
   maxTargets: 10,
   closedCircuitBonusTargets: 2,
+  closedCircuitDamageMultiplier: 1.25,
   coverageBonusTargets: 1,
   thunderheadMarks: 2,
-  circuitTickDamageMultiplier: 0.15
+  circuitTickDamageMultiplier: 0.2,
+  thunderheadDamageMultiplier: 1.25,
+  thunderheadExplosionDamageMultiplier: 1.25
 } as const;
 export type BoomerangEvolution = 'twin_comet' | 'singularity_return';
-/** Singularity's carrier forks at full range; shards are single-hit seekers, not AoE. */
+/** Singularity forks before its base reach; longer-lived shards seek distinct targets, not AoE. */
 export const SINGULARITY_RETURN_TUNING = {
-  rangeMultiplier: 1.48,
+  rangeMultiplier: 0.9,
   fragmentCount: 6,
   fragmentFanHalfAngle: 0.55,
   fragmentRadiusMultiplier: 0.7,
   fragmentSpeed: 520,
   turnRadiansPerSecond: 8,
-  fragmentLifetimeSeconds: 1.35,
-  targetSearchRadius: 320,
-  carrierDamageMultiplier: 0.65,
-  fragmentDamageMultiplier: 0.85,
+  fragmentLifetimeSeconds: 2,
+  targetSearchRadius: 460,
+  carrierDamageMultiplier: 1.25,
+  fragmentDamageMultiplier: 1.25,
   splitFxRadius: 42,
   splitFxSeconds: 0.32
 } as const;

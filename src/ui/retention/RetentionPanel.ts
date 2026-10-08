@@ -36,6 +36,7 @@ export interface RetentionPanelOptions {
   readonly onClaimObjective: (id: RetentionObjectiveId) => Promise<RetentionClaimResult>;
   readonly readProgress: () => { readonly progress: RetentionSaveData; readonly walletNova: number };
   readonly onStartChallenge: (id: RetentionChallengeId) => void;
+  readonly onViewReward: (family: RetentionWeeklyEdition['reward']['family'], id: RetentionWeeklyEdition['reward']['id']) => void;
 }
 
 const image = (src: string, alt: string, className: string): HTMLImageElement => {
@@ -107,10 +108,17 @@ export class RetentionPanel {
     const artwork = document.createElement('div');
     artwork.className = 'retention-weekly-art';
     artwork.append(image(ART[challenge.artId], challenge.title, 'retention-boss-art'));
-    const prize = document.createElement('div');
+    const prize = document.createElement('button');
+    prize.type = 'button';
     prize.className = 'retention-prize-art';
-    prize.append(image(REWARD_COSMETIC_IMAGES[edition.reward.id], edition.reward.name, 'retention-prize-ship'));
-    prize.setAttribute('aria-hidden', 'true');
+    prize.setAttribute('aria-label', 'Ver recompensa en Skins');
+    prize.append(image(REWARD_COSMETIC_IMAGES[edition.reward.id], '', 'retention-prize-ship'));
+    const prizeStatus = document.createElement('span');
+    prizeStatus.className = 'retention-prize-status';
+    prizeStatus.textContent = options.skinOwned ? 'ADQUIRIDA' : 'POR GANAR';
+    prize.dataset.owned = String(options.skinOwned);
+    prize.append(prizeStatus);
+    prize.addEventListener('click', () => options.onViewReward(edition.reward.family, edition.reward.id));
     const copy = document.createElement('div');
     copy.className = 'retention-weekly-copy';
     const eyebrow = document.createElement('span');
@@ -129,19 +137,43 @@ export class RetentionPanel {
     const reward = document.createElement('span');
     reward.className = 'retention-reward';
     const claimed = progress.weeklyClaimIds.includes(edition.editionId);
+    reward.dataset.owned = String(options.skinOwned);
     const novaReward = Math.min(
       RETENTION_WEEKLY_NOVA_AFTER_COLLECTION,
       Math.max(0, MAX_NOVA - Math.floor(options.walletNova))
     );
-    reward.textContent = claimed
-      ? 'PREMIO SEMANAL RECLAMADO'
-      : options.skinOwned ? novaReward > 0 ? `NOVA DE EVENTO · ${novaReward}` : 'NOVA DE EVENTO · BILLETERA LLENA'
-        : `${edition.reward.family === 'ship' ? 'NAVE' : edition.reward.family === 'cannon' ? 'CAÑÓN' : 'FONDO'} EXCLUSIVO · ${edition.reward.name.toUpperCase()}`;
+    const rewardState = document.createElement('strong');
+    rewardState.className = 'retention-reward-state';
+    rewardState.textContent = options.skinOwned && !claimed ? 'NOVA DE EVENTO'
+      : options.skinOwned ? 'RECOMPENSA ADQUIRIDA'
+        : claimed ? 'PREMIO SEMANAL COBRADO' : 'RECOMPENSA DE ESTA SEMANA';
+    const rewardName = document.createElement('span');
+    rewardName.className = 'retention-reward-name';
+    rewardName.textContent = options.skinOwned && !claimed
+      ? novaReward > 0 ? `+${novaReward} NOVA` : 'BILLETERA LLENA'
+      : edition.reward.name;
+    reward.append(rewardState, rewardName);
     meta.append(timer, reward);
-    const ruleDetails = document.createElement('details');
-    ruleDetails.className = 'retention-rule-details';
-    const ruleSummary = document.createElement('summary');
-    ruleSummary.textContent = `Ver reglas del reto · ${challenge.rules.length}`;
+    const rulesButton = document.createElement('button');
+    rulesButton.type = 'button';
+    rulesButton.className = 'retention-rule-open';
+    rulesButton.textContent = 'Ver reglas del reto';
+    rulesButton.setAttribute('aria-haspopup', 'dialog');
+    const rulesDialog = document.createElement('dialog');
+    rulesDialog.className = 'retention-rules-dialog';
+    rulesDialog.setAttribute('aria-labelledby', 'retention-rules-title');
+    const rulesHeader = document.createElement('div');
+    rulesHeader.className = 'retention-rules-header';
+    const rulesTitle = document.createElement('h4');
+    rulesTitle.id = 'retention-rules-title';
+    rulesTitle.textContent = 'Reglas del reto';
+    const rulesClose = document.createElement('button');
+    rulesClose.type = 'button';
+    rulesClose.className = 'retention-rules-close';
+    rulesClose.textContent = '×';
+    rulesClose.autofocus = true;
+    rulesClose.setAttribute('aria-label', 'Cerrar reglas');
+    rulesHeader.append(rulesTitle, rulesClose);
     const rules = document.createElement('ul');
     rules.className = 'retention-rules';
     for (const rule of challenge.rules) {
@@ -149,7 +181,18 @@ export class RetentionPanel {
       item.textContent = rule;
       rules.append(item);
     }
-    ruleDetails.append(ruleSummary, rules);
+    rulesDialog.append(rulesHeader, rules);
+    const closeRules = (): void => {
+      if (rulesDialog.open) rulesDialog.close();
+    };
+    rulesButton.addEventListener('click', () => {
+      if (!rulesDialog.open) rulesDialog.showModal();
+    });
+    rulesClose.addEventListener('click', closeRules);
+    rulesDialog.addEventListener('click', event => {
+      if (event.target === rulesDialog) closeRules();
+    });
+    rulesDialog.addEventListener('close', () => rulesButton.focus({ preventScroll: true }));
     const play = document.createElement('button');
     play.type = 'button';
     play.className = 'start-primary retention-play';
@@ -157,8 +200,10 @@ export class RetentionPanel {
       ? 'Practicar · sin premio'
       : claimed ? 'Reintentar gratis' : 'Jugar reto · gratis';
     play.addEventListener('click', () => options.onStartChallenge(challenge.id));
-    copy.append(eyebrow, title, briefing, meta, ruleDetails, play);
+    copy.append(eyebrow, title, briefing, meta, rulesButton, play);
     card.append(artwork, prize, copy);
+    card.append(rulesDialog);
+    card.dataset.rewardOwned = String(options.skinOwned);
     return card;
   }
 

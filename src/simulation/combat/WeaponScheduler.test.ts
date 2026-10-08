@@ -47,4 +47,25 @@ describe('WeaponScheduler', () => {
     }
     expect(fireBoomerang).toHaveBeenCalledTimes(2);
   });
+
+  it('preserves one ready boomerang interval when a bounded cast cannot launch', () => {
+    const fireBoomerang = vi.fn().mockReturnValueOnce(false).mockReturnValue(true);
+    const scheduler = new WeaponScheduler({
+      fireProjectile: vi.fn(),
+      fireChain: vi.fn(),
+      fireBoomerang
+    });
+
+    scheduler.update(0.1, 10, false, 10, player, false, true, 0.25);
+    scheduler.update(0.1, 10, false, 10, player, false, true, 0.25);
+    scheduler.update(0.05, 10, false, 10, player, false, true, 0.25);
+    expect(fireBoomerang).toHaveBeenCalledTimes(1);
+    scheduler.update(0.05, 10, false, 10, player, false, true, 0.25);
+    expect(fireBoomerang).toHaveBeenCalledTimes(2);
+    scheduler.update(0.1, 10, false, 10, player, false, true, 0.25);
+    scheduler.update(0.09, 10, false, 10, player, false, true, 0.25);
+    expect(fireBoomerang).toHaveBeenCalledTimes(2);
+    scheduler.update(0.01, 10, false, 10, player, false, true, 0.25);
+    expect(fireBoomerang).toHaveBeenCalledTimes(3);
+  });
 });

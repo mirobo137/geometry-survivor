@@ -20,9 +20,11 @@ texto pintado (descartada por responsive/accesibilidad) y entorno + nave recorta
 
 Consumidores: `index.html`, `StartScreen.mountScene/updateHomeShip`, `src/ui/home.css`.
 Título, ruta seleccionada, botones, estadísticas y foco son HTML real.
-Actos, Skins y Laboratorio reutilizan imágenes ya aprobadas en sus accesos;
-Configuración conserva su símbolo SVG sobre material CSS, sin generar un
-bitmap redundante para representar tres controles.
+Actos, Skins y Laboratorio reutilizan imágenes ya aprobadas en sus accesos.
+Configuración, Retos y Bitácora, y Ruleta diaria usan placas ilustradas propias
+en sus botones; títulos, estados, iconos auxiliares y controles permanecen como
+HTML/SVG accesible. Los recursos y prompts de las tres placas están en
+[`../menus/README.md`](../menus/README.md).
 
 | Archivo de producción | Original | Derivado | Bytes | Alpha |
 | --- | --- | --- | ---: | --- |

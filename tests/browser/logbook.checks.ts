@@ -18,18 +18,18 @@ const seed = (page: Page, language: 'es' | 'en' = 'es') => page.addInitScript(pr
 }, language);
 
 export const registerLogbookChecks = (): void => {
-  test('bitácora: deja visible y táctil la acción del reto semanal en móvil y desktop', async ({ page }) => {
+  test('bitácora: abre reglas en modal sin mover el botón del reto en móvil y desktop', async ({ page }) => {
     const failures: string[] = [];
     page.on('pageerror', error => failures.push(error.message));
     for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
       await page.setViewportSize(viewport);
       await open(page);
       const card = page.locator('.retention-weekly-card');
-      const details = card.locator('.retention-rule-details');
+      const rulesButton = card.locator('.retention-rule-open');
+      const dialog = page.locator('.retention-rules-dialog');
       const rules = card.locator('.retention-rules');
       const play = card.locator('.retention-play');
-      await expect(details).not.toHaveAttribute('open', '');
-      await expect(rules).toBeHidden();
+      await expect(dialog).toBeHidden();
       await expect(play).toBeVisible();
       await expect(play).toBeInViewport({ ratio: 0.8 });
       const cardBounds = await card.boundingBox();
@@ -37,10 +37,18 @@ export const registerLogbookChecks = (): void => {
       expect(cardBounds).not.toBeNull();
       expect(playBounds).not.toBeNull();
       expect(playBounds!.y + playBounds!.height).toBeLessThanOrEqual(cardBounds!.y + cardBounds!.height + 1);
-      await details.locator('summary').click();
+      await rulesButton.click();
+      await expect(dialog).toBeVisible();
       await expect(rules).toBeVisible();
-      await details.locator('summary').click();
-      await expect(rules).toBeHidden();
+      await expect(play).toBeInViewport({ ratio: 0.8 });
+      const openCardBounds = await card.boundingBox();
+      expect(openCardBounds?.height).toBeCloseTo(cardBounds!.height, 1);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(rulesButton).toBeFocused();
+      await rulesButton.click();
+      await dialog.locator('.retention-rules-close').click();
+      await expect(dialog).toBeHidden();
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page);
@@ -48,6 +56,68 @@ export const registerLogbookChecks = (): void => {
     await expect(page.locator('#start-screen')).toBeHidden();
     await expect(page.locator('#game-hud')).toBeVisible();
     expect(failures).toEqual([]);
+  });
+
+  test('bitácora: abre la recompensa semanal en la categoría correcta cuando aún está por ganar', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.clock.setFixedTime(new Date('2026-10-07T12:00:00Z'));
+    await page.addInitScript(() => {
+      localStorage.setItem('geometry-survivor:language-preference', 'en');
+      localStorage.setItem('geometry-survivor:save', JSON.stringify({ schemaVersion: 15, wallet: { nova: 900 } }));
+    });
+    await open(page);
+    const weekly = page.locator('.retention-weekly-card');
+    await expect(weekly).toHaveAttribute('data-reward-owned', 'false');
+    await expect(weekly.locator('.retention-prize-status')).toHaveText('TO EARN');
+    await expect(weekly.locator('.retention-reward-state')).toHaveText('THIS WEEK’S REWARD');
+
+    await weekly.locator('.retention-prize-art').click();
+    await expect(page.locator('#start-skins-view')).toBeVisible();
+    await expect(page.locator('#start-player-skins-tab')).toHaveAttribute('aria-selected', 'true');
+    const rewardCard = page.locator('.skin-card[data-skin="asterion"]');
+    await expect(rewardCard).toBeInViewport({ ratio: 0.8 });
+    await expect(rewardCard).not.toHaveClass(/is-challenge-reward-owned/);
+
+    for (const edition of [
+      { date: '2026-11-09T12:00:00Z', family: '#start-cannon-skins-tab', card: '.cannon-card[data-cannon="astral-fang"]' },
+      { date: '2026-12-14T12:00:00Z', family: '#start-backgrounds-tab', card: '.background-card[data-background="ember-remnant"]' }
+    ]) {
+      await page.clock.setFixedTime(new Date(edition.date));
+      await page.reload();
+      await open(page);
+      await page.locator('.retention-weekly-card .retention-prize-art').click();
+      await expect(page.locator(edition.family)).toHaveAttribute('aria-selected', 'true');
+      await expect(page.locator(edition.card)).toBeInViewport({ ratio: 0.8 });
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('bitácora: destaca la skin de reto adquirida y la enfoca en su catálogo', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.clock.setFixedTime(new Date('2026-10-07T12:00:00Z'));
+    await page.addInitScript(() => {
+      localStorage.setItem('geometry-survivor:language-preference', 'en');
+      localStorage.setItem('geometry-survivor:save', JSON.stringify({
+        schemaVersion: 15,
+        skins: { selected: 'spearhead', unlocked: ['cyan', 'spearhead', 'asterion'] },
+        wallet: { nova: 900 },
+        retention: { weeklyClaimIds: ['rf2-20261005-core-duel'] }
+      }));
+    });
+    await open(page);
+    const weekly = page.locator('.retention-weekly-card');
+    await expect(weekly).toHaveAttribute('data-reward-owned', 'true');
+    await expect(page.locator('.retention-prize-status')).toHaveText('ACQUIRED');
+    await expect(page.locator('.retention-reward-state')).toHaveText('REWARD ACQUIRED');
+    await weekly.locator('.retention-prize-art').click();
+    await expect(page.locator('#start-skins-view')).toBeVisible();
+    const acquiredCard = page.locator('.skin-card[data-skin="asterion"]');
+    await expect(acquiredCard).toBeInViewport({ ratio: 0.8 });
+    await expect(acquiredCard).toHaveClass(/is-challenge-reward-owned/);
+    await expect(acquiredCard.locator('.skin-card-action')).toHaveText('CHALLENGE · ACQUIRED');
+    expect(errors).toEqual([]);
   });
 
   test('bitácora: cobra manualmente, renueva generales y retira objetivos de campaña', async ({ page }, info) => {
@@ -107,7 +177,8 @@ export const registerLogbookChecks = (): void => {
     await page.locator('#start-retention-back').click();
     await page.locator('#start-settings-toggle').click();
     await page.locator('#start-language').selectOption('es');
-    await page.locator('#start-settings-toggle').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#start-settings')).toBeHidden();
     await page.locator('#start-retention').click();
     await expect(first.locator('.retention-objective-copy strong')).toHaveText('Primera travesía · Rango 2');
     await expect(first).toContainText('Termina 2 partidas normales desde el último cobro.');

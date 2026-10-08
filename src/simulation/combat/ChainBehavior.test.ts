@@ -49,6 +49,44 @@ describe('ChainBehavior evolutions', () => {
     expect(enemies.pool.states[0].health).toBeLessThan(before);
   });
 
+  it('keeps Closed Circuit anchors at their impact positions when callbacks recycle killed slots', () => {
+    const enemyPool = new EnemyPool(3);
+    const enemies = new EnemySystem(enemyPool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    const originalPositions = [790, 820, 850];
+    for (const x of originalPositions) {
+      const enemy = enemyPool.acquire();
+      if (!enemy) throw new Error('No se pudo preparar el objetivo reciclable');
+      Object.assign(enemy, { kind: 'chaser', x, y: 360, radius: 12, health: 1, maxHealth: 1, speed: 0 });
+    }
+    enemies.rebuildGrid();
+    let recycledCount = 0;
+    const behavior = new ChainBehavior({
+      enemies,
+      rollCriticalDamage: (damage) => damage,
+      onEnemyDefeated: (defeated) => {
+        enemyPool.release(defeated);
+        const recycled = enemyPool.acquire();
+        if (!recycled) throw new Error('No se pudo reciclar el slot derrotado');
+        Object.assign(recycled, {
+          x: 1_100 + recycledCount * 20, y: 650, radius: 12,
+          health: 1_000, maxHealth: 1_000, speed: 0
+        });
+        recycledCount += 1;
+        enemies.rebuildGrid();
+      }
+    });
+    behavior.unlock();
+    behavior.setEvolution('closed_circuit');
+    behavior.fire(player);
+
+    const cables = behavior.segments.filter((segment) => segment.active && segment.persistent);
+    expect(cables).toHaveLength(3);
+    expect(cables.map(({ x1, x2 }) => [x1, x2])).toEqual([
+      [790, 820], [820, 850], [850, 790]
+    ]);
+    expect(cables.every(({ x1, x2, y1, y2 }) => Math.hypot(x2 - x1, y2 - y1) > 0)).toBe(true);
+  });
+
   it('Thunderhead retains every base target with only two delayed explosions', () => {
     const { behavior, enemies } = setup(3);
     expect(behavior.setEvolution('thunderhead')).toBe(true);
@@ -59,9 +97,22 @@ describe('ChainBehavior evolutions', () => {
 
     const healthBefore = enemies.pool.states[2].health;
     expect(healthBefore).toBeLessThan(linkHealthBefore);
+    expect(linkHealthBefore - healthBefore).toBeCloseTo(behavior.currentDamage * 1.25);
     behavior.updateSegments(0.2);
     expect(behavior.explosions.some((explosion) => explosion.phase === 'active')).toBe(true);
     expect(enemies.pool.states[2].health).toBeLessThan(healthBefore);
+  });
+
+  it('Thunderhead applies both explosion impacts when a target lies in their overlap', () => {
+    const { behavior, enemies } = setup(3);
+    behavior.setEvolution('thunderhead');
+    behavior.fire(player);
+    const target = enemies.pool.states[2];
+    const healthBeforeExplosions = target.health;
+
+    behavior.updateSegments(0.2);
+
+    expect(healthBeforeExplosions - target.health).toBeCloseTo(behavior.currentDamage * 1.25 * 2);
   });
 
   it.each(['closed_circuit', 'thunderhead'] as const)('%s retains rank VII targets and grows through coverage without clipping the circuit', evolution => {
@@ -91,15 +142,15 @@ describe('ChainBehavior evolutions', () => {
     expect(behavior.currentMaxTargets).toBe(3);
   });
 
-  it.each([30, 60, 144])('Closed Circuit ticks deal 25%% more damage once per target, including overlapping cables at %i Hz', hz => {
+  it.each([30, 60, 144])('Closed Circuit impacts and cable ticks deal increased damage once per target at %i Hz', hz => {
     const { behavior, enemies } = setup(5);
     behavior.setEvolution('closed_circuit');
     behavior.fire(player);
     const beforeTicks = enemies.pool.states[1].health;
-    expect(beforeTicks).toBeCloseTo(1000 - behavior.currentDamage * 0.4);
+    expect(beforeTicks).toBeCloseTo(1000 - behavior.currentDamage * 1.25);
     // This target touches both adjacent cables and the closing cable: still one hit.
     for (let i = 0; i < Math.ceil(hz * 0.85); i++) behavior.updateSegments(1 / hz);
-    expect(enemies.pool.states[1].health).toBeCloseTo(beforeTicks - behavior.currentDamage * 0.15 * 4);
+    expect(enemies.pool.states[1].health).toBeCloseTo(beforeTicks - behavior.currentDamage * 0.2 * 4);
     behavior.updateSegments(1);
     expect(behavior.segments.every(segment => !segment.active)).toBe(true);
   });

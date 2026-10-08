@@ -38,15 +38,11 @@ export class HealthBarView {
       return;
     }
 
-    // Tanks and elites are always relevant. Render them first so horde damage
-    // cannot crowd their bars out of the fixed visual budget.
+    // Every ordinary enemy, including tanks and elites, gets the same short
+    // health-bar window after taking damage. Bosses use the dedicated HUD.
     for (let index = 0; index < enemies.length && this.activeBars < this.limit; index += 1) {
       const state = enemies[index];
-      if (state.active && (state.kind === 'tank' || state.kind === 'elite')) this.draw(state);
-    }
-    for (let index = 0; index < enemies.length && this.activeBars < this.limit; index += 1) {
-      const state = enemies[index];
-      if (!state.active || state.kind === 'tank' || state.kind === 'elite' || state.kind === 'boss') continue;
+      if (!state.active || state.kind === 'boss') continue;
       if (this.recentUntil[index] >= animationSeconds) this.draw(state);
     }
     this.root.visible = this.activeBars > 0;
@@ -69,7 +65,7 @@ export class HealthBarView {
       .fill({ color: 0x071120, alpha: 0.9 })
       .beginPath()
       .rect(left, top, BAR_WIDTH * ratio, BAR_HEIGHT)
-      .fill({ color: state.kind === 'elite' ? 0xff5fd2 : state.kind === 'tank' ? 0xc58cff : 0x75e6ff, alpha: 0.95 })
+      .fill({ color: 0x75e6ff, alpha: 0.95 })
       .beginPath()
       .rect(left, top, BAR_WIDTH, BAR_HEIGHT)
       .stroke({ color: 0xeaf0ff, width: 1, alpha: 0.7 });

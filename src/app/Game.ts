@@ -57,7 +57,7 @@ import { AttackAudioFeedback } from '../audio/AttackAudioFeedback';
 import type { AudioService, AudioSettings } from '../audio/AudioService';
 import { GameState } from './GameState';
 import { createRunSummary, type RunOutcome } from './RunSummary';
-import { calculateRunNova } from '../content/meta/EconomyDefinitions';
+import { calculateRunNova, calculateVoluntaryWithdrawalNova } from '../content/meta/EconomyDefinitions';
 import { canClaimLaboratoryVitalityAd, claimLaboratoryVitalityAd } from '../content/meta/LaboratoryProgression';
 import {
   getLaboratoryCombatBonuses,
@@ -693,16 +693,11 @@ export class Game {
     else this.returnToMenuState();
   };
 
-  private readonly onPauseWithdraw = (): void => {
-    if (this.runMode !== 'overdrive' || this.contextLost || !this.gameState.withdrawFromPause()) return;
-    if (typeof window !== 'undefined' && !window.confirm(
-      '¿Retirarte y cobrar esta run de Overdrive? La run terminará definitivamente y no se puede reanudar después de cerrar.'
-    )) {
-      this.gameState.enterPause();
-      return;
-    }
+  private readonly onPauseWithdraw = (): boolean => {
+    if (this.runMode !== 'overdrive' || this.contextLost || !this.gameState.withdrawFromPause()) return false;
     this.nextTerminalCause = 'withdrawal';
     this.finishRun('game-over');
+    return true;
   };
 
   private readonly onActIntermissionReturnToMenu = (): void => {
@@ -1267,6 +1262,8 @@ export class Game {
       health: this.player.state.health,
       maxHealth: this.player.state.maxHealth,
       xp: this.combat.stats.experience,
+      levelStartExperience: this.progression.currentLevelExperience,
+      nextLevelExperience: this.progression.state.nextLevelExperience,
       kills: this.combat.stats.kills,
       level: this.progression.state.level,
       assault: this.combat.overdriveAssaultProgress ?? undefined
@@ -1657,6 +1654,17 @@ export class Game {
 
   private openPause(message: string): void {
     const settings = this.saveStore.load().settings;
+    const canWithdraw = this.runMode === 'overdrive'
+      && !this.diagnosticOverdrive
+      && this.weaponPath === null
+      && !this.stressMode
+      && this.activeRetentionChallenge === null;
+    const withdrawalQuote = canWithdraw
+      ? calculateVoluntaryWithdrawalNova(
+        calculateRunNova(createRunSummary('game-over', this.combat.stats))
+          + this.upgradeApplier.overdriveNovaReward
+      )
+      : undefined;
     this.pause.open(message, this.resumeFromLifecycle, {
       settings,
       controlScheme: settings.controlScheme,
@@ -1664,7 +1672,8 @@ export class Game {
       onControlSchemeChange: this.onPauseControlSchemeChange,
       onRestart: this.onPauseRestart,
       onReturnToMenu: this.startScreen ? this.onPauseReturnToMenu : undefined,
-      onWithdraw: this.runMode === 'overdrive' ? this.onPauseWithdraw : undefined
+      onWithdraw: withdrawalQuote ? this.onPauseWithdraw : undefined,
+      withdrawalQuote
     });
   }
 
@@ -1803,8 +1812,11 @@ export class Game {
     const saved = this.saveStore.load();
     const isolatedChallenge = this.activeRetentionChallenge !== null;
     const best = isolatedChallenge ? saved.best : mergeBestRun(saved.best, { timeSeconds: summary.elapsedSeconds, score: summary.score });
-    const novaReward = isolatedChallenge ? 0 : calculateRunNova(summary)
+    const generatedNovaReward = isolatedChallenge ? 0 : calculateRunNova(summary)
       + (this.runMode === 'overdrive' ? this.upgradeApplier.overdriveNovaReward : 0);
+    const novaReward = terminalCause === 'withdrawal'
+      ? calculateVoluntaryWithdrawalNova(generatedNovaReward).payoutNova
+      : generatedNovaReward;
     const profile = this.profiler.enabled ? this.profiler.snapshot(performance.now() + 500) : null;
     this.terminalRunToken += 1;
     const terminalToken = this.terminalRunToken;

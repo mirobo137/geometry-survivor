@@ -11,7 +11,10 @@ const TARGET_SEARCH_RADIUS = 960;
 const CAPTURE_PADDING = 6;
 const EPSILON = 0.000001;
 const TWIN_COMET_ANGLES = [-0.64, -0.32, 0, 0.32, 0.64] as const;
-const TWIN_COMET_RANGE_MULTIPLIER = 0.85;
+const TWIN_COMET_MAX_ACTIVE_CASTS = 3;
+const TWIN_COMET_RANGE_MULTIPLIER = 0.8;
+const TWIN_COMET_DAMAGE_MULTIPLIER = 1.25;
+const TWIN_COMET_RETURN_SPEED_MULTIPLIER = 1.15;
 
 export interface BoomerangBehaviorContext {
   readonly enemies: EnemySystem;
@@ -28,9 +31,10 @@ export interface BoomerangBehaviorContext {
 export class BoomerangBehavior {
   private readonly outboundHitGenerations: Uint32Array[];
   private readonly returnHitGenerations: Uint32Array[];
-  /** A single five-piece cast shares its per-phase target ledger. */
-  private readonly twinOutboundHitGenerations: Uint32Array;
-  private readonly twinReturnHitGenerations: Uint32Array;
+  /** Each bounded overlapping five-piece cast owns its per-phase hit ledger. */
+  private readonly twinOutboundHitGenerations: Uint32Array[];
+  private readonly twinReturnHitGenerations: Uint32Array[];
+  private readonly twinCastRemainingPieces = new Uint8Array(TWIN_COMET_MAX_ACTIVE_CASTS);
   private readonly fragmentTargets = new Int32Array(SINGULARITY.fragmentCount);
   private readonly spawnedFragments: Uint8Array;
   private readonly returnCurveComplete: Uint8Array;
@@ -64,8 +68,14 @@ export class BoomerangBehavior {
       { length: context.boomerangs.capacity },
       () => new Uint32Array(context.enemies.pool.capacity)
     );
-    this.twinOutboundHitGenerations = new Uint32Array(context.enemies.pool.capacity);
-    this.twinReturnHitGenerations = new Uint32Array(context.enemies.pool.capacity);
+    this.twinOutboundHitGenerations = Array.from(
+      { length: TWIN_COMET_MAX_ACTIVE_CASTS },
+      () => new Uint32Array(context.enemies.pool.capacity)
+    );
+    this.twinReturnHitGenerations = Array.from(
+      { length: TWIN_COMET_MAX_ACTIVE_CASTS },
+      () => new Uint32Array(context.enemies.pool.capacity)
+    );
     this.spawnedFragments = new Uint8Array(context.boomerangs.capacity);
     this.returnCurveComplete = new Uint8Array(context.boomerangs.capacity);
   }
@@ -76,6 +86,12 @@ export class BoomerangBehavior {
 
   public get currentDamage(): number {
     return this.damage;
+  }
+
+  public get currentImpactDamageMultiplier(): number {
+    return this.evolution === 'twin_comet'
+      ? TWIN_COMET_DAMAGE_MULTIPLIER
+      : this.evolution === 'singularity_return' ? SINGULARITY.carrierDamageMultiplier : 1;
   }
 
   public get currentEvolution(): BoomerangEvolution | null {
@@ -137,19 +153,20 @@ export class BoomerangBehavior {
     return true;
   }
 
-  public fire(player: PlayerState): void {
+  public fire(player: PlayerState): boolean {
     const twinCast = this.evolution === 'twin_comet';
     const singularityCast = this.evolution === 'singularity_return';
     const pieceCount = twinCast ? TWIN_COMET_ANGLES.length : 1;
     const activeCount = this.context.boomerangs.activeCount;
+    const twinLedgerSlot = twinCast ? this.findAvailableTwinLedgerSlot() : -1;
     // Reserve all five extra slots before firing: never clip the six-way split.
     const reserved = this.context.boomerangs.states.reduce((count, state) => (
       count + (state.active && state.evolution === 'singularity_return' && !state.fragment ? SINGULARITY.fragmentCount - 1 : 0)
     ), 0);
     if (!this.unlocked || pieceCount > this.context.boomerangs.capacity
-      || (twinCast && activeCount > 0)
+      || (twinCast && (twinLedgerSlot < 0 || activeCount + pieceCount > this.context.boomerangs.capacity))
       || (singularityCast ? activeCount + reserved + SINGULARITY.fragmentCount > this.context.boomerangs.capacity
-        : activeCount + pieceCount > (twinCast ? pieceCount : BOOMERANG_DEFINITION.maxActive))) return;
+        : !twinCast && activeCount + pieceCount > BOOMERANG_DEFINITION.maxActive)) return false;
     const targetIndex = this.context.enemies.findNearestEnemyIndex(player.x, player.y, TARGET_SEARCH_RADIUS);
     const target = targetIndex >= 0 ? this.context.enemies.getState(targetIndex) : null;
     const targetIsValid = target?.active === true && target.health > 0;
@@ -163,12 +180,21 @@ export class BoomerangBehavior {
     const baseDirectionX = this.lastDirectionX;
     const baseDirectionY = this.lastDirectionY;
     if (twinCast) {
-      this.twinOutboundHitGenerations.fill(0);
-      this.twinReturnHitGenerations.fill(0);
+      this.twinCastRemainingPieces[twinLedgerSlot] = pieceCount;
+      this.twinOutboundHitGenerations[twinLedgerSlot].fill(0);
+      this.twinReturnHitGenerations[twinLedgerSlot].fill(0);
     }
+    const acquired: BoomerangState[] = [];
     for (let piece = 0; piece < pieceCount; piece += 1) {
       const state = this.context.boomerangs.acquire();
-      if (!state) return;
+      if (!state) {
+        for (const partial of acquired) this.releaseBoomerang(partial);
+        if (twinCast) this.twinCastRemainingPieces[twinLedgerSlot] = 0;
+        return false;
+      }
+      state.evolution = this.evolution;
+      state.twinCometLedgerSlot = twinLedgerSlot;
+      acquired.push(state);
       const angle = twinCast ? TWIN_COMET_ANGLES[piece] : 0;
       const cosine = Math.cos(angle);
       const sine = Math.sin(angle);
@@ -215,10 +241,10 @@ export class BoomerangBehavior {
         state.curveEndX += normalX * state.fanOffset * 12;
         state.curveEndY += normalY * state.fanOffset * 12;
       }
-      state.evolution = this.evolution;
       this.outboundHitGenerations[state.slotIndex].fill(0);
       this.returnHitGenerations[state.slotIndex].fill(0);
     }
+    return true;
   }
 
   public update(dtSeconds: number, player: PlayerState): void {
@@ -240,7 +266,7 @@ export class BoomerangBehavior {
       state.ageSeconds += dt;
       state.lifetimeSeconds -= dt;
       if (state.lifetimeSeconds <= 0) {
-        this.context.boomerangs.release(state);
+        this.releaseBoomerang(state);
         continue;
       }
 
@@ -286,13 +312,18 @@ export class BoomerangBehavior {
             state.returnTargetX - state.returnStartX,
             state.returnTargetY - state.returnStartY
           ));
-          state.pathProgress = Math.min(1, state.pathProgress + remaining * this.returnSpeed / distance);
+          state.pathProgress = Math.min(
+            1,
+            state.pathProgress + remaining * this.returnSpeed * TWIN_COMET_RETURN_SPEED_MULTIPLIER / distance
+          );
           this.setQuadraticPosition(state, state.pathProgress, true);
           state.vx = (state.x - startX) / Math.max(EPSILON, remaining);
           state.vy = (state.y - startY) / Math.max(EPSILON, remaining);
           this.hitAlongSegment(state, startX, startY, state.x, state.y, 'returning');
           remaining = 0;
-          if (state.pathProgress >= 1 - EPSILON) this.returnCurveComplete[state.slotIndex] = 1;
+          if (state.pathProgress >= 1 - EPSILON) {
+            this.returnCurveComplete[state.slotIndex] = 1;
+          }
           continue;
         }
 
@@ -301,23 +332,25 @@ export class BoomerangBehavior {
         const distance = Math.hypot(dx, dy);
         const captureRadius = player.radius + CAPTURE_PADDING;
         if (distance <= captureRadius) {
-          this.context.boomerangs.release(state);
+          this.releaseBoomerang(state);
           break;
         }
 
         const directionX = dx / Math.max(EPSILON, distance);
         const directionY = dy / Math.max(EPSILON, distance);
-        state.vx = directionX * this.returnSpeed;
-        state.vy = directionY * this.returnSpeed;
-        const travel = Math.min(this.returnSpeed * remaining, distance);
+        const returnSpeed = this.returnSpeed
+          * (state.evolution === 'twin_comet' ? TWIN_COMET_RETURN_SPEED_MULTIPLIER : 1);
+        state.vx = directionX * returnSpeed;
+        state.vy = directionY * returnSpeed;
+        const travel = Math.min(returnSpeed * remaining, distance);
         const startX = state.x;
         const startY = state.y;
         state.x += directionX * travel;
         state.y += directionY * travel;
         this.hitAlongSegment(state, startX, startY, state.x, state.y, 'returning');
-        remaining -= travel / this.returnSpeed;
+        remaining -= travel / returnSpeed;
         if (Math.hypot(player.x - state.x, player.y - state.y) <= captureRadius) {
-          this.context.boomerangs.release(state);
+          this.releaseBoomerang(state);
         }
       }
     }
@@ -343,6 +376,7 @@ export class BoomerangBehavior {
       state.distanceTravelled = 0;
       state.travelLimit = 0;
       state.fanOffset = 0;
+      state.twinCometLedgerSlot = -1;
       state.curveStartX = 0;
       state.curveStartY = 0;
       state.curveControlX = 0;
@@ -360,8 +394,9 @@ export class BoomerangBehavior {
     }
     for (const ledger of this.outboundHitGenerations) ledger.fill(0);
     for (const ledger of this.returnHitGenerations) ledger.fill(0);
-    this.twinOutboundHitGenerations.fill(0);
-    this.twinReturnHitGenerations.fill(0);
+    for (const ledger of this.twinOutboundHitGenerations) ledger.fill(0);
+    for (const ledger of this.twinReturnHitGenerations) ledger.fill(0);
+    this.twinCastRemainingPieces.fill(0);
     this.returnCurveComplete.fill(0);
     this.spawnedFragments.fill(0);
     this.fragmentTargets.fill(-1);
@@ -439,7 +474,7 @@ export class BoomerangBehavior {
       const distinct = this.nearestFragmentTarget(x, y, piece);
       this.fragmentTargets[piece] = distinct >= 0 ? distinct : this.nearestFragmentTarget(x, y);
     }
-    this.context.boomerangs.release(carrier);
+    this.releaseBoomerang(carrier);
     for (let piece = 0; piece < SINGULARITY.fragmentCount; piece += 1) {
       const shard = this.context.boomerangs.acquire();
       if (!shard) break; // Reserved at fire(); defensive for external pool consumers.
@@ -456,6 +491,7 @@ export class BoomerangBehavior {
         damage: damage * SINGULARITY.fragmentDamageMultiplier,
         ageSeconds: 0, lifetimeSeconds: SINGULARITY.fragmentLifetimeSeconds,
         phase: 'homing', fragment: true, targetIndex, targetGeneration: target?.generation ?? 0,
+        twinCometLedgerSlot: -1,
         evolution: 'singularity_return', directionX: launchX, directionY: launchY,
         distanceTravelled: 0, travelLimit: 0, fanOffset, pathProgress: 0,
         curveStartX: x, curveStartY: y, curveControlX: 0, curveControlY: 0,
@@ -508,10 +544,10 @@ export class BoomerangBehavior {
     if (hitIndex >= 0) {
       const enemy = this.context.enemies.getState(hitIndex);
       const damage = this.context.rollCriticalDamage(state.damage);
-      this.context.boomerangs.release(state);
+      this.releaseBoomerang(state);
       enemy.health -= damage;
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
-    } else if (state.lifetimeSeconds <= 0) this.context.boomerangs.release(state);
+    } else if (state.lifetimeSeconds <= 0) this.releaseBoomerang(state);
   }
 
   private triggerSingularityPulse(x: number, y: number): void {
@@ -578,8 +614,10 @@ export class BoomerangBehavior {
     const midX = (startX + endX) * 0.5;
     const midY = (startY + endY) * 0.5;
     const candidates = this.context.enemies.queryCircle(midX, midY, length * 0.5 + state.radius + 48);
-    const ledger = state.evolution === 'twin_comet'
-      ? phase === 'outbound' ? this.twinOutboundHitGenerations : this.twinReturnHitGenerations
+    const ledger = state.evolution === 'twin_comet' && state.twinCometLedgerSlot >= 0
+      ? phase === 'outbound'
+        ? this.twinOutboundHitGenerations[state.twinCometLedgerSlot]
+        : this.twinReturnHitGenerations[state.twinCometLedgerSlot]
       : phase === 'outbound' ? this.outboundHitGenerations[state.slotIndex] : this.returnHitGenerations[state.slotIndex];
 
     for (const index of candidates) {
@@ -588,7 +626,7 @@ export class BoomerangBehavior {
       if (distanceToSegmentSquared(enemy.x, enemy.y, startX, startY, dx, dy) > (state.radius + enemy.radius) ** 2) continue;
       ledger[index] = enemy.generation;
       const phaseMultiplier = state.evolution === 'twin_comet'
-        ? 1.1
+        ? TWIN_COMET_DAMAGE_MULTIPLIER
         : state.evolution === 'singularity_return'
           ? SINGULARITY.carrierDamageMultiplier
           : 1;
@@ -605,6 +643,19 @@ export class BoomerangBehavior {
     this.returnSpeed = this.rank >= 4 ? 500 : BOOMERANG_DEFINITION.returnSpeed;
     this.radius = this.rank >= 5 ? 13 : BOOMERANG_DEFINITION.radius;
     this.outboundDistance = this.rank >= 3 ? 280 : BOOMERANG_DEFINITION.outboundDistance;
+  }
+
+  private findAvailableTwinLedgerSlot(): number {
+    return this.twinCastRemainingPieces.findIndex((remaining) => remaining === 0);
+  }
+
+  private releaseBoomerang(state: BoomerangState): void {
+    if (!state.active) return;
+    const ledgerSlot = state.evolution === 'twin_comet' ? state.twinCometLedgerSlot : -1;
+    this.context.boomerangs.release(state);
+    if (ledgerSlot >= 0 && this.twinCastRemainingPieces[ledgerSlot] > 0) {
+      this.twinCastRemainingPieces[ledgerSlot] -= 1;
+    }
   }
 }
 

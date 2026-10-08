@@ -5,6 +5,7 @@ import type { BossRenderState } from '../combat/CombatRenderState';
 import type { EnemyState } from '../combat/EntityPools';
 import { EnemySystem } from '../enemies/EnemySystem';
 import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
+import { clampPointToArena, getArenaOrbitRadius, type ArenaBoundaryInput } from '../ArenaBoundary';
 
 export type BossPhase = BossRenderState['phase'];
 export type BossInstanceId = 'primary' | 'secondary';
@@ -129,9 +130,11 @@ export class BossSystem {
     dtSeconds: number,
     elapsedSeconds: number,
     player: PlayerState,
-    arenaRadius: number
+    arena: ArenaBoundaryInput
   ): number {
     if (!this.enabled || (this.phase === 'defeated' && (!this.manualSpawn || !this.spawnRequested))) return 0;
+    const arenaRadius = typeof arena === 'number' ? arena : arena.radius;
+    this.state.movementBoundary = typeof arena === 'number' ? undefined : arena;
     this.arenaRadius = Math.max(0, arenaRadius);
     if (!this.boss) {
       if (this.manualSpawn ? !this.spawnRequested : elapsedSeconds + EPSILON < this.definition.startSeconds) return 0;
@@ -141,6 +144,7 @@ export class BossSystem {
       this.phase = 'intro';
       this.phaseTimer = 0;
       this.hitApplied = false;
+      this.constrainBoss();
       this.syncState();
       return 0;
     }
@@ -150,6 +154,13 @@ export class BossSystem {
     }
 
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
+    this.constrainBoss();
+    this.constrainReplicaMarkers();
+    if (this.phase === 'charge-telegraph' || this.phase === 'zigzag-telegraph') {
+      this.state.chargeStartX = this.boss.x;
+      this.state.chargeStartY = this.boss.y;
+      this.constrainChargeTarget();
+    }
     this.bodyContactCooldownSeconds = Math.max(0, this.bodyContactCooldownSeconds - dt);
     this.previousX = this.boss.x;
     this.previousY = this.boss.y;
@@ -179,6 +190,12 @@ export class BossSystem {
       remaining -= step;
       this.updatePatternGeometry(step);
       this.updateAttackMovement();
+      this.constrainBoss();
+      this.constrainReplicaMarkers();
+      if (this.state.movementBoundary && step > EPSILON) {
+        this.boss.vx = (this.boss.x - segmentStartX) / step;
+        this.boss.vy = (this.boss.y - segmentStartY) / step;
+      }
       this.syncState();
 
       // Boss hulls hurt independently of their authored attack pattern. Use
@@ -238,6 +255,7 @@ export class BossSystem {
   }
 
   public reset(): void {
+    this.state.movementBoundary = undefined;
     this.releasePatternReservations();
     this.boss = null;
     this.phase = 'inactive';
@@ -334,6 +352,49 @@ export class BossSystem {
     this.boss.vy = Math.cos(this.movementAngle)
       * this.definition.movementAngularSpeed * movementRadius;
     this.movementWasLocked = false;
+  }
+
+  private constrainBoss(): void {
+    if (!this.boss || !this.state.movementBoundary) return;
+    const position = clampPointToArena(this.boss.x, this.boss.y,
+      this.boss.radius + 24, this.state.movementBoundary);
+    this.boss.x = position.x;
+    this.boss.y = position.y;
+  }
+
+  private constrainReplicaMarkers(): void {
+    if (!this.state.movementBoundary || !this.phase.startsWith('replicas-')) return;
+    const left = clampPointToArena(this.replicaLeftX, this.replicaLeftY,
+      WARDEN_REPLICA_EDGE_MARGIN, this.state.movementBoundary);
+    const right = clampPointToArena(this.replicaRightX, this.replicaRightY,
+      WARDEN_REPLICA_EDGE_MARGIN, this.state.movementBoundary);
+    this.replicaLeftX = this.state.replicaLeftX = left.x;
+    this.replicaLeftY = this.state.replicaLeftY = left.y;
+    this.replicaRightX = this.state.replicaRightX = right.x;
+    this.replicaRightY = this.state.replicaRightY = right.y;
+  }
+
+  /** Preserve the announced charge direction while shortening it at a wall. */
+  private constrainChargeTarget(): void {
+    const boundary = this.state.movementBoundary;
+    if (!boundary) return;
+    const target = clampPointToArena(this.state.chargeAimX, this.state.chargeAimY,
+      (this.boss?.radius ?? 48) + 24, boundary);
+    if (Math.hypot(target.x - this.state.chargeAimX, target.y - this.state.chargeAimY) <= EPSILON) return;
+    const dx = this.state.chargeAimX - this.state.chargeStartX;
+    const dy = this.state.chargeAimY - this.state.chargeStartY;
+    let low = 0;
+    let high = 1;
+    for (let i = 0; i < 20; i += 1) {
+      const t = (low + high) * 0.5;
+      const x = this.state.chargeStartX + dx * t;
+      const y = this.state.chargeStartY + dy * t;
+      const bounded = clampPointToArena(x, y, (this.boss?.radius ?? 48) + 24, boundary);
+      if (Math.hypot(bounded.x - x, bounded.y - y) <= EPSILON) low = t;
+      else high = t;
+    }
+    this.state.chargeAimX = this.state.chargeStartX + dx * low;
+    this.state.chargeAimY = this.state.chargeStartY + dy * low;
   }
 
   private phaseDuration(): number {
@@ -494,6 +555,7 @@ export class BossSystem {
         dot * dot + safeRadius * safeRadius - ox * ox - oy * oy)));
       this.state.chargeAimX = this.state.chargeStartX + directionX * chargeDistance;
       this.state.chargeAimY = this.state.chargeStartY + directionY * chargeDistance;
+      this.constrainChargeTarget();
       return;
     }
     if (pattern === 'zigzag') {
@@ -550,6 +612,7 @@ export class BossSystem {
     this.state.replicaLeftY = this.replicaLeftY;
     this.state.replicaRightX = this.replicaRightX;
     this.state.replicaRightY = this.replicaRightY;
+    this.constrainReplicaMarkers();
   }
 
   private syncState(): void {
@@ -652,8 +715,11 @@ export class BossSystem {
     );
     const angle = this.state.curveStartAngle + this.state.curveDirection * travel;
     this.state.curveAngle = angle;
-    this.boss.x = ARENA_CENTER.x + Math.cos(angle) * this.state.curveRadius;
-    this.boss.y = ARENA_CENTER.y + Math.sin(angle) * this.state.curveRadius;
+    const radius = this.state.movementBoundary
+      ? getArenaOrbitRadius(this.state.movementBoundary, angle, this.state.curveRadius, this.boss.radius + 24)
+      : this.state.curveRadius;
+    this.boss.x = ARENA_CENTER.x + Math.cos(angle) * radius;
+    this.boss.y = ARENA_CENTER.y + Math.sin(angle) * radius;
     this.boss.vx = -Math.sin(angle) * this.state.curveDirection * this.state.curveRadius * this.definition.curveAngularSpeed;
     this.boss.vy = Math.cos(angle) * this.state.curveDirection * this.state.curveRadius * this.definition.curveAngularSpeed;
   }
@@ -704,6 +770,7 @@ export class BossSystem {
       dot * dot + safeRadius * safeRadius - ox * ox - oy * oy)));
     this.state.chargeAimX = this.state.chargeStartX + directionX * travel;
     this.state.chargeAimY = this.state.chargeStartY + directionY * travel;
+    this.constrainChargeTarget();
   }
 
   private fireFractureBattery(player: PlayerState): void {

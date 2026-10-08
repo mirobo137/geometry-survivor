@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { LevelProgression } from './LevelProgression';
 
 describe('LevelProgression', () => {
+  it('exposes the start threshold of each level for the HUD and resets it', () => {
+    const progression = new LevelProgression();
+    expect(progression.currentLevelExperience).toBe(0);
+    progression.sync(14);
+    expect(progression.currentLevelExperience).toBe(8);
+    progression.sync(21);
+    expect(progression.currentLevelExperience).toBe(20);
+    progression.reset();
+    expect(progression.currentLevelExperience).toBe(0);
+  });
   it('keeps level one below the first threshold and queues one level-up at 8 XP', () => {
     const progression = new LevelProgression();
 

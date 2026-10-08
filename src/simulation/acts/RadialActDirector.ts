@@ -55,6 +55,9 @@ export class RadialActDirector {
     return this.definition.initialArenaShape;
   }
 
+  /** Zero preserves the finite authored campaign timeline. */
+  public get arenaShapeCycleSeconds(): number { return 0; }
+
   public getSpawnIntervalSeconds(elapsedSeconds: number): number {
     const elapsed = Math.max(0, elapsedSeconds);
     for (let index = this.definition.spawnPhases.length - 1; index >= 0; index -= 1) {

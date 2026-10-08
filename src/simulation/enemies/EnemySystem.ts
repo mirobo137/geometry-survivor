@@ -22,6 +22,7 @@ import type { WeaponEvolutionScenario } from '../../content/weapons/WeaponEvolut
 import type { FractureThreatEmitter } from '../fracture/FractureThreatSystem';
 import { capOverdriveHealth } from '../../content/run/OverdriveDefinitions';
 import type { BossDefinition } from '../../content/bosses/BossDefinition';
+import { clampPointToArena, type ArenaBoundary } from '../ArenaBoundary';
 
 const CONTACT_COOLDOWN_SECONDS = 0.45;
 const SPAWN_RADIUS_PADDING = 80;
@@ -343,7 +344,7 @@ export class EnemySystem {
   }
 
   /** Updates movement and returns the first contact damage, if any. */
-  public update(dtSeconds: number, player: PlayerState, arenaRadius = 270): number | null {
+  public update(dtSeconds: number, player: PlayerState, arenaRadius = 270, boundary?: ArenaBoundary): number | null {
     const dt = Math.min(Math.max(dtSeconds, 0), 0.1);
     if (dt === 0) {
       for (const enemy of this.pool.states) {
@@ -415,6 +416,11 @@ export class EnemySystem {
         enemy.vx = 0;
         enemy.vy = 0;
       }
+      }
+      if (boundary && enemy.kind === 'warden-replica') {
+        const position = clampPointToArena(enemy.x, enemy.y, Math.max(30, enemy.radius), boundary);
+        enemy.x = position.x;
+        enemy.y = position.y;
       }
       if (
         contactDamage === null

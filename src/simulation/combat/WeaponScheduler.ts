@@ -3,7 +3,7 @@ import type { PlayerState } from '../PlayerModel';
 export interface WeaponScheduleCallbacks {
   readonly fireProjectile: (player: PlayerState) => void;
   readonly fireChain: (player: PlayerState) => void;
-  readonly fireBoomerang?: (player: PlayerState) => void;
+  readonly fireBoomerang?: (player: PlayerState) => boolean | void;
   readonly firePulseRing?: (player: PlayerState) => void;
 }
 
@@ -43,11 +43,16 @@ export class WeaponScheduler {
     }
 
     if (boomerangEnabled && this.callbacks.fireBoomerang) {
-      this.boomerangAccumulator += dt;
       const boomerangCooldown = Math.max(0.001, boomerangCooldownSeconds);
+      this.boomerangAccumulator += dt;
       while (this.boomerangAccumulator >= boomerangCooldown) {
+        if (this.callbacks.fireBoomerang(player) === false) {
+          // Keep one ready cast while the bounded pool is full, without an
+          // unbounded catch-up burst. A rejected launch consumes no interval.
+          this.boomerangAccumulator = Math.min(this.boomerangAccumulator, boomerangCooldown);
+          break;
+        }
         this.boomerangAccumulator -= boomerangCooldown;
-        this.callbacks.fireBoomerang(player);
       }
     } else {
       this.boomerangAccumulator = 0;

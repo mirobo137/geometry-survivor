@@ -15,14 +15,25 @@ const enemy = (kind: EnemyRenderState['kind'], active = true): EnemyRenderState 
 });
 
 describe('HealthBarView', () => {
-  it('prioritizes tank and elite bars and limits recent common enemies', () => {
+  it('shows the same recent-damage bar window for every ordinary enemy', () => {
     const view = new HealthBarView(4, 'low');
     const enemies = [enemy('chaser'), enemy('tank'), enemy('elite'), enemy('fast')];
-    view.noteDamage(0, 0);
-    view.noteDamage(3, 0);
+    for (let index = 0; index < enemies.length; index += 1) view.noteDamage(index, 0);
     view.render(enemies, 0);
     expect(view.activeBarCount).toBe(4);
     view.render(enemies, 1.01);
+    expect(view.activeBarCount).toBe(0);
+  });
+
+  it('does not show tank or elite bars before they are damaged', () => {
+    const view = new HealthBarView(3, 'low');
+    const enemies = [enemy('tank'), enemy('elite'), enemy('boss')];
+    view.render(enemies, 0);
+    expect(view.activeBarCount).toBe(0);
+
+    view.noteDamage(0, 0);
+    view.noteDamage(1, 0);
+    view.render(enemies, 0.5);
     expect(view.activeBarCount).toBe(2);
   });
 });

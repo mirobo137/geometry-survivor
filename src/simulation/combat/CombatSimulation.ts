@@ -471,6 +471,14 @@ export class CombatSimulation {
     return this.weaponSystem.currentProjectileCooldown;
   }
 
+  public get currentEffectiveProjectileCooldown(): number {
+    return this.weaponSystem.currentEffectiveProjectileCooldown;
+  }
+
+  public getWeaponMasteryDamageMultiplier(family: WeaponPathId): number {
+    return this.weaponSystem.getWeaponMasteryDamageMultiplier(family);
+  }
+
   public get currentProjectileSpeed(): number {
     return this.weaponSystem.currentProjectileSpeed;
   }
@@ -946,7 +954,8 @@ export class CombatSimulation {
     if (!this.stressMode && (!isolatedAngularDrill || this.wardenDrill || this.retentionBossDuel)) {
       this.bossAttackGate?.update(dt);
       for (const bossSystem of this.bosses) {
-        const bossDamage = bossSystem.update(dt, this.stageElapsedSeconds, player, arenaRadius);
+        const bossDamage = bossSystem.update(dt, this.stageElapsedSeconds, player,
+          this.assaultDirector ? arenaBoundary : arenaRadius);
         if (bossSystem === this.boss && this.assaultBossSpawnPending && this.boss.state.active) {
           this.assaultBossSpawnPending = false;
         }
@@ -957,7 +966,8 @@ export class CombatSimulation {
       }
     }
 
-    const contactDamage = this.enemySystem.update(dt, player, arenaRadius);
+    const contactDamage = this.enemySystem.update(dt, player, arenaRadius,
+      this.assaultDirector ? arenaBoundary : undefined);
     if (contactDamage !== null) {
       this.stats.damageTaken += contactDamage;
       this.pendingEvents.push({ type: 'playerDamaged', amount: contactDamage, source: 'contact' });

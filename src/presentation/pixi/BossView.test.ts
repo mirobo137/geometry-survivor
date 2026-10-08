@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { WardenAttackView } from './WardenAttackView';
 import type { BossRenderState } from '../../simulation/combat/CombatRenderState';
 import { BossView } from './BossView';
+import { getArenaOrbitRadius } from '../../simulation/ArenaBoundary';
 
 const createRingState = (safeGapAngle: number): BossRenderState => ({
   bossId: 'core-sentinel',
@@ -68,6 +69,21 @@ const createAttackState = (phase: BossRenderState['phase'], pattern: BossRenderS
 });
 
 describe('BossView', () => {
+  it('places curve warnings on the same contour-clipped path as Warden movement', () => {
+    const view = new WardenAttackView();
+    const state = createAttackState('curve-telegraph', 'curve');
+    state.curveRadius = 250;
+    state.movementBoundary = { radius: 270, shapeFrom: 'circle', shapeTo: 'rectangle-horizontal', morphProgress: 0.8 };
+    view.render(state);
+    const markers = (view as unknown as { route: Graphics[] }).route;
+    for (let i = 0; i < markers.length; i += 1) {
+      const angle = state.curveStartAngle + state.curveDirection * state.curveTravelRadians * i / (markers.length - 1);
+      const radius = getArenaOrbitRadius(state.movementBoundary, angle, state.curveRadius, state.radius + 24);
+      expect(markers[i].x).toBeCloseTo(640 + Math.cos(angle) * radius);
+      expect(markers[i].y).toBeCloseTo(360 + Math.sin(angle) * radius);
+    }
+    view.root.destroy({ children: true });
+  });
   it('starts a ring gap arc as an independent path', () => {
     const view = new BossView();
 

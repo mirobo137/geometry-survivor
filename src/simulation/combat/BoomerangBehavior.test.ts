@@ -144,12 +144,12 @@ describe('BoomerangBehavior', () => {
   it('Comet Quintet sweeps with five short blades and damages each target once per phase', () => {
     const { boomerangs, behavior, enemies, enemy, player } = setup(8);
     expect(behavior.setEvolution('twin_comet')).toBe(true);
-    behavior.fire(player);
+    expect(behavior.fire(player)).toBe(true);
 
     expect(boomerangs.activeCount).toBe(5);
     expect(boomerangs.states.slice(0, 5).map((state) => state.fanOffset)).toEqual([-2, -1, 0, 1, 2]);
     expect(boomerangs.states.slice(0, 5).every((state) => state.travelLimit < behavior.currentOutboundDistance)).toBe(true);
-    behavior.fire(player);
+    expect(behavior.fire(player)).toBe(false);
     expect(boomerangs.activeCount).toBe(5);
 
     const left = enemies.spawn(0, 270);
@@ -167,18 +167,59 @@ describe('BoomerangBehavior', () => {
     enemies.rebuildGrid();
     for (let index = 0; index < 100; index += 1) behavior.update(1 / 60, player);
 
-    expect(enemy.health).toBeCloseTo(1_000 - 13 * 1.1 * 2, 4);
+    expect(enemy.health).toBeCloseTo(1_000 - 13 * 1.25 * 2, 4);
     expect(left.health).toBeLessThan(1_000);
     expect(right.health).toBeLessThan(1_000);
     expect(boomerangs.activeCount).toBe(0);
   });
 
+  it('keeps separate per-phase hit ledgers for bounded overlapping Comet casts', () => {
+    const { behavior, boomerangs, enemy, player } = setup(18);
+    behavior.setEvolution('twin_comet');
+    expect(behavior.fire(player)).toBe(true);
+    expect(behavior.fire(player)).toBe(true);
+    expect(behavior.fire(player)).toBe(true);
+    expect(behavior.fire(player)).toBe(false);
+    expect(boomerangs.activeCount).toBe(15);
+    expect(new Set(boomerangs.states.filter((state) => state.active).map((state) => state.twinCometLedgerSlot))).toEqual(
+      new Set([0, 1, 2])
+    );
+
+    for (let index = 0; index < 120; index += 1) behavior.update(1 / 60, player);
+
+    expect(enemy.health).toBeCloseTo(1_000 - 13 * 1.25 * 6, 4);
+    expect(boomerangs.activeCount).toBe(0);
+  });
+
+  it.each([30, 60, 144])('Comet return tracks a moving player until capture at %i Hz', hz => {
+    const { behavior, boomerangs, player } = setup(8);
+    behavior.setEvolution('twin_comet');
+    behavior.fire(player);
+    const dt = 1 / hz;
+    for (let index = 0; index < Math.ceil(1.5 * hz); index += 1) {
+      player.x += 210 * dt;
+      behavior.update(dt, player);
+    }
+    expect(boomerangs.activeCount).toBe(0);
+  });
+
+  it.each([30, 60, 144])('Comet Quintet relaunches within its rank VI interval at %i Hz', hz => {
+    const { behavior, boomerangs, player } = setup(8);
+    for (const rank of [2, 3, 4, 5, 6] as const) expect(behavior.setRank(rank)).toBe(true);
+    behavior.setEvolution('twin_comet');
+    behavior.fire(player);
+    for (let index = 0; index < Math.ceil(1.1 * hz); index += 1) behavior.update(1 / hz, player);
+    expect(boomerangs.activeCount).toBe(0);
+    behavior.fire(player);
+    expect(boomerangs.activeCount).toBe(5);
+  });
+
   it('Singularity travels the trimmed extended range, splits into six nearest distinct homing shards, and never explodes', () => {
     const { behavior, enemies, enemy, boomerangs, player } = setup(8);
     behavior.setEvolution('singularity_return');
-    expect(behavior.currentOutboundDistance).toBe(370);
+    expect(behavior.currentOutboundDistance).toBe(225);
     behavior.fire(player);
-    const endpoint = player.x + 370;
+    const endpoint = player.x + 225;
     const targets = Array.from({ length: 6 }, () => enemies.spawn(0, 270));
     targets.forEach((target, i) => {
       if (!target) throw new Error('missing target');
@@ -197,10 +238,10 @@ describe('BoomerangBehavior', () => {
     expect(shards.map(s => enemies.getState(s.targetIndex))).toEqual(expect.arrayContaining(targets));
     expect(shards.every(s => s.ageSeconds < 1 / 60)).toBe(true); // no newborn double tick
     expect(targets.every(t => t!.health === 1000 && t!.slowSeconds === 0)).toBe(true);
-    expect(enemy.health).toBeCloseTo(1000 - 13 * 0.65);
+    expect(enemy.health).toBeCloseTo(1000 - 13 * 1.25);
     for (let i = 0; i < 100; i++) behavior.update(1 / 60, player);
     // Guidance prefers distinct targets, but a closer enemy can physically intercept a shard.
-    expect(targets.reduce((damage, target) => damage + 1000 - target!.health, 0)).toBeCloseTo(13 * 0.85 * 6);
+    expect(targets.reduce((damage, target) => damage + 1000 - target!.health, 0)).toBeCloseTo(13 * 1.25 * 6);
     expect(boomerangs.activeCount).toBe(0);
   });
 
@@ -212,7 +253,7 @@ describe('BoomerangBehavior', () => {
     behavior.fire(player);
     for (let i = 0; i < hz * 3; i++) behavior.update(1 / hz, player);
     expect(behavior.pulseState.sequence).toBe(1);
-    expect(enemy.health).toBeCloseTo(1000 - 13 * 0.85 * 6);
+    expect(enemy.health).toBeCloseTo(1000 - 13 * 1.25 * 6);
     expect(enemy.slowSeconds).toBe(0);
     expect(enemy.stunSeconds).toBe(0);
     expect(boomerangs.activeCount).toBe(0);
@@ -228,7 +269,7 @@ describe('BoomerangBehavior', () => {
     for (let i = 0; i < 100 && boomerangs.states.filter(s => s.active && s.fragment).length < 6; i++) behavior.update(1 / 60, player);
     expect(boomerangs.states.filter(s => s.active && s.fragment)).toHaveLength(6);
     expect(boomerangs.activeCount).toBe(6);
-    for (let i = 0; i < 100; i++) behavior.update(1 / 60, player);
+    for (let i = 0; i < 130; i++) behavior.update(1 / 60, player);
     expect(boomerangs.activeCount).toBe(0);
     const tiny = setup(2);
     tiny.behavior.setEvolution('singularity_return');
@@ -251,29 +292,25 @@ describe('BoomerangBehavior', () => {
       targetIndex: enemies.pool.states.indexOf(enemy), targetGeneration: enemy.generation });
     behavior.update(0.1, player);
     expect(shard.active).toBe(false);
-    expect(first.health).toBeCloseTo(1000 - 13 * 0.85);
+    expect(first.health).toBeCloseTo(1000 - 13 * 1.25);
     expect(enemy.health).toBe(1000);
   });
 
-  it('reserves six new shards even while two old fragments remain in the eight-slot pool', () => {
-    const { behavior, enemies, boomerangs, player } = setup(8);
+  it('keeps launching at the authored cadence while earlier six-fragment fans are still active', () => {
+    const { behavior, enemies, boomerangs, player } = setup(18);
     enemies.pool.reset();
     enemies.rebuildGrid();
     behavior.setEvolution('singularity_return');
     behavior.fire(player);
     for (let i = 0; i < 100 && behavior.pulseState.sequence === 0; i++) behavior.update(1 / 60, player);
     expect(boomerangs.activeCount).toBe(6);
+    for (let i = 0; i < 65; i++) behavior.update(1 / 60, player);
     behavior.fire(player);
-    expect(boomerangs.activeCount).toBe(6);
-    for (const shard of boomerangs.states.filter(state => state.active).slice(2)) boomerangs.release(shard);
-    behavior.fire(player);
-    expect(boomerangs.activeCount).toBe(3);
-    behavior.fire(player);
-    expect(boomerangs.activeCount).toBe(3);
+    expect(boomerangs.activeCount).toBeGreaterThanOrEqual(6);
     for (let i = 0; i < 100 && behavior.pulseState.sequence < 2; i++) behavior.update(1 / 60, player);
     expect(behavior.pulseState.sequence).toBe(2);
-    expect(boomerangs.activeCount).toBe(8);
-    expect(boomerangs.states.every(state => state.active && state.fragment)).toBe(true);
+    expect(boomerangs.activeCount).toBe(12);
+    expect(boomerangs.states.filter(state => state.active && state.fragment)).toHaveLength(12);
   });
 
   it('retargets from the fixed split point after an enemy slot is recycled and follows moving targets', () => {

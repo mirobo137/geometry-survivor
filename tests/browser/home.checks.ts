@@ -242,14 +242,48 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
         ));
         expect(buttonLayout).toHaveLength(7); // Existing five actions plus Retos/Bitácora and daily wheel.
         expect(buttonLayout.every(Boolean)).toBe(true);
+        const menuPanel = page.locator('.start-screen-panel');
+        const panelBeforeSettings = await menuPanel.boundingBox();
+        const cardBackgrounds = await Promise.all([
+          '#start-settings-toggle', '#start-retention', '#start-daily-wheel'
+        ].map(async selector => {
+          const background = await page.locator(selector!).evaluate(node => getComputedStyle(node).backgroundImage);
+          return background.includes('url(') && background.includes('linear-gradient(');
+        }));
+        expect(cardBackgrounds).toEqual([true, true, true]);
         await page.locator('#start-settings-toggle').click();
         await expect(page.locator('#start-settings')).toBeVisible();
+        await expect(page.locator('#start-settings')).toHaveJSProperty('open', true);
+        await expect(page.locator('#start-settings-toggle')).toHaveAttribute('aria-expanded', 'true');
+        const panelWithSettings = await menuPanel.boundingBox();
+        expect(panelBeforeSettings).not.toBeNull();
+        expect(panelWithSettings).not.toBeNull();
+        expect(Math.abs(panelWithSettings!.height - panelBeforeSettings!.height)).toBeLessThan(0.5);
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#start-settings')).toBeHidden();
+        await expect(page.locator('#start-settings-toggle')).toHaveAttribute('aria-expanded', 'false');
+        await expect(page.locator('#start-settings-toggle')).toBeFocused();
         await page.locator('#start-settings-toggle').click();
+        await page.mouse.click(2, 2); // Outside the dialog: backdrop click closes it without affecting the menu.
+        await expect(page.locator('#start-settings')).toBeHidden();
+        await expect(page.locator('#start-settings-toggle')).toHaveAttribute('aria-expanded', 'false');
+        await page.locator('#start-settings-toggle').click();
+        await page.locator('#start-settings-close').click();
         await expect(page.locator('#start-settings')).toBeHidden();
         await expect(page.locator('#start-play')).toBeVisible();
         expect(await page.locator('#start-main-view').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
       });
     }
+    await page.locator('#start-settings-toggle').click();
+    await page.locator('#start-language').selectOption('en');
+    await expect(page.locator('.start-hint')).toHaveText(
+      'PC: WASD and arrow keys work by default. Mobile: choose joystick or follow finger in Settings.'
+    );
+    await page.locator('#start-language').selectOption('es');
+    await expect(page.locator('.start-hint')).toHaveText(
+      'PC: WASD y flechas disponibles por defecto. Móvil: joystick o seguir el dedo en Configuración.'
+    );
+    await page.locator('#start-settings-close').click();
     await page.locator('#start-play').click();
     await expect(page.locator('#start-screen')).toBeHidden();
     await expect(page.locator('#game-hud')).toBeVisible();

@@ -15,9 +15,12 @@ import {
   OVERDRIVE_ASSAULT_OPENING_EXPERIENCE_MULTIPLIER,
   OVERDRIVE_ASSAULT_SPAWN_DENSITY,
   OVERDRIVE_ASSAULT_BOSS_ORDER,
-  OVERDRIVE_ASSAULT_ENEMY_POOL
+  OVERDRIVE_ASSAULT_ENEMY_POOL,
+  OVERDRIVE_ASSAULT_ARENA_CHANGES,
+  OVERDRIVE_ASSAULT_ARENA_CYCLE_SECONDS
 } from '../../content/run/OverdriveAssaultDefinitions';
 import { RadialActDirector } from './RadialActDirector';
+import type { ArenaLaserPressure, ArenaShape } from '../../content/run/ArenaShapeDefinitions';
 
 const BOSS_DEFINITIONS: Readonly<Record<string, BossDefinition>> = {
   'core-sentinel': BOSS_DEFINITION,
@@ -30,7 +33,7 @@ const ASSAULT_ACT_DEFINITION = {
   durationSeconds: Number.MAX_SAFE_INTEGER,
   bossStartSeconds: 0,
   boss: { ...BOSS_DEFINITION, startSeconds: 0 },
-  arenaShapeChanges: []
+  arenaShapeChanges: OVERDRIVE_ASSAULT_ARENA_CHANGES
 } as const;
 
 /** Stateless seeded mixer: the same seed and spawn index select the same family. */
@@ -46,7 +49,7 @@ const sample = (seed: number, spawnIndex: number): number => {
 
 /**
  * Continuous Overdrive variant. It shares the simulation-facing act contract,
- * but owns no stage clock, arena rotation or Normal difficulty curve.
+ * with a repeating arena timeline and no Normal stage clock or difficulty curve.
  */
 export class OverdriveAssaultDirector extends RadialActDirector {
   private readonly seed: number;
@@ -59,6 +62,15 @@ export class OverdriveAssaultDirector extends RadialActDirector {
 
   public override get enemyHealthMultiplier(): number {
     return getOverdriveAssaultHealthMultiplier(this.defeatedBossCount);
+  }
+
+  public override get arenaShapeCycleSeconds(): number {
+    return OVERDRIVE_ASSAULT_ARENA_CYCLE_SECONDS;
+  }
+
+  /** Geometry changes do not inherit the campaign's escalating hexagon laser cadence. */
+  public override getLaserPressure(_shape: ArenaShape, _shapeIndex: number): ArenaLaserPressure {
+    return super.getLaserPressure('circle', 0);
   }
 
   public get commonEnemyExperienceMultiplier(): number {

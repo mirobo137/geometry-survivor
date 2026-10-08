@@ -1069,7 +1069,7 @@ describe('Game', () => {
 
   it('settles an Overdrive withdrawal without revive or double-NOVA offers', async () => {
     vi.useFakeTimers();
-    const saved = {
+    let saved = {
       ...createDefaultSaveData(),
       overdrive: { ...createDefaultSaveData().overdrive, unlocked: true }
     };
@@ -1077,21 +1077,26 @@ describe('Game', () => {
     const game = new Game({
       ...createOptions({
         ads: { isRewardedAvailable: vi.fn(async () => true), showRewarded },
-        saveStore: { load: () => saved, save: vi.fn(() => true), clear: vi.fn() }
+        saveStore: {
+          load: () => saved,
+          save: vi.fn((next: typeof saved) => { saved = next; return true; }),
+          clear: vi.fn()
+        }
       }),
       mode: 'overdrive',
       diagnosticOverdrive: false
     });
-    const confirm = vi.fn(() => true);
-    vi.stubGlobal('window', { confirm, location: { search: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
     const runtime = game as unknown as {
       gameState: { enterPause: () => boolean };
       onPauseWithdraw: () => void;
       openGameOverSummary: (...args: unknown[]) => Promise<void>;
       pendingTerminalRun: { summary: unknown; best: unknown; novaReward: number; token: number } | null;
+      combat: { stats: { elapsedSeconds: number; kills: number } };
     };
 
     expect(runtime.gameState.enterPause()).toBe(true);
+    runtime.combat.stats.elapsedSeconds = 180;
+    runtime.combat.stats.kills = 55;
     runtime.onPauseWithdraw();
     const pending = runtime.pendingTerminalRun;
     if (!pending) throw new Error('Expected a withdrawal settlement');
@@ -1099,7 +1104,8 @@ describe('Game', () => {
       game, pending.summary, pending.best, pending.novaReward, pending.novaReward, pending.token
     );
 
-    expect(confirm).toHaveBeenCalledOnce();
+    expect(pending.novaReward).toBe(30);
+    expect(saved.wallet.nova).toBe(30);
     expect(mocks.gameOverOpen.mock.calls.at(-1)?.[5]).toMatchObject({
       reviveAvailable: false,
       doubleNovaAvailable: false

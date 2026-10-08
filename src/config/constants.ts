@@ -10,7 +10,9 @@ export const ARENA_INTERMEDIATE_RADIUS = 315;
 export const ARENA_RESONANCE_DURATION_SECONDS = 2.8;
 export const ENEMY_POOL_CAPACITY = 250;
 export const PROJECTILE_POOL_CAPACITY = 300;
-export const BOOMERANG_POOL_CAPACITY = 8;
+// Three six-shard Singularity fans can briefly overlap while later casts launch.
+// Keep that concurrency pooled and bounded instead of waiting for impacts.
+export const BOOMERANG_POOL_CAPACITY = 18;
 // Up to ten targets plus the three persistent cables of Closed Circuit.
 export const CHAIN_SEGMENT_POOL_CAPACITY = 13;
 export const PLAYER_RADIUS = 22;

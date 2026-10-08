@@ -8,6 +8,7 @@ import type { MagneticChargeEvolution, ProjectileEvolution, PulseRingEvolution, 
 import type { BoomerangState as PooledBoomerangState } from './EntityPools';
 import type { BossId, BossPattern } from '../../content/bosses/BossDefinition';
 import type { BossInstanceId } from '../bosses/BossSystem';
+import type { ArenaBoundary } from '../ArenaBoundary';
 import type { FractureMineState, FractureProjectileState } from '../fracture/FractureThreatSystem';
 
 export type { BoomerangPhase } from './EntityPools';
@@ -37,6 +38,8 @@ export type BossPhase =
   | 'defeated';
 
 export interface BossRenderState {
+  /** Present in Assault so orbital warnings follow the actual morphing boundary. */
+  movementBoundary?: Readonly<ArenaBoundary>;
   bossId: BossId;
   /** Present on runtime states; optional keeps isolated visual fixtures backwards-compatible. */
   instanceId?: BossInstanceId;

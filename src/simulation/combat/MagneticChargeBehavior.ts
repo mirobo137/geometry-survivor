@@ -13,30 +13,30 @@ const EPSILON = 0.000001;
 const RANDOM_SEED = 0x4d61_676e;
 const EVENT_CORE_RADIUS = 64;
 const EVENT_FINAL_RADIUS = 110;
-const EVENT_HORIZON_HOLD_SECONDS = 3.4;
-const EVENT_HORIZON_TICK_SECONDS = 0.2;
-const EVENT_HORIZON_TICK_DAMAGE_MULTIPLIER = 0.14;
+const EVENT_HORIZON_HOLD_SECONDS = 2;
+const EVENT_HORIZON_TICK_SECONDS = DEFINITION.hitCooldownSeconds;
+const EVENT_HORIZON_TICK_DAMAGE_MULTIPLIER = 1.25;
 const EVENT_HORIZON_PULL_RADIUS = 210;
 const EVENT_HORIZON_PULL_STRENGTH = 145;
 const EVENT_HORIZON_HOLD_RADIUS = 18;
 const EVENT_HORIZON_SLOW_SECONDS = 2.25;
 const EVENT_HORIZON_SLOW_MULTIPLIER = 0.38;
-const POLAR_TRIANGLE_RADIUS_FACTOR = 0.61;
+const POLAR_TRIANGLE_RADIUS_FACTOR = 0.76;
 // Keep the three fronts narrow enough to read as blades, but give their
 // collision a stable authored width so a visible front cannot miss an enemy
 // because of a one-pixel sampling gap. The final core is intentionally a bit
 // larger than the original prototype's 55u so Polar Collapse has a reliable
 // damage beat when an enemy reaches the convergence point.
-const POLAR_FINAL_RADIUS_FACTOR = 0.43;
+const POLAR_FINAL_RADIUS_FACTOR = 0.55;
 const POLAR_FRONT_WIDTH = 24;
 const POLAR_FINAL_TICK_PROGRESS = 0.32;
 const POLAR_COLLAPSE_SECONDS = 0.42;
 const POLAR_PULL_STRENGTH = 230;
 const POLAR_PULL_SECONDS = 0.55;
 const POLAR_HIT_STUN_SECONDS = 1.1;
-const POLAR_FRONT_DAMAGE_MULTIPLIER = 0.6;
-const POLAR_FINAL_DAMAGE_MULTIPLIER = 0.45;
-const POLAR_STUNNED_FINAL_DAMAGE_MULTIPLIER = 1.4;
+const POLAR_FRONT_DAMAGE_MULTIPLIER = 3.2;
+const POLAR_FINAL_DAMAGE_MULTIPLIER = 3.2;
+const POLAR_STUNNED_FINAL_DAMAGE_MULTIPLIER = 3.5;
 
 export type MagneticChargePhase = 'idle' | 'travel' | 'attract' | 'detonate' | 'collapse' | 'recovery';
 
@@ -115,6 +115,12 @@ export class MagneticChargeBehavior {
     return this.damage;
   }
 
+  public get currentImpactDamageMultiplier(): number {
+    return this.evolution === 'event_horizon'
+      ? EVENT_HORIZON_TICK_DAMAGE_MULTIPLIER
+      : this.evolution === 'polar_collapse' ? POLAR_FRONT_DAMAGE_MULTIPLIER : 1;
+  }
+
   public get currentCooldown(): number {
     return this.cooldownSeconds;
   }
@@ -175,7 +181,6 @@ export class MagneticChargeBehavior {
   public setEvolution(evolution: MagneticChargeEvolution): boolean {
     if (this.evolution !== null) return false;
     this.evolution = evolution;
-    this.applyEvolutionTuning();
     return true;
   }
 
@@ -359,7 +364,7 @@ export class MagneticChargeBehavior {
       const candidate = clampPointToArena(
         player.x + Math.cos(angle) * distance,
         player.y + Math.sin(angle) * distance,
-        this.evolution === 'polar_collapse' ? 16 + 90 : 16,
+        this.evolution === 'polar_collapse' ? 16 + this.effectivePolarRadius() : 16,
         arena
       );
       const candidateDistance = Math.hypot(candidate.x - player.x, candidate.y - player.y);
@@ -567,14 +572,6 @@ export class MagneticChargeBehavior {
     }
   }
 
-  private applyEvolutionTuning(): void {
-    if (this.evolution === 'event_horizon') {
-      this.cooldownSeconds *= 1.2;
-    } else if (this.evolution === 'polar_collapse') {
-      this.cooldownSeconds *= 1.25;
-    }
-  }
-
   private getPolarFinalPulseCount(progress: number): number {
     return progress >= POLAR_FINAL_TICK_PROGRESS ? 1 : 0;
   }
@@ -591,7 +588,6 @@ export class MagneticChargeBehavior {
     this.detonateSeconds = this.rank >= 7 ? 1.6 : DEFINITION.detonateSeconds;
     this.pullRadius = this.rank >= 4 ? 200 : DEFINITION.pullRadius;
     this.outerRadius = this.rank >= 3 ? 166 : DEFINITION.outerRadius;
-    this.applyEvolutionTuning();
   }
 
   private effectivePullRadius(): number {

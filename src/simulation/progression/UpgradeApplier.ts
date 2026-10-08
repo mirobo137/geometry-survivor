@@ -616,27 +616,28 @@ export class UpgradeApplier {
     switch (family) {
       case 'projectile':
         return channel === 'power'
-          ? { stat: 'projectileDamage', before: this.combat.currentProjectileDamage, after: this.combat.currentProjectileDamage + 4 }
+          ? this.getMasteryPowerPreview('projectile', 'projectileDamage', this.combat.currentProjectileDamage, 4)
           : channel === 'tempo'
-            ? { stat: 'projectileCooldown', before: this.combat.currentProjectileCooldown,
-              after: Math.max(PROJECTILE_MIN_COOLDOWN_SECONDS, this.combat.currentProjectileCooldown - 0.05) }
+            ? { stat: 'projectileCooldown', before: this.combat.currentEffectiveProjectileCooldown,
+              after: Math.max(PROJECTILE_MIN_COOLDOWN_SECONDS, this.combat.currentProjectileCooldown - 0.05)
+                * (this.combat.currentEffectiveProjectileCooldown / this.combat.currentProjectileCooldown) }
             : { stat: 'projectileSpeed', before: this.combat.currentProjectileSpeed, after: this.combat.currentProjectileSpeed + 45 };
       case 'orbit':
-        if (channel === 'power') return { stat: 'orbitDamage', before: this.combat.currentOrbitDamage, after: this.combat.currentOrbitDamage + 4 };
+        if (channel === 'power') return this.getMasteryPowerPreview('orbit', 'orbitDamage', this.combat.currentOrbitDamage, 4);
         if (channel === 'tempo') return { stat: 'orbitHitCooldown', before: this.combat.currentOrbitHitCooldown, after: Math.max(0.08, this.combat.currentOrbitHitCooldown - 0.03) };
         return this.combat.currentOrbitEvolution === 'solar_crown'
           ? { stat: 'orbitContactRadius', before: this.combat.currentOrbitContactRadius, after: this.combat.currentOrbitContactRadius + 4 }
           : { stat: 'orbitRadius', before: this.combat.currentOrbitRadius, after: this.combat.currentOrbitRadius + 14 };
       case 'chain':
         return channel === 'power'
-          ? { stat: 'chainDamage', before: this.combat.currentChainDamage, after: this.combat.currentChainDamage + 4 }
+          ? this.getMasteryPowerPreview('chain', 'chainDamage', this.combat.currentChainDamage, 4)
           : channel === 'tempo'
             ? { stat: 'chainCooldown', before: this.combat.currentChainCooldown, after: Math.max(0.45, this.combat.currentChainCooldown - 0.12) }
             : { stat: 'chainTargets', before: this.combat.currentChainMaxTargets,
               after: Math.min(CHAIN_EVOLUTION_TUNING.maxTargets, this.combat.currentChainMaxTargets + CHAIN_EVOLUTION_TUNING.coverageBonusTargets) };
       case 'boomerang':
         return channel === 'power'
-          ? { stat: 'boomerangDamage', before: this.combat.currentBoomerangDamage, after: this.combat.currentBoomerangDamage + 4 }
+          ? this.getMasteryPowerPreview('boomerang', 'boomerangDamage', this.combat.currentBoomerangDamage, 4)
           : channel === 'tempo'
             ? { stat: 'boomerangCooldown', before: this.combat.currentBoomerangCooldown, after: Math.max(0.35, this.combat.currentBoomerangCooldown - 0.08) }
             : { stat: 'boomerangDistance', before: this.combat.currentBoomerangOutboundDistance,
@@ -644,17 +645,31 @@ export class UpgradeApplier {
                 ? SINGULARITY_RETURN_TUNING.rangeMultiplier : 1) };
       case 'pulse_ring':
         return channel === 'power'
-          ? { stat: 'pulseRingDamage', before: this.combat.currentPulseRingDamage, after: this.combat.currentPulseRingDamage + 6 }
+          ? this.getMasteryPowerPreview('pulse_ring', 'pulseRingDamage', this.combat.currentPulseRingDamage, 6)
           : channel === 'tempo'
             ? { stat: 'pulseRingCooldown', before: this.combat.currentPulseRingCooldown, after: Math.max(0.5, this.combat.currentPulseRingCooldown - 0.25) }
             : { stat: 'pulseRingRadius', before: this.combat.currentPulseRingEndRadius, after: this.combat.currentPulseRingEndRadius + 22 };
       case 'magnetic_charge':
         return channel === 'power'
-          ? { stat: 'magneticChargeDamage', before: this.combat.currentMagneticChargeDamage, after: this.combat.currentMagneticChargeDamage + 5 }
+          ? this.getMasteryPowerPreview('magnetic_charge', 'magneticChargeDamage', this.combat.currentMagneticChargeDamage, 5)
           : channel === 'tempo'
             ? { stat: 'magneticChargeCooldown', before: this.combat.currentMagneticChargeCooldown, after: Math.max(0.45, this.combat.currentMagneticChargeCooldown - 0.45) }
             : { stat: 'magneticChargeRadius', before: this.combat.currentMagneticChargeOuterRadius, after: this.combat.currentMagneticChargeOuterRadius + 24 };
     }
+  }
+
+  private getMasteryPowerPreview(
+    family: WeaponPathId,
+    stat: NonNullable<UpgradePreview>['stat'],
+    currentDamage: number,
+    increase: number
+  ): UpgradePreview {
+    const multiplier = this.combat.getWeaponMasteryDamageMultiplier(family);
+    return {
+      stat,
+      before: currentDamage * multiplier,
+      after: (currentDamage + increase) * multiplier
+    };
   }
 
   private hasEffectiveWeaponMastery(definition: UpgradeDefinition): boolean {

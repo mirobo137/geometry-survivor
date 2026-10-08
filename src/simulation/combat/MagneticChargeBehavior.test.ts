@@ -12,11 +12,13 @@ const advance = (
   player: PlayerModel,
   seconds: number,
   arena = ARENA_RADIUS,
-  cooldownSeconds = WEAPON_DEFINITIONS.magneticCharge.cooldownSeconds
+  cooldownSeconds = WEAPON_DEFINITIONS.magneticCharge.cooldownSeconds,
+  framesPerSecond = 60
 ): void => {
-  const steps = Math.ceil(seconds * 60);
+  const deltaSeconds = 1 / framesPerSecond;
+  const steps = Math.ceil(seconds * framesPerSecond);
   for (let index = 0; index < steps; index += 1) {
-    weapon.update(1 / 60, player.state, arena, cooldownSeconds);
+    weapon.update(deltaSeconds, player.state, arena, cooldownSeconds);
   }
 };
 
@@ -118,7 +120,12 @@ describe('MagneticChargeBehavior', () => {
     const pool = new EnemyPool(2);
     const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
     const player = new PlayerModel();
-    const weapon = new MagneticChargeBehavior({ enemies, rollCriticalDamage: (damage) => damage, onEnemyDefeated: () => undefined });
+    const tickDamages: number[] = [];
+    const weapon = new MagneticChargeBehavior({
+      enemies,
+      rollCriticalDamage: (damage) => { tickDamages.push(damage); return damage; },
+      onEnemyDefeated: () => undefined
+    });
     weapon.unlock();
     expect(weapon.setEvolution('event_horizon')).toBe(true);
     advance(weapon, player, 1 / 60);
@@ -130,11 +137,13 @@ describe('MagneticChargeBehavior', () => {
     expect(weapon.state.pullRadius).toBe(210);
     expect(weapon.state.innerRadius).toBe(64);
     expect(weapon.state.outerRadius).toBe(110);
-    expect(weapon.currentCooldown).toBeCloseTo(6.24);
+    expect(weapon.currentCooldown).toBeCloseTo(5.2);
     expect(target.health).toBeLessThan(before);
-    // The 3.4s hold ends directly in recovery; it does not create the old
+    expect(tickDamages.length).toBeGreaterThan(1);
+    expect(tickDamages.every((damage) => damage === WEAPON_DEFINITIONS.magneticCharge.damage * 1.25)).toBe(true);
+    // The 2s hold ends directly in recovery; it does not create the old
     // damaging collapse. Only enemies that the core actually damaged slow.
-    advance(weapon, player, 2.1);
+    advance(weapon, player, 0.65);
     expect(weapon.state.phase).toBe('recovery');
     expect(target.slowSeconds).toBeGreaterThan(2);
     expect(target.slowMultiplier).toBeCloseTo(0.38);
@@ -172,8 +181,80 @@ describe('MagneticChargeBehavior', () => {
     expect(target.stunSeconds).toBeGreaterThan(0);
     const collapseHits = damages.filter((hit) => hit.phase === 'collapse');
     expect(collapseHits).toEqual([
-      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 1.4 }
+      { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 3.5 }
     ]);
+  });
+
+  it('extends Polar Collapse blade hits to the authored outer reach', () => {
+    for (const framesPerSecond of [30, 60, 144]) {
+      const pool = new EnemyPool(2);
+      const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+      const player = new PlayerModel();
+      const damages: { phase: string; damage: number }[] = [];
+      let weapon: MagneticChargeBehavior;
+      weapon = new MagneticChargeBehavior({
+        enemies,
+        rollCriticalDamage: (damage) => {
+          damages.push({ phase: weapon.state.phase, damage });
+          return damage;
+        },
+        onEnemyDefeated: () => undefined
+      });
+      weapon.unlock();
+      weapon.setEvolution('polar_collapse');
+      advance(weapon, player, 1 / framesPerSecond, ARENA_RADIUS, undefined, framesPerSecond);
+      weapon.state.targetX = LOGICAL_WIDTH / 2;
+      weapon.state.targetY = LOGICAL_HEIGHT / 2;
+      weapon.state.polarAngle = 0;
+      const boss = createTarget(pool, weapon.state.targetX + 130, weapon.state.targetY, 'boss');
+      enemies.rebuildGrid();
+
+      advance(weapon, player, 3, ARENA_RADIUS, undefined, framesPerSecond);
+
+      expect(damages, `${framesPerSecond} FPS`).toEqual([
+        { phase: 'detonate', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 3.2 }
+      ]);
+      expect(boss.stunSeconds, `${framesPerSecond} FPS`).toBe(0);
+    }
+  });
+
+  it('extends Polar Collapse final burst radius without widening its blade damage', () => {
+    for (const framesPerSecond of [30, 60, 144]) {
+      const pool = new EnemyPool(2);
+      const enemies = new EnemySystem(pool, new SpatialGrid(LOGICAL_WIDTH, LOGICAL_HEIGHT));
+      const player = new PlayerModel();
+      const damages: { phase: string; damage: number }[] = [];
+      let weapon: MagneticChargeBehavior;
+      weapon = new MagneticChargeBehavior({
+        enemies,
+        rollCriticalDamage: (damage) => {
+          damages.push({ phase: weapon.state.phase, damage });
+          return damage;
+        },
+        onEnemyDefeated: () => undefined
+      });
+      weapon.unlock();
+      weapon.setEvolution('polar_collapse');
+      advance(weapon, player, 1 / framesPerSecond, ARENA_RADIUS, undefined, framesPerSecond);
+      weapon.state.targetX = LOGICAL_WIDTH / 2;
+      weapon.state.targetY = LOGICAL_HEIGHT / 2;
+      weapon.state.polarAngle = 0;
+      const angle = Math.PI / 3;
+      const boss = createTarget(
+        pool,
+        weapon.state.targetX + Math.cos(angle) * 90,
+        weapon.state.targetY + Math.sin(angle) * 90,
+        'boss'
+      );
+      enemies.rebuildGrid();
+
+      advance(weapon, player, 3, ARENA_RADIUS, undefined, framesPerSecond);
+
+      expect(damages, `${framesPerSecond} FPS`).toEqual([
+        { phase: 'collapse', damage: WEAPON_DEFINITIONS.magneticCharge.damage * 3.2 }
+      ]);
+      expect(boss.stunSeconds, `${framesPerSecond} FPS`).toBe(0);
+    }
   });
 
   it('does not stun or amplify Polar Collapse against a boss', () => {
@@ -198,7 +279,7 @@ describe('MagneticChargeBehavior', () => {
     advance(weapon, player, 3);
 
     expect(boss.stunSeconds).toBe(0);
-    expect(damages).toEqual([WEAPON_DEFINITIONS.magneticCharge.damage * 0.45]);
+    expect(damages).toEqual([WEAPON_DEFINITIONS.magneticCharge.damage * 3.2]);
   });
 });
 

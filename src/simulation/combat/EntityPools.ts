@@ -113,6 +113,8 @@ export interface BoomerangState {
   travelLimit: number;
   /** Signed fan slot of Twin Comet or the three Singularity shards. */
   fanOffset: number;
+  /** Bounded shared hit-ledger slot for one overlapping Twin Comet cast. */
+  twinCometLedgerSlot: number;
   /** Twin's curve anchors; fragment curveStart stores its fixed split origin. */
   curveStartX: number;
   curveStartY: number;
@@ -216,7 +218,8 @@ const createBoomerangState = (slotIndex: number): BoomerangState => ({
       directionY: 0,
       distanceTravelled: 0,
       travelLimit: 0,
-      fanOffset: 0,
+  fanOffset: 0,
+  twinCometLedgerSlot: -1,
       curveStartX: 0,
       curveStartY: 0,
       curveControlX: 0,

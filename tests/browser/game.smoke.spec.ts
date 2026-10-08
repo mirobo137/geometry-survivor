@@ -18,6 +18,45 @@ registerCatalogChecks();
 registerDailyWheelChecks();
 registerLogbookChecks();
 
+test('barras compactas de vida y XP caben en el HUD de todos los modos', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 320, height: 740 }, { width: 844, height: 390 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/?debug=1&mode=overdrive&od-variant=assault&lab-profile=max&quality=low');
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#game-hud')).toBeVisible();
+    await page.locator('#debug-panel').evaluate(element => { (element as HTMLElement).style.display = 'none'; });
+    await expect(page.locator('#hud-health-meter')).toHaveAttribute('aria-valuenow', '100');
+    await expect(page.locator('#hud-xp')).toHaveText(/XP \d+\/\d+/);
+    const layout = await page.locator('#game-hud').evaluate(root => {
+      const hud = root.getBoundingClientRect();
+      const pause = document.querySelector('#pause-toggle')!.getBoundingClientRect();
+      return [...root.querySelectorAll<HTMLElement>('.hud-meter')].map(meter => {
+        const bounds = meter.getBoundingClientRect();
+        const label = meter.querySelector<HTMLElement>('span')!;
+        const fill = meter.querySelector<HTMLElement>('.hud-meter-fill')!.getBoundingClientRect();
+        return { inside: bounds.left >= hud.left && bounds.right <= pause.left,
+          labelFits: label.scrollWidth <= label.clientWidth, width: bounds.width,
+          fillWidth: fill.width, trackWidth: meter.querySelector('.hud-meter-track')!.getBoundingClientRect().width };
+      });
+    });
+    for (const meter of layout) {
+      expect(meter.inside).toBe(true);
+      expect(meter.labelFits).toBe(true);
+      expect(meter.width).toBeGreaterThan(45);
+      expect(meter.fillWidth).toBeLessThanOrEqual(meter.trackWidth);
+    }
+    await page.locator('#game-hud').screenshot({ path: testInfo.outputPath(`hud-meters-${viewport.width}.png`) });
+  }
+  for (const route of ['act=radial', 'act=angular', 'act=fracture', 'mode=overdrive&od-variant=normal', 'retention-challenge=core-duel']) {
+    await page.goto(`/?debug=1&${route}&quality=low`);
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#hud-health-meter')).toBeVisible();
+    await expect(page.locator('#hud-xp-meter')).toBeVisible();
+  }
+  expect(failures).toEqual([]);
+});
+
 test('equipa Manta Veil en PNG, conserva la selección y carga solo su nave y cañones', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -551,6 +590,75 @@ test('abre Overdrive Normal y Asalto con perfiles de laboratorio aislados', asyn
   }
 });
 
+test('carga la arena variable de Asalto en escritorio y movil', async ({ page }, testInfo) => {
+  const failures = captureRuntimeFailures(page);
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    // The existing boss diagnostic advances the clock to 260 s. Assault still
+    // gates bosses by kills, but its arena is already in the octagon plateau.
+    await page.goto('/?debug=1&mode=overdrive&od-variant=assault&boss=1&lab-profile=max&quality=low');
+    await expect(page.locator('#boot-status')).toBeHidden();
+    await expect(page.locator('#debug-panel')).toContainText('mode: overdrive-assault');
+    await expect(page.locator('#debug-panel')).toContainText('octagon');
+    await expect(page.locator('#game-container canvas')).toBeVisible();
+    await page.locator('#game-container canvas').screenshot({ path: testInfo.outputPath(`assault-arena-${viewport.width}.png`) });
+  }
+  expect(failures).toEqual([]);
+});
+
+test('acomoda las dos entradas de Overdrive dentro del espacio de una tarjeta', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('geometry-survivor:save', JSON.stringify({
+      schemaVersion: 7,
+      unlockedActs: ['radial', 'angular', 'fracture'],
+      overdrive: { unlocked: true }
+    }));
+  });
+  await page.goto('/?debug=1');
+  await expect(page.locator('#boot-status')).toBeHidden();
+  await page.locator('#start-level').click();
+  await expect(page.locator('#start-overdrive-card')).toBeVisible();
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  const desktopLayout = await page.evaluate(() => {
+    const bounds = (selector: string) => {
+      const rect = document.querySelector(selector)!.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    };
+    return {
+      route: bounds('#start-act-fracture'),
+      overdrive: bounds('#start-overdrive-card'),
+      normal: bounds('#start-overdrive'),
+      assault: bounds('#start-overdrive-assault')
+    };
+  });
+  expect(Math.abs(desktopLayout.overdrive.width - desktopLayout.route.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(desktopLayout.overdrive.height - desktopLayout.route.height)).toBeLessThanOrEqual(2);
+  expect(desktopLayout.normal.x).toBeLessThan(desktopLayout.assault.x);
+  expect(Math.abs(desktopLayout.normal.y - desktopLayout.assault.y)).toBeLessThanOrEqual(2);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileLayout = await page.evaluate(() => {
+    const bounds = (selector: string) => {
+      const rect = document.querySelector(selector)!.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom };
+    };
+    return {
+      route: bounds('#start-act-fracture'),
+      card: bounds('#start-overdrive-card'),
+      normal: bounds('#start-overdrive'),
+      assault: bounds('#start-overdrive-assault')
+    };
+  });
+  expect(Math.abs(mobileLayout.card.width - mobileLayout.route.width)).toBeLessThanOrEqual(2);
+  expect(mobileLayout.card.x).toBeGreaterThan(mobileLayout.route.x);
+  expect(Math.abs(mobileLayout.card.y - mobileLayout.route.y)).toBeLessThanOrEqual(2);
+  expect(mobileLayout.assault.y).toBeGreaterThanOrEqual(mobileLayout.normal.bottom);
+  expect(Math.abs(mobileLayout.card.height - mobileLayout.route.height)).toBeLessThanOrEqual(2);
+  expect(mobileLayout.normal.height).toBeLessThan(mobileLayout.route.height / 2);
+  expect(mobileLayout.assault.height).toBeLessThan(mobileLayout.route.height / 2);
+});
+
 test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
   await page.addInitScript(() => {
@@ -568,6 +676,7 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await expect(page.locator('#start-overdrive-assault')).toBeVisible();
   await expect(page.locator('#start-overdrive')).toBeEnabled();
   await expect(page.locator('#start-overdrive-assault')).toBeEnabled();
+
   await page.evaluate(() => { (window as unknown as { menuIdentity: string }).menuIdentity = 'same-document'; });
   await page.locator('#start-overdrive-assault').click();
   await expect(page.locator('#start-overdrive-assault')).toHaveClass(/is-selected/);
@@ -595,6 +704,24 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-withdraw')).toBeVisible();
   await expect(page.locator('#pause-withdraw')).toContainText('Retirarse y cobrar');
+  await page.locator('#pause-withdraw').click();
+  await expect(page.locator('#pause-withdrawal-dialog')).toBeVisible();
+  await expect(page.locator('#pause-withdrawal-message')).toContainText('mitad');
+  const withdrawalQuote = await page.locator('#pause-withdrawal-dialog').evaluate(dialog => {
+    const read = (id: string) => Number(
+      dialog.querySelector<HTMLOutputElement>(id)?.value.replace(/[−,]/g, '') ?? Number.NaN
+    );
+    return {
+      generated: read('#pause-withdrawal-generated'),
+      forfeited: read('#pause-withdrawal-forfeited'),
+      payout: read('#pause-withdrawal-payout')
+    };
+  });
+  expect(withdrawalQuote.generated).toBe(withdrawalQuote.forfeited + withdrawalQuote.payout);
+  expect(withdrawalQuote.payout).toBe(Math.floor(withdrawalQuote.generated / 2));
+  await page.locator('#pause-withdrawal-back').click();
+  await expect(page.locator('#pause-withdrawal-dialog')).toBeHidden();
+  await expect(page.locator('#pause-overlay')).toBeVisible();
   await page.locator('#pause-menu').click();
   await page.locator('#start-level').click();
   await expect(page.locator('#start-overdrive')).toBeEnabled();

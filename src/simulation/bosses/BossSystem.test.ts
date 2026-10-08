@@ -7,6 +7,8 @@ import { EnemyPool } from '../combat/EntityPools';
 import { SpatialGrid } from '../spatial/SpatialGrid';
 import { EnemySystem } from '../enemies/EnemySystem';
 import { BossSystem } from './BossSystem';
+import { clampPointToArena, type ArenaBoundary } from '../ArenaBoundary';
+import { OVERDRIVE_ASSAULT_ARENA_SHAPES } from '../../content/run/OverdriveAssaultDefinitions';
 
 const TEST_DEFINITION = {
   ...BOSS_DEFINITION,
@@ -36,6 +38,67 @@ const advanceToRing = (boss: BossSystem, player: PlayerModel): void => {
 };
 
 describe('BossSystem', () => {
+  it.each([30, 60, 144])('keeps Warden and its announced replicas bounded while walls morph at %i Hz', rate => {
+    const pool = new EnemyPool(40);
+    const enemies = new EnemySystem(pool, new SpatialGrid(1280, 720));
+    const boss = new BossSystem(enemies, { ...ORBITAL_WARDEN_DEFINITION,
+      startSeconds: 0, introSeconds: 0.05, chargeTelegraphSeconds: 0.1,
+      chargeActiveSeconds: 0.35, curveTelegraphSeconds: 0.1, curveActiveSeconds: 0.5,
+      replicasTelegraphSeconds: 0.1, replicasActiveSeconds: 0.1, recoverySeconds: 0.1 });
+    const player = new PlayerModel();
+    player.state.x = ARENA_CENTER.x + 250;
+    player.state.y = ARENA_CENTER.y - 180;
+    for (let frame = 0; frame < rate * 6; frame += 1) {
+      const boundary: ArenaBoundary = { radius: 270, shapeFrom: 'circle',
+        shapeTo: 'rectangle-horizontal', morphProgress: Math.min(1, frame / (rate * 3)) };
+      boss.update(1 / rate, 0, player.state, boundary);
+      enemies.update(1 / rate, player.state, boundary.radius, boundary);
+      for (const enemy of pool.states.filter(enemy => enemy.active)) {
+        const safe = clampPointToArena(enemy.x, enemy.y,
+          enemy.kind === 'boss' ? enemy.radius + 24 : Math.max(30, enemy.radius), boundary);
+        expect(Math.hypot(safe.x - enemy.x, safe.y - enemy.y)).toBeLessThan(0.00001);
+      }
+      if (boss.state.phase.startsWith('replicas-')) {
+        for (const point of [
+          [boss.state.replicaLeftX, boss.state.replicaLeftY],
+          [boss.state.replicaRightX, boss.state.replicaRightY]
+        ]) {
+          const safe = clampPointToArena(point[0], point[1], 30, boundary);
+          expect(Math.hypot(safe.x - point[0], safe.y - point[1])).toBeLessThan(0.00001);
+        }
+      }
+    }
+  });
+  it.each(OVERDRIVE_ASSAULT_ARENA_SHAPES)('keeps Warden attacks and living replicas inside %s', shape => {
+    const pool = new EnemyPool(40);
+    const enemies = new EnemySystem(pool, new SpatialGrid(1280, 720));
+    const boss = new BossSystem(enemies, {
+      ...ORBITAL_WARDEN_DEFINITION, startSeconds: 0, introSeconds: 0.05,
+      chargeTelegraphSeconds: 0.1, chargeActiveSeconds: 0.35,
+      curveTelegraphSeconds: 0.1, curveActiveSeconds: 0.5,
+      replicasTelegraphSeconds: 0.1, replicasActiveSeconds: 0.1,
+      recoverySeconds: 0.1
+    });
+    const boundary: ArenaBoundary = { radius: ARENA_RADIUS, shapeFrom: shape, shapeTo: shape, morphProgress: 0 };
+    const player = new PlayerModel();
+    player.state.x = ARENA_CENTER.x + ARENA_RADIUS;
+    player.state.y = ARENA_CENTER.y + ARENA_RADIUS;
+    const phases = new Set<string>();
+    for (let frame = 0; frame < 600; frame += 1) {
+      boss.update(1 / 60, 0, player.state, boundary);
+      enemies.update(1 / 60, player.state, ARENA_RADIUS, boundary);
+      phases.add(boss.state.phase);
+      for (const enemy of pool.states.filter(enemy => enemy.active)) {
+        const clearance = enemy.kind === 'boss' ? enemy.radius + 24 : Math.max(30, enemy.radius);
+        const safe = clampPointToArena(enemy.x, enemy.y, clearance, boundary);
+        expect(Math.hypot(safe.x - enemy.x, safe.y - enemy.y)).toBeLessThan(0.00001);
+      }
+    }
+    expect(phases.has('charge-active')).toBe(true);
+    expect(phases.has('curve-active')).toBe(true);
+    expect(phases.has('replicas-active')).toBe(true);
+    expect(pool.states.some(enemy => enemy.active && enemy.kind === 'warden-replica')).toBe(true);
+  });
   it('waits for an explicit request in manual mode and can be triggered again after defeat', () => {
     const { boss, player } = createBoss();
     boss.setManualSpawn(true);

@@ -5,11 +5,11 @@ código y las pruebas reflejan la implementación actual; cualquier aceptación
 humana aún abierta se registra únicamente en
 [PLAN_DESARROLLO.md](../../PLAN_DESARROLLO.md).
 
-Revisión 30-09-2026: Singularity Return cambia a fragmentación remota guiada
-por solicitud explícita, §4.D. Comet Quintet no cambia. Thunderhead obtiene PNG
-de descarga exclusivo y Echo corrige el fade final, sin cambiar sus reglas.
+Revisión histórica 30-09-2026: Singularity Return cambia a fragmentación
+remota guiada, Thunderhead obtiene PNG de descarga exclusivo y Echo corrige el
+fade final. El rebalance 07-10-2026 más abajo sustituye los valores numéricos.
 
-Segunda revisión autorizada 30-09-2026: Singularity emite seis filos y recorta
+Segunda revisión histórica autorizada 30-09-2026: Singularity emite seis filos y recorta
 20% del alcance **añadido** (+60% → +48%). Closed Circuit suma dos blancos
 y aumenta 25% su daño por tick; Thunderhead no sacrifica blancos. Cobertura
 postevolución suma un blanco y 30u entre enlaces en ambas ramas (tres compras).
@@ -20,6 +20,15 @@ las 42 filas I–VII, cartas, calibraciones y herencia de estadísticas al
 evolucionar. Sus fórmulas de herencia prevalecen sobre los valores fijos de
 prototipo en §4. Los rangos tienen ahora una secuencia fija por familia.
 
+Rebalance aprobado para prueba local 07-10-2026: las doce evoluciones aumentan
+el daño directo frente al mismo rango base; Rail Lance conserva al menos +5%
+incluso en su quinto impacto, ofrece +50% en el primero y aumenta su intervalo
+10%. Las otras once ofrecen al menos +25% por impacto y no añaden enfriamiento.
+Los bonos de daño se aplican encima del daño heredado por rango, laboratorio y
+Overdrive; las ramas de varios impactos conservan sus pasadas/objetivos y
+potencian el impacto en lugar de compensarlo sólo con cobertura. La aceptación
+de balance humano sigue pendiente en PLAN_DESARROLLO.md.
+
 ## Corrección vigente de daño y lectura
 
 Este bloque prevalece sobre las descripciones de prototipo mas abajo cuando
@@ -27,27 +36,32 @@ hay una diferencia.
 
 - `solar_crown`: ya no emite cuchillas hacia afuera. Al evolucionar agrega
   tres cuchillas a la formacion y fija el total en seis, todas orbitando a
-  radio authored fijo de 94u. El contacto de las seis cuchillas es el dano
-  real; no existe fase de salida, desaparicion ni hit fantasma en el centro.
+  radio authored fijo de 94u; cada impacto hace 25% más daño. El contacto de
+  las seis cuchillas es el dano real; no existe fase de salida, desaparicion
+  ni hit fantasma en el centro. Graviton Halo conserva su elipse, sin un pulso
+  no implementado, y también mejora 25% el daño por impacto.
 - `echo_shock`: una sola cresta alcanza 280u (o el alcance de rango si fuera
   mayor) y retorna al mismo origen capturado. Ida y vuelta hacen el dano
   completo una vez por objetivo y nunca desplazan; el movimiento posterior
   del player no crea un segundo centro ni puede cambiar la zona anunciada.
-- `compression_wave`: el frente conserva el eje capturado al iniciar el
-  telegraph, aunque el player se mueva durante el cast. La simulacion y la
+- `compression_wave`: el frente conserva el eje contrario al último movimiento
+  capturado al iniciar el telegraph, para alcanzar a quienes persiguen al
+  jugador; conserva ese eje aunque el player se mueva durante el cast. Cada
+  frente inflige 25% más daño. La simulacion y la
   vista usan ese mismo eje; la vista ya no dibuja un aro completo para no
-  prometer dano detras del player. El radio final es 320u y el borde fisico
+  prometer daño fuera de su frente. El radio final es 320u y el borde fisico
   considera el radio del enemigo, por lo que un hull que roza el frente no se
   pierde por comprobar solo su centro. Libera tres frentes de 0.28s, con una
   pausa visual de 0.10s, y cada impacto empuja tres veces el empuje base del
   rango actual; no atrae en ninguna fase.
-- `event_horizon`: retiene durante3.4s en un núcleo remoto radio64, con
-  atracción radio210 y ticks de14% del daño base cada0.2s. No hay explosión
+- `event_horizon`: retiene durante2s en un núcleo remoto radio64, con
+  atracción radio210 y ticks de125% del daño base cada0.32s; conserva el
+  enfriamiento base de 5.2s (4.6s desde rango VI). No hay explosión
   final: los supervivientes que recibieron ticks salen ralentizados a38% por
   2.25s; quien no entró al núcleo nunca recibe ese control.
 - `polar_collapse`: atrae durante0.55s a230u/s. Sus tres frentes conservan
-  ancho físico24u, infligen60% y aturden1.1s a enemigos no-boss; la única
-  implosión final de radio43% inflige140% a esos aturdidos o45% a un objetivo
+  ancho físico24u, infligen320% y aturden1.1s a enemigos no-boss; la única
+  implosión final de radio55% inflige350% a esos aturdidos o320% a un objetivo
   que llegara sin aturdimiento. La vista muestra triángulo, filos y un remate,
   no dos pulsos pequeños.
 - La auditoria automatica exige que las doce ramas (`rail_lance`,
@@ -162,9 +176,13 @@ cambiar la mecánica. En las cinco parejas nuevas las cifras necesitan prueba.
 ### A. Projectile — conservar aprobación
 
 `rail_lance`: disparo pesado perforante; `pulse_volley`: abanico de proyectiles.
-Conservar daño, cadencia, curvas, anclas y presentación que el usuario probó.
-Solo adaptar elegibilidad/UI, con regresión de comportamiento. No aprovechar
-la migración para rediseñar estos assets o «mejorar» su balance.
+Rail Lance conserva el calibre y perforación de hasta cinco objetivos, pero su
+intervalo es 1.10× el del mismo rango (0.605 s en I–III, 0.517 s en IV–VI,
+0.429 s en VII, antes de bonos de cadencia), con 1.50× daño inicial por proyectil;
+la caída de 10 puntos por objetivo perforado tiene piso ×0.70 (el quinto queda
+en ×1.05 respecto al proyectil base). Pulse
+Volley conserva la cadencia base y 1.25× daño. No alterar curvas, anclas ni
+presentación fuera de esta calibración autorizada.
 
 ### B. Orbit: emitir hacia afuera o peinar un corredor
 
@@ -217,16 +235,17 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - **Verbo:** tres impactos levantan un triángulo eléctrico estacionario.
   La cadena inicial conserva sus targets adquiridos y suma dos (siete en VII); elegir
   hasta tres de esos impactos como nodos por búsquedas limitadas de la grid.
-  Congelar sus posiciones al impacto: aunque mueran, los anclajes no persiguen.
+  Capturar las coordenadas antes de aplicar daño o ejecutar callbacks; aunque el
+  blanco muera o su slot se recicle, los anclajes no persiguen ni saltan al origen.
 - Impacto inicial y red de 0.9 s, con ticks cada 0.2 s. Solo los tres cables
   dañan (ancho físico 10), **no el interior completo**. Una unión de segmentos
   por tick y target evita triple daño en las esquinas.
 - Un blanco: un enlace origen capturado→blanco, longitud máxima de alcance
   base; dos blancos: un enlace entre ellos. No inventar vértices fuera de arena
   ni repetir targets para simular triángulo. Máximo una red/3 nodos/3 segmentos.
-- Presupuesto vigente: 40% por impacto, 15% por tick de red (antes 12%:
-  **+25% relativo**), cuatro ticks a lo largo de 0.9 s. La maestría de Potencia
-  y el daño permanente también multiplican el cable. No dispara una
+- Balance vigente: 125% por impacto directo y 20% del daño base por tick de
+  cada cable (cuatro ticks a lo largo de 0.9 s). La maestría de Potencia y el
+  daño permanente también multiplican los cables. No dispara una
   segunda red mientras la primera sigue activa.
 - Ventaja: conducir perseguidores a cables ya tendidos. Pérdida: enemigos
   dispersos o que abandonan la red reducen utilidad; no requiere borde cargado.
@@ -254,9 +273,11 @@ la migración para rediseñar estos assets o «mejorar» su balance.
   congela posición; aviso final 0.15 s; explosión disco radio70 en ese punto.
   Si muere antes, usar última posición válida de esa generación.
 - Máximo dos marcas/explosiones por cast. Explosiones no generan otras marcas.
-  Daño de sus discos solapados se resuelve una vez por objetivo/cast.
-- Presupuesto: 35% enlaces, 65% explosiones. Ventaja contra concentraciones;
-  enemigo veloz puede salir tras bloqueo. No deja zona persistente.
+  Cada disco aplica su propio impacto: un enemigo dentro de ambos radios recibe
+  ambos daños (doble impacto intencional), sin crear marcas ni explosiones nuevas.
+- Balance vigente: +25% por impacto de rayo y por explosión frente al arma
+  base; conserva los rebotes y las dos marcas explosivas. Ventaja contra
+  concentraciones; enemigo veloz puede salir tras bloqueo. No deja zona persistente.
 - Arte: sello de tres pequeños capacitores sobre target, cierre de diamante
   al fijarse y golpe radial breve con dientes eléctricos. Conservar el disco
   real visible durante impacto; nada de una línea base simplemente más gruesa.
@@ -270,50 +291,53 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 #### Comet Quintet — `twin_comet`
 
 - **Verbo:** cinco cuchillas salen en un abanico de ±0.64 radianes, describen
-  curvas y regresan al jugador. El alcance de ida es el 85% del rango actual
-  (212.5 u en rango I, 238 u desde rango III); la maestría de cobertura sigue
-  ampliándolo. Cada cuchilla daña al salir y al volver.
-- Un solo lanzamiento puede estar activo. Las cinco piezas usan el pool actual
-  de ocho slots. Comparten un registro de impactos: cada enemigo recibe como
-  máximo un golpe de ida y uno de vuelta por lanzamiento, aunque varios filos
-  se superpongan. Cada golpe inflige 110% del daño actual del arma; el boss no
-  recibe cinco impactos por fase. No hay explosión ni empuje.
+  curvas y regresan al jugador. El alcance de ida es el 80% del rango actual
+  (200 u en rango I, 224 u desde rango III); la maestría de cobertura sigue
+  ampliándolo. Cada cuchilla daña al salir y al volver, con 125% de daño por
+  golpe. El regreso curvo es 15% más rápido para terminar antes del intervalo
+  de relanzamiento, incluido el mínimo de rango VI.
+- Hasta tres lanzamientos pueden solaparse dentro del pool fijo de 18 cuerpos.
+  Cada abanico de cinco piezas comparte su propio registro de impactos: cada
+  enemigo recibe como máximo un golpe de ida y uno de vuelta **por lanzamiento**,
+  aunque varios filos se superpongan; abanicos distintos pueden volver a
+  impactar al mismo objetivo. El regreso sigue la curva y luego busca la
+  posición actual del jugador hasta capturarlo. Sin cinco espacios libres o un
+  ledger disponible no dispara ni consume el cooldown. No hay explosión ni empuje.
 - Presentación: filos dorados con giro visible, estelas cortas y vuelta curva.
   Low conserva las cinco cuchillas y su colisión; puede omitir decoración.
 - Carta: «Cinco cuchillas de corto alcance barren en abanico y golpean al salir
   y regresar». Probar cobertura lateral, retorno con player en movimiento,
-  daño único por fase y saturación del pool.
+  relanzamiento en cooldown de rango VI y daño único por fase.
 
 #### Singularity Return — `singularity_return`
 
-- **Verbo (revisión autorizada 30-09-2026):** una pieza recorre el 148% del
-  alcance base + mejoras (370 u en I; 414.4 u desde III), sin detenerse al llegar
+- **Verbo (rebalance 07-10-2026):** una pieza recorre el 90% del alcance base
+  + mejoras (225 u en I; 252 u desde III), sin detenerse al llegar
   al blanco inicial. En el extremo se sustituye por **seis fragmentos guiados**.
   Orienta el lanzamiento hacia el enemigo más cercano; sin blancos conserva dirección.
 - Cada fragmento adquiere uno de los seis enemigos más cercanos al punto de
-  separación, dentro de 320 u, priorizando objetivos distintos. Si quedan menos
+  separación, dentro de 460 u, priorizando objetivos distintos. Si quedan menos
   de seis, pueden compartir blanco; si no hay ninguno, avanzan y caducan.
   Siguen su posición real con giro limitado a 8 rad/s, velocidad 520 u/s y
-  vida de 1.35 s. Tras muerte/reciclaje buscan otro desde el origen fijo.
+  vida de 2 s. Tras muerte/reciclaje buscan otro desde el origen fijo.
   El índice y la generación impiden perseguir un slot reutilizado fuera de rango.
-- La pieza inicial perfora con 65% del daño actual, una vez por enemigo.
-  Cada fragmento inflige 85% al **primer contacto físico** de su segmento barrido
+- La pieza inicial perfora con 125% del daño actual, una vez por enemigo.
+  Cada fragmento inflige 125% al **primer contacto físico** de su segmento barrido
   y se consume. Radio físico 70% del cuerpo inicial. No retorno, daño de área,
   ralentización, aturdimiento ni divisiones recursivas. Hereda daño permanente,
-  mejoras de run y multiplicador Overdrive. Cobertura suma 59.2 u efectivos por
-  maestría (+40 base × 1.48), incluido el antes/después de la carta. No se reduce
-  el daño de cada filo al duplicar su número: este ajuste está en prueba humana.
-- Pool existente de ocho: cada portador reserva cinco plazas extra antes de salir.
-  Sin espacio para las reservas no dispara; no se recorta la división de seis.
-  Puede convivir con hasta dos filos antiguos, pero no con otro portador.
+  mejoras de run y multiplicador Overdrive. Cobertura suma 36 u efectivos por
+  maestría (+40 base × 0.9), incluido el antes/después de la carta.
+- Pool fijo de 18: cada portador reserva cinco plazas extra antes de salir. Sin
+  espacio para la división completa no dispara; hasta tres abanicos se solapan
+  mientras los fragmentos vuelan, sin esperar impactos o caducidad para lanzar.
   Los recién nacidos avanzan sólo el tiempo restante de ese tick, una vez.
 - Presentación: portador singular violeta; apertura transparente de tres brazos
   de radio decorativo 42 u durante 0.32 s; seis filos individuales orientados
   según su velocidad. PNG propios, **nunca la explosión de Magnetic Charge**.
   La apertura no representa un disco dañino. Low conserva los seis filos.
   El abanico mantiene ±0.55 rad; no se duplica su ancho al sumar piezas.
-- Carta: «Viaja un 48% más lejos y se divide en seis fragmentos que persiguen
-  enemigos cercanos». Probar rango completo frente a blanco cercano, seis
+- Carta: «Recorre menos distancia y se divide en seis fragmentos: cada impacto
+  hace 25% más de daño». Probar rango corto frente a blanco cercano, seis
   destinos distintos, boss único, muerte/reciclaje, blanco móvil, primera
   colisión, falta de blancos, reservas, limpieza y 30/60/144 Hz.
   La nueva rama espera prueba humana; el balance general aprobado no se reabre.
@@ -323,7 +347,8 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 #### Echo Shock / Eco de retorno — `echo_shock`
 
 - **Verbo:** una cresta larga sale del origen capturado y vuelve por el mismo
-  corredor. No sigue al player, no crea un segundo emisor y no requiere apuntado.
+  corredor. No sigue al player, no crea un segundo emisor y no requiere apuntado;
+  ambas pasadas infligen 25% más daño.
 - Alcanza al menos 280u; cada objetivo puede recibir un impacto completo en ida
   y otro en vuelta. Un solo cast, dos cruces, sin desplazamiento ni atracción.
 - Ventaja: duplica el daño en una ruta legible y castiga al grupo que permanece
@@ -340,11 +365,12 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 #### Compression Wave / Ariete de presión — `compression_wave`
 
 - **Verbo:** convertir el aro completo en un frente direccional que abre paso.
-  Orientación último movimiento, fallback arriba; mostrarla durante carga base
+  Orientación opuesta al último movimiento para alcanzar perseguidores; fallback
+  abajo antes de que el player se mueva. Mostrarla durante carga base
   y fijar eje 0.15 s antes del disparo. Sin apuntado extra ni target requerido.
 - Frente de arco de 110°, espesor28, radio desde30 hasta320 en0.28 s, alrededor
   del origen capturado. Repetir tres veces, separadas por0.10 s. Cada frente
-  puede golpear una vez al mismo objetivo y lo empuja radialmente tres veces el
+  puede golpear una vez al mismo objetivo con 125% de daño y lo empuja radialmente tres veces el
   empuje base de su rango; bosses reciben daño sin desplazamiento. **Cero atracción**.
 - Presupuesto 100% frente. Ventaja alcance y corredor despejado; pérdida total
   de cobertura trasera. El interior ya barrido no sigue haciendo daño entre
@@ -352,10 +378,10 @@ la migración para rediseñar estos assets o «mejorar» su balance.
 - Arte: dos mordazas en V cargan frente a nave, cavidad oscura, cresta gruesa
   marfil/violeta y puntas ámbar; estela corta que desvanece hacia atrás.
   No renderizar círculo completo, cono relleno sólido ni indicador hasta borde.
-- Carta: «Tres ondas frontales rápidas empujan con fuerza triple y abren camino.
-  Llegan más lejos; no golpean detrás de ti».
-- Prueba: un enemigo a200u delante recibe tres impactos y se aleja en cada uno;
-  otro detrás no recibe daño; sin atracción en ninguna fase.
+- Carta: «Tres frentes atacan hacia atrás, contra quienes te persiguen: +25% de
+  daño y triple empuje».
+- Prueba: con el jugador moviéndose hacia delante, un perseguidor recibe tres
+  impactos y se aleja; un enemigo delante no recibe daño; sin atracción.
 
 ### F. Magnetic: sostener un núcleo remoto o cerrar una trampa geométrica
 
@@ -367,8 +393,8 @@ estas ramas cambian expresamente sus zonas de daño.
 #### Event Horizon / Núcleo de acreción — `event_horizon`
 
 - **Verbo:** mantener un pozo remoto que captura, daña progresivamente y deja
-  lentos a los supervivientes. Viaje base; sostener3.4s con atracción radio210
-  a145u/s. Centro disco radio64 daña14% cada0.2s. Al cierre no hay explosión.
+  lentos a los supervivientes. Viaje base; sostener2s con atracción radio210
+  a145u/s. Centro disco radio64 daña125% cada0.32s. Al cierre no hay explosión.
 - Un pozo. Todo el daño pertenece a ticks del núcleo; no mantener banda base,
   centro sin daño ni golpe final. Cadencia no solapa pozos.
 - Ventaja: retener una concentración y dañarla en su destino. Pérdida: zona
@@ -387,14 +413,15 @@ estas ramas cambian expresamente sus zonas de daño.
 
 - **Verbo:** la bomba abre tres satélites, atrae con seguridad a los enemigos
   hacia su destino remoto y tres frentes convergen hacia el centro. Viaje base,
-  atracción0.55s a230u/s, apertura visual hacia vértices de un triángulo radio90
-  y frentes durante0.45s; el núcleo final permanece0.42s, recuperación base.
+  atracción0.55s a230u/s, apertura visual hacia vértices a0.76×radio exterior
+  (112u base/126u desde rango III) y frentes durante0.45s; el núcleo final
+  cubre0.55×radio exterior (81u/91u respectivamente) durante0.42s.
 - Los frentes son tres segmentos finitos de ancho24; extremos interpolan de
   vértices originales al centro. Barrer su desplazamiento. En el instante
   degenerado no dibujar segmentos de longitud cero; usar disco final.
 - Máximo tres satélites, tres segmentos y un centro por cast. Un hit de frentes
-  por enemigo aplica60% y aturde1.1s; una única implosión final aplica140% a
-  los aturdidos que sigan en el núcleo o45% a objetivos no preparados. El
+  por enemigo aplica320% y aturde1.1s; una única implosión final aplica350% a
+  los aturdidos que sigan en el núcleo o320% a objetivos no preparados. El
   control no afecta bosses.
 - Elegir centro lejano con margen para triángulo completo usando ArenaBoundary;
   intentos limitados (8), luego reducir uniformemente radio hasta caber. Si
@@ -410,7 +437,7 @@ estas ramas cambian expresamente sus zonas de daño.
 - Carta: «Tres filos arrastran y aturden; la implosión final castiga al objetivo
   preparado. Golpe remoto de alto daño».
 - Prueba: tres frentes físicos coinciden con lo visible; target alcanzado por
-  un filo queda aturdido y recibe el remate140%; sin filo sólo recibe45%;
+  un filo queda aturdido y recibe el remate350%; sin filo sólo recibe320%;
   funciona sin enemigos y en hexágono/cuadrado.
 
 ## 5. Procedimiento visual de evoluciones

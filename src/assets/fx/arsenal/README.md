@@ -2,11 +2,17 @@
 
 Extensión solicitada por el usuario de la carga magnética a las seis familias,
 sus doce evoluciones y el escudo recargable. El lote inicial no cambia reglas.
-Revisión posterior autorizada: Singularity Return sustituye su detonación por
-alcance +48% y seis fragmentos guiados (el extra +60% se recortó 20%);
-Echo corrige su radio de fade final. Closed Circuit suma dos blancos y +25%
-de daño por tick. Ambas ramas de cadena crecen +1 blanco/+30u con Cobertura,
-hasta tres compras; Thunderhead conserva todos los blancos base y dos marcas.
+Revisión de balance 07-10-2026: todas las evoluciones suben el daño por impacto
+(+25%; Rail Lance aplica +50% al primero y conserva al menos +5% hasta el
+quinto, con un intervalo de disparo 10% mayor).
+Singularity Return se divide al 90% del alcance base, con seis fragmentos
+guiados de +25% de daño y 2 s de vida; admite hasta tres abanicos simultáneos
+en su pool de 18.
+Comet Quintet conserva su alcance compacto y retorna 15% más rápido para no
+bloquear el relanzamiento. Compression Wave apunta en sentido contrario al
+movimiento del jugador. Closed Circuit y Thunderhead conservan sus blancos y
+efectos, ahora con +25% de daño directo/explosión. Las dos ramas de cadena
+crecen +1 blanco/+30u con Cobertura, hasta tres compras.
 Fuente de procedimiento: [Arte híbrido](../../../../docs/design/ARTE_HIBRIDO.md).
 La aceptación artística final y la medición en móvil físico siguen pendientes.
 

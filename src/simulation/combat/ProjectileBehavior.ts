@@ -11,7 +11,10 @@ import type { PlayerState } from '../PlayerModel';
 import type { ShotRenderState } from './CombatRenderState';
 import type { EnemyState, ProjectilePool, ProjectileState } from './EntityPools';
 import type { EnemySystem } from '../enemies/EnemySystem';
-import type { ProjectileEvolution } from '../../content/weapons/WeaponEvolutionDefinitions';
+import {
+  RAIL_LANCE_TUNING,
+  type ProjectileEvolution
+} from '../../content/weapons/WeaponEvolutionDefinitions';
 
 const PROJECTILE_DEFINITION = WEAPON_DEFINITIONS.projectile;
 
@@ -38,9 +41,7 @@ const createShotState = (): ShotRenderState => ({
 });
 
 const VOLLEY_ANGLES = [-0.14, 0, 0.14] as const;
-const RAIL_LANCE_DAMAGE_MULTIPLIER = 1.35;
-const RAIL_LANCE_RADIUS_MULTIPLIER = 1.45;
-const RAIL_LANCE_MAX_TARGETS = 5;
+const PULSE_VOLLEY_DAMAGE_MULTIPLIER = 1.25;
 
 /** Projectile firing, muzzle geometry and collision against the enemy query surface. */
 export class ProjectileBehavior {
@@ -54,6 +55,13 @@ export class ProjectileBehavior {
 
   public get totalShotsFired(): number {
     return this.shotsFired;
+  }
+
+  public get currentEvolutionDamageMultiplier(): number {
+    const evolution = this.context.getProjectileEvolution();
+    return evolution === 'rail_lance'
+      ? RAIL_LANCE_TUNING.damageMultiplier
+      : evolution === 'pulse_volley' ? PULSE_VOLLEY_DAMAGE_MULTIPLIER : 1;
   }
 
   public fire(player: PlayerState): void {
@@ -161,12 +169,15 @@ export class ProjectileBehavior {
         const hitDistance = projectile.radius + enemy.radius;
         if (Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y) > hitDistance) continue;
         const damageMultiplier = projectile.evolution === 'rail_lance'
-          ? Math.max(0.6, 1 - projectile.piercingHitCount * 0.1)
+          ? Math.max(
+            RAIL_LANCE_TUNING.minimumPierceDamageMultiplier,
+            1 - projectile.piercingHitCount * RAIL_LANCE_TUNING.damageFalloffPerPiercedTarget
+          )
           : 1;
         enemy.health -= projectile.damage * damageMultiplier;
         if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
         if (projectile.evolution !== 'rail_lance'
-          || projectile.piercingHitCount + 1 >= RAIL_LANCE_MAX_TARGETS) {
+          || projectile.piercingHitCount + 1 >= RAIL_LANCE_TUNING.maxTargets) {
           this.context.projectiles.release(projectile);
         } else {
           projectile.piercingHitCount += 1;
@@ -225,10 +236,10 @@ export class ProjectileBehavior {
     projectile.vx = directionX * this.context.getProjectileSpeed();
     projectile.vy = directionY * this.context.getProjectileSpeed();
     projectile.radius = PROJECTILE_DEFINITION.radius
-      * (evolution === 'rail_lance' ? RAIL_LANCE_RADIUS_MULTIPLIER : 1);
+      * (evolution === 'rail_lance' ? RAIL_LANCE_TUNING.radiusMultiplier : 1);
     const damageMultiplier = evolution === 'rail_lance'
-      ? RAIL_LANCE_DAMAGE_MULTIPLIER
-      : evolution === 'pulse_volley' ? 0.55 : 1;
+      ? RAIL_LANCE_TUNING.damageMultiplier
+      : evolution === 'pulse_volley' ? PULSE_VOLLEY_DAMAGE_MULTIPLIER : 1;
     projectile.damage = this.context.rollCriticalDamage(this.context.getProjectileDamage() * damageMultiplier);
     projectile.ageSeconds = 0;
     projectile.lifetimeSeconds = PROJECTILE_DEFINITION.lifetimeSeconds;

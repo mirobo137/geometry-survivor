@@ -47,6 +47,8 @@ export class ChainBehavior {
   public readonly segments = Array.from({ length: CHAIN_SEGMENT_POOL_CAPACITY }, createChainSegmentState);
   public readonly explosions = Array.from({ length: CHAIN_EVOLUTION_TUNING.thunderheadMarks }, createChainExplosionState);
   private readonly hitIndices = Array.from({ length: CHAIN_SEGMENT_POOL_CAPACITY }, () => -1);
+  private readonly hitTargetX = new Float32Array(CHAIN_SEGMENT_POOL_CAPACITY);
+  private readonly hitTargetY = new Float32Array(CHAIN_SEGMENT_POOL_CAPACITY);
   private readonly circuitHitMarkers: Uint32Array;
   private readonly circuitHitGenerations: Uint32Array;
   private unlocked = false;
@@ -73,6 +75,12 @@ export class ChainBehavior {
 
   public get currentDamage(): number {
     return this.damage;
+  }
+
+  public get currentDirectHitDamageMultiplier(): number {
+    return this.evolution === 'closed_circuit'
+      ? CHAIN_EVOLUTION_TUNING.closedCircuitDamageMultiplier
+      : this.evolution === 'thunderhead' ? CHAIN_EVOLUTION_TUNING.thunderheadDamageMultiplier : 1;
   }
 
   public get currentEvolution(): ChainEvolution | null {
@@ -191,24 +199,26 @@ export class ChainBehavior {
       );
       if (enemyIndex < 0) break;
       const enemy = this.context.enemies.getState(enemyIndex);
+      const hitX = enemy.x;
+      const hitY = enemy.y;
       const segment = this.segments[targetIndex];
       segment.active = true;
       segment.x1 = currentX;
       segment.y1 = currentY;
-      segment.x2 = enemy.x;
-      segment.y2 = enemy.y;
+      segment.x2 = hitX;
+      segment.y2 = hitY;
       segment.lifeSeconds = CHAIN_DEFINITION.segmentLifetimeSeconds;
       segment.persistent = false;
       this.hitIndices[targetIndex] = enemyIndex;
-      enemy.health -= this.context.rollCriticalDamage(
-        this.damage * (this.evolution === 'closed_circuit' ? 0.4 : 1)
-      );
+      this.hitTargetX[targetIndex] = hitX;
+      this.hitTargetY[targetIndex] = hitY;
+      enemy.health -= this.context.rollCriticalDamage(this.damage * this.currentDirectHitDamageMultiplier);
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
-      currentX = enemy.x;
-      currentY = enemy.y;
+      currentX = hitX;
+      currentY = hitY;
       targetCount += 1;
       if (this.evolution === 'thunderhead' && targetIndex < CHAIN_EVOLUTION_TUNING.thunderheadMarks) {
-        this.scheduleExplosion(targetIndex, enemy.x, enemy.y);
+        this.scheduleExplosion(targetIndex, hitX, hitY);
       }
     }
     if (this.evolution === 'closed_circuit') this.createCircuit(player.x, player.y, targetCount);
@@ -225,6 +235,8 @@ export class ChainBehavior {
       segment.persistent = false;
     }
     this.hitIndices.fill(-1);
+    this.hitTargetX.fill(0);
+    this.hitTargetY.fill(0);
     for (const explosion of this.explosions) {
       explosion.active = false;
       explosion.phase = 'telegraph';
@@ -281,7 +293,9 @@ export class ChainBehavior {
       const enemy = this.context.enemies.getState(index);
       if (!enemy.active || enemy.health <= 0) continue;
       if (Math.hypot(enemy.x - explosion.x, enemy.y - explosion.y) > explosion.radius + enemy.radius) continue;
-      enemy.health -= this.context.rollCriticalDamage(this.damage * 0.45);
+      enemy.health -= this.context.rollCriticalDamage(
+        this.damage * CHAIN_EVOLUTION_TUNING.thunderheadExplosionDamageMultiplier
+      );
       if (enemy.health <= 0) this.context.onEnemyDefeated(enemy);
     }
   }
@@ -289,12 +303,10 @@ export class ChainBehavior {
   private createCircuit(originX: number, originY: number, targetCount: number): void {
     const nodeCount = Math.min(3, targetCount);
     if (nodeCount <= 0) return;
-    const nodes = Array.from({ length: nodeCount }, (_, index) => {
-      const enemy = this.context.enemies.getState(this.hitIndices[index]);
-      return enemy.active && enemy.health > 0
-        ? { x: enemy.x, y: enemy.y }
-        : { x: originX, y: originY };
-    });
+    const nodes = Array.from({ length: nodeCount }, (_, index) => ({
+      x: this.hitTargetX[index],
+      y: this.hitTargetY[index]
+    }));
     let segmentIndex = targetCount;
     const createSegment = (x1: number, y1: number, x2: number, y2: number): void => {
       const segment = this.segments[segmentIndex];

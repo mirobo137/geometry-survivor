@@ -107,6 +107,28 @@ Con el promedio teórico de `4.75 XP` por baja, el factor `0.5` equivaldría a
 matemática, no una medición: los enemigos tienen distinto tiempo de eliminación
 y la mezcla de bajas reales puede diferir.
 
+## Arena variable de Asalto
+
+La arena reutiliza las siete formas existentes. El ciclo es círculo → hexágono
+→ cuadrado → rombo → rectángulo horizontal → octágono → rectángulo vertical
+→ círculo, y se repite indefinidamente con una lista fija de siete transiciones.
+Cada transformación concluye a los 45 s de la anterior: 2 s de contorno de aviso
+y 1.25 s de morph. La primera advertencia comienza a los 41.75 s. El reloj de
+arena se detiene con la simulación al pausar o elegir cartas; ningún encuentro
+de boss ni su cola bloquea el ciclo y no se reinicia la run para cambiar de forma.
+
+En Asalto, los bosses reciben el borde interpolado de la arena. Se conserva
+un margen de 24 unidades además del radio del casco. Orbital conserva sus tres
+patrones: la carga se acorta al llegar a una pared manteniendo su dirección,
+la curva se adapta al radio disponible en cada ángulo, y las réplicas aparecen
+y permanecen dentro del borde con margen de 30 unidades o su radio si es mayor.
+Los avisos de curva/carga y de réplicas usan esas mismas coordenadas.
+Los callers de campaña y Overdrive Normal conservan su contrato circular actual.
+
+Validar formas y reinicio, límites de casco/réplicas en todas las formas y durante
+un morph, correspondencia de avisos y movimientos, y cambios con boss activo o
+en cola. La presión añadida necesita aprobación en partida y móvil físico.
+
 ## Prueba humana pendiente
 
 Comparar baseline y ensayo en el mismo teléfono, navegador, calidad,

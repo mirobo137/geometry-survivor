@@ -4,8 +4,12 @@
 #start-screen .start-engagement-grid strong { font-size: clamp(.76rem, 1.35vw, .95rem); }
 #start-screen .start-engagement-grid small { font-size: .5rem; line-height: 1.4; white-space: normal; }
 #start-screen .start-engagement-grid .retention-entry-mark { position: absolute; top: .45rem; right: .6rem; color: #a9e8fa; opacity: .5; }
-#start-screen .start-wheel-entry { border-color: #bb9254; background: radial-gradient(ellipse at 100% 0, #8b653955, transparent 72%), #0c1826; }
-.wheel-entry-icon { position: absolute; right: .4rem; top: .15rem; width: 3.2rem; height: 3.2rem; opacity: .55; pointer-events: none; }
+#start-screen .start-wheel-entry {
+  border-color: #bb9254;
+  background-image: linear-gradient(0deg, #081724f2 0%, #081724a8 55%, #08172422), url('../assets/images/ui/menus/home-cards/daily-reward-wheel.webp');
+  background-position: center;
+  background-size: cover;
+}
 .daily-wheel-dialog {
   color: #e9f3ff; background: radial-gradient(ellipse at 15% 20%, #163b56 0, transparent 52%), linear-gradient(125deg, #0a1a2a, #0c111e 70%, #2b221d);
   border: 1px solid #b9975d; border-radius: 1.1rem; padding: 0; width: min(64rem, calc(100vw - 1.5rem)); max-width: none;

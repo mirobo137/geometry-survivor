@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { ARENA_CENTER } from '../../config/constants';
 import type { BossRenderState } from '../../simulation/combat/CombatRenderState';
 import type { FxQuality } from '../../content/visual/VisualTokens';
+import { getArenaOrbitRadius } from '../../simulation/ArenaBoundary';
 
 const INK = 0x111e30;
 const METAL = 0x557387;
@@ -87,11 +88,13 @@ export class WardenAttackView {
       marker.visible = warning && (curved || i<3);
       if (curved) {
         const a = s.curveStartAngle+s.curveDirection*s.curveTravelRadians*t;
-        marker.position.set(ARENA_CENTER.x+Math.cos(a)*s.curveRadius,ARENA_CENTER.y+Math.sin(a)*s.curveRadius);
+        const radius = s.movementBoundary
+          ? getArenaOrbitRadius(s.movementBoundary, a, s.curveRadius, s.radius + 24) : s.curveRadius;
+        marker.position.set(ARENA_CENTER.x+Math.cos(a)*radius,ARENA_CENTER.y+Math.sin(a)*radius);
         marker.rotation = a+s.curveDirection*Math.PI/2;
       } else {
-        const d = 60+i*23-p*8;
-        marker.position.set(s.x+Math.cos(angle)*d,s.y+Math.sin(angle)*d);
+        const d = s.movementBoundary ? length * (i + 1) / 4 : 60+i*23-p*8;
+        marker.position.set(s.chargeStartX+Math.cos(angle)*d,s.chargeStartY+Math.sin(angle)*d);
         marker.rotation = angle;
       }
       marker.alpha = (0.18+0.55*p)*(1-t*0.65);
@@ -103,9 +106,11 @@ export class WardenAttackView {
         const travelled = Math.abs(s.curveAngle-s.curveStartAngle);
         const span = Math.min(1.15,travelled);
         const a = s.curveAngle-s.curveDirection*span*tail;
-        wake.position.set(ARENA_CENTER.x+Math.cos(a)*s.curveRadius,ARENA_CENTER.y+Math.sin(a)*s.curveRadius);
+        const radius = s.movementBoundary
+          ? getArenaOrbitRadius(s.movementBoundary, a, s.curveRadius, s.radius + 24) : s.curveRadius;
+        wake.position.set(ARENA_CENTER.x+Math.cos(a)*radius,ARENA_CENTER.y+Math.sin(a)*radius);
         wake.rotation = a+s.curveDirection*Math.PI/2;
-        wake.scale.set(Math.max(0.01,span*s.curveRadius/this.wake.length*1.1),(1-tail)*1.1);
+        wake.scale.set(Math.max(0.01,span*radius/this.wake.length*1.1),(1-tail)*1.1);
       } else {
         const travelled = recovery ? length : length*p;
         const span = Math.min(230,travelled);

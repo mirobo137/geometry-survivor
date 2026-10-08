@@ -135,3 +135,99 @@ Iniciar visible sin scroll en 1280×720 y 390×844; disponible por scroll en las
 dos ventanas más pequeñas. Capturas locales ignoradas:
 `test-results/act-header-art/`. No se ejecutó la suite completa ni CI; no se
 hizo commit/push. La aceptación artística sigue siendo del usuario.
+
+## Accesos de Inicio: configuración, bitácora y ruleta — 07-10-2026
+
+Se agregaron tres placas de fondo para completar visualmente la fila de
+interacción del menú. Son ilustraciones opacas sin copy horneado: sus focos
+quedan hacia la derecha y la zona izquierda oscura conserva contraste para los
+títulos/estados HTML. Configuración abre ahora un `<dialog>` modal nativo fuera
+del flujo del grid; Escape, el botón de cerrar y el backdrop lo cierran, el foco
+regresa al acceso y el contenedor no crece. Los otros accesos conservan sus
+fondos actuales.
+
+| Archivo | Motivo | PNG original | Derivado WebP | Bytes final |
+| --- | --- | ---: | ---: | ---: |
+| `home-cards/settings-control-console.webp` | Tres reguladores holográficos y un dial de calibración | 1932×814 · 2,041,344 B | 960×404 | 46,554 |
+| `home-cards/retention-flight-log.webp` | Bitácora/prisma con sello estelar de desafío | 1932×814 · 2,190,044 B | 960×404 | 64,636 |
+| `home-cards/daily-reward-wheel.webp` | Aro de premio segmentado con un sector raro iluminado | 1932×814 · 2,383,144 B | 960×404 | 79,218 |
+
+Total transferido de los tres derivados: **190,408 bytes**. Conversión
+Lanczos a 960 px de ancho con FFmpeg/libwebp, calidad 84 y compresión 6. Son
+placas RGB opacas (`transparent_background=false`), sin texto ni logos. La
+base RGBA teórica de las tres imágenes a resolución derivada es 4,654,080 B
+(~4.44 MiB), no una medición de memoria real. Fondo estático CSS, sin filtros
+ni animaciones. Si una descarga falla, se conserva el degradado CSS; el texto
+y los controles siguen disponibles. No se midió rendimiento en dispositivo
+físico.
+
+Procedencia: herramienta ImageGen integrada. Referencia de estilo: captura del
+menú adjunta por el usuario, únicamente para paleta y acabado; composición y
+motivos nuevos. IDs de generación: Configuración
+`exec-21f7aa89-4db9-4761-867b-4f4d555ba2ee`, Bitácora
+`exec-a7b8a9b4-5a81-4ddd-a8f3-3cc565fe0643`, Ruleta
+`exec-7c265dff-c30b-4d35-8059-d2d8b57f6c26`.
+
+### Prompts completos
+
+#### Configuración
+
+```text
+Use case: stylized-concept
+Asset type: wide home-menu feature-card background for a sci-fi survival game
+Primary request: create an atmospheric visual for the Settings / controls button, using the attached menu screenshot only as a reference for its dark cinematic space palette, luminous cyan highlights, and premium game-art finish
+Scene/backdrop: deep navy orbital command space, subtle depth and a few restrained stars
+Subject: a compact holographic control console made from three elegant vertical tuning rails and a central glowing calibration dial, presented as an environmental visual motif, not as a literal UI screenshot
+Style/medium: polished painterly 3D game illustration, crisp materials and controlled glow, compatible with the reference game menu
+Composition/framing: very wide landscape feature-card crop, main control motif on the right half, keep lower-left area darker and visually quiet so HTML title copy remains readable; no borders or card frame
+Lighting/mood: cool cyan and ice-blue emitted light with restrained warm gold pinpoints, calm and precise
+Constraints: no text, no letters, no numbers, no logos, no watermark; do not render a complete interface or buttons; dark enough to sit behind white menu labels; coherent with the attached reference, but an original scene
+```
+
+#### Retos y Bitácora
+
+```text
+Use case: stylized-concept
+Asset type: wide home-menu feature-card background for a sci-fi survival game
+Primary request: create a visual for the Challenges & Flight Logbook button, matching the attached generated Settings card only as a shared reference for dark cinematic space, cyan highlights, restrained gold details, and premium painted 3D game art; this must have its own clearly different motif
+Scene/backdrop: dark deep-space archive chamber with subtle star dust and layered depth
+Subject: a compact floating pilot flight-log prism, partly open, showing a bright star-shaped challenge seal and a few abstract mission-record glyph marks as light only
+Style/medium: polished painterly 3D game illustration, tactile dark metal and translucent holographic glass, clean silhouette
+Composition/framing: very wide landscape home-menu card crop, focal archive prism toward the right half, lower-left stays dark and uncluttered for HTML title and status text; no borders or card frame
+Lighting/mood: cyan/ice-blue holographic light with a small warm amber reward glint, purposeful and rewarding
+Constraints: no readable text, no letters, no numbers, no logos, no watermark; do not render a complete interface, panel, or button; preserve strong dark contrast under white copy; original art, not a recolor of the reference
+```
+
+#### Ruleta diaria
+
+```text
+Use case: stylized-concept
+Asset type: wide home-menu feature-card background for a sci-fi survival game
+Primary request: create a visual for the Daily Wheel reward button, matching the immediately previous generated home-card art only as a reference for dark cinematic space, cyan highlights, warm restrained gold, and premium painterly 3D finish; use a distinct motif
+Scene/backdrop: deep navy orbital reward-vault space, subtle star particles and a distant planet
+Subject: a large elegant roulette-like energy ring with ten subtle radial divisions and one brilliant rare reward sector, a small glowing crystalline prize at its center; it should read as a daily spin/reward opportunity without showing numbers or text
+Style/medium: polished painterly 3D game illustration, intricate but legible ring, metallic gold filigree mixed with cyan reactor glass
+Composition/framing: very wide landscape home-menu card crop, place the luminous ring on the right half, keep the lower-left dark and simple for HTML title and status text; no borders or card frame
+Lighting/mood: inviting gold rim-light with cool blue-cyan glow, celebratory but still in the game's restrained space aesthetic
+Constraints: no text, no letters, no numbers, no logos, no watermark; do not render a complete interface, panel, or button; no clutter under the menu copy; original scene with a clear wheel silhouette
+```
+
+### Validación de integración
+
+Typecheck, las 142 suites unitarias (836 pruebas) y `build:local` pasaron.
+El smoke de Chromium para escritorio y móvil pasó en 320×640, 390×844,
+640×360 y 1280×720: abrir Configuración no cambia la altura del panel; Escape,
+backdrop y el botón cierran el modal, actualizan `aria-expanded` y conservan
+el foco/navegación. Las tres tarjetas muestran fondo ilustrado y gradiente,
+y no hay texto recortado en los botones.
+
+La primera comprobación reveló que la cuadrícula principal seguía en dos
+columnas a 320 px y que las tarjetas quedaban comprimidas; se ajustaron ambas
+cuadrículas de accesos a una columna bajo 480 px. También se cerró el elemento
+`<dialog>` con su etiqueta correcta: el parser HTML había reparado el marcado
+incorrecto y creado columnas implícitas que estrechaban la portada. El smoke
+actual cubre ambas regresiones.
+
+Vite publica las placas como recursos del build; sus URLs se comprueban en
+Chromium y no dependen de ImageGen en runtime. No se probó en móvil físico, CI
+ni Pages, y no se hizo commit/push.

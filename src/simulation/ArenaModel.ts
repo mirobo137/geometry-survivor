@@ -63,8 +63,10 @@ export class ArenaModel {
       this.expansionResonance(elapsedSeconds, ARENA_EXPANSION_START_SECONDS),
       this.expansionResonance(elapsedSeconds, ARENA_SECOND_EXPANSION_START_SECONDS)
     );
+    const cycleSeconds = this.actDirector.arenaShapeCycleSeconds;
+    const cycleIndex = cycleSeconds > 0 ? Math.floor(elapsedSeconds / cycleSeconds) : 0;
     const shapeFrame = getShapeFrame(
-      elapsedSeconds,
+      cycleSeconds > 0 ? elapsedSeconds % cycleSeconds : elapsedSeconds,
       this.actDirector.initialArenaShape,
       this.actDirector.arenaShapeChanges
     );
@@ -76,6 +78,7 @@ export class ArenaModel {
       expansionIndex,
       resonance,
       ...shapeFrame,
+      shapeIndex: shapeFrame.shapeIndex + cycleIndex * this.actDirector.arenaShapeChanges.length,
       ...(this.centerExclusionRadius > 0 ? { centerExclusionRadius: this.centerExclusionRadius } : {})
     };
   }

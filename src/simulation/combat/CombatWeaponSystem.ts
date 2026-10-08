@@ -19,6 +19,7 @@ import { EnemySystem } from '../enemies/EnemySystem';
 import { StressCombatScenario } from './StressCombatScenario';
 import type { LaboratoryCombatBonuses } from '../../content/meta/LaboratoryDefinitions';
 import type { ArenaBoundaryInput } from '../ArenaBoundary';
+import { RAIL_LANCE_TUNING } from '../../content/weapons/WeaponEvolutionDefinitions';
 import { WeaponScheduler } from './WeaponScheduler';
 import { ProjectileBehavior } from './ProjectileBehavior';
 import { OrbitBehavior } from './OrbitBehavior';
@@ -198,6 +199,10 @@ export class CombatWeaponSystem {
     return this.projectileCooldown;
   }
 
+  public get currentEffectiveProjectileCooldown(): number {
+    return this.getEffectiveProjectileCooldown();
+  }
+
   public get currentProjectileSpeed(): number {
     return this.projectileSpeed;
   }
@@ -291,6 +296,18 @@ export class CombatWeaponSystem {
 
   public get currentMagneticChargeDamage(): number {
     return this.magneticChargeBehavior.currentDamage;
+  }
+
+  public getWeaponMasteryDamageMultiplier(family: WeaponPathId): number {
+    switch (family) {
+      case 'projectile': return this.projectileBehavior.currentEvolutionDamageMultiplier;
+      // Orbit exposes already-evolved effective damage in currentOrbitDamage.
+      case 'orbit': return 1;
+      case 'chain': return this.chainBehavior.currentDirectHitDamageMultiplier;
+      case 'boomerang': return this.boomerangBehavior.currentImpactDamageMultiplier;
+      case 'pulse_ring': return this.pulseRingBehavior.currentImpactDamageMultiplier;
+      case 'magnetic_charge': return this.magneticChargeBehavior.currentImpactDamageMultiplier;
+    }
   }
 
   public get currentMagneticChargeRank(): number {
@@ -640,8 +657,10 @@ export class CombatWeaponSystem {
   }
 
   private getEffectiveProjectileCooldown(): number {
-    return this.projectileCooldown
-      * (this.projectileEvolution === 'rail_lance' ? 1.35 : this.projectileEvolution === 'pulse_volley' ? 1.15 : 1);
+    // Rail Lance trades a 10% slower rhythm for a 50% heavier direct hit.
+    return this.projectileEvolution === 'rail_lance'
+      ? this.projectileCooldown * RAIL_LANCE_TUNING.cooldownMultiplier
+      : this.projectileCooldown;
   }
 
   private applyProjectileRankStats(): void {
@@ -674,9 +693,7 @@ export class CombatWeaponSystem {
   }
 
   private getEffectiveBoomerangCooldown(): number {
-    const multiplier = this.boomerangBehavior.currentEvolution === 'twin_comet'
-      ? 1.2 : this.boomerangBehavior.currentEvolution === 'singularity_return' ? 1.35 : 1;
-    return this.boomerangCooldown * multiplier;
+    return this.boomerangCooldown;
   }
 
   private getChainCooldownForRank(): number {
@@ -695,9 +712,7 @@ export class CombatWeaponSystem {
   }
 
   private getEffectivePulseRingCooldown(): number {
-    const multiplier = this.pulseRingBehavior.currentEvolution === 'echo_shock'
-      ? 1.15 : this.pulseRingBehavior.currentEvolution === 'compression_wave' ? 1.35 : 1;
-    return this.pulseRingCooldown * multiplier;
+    return this.pulseRingCooldown;
   }
 
   public initializeStress(player: PlayerState): void {

@@ -1,6 +1,26 @@
 import type { BossId } from '../bosses/BossDefinition';
 import type { EnemyKind } from '../enemies/EnemyDefinitions';
 import { OVERDRIVE_HEALTH_MULTIPLIER_CAP } from './OverdriveDefinitions';
+import type { ArenaShape, ArenaShapeChangeDefinition } from './ArenaShapeDefinitions';
+
+/** A bounded, repeating timeline; fights and kill quotas continue during morphs. */
+export const OVERDRIVE_ASSAULT_ARENA_SHAPES: readonly ArenaShape[] = [
+  'circle', 'hexagon', 'square', 'diamond', 'rectangle-horizontal', 'octagon', 'rectangle-vertical'
+];
+export const OVERDRIVE_ASSAULT_ARENA_TIMING = {
+  intervalSeconds: 45, telegraphSeconds: 2, morphSeconds: 1.25
+} as const;
+export const OVERDRIVE_ASSAULT_ARENA_CYCLE_SECONDS =
+  OVERDRIVE_ASSAULT_ARENA_TIMING.intervalSeconds * OVERDRIVE_ASSAULT_ARENA_SHAPES.length;
+export const OVERDRIVE_ASSAULT_ARENA_CHANGES: readonly ArenaShapeChangeDefinition[] =
+  OVERDRIVE_ASSAULT_ARENA_SHAPES.map((from, index) => ({
+    from,
+    to: OVERDRIVE_ASSAULT_ARENA_SHAPES[(index + 1) % OVERDRIVE_ASSAULT_ARENA_SHAPES.length],
+    startSeconds: (index + 1) * OVERDRIVE_ASSAULT_ARENA_TIMING.intervalSeconds
+      - OVERDRIVE_ASSAULT_ARENA_TIMING.telegraphSeconds - OVERDRIVE_ASSAULT_ARENA_TIMING.morphSeconds,
+    telegraphSeconds: OVERDRIVE_ASSAULT_ARENA_TIMING.telegraphSeconds,
+    morphSeconds: OVERDRIVE_ASSAULT_ARENA_TIMING.morphSeconds
+  }));
 
 /** Initial balance hypothesis; compare against Normal runs before release. */
 export const OVERDRIVE_ASSAULT_KILLS_PER_BOSS = 100 as const;

@@ -251,6 +251,14 @@ Liquidar NOVA una sola vez al morir definitivamente o retirarse:
 
 - No mostrar victoria terminal ni pagar por cada boss.
 - Conservar límites de recompensa y cartera actuales.
+- Una derrota paga el 100% de la NOVA generada por la run. Una retirada
+  voluntaria y confirmada desde pausa paga el 50%, redondeado hacia abajo; la
+  mitad restante se pierde. La regla se aplica a Overdrive Normal y Asalto.
+- Antes de confirmar una retirada, mostrar una pantalla integrada con NOVA
+  generada, pérdida y pago neto. Regresar/cancelar conserva la pausa y no
+  modifica la recompensa; aceptar cierra la run y liquida una sola vez.
+- La retirada no ofrece revivir ni duplicar la recompensa con anuncio. Una
+  derrota normal conserva el flujo de revivir y duplicar vigente.
 - No reiniciar revive, duplicación ni contadores de monetización por tramo.
 - Añadir `Retirarse y cobrar` en pausa, con confirmación.
 - Una retirada no cuenta como victoria de campaña.

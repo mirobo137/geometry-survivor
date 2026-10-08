@@ -11,6 +11,7 @@ const EPSILON = 0.000001;
 const COMPRESSION_WAVE_END_RADIUS = 320;
 const ECHO_SHOCK_END_RADIUS = 280;
 const COMPRESSION_WAVE_BURSTS = 3;
+const PULSE_RING_EVOLUTION_DAMAGE_MULTIPLIER = 1.25;
 
 export interface PulseRingWeaponBehaviorContext {
   readonly enemies: EnemySystem;
@@ -76,6 +77,10 @@ export class PulseRingWeaponBehavior {
 
   public get currentDamage(): number {
     return this.damage;
+  }
+
+  public get currentImpactDamageMultiplier(): number {
+    return this.evolution === null ? 1 : PULSE_RING_EVOLUTION_DAMAGE_MULTIPLIER;
   }
 
   public get currentEvolution(): PulseRingEvolution | null {
@@ -148,8 +153,9 @@ export class PulseRingWeaponBehavior {
     // The telegraph and the damaging front share one captured axis. Player
     // movement can aim the next cast, but cannot rotate an already announced
     // wave away from the hitbox the player just read.
-    this.castDirectionX = this.directionX;
-    this.castDirectionY = this.directionY;
+    const aimDirection = this.evolution === 'compression_wave' ? -1 : 1;
+    this.castDirectionX = this.directionX * aimDirection;
+    this.castDirectionY = this.directionY * aimDirection;
     this.state.directionX = this.castDirectionX;
     this.state.directionY = this.castDirectionY;
     this.state.evolution = this.evolution;
@@ -283,7 +289,9 @@ export class PulseRingWeaponBehavior {
       this.hitCastMarkers[index] = cast;
       this.hitEnemyGenerations[index] = enemy.generation;
       this.hitWaveMarkers[index] = waveMarker;
-      enemy.health -= this.context.rollCriticalDamage(this.damage);
+      enemy.health -= this.context.rollCriticalDamage(
+        this.damage * (this.evolution === null ? 1 : PULSE_RING_EVOLUTION_DAMAGE_MULTIPLIER)
+      );
       if (enemy.health <= 0) {
         this.context.onEnemyDefeated(enemy);
         continue;

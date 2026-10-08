@@ -213,6 +213,61 @@ describe('UpgradeApplier', () => {
     expect(applier.getUniversalMasteryChoices()).toHaveLength(6);
   });
 
+  it('previews post-evolution Power cards with their effective per-hit damage', () => {
+    const families = [
+      { family: 'projectile' as const, base: undefined, evolution: 'rail_lance', multiplier: 1.5, amount: 4, stat: 'projectileDamage' },
+      { family: 'orbit' as const, base: 'orbit_blade', evolution: 'solar_crown', multiplier: 1, amount: 4, stat: 'orbitDamage' },
+      { family: 'chain' as const, base: 'chain_lightning', evolution: 'closed_circuit', multiplier: 1.25, amount: 4, stat: 'chainDamage' },
+      { family: 'boomerang' as const, base: 'vector_boomerang', evolution: 'twin_comet', multiplier: 1.25, amount: 4, stat: 'boomerangDamage' },
+      { family: 'pulse_ring' as const, base: 'pulse_ring', evolution: 'echo_shock', multiplier: 1.25, amount: 6, stat: 'pulseRingDamage' },
+      { family: 'magnetic_charge' as const, base: 'magnetic_charge', evolution: 'event_horizon', multiplier: 1.25, amount: 5, stat: 'magneticChargeDamage' }
+    ] as const;
+
+    for (const { family, base, evolution, multiplier, amount, stat } of families) {
+      const combat = new CombatSimulation();
+      const applier = new UpgradeApplier(new PlayerModel(), combat);
+      if (base !== undefined) expect(applier.apply(base)).toBe(true);
+      for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`${family}_rank_${rank}`)).toBe(true);
+      expect(applier.apply(evolution)).toBe(true);
+      const damage = family === 'projectile' ? combat.currentProjectileDamage
+        : family === 'orbit' ? combat.currentOrbitDamage
+          : family === 'chain' ? combat.currentChainDamage
+            : family === 'boomerang' ? combat.currentBoomerangDamage
+              : family === 'pulse_ring' ? combat.currentPulseRingDamage : combat.currentMagneticChargeDamage;
+
+      expect(applier.getPreview(`${family}_mastery_power`)).toEqual({
+        stat,
+        before: expect.closeTo(damage * multiplier),
+        after: expect.closeTo((damage + amount) * multiplier)
+      });
+    }
+
+    const polarCombat = new CombatSimulation();
+    const polarApplier = new UpgradeApplier(new PlayerModel(), polarCombat);
+    expect(polarApplier.apply('magnetic_charge')).toBe(true);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(polarApplier.apply(`magnetic_charge_rank_${rank}`)).toBe(true);
+    expect(polarApplier.apply('polar_collapse')).toBe(true);
+    const polarDamage = polarCombat.currentMagneticChargeDamage;
+    expect(polarApplier.getPreview('magnetic_charge_mastery_power')).toEqual({
+      stat: 'magneticChargeDamage',
+      before: expect.closeTo(polarDamage * 3.2),
+      after: expect.closeTo((polarDamage + 5) * 3.2)
+    });
+  });
+
+  it('shows Rail Lance effective cooldown before and after its Tempo mastery', () => {
+    const combat = new CombatSimulation();
+    const applier = new UpgradeApplier(new PlayerModel(), combat);
+    for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
+    expect(applier.apply('rail_lance')).toBe(true);
+
+    expect(applier.getPreview('projectile_mastery_tempo')).toEqual({
+      stat: 'projectileCooldown',
+      before: expect.closeTo(0.429),
+      after: expect.closeTo(0.374)
+    });
+  });
+
   it('bounds the acquisition history without changing stack totals', () => {
     const applier = new UpgradeApplier(new PlayerModel(), new CombatSimulation(), 0x1234, 'overdrive');
     for (const rank of [2, 3, 4, 5, 6, 7] as const) expect(applier.apply(`projectile_rank_${rank}`)).toBe(true);
@@ -618,10 +673,10 @@ describe('UpgradeApplier', () => {
     expect(applier.apply('singularity_return')).toBe(true);
     const preview = applier.getPreview('boomerang_mastery_coverage');
     expect(preview?.stat).toBe('boomerangDistance');
-    expect(preview?.before).toBeCloseTo(414.4);
-    expect(preview?.after).toBeCloseTo(473.6);
+    expect(preview?.before).toBeCloseTo(252);
+    expect(preview?.after).toBeCloseTo(288);
     expect(applier.apply('boomerang_mastery_coverage')).toBe(true);
-    expect(combat.currentBoomerangOutboundDistance).toBeCloseTo(473.6);
+    expect(combat.currentBoomerangOutboundDistance).toBeCloseTo(288);
   });
 
   it.each(['closed_circuit', 'thunderhead'] as const)('previews and applies extra targets and reach for %s after evolution', evolution => {

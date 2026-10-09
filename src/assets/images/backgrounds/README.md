@@ -75,8 +75,9 @@ incluido el movimiento compartido obligatorio, está en
   compone las dos corrientes fuente estáticas encima de la misma lámina; CSS la
   refleja horizontalmente para cubrir las cuatro esquinas. No anima en UI. Si
   el navegador la decodifica, representa ~1 MiB RGBA adicional en caché.
-- Economía: `priceNova=0`, no resta NOVA ni muestra anuncio; la selección se
-  guarda como cualquier otro fondo.
+- Economía: compra con NOVA y oferta opcional del 25% por video según el
+  [catálogo vigente](../../../../docs/design/CATALOGO_DIEZ.md). Se preserva la
+  propiedad previa; la gratuidad del prototipo ya no aplica a perfiles nuevos.
 - Prueba: `docs/visual/background-reference.html` y
   `docs/visual/capture-background.mjs`.
 

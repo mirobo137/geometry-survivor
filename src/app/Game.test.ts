@@ -7,6 +7,7 @@ import { getRetentionWeeklyEdition, RETENTION_WEEK_ANCHOR_UTC, RETENTION_WEEK_MS
 import type { PlatformAdapter, RewardedAdResult } from '../platform/Platform';
 import type { GameElements, GameOptions } from './Game';
 import { Game } from './Game';
+import type { CosmeticUnlockResult, CosmeticUnlockTarget } from './CosmeticPurchase';
 
 const mocks = vi.hoisted(() => ({
   gameOverOpen: vi.fn(),
@@ -41,6 +42,9 @@ vi.mock('../presentation/PixiGameView', () => ({
     public playPlayerDefeat = vi.fn();
     public playEnemyDefeat = vi.fn();
     public playBossDefeat = vi.fn();
+    public setPlayerSkin = vi.fn();
+    public setCannonSkin = vi.fn();
+    public setBackground = vi.fn();
   }
 }));
 
@@ -165,6 +169,82 @@ const createOptions = (overrides: PlatformOverrides = {}): GameOptions => ({
 });
 
 describe('Game', () => {
+  const purchaseFixture = (result: RewardedAdResult = 'rewarded') => {
+    let saved = { ...createDefaultSaveData(), wallet: { nova: 480 } };
+    const showRewarded = vi.fn(async () => result);
+    const saveDurably = vi.fn((data: typeof saved) => { saved = data; return true; });
+    const game = new Game(createOptions({
+      ads: { isRewardedAvailable: vi.fn(async () => true), showRewarded },
+      saveStore: { load: () => saved, save: () => true, clear: vi.fn(), saveDurably }
+    }));
+    const runtime = game as unknown as {
+      gameState: { phase: string };
+      requestCosmeticUnlock: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
+    };
+    runtime.gameState.phase = 'menu';
+    return { runtime, showRewarded, saveDurably, read: () => saved };
+  };
+
+  it.each([
+    { kind: 'player', id: 'cyan' }, { kind: 'cannon', id: 'basic' }, { kind: 'background', id: 'ion-storm' }
+  ] as const)('commits video purchase for $kind once with NOVA and ownership in one save', async target => {
+    const fixture = purchaseFixture();
+    expect((await fixture.runtime.requestCosmeticUnlock(target)).result).toBe('rewarded');
+    expect(fixture.read().wallet.nova).toBe(30);
+    expect(fixture.saveDurably).toHaveBeenCalledTimes(2); // preflight + atomic purchase
+    expect((await fixture.runtime.requestCosmeticUnlock(target)).result).toBe('unavailable');
+    expect(fixture.read().wallet.nova).toBe(30);
+    expect(fixture.showRewarded).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['dismissed', 'error', 'unavailable'] as const)('does not debit or unlock on %s', async result => {
+    const fixture = purchaseFixture(result);
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' })).result).toBe(result);
+    expect(fixture.read().wallet.nova).toBe(480);
+    expect(fixture.read().skins.unlocked).not.toContain('cyan');
+    expect(fixture.saveDurably).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not show a video when discounted cost is unaffordable or persistence is unavailable', async () => {
+    const fixture = purchaseFixture();
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'violet' })).result).toBe('unavailable');
+    fixture.saveDurably.mockReturnValue(false);
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' })).result).toBe('error');
+    expect(fixture.showRewarded).not.toHaveBeenCalled();
+  });
+
+  it('does not request a cosmetic video outside the menu or after shutdown', async () => {
+    const fixture = purchaseFixture();
+    fixture.runtime.gameState.phase = 'playing';
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' })).result).toBe('unavailable');
+    fixture.runtime.gameState.phase = 'menu';
+    (fixture.runtime as unknown as { stopped: boolean }).stopped = true;
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' })).result).toBe('unavailable');
+    expect(fixture.showRewarded).not.toHaveBeenCalled();
+    expect(fixture.saveDurably).not.toHaveBeenCalled();
+  });
+
+  it('refuses simultaneous requests and rechecks funds after the video', async () => {
+    const fixture = purchaseFixture();
+    let finish!: (result: RewardedAdResult) => void;
+    fixture.showRewarded.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const purchase = fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' });
+    await vi.waitFor(() => expect(fixture.showRewarded).toHaveBeenCalledTimes(1));
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'cannon', id: 'basic' })).result).toBe('unavailable');
+    fixture.saveDurably({ ...fixture.read(), wallet: { nova: 10 } });
+    finish('rewarded');
+    expect((await purchase).result).toBe('error');
+    expect(fixture.read().wallet.nova).toBe(10);
+    expect(fixture.read().skins.unlocked).not.toContain('cyan');
+  });
+
+  it('leaves ownership and wallet intact if the final durable write fails', async () => {
+    const fixture = purchaseFixture();
+    fixture.saveDurably.mockImplementationOnce(() => true).mockImplementationOnce(() => false);
+    expect((await fixture.runtime.requestCosmeticUnlock({ kind: 'player', id: 'cyan' })).result).toBe('error');
+    expect(fixture.read().wallet.nova).toBe(480);
+    expect(fixture.read().skins.unlocked).not.toContain('cyan');
+  });
   it.each([
     ['playing', 0.1], ['paused', 0], ['level-up', 0], ['menu', 0], ['run-intro', 0],
     ['victory', 0.1], ['game-over', 0.1], ['act-intermission', 0.1], ['overdrive-transition', 0.1]

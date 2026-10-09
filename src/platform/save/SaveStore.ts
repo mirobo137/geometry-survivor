@@ -152,11 +152,11 @@ export const createDefaultSaveData = (): SaveData => ({
   tutorialSeen: false,
   skins: {
     selected: 'spearhead',
-    unlocked: ['cyan', 'spearhead']
+    unlocked: ['spearhead']
   },
   cannonSkins: {
     selected: 'spearhead',
-    unlocked: ['basic', 'spearhead']
+    unlocked: ['spearhead']
   },
   backgrounds: {
     selected: 'deep-space',
@@ -232,7 +232,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const unlocked = Array.isArray(rawSkins.unlocked)
     ? rawSkins.unlocked.filter(isPlayerSkinId)
     : [];
-  const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['cyan', 'spearhead', ...unlocked]));
+  const normalizedUnlocked = Array.from(new Set<PlayerSkinId>(['spearhead', ...unlocked]));
   const normalizedUnlockedActs = Array.from(new Set<CampaignActId>([
     'radial',
     ...rawUnlockedActs.filter(isCampaignActId)
@@ -245,7 +245,7 @@ export const migrateSaveData = (value: unknown): SaveData => {
   const cannonUnlocked = Array.isArray(rawCannonSkins.unlocked)
     ? rawCannonSkins.unlocked.filter(isCannonSkinId)
     : [];
-  const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['basic', 'spearhead', ...cannonUnlocked]));
+  const normalizedCannonUnlocked = Array.from(new Set<CannonSkinId>(['spearhead', ...cannonUnlocked]));
   const requestedCannon = isCannonSkinId(rawCannonSkins.selected) ? rawCannonSkins.selected : 'spearhead';
   const selectedCannon = normalizedCannonUnlocked.includes(requestedCannon) ? requestedCannon : 'spearhead';
   const backgroundUnlocked = Array.isArray(rawBackgrounds.unlocked)

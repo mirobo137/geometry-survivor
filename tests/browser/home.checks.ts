@@ -35,9 +35,8 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
         const screen = page.locator(`#start-${view}-view`);
         await expect(screen).toBeVisible();
         if (view === 'skins') {
-          await expect(page.locator('#start-cosmetic-rewarded-button')).toBeHidden();
-          await page.locator('#start-cosmetic-rewarded summary').click();
-          await expect(page.locator('#start-cosmetic-rewarded-button')).toBeVisible();
+          // Fully affordable items must not promote a discounted video.
+          await expect(page.locator('.cosmetic-discount-badge:visible')).toHaveCount(0);
         }
         const bounds = await screen.evaluate(element => {
           const body = element.querySelector<HTMLElement>('.console-body')!;
@@ -132,7 +131,7 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
             await page.locator(`#start-${tab}-tab`).click();
             await expect(body).toHaveJSProperty('scrollTop', 0);
             expect(await body.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
-            await expect(page.locator('#start-cosmetic-rewarded-button')).toBeHidden();
+            await expect(page.locator('.cosmetic-discount-badge:visible')).toHaveCount(0);
             if (!process.env.CI && (width === 390 || width === 1280)) {
               await page.screenshot({ path: testInfo.outputPath(`${tab}-${width}.png`) });
             }

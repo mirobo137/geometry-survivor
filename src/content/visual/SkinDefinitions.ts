@@ -44,11 +44,11 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Aurora Strider',
     subtitle: 'La señal original',
     description: 'Un corredor azul acero que atraviesa el vacío con dos alas de media luna abiertas.',
-    rarity: 'INICIAL',
-    tier: 'starter',
-    priceNova: 0,
+    rarity: 'COMÚN',
+    tier: 'common',
+    priceNova: 600,
     palette: PLAYER_SKINS.cyan,
-    acquisition: 'default',
+    acquisition: 'nova',
     signature: 'aurora'
   },
   {
@@ -56,11 +56,11 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Eclipse Prism',
     subtitle: 'Energía de eclipse',
     description: 'Armadura facetada de amatista que encierra un prisma dentro de un eclipse angular.',
-    rarity: 'DESBLOQUEABLE',
+    rarity: 'COMÚN',
     palette: PLAYER_SKINS.violet,
     acquisition: 'nova',
     tier: 'common',
-    priceNova: 250,
+    priceNova: 1200,
     signature: 'prism'
   },
   {
@@ -68,11 +68,11 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Solar Bastion',
     subtitle: 'Núcleo de forja',
     description: 'Un bastión hexagonal de bronce y cerámica que protege un reactor solar incandescente.',
-    rarity: 'NUEVA · DEMO',
+    rarity: 'RARA',
     palette: PLAYER_SKINS.amber,
     acquisition: 'nova',
     tier: 'rare',
-    priceNova: 600,
+    priceNova: 1800,
     signature: 'solar'
   },
   {
@@ -80,11 +80,11 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Verdant Vector',
     subtitle: 'Pulso biocristalino',
     description: 'Cuatro aletas biocristalinas enmarcan un núcleo verde vivo y una quilla precisa.',
-    rarity: 'NUEVA · DEMO',
+    rarity: 'ÉPICA',
     palette: PLAYER_SKINS.emerald,
     acquisition: 'nova',
     tier: 'epic',
-    priceNova: 1200,
+    priceNova: 3600,
     signature: 'verdant'
   },
   {
@@ -92,9 +92,9 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Obsidian Relay',
     subtitle: 'Señal de vacío',
     description: 'Una nave furtiva de obsidiana con tres antenas y una señal rosa encendida.',
-    rarity: 'NUEVA · DEMO',
+    rarity: 'ÉPICA',
     tier: 'epic',
-    priceNova: 1800,
+    priceNova: 4800,
     palette: PLAYER_SKINS.obsidian,
     acquisition: 'nova',
     signature: 'quasar'
@@ -104,9 +104,9 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Nova Warden',
     subtitle: 'Núcleo de supernova',
     description: 'Un guardián plateado de seis escudos alrededor de una estrella azul y dorada.',
-    rarity: 'NUEVA · PREMIUM',
+    rarity: 'ÉPICA',
     tier: 'epic',
-    priceNova: 3000,
+    priceNova: 6000,
     palette: PLAYER_SKINS.nova,
     acquisition: 'nova',
     signature: 'supernova'
@@ -116,9 +116,9 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
     name: 'Manta Veil',
     subtitle: 'Porcelana de las mareas',
     description: 'Un ala de nácar continua, ancha y silenciosa, con reflejos de mar y una perla turquesa.',
-    rarity: 'NUEVA · HÍBRIDA',
-    tier: 'epic',
-    priceNova: 0,
+    rarity: 'RARA',
+    tier: 'rare',
+    priceNova: 2400,
     palette: PLAYER_SKINS.manta,
     acquisition: 'nova',
     signature: 'manta'
@@ -126,13 +126,13 @@ export const PLAYER_SKIN_DEFINITIONS: readonly PlayerSkinDefinition[] = [
   {
     id: 'corsair', name: 'Scarlet Corsair', subtitle: 'Dos proas, una señal',
     description: 'Un catamarán de cerámica escarlata: dos pontones abiertos y motores gemelos de hielo.',
-    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 3600,
+    rarity: 'ÉPICA', tier: 'epic', priceNova: 7200,
     palette: PLAYER_SKINS.corsair, acquisition: 'nova', signature: 'aurora'
   },
   {
     id: 'nautilus', name: 'Nautilus Ark', subtitle: 'La espiral del abismo',
     description: 'Una concha blindada de cobalto y latón abraza un reactor turquesa excéntrico.',
-    rarity: 'NUEVA · PREMIUM', tier: 'epic', priceNova: 4200,
+    rarity: 'ÉPICA', tier: 'epic', priceNova: 9600,
     palette: PLAYER_SKINS.nautilus, acquisition: 'nova', signature: 'quasar'
   },
   {

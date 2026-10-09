@@ -1,3 +1,4 @@
+import type { CosmeticUnlockTarget, CosmeticUnlockResult } from '../../app/CosmeticPurchase';
 import {
   CANNON_SKIN_DEFINITIONS,
   getCannonSkinDefinition,
@@ -5,7 +6,7 @@ import {
 } from '../../content/visual/CannonSkinDefinitions';
 import type { CannonSkinSaveData } from '../../platform/save/SaveStore';
 import type { WalletSaveData } from '../../platform/save/SaveStore';
-import { formatNova } from '../../content/meta/EconomyDefinitions';
+import { formatNova, getCosmeticDiscountQuote } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createCannonPreviewSvg } from './CannonPreviewSvg';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
@@ -14,6 +15,8 @@ import { getRewardCatalogAction } from './RewardCatalogAction';
 import type { RewardCosmeticSource } from '../../content/retention/RewardCosmeticDefinitions';
 
 export interface CannonSelectPanelOptions {
+  readonly discountAvailable?: boolean;
+  readonly onDiscountPurchase?: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
   readonly state: CannonSkinSaveData;
   readonly wallet: WalletSaveData;
   readonly onStateChange: (state: CannonSkinSaveData) => void;
@@ -25,6 +28,7 @@ interface CannonCardEntry {
   readonly card: HTMLElement;
   readonly button: HTMLButtonElement;
   readonly action: HTMLElement;
+  readonly offer: HTMLElement;
 }
 
 /** DOM-only locker for complete cannon + projectile + trail cosmetic packages. */
@@ -32,8 +36,10 @@ export class CannonSelectPanel {
   private readonly cards: HTMLElement;
   private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<CannonSkinId, CannonCardEntry>();
-  private state: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['basic', 'spearhead'] };
+  private state: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['spearhead'] };
   private wallet: WalletSaveData = { nova: 0 };
+  private discountAvailable = false;
+  private discountHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private changeHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
   private rewardNavigateHandler: ((source: RewardCosmeticSource) => void) | null = null;
@@ -48,6 +54,8 @@ export class CannonSelectPanel {
   }
 
   public open(options: CannonSelectPanelOptions): void {
+    this.discountAvailable = options.discountAvailable ?? false;
+    this.discountHandler = options.onDiscountPurchase ?? null;
     this.state = this.normalize(options.state);
     this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
@@ -59,13 +67,15 @@ export class CannonSelectPanel {
   }
 
   public close(): void {
+    this.discountAvailable = false;
+    this.discountHandler = null;
     this.changeHandler = null;
     this.walletHandler = null;
     this.rewardNavigateHandler = null;
   }
 
   private normalize(state: CannonSkinSaveData): CannonSkinSaveData {
-    const unlocked = Array.from(new Set<CannonSkinId>(['basic', 'spearhead', ...state.unlocked]));
+    const unlocked = Array.from(new Set<CannonSkinId>(['spearhead', ...state.unlocked]));
     const selected = unlocked.includes(state.selected) ? state.selected : 'spearhead';
     return { selected, unlocked };
   }
@@ -103,11 +113,14 @@ export class CannonSelectPanel {
       description.textContent = cannon.description;
       const action = document.createElement('span');
       action.className = 'cannon-card-action';
-      copy.append(meta, title, description, action);
+      const offer = document.createElement('span');
+      offer.className = 'cosmetic-discount-badge';
+      offer.textContent = 'OFERTA −25% · VIDEO + NOVA';
+      copy.append(meta, title, description, offer, action);
       button.append(copy);
       card.append(button);
       this.cards.append(card);
-      this.cardEntries.set(cannon.id, { card, button, action });
+      this.cardEntries.set(cannon.id, { card, button, action, offer });
     }
   }
 
@@ -117,6 +130,8 @@ export class CannonSelectPanel {
       if (!entry) continue;
       const unlocked = this.state.unlocked.includes(cannon.id);
       const selected = this.state.selected === cannon.id;
+      entry.offer.hidden = unlocked || !this.discountAvailable || !!getRewardCatalogAction(cannon.id)
+        || !getCosmeticDiscountQuote(cannon.priceNova, this.wallet.nova).eligible;
       entry.card.classList.toggle('is-selected', selected);
       entry.card.classList.toggle('is-locked', !unlocked);
       entry.button.setAttribute('aria-label', unlocked
@@ -166,6 +181,20 @@ export class CannonSelectPanel {
       actionDisabled: selected || (reward ? !reward.available : !unlocked && !affordable),
       status: reward ? reward.status : selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      purchase: !unlocked && !reward && definition.priceNova > 0 ? {
+        priceNova: definition.priceNova, walletNova: this.wallet.nova,
+        videoAvailable: this.discountAvailable,
+        onDiscountPurchase: async () => {
+          const response = await this.discountHandler?.({ kind: 'cannon', id }) ?? { result: 'unavailable' as const };
+          if (response.result === 'rewarded' || response.result === 'unavailable') this.discountAvailable = false;
+          if (response.data) {
+            this.state = this.normalize(response.data.cannonSkins);
+            this.wallet = response.data.wallet;
+          }
+          this.updateCards();
+          return response;
+        }
+      } : undefined,
       onAction: () => { if (reward?.available) this.rewardNavigateHandler?.(reward.source); else if (!reward) this.select(id); }
     }, button);
   }

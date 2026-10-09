@@ -8,6 +8,26 @@ export const NOVA_CURRENCY = {
 
 export type CosmeticTier = 'starter' | 'common' | 'rare' | 'epic';
 
+export const COSMETIC_VIDEO_DISCOUNT_PERCENT = 25;
+
+/** Whole NOVA: round the payable amount up, never discount more than 25%. */
+export const getCosmeticDiscountQuote = (priceNova: number, walletNova: number) => {
+  const price = Number.isFinite(priceNova) ? Math.max(0, Math.floor(priceNova)) : 0;
+  const balance = Number.isFinite(walletNova) ? Math.max(0, Math.floor(walletNova)) : 0;
+  const discountNova = Math.floor(price * COSMETIC_VIDEO_DISCOUNT_PERCENT / 100);
+  const payNova = price - discountNova;
+  return { priceNova: price, balanceNova: balance, discountNova, payNova,
+    missingNova: Math.max(0, price - balance),
+    eligible: price > 0 && balance < price && balance >= payNova };
+};
+
+/**
+ * Approved store ladder per family: 600, 1200, 1800, 2400, 3600, 4800,
+ * 6000, 7200 and 9600 NOVA. At the target 600 NOVA/run (1200 when doubled),
+ * this spans one to sixteen runs without changing the payout formula.
+ * Cosmetic price never implies a combat advantage.
+ */
+
 export interface CosmeticEconomy {
   readonly tier: CosmeticTier;
   readonly priceNova: number;

@@ -5,7 +5,7 @@ import { migrateSaveData } from '../../../platform/save/SaveStore';
 describe('Manta fleet skin contract', () => {
   it('retains existing ownership and selection while granting the free base ship', () => {
     const save = migrateSaveData({ schemaVersion: 5, skins: { selected: 'manta', unlocked: ['cyan', 'manta'] } });
-    expect(save.skins).toEqual({ selected: 'manta', unlocked: ['cyan', 'spearhead', 'manta'] });
+    expect(save.skins).toEqual({ selected: 'manta', unlocked: ['spearhead', 'cyan', 'manta'] });
   });
   it('publishes the new full-ship image as transparent RGBA PNG', () => {
     const png = readFileSync(new URL('../ships/manta.png', import.meta.url));

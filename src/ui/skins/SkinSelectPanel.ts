@@ -1,3 +1,4 @@
+import type { CosmeticUnlockTarget, CosmeticUnlockResult } from '../../app/CosmeticPurchase';
 import {
   getPlayerSkinDefinition,
   PLAYER_SKIN_DEFINITIONS
@@ -5,7 +6,7 @@ import {
 import type { PlayerSkinId } from '../../content/visual/VisualTokens';
 import type { SkinSaveData } from '../../platform/save/SaveStore';
 import type { WalletSaveData } from '../../platform/save/SaveStore';
-import { formatNova } from '../../content/meta/EconomyDefinitions';
+import { formatNova, getCosmeticDiscountQuote } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { createPlayerSkinPreviewSvg } from './SkinPreviewSvg';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
@@ -14,6 +15,8 @@ import type { RewardCosmeticSource } from '../../content/retention/RewardCosmeti
 import { getRewardCatalogAction } from './RewardCatalogAction';
 
 export interface SkinSelectPanelOptions {
+  readonly discountAvailable?: boolean;
+  readonly onDiscountPurchase?: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
   readonly state: SkinSaveData;
   readonly wallet: WalletSaveData;
   readonly onStateChange: (state: SkinSaveData) => void;
@@ -25,6 +28,7 @@ interface SkinCardEntry {
   readonly card: HTMLElement;
   readonly button: HTMLButtonElement;
   readonly action: HTMLElement;
+  readonly offer: HTMLElement;
 }
 
 /** DOM-only locker: accessible cards and shared SVG/hybrid presentation. */
@@ -32,8 +36,10 @@ export class SkinSelectPanel {
   private readonly cards: HTMLElement;
   private readonly dialog: CosmeticPreviewDialog;
   private readonly cardEntries = new Map<PlayerSkinId, SkinCardEntry>();
-  private state: SkinSaveData = { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] };
+  private state: SkinSaveData = { selected: 'spearhead', unlocked: ['spearhead'] };
   private wallet: WalletSaveData = { nova: 0 };
+  private discountAvailable = false;
+  private discountHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private changeHandler: ((state: SkinSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
   private rewardNavigateHandler: ((source: RewardCosmeticSource) => void) | null = null;
@@ -48,6 +54,8 @@ export class SkinSelectPanel {
   }
 
   public open(options: SkinSelectPanelOptions): void {
+    this.discountAvailable = options.discountAvailable ?? false;
+    this.discountHandler = options.onDiscountPurchase ?? null;
     this.state = this.normalize(options.state);
     this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
@@ -59,13 +67,15 @@ export class SkinSelectPanel {
   }
 
   public close(): void {
+    this.discountAvailable = false;
+    this.discountHandler = null;
     this.changeHandler = null;
     this.walletHandler = null;
     this.rewardNavigateHandler = null;
   }
 
   private normalize(state: SkinSaveData): SkinSaveData {
-    const unlocked = Array.from(new Set<PlayerSkinId>(['cyan', 'spearhead', ...state.unlocked]));
+    const unlocked = Array.from(new Set<PlayerSkinId>(['spearhead', ...state.unlocked]));
     const selected = unlocked.includes(state.selected) ? state.selected : 'spearhead';
     return { selected, unlocked };
   }
@@ -109,11 +119,14 @@ export class SkinSelectPanel {
       description.textContent = skin.description;
       const action = document.createElement('span');
       action.className = 'skin-card-action';
-      copy.append(meta, title, description, action);
+      const offer = document.createElement('span');
+      offer.className = 'cosmetic-discount-badge';
+      offer.textContent = 'OFERTA −25% · VIDEO + NOVA';
+      copy.append(meta, title, description, offer, action);
       button.append(copy);
       card.append(button);
       this.cards.append(card);
-      this.cardEntries.set(skin.id, { card, button, action });
+      this.cardEntries.set(skin.id, { card, button, action, offer });
     }
   }
 
@@ -123,6 +136,8 @@ export class SkinSelectPanel {
       if (!entry) continue;
       const unlocked = this.state.unlocked.includes(skin.id);
       const selected = this.state.selected === skin.id;
+      entry.offer.hidden = unlocked || !this.discountAvailable || !!getRewardCatalogAction(skin.id)
+        || !getCosmeticDiscountQuote(skin.priceNova, this.wallet.nova).eligible;
       entry.card.classList.toggle('is-selected', selected);
       entry.card.classList.toggle('is-locked', !unlocked);
       entry.button.setAttribute('aria-label', unlocked
@@ -190,6 +205,20 @@ export class SkinSelectPanel {
         : definition.acquisition === 'daily-wheel' ? 'Recompensa exclusiva disponible en la ruleta diaria'
         : definition.acquisition === 'event' ? 'Recompensa exclusiva disponible en Retos y Bitácora'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      purchase: !unlocked && !reward && definition.priceNova > 0 ? {
+        priceNova: definition.priceNova, walletNova: this.wallet.nova,
+        videoAvailable: this.discountAvailable,
+        onDiscountPurchase: async () => {
+          const response = await this.discountHandler?.({ kind: 'player', id }) ?? { result: 'unavailable' as const };
+          if (response.result === 'rewarded' || response.result === 'unavailable') this.discountAvailable = false;
+          if (response.data) {
+            this.state = this.normalize(response.data.skins);
+            this.wallet = response.data.wallet;
+          }
+          this.updateCards();
+          return response;
+        }
+      } : undefined,
       onAction: () => {
         if (reward) {
           if (getRewardCatalogAction(id)?.available) this.rewardNavigateHandler?.(reward.source);

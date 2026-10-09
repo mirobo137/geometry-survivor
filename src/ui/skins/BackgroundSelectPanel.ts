@@ -1,3 +1,4 @@
+import type { CosmeticUnlockTarget, CosmeticUnlockResult } from '../../app/CosmeticPurchase';
 import {
   BACKGROUND_DEFINITIONS,
   getBackgroundDefinition,
@@ -5,7 +6,7 @@ import {
 } from '../../content/visual/BackgroundDefinitions';
 import type { BackgroundSaveData } from '../../platform/save/SaveStore';
 import type { WalletSaveData } from '../../platform/save/SaveStore';
-import { formatNova } from '../../content/meta/EconomyDefinitions';
+import { formatNova, getCosmeticDiscountQuote } from '../../content/meta/EconomyDefinitions';
 import novaSvg from '../../assets/svg/ui/nova.svg?raw';
 import { CosmeticPreviewDialog } from './CosmeticPreviewDialog';
 import { getRewardCatalogAction } from './RewardCatalogAction';
@@ -13,6 +14,8 @@ import { REWARD_COSMETIC_IMAGES } from '../../assets/skins/RewardCosmeticAssets'
 import { getRewardCosmetic, type RewardCosmeticSource } from '../../content/retention/RewardCosmeticDefinitions';
 
 export interface BackgroundSelectPanelOptions {
+  readonly discountAvailable?: boolean;
+  readonly onDiscountPurchase?: (target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>;
   readonly state: BackgroundSaveData;
   readonly wallet: WalletSaveData;
   readonly onStateChange: (state: BackgroundSaveData) => void;
@@ -24,6 +27,7 @@ interface BackgroundCardEntry {
   readonly card: HTMLElement;
   readonly button: HTMLButtonElement;
   readonly action: HTMLElement;
+  readonly offer: HTMLElement;
 }
 
 /** DOM-only locker for selectable, presentation-only arena atmospheres. */
@@ -33,6 +37,8 @@ export class BackgroundSelectPanel {
   private readonly cardEntries = new Map<BackgroundId, BackgroundCardEntry>();
   private state: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
+  private discountAvailable = false;
+  private discountHandler: ((target: CosmeticUnlockTarget) => Promise<CosmeticUnlockResult>) | null = null;
   private changeHandler: ((state: BackgroundSaveData) => void) | null = null;
   private walletHandler: ((wallet: WalletSaveData) => void) | null = null;
   private rewardNavigateHandler: ((source: RewardCosmeticSource) => void) | null = null;
@@ -47,6 +53,8 @@ export class BackgroundSelectPanel {
   }
 
   public open(options: BackgroundSelectPanelOptions): void {
+    this.discountAvailable = options.discountAvailable ?? false;
+    this.discountHandler = options.onDiscountPurchase ?? null;
     this.state = this.normalize(options.state);
     this.wallet = { nova: Math.max(0, Math.floor(options.wallet.nova)) };
     this.changeHandler = options.onStateChange;
@@ -57,6 +65,8 @@ export class BackgroundSelectPanel {
   }
 
   public close(): void {
+    this.discountAvailable = false;
+    this.discountHandler = null;
     this.changeHandler = null;
     this.walletHandler = null;
     this.rewardNavigateHandler = null;
@@ -106,11 +116,14 @@ export class BackgroundSelectPanel {
       description.textContent = background.description;
       const action = document.createElement('span');
       action.className = 'background-card-action';
-      copy.append(meta, title, description, action);
+      const offer = document.createElement('span');
+      offer.className = 'cosmetic-discount-badge';
+      offer.textContent = 'OFERTA −25% · VIDEO + NOVA';
+      copy.append(meta, title, description, offer, action);
       button.append(art, copy);
       card.append(button);
       this.cards.append(card);
-      this.cardEntries.set(background.id, { card, button, action });
+      this.cardEntries.set(background.id, { card, button, action, offer });
     }
   }
 
@@ -120,6 +133,8 @@ export class BackgroundSelectPanel {
       if (!entry) continue;
       const unlocked = this.state.unlocked.includes(background.id);
       const selected = this.state.selected === background.id;
+      entry.offer.hidden = unlocked || !this.discountAvailable || !!getRewardCatalogAction(background.id)
+        || !getCosmeticDiscountQuote(background.priceNova, this.wallet.nova).eligible;
       entry.card.classList.toggle('is-selected', selected);
       const reward = getRewardCatalogAction(background.id);
       const challengeRewardOwned = reward?.source === 'weekly-logbook' && unlocked;
@@ -190,6 +205,20 @@ export class BackgroundSelectPanel {
       actionDisabled: selected || (reward ? !reward.available : !unlocked && !affordable),
       status: reward ? reward.status : selected ? 'Equipado actualmente' : unlocked ? 'Desbloqueado'
         : affordable ? 'Disponible para desbloquear' : `Faltan ${formatNova(definition.priceNova - this.wallet.nova)} NOVA`,
+      purchase: !unlocked && !reward && definition.priceNova > 0 ? {
+        priceNova: definition.priceNova, walletNova: this.wallet.nova,
+        videoAvailable: this.discountAvailable,
+        onDiscountPurchase: async () => {
+          const response = await this.discountHandler?.({ kind: 'background', id }) ?? { result: 'unavailable' as const };
+          if (response.result === 'rewarded' || response.result === 'unavailable') this.discountAvailable = false;
+          if (response.data) {
+            this.state = this.normalize(response.data.backgrounds);
+            this.wallet = response.data.wallet;
+          }
+          this.updateCards();
+          return response;
+        }
+      } : undefined,
       onAction: () => { if (reward?.available) this.rewardNavigateHandler?.(reward.source); else if (!reward) this.select(id); }
     }, button);
   }

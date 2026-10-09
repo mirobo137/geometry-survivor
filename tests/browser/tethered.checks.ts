@@ -123,13 +123,15 @@ export const registerTetheredShipChecks = (): void => {
     }
     expect(errors).toEqual([]);
   });
-  test('Ivory Spear se equipa gratis en skins y persiste sin URL de prototipo', async ({ page }, testInfo) => {
+  test('Ivory Spear se equipa gratis y conserva la propiedad previa de Cyan', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.addInitScript(() => {
       const host = window as unknown as { __PIXI_APP_INIT__?: (app: unknown) => void; __tetherSmokeApp?: unknown };
       host.__PIXI_APP_INIT__ = app => { host.__tetherSmokeApp = app; };
+      if (!localStorage.getItem('geometry-survivor:save')) localStorage.setItem('geometry-survivor:save',
+        JSON.stringify({ schemaVersion: 8, skins: { selected: 'spearhead', unlocked: ['spearhead', 'cyan'] }, wallet: { nova: 0 } }));
     });
     await page.goto('/?quality=low');
     await expect(page.locator('#boot-status')).toBeHidden();

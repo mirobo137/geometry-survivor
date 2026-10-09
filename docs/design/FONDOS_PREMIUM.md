@@ -143,9 +143,11 @@ imagen en X/Y por separado ni mover cámara, simulación o arena para encajarla.
 ## Integración de producto
 
 ID estable: nacre-orbit. Aparece primero en Skins → Fondos.
-Precio cero y etiqueta GRATIS · EQUIPAR. Usa el flujo de adquisición existente
-con priceNova=0: no resta NOVA ni ofrece anuncio. Al equipar se añade a unlocked
-y persiste selected. No se fuerza sobre el fondo que el usuario ya tenía.
+Usa el flujo de compra vigente con NOVA y la oferta opcional del 25% por video;
+precios y condiciones canónicos en [Catálogo](CATALOGO_DIEZ.md). La gratuidad
+del prototipo quedó reemplazada. Al comprar se añade a unlocked y persiste
+selected; quienes ya lo adquirieron lo conservan. No se fuerza sobre el fondo
+que el usuario ya tenía.
 No necesita nueva versión del save; isBackgroundId admite el nuevo ID.
 
 ## Comprobación reproducible
@@ -156,7 +158,8 @@ ArenaView reales en landscape, portrait, Low y High.
 node docs/visual/capture-background.mjs genera referencia, locker y boss
 Low desktop/High portrait en test-results/background-reference/. En las
 capturas de combate se oculta sólo el panel debug para inspeccionar el arte.
-El script verifica selección gratis, saldo y ausencia de errores de página/HTTP.
+El script de referencia conserva el flujo del prototipo; para validar compras
+vigentes usar los smoke de catálogo y compra, saldo y ausencia de errores.
 
 Validar carga fallida/tardía, reutilización, resize, cambio de tema, cartera
 vacía, persistencia, menú y partida. Ejecutar typecheck, tests, builds local,

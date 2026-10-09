@@ -118,6 +118,15 @@ Validar los flujos completos en PC y móvil:
   en ambos, probabilidad compartida de 1% a 20%, cambio de temporada y guardado;
 - revisar en el catálogo que cada premio activo redirija a su fuente y los
   premios fuera de temporada no parezcan comprables;
+- validar en juego el ritmo de la escala de tienda aprobada (600–9,600 NOVA
+  por familia; importes en [catálogo](docs/design/CATALOGO_DIEZ.md)) y la oferta
+  opcional del 25% por video en naves,
+  cañones y fondos: sólo cuando no alcance el precio normal pero sí el rebajado;
+  tarjeta con indicador, modal con precio/saldo/faltante/descuento/pago y cobro
+  de NOVA junto al desbloqueo después de completar el video. No hay desbloqueo
+  gratuito por anuncio; sólo los tres cosméticos iniciales parten abiertos.
+  Se preserva la propiedad de perfiles existentes y los premios exclusivos.
+  Confirmar el flujo con anuncios reales en el portal y móvil físico;
 - probar errores de almacenamiento, callbacks repetidos, dos pestañas, cartera
   al tope, cancelación de anuncio y salida/reinicio del evento.
 

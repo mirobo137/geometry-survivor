@@ -29,10 +29,10 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'nacre-orbit',
     name: 'Órbita de Nacre',
     subtitle: 'Silencio entre mundos',
-    description: 'Un gigante anillado en penumbra y una luna distante. Gratis para probar.',
-    rarity: 'PREMIUM · GRATIS',
+    description: 'Un gigante anillado en penumbra y una luna distante.',
+    rarity: 'ÉPICA',
     tier: 'epic',
-    priceNova: 0,
+    priceNova: 4800,
     acquisition: 'nova',
     tokens: { base: 0x080e1c, glow: 0x243745, accent: 0x718b90, secondary: 0x899188, pattern: 'constellation' }
   },
@@ -40,10 +40,10 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'vesper-bloom',
     name: 'Flor del Ocaso',
     subtitle: 'Materia que despierta',
-    description: 'Una flor astral facetada en la periferia. Gratis para probar.',
-    rarity: 'PREMIUM · GRATIS',
+    description: 'Una flor astral facetada en la periferia.',
+    rarity: 'ÉPICA',
     tier: 'epic',
-    priceNova: 0,
+    priceNova: 3600,
     acquisition: 'nova',
     tokens: { base: 0x080b17, glow: 0x3d315a, accent: 0x9b8aac, secondary: 0x79aaa5, pattern: 'crystal' }
   },
@@ -51,10 +51,10 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     id: 'tidal-veil',
     name: 'Velo de Marea',
     subtitle: 'Corrientes bajo el vacío',
-    description: 'Nebulosas pintadas en los bordes y un centro sereno. Gratis para probar.',
-    rarity: 'PREMIUM · GRATIS',
-    tier: 'epic',
-    priceNova: 0,
+    description: 'Nebulosas pintadas en los bordes y un centro sereno.',
+    rarity: 'RARA',
+    tier: 'rare',
+    priceNova: 2400,
     acquisition: 'nova',
     tokens: { base: 0x080b17, glow: 0x243742, accent: 0x668d91, secondary: 0x93816b, pattern: 'nebula' }
   },
@@ -74,10 +74,10 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     name: 'Tormenta iónica',
     subtitle: 'Nubes de carga',
     description: 'Velos de vapor iónico teal y cian alrededor de una zona central oscura.',
-    rarity: 'DESBLOQUEABLE',
+    rarity: 'COMÚN',
     acquisition: 'nova',
     tier: 'common',
-    priceNova: 150,
+    priceNova: 600,
     tokens: { base: 0x071321, glow: 0x174c5a, accent: 0x65f2c2, secondary: 0x75e6ff, pattern: 'nebula' }
   },
   {
@@ -85,10 +85,10 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     name: 'Deriva solar',
     subtitle: 'Ruta de forja',
     description: 'Corrientes pictóricas de cobre y ámbar, contenidas en los bordes.',
-    rarity: 'NUEVA · DEMO',
+    rarity: 'RARA',
     acquisition: 'nova',
     tier: 'rare',
-    priceNova: 350,
+    priceNova: 1200,
     tokens: { base: 0x170d0d, glow: 0x5b2b1f, accent: 0xffb86b, secondary: 0xffe39a, pattern: 'solar' }
   },
   {
@@ -96,28 +96,28 @@ export const BACKGROUND_DEFINITIONS: readonly BackgroundDefinition[] = [
     name: 'Campo cristal',
     subtitle: 'Geometría suspendida',
     description: 'Estratos de geoda violeta y teal que enmarcan el espacio de combate.',
-    rarity: 'NUEVA · DEMO',
+    rarity: 'RARA',
     acquisition: 'nova',
-    tier: 'epic',
-    priceNova: 700,
+    tier: 'rare',
+    priceNova: 1800,
     tokens: { base: 0x100b20, glow: 0x38205b, accent: 0xd2a8ff, secondary: 0x75e6ff, pattern: 'crystal' }
   },
   {
     id: 'silent-archive', name: 'Archivo Silente', subtitle: 'Bóvedas que olvidaron las estrellas',
     description: 'Arcos monumentales de cerámica erosionada descansan sobre un abismo teal.',
-    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 1200, acquisition: 'nova',
+    rarity: 'ÉPICA', tier: 'epic', priceNova: 6000, acquisition: 'nova',
     tokens: { base: 0x070e16, glow: 0x243f45, accent: 0xa0c1bc, secondary: 0xb8ad91, pattern: 'constellation' }
   },
   {
     id: 'lunar-fault', name: 'Falla Lunar', subtitle: 'El silencio de una corteza rota',
     description: 'Terrazas de cráter y basalto ceniciento enmarcan un golfo oscuro con luz rasante.',
-    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 1800, acquisition: 'nova',
+    rarity: 'ÉPICA', tier: 'epic', priceNova: 7200, acquisition: 'nova',
     tokens: { base: 0x0c0e15, glow: 0x343b44, accent: 0xb1b7c2, secondary: 0xa58268, pattern: 'solar' }
   },
   {
     id: 'leviathan-wake', name: 'Estela del Leviatán', subtitle: 'Un fósil entre las mareas negras',
     description: 'Costillas colosales de jade y nácar se pierden en una profundidad azul abisal.',
-    rarity: 'NUEVO · PREMIUM', tier: 'epic', priceNova: 2400, acquisition: 'nova',
+    rarity: 'ÉPICA', tier: 'epic', priceNova: 9600, acquisition: 'nova',
     tokens: { base: 0x050d17, glow: 0x183f41, accent: 0x82bcaf, secondary: 0x91aabd, pattern: 'nebula' }
   }
   ,...REWARD_COSMETICS.filter(reward => reward.family === 'background').map((reward, index) => ({

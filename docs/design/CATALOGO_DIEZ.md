@@ -1,7 +1,7 @@
 # Catálogo de lanzamiento — identidad y composición
 
-Contrato de identidad para diez cosméticos por familia, sin sustituir propiedad,
-precios ni IDs existentes. Contratos:
+Contrato de identidad para diez cosméticos por familia, sin sustituir propiedad
+ni IDs existentes. Los precios reflejan la calibración comercial vigente. Contratos:
 [Naves PNG](NAVES_PNG.md), [Arte híbrido](ARTE_HIBRIDO.md) y
 [Fondos premium](FONDOS_PREMIUM.md). No cambia simulación ni balance.
 
@@ -55,18 +55,47 @@ pooling.
 
 | Familia / ID | Nombre | NOVA | Derivados runtime / preview (bytes) |
 | --- | --- | ---: | --- |
-| Nave `corsair` | Scarlet Corsair | 3,600 | PNG 256²: 65,728 |
-| Nave `nautilus` | Nautilus Ark | 4,200 | PNG 256²: 63,155 |
-| Cañón `gyre` | Gyre Coil | 3,600 | PNG 128²: 27,572; cabeza 6,132; cinta 5,902 |
-| Cañón `razor` | Rift Saw | 4,200 | PNG 128²: 28,589; cabeza 5,661; cinta 6,742 |
-| Fondo `silent-archive` | Archivo Silente | 1,200 | WebP 1254²: 86,762; preview 512²: 17,982 |
-| Fondo `lunar-fault` | Falla Lunar | 1,800 | WebP 1254²: 114,674; preview 512²: 23,660 |
-| Fondo `leviathan-wake` | Estela del Leviatán | 2,400 | WebP 1254²: 65,080; preview 512²: 15,092 |
+| Nave `corsair` | Scarlet Corsair | 7,200 | PNG 256²: 65,728 |
+| Nave `nautilus` | Nautilus Ark | 9,600 | PNG 256²: 63,155 |
+| Cañón `gyre` | Gyre Coil | 7,200 | PNG 128²: 27,572; cabeza 6,132; cinta 5,902 |
+| Cañón `razor` | Rift Saw | 9,600 | PNG 128²: 28,589; cabeza 5,661; cinta 6,742 |
+| Fondo `silent-archive` | Archivo Silente | 6,000 | WebP 1254²: 86,762; preview 512²: 17,982 |
+| Fondo `lunar-fault` | Falla Lunar | 7,200 | WebP 1254²: 114,674; preview 512²: 23,660 |
+| Fondo `leviathan-wake` | Estela del Leviatán | 9,600 | WebP 1254²: 65,080; preview 512²: 15,092 |
 
-Son cosméticos comprables con NOVA, no premios forzados ni otra migración. Se
-mantienen todos los cosméticos gratuitos y los precios anteriores. Selección y
-propiedad usan los mismos guards y payload localStorage; la nave nueva elegida
-también aparece en Inicio mediante el contrato ya existente.
+Son cosméticos comprables con NOVA, sin ventajas de combate. Sólo Ivory Spear,
+su cañón y Deep Space parten desbloqueados; se preserva la propiedad previa.
+Los premios exclusivos siguen obteniéndose en retos/ruleta, no en la tienda.
+El precio canónico está en las definiciones de contenido. La escala aprobada
+se aplica a las nueve opciones comprables de cada familia, conservando su
+orden relativo de costo anterior:
+
+| NOVA | Nave | Cañón | Fondo |
+| ---: | --- | --- | --- |
+| 600 | `cyan` | `basic` | `ion-storm` |
+| 1,200 | `violet` | `curve` | `solar-drift` |
+| 1,800 | `amber` | `smoke` | `crystal-field` |
+| 2,400 | `manta` | `bloom` | `tidal-veil` |
+| 3,600 | `emerald` | `rainbow` | `vesper-bloom` |
+| 4,800 | `obsidian` | `lattice` | `nacre-orbit` |
+| 6,000 | `nova` | `helix` | `silent-archive` |
+| 7,200 | `corsair` | `gyre` | `lunar-fault` |
+| 9,600 | `nautilus` | `razor` | `leviathan-wake` |
+
+Con el escenario de 600 NOVA por partida (1,200 con duplicación), la escala
+equivale a 1–16 partidas sin video o 0.5–8 duplicadas. Son referencias de
+calibración, no ingresos garantizados; no se cambia la fórmula de ganancias,
+el Laboratorio ni las rarezas. Pendiente validar el ritmo real en juego.
+
+Si el saldo no alcanza el precio normal pero sí el 75%, se ofrece en esa skin
+un descuento opcional del 25% por video. La tarjeta indica la oferta; el modal
+expone precio, saldo, faltante, descuento y pago, dejando explícito **video +
+NOVA**, no desbloqueo gratis. Se redondea el pago hacia arriba a NOVA entera
+(600 → 450, ahorro 150; 9,600 → 7,200, ahorro 2,400). Sólo se cobra y equipa tras completar el video,
+guardando débito y propiedad en un payload mediante el proveedor activo
+(local o SDK). Cancelación/error no otorgan propiedad ni descuentan saldo;
+se revalidan precio, saldo y propiedad al terminar el video. Se conserva el
+límite existente de una oferta cosmética exitosa por sesión/run.
 
 Prompts literales de las nueve generaciones originales y rutas fuente:
 [`catalog-ten-image-sources.json`](../../scripts/catalog-ten-image-sources.json).

@@ -102,7 +102,7 @@ export const registerCatalogChecks = (): void => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(() => {
       if (!localStorage.getItem('geometry-survivor:save')) localStorage.setItem('geometry-survivor:save',
-        JSON.stringify({ schemaVersion: 8, wallet: { nova: 30_000 } }));
+        JSON.stringify({ schemaVersion: 8, wallet: { nova: 60_000 } }));
     });
     await page.goto('/?quality=low');
     await expect(page.locator('#boot-status')).toBeHidden();
@@ -134,12 +134,12 @@ export const registerCatalogChecks = (): void => {
     expect(await page.locator('.home-mark-image').evaluate(image => (image as HTMLImageElement).currentSrc)).toContain('nautilus-');
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save')!));
     expect(saved.skins.selected).toBe('nautilus');
-    expect(saved.skins.unlocked).toEqual(expect.arrayContaining(['cyan', 'corsair', 'nautilus']));
+    expect(saved.skins.unlocked).toEqual(['spearhead', 'corsair', 'nautilus']);
     expect(saved.cannonSkins.selected).toBe('razor');
-    expect(saved.cannonSkins.unlocked).toEqual(expect.arrayContaining(['basic', 'gyre', 'razor']));
+    expect(saved.cannonSkins.unlocked).toEqual(['spearhead', 'gyre', 'razor']);
     expect(saved.backgrounds.selected).toBe('leviathan-wake');
     expect(saved.backgrounds.unlocked).toEqual(expect.arrayContaining(['deep-space', 'silent-archive', 'lunar-fault']));
-    expect(saved.wallet.nova).toBe(9000);
+    expect(saved.wallet.nova).toBe(60000 - 7200 - 9600 - 7200 - 9600 - 6000 - 7200 - 9600);
     expect(errors).toEqual([]);
   });
 };

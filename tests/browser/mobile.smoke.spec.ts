@@ -1,3 +1,4 @@
+import { registerPurchaseChecks } from './purchase.checks';
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { CANNON_SKIN_DEFINITIONS } from '../../src/content/visual/CannonSkinDefinitions';
@@ -22,6 +23,7 @@ registerTetheredShipChecks();
 registerCatalogChecks();
 registerDailyWheelChecks();
 registerLogbookChecks();
+registerPurchaseChecks();
 
 test('el idioma detecta el dispositivo, permite elegir manualmente y persiste la elección', async ({ page }) => {
   await page.addInitScript(() => {
@@ -299,8 +301,9 @@ test('permite desplazarse por el locker de skins en portrait', async ({ page }, 
     const rect = dialog.getBoundingClientRect();
     return rect.left >= 0 && rect.right <= innerWidth && rect.top >= 0 && rect.bottom <= innerHeight;
   })).toBe(true);
-  await page.locator('#start-cosmetic-action').click();
-  await expect(page.locator('.background-card[data-background="nacre-orbit"]')).toHaveClass(/is-selected/);
+  await expect(page.locator('#start-cosmetic-action')).toBeDisabled();
+  await expect(page.locator('#start-cosmetic-price-summary')).toContainText('4,800 NOVA');
+  await expect(page.locator('.background-card[data-background="nacre-orbit"]')).toHaveClass(/is-locked/);
   expect(failures).toEqual([]);
 });
 

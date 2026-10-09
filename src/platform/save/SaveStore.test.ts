@@ -52,7 +52,7 @@ describe('LocalSaveStore', () => {
     const defaults = createDefaultSaveData();
     store.save({ ...defaults, wallet: { nova: 425 },
       skins: { selected: 'spearhead', unlocked: ['cyan', 'manta', 'spearhead'] } });
-    expect(store.load().skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'spearhead', 'manta'] });
+    expect(store.load().skins).toEqual({ selected: 'spearhead', unlocked: ['spearhead', 'cyan', 'manta'] });
     expect(store.load().wallet.nova).toBe(425);
     expect(store.load().cannonSkins).toEqual(defaults.cannonSkins);
   });
@@ -77,7 +77,7 @@ describe('LocalSaveStore', () => {
 
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION);
     expect(migrated.best).toEqual({ timeSeconds: 321, score: 9_876 });
-    expect(migrated.skins).toEqual({ selected: 'manta', unlocked: ['cyan', 'spearhead', 'manta'] });
+    expect(migrated.skins).toEqual({ selected: 'manta', unlocked: ['spearhead', 'cyan', 'manta'] });
     expect(migrated.wallet.nova).toBe(1_234);
     expect(migrated.overdrive.unlocked).toBe(true);
     expect(migrated.lastSelectedRoute).toBe('overdrive');
@@ -179,8 +179,8 @@ describe('LocalSaveStore', () => {
       },
       best: { timeSeconds: 0, score: 14 },
       tutorialSeen: true,
-      skins: { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] },
-      cannonSkins: { selected: 'spearhead', unlocked: ['basic', 'spearhead'] },
+      skins: { selected: 'spearhead', unlocked: ['spearhead'] },
+      cannonSkins: { selected: 'spearhead', unlocked: ['spearhead'] },
       backgrounds: { selected: 'deep-space', unlocked: ['deep-space'] },
       wallet: { nova: 0 },
       laboratory: createDefaultSaveData().laboratory,
@@ -364,15 +364,15 @@ describe('LocalSaveStore', () => {
     expect(migrateSaveData({
       schemaVersion: 1,
       skins: { selected: 'violet', unlocked: ['violet', 'violet', 'unknown'] }
-    }).skins).toEqual({ selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet'] });
+    }).skins).toEqual({ selected: 'violet', unlocked: ['spearhead', 'violet'] });
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       skins: { selected: 'violet', unlocked: [] }
-    }).skins).toEqual({ selected: 'spearhead', unlocked: ['cyan', 'spearhead'] });
+    }).skins).toEqual({ selected: 'spearhead', unlocked: ['spearhead'] });
     expect(migrateSaveData({
       schemaVersion: SAVE_SCHEMA_VERSION,
       cannonSkins: { selected: 'rainbow', unlocked: ['rainbow', 'rainbow', 'unknown'] }
-    }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['basic', 'spearhead', 'rainbow'] });
+    }).cannonSkins).toEqual({ selected: 'rainbow', unlocked: ['spearhead', 'rainbow'] });
     expect(migrateSaveData({
       schemaVersion: 3,
       backgrounds: { selected: 'crystal-field', unlocked: ['crystal-field', 'crystal-field', 'unknown'] }

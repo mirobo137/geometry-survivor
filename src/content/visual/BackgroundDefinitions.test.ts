@@ -14,7 +14,7 @@ describe('BackgroundDefinitions', () => {
     expect(getBackgroundDefinition('deep-space').id).toBe('deep-space');
     expect(isBackgroundId('crystal-field')).toBe(true);
     expect(isBackgroundId('unknown')).toBe(false);
-    expect(getBackgroundDefinition('nacre-orbit').priceNova).toBe(0);
-    expect(getBackgroundDefinition('vesper-bloom').priceNova).toBe(0);
+    expect(getBackgroundDefinition('nacre-orbit').priceNova).toBeGreaterThan(0);
+    expect(getBackgroundDefinition('vesper-bloom').priceNova).toBeGreaterThan(0);
   });
 });

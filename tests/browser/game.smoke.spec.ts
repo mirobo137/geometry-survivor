@@ -1,3 +1,4 @@
+import { registerPurchaseChecks } from './purchase.checks';
 import { expect, test, type Page } from '@playwright/test';
 import { BACKGROUND_DEFINITIONS } from '../../src/content/visual/BackgroundDefinitions';
 import { CANNON_SKIN_DEFINITIONS } from '../../src/content/visual/CannonSkinDefinitions';
@@ -24,6 +25,7 @@ registerTetheredShipChecks();
 registerCatalogChecks();
 registerDailyWheelChecks();
 registerLogbookChecks();
+registerPurchaseChecks();
 
 test('barras compactas de vida y XP caben en el HUD de todos los modos', async ({ page }, testInfo) => {
   const failures = captureRuntimeFailures(page);
@@ -327,8 +329,8 @@ test('compra y equipa skins desde el menu y conserva la seleccion', async ({ pag
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.skin-card[data-skin="nova"]')).toHaveClass(/is-selected/);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['cyan', 'spearhead', 'violet', 'nova'] });
-  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(saved.skins).toMatchObject({ selected: 'nova', unlocked: ['spearhead', 'violet', 'nova'] });
+  expect(saved.wallet.nova).toBe(20000 - 1200 - 6000);
   await expect(page.locator('.home-mark-image')).toHaveAttribute('data-skin', 'nova');
   expect(failures).toEqual([]);
 });
@@ -361,8 +363,8 @@ test('compra y equipa canones desde el menu y conserva la seleccion', async ({ p
   await page.locator('#start-cosmetic-action').click();
   await expect(page.locator('.cannon-card[data-cannon="helix"]')).toHaveClass(/is-selected/);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['basic', 'spearhead', 'curve', 'helix'] });
-  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(saved.cannonSkins).toMatchObject({ selected: 'helix', unlocked: ['spearhead', 'curve', 'helix'] });
+  expect(saved.wallet.nova).toBe(20000 - 1200 - 6000);
   expect(failures).toEqual([]);
 });
 
@@ -392,7 +394,7 @@ test('compra y equipa fondos desde el menu y conserva la seleccion', async ({ pa
   await expect(page.locator('#start-main-view')).toBeVisible();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
   expect(saved.backgrounds).toMatchObject({ selected: 'crystal-field', unlocked: ['deep-space', 'ion-storm', 'crystal-field'] });
-  expect(saved.wallet.nova).toBeLessThan(20000);
+  expect(saved.wallet.nova).toBe(20000 - 600 - 1800);
   expect(failures).toEqual([]);
 });
 
@@ -453,16 +455,20 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   expect(failures).toEqual([]);
 });
 
-test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al recargar', async ({ page }) => {
+test('compra Nacre y Vesper con NOVA y conserva el fondo al recargar', async ({ page }) => {
   const failures = captureRuntimeFailures(page);
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('geometry-survivor:save')) localStorage.setItem('geometry-survivor:save',
+      JSON.stringify({ schemaVersion: 8, wallet: { nova: 8500 } }));
+  });
   await page.goto('/');
   await page.locator('#start-skins').click();
   await page.locator('#start-backgrounds-tab').click();
   const card = page.locator('.background-card[data-background="nacre-orbit"]');
-  await expect(card).not.toHaveClass(/is-locked/);
-  await expect(card).toContainText('GRATIS');
+  await expect(card).toHaveClass(/is-locked/);
+  await expect(card).toContainText('4,800');
   await card.locator('button').click();
-  await expect(page.locator('#start-cosmetic-action')).toContainText('gratis');
+  await expect(page.locator('#start-cosmetic-action')).toContainText('4,800 NOVA');
   await page.locator('#start-cosmetic-action').click();
   await expect(card).toHaveClass(/is-selected/);
   await page.reload();
@@ -470,8 +476,8 @@ test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al reca
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('.background-card[data-background="nacre-orbit"]')).toHaveClass(/is-selected/);
   const vesper = page.locator('.background-card[data-background="vesper-bloom"]');
-  await expect(vesper).not.toHaveClass(/is-locked/);
-  await expect(vesper).toContainText('GRATIS');
+  await expect(vesper).toHaveClass(/is-locked/);
+  await expect(vesper).toContainText('3,600');
   await vesper.locator('button').click();
   await page.locator('#start-cosmetic-action').click();
   await expect(vesper).toHaveClass(/is-selected/);
@@ -480,7 +486,7 @@ test('equipa gratis Nacre y Vesper con cartera vacia y conserva el fondo al reca
   await page.locator('#start-backgrounds-tab').click();
   await expect(page.locator('.background-card[data-background="vesper-bloom"]')).toHaveClass(/is-selected/);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('geometry-survivor:save') ?? '{}'));
-  expect(saved.wallet.nova).toBe(0);
+  expect(saved.wallet.nova).toBe(100);
   expect(saved.backgrounds.selected).toBe('vesper-bloom');
   expect(saved.backgrounds.unlocked).toEqual(['deep-space', 'nacre-orbit', 'vesper-bloom']);
   await page.locator('#start-skins-back').click();
@@ -821,44 +827,6 @@ test('muestra y conserva el reporte local de linea base con ?baseline=1', async 
   await expect(page.locator('#start-screen')).toBeHidden();
   await expect.poll(async () => page.locator('#baseline-output').textContent())
     .toContain('Run en curso: si');
-  expect(failures).toEqual([]);
-});
-
-test('ofrece un desbloqueo cosmetico rewarded y lo persiste', async ({ page }) => {
-  const failures = captureRuntimeFailures(page);
-  await page.goto('/?ad=success');
-  await expect(page.locator('#boot-status')).toBeHidden();
-  await expect(page.locator('#start-screen')).toBeVisible();
-  await page.locator('#start-skins').click();
-  const offer = page.locator('#start-cosmetic-rewarded');
-  await expect(offer).toBeVisible();
-  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Eclipse Prism');
-  await page.locator('#start-cannon-skins-tab').click();
-  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Arc Needle');
-  await page.locator('#start-backgrounds-tab').click();
-  await expect(page.locator('#start-cosmetic-rewarded-name')).toContainText('Tormenta');
-  await page.locator('#start-player-skins-tab').click();
-  await expect(page.locator('#start-cosmetic-rewarded-name')).toHaveText('Eclipse Prism');
-  await page.locator('#start-cosmetic-rewarded summary').click();
-  await page.locator('#start-cosmetic-rewarded-button').click();
-  await expect(page.locator('#start-cosmetic-rewarded-button')).toHaveText('Anuncio en curso');
-  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-selected/, { timeout: 5_000 });
-  await expect(offer).toContainText('desbloqueado y equipado');
-  await expect(page.locator('#start-cosmetic-rewarded-button')).toBeHidden();
-
-  const saved = await page.evaluate(() => localStorage.getItem('geometry-survivor:save'));
-  expect(JSON.parse(saved ?? '{}').skins).toMatchObject({ selected: 'violet', unlocked: ['cyan', 'spearhead', 'violet'] });
-  await expect(page.locator('.home-mark-image')).toHaveAttribute('data-skin', 'violet');
-  expect(failures).toEqual([]);
-});
-
-test('oculta la oferta cosmetica cuando el adaptador local no tiene inventario', async ({ page }) => {
-  const failures = captureRuntimeFailures(page);
-  await page.goto('/?ad=unavailable');
-  await expect(page.locator('#boot-status')).toBeHidden();
-  await page.locator('#start-skins').click();
-  await expect(page.locator('#start-cosmetic-rewarded')).toBeHidden();
-  await expect(page.locator('.skin-card[data-skin="violet"]')).toHaveClass(/is-locked/);
   expect(failures).toEqual([]);
 });
 

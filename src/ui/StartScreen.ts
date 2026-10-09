@@ -13,12 +13,8 @@ import overdriveEmblemFallbackUrl from '../assets/svg/ui/start/overdrive.svg?url
 import type { BackgroundSaveData, CampaignActId, CannonSkinSaveData, ControlScheme, LaboratorySaveData, SkinSaveData, WalletSaveData } from '../platform/save/SaveStore';
 import { formatNova } from '../content/meta/EconomyDefinitions';
 import novaSvg from '../assets/svg/ui/nova.svg?raw';
-import { getPlayerSkinDefinition, PLAYER_SKIN_DEFINITIONS } from '../content/visual/SkinDefinitions';
-import { CANNON_SKIN_DEFINITIONS } from '../content/visual/CannonSkinDefinitions';
-import { BACKGROUND_DEFINITIONS } from '../content/visual/BackgroundDefinitions';
-import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
-import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
-import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
+import { getPlayerSkinDefinition } from '../content/visual/SkinDefinitions';
+import type { FxQuality } from '../content/visual/VisualTokens';
 import { SkinSelectPanel } from './skins/SkinSelectPanel';
 import { CannonSelectPanel } from './skins/CannonSelectPanel';
 import { BackgroundSelectPanel } from './skins/BackgroundSelectPanel';
@@ -40,12 +36,8 @@ export interface StartScreenBest {
   readonly score: number;
 }
 
-export type CosmeticUnlockResult = 'rewarded' | 'dismissed' | 'unavailable' | 'error';
-
-export type CosmeticUnlockTarget =
-  | { readonly kind: 'player'; readonly id: PlayerSkinId; readonly name: string; readonly priceNova: number }
-  | { readonly kind: 'cannon'; readonly id: CannonSkinId; readonly name: string; readonly priceNova: number }
-  | { readonly kind: 'background'; readonly id: BackgroundId; readonly name: string; readonly priceNova: number };
+export type { CosmeticUnlockTarget, CosmeticUnlockResult } from '../app/CosmeticPurchase';
+import type { CosmeticUnlockTarget, CosmeticUnlockResult } from '../app/CosmeticPurchase';
 
 export interface StartScreenOptions {
   readonly firstFlight?: boolean;
@@ -153,17 +145,13 @@ export class StartScreen {
   private readonly playerSkinsView: HTMLElement;
   private readonly cannonSkinsView: HTMLElement;
   private readonly backgroundsView: HTMLElement;
-  private readonly cosmeticRewarded: HTMLElement;
-  private readonly cosmeticRewardedName: HTMLElement;
-  private readonly cosmeticRewardedMessage: HTMLElement;
-  private readonly cosmeticRewardedButton: HTMLButtonElement;
   private actChangeHandler: ((actId: ActId) => void) | null = null;
   private playHandler: ((calibrationId?: CalibrationId) => void) | null = null;
   private settingsHandler: ((settings: AudioSettings) => void) | null = null;
   private controlSchemeHandler: ((controlScheme: ControlScheme) => void) | null = null;
   private skinStateHandler: ((state: SkinSaveData) => void) | null = null;
-  private skinState: SkinSaveData = { selected: 'spearhead', unlocked: ['cyan', 'spearhead'] };
-  private cannonSkinState: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['basic', 'spearhead'] };
+  private skinState: SkinSaveData = { selected: 'spearhead', unlocked: ['spearhead'] };
+  private cannonSkinState: CannonSkinSaveData = { selected: 'spearhead', unlocked: ['spearhead'] };
   private backgroundState: BackgroundSaveData = { selected: 'deep-space', unlocked: ['deep-space'] };
   private wallet: WalletSaveData = { nova: 0 };
   private laboratory: LaboratorySaveData = { levels: {}, currentOfferIds: [], deferredOffers: [], history: [], purchasesSinceVitalityAd: 0, vitalityAdRank: 0, offerStep: 0 };
@@ -177,8 +165,6 @@ export class StartScreen {
   private cosmeticOfferConsumed = false;
   private cosmeticRequestPending = false;
   private cosmeticRequestToken = 0;
-  private activeSkinTab: 'player' | 'cannon' | 'background' = 'player';
-  private cosmeticTarget: CosmeticUnlockTarget | null = null;
   private overdrivePlayHandler: ((variant: OverdriveVariant) => void) | null = null;
   private overdriveUnlocked = false;
   private homeMarkReady: Promise<boolean> | null = null;
@@ -187,18 +173,15 @@ export class StartScreen {
     this.skinState = state;
     this.skinStateHandler?.(state);
     this.updateHomeShip();
-    this.updateCosmeticOffer();
   };
 
   private readonly onCannonSkinStateChange = (state: CannonSkinSaveData): void => {
     this.cannonSkinState = state;
     this.cannonSkinStateHandler?.(state);
-    this.updateCosmeticOffer();
   };
   private readonly onBackgroundStateChange = (state: BackgroundSaveData): void => {
     this.backgroundState = state;
     this.backgroundStateHandler?.(state);
-    this.updateCosmeticOffer();
   };
   private cannonSkinStateHandler: ((state: CannonSkinSaveData) => void) | null = null;
   private backgroundStateHandler: ((state: BackgroundSaveData) => void) | null = null;
@@ -250,10 +233,6 @@ export class StartScreen {
     const playerSkinsView = root.querySelector<HTMLElement>('#start-player-skins-panel');
     const cannonSkinsView = root.querySelector<HTMLElement>('#start-cannon-skins-panel');
     const backgroundsView = root.querySelector<HTMLElement>('#start-backgrounds-panel');
-    const cosmeticRewarded = root.querySelector<HTMLElement>('#start-cosmetic-rewarded');
-    const cosmeticRewardedName = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-name');
-    const cosmeticRewardedMessage = root.querySelector<HTMLElement>('#start-cosmetic-rewarded-message');
-    const cosmeticRewardedButton = root.querySelector<HTMLButtonElement>('#start-cosmetic-rewarded-button');
     if (
       !playButton || !settingsToggle || !levelToggle || !settingsPanel || !settingsCloseButton || !panel
       || !overdriveButton || !overdriveAssaultButton
@@ -266,8 +245,6 @@ export class StartScreen {
       || !metaToggle || !metaBack || !metaView || !retentionToggle || !retentionBack
       || !retentionView || !retentionBody || !playerSkinsView || !cannonSkinsView
       || !backgroundsView
-      || !cosmeticRewarded || !cosmeticRewardedName || !cosmeticRewardedMessage
-      || !cosmeticRewardedButton
     ) {
       throw new Error('Faltan elementos de la pantalla de inicio');
     }
@@ -306,10 +283,6 @@ export class StartScreen {
     this.playerSkinsView = playerSkinsView;
     this.cannonSkinsView = cannonSkinsView;
     this.backgroundsView = backgroundsView;
-    this.cosmeticRewarded = cosmeticRewarded;
-    this.cosmeticRewardedName = cosmeticRewardedName;
-    this.cosmeticRewardedMessage = cosmeticRewardedMessage;
-    this.cosmeticRewardedButton = cosmeticRewardedButton;
     this.cosmeticDialog = new CosmeticPreviewDialog(root);
     this.skinsPanel = new SkinSelectPanel(playerSkinsView, this.cosmeticDialog);
     this.cannonPanel = new CannonSelectPanel(cannonSkinsView, this.cosmeticDialog);
@@ -381,7 +354,6 @@ export class StartScreen {
     this.playerSkinsTab.addEventListener('click', () => this.selectSkinTab('player'));
     this.cannonSkinsTab.addEventListener('click', () => this.selectSkinTab('cannon'));
     this.backgroundsTab.addEventListener('click', () => this.selectSkinTab('background'));
-    this.cosmeticRewardedButton.addEventListener('click', () => { void this.requestCosmeticUnlock(); });
     this.metaToggle.addEventListener('click', () => this.openMeta());
     this.metaBack.addEventListener('click', () => this.closeMeta());
     this.retentionToggle.addEventListener('click', () => this.openRetention());
@@ -468,7 +440,6 @@ export class StartScreen {
     this.cosmeticOfferConsumed = false;
     this.cosmeticRequestPending = false;
     this.cosmeticRequestToken += 1;
-    this.cosmeticTarget = null;
     this.updateNovaValues();
     this.setSettings(options.settings);
     this.setControlScheme(options.controlScheme);
@@ -530,8 +501,6 @@ export class StartScreen {
     this.cosmeticOfferConsumed = false;
     this.cosmeticRequestPending = false;
     this.cosmeticRequestToken += 1;
-    this.cosmeticTarget = null;
-    this.hideCosmeticOffer();
     this.setSettingsExpanded(false);
     this.closeSkins();
     this.closeMeta();
@@ -826,10 +795,8 @@ export class StartScreen {
     this.root.classList.remove('is-skins-mode');
     this.root.querySelector<HTMLElement>('.start-screen-panel')?.classList.remove('is-skins-open');
     this.panel.scrollTop = 0;
-    this.cosmeticTarget = null;
     this.cosmeticRequestPending = false;
     this.cosmeticRequestToken += 1;
-    this.hideCosmeticOffer();
   }
 
   private openMeta(): void {
@@ -862,7 +829,6 @@ export class StartScreen {
 
   private selectSkinTab(tab: 'player' | 'cannon' | 'background'): void {
     this.cosmeticDialog.close();
-    this.activeSkinTab = tab;
     this.applySkinTab(tab);
     if (tab === 'cannon') {
       this.cannonPanel.open({
@@ -870,7 +836,9 @@ export class StartScreen {
         wallet: this.wallet,
         onStateChange: this.onCannonSkinStateChange,
         onWalletChange: (wallet) => this.onWalletChange(wallet),
-        onRewardNavigate: source => this.navigateToRewardSource(source)
+        onRewardNavigate: source => this.navigateToRewardSource(source),
+        discountAvailable: this.cosmeticUnlockAvailable && !this.cosmeticOfferConsumed,
+        onDiscountPurchase: target => this.requestCosmeticDiscount(target)
       });
       this.skinsPanel.close();
       this.backgroundPanel.close();
@@ -880,7 +848,9 @@ export class StartScreen {
         wallet: this.wallet,
         onStateChange: this.onBackgroundStateChange,
         onWalletChange: (wallet) => this.onWalletChange(wallet),
-        onRewardNavigate: source => this.navigateToRewardSource(source)
+        onRewardNavigate: source => this.navigateToRewardSource(source),
+        discountAvailable: this.cosmeticUnlockAvailable && !this.cosmeticOfferConsumed,
+        onDiscountPurchase: target => this.requestCosmeticDiscount(target)
       });
       this.skinsPanel.close();
       this.cannonPanel.close();
@@ -892,17 +862,16 @@ export class StartScreen {
         wallet: this.wallet,
         onStateChange: this.onSkinStateChange,
         onWalletChange: (wallet) => this.onWalletChange(wallet),
-        onRewardNavigate: source => this.navigateToRewardSource(source)
+        onRewardNavigate: source => this.navigateToRewardSource(source),
+        discountAvailable: this.cosmeticUnlockAvailable && !this.cosmeticOfferConsumed,
+        onDiscountPurchase: target => this.requestCosmeticDiscount(target)
       });
     }
-    this.updateCosmeticOffer();
   }
 
   private applySkinTab(tab: 'player' | 'cannon' | 'background'): void {
     const body = this.skinsView.querySelector<HTMLElement>('.console-body');
     if (body) body.scrollTop = 0;
-    const offerDetails = this.cosmeticRewarded.querySelector('details');
-    if (offerDetails) offerDetails.open = false;
     const cannon = tab === 'cannon';
     const background = tab === 'background';
     this.playerSkinsTab.classList.toggle('is-active', !cannon && !background);
@@ -940,7 +909,6 @@ export class StartScreen {
     const formatted = formatNova(wallet.nova);
     for (const value of this.novaValues) value.textContent = formatted;
     this.walletStateHandler?.(wallet);
-    this.updateCosmeticOffer();
   }
 
   private onLaboratoryChange(laboratory: LaboratorySaveData, wallet: WalletSaveData): boolean {
@@ -958,108 +926,26 @@ export class StartScreen {
     return response ?? { result: 'unavailable' };
   }
 
-  private updateCosmeticOffer(): void {
-    if (
-      this.skinsView.hidden
-      || !this.cosmeticUnlockAvailable || this.cosmeticOfferConsumed || this.cosmeticRequestPending
-    ) {
-      if (!this.cosmeticRequestPending) this.hideCosmeticOffer();
-      return;
-    }
-    const target = this.findCosmeticTarget();
-    this.cosmeticTarget = target;
-    if (!target) {
-      this.hideCosmeticOffer();
-      return;
-    }
-    this.cosmeticRewarded.dataset.state = 'ready';
-    this.cosmeticRewarded.hidden = false;
-    this.cosmeticRewardedName.textContent = target.name;
-    this.cosmeticRewardedMessage.textContent = `Mira un anuncio para desbloquear y equipar este cosmético, o cómpralo por ${formatNova(target.priceNova)} NOVA.`;
-    this.cosmeticRewardedButton.hidden = false;
-    this.cosmeticRewardedButton.disabled = false;
-    this.cosmeticRewardedButton.textContent = 'Ver anuncio · desbloquear';
-  }
-
-  private findCosmeticTarget(): CosmeticUnlockTarget | null {
-    if (this.activeSkinTab === 'player') {
-      const definition = PLAYER_SKIN_DEFINITIONS.find((candidate) => candidate.acquisition === 'nova'
-        && !this.skinState.unlocked.includes(candidate.id) && candidate.priceNova > 0);
-      return definition ? { kind: 'player', id: definition.id, name: definition.name, priceNova: definition.priceNova } : null;
-    }
-    if (this.activeSkinTab === 'cannon') {
-      const definition = CANNON_SKIN_DEFINITIONS.find((candidate) => !this.cannonSkinState.unlocked.includes(candidate.id) && candidate.priceNova > 0);
-      return definition ? { kind: 'cannon', id: definition.id, name: definition.name, priceNova: definition.priceNova } : null;
-    }
-    const definition = BACKGROUND_DEFINITIONS.find((candidate) => !this.backgroundState.unlocked.includes(candidate.id) && candidate.priceNova > 0);
-    return definition ? { kind: 'background', id: definition.id, name: definition.name, priceNova: definition.priceNova } : null;
-  }
-
-  private async requestCosmeticUnlock(): Promise<void> {
-    const target = this.cosmeticTarget;
+  private async requestCosmeticDiscount(target: CosmeticUnlockTarget): Promise<CosmeticUnlockResult> {
     const handler = this.cosmeticUnlockHandler;
-    if (!target || !handler || this.cosmeticRequestPending) return;
-    const requestToken = ++this.cosmeticRequestToken;
+    if (!handler || !this.cosmeticUnlockAvailable || this.cosmeticRequestPending || this.cosmeticOfferConsumed) return { result: 'unavailable' };
+    const token = ++this.cosmeticRequestToken;
     this.cosmeticRequestPending = true;
-    this.cosmeticRewarded.dataset.state = 'pending';
-    this.cosmeticRewardedMessage.textContent = 'Cargando recompensa...';
-    this.cosmeticRewardedButton.disabled = true;
-    this.cosmeticRewardedButton.textContent = 'Anuncio en curso';
-    const result = await handler(target);
-    if (requestToken !== this.cosmeticRequestToken) return;
+    let response: CosmeticUnlockResult;
+    try { response = await handler(target); } catch { response = { result: 'error' }; }
+    if (token !== this.cosmeticRequestToken) return { result: 'unavailable' };
     this.cosmeticRequestPending = false;
-    if (result === 'rewarded') {
-      this.cosmeticOfferConsumed = true;
-      this.applyCosmeticUnlock(target);
-      this.cosmeticRewarded.dataset.state = 'success';
-      this.cosmeticRewarded.hidden = false;
-      this.cosmeticRewardedMessage.textContent = `${target.name} desbloqueado y equipado.`;
-      this.cosmeticRewardedButton.hidden = true;
-      this.cosmeticTarget = null;
-      return;
+    if (response.result === 'rewarded' || response.result === 'unavailable') this.cosmeticUnlockAvailable = false;
+    if (response.result === 'rewarded') this.cosmeticOfferConsumed = true;
+    if (response.data) {
+      this.skinState = response.data.skins;
+      this.cannonSkinState = response.data.cannonSkins;
+      this.backgroundState = response.data.backgrounds;
+      this.wallet = response.data.wallet;
+      this.updateNovaValues();
+      this.updateHomeShip();
     }
-    this.cosmeticRewarded.dataset.state = result;
-    if (result === 'unavailable') this.cosmeticUnlockAvailable = false;
-    this.cosmeticRewardedMessage.textContent = result === 'dismissed'
-      ? 'Anuncio cancelado. Puedes intentarlo otra vez o comprar con NOVA.'
-      : result === 'unavailable'
-        ? 'Anuncio no disponible. Compra el cosmético con NOVA.'
-        : 'No se pudo completar el anuncio. Puedes reintentarlo o comprar con NOVA.';
-    this.cosmeticRewardedButton.hidden = result === 'unavailable';
-    this.cosmeticRewardedButton.disabled = result === 'unavailable';
-    this.cosmeticRewardedButton.textContent = 'Reintentar · desbloquear';
-  }
-
-  private applyCosmeticUnlock(target: CosmeticUnlockTarget): void {
-    if (target.kind === 'player') {
-      this.skinState = {
-        selected: target.id,
-        unlocked: Array.from(new Set<PlayerSkinId>([...this.skinState.unlocked, target.id]))
-      };
-      this.onSkinStateChange(this.skinState);
-    } else if (target.kind === 'cannon') {
-      this.cannonSkinState = {
-        selected: target.id,
-        unlocked: Array.from(new Set<CannonSkinId>([...this.cannonSkinState.unlocked, target.id]))
-      };
-      this.onCannonSkinStateChange(this.cannonSkinState);
-    } else {
-      this.backgroundState = {
-        selected: target.id,
-        unlocked: Array.from(new Set<BackgroundId>([...this.backgroundState.unlocked, target.id]))
-      };
-      this.onBackgroundStateChange(this.backgroundState);
-    }
-    this.selectSkinTab(this.activeSkinTab);
-  }
-
-  private hideCosmeticOffer(): void {
-    this.cosmeticRewarded.hidden = true;
-    this.cosmeticRewarded.dataset.state = 'hidden';
-    this.cosmeticRewardedName.textContent = '';
-    this.cosmeticRewardedMessage.textContent = '';
-    this.cosmeticRewardedButton.hidden = true;
-    this.cosmeticRewardedButton.disabled = true;
+    return response;
   }
 
   private updateNovaValues(): void {

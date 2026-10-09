@@ -170,44 +170,6 @@
   box-shadow: 0 0 1.2rem #ffe39a65, inset 0 1px #fff5;
 }
 .console-body :is(.skin-card-copy, .cannon-card-copy, .background-card-copy) { overflow-wrap: anywhere; }
-#start-screen .cosmetic-rewarded {
-  display: block;
-  padding: 0;
-  border-color: #527183;
-  border-radius: .5rem;
-  background: #111f2e;
-  box-shadow: inset 0 1px #d1e2ec20;
-}
-#start-screen .cosmetic-rewarded[hidden] { display: none; }
-.cosmetic-rewarded summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: .25rem .75rem;
-  padding: .75rem;
-  min-height: 44px;
-  cursor: pointer;
-  list-style: none;
-}
-.cosmetic-rewarded summary::-webkit-details-marker { display: none; }
-.cosmetic-rewarded summary strong { font-size: .85rem; overflow-wrap: anywhere; }
-.cosmetic-rewarded-label { color: #a9c9cf; font-size: .6rem; line-height: 1.4; min-width: 0; overflow-wrap: anywhere; }
-.rewarded-disclosure { grid-column: 2; grid-row: 1 / 3; align-self: center; color: #75e6ff; font-size: 1.25rem; }
-.cosmetic-rewarded details[open] .rewarded-disclosure { transform: rotate(45deg); }
-.cosmetic-rewarded .cosmetic-rewarded-copy {
-  padding: .75rem;
-  border-top: 1px solid #324d60;
-  gap: .75rem;
-  color: #b9ccd9;
-  font-size: .8rem;
-  line-height: 1.5;
-}
-.cosmetic-rewarded button {
-  min-height: 44px;
-  color: #d1e2ec;
-  background: #243b4e;
-  border: 1px solid #527183;
-  box-shadow: inset 0 1px #d1e2ec40, inset 0 -3px #060d19;
-}
 .console-screen :is(button, summary):focus-visible { outline: 2px solid #ffe39a; outline-offset: 2px; }
 
 .console-body .meta-wallet { width: fit-content; flex-wrap: wrap; line-height: 1.4; }
@@ -656,7 +618,8 @@
 .cosmetic-dialog-copy p { margin: 0; color: #bdcfe4; font-size: .85rem; line-height: 1.4; }
 .cosmetic-dialog-copy #start-cosmetic-description { margin-top: .35rem; }
 .cosmetic-dialog-copy #start-cosmetic-status { margin-top: .35rem; color: #9cebdc; font-weight: 700; }
-#start-cosmetic-action {
+#start-cosmetic-action,
+#start-cosmetic-discount-action {
   min-height: 48px;
   padding: .65rem .9rem;
   border: 1px solid #a5f1ea;
@@ -668,7 +631,38 @@
   letter-spacing: .04em;
   cursor: pointer;
 }
-#start-cosmetic-action:disabled { border-color: #506577; color: #b4c4d5; background: #203044; box-shadow: none; cursor: default; }
+#start-cosmetic-action:disabled,
+#start-cosmetic-discount-action:disabled { border-color: #506577; color: #b4c4d5; background: #203044; box-shadow: none; cursor: default; }
+
+.cosmetic-discount-badge {
+  align-self: start;
+  padding: .3rem .45rem;
+  border: 1px solid #d3af59;
+  border-radius: .4rem;
+  color: #ffe6a5;
+  background: linear-gradient(120deg, #3c321e, #1b2534);
+  font: 800 .6rem/1.3 ui-monospace, monospace;
+}
+.cosmetic-discount-badge[hidden], .cosmetic-price-summary[hidden],
+.cosmetic-dialog-actions button[hidden] { display: none; }
+.cosmetic-price-summary {
+  display: grid;
+  gap: .3rem;
+  margin-top: .5rem;
+  padding: .65rem .8rem;
+  border: 1px solid #5c7388;
+  border-radius: .55rem;
+  background: #071421;
+  font-size: .8rem;
+}
+.cosmetic-price-summary > div { display: flex; justify-content: space-between; gap: .75rem; }
+.cosmetic-price-summary strong { white-space: nowrap; font-family: ui-monospace, monospace; }
+.cosmetic-price-discount { color: #ffe39a; }
+.cosmetic-price-total { padding-top: .35rem; border-top: 1px solid #506577; color: #9cebdc; font-weight: 800; }
+.cosmetic-price-summary p { margin-top: .35rem; font-size: .75rem; }
+.cosmetic-dialog-actions { display: grid; gap: .5rem; position: sticky; bottom: 0; padding: .5rem 0; background: #0b1525; }
+#start-cosmetic-keep-saving { min-height: 44px; border: 1px solid #506577; border-radius: .5rem; background: #18273a; color: #caddf0; cursor: pointer; }
+.has-discount-offer .cosmetic-dialog-stage { height: clamp(6rem, 19dvh, 10rem); }
 
 /* Match the game's square plate and four independently drifting current sprites. */
 .cosmetic-background-frame { position: relative; overflow: hidden; isolation: isolate; }

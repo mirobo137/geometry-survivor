@@ -1,3 +1,4 @@
+import { prepareDiscountedCosmeticPurchase } from './CosmeticPurchase';
 import type { Application, Ticker } from 'pixi.js';
 import { ARENA_CENTER, FIXED_STEP_SECONDS } from '../config/constants';
 import { DebugPanel } from '../debug/DebugPanel';
@@ -34,14 +35,12 @@ import type {
   WeaponEvolutionScenario
 } from '../content/weapons/WeaponEvolutionDefinitions';
 import type { FxQuality, PlayerSkinId } from '../content/visual/VisualTokens';
-import { getPlayerSkinDefinition, isPlayerSkinId } from '../content/visual/SkinDefinitions';
 import { DailyWheelService } from './DailyWheelService';
 import { RetentionObjectiveService } from './RetentionObjectiveService';
 import { type DailyWheelKind, type DailyWheelResult } from '../content/retention/DailyWheelDefinitions';
 import { createRewardPreviewStore, ownsRewardCosmetic, unlockRewardCosmetic } from './RewardCosmeticOwnership';
-import { getRewardCosmetic } from '../content/retention/RewardCosmeticDefinitions';
-import { isCannonSkinId, type CannonSkinId } from '../content/visual/CannonSkinDefinitions';
-import { isBackgroundId, type BackgroundId } from '../content/visual/BackgroundDefinitions';
+import type { CannonSkinId } from '../content/visual/CannonSkinDefinitions';
+import type { BackgroundId } from '../content/visual/BackgroundDefinitions';
 import { LevelProgression } from '../simulation/progression/LevelProgression';
 import { UpgradeApplier } from '../simulation/progression/UpgradeApplier';
 import { GameHud } from '../ui/GameHud';
@@ -52,7 +51,7 @@ import { LevelUpOverlay, type LevelUpNavigationOptions } from '../ui/level-up/Le
 import { getUpgradeCardVisual } from '../ui/level-up/UpgradeCardVisual';
 import type { LevelUpCardInteraction } from '../ui/level-up/LevelUpCardInteraction';
 import { PauseOverlay } from '../ui/PauseOverlay';
-import { StartScreen, type CosmeticUnlockTarget } from '../ui/StartScreen';
+import { StartScreen, type CosmeticUnlockTarget, type CosmeticUnlockResult } from '../ui/StartScreen';
 import { RunTransitionOverlay, type RunTransitionVariant } from '../ui/RunTransitionOverlay';
 import type { AudioCue } from '../content/audio/AudioCueDefinitions';
 import { AttackAudioFeedback } from '../audio/AttackAudioFeedback';
@@ -697,7 +696,7 @@ export class Game {
     return { result, laboratory };
   };
 
-  private readonly onStartCosmeticUnlock = (target: CosmeticUnlockTarget): Promise<RewardedAdResult> => (
+  private readonly onStartCosmeticUnlock = (target: CosmeticUnlockTarget): Promise<CosmeticUnlockResult> => (
     this.requestCosmeticUnlock(target)
   );
 
@@ -2186,41 +2185,32 @@ export class Game {
     this.gameOver.setDoubleNovaResult(result);
   }
 
-  private async requestCosmeticUnlock(target: CosmeticUnlockTarget): Promise<RewardedAdResult> {
-    if (this.gameState.phase !== 'menu') return 'unavailable';
+  private async requestCosmeticUnlock(target: CosmeticUnlockTarget): Promise<CosmeticUnlockResult> {
+    if (this.stopped || this.gameState.phase !== 'menu') return { result: 'unavailable' };
     const saved = this.saveStore.load();
-    if (target.kind === 'player' && isPlayerSkinId(target.id)
-      && getPlayerSkinDefinition(target.id).acquisition !== 'nova') return 'unavailable';
-    if (getRewardCosmetic(target.id)) return 'unavailable';
-    const alreadyUnlocked = target.kind === 'player'
-      ? !isPlayerSkinId(target.id) || saved.skins.unlocked.includes(target.id)
-      : target.kind === 'cannon'
-        ? !isCannonSkinId(target.id) || saved.cannonSkins.unlocked.includes(target.id)
-        : !isBackgroundId(target.id) || saved.backgrounds.unlocked.includes(target.id);
-    if (alreadyUnlocked) return 'unavailable';
+    if (!prepareDiscountedCosmeticPurchase(saved, target)) return { result: 'unavailable' };
+    // Verify persistence before asking the player to watch a video.
+    if (!this.saveStore.saveDurably?.(saved)) return { result: 'error' };
     const offerToken = this.rewardedOffers.begin('cosmetic-unlock');
-    if (offerToken === null) return 'unavailable';
+    if (offerToken === null) return { result: 'unavailable' };
     const result = await this.rewardedAds.request('cosmetic-unlock');
-    this.rewardedOffers.settle('cosmetic-unlock', offerToken, result);
-    if (result !== 'rewarded') return result;
-    this.audio.playCue('reward-claimed');
-
-    const current = this.saveStore.load();
-    if (target.kind === 'player' && isPlayerSkinId(target.id)) {
-      const unlocked = Array.from(new Set<PlayerSkinId>([...current.skins.unlocked, target.id]));
-      this.saveStore.save({ ...current, skins: { selected: target.id, unlocked } });
-      this.view.setPlayerSkin(target.id);
-    } else if (target.kind === 'cannon' && isCannonSkinId(target.id)) {
-      const unlocked = Array.from(new Set<CannonSkinId>([...current.cannonSkins.unlocked, target.id]));
-      this.saveStore.save({ ...current, cannonSkins: { selected: target.id, unlocked } });
-      this.cannonSkin = target.id;
-      this.view.setCannonSkin(target.id);
-    } else if (target.kind === 'background' && isBackgroundId(target.id)) {
-      const unlocked = Array.from(new Set<BackgroundId>([...current.backgrounds.unlocked, target.id]));
-      this.saveStore.save({ ...current, backgrounds: { selected: target.id, unlocked } });
-      this.view.setBackground(target.id);
+    if (result !== 'rewarded') {
+      this.rewardedOffers.settle('cosmetic-unlock', offerToken, result);
+      return { result };
     }
-    return result;
+    const current = this.saveStore.load();
+    const next = !this.stopped && this.gameState.phase === 'menu' ? prepareDiscountedCosmeticPurchase(current, target) : null;
+    if (!next || !this.saveStore.saveDurably?.(next)) {
+      this.rewardedOffers.settle('cosmetic-unlock', offerToken, 'error');
+      return { result: 'error', data: current };
+    }
+    this.rewardedOffers.settle('cosmetic-unlock', offerToken, 'rewarded');
+    this.audio.playCue('reward-claimed');
+    this.view.setPlayerSkin(next.skins.selected);
+    this.cannonSkin = next.cannonSkins.selected;
+    this.view.setCannonSkin(next.cannonSkins.selected);
+    this.view.setBackground(next.backgrounds.selected);
+    return { result: 'rewarded', data: next };
   }
 
   private restartRun(): void {

@@ -3,6 +3,15 @@
  * Keep these entries as complete phrases so UI copy remains easy to audit.
  */
 export const CATALOG = [
+  { es: 'PRIMER VUELO', en: 'FIRST FLIGHT' },
+  { es: 'Tu primera expedición comienza aquí.', en: 'Your first expedition starts here.' },
+  { es: 'Muévete para esquivar. Tus armas disparan automáticamente.', en: 'Move to dodge. Your weapons fire automatically.' },
+  { es: 'En PC: WASD o flechas. En móvil: joystick o seguir dedo desde Configuración.', en: 'On PC: WASD or arrow keys. On mobile: choose joystick or follow finger in Settings.' },
+  { es: 'Jugar Acto I', en: 'Play Act I' },
+  { es: 'Omitir guía y abrir el menú', en: 'Skip guide and open menu' },
+  { es: 'Omitir guía', en: 'Skip guide' },
+  { es: 'Destruye enemigos para ganar experiencia automáticamente, subir de nivel y mejorar tu nave.', en: 'Destroy enemies to automatically gain experience, level up, and upgrade your ship.' },
+  { es: 'Elige una de las tres cartas. La mejora se aplica durante esta partida.', en: 'Choose one of the three cards. The upgrade applies for this run.' },
   { es: 'RETO SUPERADO', en: 'CHALLENGE COMPLETE' },
   { es: 'ACTO COMPLETADO', en: 'ACT COMPLETE' },
   { es: 'TU HABILIDAD MARCA LA DIFERENCIA', en: 'YOUR SKILL MAKES THE DIFFERENCE' },

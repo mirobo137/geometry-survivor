@@ -48,6 +48,8 @@ export type CosmeticUnlockTarget =
   | { readonly kind: 'background'; readonly id: BackgroundId; readonly name: string; readonly priceNova: number };
 
 export interface StartScreenOptions {
+  readonly firstFlight?: boolean;
+  readonly onSkipFirstFlight?: () => void;
   readonly settings: AudioSettings;
   readonly quality: FxQuality;
   readonly best: StartScreenBest;
@@ -394,6 +396,18 @@ export class StartScreen {
   }
 
   public open(options: StartScreenOptions): void {
+    this.root.classList.toggle('is-first-flight', options.firstFlight === true);
+    const firstFlightIntro = this.root.querySelector<HTMLElement>('#first-flight-intro');
+    if (firstFlightIntro) firstFlightIntro.hidden = options.firstFlight !== true;
+    const label = this.playButton.querySelector('strong');
+    if (label) label.textContent = options.firstFlight ? 'Jugar Acto I' : 'JUGAR';
+    const skip = this.root.querySelector<HTMLButtonElement>('#first-flight-skip');
+    if (skip) skip.onclick = () => {
+      options.onSkipFirstFlight?.();
+      this.root.classList.remove('is-first-flight');
+      if (firstFlightIntro) firstFlightIntro.hidden = true;
+      if (label) label.textContent = 'JUGAR';
+    };
     this.dailyWheelOptions = options.dailyWheel ?? null;
     this.updateDailyWheelEntry();
     this.updateRetentionEntry(options.retention);

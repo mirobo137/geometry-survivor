@@ -29,7 +29,7 @@ export class DefeatSceneOverlay {
       <div class="defeat-scene-letterbox defeat-scene-letterbox-top"></div>
       <div class="defeat-scene-letterbox defeat-scene-letterbox-bottom"></div>
       <div class="defeat-scene-copy">
-        <span class="defeat-scene-kicker">GEOMETRY / SURVIVAL PROTOCOL</span>
+        <span class="defeat-scene-kicker">ORBIHEX / SURVIVAL PROTOCOL</span>
         <strong class="defeat-scene-title"></strong>
         <span class="defeat-scene-caption"></span>
         <span class="defeat-scene-signal"><i></i><i></i><i></i><i></i><i></i></span>

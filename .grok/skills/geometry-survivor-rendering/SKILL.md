@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-rendering
-description: Crear o modificar rendering PixiJS, assets SVG, lenguaje visual, UI, animaciones y FX de Geometry Survivor.
+description: Crear o modificar rendering PixiJS, assets SVG, lenguaje visual, UI, animaciones y FX de OrbiHex Survivor.
 ---
 
 # Adaptador Grok

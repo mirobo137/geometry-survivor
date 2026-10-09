@@ -1,11 +1,11 @@
 ---
 name: geometry-survivor-architecture
-description: Diseñar o modificar la arquitectura, módulos, contratos, estado y dependencias de Geometry Survivor. Usar para cambios estructurales o para ubicar una responsabilidad; no para un ajuste puramente visual o de balance.
+description: Diseñar o modificar la arquitectura, módulos, contratos, estado y dependencias de OrbiHex Survivor. Usar para cambios estructurales o para ubicar una responsabilidad; no para un ajuste puramente visual o de balance.
 metadata:
   short-description: Arquitectura modular del juego
 ---
 
-# Arquitectura de Geometry Survivor
+# Arquitectura de OrbiHex Survivor
 
 Mantén localidad del cambio sin construir abstracciones especulativas.
 

@@ -1,11 +1,11 @@
 ---
 name: geometry-survivor-svg
-description: Disenar, generar, integrar y validar SVG code-first para la UI y los assets de Geometry Survivor. Usar cuando la IA deba crear iconos, formas, logos, hazards, FX, cartas o piezas visuales vectoriales; no sustituye las skills de gameplay ni de arquitectura.
+description: Disenar, generar, integrar y validar SVG code-first para la UI y los assets de OrbiHex Survivor. Usar cuando la IA deba crear iconos, formas, logos, hazards, FX, cartas o piezas visuales vectoriales; no sustituye las skills de gameplay ni de arquitectura.
 metadata:
   short-description: SVG vectorial generado por codigo
 ---
 
-# SVG code-first para Geometry Survivor
+# SVG code-first para OrbiHex Survivor
 
 Trata cada SVG como codigo de produccion: determinista, revisable en diff, escalable, barato de renderizar y coherente con el lenguaje visual del juego. La IA debe poder crear, modificar y regenerar el asset desde una especificacion textual y geometrica sin depender de un editor grafico ni de un PNG intermedio.
 

@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js';
 import './styles.css';
 import './ui/home.css';
+import './ui/first-flight.css';
 import './ui/start-panels.css';
 import './ui/retention.css';
 import './ui/daily-wheel.css';
@@ -51,7 +52,7 @@ const reportBootError = (error: unknown): void => {
     bootStatus.dataset.state = 'error';
     bootStatus.textContent = `No se pudo iniciar el juego. ${getErrorMessage(error)}`;
   }
-  console.error('Geometry Survivor could not start:', error);
+  console.error('OrbiHex Survivor could not start:', error);
 };
 
 const isOverdriveBossPair = (value: string | null): value is OverdriveBossPair => (

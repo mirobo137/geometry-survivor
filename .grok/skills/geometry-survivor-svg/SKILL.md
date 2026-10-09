@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-svg
-description: Crear y validar SVG code-first para UI y assets de Geometry Survivor.
+description: Crear y validar SVG code-first para UI y assets de OrbiHex Survivor.
 ---
 
 # Adaptador Grok

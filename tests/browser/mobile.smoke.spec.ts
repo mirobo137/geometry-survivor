@@ -8,6 +8,12 @@ import { registerTetheredShipChecks } from './tethered.checks';
 import { registerCatalogChecks } from './catalog.checks';
 import { registerDailyWheelChecks } from './daily-wheel.checks';
 import { registerLogbookChecks } from './logbook.checks';
+import { registerFirstFlightChecks, skipFirstFlightOnBoot } from './first-flight.checks';
+
+test.beforeEach(async ({ page }) => {
+  await skipFirstFlightOnBoot(page);
+});
+registerFirstFlightChecks();
 
 registerHomeChecks({ includeDesktopViewport: false });
 registerMusicChecks();

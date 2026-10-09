@@ -5,7 +5,7 @@
      role="img"
      aria-hidden="true"
      focusable="false">
-  <title id="ui-start-mark-title">Nucleo geometrico de Geometry Survivor</title>
+  <title id="ui-start-mark-title">Nucleo geometrico de OrbiHex Survivor</title>
   <desc id="ui-start-mark-desc">Un nucleo hexagonal rodeado por orbitas, puntos y rayos de energia</desc>
   <circle id="ui-start-mark-orbit-outer" cx="0" cy="0" r="57" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 8" opacity="0.55" />
   <circle id="ui-start-mark-orbit-inner" cx="0" cy="0" r="43" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="17 8" opacity="0.85" />

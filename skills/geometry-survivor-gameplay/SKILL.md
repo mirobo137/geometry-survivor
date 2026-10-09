@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-gameplay
-description: Crear o ajustar armas, enemigos, upgrades, hazards, bosses, arena, director y balance de Geometry Survivor. Usar cuando una tarea cambia decisiones, reglas o ritmo de una run; no para infraestructura de render aislada.
+description: Crear o ajustar armas, enemigos, upgrades, hazards, bosses, arena, director y balance de OrbiHex Survivor. Usar cuando una tarea cambia decisiones, reglas o ritmo de una run; no para infraestructura de render aislada.
 metadata:
   short-description: Gameplay y contenido data-driven
 ---

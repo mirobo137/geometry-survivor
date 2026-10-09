@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-mobile-performance
-description: Implementar o revisar viewport responsive, input touch, game loop, DPR, spatial grid, pooling, calidad y profiling de Geometry Survivor.
+description: Implementar o revisar viewport responsive, input touch, game loop, DPR, spatial grid, pooling, calidad y profiling de OrbiHex Survivor.
 ---
 
 # Adaptador Grok

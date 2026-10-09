@@ -176,7 +176,7 @@ export const formatBaselineReport = (
   current: BaselineCurrentSnapshot | null
 ): string => {
   const lines = [
-    'Geometry Survivor | Linea base Acto I v1',
+    'OrbiHex Survivor | Linea base Acto I v1',
     `Runs completadas: ${records.length}/${BASELINE_TARGET_RUNS}`,
     formatCurrent(current),
     ''

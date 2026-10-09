@@ -96,13 +96,16 @@ export interface EnemyDefinition {
 const ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER = 1.2;
 /** Follow-up trial: Chaser gets 30% more health than the initial EX-02c trial. */
 const CHASER_HEALTH_FOLLOW_UP_MULTIPLIER = 1.3;
+/** Follow-up tuning: 5% and 2% reductions to the Chaser baseline. */
+const CHASER_HEALTH_ADJUSTMENT = 0.95 * 0.98;
 
 export const ENEMY_DEFINITIONS: Readonly<Record<EnemyKind, EnemyDefinition>> = {
   chaser: {
     kind: 'chaser',
     radius: 18,
     speed: 72,
-    maxHealth: 24 * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER * CHASER_HEALTH_FOLLOW_UP_MULTIPLIER,
+    // Base health reduced by 20%, then another 5% and 2%; mode/difficulty multipliers still apply.
+    maxHealth: 19.2 * CHASER_HEALTH_ADJUSTMENT * ACT_I_II_ENEMY_HEALTH_TRIAL_MULTIPLIER * CHASER_HEALTH_FOLLOW_UP_MULTIPLIER,
     contactDamage: 8,
     experience: 1,
     spawnCost: 1,

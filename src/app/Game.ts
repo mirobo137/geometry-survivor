@@ -5,6 +5,8 @@ import { FrameProfiler } from '../debug/FrameProfiler';
 import { BaselinePanel } from '../debug/BaselinePanel';
 import { BaselineRunRecorder } from '../debug/BaselineRunRecorder';
 import { InputManager } from '../input/InputManager';
+import { needsFirstFlight } from './FirstFlight';
+import { FirstFlightGuide } from '../ui/FirstFlightGuide';
 import { JoystickView } from '../ui/JoystickView';
 import type { PlatformAdapter, PlatformLifecycle, RewardedAdResult } from '../platform/Platform';
 import { RewardedAdController } from '../platform/RewardedAdController';
@@ -278,6 +280,8 @@ export class Game {
   private readonly victoryScene: VictorySceneOverlay;
   private readonly runTransition: RunTransitionOverlay | null;
   private readonly startScreen: StartScreen | null;
+  private readonly firstFlightGuide: FirstFlightGuide;
+  private firstFlightConsumed = false;
   private readonly uiAudioRoots: readonly HTMLElement[];
   private readonly attackAudio = new AttackAudioFeedback(cue => this.audio.playCue(cue));
   private readonly audioEnemyHealth: Float32Array;
@@ -413,10 +417,27 @@ export class Game {
     this.retentionNoHitFailure = false;
     this.retentionProgressEligibleThisRun = this.isRetentionProgressEligible(calibrationId ?? null);
     const saved = this.saveStore.load();
+    const firstFlight = this.isFirstFlightEntry() && needsFirstFlight(saved);
+    if (firstFlight) {
+      this.firstFlightConsumed = true;
+      this.saveStore.save({ ...saved, tutorialSeen: true });
+    }
     this.applyLaboratoryBonuses(saved.laboratory);
     this.startScreen?.close();
     this.activateRun(true);
+    if (firstFlight) this.firstFlightGuide.start();
     this.beginRunIntro('premium');
+  };
+
+  private isFirstFlightEntry(): boolean {
+    return !this.firstFlightConsumed && this.startOnMenu && this.runMode === 'campaign' && this.actId === 'radial'
+      && !this.rewardCatalogPreview && this.laboratoryProfileOverride === null
+      && this.retentionChallengePracticeId === null && this.isRetentionProgressEligible(this.calibrationId);
+  }
+
+  private readonly onSkipFirstFlight = (): void => {
+    this.firstFlightConsumed = true;
+    this.saveStore.save({ ...this.saveStore.load(), tutorialSeen: true });
   };
 
   private isRetentionProgressEligible(calibrationId: CalibrationId | null): boolean {
@@ -959,6 +980,7 @@ export class Game {
       ? new RunTransitionOverlay(options.elements.runTransition, this.completeRunIntro, this.fxQuality)
       : null;
     this.startScreen = options.elements.startScreen ? new StartScreen(options.elements.startScreen) : null;
+    this.firstFlightGuide = new FirstFlightGuide(this.container, options.elements.levelUp);
     this.joystick = new JoystickView();
     this.input = new InputManager(this.container, this.viewport, () => this.player.state, () => {
       void this.audio.unlock();
@@ -1080,6 +1102,7 @@ export class Game {
   public shutdown(): void {
     this.defeatScene.destroy();
     this.victoryScene.destroy();
+    this.firstFlightGuide.destroy();
     if (!this.started || this.stopped) return;
     this.stopped = true;
     this.clearTerminalSummaryTimer();
@@ -1122,7 +1145,9 @@ export class Game {
 
   private updateSimulation(): void {
     this.arena.update(FIXED_STEP_SECONDS);
-    this.player.update(this.input.getMovement(), FIXED_STEP_SECONDS, this.arena.state);
+    const movement = this.input.getMovement();
+    this.firstFlightGuide.noteMovement(movement.x, movement.y);
+    this.player.update(movement, FIXED_STEP_SECONDS, this.arena.state);
     this.combat.update(FIXED_STEP_SECONDS, this.player.state, this.arena.state);
     this.syncCombatAudioFeedback();
     const events = this.combat.events;
@@ -1218,6 +1243,8 @@ export class Game {
   }
 
   private renderFrame(deltaSeconds = 0): void {
+    this.firstFlightGuide.update(deltaSeconds, this.gameState.isSimulationRunning && !this.lifecyclePaused,
+      this.gameState.phase === 'level-up' && !this.lifecyclePaused);
     if (!this.gameState.isSimulationRunning) this.input.reset();
     const presentationDelta = this.gameState.phase === 'paused'
       || this.gameState.phase === 'level-up'
@@ -1452,6 +1479,7 @@ export class Game {
         ? this.upgradeApplier.applyUniversalMastery(upgradeId)
         : this.upgradeApplier.apply(upgradeId);
       if (!applied) return;
+      this.firstFlightGuide.close();
       void this.prepareCombatArt();
       this.baseline.noteUpgrade(navigation.masteryTarget === true ? 'universal_weapon_mastery' : upgradeId);
       this.advanceWeaponPath(upgradeId);
@@ -1546,6 +1574,7 @@ export class Game {
   }
 
   private activateRun(unlockAudio: boolean): void {
+    this.firstFlightGuide.close();
     this.defeatScene.close();
     this.victoryScene.close();
     this.view.root.visible = true;
@@ -1695,6 +1724,8 @@ export class Game {
     this.baselinePanel?.render(this.baseline);
     const saved = this.saveStore.load();
     this.startScreen.open({
+      firstFlight: initialView === undefined && this.isFirstFlightEntry() && needsFirstFlight(saved),
+      onSkipFirstFlight: this.onSkipFirstFlight,
       settings: saved.settings,
       quality: this.fxQuality,
       best: saved.best,
@@ -1799,6 +1830,7 @@ export class Game {
   private finishRun(outcome: RunOutcome): void {
     const transitioned = outcome === 'victory' ? this.gameState.winRun() : this.gameState.endRun();
     if (!transitioned) return;
+    this.firstFlightGuide.close();
     this.input.reset();
     // Keep the same track/position through the terminal animation.
     this.lifecycle.onGameOver();
@@ -2292,6 +2324,7 @@ export class Game {
   }
 
   private returnToMenuState(initialView?: 'retention'): void {
+    this.firstFlightGuide.close();
     this.defeatScene.close();
     this.victoryScene.close();
     this.retentionProgressEligibleThisRun = false;

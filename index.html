@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#080b17" />
-    <meta name="description" content="Geometry Survivor: prototipo web de supervivencia geométrica." />
+    <meta name="description" content="OrbiHex Survivor: acción de supervivencia espacial entre enjambres geométricos y arenas cambiantes." />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <title>Geometry Survivor</title>
+    <title>OrbiHex Survivor</title>
     <!-- First-paint cover: independent of JavaScript and the WebGL bootstrap. -->
     <style>
       #boot-status { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 1rem; margin: 0; padding: 2rem; background: #080b17; color: #d1e2ec; font: 600 1rem/1.5 system-ui, sans-serif; text-align: center; }
@@ -15,10 +15,10 @@
     </style>
   </head>
   <body>
-    <main id="game-container" aria-label="Geometry Survivor">
+    <main id="game-container" aria-label="OrbiHex Survivor">
       <div id="boot-status" role="status" aria-live="polite">
         <img src="/src/assets/svg/ui/start/mark.svg" alt="" width="112" height="112" />
-        <strong class="boot-title">GEOMETRY <span>SURVIVOR</span></strong>
+        <strong class="boot-title">ORBIHEX <span>SURVIVOR</span></strong>
         <span class="boot-track" aria-hidden="true"></span>
         <span>Cargando juego…</span>
       </div>
@@ -32,14 +32,21 @@
           <div id="start-scene" class="start-scene" aria-hidden="true"></div>
           <div class="start-brand">
             <div class="home-cover-title">
-              <p class="start-kicker">GEOMETRY / SURVIVAL PROTOCOL</p>
-              <h1 id="start-title">GEOMETRY <span>SURVIVOR</span></h1>
+              <p class="start-kicker">ORBIHEX / SURVIVAL PROTOCOL</p>
+              <h1 id="start-title">ORBIHEX <span>SURVIVOR</span></h1>
             </div>
             <div id="start-mark" aria-hidden="true"></div>
             <div class="home-cover-caption"><span id="start-equipped-ship">NAVE EQUIPADA</span><p>Sobrevive. Evoluciona. Rompe el límite.</p></div>
           </div>
           <div class="start-actions" aria-label="Menu principal">
             <p class="home-nav-kicker">TU PRÓXIMA EXPEDICIÓN</p>
+            <div id="first-flight-intro" class="first-flight-intro" hidden>
+              <span>PRIMER VUELO</span>
+              <h2>Tu primera expedición comienza aquí.</h2>
+              <p>Muévete para esquivar. Tus armas disparan automáticamente.</p>
+              <p>En PC: WASD o flechas. En móvil: joystick o seguir dedo desde Configuración.</p>
+              <button id="first-flight-skip" type="button">Omitir guía y abrir el menú</button>
+            </div>
             <button id="start-play" class="start-primary" type="button"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3 21 12 7 21Z" fill="currentColor"/><path d="M3 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="home-play-copy"><strong>JUGAR</strong><small id="start-play-route">Acto I · Radial</small></span><span class="home-play-arrow" aria-hidden="true">↗</span></button>
             <div class="start-menu-grid">
               <button id="start-settings-toggle" class="start-secondary" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="start-settings"><svg class="home-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 7h6v4H2zm7 7h6v4H9zm7-10h6v4h-6z" fill="#17283b" stroke="currentColor"/></svg><span class="home-action-copy"><strong>Configuración</strong><small>AUDIO Y CONTROL</small></span></button>

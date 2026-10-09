@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-architecture
-description: Diseñar o modificar la arquitectura, módulos, contratos, estado y dependencias de Geometry Survivor. Usar para cambios estructurales o para ubicar una responsabilidad.
+description: Diseñar o modificar la arquitectura, módulos, contratos, estado y dependencias de OrbiHex Survivor. Usar para cambios estructurales o para ubicar una responsabilidad.
 ---
 
 # Adaptador Grok

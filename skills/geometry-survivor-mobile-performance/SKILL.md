@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-mobile-performance
-description: Implementar o revisar viewport responsive, input touch, game loop, DPR, spatial grid, pooling, calidad adaptativa y profiling de Geometry Survivor. Usar cuando un cambio pueda afectar framerate, memoria, resize o móviles modestos.
+description: Implementar o revisar viewport responsive, input touch, game loop, DPR, spatial grid, pooling, calidad adaptativa y profiling de OrbiHex Survivor. Usar cuando un cambio pueda afectar framerate, memoria, resize o móviles modestos.
 metadata:
   short-description: Mobile, responsive y rendimiento
 ---

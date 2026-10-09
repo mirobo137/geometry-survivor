@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-rendering
-description: Crear o modificar rendering PixiJS, assets SVG, lenguaje visual, UI, animaciones y FX de Geometry Survivor. Usar para decisiones de Sprite, Graphics, texturas, atlas o jerarquía visual; no para cambiar reglas de combate.
+description: Crear o modificar rendering PixiJS, assets SVG, lenguaje visual, UI, animaciones y FX de OrbiHex Survivor. Usar para decisiones de Sprite, Graphics, texturas, atlas o jerarquía visual; no para cambiar reglas de combate.
 metadata:
   short-description: PixiJS, SVG y efectos visuales
 ---

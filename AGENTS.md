@@ -1,4 +1,4 @@
-# Geometry Survivor — instrucciones para agentes
+# OrbiHex Survivor — instrucciones para agentes
 
 Estas reglas aplican a todo el repositorio. Están escritas para ser neutrales al modelo y deben producir el mismo criterio de trabajo en Grok Build, Codex y otros agentes compatibles con `AGENTS.md`.
 

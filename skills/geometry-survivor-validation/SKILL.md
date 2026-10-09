@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-validation
-description: Probar, auditar o cerrar features y fases de Geometry Survivor mediante tests, CI, smoke browser, profiling y criterios de aceptación. Usar para verificación, regresiones, release readiness o cuando una puerta del plan deba demostrarse.
+description: Probar, auditar o cerrar features y fases de OrbiHex Survivor mediante tests, CI, smoke browser, profiling y criterios de aceptación. Usar para verificación, regresiones, release readiness o cuando una puerta del plan deba demostrarse.
 metadata:
   short-description: Tests, CI y puertas de calidad
 ---

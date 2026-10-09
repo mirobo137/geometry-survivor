@@ -1,4 +1,4 @@
-# Geometry Survivor — actos, meta y Overdrive
+# OrbiHex Survivor — actos, meta y Overdrive
 
 Contrato de producto de Actos y meta.
 
@@ -20,7 +20,7 @@ se mantienen únicamente en el [plan principal](../../PLAN_DESARROLLO.md).
 
 ## Decisión principal
 
-Geometry Survivor tendrá tres actos cortos con identidad espacial propia y un
+OrbiHex Survivor tendrá tres actos cortos con identidad espacial propia y un
 modo infinito opcional posterior llamado **Overdrive**.
 
 - Los actos tienen una regla aprendible, un boss y una victoria clara.

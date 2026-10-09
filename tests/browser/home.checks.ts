@@ -5,6 +5,13 @@ export const registerHomeChecks = (options: { includeDesktopViewport?: boolean }
   const viewports = options.includeDesktopViewport === false
     ? [[320, 568], [390, 844], [640, 360]] as const
     : [[320, 568], [390, 844], [640, 360], [1280, 720]] as const;
+  test('presenta la marca OrbiHex Survivor en el inicio', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle('OrbiHex Survivor');
+    await expect(page.locator('#game-container')).toHaveAttribute('aria-label', 'OrbiHex Survivor');
+    await expect(page.locator('#start-title')).toHaveText('ORBIHEX SURVIVOR');
+  });
+
   for (const [width, height] of viewports)
   test(`consolas premium sin solaparse a ${width}x${height}`, async ({ page }, testInfo) => {
     // Three complete catalog-growth passes are expensive under CI software

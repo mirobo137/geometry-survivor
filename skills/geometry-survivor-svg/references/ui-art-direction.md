@@ -1,7 +1,7 @@
 # UI premium — consola de navegación
 
 Dirección para cualquier agente que construya SVG, cartas, botones, HUD o
-pantallas de Geometry Survivor. Rutas relativas a la raíz del repositorio.
+pantallas de OrbiHex Survivor. Rutas relativas a la raíz del repositorio.
 La biblioteca de naves aprobada fija material y acabado; la UI añade una
 exigencia: reconocer una acción antes de observar su decoración.
 

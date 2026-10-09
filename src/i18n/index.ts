@@ -298,12 +298,12 @@ export const localizeDocument = (root: ParentNode = document): void => {
 
   const language = getLanguage();
   document.documentElement.lang = language;
-  document.title = language === 'es' ? 'Geometry Survivor' : 'Geometry Survivor';
+  document.title = language === 'es' ? 'OrbiHex Survivor' : 'OrbiHex Survivor';
   document.querySelector('meta[name="description"]')?.setAttribute(
     'content',
     language === 'es'
-      ? 'Geometry Survivor: supervivencia geométrica en el espacio.'
-      : 'Geometry Survivor: geometric space survival.'
+      ? 'OrbiHex Survivor: acción de supervivencia espacial entre enjambres geométricos y arenas cambiantes.'
+      : 'OrbiHex Survivor: space-survival action against geometric swarms in shifting arenas.'
   );
 };
 

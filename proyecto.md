@@ -1,4 +1,4 @@
-# Geometry Survivor — visión y principios
+# OrbiHex Survivor — visión y principios
 
 Este documento conserva la identidad del juego y sus límites arquitectónicos;
 no es una hoja de tareas. El único backlog vigente está en
@@ -6,7 +6,7 @@ no es una hoja de tareas. El único backlog vigente está en
 
 ## Identidad del juego
 
-Geometry Survivor es un survivor de una mano en el que la arena es un sistema
+OrbiHex Survivor es un survivor de una mano en el que la arena es un sistema
 vivo. El jugador se mueve para esquivar; armas, enemigos, hazards y bosses
 plantean decisiones legibles basadas en geometría y posición. La campaña ofrece
 actos con resultados claros y Overdrive es una continuación opcional, no una

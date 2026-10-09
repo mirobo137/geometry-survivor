@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-platforms
-description: Implementar o revisar builds, lifecycle, anuncios, guardado y release de Geometry Survivor para GitHub Pages, Poki o CrazyGames.
+description: Implementar o revisar builds, lifecycle, anuncios, guardado y release de OrbiHex Survivor para GitHub Pages, Poki o CrazyGames.
 ---
 
 # Adaptador Grok

@@ -1,4 +1,4 @@
-# Geometry Survivor — pendientes vigentes
+# OrbiHex Survivor — pendientes vigentes
 
 Revisión: 06-10-2026. Este es el único roadmap del proyecto. Contiene trabajo
 que todavía falta construir, validar o cerrar para publicación; no es un diario
@@ -32,6 +32,11 @@ presente en origin o un build local correcto no demuestra por sí solo que el
 workflow actual de Pages haya terminado y desplegado.
 
 ## A. Estabilidad, carga y aceptación móvil
+
+Primera partida: entrada simplificada al Acto I y guía contextual de movimiento,
+disparo automático, XP y primera carta implementadas. Se consume `tutorialSeen`
+al iniciar u omitir; las partidas siguientes y perfiles con progreso conservan
+el menú habitual. Validar claridad y posición de avisos en teléfono físico.
 
 **Estado:** correcciones de los hallazgos de recursos implementadas; prueba
 prolongada y aceptación en teléfono modesto pendientes.

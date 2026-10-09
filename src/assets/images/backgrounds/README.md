@@ -225,7 +225,7 @@ iteraciones compatibles; no sustituyen revisar cada salida dentro del juego.
 Prompts de referencia para re-generar o iterar estas familias:
 
 ```text
-DEEP SPACE — Generate an original premium painterly square background plate for a top-down geometry survivor. An immense deep-space gulf with layered midnight-blue, indigo and restrained petrol mineral nebula clouds confined to the far perimeter and broken across all four corners. No central focal subject. Keep the central 55% nearly black, low-detail and open for combat. Quiet cinematic depth, broad brush-scale cloud structure, no bright pinpoints, stars, planets, moons, ships, crystals, geometry, arena outlines, text, lasers or lightning. Fully opaque square image; designed for uniform cover crops in 16:9 landscape and 9:16 portrait.
+DEEP SPACE — Generate an original premium painterly square background plate for a top-down space-survival game. An immense deep-space gulf with layered midnight-blue, indigo and restrained petrol mineral nebula clouds confined to the far perimeter and broken across all four corners. No central focal subject. Keep the central 55% nearly black, low-detail and open for combat. Quiet cinematic depth, broad brush-scale cloud structure, no bright pinpoints, stars, planets, moons, ships, crystals, geometry, arena outlines, text, lasers or lightning. Fully opaque square image; designed for uniform cover crops in 16:9 landscape and 9:16 portrait.
 
 ION STORM — Generate an original premium painterly square background plate for a top-down survivor game: broad separated clouds of ionized teal and muted cyan vapor, softly turbulent and mineral-textured, with a few dim edge-lit folds near the corners. Keep the central 55% dark, sparse and unobstructed. No lightning bolts, thin electrical filaments, bright dots, weapons, ships, planets, reticles, geometry, text or gameplay-like silhouettes. Low contrast behind players/enemies; square opaque composition safe under landscape and portrait cover crops.
 
@@ -248,7 +248,7 @@ opacidad y ritmo se configuran por tema. Las placas permanecen inmóviles; Low y
 
 ```text
 Use case: stylized-concept
-Asset type: premium full-screen background plate for a 2D top-down geometry-survivor game
+Asset type: premium full-screen background plate for a 2D top-down space-survival game
 Primary request: create a distinctive, painterly cosmic background called “Tidal Veil”, a distant field of flowing mineral mist and deep-space vapor, intended to sit quietly behind active gameplay.
 Scene/backdrop: an immense dark interstellar gulf; broad soft currents of smoky blue-green and muted indigo drift along the far perimeter, with a few restrained antique-amber reflections embedded in the haze.
 Style/medium: premium hand-painted digital matte illustration, subtle layered pigment and atmospheric depth, elegant and cinematic but low contrast, not photorealistic.

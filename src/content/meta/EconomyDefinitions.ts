@@ -2,7 +2,7 @@
 export const NOVA_CURRENCY = {
   id: 'nova',
   name: 'NOVA',
-  description: 'Moneda local de Geometry Survivor',
+  description: 'Moneda local de OrbiHex Survivor',
   symbol: '✦'
 } as const;
 

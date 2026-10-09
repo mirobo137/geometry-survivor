@@ -1,6 +1,6 @@
 ---
 name: geometry-survivor-gameplay
-description: Crear o ajustar armas, enemigos, upgrades, hazards, bosses, arena, director y balance de Geometry Survivor.
+description: Crear o ajustar armas, enemigos, upgrades, hazards, bosses, arena, director y balance de OrbiHex Survivor.
 ---
 
 # Adaptador Grok

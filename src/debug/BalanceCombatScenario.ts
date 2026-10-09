@@ -89,7 +89,7 @@ export const runBalanceMatrix = (): readonly BalanceMeasurement[] => (
 
 export const formatBalanceMatrix = (measurements: readonly BalanceMeasurement[]): string => {
   const lines = [
-    'Geometry Survivor | EX-02 balance matrix',
+    'OrbiHex Survivor | EX-02 balance matrix',
     `seed ${BALANCE_SCENARIO_SEED} | ${BALANCE_DURATION_SECONDS}s | fijo ${BALANCE_FIXED_STEP_SECONDS}s`,
     ''
   ];

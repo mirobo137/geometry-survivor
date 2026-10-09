@@ -1,4 +1,4 @@
-# Imágenes generadas y SVG: evaluación para Geometry Survivor
+# Imágenes generadas y SVG: evaluación para OrbiHex Survivor
 
 Fecha: 29-09-2026. Estado: evaluación seguida de una implementación autorizada.
 La opción A se amplió, por petición explícita, a las 29 ilustraciones de todas

@@ -1,6 +1,6 @@
-# Geometry Survivor
+# OrbiHex Survivor
 
-Prototipo web del MVP de *Geometry Survivor*. El juego está construido para ejecutarse primero en navegador y publicarse en GitHub Pages, con destinos separados para pruebas locales, Poki y CrazyGames.
+*OrbiHex Survivor* es un juego de supervivencia espacial de acción: esquiva enjambres geométricos mientras armas automáticas y arenas cambiantes sostienen cada partida. Se ejecuta en navegador y dispone de builds separados para pruebas locales, GitHub Pages, Poki y CrazyGames.
 
 Para retomar el desarrollo, consulta el [plan único de pendientes](PLAN_DESARROLLO.md), el [índice de documentación](docs/README.md) y la skill de la tarea. No hay un snapshot o plan de ejecución paralelo.
 

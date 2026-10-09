@@ -1,6 +1,6 @@
 # Prism Aegis — órbita geométrica premium
 
-Esta es la receta específica para la órbita persistente de Geometry Survivor.
+Esta es la receta específica para la órbita persistente de OrbiHex Survivor.
 Se aplica junto a `docs/design/EFECTOS_PREMIUM.md` y las skills canónicas de
 rendering, SVG y mobile-performance.
 

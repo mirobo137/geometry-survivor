@@ -84,9 +84,11 @@ test('joystick predeterminado persiste y se cancela en pausa, cambio y rotación
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-control-scheme')).toHaveValue('joystick');
   await page.locator('#start-control-scheme').selectOption('joystick');
+  await page.locator('#start-settings-close').click();
   await page.reload();
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-control-scheme')).toHaveValue('joystick');
+  await page.locator('#start-settings-close').click();
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
   await page.locator('[data-run-transition-skip]').click();
@@ -342,6 +344,7 @@ test('mantiene el control touch en portrait móvil', async ({ page }) => {
   await page.locator('#start-settings-toggle').click();
   await expect(page.locator('#start-control-scheme option')).toHaveCount(2);
   await page.locator('#start-control-scheme').selectOption('joystick');
+  await page.locator('#start-settings-close').click();
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
   await page.locator('[data-run-transition-skip]').click();

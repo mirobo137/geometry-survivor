@@ -56,7 +56,7 @@ export const registerMusicChecks = (): void => {
     expect(menu.contexts).toBeLessThanOrEqual(2);
     expect(menu.liveContexts).toBe(1);
     expect(menu.decodes).toBe(0); // Long music never uses decodeAudioData.
-    await page.locator('#start-settings-toggle').click();
+    await page.locator('#start-settings-close').click();
     await page.locator('#start-play').click();
     await page.locator('[data-run-transition-skip]').click();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.2, 2);
@@ -89,7 +89,7 @@ export const registerMusicChecks = (): void => {
     await page.locator('#start-muted').uncheck();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.paused).toBe(false);
     expect((await readMusic(page)).tracks[0].volume).toBeCloseTo(0.25, 2);
-    await page.locator('#start-settings-toggle').click();
+    await page.locator('#start-settings-close').click();
     await page.locator('#start-play').click();
     await expect.poll(async () => (await readMusic(page)).tracks[0]?.volume).toBeCloseTo(0.1, 2);
     const final = await readMusic(page);
@@ -127,7 +127,7 @@ export const registerMusicChecks = (): void => {
       return load;
     });
     try {
-      await page.locator('#start-settings-toggle').click();
+      await page.locator('#start-settings-close').click();
       await page.locator('#start-play').click();
       await page.locator('[data-run-transition-skip]').click();
       await page.locator('#pause-toggle').click();

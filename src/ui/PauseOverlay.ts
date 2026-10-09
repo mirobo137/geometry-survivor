@@ -70,12 +70,13 @@ export class PauseOverlay {
     this.menuButton = root.querySelector<HTMLButtonElement>('#pause-menu');
     this.withdrawButton = root.querySelector<HTMLButtonElement>('#pause-withdraw');
     this.pausePanel = root.querySelector<HTMLElement>('.pause-panel');
-    this.withdrawalDialog = root.querySelector<HTMLElement>('#pause-withdrawal-dialog');
-    this.withdrawalGenerated = root.querySelector<HTMLOutputElement>('#pause-withdrawal-generated');
-    this.withdrawalForfeited = root.querySelector<HTMLOutputElement>('#pause-withdrawal-forfeited');
-    this.withdrawalPayout = root.querySelector<HTMLOutputElement>('#pause-withdrawal-payout');
-    this.withdrawalBackButton = root.querySelector<HTMLButtonElement>('#pause-withdrawal-back');
-    this.withdrawalConfirmButton = root.querySelector<HTMLButtonElement>('#pause-withdrawal-confirm');
+    this.withdrawalDialog = root.parentElement?.querySelector<HTMLElement>('#pause-withdrawal-dialog')
+      ?? root.querySelector<HTMLElement>('#pause-withdrawal-dialog');
+    this.withdrawalGenerated = this.withdrawalDialog?.querySelector<HTMLOutputElement>('#pause-withdrawal-generated') ?? null;
+    this.withdrawalForfeited = this.withdrawalDialog?.querySelector<HTMLOutputElement>('#pause-withdrawal-forfeited') ?? null;
+    this.withdrawalPayout = this.withdrawalDialog?.querySelector<HTMLOutputElement>('#pause-withdrawal-payout') ?? null;
+    this.withdrawalBackButton = this.withdrawalDialog?.querySelector<HTMLButtonElement>('#pause-withdrawal-back') ?? null;
+    this.withdrawalConfirmButton = this.withdrawalDialog?.querySelector<HTMLButtonElement>('#pause-withdrawal-confirm') ?? null;
     this.resumeButton.addEventListener('click', () => this.resumeHandler?.());
     this.settingsToggle?.addEventListener('click', () => this.toggleSettings());
     this.musicInput?.addEventListener('input', () => this.emitSettings());
@@ -90,7 +91,7 @@ export class PauseOverlay {
     this.withdrawalDialog?.addEventListener('click', event => {
       if (event.target === this.withdrawalDialog) this.closeWithdrawalConfirmation(true);
     });
-    this.root.addEventListener('keydown', event => this.handleWithdrawalKeydown(event));
+    this.withdrawalDialog?.addEventListener('keydown', event => this.handleWithdrawalKeydown(event));
   }
 
   public open(message: string, resumeHandler: ResumeHandler, actions: PauseActions = {}): void {

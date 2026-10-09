@@ -426,7 +426,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   const settings = page.locator('#start-settings');
   const expandedSettingsHeight = await settings.evaluate((element) => element.getBoundingClientRect().height);
   expect(expandedSettingsHeight).toBeGreaterThan(40);
-  await page.locator('#start-settings-toggle').click();
+  await page.locator('#start-settings-close').click();
   await expect(settings).toBeHidden();
   expect(await settings.evaluate((element) => element.getBoundingClientRect().height)).toBe(0);
   await page.locator('#start-settings-toggle').click();
@@ -435,6 +435,7 @@ test('presenta el menu inicial y conserva la configuracion antes de jugar', asyn
   await page.locator('#start-sfx').fill('65');
   await expect(page.locator('#start-music-value')).toHaveText('45%');
   await expect(page.locator('#start-sfx-value')).toHaveText('65%');
+  await page.locator('#start-settings-close').click();
   await page.locator('#start-play').click();
   await expect(page.locator('#start-screen')).toBeHidden();
   await expect(page.locator('#game-hud')).toBeVisible();
@@ -704,9 +705,25 @@ test('ofrece Overdrive dentro de la seleccion de actos cuando esta desbloqueado'
   await page.locator('#pause-toggle').click();
   await expect(page.locator('#pause-withdraw')).toBeVisible();
   await expect(page.locator('#pause-withdraw')).toContainText('Retirarse y cobrar');
+  await page.setViewportSize({ width: 320, height: 390 });
   await page.locator('#pause-withdraw').click();
   await expect(page.locator('#pause-withdrawal-dialog')).toBeVisible();
+  await expect(page.locator('#pause-withdrawal-dialog')).toHaveCSS('position', 'fixed');
+  await expect(page.locator('#pause-withdrawal-dialog')).toHaveCSS('touch-action', 'pan-y');
   await expect(page.locator('#pause-withdrawal-message')).toContainText('mitad');
+  const withdrawalScroll = await page.locator('#pause-withdrawal-dialog').evaluate(dialog => ({
+    canScroll: dialog.scrollHeight > dialog.clientHeight,
+    top: dialog.scrollTop
+  }));
+  expect(withdrawalScroll.canScroll).toBe(true);
+  await page.mouse.move(160, 330);
+  expect(await page.locator('#pause-withdrawal-dialog').evaluate(dialog => {
+    const hit = document.elementFromPoint(160, 330);
+    const receivesPointer = hit === dialog || (hit instanceof Node && dialog.contains(hit));
+    return receivesPointer && dialog.closest('[inert]') === null && dialog.parentElement?.id === 'game-container';
+  })).toBe(true);
+  await page.mouse.wheel(0, 350);
+  await expect.poll(() => page.locator('#pause-withdrawal-dialog').evaluate(dialog => dialog.scrollTop)).toBeGreaterThan(0);
   const withdrawalQuote = await page.locator('#pause-withdrawal-dialog').evaluate(dialog => {
     const read = (id: string) => Number(
       dialog.querySelector<HTMLOutputElement>(id)?.value.replace(/[−,]/g, '') ?? Number.NaN
@@ -893,7 +910,8 @@ test('pausa manualmente y persiste los ajustes de audio', async ({ page }) => {
   await expect(page.locator('#pause-panel-frame svg')).toBeVisible();
   await expect(page.locator('#pause-overlay button:not([hidden]) svg')).toHaveCount(4);
   const pauseLayout = await page.locator('#pause-overlay').evaluate((overlay) => {
-    const buttons = [...overlay.querySelectorAll<HTMLButtonElement>('button:not([hidden])')];
+    const buttons = [...overlay.querySelectorAll<HTMLButtonElement>('button:not([hidden])')]
+      .filter(button => button.getClientRects().length > 0);
     const panel = overlay.querySelector<HTMLElement>('.pause-panel');
     return {
       buttonsHaveTouchTarget: buttons.every((button) => {
